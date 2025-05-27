@@ -1,0 +1,43 @@
+{
+  "name": "@brain-toolkit/element-sizer",
+  "version": "0.1.1",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/fe-base.git",
+    "directory": "packages/logger"
+  },
+  "homepage": "https://github.com/qlover/fe-base#readme",
+  "keywords": [
+    "brain toolkit",
+    "element-sizer",
+    "ElementSizer"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  }
+}
