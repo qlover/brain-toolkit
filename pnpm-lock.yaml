@@ -27,22 +27,22 @@ importers:
         specifier: 20.6.4
         version: 20.6.4(@babel/traverse@7.27.0)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.21)(typescript@5.4.5))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@20.6.4(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.21)(typescript@5.4.5))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
       '@qlover/env-loader':
-        specifier: latest
+        specifier: ^0.3.0
         version: 0.3.0
       '@qlover/eslint-plugin-fe-dev':
-        specifier: latest
+        specifier: ^0.2.0
         version: 0.2.0
       '@qlover/fe-release':
-        specifier: latest
-        version: 2.3.0(typescript@5.4.5)
+        specifier: ^2.3.1
+        version: 2.3.1(typescript@5.4.5)
       '@qlover/fe-scripts':
-        specifier: latest
+        specifier: ^0.11.6
         version: 0.11.6(@types/node@22.15.2)(typescript@5.4.5)
       '@qlover/fe-standard':
-        specifier: latest
+        specifier: ^0.0.4
         version: 0.0.4
       '@qlover/scripts-context':
-        specifier: latest
+        specifier: ^0.2.1
         version: 0.2.1(typescript@5.4.5)
       '@rollup/plugin-commonjs':
         specifier: ^28.0.1
@@ -1269,8 +1269,11 @@ packages:
   '@qlover/fe-corekit@1.3.1':
     resolution: {integrity: sha512-1r/Qvj/+XbrrihPaV4BrLa326bY06V3YcBCIl1P0+vGiVYSoQpTJLaPcSBOLRQUS1AQjm6Nt3LaAhSu73AbgCg==}
 
-  '@qlover/fe-release@2.3.0':
-    resolution: {integrity: sha512-HhCpm3G+0iRaiQnYKm+QJTvgaSaelBz512gliHv1E6838J9lY4vVzwgYFNl3lo0hWGqstQj1WSd/Mr7FkXJdsg==}
+  '@qlover/fe-corekit@1.4.0':
+    resolution: {integrity: sha512-7WWfs+6Z5rKF1WsCFAlwL563i9/fV9hndXWXsBu7MESPRdiMfIkIPuaV2+pQo1TFCfXCbjai6kCyxF6B78oQBw==}
+
+  '@qlover/fe-release@2.3.1':
+    resolution: {integrity: sha512-ZZ6xrIywILGDspns1nZTKZl1mLMFGQIq0bhTQ2nQGWIqdaMjlaxJVNgy0YS8W6ZpbeYF2Jj3tokNhBWHvp+hUQ==}
     hasBin: true
 
   '@qlover/fe-scripts@0.11.6':
@@ -5354,11 +5357,16 @@ snapshots:
       lodash: 4.17.21
       merge: 2.1.1
 
-  '@qlover/fe-release@2.3.0(typescript@5.4.5)':
+  '@qlover/fe-corekit@1.4.0':
+    dependencies:
+      lodash: 4.17.21
+      merge: 2.1.1
+
+  '@qlover/fe-release@2.3.1(typescript@5.4.5)':
     dependencies:
       '@octokit/rest': 21.1.1
       '@qlover/env-loader': 0.3.0
-      '@qlover/fe-corekit': 1.3.1
+      '@qlover/fe-corekit': 1.4.0
       '@qlover/logger': 0.1.1
       '@qlover/scripts-context': 0.2.1(typescript@5.4.5)
       find-workspaces: 0.3.1
