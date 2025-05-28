@@ -4,27 +4,27 @@ Brain AI Frontend Toolkit - Powerful frontend tools collection for AI applicatio
 
 ## 📖 Table of Contents
 
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Quick Start](#quick-start)
+- [Project Overview](#-project-overview)
+- [Features](#-features)
+- [Quick Start](#-quick-start)
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Basic Usage](#basic-usage)
-- [Package List](#package-list)
-- [Development Guide](#development-guide)
+- [Package List](#-package-list)
+- [Development Guide](#-development-guide)
   - [Project Build and Dependency Management](./docs/en/project-builder.md)
   - [Commit Convention](./docs/en/commit-convention.md)
   - [Project Release](./docs/en/project-release.md)
   - [How to Add a Subpackage](./docs/en/how-to-add-a-subpackage.md)
   - [Testing Guide](./docs/en/testing-guide.md)
   - [Build Formats Guide](./docs/en/build-formats.md)
-- [Script Commands](#script-commands)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [Version Release](#version-release)
-- [FAQ](#faq)
-- [License](#license)
+- [Script Commands](#-script-commands)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [Version Release](#-version-release)
+- [FAQ](#-faq)
+- [License](#-license)
 
 ## 📋 Project Overview
 
@@ -72,8 +72,8 @@ pnpm add @brain-toolkit/element-sizer
 
 ## 📦 Package List
 
-| Package Name | Version | Description |
-|--------------|---------|-------------|
+| Package Name                                                       | Version                                                           | Description                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------ |
 | [@brain-toolkit/element-sizer](./packages/element-sizer/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM element expand/collapse animation tool |
 
 ## 🛠️ Development Guide

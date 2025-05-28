@@ -31,7 +31,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 beforeEach(() => {
   // 清理 DOM
   document.body.innerHTML = '';
-  
+
   // 重置所有 Mock
   vi.clearAllMocks();
 });
@@ -47,8 +47,8 @@ expect.extend({
     const pass = document.body.contains(received);
     return {
       pass,
-      message: () => 
-        pass 
+      message: () =>
+        pass
           ? `Expected element not to be in DOM`
           : `Expected element to be in DOM`
     };
@@ -62,4 +62,4 @@ declare global {
       toBeInDOM(): any;
     }
   }
-} 
+}

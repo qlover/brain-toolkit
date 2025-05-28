@@ -4,25 +4,26 @@ This document provides detailed instructions on how to add new subpackages to th
 
 ## 📋 Table of Contents
 
-- [Creation Method Selection](#creation-method-selection)
-- [Manual Package Creation](#manual-package-creation)
-- [Using nx Creation](#using-nx-creation)
-- [Configuration File Details](#configuration-file-details)
-- [Best Practices](#best-practices)
-- [Common Issues](#common-issues)
+- [Creation Method Selection](#-creation-method-selection)
+- [Manual Package Creation](#-manual-package-creation)
+- [Using nx Creation](#-using-nx-creation)
+- [Configuration File Details](#-configuration-file-details)
+- [Best Practices](#-best-practices)
+- [Common Issues](#-common-issues)
 
 ## 🎯 Creation Method Selection
 
 ### Manual Creation vs nx Creation
 
-| Feature | Manual Creation | nx Creation |
-|---------|----------------|-------------|
-| **Flexibility** | ⭐⭐⭐⭐⭐ Full customization | ⭐⭐⭐ Template-based |
-| **Speed** | ⭐⭐ Manual configuration required | ⭐⭐⭐⭐⭐ Quick generation |
-| **Learning Curve** | ⭐⭐⭐ Need to understand configuration | ⭐⭐⭐⭐ Relatively simple |
-| **Customization** | ⭐⭐⭐⭐⭐ Any build tool | ⭐⭐⭐ Preset options |
+| Feature            | Manual Creation                         | nx Creation                 |
+| ------------------ | --------------------------------------- | --------------------------- |
+| **Flexibility**    | ⭐⭐⭐⭐⭐ Full customization           | ⭐⭐⭐ Template-based       |
+| **Speed**          | ⭐⭐ Manual configuration required      | ⭐⭐⭐⭐⭐ Quick generation |
+| **Learning Curve** | ⭐⭐⭐ Need to understand configuration | ⭐⭐⭐⭐ Relatively simple  |
+| **Customization**  | ⭐⭐⭐⭐⭐ Any build tool               | ⭐⭐⭐ Preset options       |
 
 **Recommended Choice**:
+
 - 🚀 **Quick Development**: Use nx creation
 - 🔧 **Special Requirements**: Manual creation (for specific build tools)
 
@@ -90,11 +91,7 @@ touch package.json
     "directory": "packages/my-new-package"
   },
   "homepage": "https://github.com/qlover/brain-toolkit#readme",
-  "keywords": [
-    "brain toolkit",
-    "my-new-package",
-    "your keywords"
-  ],
+  "keywords": ["brain toolkit", "my-new-package", "your keywords"],
   "author": "Your Name",
   "license": "ISC",
   "publishConfig": {
@@ -122,15 +119,8 @@ touch tsconfig.json
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "__tests__",
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "__tests__", "**/*.test.ts"]
 }
 ```
 
@@ -178,9 +168,9 @@ touch src/index.ts
 // src/index.ts
 /**
  * @brain-toolkit/my-new-package
- * 
+ *
  * Your package description
- * 
+ *
  * @author Your Name
  * @version 0.1.0
  */
@@ -247,11 +237,11 @@ import type { MyUtilOptions } from './types';
 
 export function myUtilFunction(options: MyUtilOptions = {}): string {
   const { debug = false } = options;
-  
+
   if (debug) {
     console.log('myUtilFunction called');
   }
-  
+
   return 'Utility function result';
 }
 ```
@@ -291,9 +281,9 @@ describe('MyMainClass', () => {
   it('should execute doSomething method', () => {
     const consoleSpy = vi.spyOn(console, 'log');
     const instance = new MyMainClass();
-    
+
     instance.doSomething();
-    
+
     expect(consoleSpy).toHaveBeenCalledWith('MyMainClass is working!');
     consoleSpy.mockRestore();
   });
@@ -339,7 +329,7 @@ export { MyMainClass as default } from './my-main-class';
 touch README.md
 ```
 
-```markdown
+````markdown
 # @brain-toolkit/my-new-package
 
 Brief description of your package.
@@ -351,6 +341,7 @@ npm install @brain-toolkit/my-new-package
 # or
 pnpm add @brain-toolkit/my-new-package
 ```
+````
 
 ## 🚀 Quick Start
 
@@ -388,13 +379,14 @@ new MyMainClass(options?: MyMainClassOptions)
 ```typescript
 myUtilFunction(options?: MyUtilOptions): string
 ```
-```
+
+````
 
 #### 5.2 Create CHANGELOG.md
 
 ```bash
 touch CHANGELOG.md
-```
+````
 
 ```markdown
 # @brain-toolkit/my-new-package
@@ -482,6 +474,7 @@ cd packages/my-new-package
 ```
 
 Need to manually adjust the following:
+
 - Package name format: `@brain-toolkit/package-name`
 - Repository information
 - Publishing configuration
@@ -505,27 +498,27 @@ nx show project my-new-package
 
 ### package.json Key Fields
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `name` | Package name, must start with `@brain-toolkit/` | `@brain-toolkit/my-package` |
-| `version` | Version number, follow semantic versioning | `0.1.0` |
-| `type` | Module type, set to `module` | `module` |
-| `main` | CommonJS entry | `./dist/index.cjs` |
-| `module` | ES Module entry | `./dist/index.js` |
-| `types` | TypeScript type definitions | `./dist/index.d.ts` |
-| `exports` | Modern export configuration | See example above |
-| `files` | Files included when publishing | `["dist", "README.md"]` |
+| Field     | Description                                     | Example                     |
+| --------- | ----------------------------------------------- | --------------------------- |
+| `name`    | Package name, must start with `@brain-toolkit/` | `@brain-toolkit/my-package` |
+| `version` | Version number, follow semantic versioning      | `0.1.0`                     |
+| `type`    | Module type, set to `module`                    | `module`                    |
+| `main`    | CommonJS entry                                  | `./dist/index.cjs`          |
+| `module`  | ES Module entry                                 | `./dist/index.js`           |
+| `types`   | TypeScript type definitions                     | `./dist/index.d.ts`         |
+| `exports` | Modern export configuration                     | See example above           |
+| `files`   | Files included when publishing                  | `["dist", "README.md"]`     |
 
 ### tsup.config.ts Configuration Options
 
-| Option | Description | Recommended Value |
-|--------|-------------|-------------------|
-| `entry` | Entry files | `['src/index.ts']` |
-| `format` | Output formats | `['esm', 'cjs']` |
-| `dts` | Generate type definitions | `true` |
-| `sourcemap` | Generate source maps | `true` |
-| `clean` | Clean before build | `true` |
-| `minify` | Code minification | `process.env.NODE_ENV === 'production'` |
+| Option      | Description               | Recommended Value                       |
+| ----------- | ------------------------- | --------------------------------------- |
+| `entry`     | Entry files               | `['src/index.ts']`                      |
+| `format`    | Output formats            | `['esm', 'cjs']`                        |
+| `dts`       | Generate type definitions | `true`                                  |
+| `sourcemap` | Generate source maps      | `true`                                  |
+| `clean`     | Clean before build        | `true`                                  |
+| `minify`    | Code minification         | `process.env.NODE_ENV === 'production'` |
 
 ## 🎯 Best Practices
 
@@ -630,10 +623,15 @@ __tests__/
 Brief description
 
 ## 📦 Installation
-## 🚀 Quick Start  
+
+## 🚀 Quick Start
+
 ## 📖 API Documentation
+
 ## 🎯 Use Cases
+
 ## 🔧 Configuration Options
+
 ## 📝 Examples
 ```
 
@@ -642,9 +640,10 @@ Brief description
 ### Q1: How should packages be named?
 
 **A**: Package names must start with `@brain-toolkit/` and use kebab-case format:
+
 ```bash
 ✅ @brain-toolkit/element-sizer
-✅ @brain-toolkit/ui-components  
+✅ @brain-toolkit/ui-components
 ✅ @brain-toolkit/data-utils
 
 ❌ @brain-toolkit/ElementSizer
@@ -655,6 +654,7 @@ Brief description
 ### Q2: How to handle inter-package dependencies?
 
 **A**: Use `workspace:*` to reference local packages:
+
 ```json
 {
   "dependencies": {
@@ -666,6 +666,7 @@ Brief description
 ### Q3: What to do when build fails?
 
 **A**: Check the following points:
+
 1. Ensure `tsconfig.json` configuration is correct
 2. Check `tsup.config.ts` entry file path
 3. Confirm all dependencies are installed: `pnpm install`
@@ -674,6 +675,7 @@ Brief description
 ### Q4: How to debug new packages?
 
 **A**: Use the following commands:
+
 ```bash
 # Watch mode build
 cd packages/my-new-package
@@ -687,6 +689,7 @@ pnpm add @brain-toolkit/my-new-package@workspace:*
 ### Q5: What to check before publishing?
 
 **A**: Pre-publish checklist:
+
 - [ ] Package name format is correct
 - [ ] Version number follows semantic versioning
 - [ ] README.md documentation is complete
@@ -698,6 +701,7 @@ pnpm add @brain-toolkit/my-new-package@workspace:*
 ### Q6: How to delete a created package?
 
 **A**: Deletion steps:
+
 ```bash
 # 1. Delete package directory
 rm -rf packages/my-package

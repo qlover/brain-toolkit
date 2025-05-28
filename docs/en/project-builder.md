@@ -4,11 +4,11 @@ This document introduces the build system and dependency management of the brain
 
 ## 📋 Table of Contents
 
-- [Build System Overview](#build-system-overview)
-- [pnpm Workspace Management](#pnpm-workspace-management)
-- [Build Commands](#build-commands)
-- [Dependency Management Strategy](#dependency-management-strategy)
-- [Common Issues](#common-issues)
+- [Build System Overview](#-build-system-overview)
+- [pnpm Workspace Management](#-pnpm-workspace-management)
+- [Build Commands](#-build-commands)
+- [Dependency Management Strategy](#-dependency-management-strategy)
+- [Common Issues](#-common-issues)
 
 ## 🏗️ Build System Overview
 
@@ -20,12 +20,12 @@ brain-toolkit adopts a **monorepo** architecture, which means managing multiple 
 
 ### Main Tech Stack
 
-| Tool | Purpose | Version |
-|------|---------|---------|
-| **pnpm** | Package manager with workspace support | >= 8.0.0 |
-| **nx** | Build system, task orchestration and caching | 20.6.4 |
-| **tsup** | TypeScript build tool | ^8.4.0 |
-| **TypeScript** | Type system | ~5.4.5 |
+| Tool           | Purpose                                      | Version  |
+| -------------- | -------------------------------------------- | -------- |
+| **pnpm**       | Package manager with workspace support       | >= 8.0.0 |
+| **nx**         | Build system, task orchestration and caching | 20.6.4   |
+| **tsup**       | TypeScript build tool                        | ^8.4.0   |
+| **TypeScript** | Type system                                  | ~5.4.5   |
 
 ### Why Choose These Tools?
 
@@ -56,11 +56,12 @@ pnpm -r run build
 ```
 
 **Why do we need recursive builds?**
+
 - There are dependency relationships between packages, they must be built in the correct order
 - If package A depends on package B, then package B must be built first, then package A
 - pnpm automatically analyzes dependency relationships to ensure correct build order
 
-### workspace:* Dependency Mechanism
+### workspace:\* Dependency Mechanism
 
 Local package dependencies use `workspace:*`:
 
@@ -72,7 +73,8 @@ Local package dependencies use `workspace:*`:
 }
 ```
 
-**How workspace:* works:**
+**How workspace:\* works:**
+
 1. **Development stage**: pnpm creates soft links pointing to local packages
 2. **Publishing stage**: Automatically replaced with specific version numbers (like `^1.2.3`)
 3. **Real-time sync**: Changes to local packages are immediately reflected in dependents
@@ -88,6 +90,7 @@ pnpm install && pnpm build
 ```
 
 **Why must we build?**
+
 - TypeScript source code needs to be compiled to JavaScript
 - Other packages reference build artifacts in the `dist/` directory, not `src/` source code
 - Missing build artifacts will cause "module not found" errors
@@ -123,16 +126,19 @@ pnpm --filter @brain-toolkit/element-sizer build
 ```
 
 **Purpose of each command:**
+
 - `pnpm build`: Build all packages concurrently, then rebuild to ensure dependencies are correct
 - `pnpm nx:build`: Use nx incremental build, only build changed packages
 - `pnpm clean:build`: Clean dist directories of all packages
 
 **Why do we need `pnpm rebuild`?**
+
 - Ensure all package dependencies are up to date
 - Re-link local package dependencies
 - Resolve possible dependency cache issues
 
 **When to use incremental builds?**
+
 - During development, when you only want to build modified packages
 - In large projects where full builds take too long
 - In CI/CD, only build affected packages
@@ -142,6 +148,7 @@ pnpm --filter @brain-toolkit/element-sizer build
 ### Dependency Types
 
 1. **Local package dependencies**: Use `workspace:*`
+
    ```json
    {
      "dependencies": {
@@ -149,9 +156,11 @@ pnpm --filter @brain-toolkit/element-sizer build
      }
    }
    ```
+
    **Purpose**: Reference other packages in the same repository
 
 2. **External package dependencies**: Use specific versions
+
    ```json
    {
      "dependencies": {
@@ -159,6 +168,7 @@ pnpm --filter @brain-toolkit/element-sizer build
      }
    }
    ```
+
    **Purpose**: Reference third-party packages from npm
 
 3. **Development dependencies**: Build and test tools
@@ -186,6 +196,7 @@ pnpm test
 ```
 
 **Why follow this order?**
+
 1. **Install first**: Ensure all dependencies are downloaded
 2. **Then build**: Generate build artifacts needed by other packages
 3. **Finally test**: Verify all packages work correctly
@@ -199,6 +210,7 @@ pnpm test
 **Cause**: The dependent package hasn't been built, missing `dist/` directory
 
 **Solution**:
+
 ```bash
 # Check if dependency package is built
 ls packages/utils/dist/
@@ -217,6 +229,7 @@ pnpm build
 **Cause**: TypeScript cannot find type definition files (`.d.ts`)
 
 **Solution**:
+
 ```bash
 # Regenerate type definitions
 pnpm --filter @brain-toolkit/types build
@@ -229,6 +242,7 @@ pnpm --filter @brain-toolkit/types build
 **Cause**: Build tools used cache and didn't detect file changes
 
 **Solution**:
+
 ```bash
 # Clean build cache
 pnpm clean:build && pnpm build
@@ -242,6 +256,7 @@ nx reset
 **Cause**: Different packages depend on different versions of the same library
 
 **Solution**:
+
 ```bash
 # Check dependency tree
 pnpm list --filter @brain-toolkit/element-sizer
@@ -258,17 +273,20 @@ rm -rf node_modules && pnpm install
 ### Development Workflow
 
 1. **Initialize project**:
+
    ```bash
    pnpm install && pnpm build  # Install dependencies and build
    ```
 
 2. **Daily development**:
+
    ```bash
    pnpm nx:build              # Incremental build of changed packages
    pnpm test                  # Run tests
    ```
 
 3. **Watch mode development**:
+
    ```bash
    cd packages/element-sizer
    pnpm dev  # Start watch mode, automatically rebuild on file changes
