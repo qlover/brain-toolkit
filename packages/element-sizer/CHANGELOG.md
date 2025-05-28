@@ -1,5 +1,16 @@
 # @brain-toolkit/element-sizer
 
+## 0.2.2
+
+### Patch Changes
+
+#### ♻️ Refactors
+
+- **ElementSizer:** Update repository and homepage URLs in element-sizer package.json ([9a0e7be](https://github.com/qlover/brain-toolkit/commit/9a0e7be536ff8db4681e695bbc88b986e2a335e4)) ([#8](https://github.com/qlover/brain-toolkit/pull/8))
+
+  - Changed repository URL to reflect the new project location in brain-toolkit.
+  - Updated homepage URL to match the new project structure.
+
 ## 0.2.1
 
 ### Patch Changes
