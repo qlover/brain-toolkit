@@ -26,10 +26,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qlover/fe-base.git",
-    "directory": "packages/logger"
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/element-sizer"
   },
-  "homepage": "https://github.com/qlover/fe-base#readme",
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
   "keywords": [
     "brain toolkit",
     "element-sizer",
