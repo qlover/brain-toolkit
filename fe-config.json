@@ -1,6 +1,7 @@
 {
   "protectedBranches": ["master", "develop"],
   "release": {
+    "autoMergeReleasePR": true,
     "githubPR": {
       "commitArgs": ["--no-verify"],
       "pushChangedLabels": true
