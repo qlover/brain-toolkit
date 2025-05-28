@@ -1,14 +1,14 @@
 {
-  "name": "fe-base-monorepo",
+  "name": "brain-toolkit",
   "version": "0.0.0",
-  "description": "A base frontwork",
+  "description": "Brain AI use frontend tools,kits",
   "type": "module",
   "private": true,
   "repository": {
     "type": "github",
-    "url": "https://github.com/qlover/fe-base"
+    "url": "https://github.com/qlover/brain-toolkit"
   },
-  "homepage": "https://github.com/qlover/fe-base#readme",
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
   "files": [],
   "scripts": {
     "build": "pnpm -r --workspace-concurrency=4 run build && pnpm rebuild",
@@ -24,8 +24,8 @@
     "prepare": "husky"
   },
   "keywords": [
-    "fe",
-    "fe-base"
+    "brain-toolkit",
+    "brain"
   ],
   "author": "qlover",
   "license": "ISC",
