@@ -1,5 +1,17 @@
 # @brain-toolkit/element-sizer
 
+## 0.2.1
+
+### Patch Changes
+
+#### ✨ Features
+
+- **ElementResizer:** Add mock implementation for ElementResizer class ([cfbe003](https://github.com/qlover/brain-toolkit/commit/cfbe0036ade3d5d4552f0e3155a9f895343ffacf)) ([#6](https://github.com/qlover/brain-toolkit/pull/6))
+
+  - Introduced a new mock file for the ElementResizer class to facilitate testing.
+  - Implemented mock methods for expand, collapse, fixedCurrentTargetRect, and cancelAnimation.
+  - Added utility functions for size calculations and element rect retrieval to enhance testing capabilities.
+
 ## 0.2.0
 
 ### Minor Changes
