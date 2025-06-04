@@ -1,0 +1,52 @@
+{
+  "name": "@brain-toolkit/ts2locales",
+  "version": "0.2.2",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.js",
+      "require": "./dist/vite/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/ts2locales"
+  },
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "keywords": [
+    "brain toolkit",
+    "ts2locales",
+    "ts2locales",
+    "ViteTsToLocales"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "vite": "^6.1.0"
+  }
+}
