@@ -74,7 +74,8 @@ pnpm add @brain-toolkit/element-sizer
 
 | Package Name                                                       | Version                                                           | Description                                |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------ |
-| [@brain-toolkit/element-sizer](./packages/element-sizer/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM element expand/collapse animation tool |
+| [@brain-toolkit/element-sizer](./packages/element-sizer/README_EN.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM element expand/collapse animation tool |
+| [@brain-toolkit/ts2locales](./packages/ts2locales/README_EN.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales) | TypeScript internationalization file generator |
 
 ## 🛠️ Development Guide
 

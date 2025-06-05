@@ -1,6 +1,43 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
+// 配置选项类型
+export interface Ts2LocalesOptions {
+  /**
+   * 本地化前缀，默认为 'local'
+   * @example
+   * // 默认情况下使用 @localZh, @localEn
+   * // 如果设置为 'i18n'，则使用 @i18nZh, @i18nEn
+   */
+  localPrefix: string;
+  /**
+   * 描述标签名称
+   */
+  descriptionKey: string;
+  /**
+   * JSDoc 正则表达式
+   */
+  jsdocRegex: RegExp;
+  /**
+   * 字符串字面量正则表达式
+   */
+  stringLiteralRegex: RegExp;
+  /**
+   * 元数据行正则表达式
+   */
+  metadataLineRegex: RegExp;
+}
+
+// 默认配置
+const DEFAULT_OPTIONS: Ts2LocalesOptions = {
+  localPrefix: 'local',
+  descriptionKey: 'description',
+  jsdocRegex:
+    /\/\*\*\s*([\s\S]*?)\s*\*\/\s*export\s+const\s+([A-Z_0-9]+)\s*=\s*(['"][^'"]+['"])\s*;?/g,
+  stringLiteralRegex: /^['"]([^'"]+)['"]$/,
+  metadataLineRegex: /@(\w+)\s*(.*)?/
+};
+
 export type Ts2LocalesValue = {
   /**
    * @description The path to the source file
@@ -31,12 +68,15 @@ export type Ts2LocalesValue = {
   target: string;
 };
 
+// 支持的语言代码类型
+export type LocaleCode = string;
+
+// 本地化值类型
 export type SourceParseValue = {
   key: string;
   value: string;
   description: string;
-  localeZh: string;
-  localeEn: string;
+  [key: string]: string;
 };
 
 /**
@@ -46,12 +86,149 @@ export type SourceParseValue = {
  * @class
  */
 export class Ts2Locales {
+  private readonly options: Ts2LocalesOptions;
+
   /**
    * Creates a new Ts2Locales instance
    *
    * @param locales - Array of supported locale codes, e.g. ['zh', 'en']
+   * @param options - Configuration options
+   * @throws {Error} If locales array is empty
    */
-  constructor(private locales: string[]) {}
+  constructor(
+    private readonly locales: LocaleCode[],
+    options: Partial<Ts2LocalesOptions> = {}
+  ) {
+    if (!locales.length) {
+      throw new Error('At least one locale must be provided');
+    }
+
+    this.options = { ...DEFAULT_OPTIONS, ...options };
+  }
+
+  /**
+   * Converts a locale code to its corresponding metadata key
+   * @param locale - The locale code to convert
+   * @returns The metadata key for the locale
+   */
+  private getLocaleKey(locale: LocaleCode): `locale${Capitalize<LocaleCode>}` {
+    const capitalizedLocale = locale.charAt(0).toUpperCase() + locale.slice(1);
+    return `locale${capitalizedLocale}` as `locale${Capitalize<LocaleCode>}`;
+  }
+
+  /**
+   * Validates a string literal value
+   * @param value - The value to validate
+   * @param key - The key associated with the value (for error messages)
+   * @returns The cleaned string value
+   * @throws {Error} If the value is not a valid string literal
+   */
+  private validateStringLiteral(value: string, key: string): string {
+    const trimmedValue = value.trim();
+    if (trimmedValue.startsWith('{') || trimmedValue.startsWith('[')) {
+      throw new Error(
+        `Invalid value for key "${key}": Object or array values are not allowed, value: ${value}`
+      );
+    }
+    if (!trimmedValue.startsWith("'") && !trimmedValue.startsWith('"')) {
+      throw new Error(
+        `Invalid value for key "${key}": Only string literals are allowed, value: ${value}`
+      );
+    }
+    const match = trimmedValue.match(this.options.stringLiteralRegex);
+    if (!match) {
+      throw new Error(`Invalid string literal for key "${key}": ${value}`);
+    }
+    return match[1];
+  }
+
+  private extractMetadata(jsdoc: string): Record<string, string> {
+    const metadata: Record<string, string> = {
+      [this.options.descriptionKey]: ''
+    };
+
+    // Initialize values for provided locales only
+    for (const locale of this.locales) {
+      metadata[this.getLocaleKey(locale)] = '';
+    }
+
+    // Extract all lines starting with @
+    const lines = jsdoc.split('\n');
+    for (const line of lines) {
+      const match = line.match(this.options.metadataLineRegex);
+      if (match) {
+        const [, key, value = ''] = match;
+        if (key === this.options.descriptionKey) {
+          metadata[this.options.descriptionKey] = value.trim();
+        } else if (key.startsWith(this.options.localPrefix)) {
+          const locale = key
+            .slice(this.options.localPrefix.length)
+            .toLowerCase();
+          // Only process locales that were provided in constructor
+          if (this.locales.includes(locale)) {
+            const localeKey = this.getLocaleKey(locale);
+            metadata[localeKey] = value.trim();
+          }
+        }
+      }
+    }
+
+    return metadata;
+  }
+
+  parse(content: string): SourceParseValue[] {
+    const resultsMap = new Map<string, SourceParseValue>();
+
+    let match;
+    while ((match = this.options.jsdocRegex.exec(content)) !== null) {
+      const [, jsdoc, key, rawValue] = match;
+      const value = this.validateStringLiteral(rawValue, key);
+      const metadata = this.extractMetadata(jsdoc);
+
+      this.validateMetadata(metadata, key);
+
+      const entry: SourceParseValue = {
+        key,
+        value,
+        description: metadata[this.options.descriptionKey],
+        ...Object.fromEntries(
+          this.locales.map((locale) => [
+            this.getLocaleKey(locale),
+            metadata[this.getLocaleKey(locale)]
+          ])
+        )
+      };
+
+      // Store the entry in the map using value as the key instead of the constant name
+      resultsMap.set(entry.key, entry);
+    }
+
+    // Convert the map values back to an array
+    return Array.from(resultsMap.values());
+  }
+
+  /**
+   * Validates metadata and logs warnings for missing values
+   * @param metadata - The metadata to validate
+   * @param key - The key associated with the metadata
+   */
+  private validateMetadata(
+    metadata: Record<string, string>,
+    key: string
+  ): void {
+    if (!metadata[this.options.descriptionKey]) {
+      console.warn(`Warning: Empty @description found for key "${key}"`);
+    }
+
+    for (const locale of this.locales) {
+      const localeKey = this.getLocaleKey(locale);
+      if (!metadata[localeKey]) {
+        console.warn(
+          `Warning: Empty @${this.options.localPrefix}${locale} found for key "${key}"`
+        );
+      }
+    }
+  }
 
   /**
    * Extracts internationalization information from the source file
@@ -60,52 +237,7 @@ export class Ts2Locales {
    * @returns Array of extracted internationalization information objects
    */
   getSourceParseValue(source: string): SourceParseValue[] {
-    const content = readFileSync(source, 'utf-8');
-    const results: SourceParseValue[] = [];
-
-    // Use regular expressions to match JSDoc comments and exported constant declarations
-    const regex =
-      /\/\*\*\s*([\s\S]*?)\s*\*\/\s*export\s+const\s+([A-Z_]+)\s*=\s*['"]([^'"]+)['"]/g;
-
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      const jsdoc = match[1];
-      const key = match[2];
-      const value = match[3];
-
-      // Extract description from JSDoc
-      const descriptionMatch = /@description\s+(.*?)(\r?\n|$)/m.exec(jsdoc);
-      const description = descriptionMatch ? descriptionMatch[1].trim() : '';
-
-      // Create basic entry
-      const entry: SourceParseValue = {
-        key,
-        value,
-        description,
-        localeZh: '',
-        localeEn: ''
-      };
-
-      // Dynamically extract all tags starting with @local
-      const localRegex = /@local([A-Za-z]+)\s+(.*?)(\r?\n|$)/gm;
-      let localMatch;
-
-      while ((localMatch = localRegex.exec(jsdoc)) !== null) {
-        const locale = localMatch[1].toLowerCase(); // e.g. Zh, En, etc.
-        const localValue = localMatch[2].trim();
-
-        // Dynamically set localization values
-
-        // For other languages, dynamically add to the object
-        (entry as Record<string, string>)[
-          `locale${locale.charAt(0).toUpperCase()}${locale.slice(1)}`
-        ] = localValue;
-      }
-
-      results.push(entry);
-    }
-
-    return results;
+    return this.parse(readFileSync(source, 'utf-8'));
   }
 
   /**
@@ -115,7 +247,7 @@ export class Ts2Locales {
    * @param sourceParseValues - Array of internationalization information extracted from the source file
    * @returns Object containing the localization content
    */
-  createLocaleFile(
+  create(
     locale: string,
     sourceParseValues: SourceParseValue[]
   ): Record<string, string> {
@@ -123,7 +255,7 @@ export class Ts2Locales {
 
     for (const item of sourceParseValues) {
       // Dynamically get the localization value for the current language
-      const localeKey = `locale${locale.charAt(0).toUpperCase()}${locale.slice(1)}`;
+      const localeKey = this.getLocaleKey(locale);
       const itemKey = item[localeKey as keyof SourceParseValue];
 
       if (itemKey) {
@@ -155,7 +287,7 @@ export class Ts2Locales {
 
     for (const locale of this.locales) {
       // 2. Create localization file content
-      const localeFile = this.createLocaleFile(locale, sourceParseValues);
+      const localeJSONContent = this.create(locale, sourceParseValues);
 
       // 3. Read target file path
       const targetPath = target.replace('{{lng}}', locale);
@@ -164,7 +296,7 @@ export class Ts2Locales {
       if (existsSync(targetPath)) {
         const targetFile = readFileSync(targetPath, 'utf-8');
         const targetFileJson = JSON.parse(targetFile);
-        const mergedFile = { ...targetFileJson, ...localeFile };
+        const mergedFile = { ...targetFileJson, ...localeJSONContent };
         writeFileSync(targetPath, JSON.stringify(mergedFile, null, 2));
       } else {
         // If it doesn't exist, create directory path and new file
@@ -172,7 +304,7 @@ export class Ts2Locales {
         if (!existsSync(dirPath)) {
           mkdirSync(dirPath, { recursive: true });
         }
-        writeFileSync(targetPath, JSON.stringify(localeFile, null, 2));
+        writeFileSync(targetPath, JSON.stringify(localeJSONContent, null, 2));
       }
     }
   }

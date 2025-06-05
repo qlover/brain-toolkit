@@ -18,7 +18,7 @@ export default (opts: Ts2LocalesOptions = {}): Plugin => {
   const { locales = ['en', 'zh'], options = [] } = opts;
 
   return {
-    name: 'vite-env-config',
+    name: 'vite-ts2locales',
     async configResolved() {
       const ts2Locale = new Ts2Locales(locales);
       for (const value of options) {
