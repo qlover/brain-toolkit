@@ -75,6 +75,7 @@ pnpm add @brain-toolkit/element-sizer
 | 包名 | 版本 | 描述 |
 |------|------|------|
 | [@brain-toolkit/element-sizer](./packages/element-sizer/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM 元素展开/折叠动画工具 |
+| [@brain-toolkit/ts2locales](./packages/ts2locales/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales) | TypeScript 国际化文件生成工具 |
 
 ## 🛠️ 开发指南
 
