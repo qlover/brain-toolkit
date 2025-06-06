@@ -2,6 +2,29 @@ import { PluginOption } from 'vite';
 import fs from 'fs';
 import path from 'path';
 
+// Helper function to get dirname in both ESM and CJS
+const getDirname = (): string => {
+  try {
+    // For CJS
+    if (typeof __dirname !== 'undefined') {
+      return __dirname;
+    }
+    // For ESM
+    if (typeof import.meta.url === 'string') {
+      const pathname = new URL(import.meta.url).pathname;
+      // Remove leading slash on Windows and decode URI
+      const decodedPathname = decodeURIComponent(
+        process.platform === 'win32' ? pathname.slice(1) : pathname
+      );
+      return path.dirname(decodedPathname);
+    }
+    return process.cwd();
+  } catch {
+    // Fallback for browser environment
+    return process.cwd();
+  }
+};
+
 export type ViteDeprecatedAntdOptions = {
   /**
    * Whether to forbid the use of global antd components
@@ -53,10 +76,11 @@ export default (opts: ViteDeprecatedAntdOptions = {}): PluginOption => {
 
   return {
     name,
-    async configResolved() {
+    configResolved() {
       const absoluteTargetPath = path.resolve(process.cwd(), targetPath);
       const targetDir = path.dirname(absoluteTargetPath);
-      const templatePath = path.resolve(__dirname, '../assets/deprecated-ant');
+      const dirname = getDirname();
+      const templatePath = path.resolve(dirname, '../assets/deprecated-ant');
 
       if (mode === 'noGlobals') {
         // Create directory if it doesn't exist
