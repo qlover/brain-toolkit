@@ -1,6 +1,8 @@
 # brain-toolkit
 
-Brain AI Frontend Toolkit - Powerful frontend tools collection for AI applications
+English | [简体中文](./README.md)
+
+Frontend toolkit for Brain AI - Providing powerful frontend tools collection for AI applications
 
 ## 📖 Table of Contents
 
@@ -76,6 +78,7 @@ pnpm add @brain-toolkit/element-sizer
 | ------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------ |
 | [@brain-toolkit/element-sizer](./packages/element-sizer/README_EN.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM element expand/collapse animation tool |
 | [@brain-toolkit/ts2locales](./packages/ts2locales/README_EN.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales) | TypeScript internationalization file generator |
+| [@brain-toolkit/antd-theme-override](./packages/antd-theme-override/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/antd-theme-override) | Ant Design theme override and customization utility |
 
 ## 🛠️ Development Guide
 
