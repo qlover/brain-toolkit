@@ -1,5 +1,7 @@
 # brain-toolkit
 
+[English](./README_EN.md) | 简体中文
+
 Brain AI 前端工具包 - 为 AI 应用提供强大的前端工具集合
 
 ## 📖 目录
@@ -76,6 +78,7 @@ pnpm add @brain-toolkit/element-sizer
 |------|------|------|
 | [@brain-toolkit/element-sizer](./packages/element-sizer/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM 元素展开/折叠动画工具 |
 | [@brain-toolkit/ts2locales](./packages/ts2locales/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales) | TypeScript 国际化文件生成工具 |
+| [@brain-toolkit/antd-theme-override](./packages/antd-theme-override/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/antd-theme-override) | Ant Design 主题覆盖和自定义工具 |
 
 ## 🛠️ 开发指南
 
