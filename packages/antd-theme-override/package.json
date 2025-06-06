@@ -1,0 +1,58 @@
+{
+  "name": "@brain-toolkit/antd-theme-override",
+  "version": "0.0.1",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.js",
+      "require": "./dist/vite/index.cjs"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/antd-theme-override"
+  },
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "keywords": [
+    "brain toolkit",
+    "antd theme override"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.6",
+    "antd": "^5.25.3",
+    "react": "^18.3.1",
+    "vite": "^6.1.0"
+  }
+}
