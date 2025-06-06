@@ -1,5 +1,16 @@
 # @brain-toolkit/antd-theme-override
 
+## 0.0.3
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- **antd-theme-override:** Add helper function for directory resolution ([dcc2f16](https://github.com/qlover/brain-toolkit/commit/dcc2f16a518dec6a53d04162eb77c27d6902b14e)) ([#15](https://github.com/qlover/brain-toolkit/pull/15))
+
+  - Introduced a `getDirname` function to handle directory resolution for both ESM and CJS environments, improving compatibility across different module systems.
+  - Updated the `templatePath` resolution in the Vite plugin to utilize the new helper function, ensuring correct path handling regardless of the module type.
+
 ## 0.0.2
 
 ### Patch Changes
