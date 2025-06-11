@@ -1,4 +1,3 @@
-import { RequestAdapterConfig } from '@qlover/fe-corekit';
 import {
   LoginRequest,
   LoginResponseData,
@@ -6,12 +5,15 @@ import {
   UserInfoResponseData
 } from './UserAuthServiceInterface';
 import { UserAuthStoreInterface } from './UserAuthStoreInterface';
+import { UserAuthApi, UserAuthApiConfig } from './impl/UserAuthApi';
 
-export interface UserAuthOptions extends RequestAdapterConfig {
+export interface UserAuthOptions extends UserAuthApiConfig {
   /**
    * user auth service
    *
    * implement api request
+   *
+   * @default `UserAuthApi`
    */
   service?: UserAuthServiceInterface;
 
@@ -48,10 +50,12 @@ export interface UserAuthOptions extends RequestAdapterConfig {
  */
 export class UserAuth {
   constructor(protected options: UserAuthOptions) {
-    const store = options.store;
+    const { service, store, href, ...config } = options;
 
-    if (this.options.href && store) {
-      store.setToken(this.getTokenFromHref(this.options.href));
+    options.service = service || new UserAuthApi(config);
+
+    if (href && store) {
+      store.setToken(this.getTokenFromHref(href));
     }
   }
 

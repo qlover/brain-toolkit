@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
 
 export default defineConfig({
   test: {
@@ -10,6 +11,11 @@ export default defineConfig({
       // workspace:* case link to local package, has __tests__ folder
       'packages/**/node_modules/**'
     ],
-    alias: {}
+    alias: {
+      '@brain-toolkit/element-sizer': resolve(
+        __dirname,
+        'packages/element-sizer/__mocks__'
+      )
+    }
   }
 });

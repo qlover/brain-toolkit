@@ -40,7 +40,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@qlover/fe-corekit": "^1.4.0"
-  }
+  "dependencies": {}
 }
