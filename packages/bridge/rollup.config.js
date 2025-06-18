@@ -11,5 +11,5 @@ export default createBaseRollup({
   ],
   clean: false,
   excludeDependencies: true,
-  isProduction: true
+  isProduction: false
 });

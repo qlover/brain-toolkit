@@ -1,24 +1,5 @@
-import { CookieStorage } from '@qlover/corekit-bridge';
-import type { SyncStorage } from '@qlover/fe-corekit';
-import { ImagicaAuthServiceConfig } from './ImagicaAuthService';
+import type { ImagicaAuthServiceConfig } from './ImagicaAuthService';
 
-const defaultStorageMaps: Record<string, () => SyncStorage<string, string>> = {
-  cookie: () => new CookieStorage(),
-  localStorage: () => {
-    if (typeof window === 'undefined') {
-      throw new Error('localStorage is not supported');
-    }
-
-    return window.localStorage as SyncStorage<string, string>;
-  },
-  sessionStorage: () => {
-    if (typeof window === 'undefined') {
-      throw new Error('sessionStorage is not supported');
-    }
-
-    return window.sessionStorage as SyncStorage<string, string>;
-  }
-};
 export const defaultDomains: Record<string, string> = {
   development: 'https://api-dev.braininc.net',
   production: 'https://api.braininc.net'
@@ -27,10 +8,10 @@ export const defaultDomains: Record<string, string> = {
 export const defaultEnv = 'production';
 
 export const defaultOptions: Partial<ImagicaAuthServiceConfig> = {
-  storageKey: 'imagica-token',
-  expiresIn: 'month',
-  storageToken: 'localStorage',
-  storageMaps: defaultStorageMaps,
+  storageToken: {
+    storageKey: 'imagica-token',
+    expiresIn: 'month'
+  },
   domains: defaultDomains,
   env: defaultEnv,
   tokenPrefix: 'token',

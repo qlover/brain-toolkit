@@ -43,9 +43,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@qlover/corekit-bridge": "1.1.1",
-    "@qlover/fe-corekit": "^1.4.1",
-    "js-cookie": "^3.0.5"
+    "@qlover/corekit-bridge": "^1.1.2",
+    "@qlover/fe-corekit": "^1.4.1"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6"

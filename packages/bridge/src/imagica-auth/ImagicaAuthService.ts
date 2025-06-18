@@ -1,11 +1,7 @@
-import type { SyncStorage } from '@qlover/fe-corekit';
 import {
-  type LoginResponseData,
-  type StorageTokenInterface,
-  type UserAuthOptions,
   UserAuthService,
-  UserToken,
-  ExpiresInType
+  type LoginResponseData,
+  type UserAuthOptions
 } from '@qlover/corekit-bridge';
 import {
   ImagicaAuthApi,
@@ -18,68 +14,7 @@ import { defaultOptions } from './consts';
 export interface ImagicaAuthServiceConfig
   extends Omit<UserAuthOptions<UserInfoResponseData>, 'storageToken'>,
     ImagicaAuthApiConfig {
-  /**
-   * Persist token key
-   *
-   * @default 'imagica-token'
-   */
-  storageKey?: string;
-
-  /**
-   * Persist token expiration time
-   *
-   * @default 'month'
-   */
-  expiresIn?: ExpiresInType;
-
-  /**
-   * Persist token implementation
-   *
-   * Built-in four implementations
-   *
-   * - cookie
-   * - localStorage
-   * - sessionStorage
-   * - memory
-   *
-   * You can also pass in a custom StorageTokenInterface implementation
-   *
-   * @default 'localStorage'
-   */
-  storageToken?: string | StorageTokenInterface<string>;
-
-  /**
-   * Persist token implementation
-   *
-   * - cookie -> CookieStorage
-   * - localStorage -> window.localStorage
-   * - sessionStorage -> window.sessionStorage
-   * - memory -> undefined(use memory)
-   *
-   * @default `defaultStorageMaps`
-   */
-  storageMaps?: Record<string, () => SyncStorage<string, string>>;
-}
-
-function getDefaultStorage(config: ImagicaAuthServiceConfig) {
-  const { storageKey, storageToken, expiresIn, storageMaps } = config;
-
-  if (typeof storageToken !== 'string' && storageToken) {
-    return storageToken;
-  }
-
-  let syncStorage: SyncStorage<string, string> | undefined;
-
-  if (storageToken && storageMaps && storageMaps[storageToken]) {
-    syncStorage = storageMaps[storageToken]();
-  }
-
-  return new UserToken({
-    storageKey: storageKey!,
-    // storage can be undefined
-    storage: syncStorage!,
-    expiresIn
-  });
+  storageToken?: string | UserAuthOptions<UserInfoResponseData>['storageToken'];
 }
 
 /**
@@ -105,25 +40,17 @@ export class ImagicaAuthService<
 > extends UserAuthService<UserInfoResponseData, Opt> {
   constructor(options: Opt = {} as Opt) {
     const mergedOpts = { ...defaultOptions, ...options };
-    const storageToken = getDefaultStorage(mergedOpts);
 
-    const service =
-      mergedOpts.service ||
-      new ImagicaAuthApi({
-        ...mergedOpts,
-        token() {
-          return storageToken.getToken();
-        }
-      });
+    const service = mergedOpts.api || new ImagicaAuthApi(mergedOpts);
 
-    super({ ...mergedOpts, storageToken, service });
+    super({ ...mergedOpts, service });
   }
 
-  get service(): ImagicaAuthApi {
-    return this.options.service as ImagicaAuthApi;
+  get api(): ImagicaAuthApi {
+    return this.options.api as ImagicaAuthApi;
   }
 
   loginWithGoogle(params: LoginWithGoogleRequest): Promise<LoginResponseData> {
-    return this.service.loginWithGoogle(params);
+    return this.api.loginWithGoogle(params);
   }
 }

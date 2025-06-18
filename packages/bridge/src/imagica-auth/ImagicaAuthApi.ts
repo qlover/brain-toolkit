@@ -1,7 +1,8 @@
 import {
   type UserAuthApiInterface,
   type RequestCommonPluginConfig,
-  RequestCommonPlugin
+  RequestCommonPlugin,
+  UserAuthStore
 } from '@qlover/corekit-bridge';
 import {
   ExecutorPlugin,
@@ -118,6 +119,7 @@ export class ImagicaAuthApi
   implements UserAuthApiInterface<UserInfoResponseData>
 {
   protected adapter: RequestAdapterFetch;
+  protected userAuthStore?: UserAuthStore<UserInfoResponseData>;
 
   constructor(config: Partial<ImagicaAuthApiConfig>) {
     const {
@@ -132,7 +134,16 @@ export class ImagicaAuthApi
     });
 
     this.adapter.usePlugin(new FetchURLPlugin());
-    this.adapter.usePlugin(new RequestCommonPlugin(restConfig));
+    this.adapter.usePlugin(
+      new RequestCommonPlugin({
+        token: () => this.userAuthStore?.getToken() ?? null,
+        ...restConfig
+      })
+    );
+  }
+
+  setUserAuthStore(store: UserAuthStore<UserInfoResponseData>): void {
+    this.userAuthStore = store;
   }
 
   usePlugin(plugin: ExecutorPlugin): void {
