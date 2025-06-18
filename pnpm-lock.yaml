@@ -168,6 +168,22 @@ importers:
         specifier: ^6.1.0
         version: 6.3.3(@types/node@22.15.2)(jiti@2.4.2)(terser@5.39.0)(yaml@2.7.1)
 
+  packages/bridge:
+    dependencies:
+      '@qlover/corekit-bridge':
+        specifier: 1.1.1
+        version: 1.1.1
+      '@qlover/fe-corekit':
+        specifier: ^1.4.1
+        version: 1.4.1
+      js-cookie:
+        specifier: ^3.0.5
+        version: 3.0.5
+    devDependencies:
+      '@types/js-cookie':
+        specifier: ^3.0.6
+        version: 3.0.6
+
   packages/element-sizer: {}
 
   packages/ts2locales:
@@ -1356,6 +1372,9 @@ packages:
     resolution: {integrity: sha512-ROFF39F6ZrnzSUEmQQZUar0Jt4xVoP9WnDRdWwF4NNcXs3xBTLgBUDoOwW141y1jP+S8nahIbdxbFC7IShw9Iw==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
+  '@qlover/corekit-bridge@1.1.1':
+    resolution: {integrity: sha512-FARbqNm8B3jTMJLLog/w4KY3R0HVTNtwSYoaNQv9GMH0CrwWphU3rWxi7nskkVwnEPLNqr7B+gIfv3mK0Cu74Q==}
+
   '@qlover/env-loader@0.3.0':
     resolution: {integrity: sha512-YjdtKpmwhgIZAkWjreA3BA3XjmxP+0xXbUSnbJACua4yV1twmW+9uP+pHM2jEi7emG5VqD1w9tT8bHC43/1a6g==}
 
@@ -1368,6 +1387,9 @@ packages:
 
   '@qlover/fe-corekit@1.4.0':
     resolution: {integrity: sha512-7WWfs+6Z5rKF1WsCFAlwL563i9/fV9hndXWXsBu7MESPRdiMfIkIPuaV2+pQo1TFCfXCbjai6kCyxF6B78oQBw==}
+
+  '@qlover/fe-corekit@1.4.1':
+    resolution: {integrity: sha512-EcUZqdMstSDjdu9OTz9s1K5lSMVDSGbGDvK0N+vNeL3HfaGW/1K0ktgPbMN4jmKbelJGaxSDch/TYKABRBOGIQ==}
 
   '@qlover/fe-release@2.3.1':
     resolution: {integrity: sha512-ZZ6xrIywILGDspns1nZTKZl1mLMFGQIq0bhTQ2nQGWIqdaMjlaxJVNgy0YS8W6ZpbeYF2Jj3tokNhBWHvp+hUQ==}
@@ -1385,6 +1407,9 @@ packages:
 
   '@qlover/scripts-context@0.2.1':
     resolution: {integrity: sha512-aOXeQFSnfhMzeCUz5ECpoFK9nkuLl6ukj+fIYH0DSlcG7qbgApRMzUor0TgtESg14fxo4H5jbHRZEF6A61pO0w==}
+
+  '@qlover/slice-store@1.2.6':
+    resolution: {integrity: sha512-HlHCkFBCsQzOFKnc+lPLO7MtUrj2kb2GpBWZQCr6kuZXMpCP7gmitu1yV5itYO+7Bq4PeMmjQbXKW/802cJ5JA==}
 
   '@rc-component/async-validator@5.0.4':
     resolution: {integrity: sha512-qgGdcVIF604M9EqjNF0hbUTz42bz/RDtxWdWuU5EQe3hi7M8ob54B6B35rOsvX5eSvIHIzT9iH1R3n+hk3CGfg==}
@@ -1745,6 +1770,9 @@ packages:
 
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
+
+  '@types/js-cookie@3.0.6':
+    resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
 
   '@types/jsdom@21.1.7':
     resolution: {integrity: sha512-yOriVnggzrnQ3a9OKOCxaVuSug3w3/SbOj5i7VwXWZEyUNl3bLF9V3MfxGbZKuwqJOQyRfqXyROBB1CoZLFWzA==}
@@ -3089,6 +3117,10 @@ packages:
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
+
+  js-cookie@3.0.5:
+    resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
+    engines: {node: '>=14'}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -6089,6 +6121,13 @@ snapshots:
 
   '@pkgr/core@0.2.4': {}
 
+  '@qlover/corekit-bridge@1.1.1':
+    dependencies:
+      '@qlover/fe-corekit': 1.4.1
+      '@qlover/logger': 0.1.1
+      '@qlover/slice-store': 1.2.6
+      js-cookie: 3.0.5
+
   '@qlover/env-loader@0.3.0':
     dependencies:
       dotenv: 16.5.0
@@ -6101,6 +6140,11 @@ snapshots:
       merge: 2.1.1
 
   '@qlover/fe-corekit@1.4.0':
+    dependencies:
+      lodash: 4.17.21
+      merge: 2.1.1
+
+  '@qlover/fe-corekit@1.4.1':
     dependencies:
       lodash: 4.17.21
       merge: 2.1.1
@@ -6147,6 +6191,8 @@ snapshots:
       lodash: 4.17.21
     transitivePeerDependencies:
       - typescript
+
+  '@qlover/slice-store@1.2.6': {}
 
   '@rc-component/async-validator@5.0.4':
     dependencies:
@@ -6471,6 +6517,8 @@ snapshots:
       '@types/node': 22.15.2
 
   '@types/estree@1.0.7': {}
+
+  '@types/js-cookie@3.0.6': {}
 
   '@types/jsdom@21.1.7':
     dependencies:
@@ -7943,6 +7991,8 @@ snapshots:
   jju@1.4.0: {}
 
   joycon@3.1.1: {}
+
+  js-cookie@3.0.5: {}
 
   js-tokens@4.0.0: {}
 
