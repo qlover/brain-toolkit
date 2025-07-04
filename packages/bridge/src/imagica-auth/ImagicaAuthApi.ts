@@ -1,17 +1,16 @@
 import {
   type UserAuthApiInterface,
   type RequestCommonPluginConfig,
-  RequestCommonPlugin,
-  UserAuthStore
+  type UserAuthStoreInterface,
+  RequestCommonPlugin
 } from '@qlover/corekit-bridge';
 import {
-  ExecutorPlugin,
+  type ExecutorPlugin,
+  type RequestAdapterFetchConfig,
+  type RequestAdapterResponse,
   FetchURLPlugin,
-  RequestAdapterFetch,
-  RequestAdapterFetchConfig,
-  RequestAdapterResponse
+  RequestAdapterFetch
 } from '@qlover/fe-corekit';
-import { defaultDomains, defaultEnv } from './consts';
 
 export interface LoginRequest {
   email: string;
@@ -24,7 +23,7 @@ export interface LoginResponseData {
   [key: string]: unknown;
 }
 
-export class UserInfoResponseDataProfile {
+export interface UserInfoResponseDataProfile {
   phone_number?: string;
   da_email?: string;
   da_email_password?: string;
@@ -102,47 +101,51 @@ export interface ImagicaAuthApiConfig
    * @default `{ development: 'https://api-dev.braininc.net', production: 'https://api.braininc.net'}`
    */
   domains?: Record<string, string>;
+}
 
-  /**
-   * tokenPrefix
-   *
-   * @default `token`
-   */
-  tokenPrefix?: string;
+function parseAdapter(
+  config: Partial<ImagicaAuthApiConfig>,
+  userAuthStore: UserAuthStoreInterface<UserInfoResponseData> | null
+) {
+  const { env, domains, ...restConfig } = config;
+
+  const fetchAdapter = new RequestAdapterFetch({
+    baseURL: env && domains ? domains[env] : undefined,
+    ...restConfig
+  });
+
+  fetchAdapter.usePlugin(new FetchURLPlugin());
+
+  fetchAdapter.usePlugin(
+    new RequestCommonPlugin({
+      token: () => userAuthStore?.getCredential() ?? null,
+      ...restConfig
+    })
+  );
+
+  return fetchAdapter;
 }
 
 /**
  * User authentication API implementation
  * @since 0.0.1
  */
-export class ImagicaAuthApi
-  implements UserAuthApiInterface<UserInfoResponseData>
+export class ImagicaAuthApi<
+  User extends UserInfoResponseData = UserInfoResponseData
+> implements UserAuthApiInterface<User>
 {
   protected adapter: RequestAdapterFetch;
-  protected userAuthStore?: UserAuthStore<UserInfoResponseData>;
+  protected userAuthStore: UserAuthStoreInterface<User> | null = null;
 
   constructor(config: Partial<ImagicaAuthApiConfig>) {
-    const {
-      env = defaultEnv,
-      domains = defaultDomains,
-      ...restConfig
-    } = config;
-
-    this.adapter = new RequestAdapterFetch({
-      baseURL: env && domains ? domains[env] : undefined,
-      ...restConfig
-    });
-
-    this.adapter.usePlugin(new FetchURLPlugin());
-    this.adapter.usePlugin(
-      new RequestCommonPlugin({
-        token: () => this.userAuthStore?.getToken() ?? null,
-        ...restConfig
-      })
-    );
+    this.adapter = parseAdapter(config, this.userAuthStore);
   }
 
-  setUserAuthStore(store: UserAuthStore<UserInfoResponseData>): void {
+  getStore(): UserAuthStoreInterface<User> | null {
+    return this.userAuthStore ?? null;
+  }
+
+  setStore(store: UserAuthStoreInterface<User>): void {
     this.userAuthStore = store;
   }
 
@@ -188,8 +191,8 @@ export class ImagicaAuthApi
     return Promise.resolve();
   }
 
-  async getUserInfo(params: GetUserInfoRequest): Promise<UserInfoResponseData> {
-    const response = await this.request<{}, UserInfoResponseData>({
+  async getUserInfo(params: GetUserInfoRequest): Promise<User> {
+    const response = await this.request<{}, User>({
       url: '/api/users/me.json',
       method: 'GET',
       token: params.token

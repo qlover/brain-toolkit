@@ -5,49 +5,32 @@ import {
 } from '@qlover/corekit-bridge';
 import {
   ImagicaAuthApi,
-  type ImagicaAuthApiConfig,
+  ImagicaAuthApiConfig,
   type LoginWithGoogleRequest,
   type UserInfoResponseData
 } from './ImagicaAuthApi';
-import { defaultOptions } from './consts';
+import { defaultRequestConfig, mergedOptions } from './consts';
 
-export interface ImagicaAuthServiceConfig
-  extends Omit<UserAuthOptions<UserInfoResponseData>, 'storageToken'>,
-    ImagicaAuthApiConfig {
-  storageToken?: string | UserAuthOptions<UserInfoResponseData>['storageToken'];
+export interface ImagicaAuthServiceConfig<User> extends UserAuthOptions<User> {
+  requestConfig?: ImagicaAuthApiConfig;
 }
 
-/**
- * Imagica Auth Service
- *
- * @since 0.0.1
- *
- * @example basic usage
- * ```ts
- * const authService = new ImagicaAuthService();
- * ```
- *
- * @example custom storage
- *
- * ```ts
- * const authService = new ImagicaAuthService({
- *   storageToken: 'cookie',
- * });
- * ```
- */
 export class ImagicaAuthService<
-  Opt extends UserAuthOptions<UserInfoResponseData>
-> extends UserAuthService<UserInfoResponseData, Opt> {
+  User extends UserInfoResponseData = UserInfoResponseData,
+  Opt extends ImagicaAuthServiceConfig<User> = ImagicaAuthServiceConfig<User>
+> extends UserAuthService<User, Opt> {
   constructor(options: Opt = {} as Opt) {
-    const mergedOpts = { ...defaultOptions, ...options };
+    const { requestConfig, ...opts } = mergedOptions(options);
+    const { api, ...restOpts } = opts;
 
-    const service = mergedOpts.api || new ImagicaAuthApi(mergedOpts);
+    const service =
+      api || new ImagicaAuthApi(requestConfig || defaultRequestConfig());
 
-    super({ ...mergedOpts, service });
+    super({ ...restOpts, api: service } as Opt);
   }
 
-  get api(): ImagicaAuthApi {
-    return this.options.api as ImagicaAuthApi;
+  override get api(): ImagicaAuthApi<User> {
+    return this.options.api as ImagicaAuthApi<User>;
   }
 
   loginWithGoogle(params: LoginWithGoogleRequest): Promise<LoginResponseData> {

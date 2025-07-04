@@ -1,3 +1,5 @@
+import { SyncStorageInterface } from '@qlover/fe-corekit';
+import { ImagicaAuthApiConfig, UserInfoResponseData } from './ImagicaAuthApi';
 import type { ImagicaAuthServiceConfig } from './ImagicaAuthService';
 
 export const defaultDomains: Record<string, string> = {
@@ -5,16 +7,15 @@ export const defaultDomains: Record<string, string> = {
   production: 'https://api.braininc.net'
 };
 
+const isBrowser = typeof window !== 'undefined';
+
 export const defaultEnv = 'production';
 
-export const defaultOptions: Partial<ImagicaAuthServiceConfig> = {
-  storageToken: {
-    storageKey: 'imagica-token',
-    expiresIn: 'month'
-  },
-  domains: defaultDomains,
+export const defaultRequestConfig: () => ImagicaAuthApiConfig = () => ({
   env: defaultEnv,
+  domains: defaultDomains,
   tokenPrefix: 'token',
+  authKey: 'Authorization',
   responseType: 'json',
   requestDataSerializer: (data, context) => {
     if (data instanceof FormData) {
@@ -27,4 +28,65 @@ export const defaultOptions: Partial<ImagicaAuthServiceConfig> = {
 
     return data;
   }
-};
+});
+
+export const defaultOptions: () => Partial<
+  ImagicaAuthServiceConfig<UserInfoResponseData>
+> = () => ({
+  /**
+   * userStorage
+   *
+   * default not save userInfo
+   *
+   * @default false
+   */
+  userStorage: false,
+
+  /**
+   * credentialStorage
+   *
+   * - key is `imagica-token`
+   * - expires is `3 months`
+   */
+  credentialStorage: {
+    key: 'imagica-token',
+    expires: ['month', 3],
+    storage: isBrowser
+      ? (window.localStorage as SyncStorageInterface<string, string>)
+      : undefined
+  },
+
+  /**
+   * If is browser, you can set the href and tokenKey
+   *
+   * @default 'window.location.href'
+   */
+  href: isBrowser ? window.location.href : '',
+
+  tokenKey: 'imagica-token',
+
+  requestConfig: defaultRequestConfig
+});
+
+export function mergedOptions<User, Opt extends ImagicaAuthServiceConfig<User>>(
+  options: Opt
+): ImagicaAuthServiceConfig<User> {
+  const defaultOpts = defaultOptions();
+
+  const result = {
+    ...defaultOpts,
+    ...options,
+    requestConfig: { ...defaultOpts.requestConfig, ...options.requestConfig }
+  };
+
+  // set default headers
+  if (result.requestConfig?.responseType === 'json') {
+    if (!result.requestConfig.defaultHeaders) {
+      result.requestConfig.defaultHeaders = {
+        'Content-Type': 'application/json'
+      };
+    }
+  }
+
+  return result;
+}
