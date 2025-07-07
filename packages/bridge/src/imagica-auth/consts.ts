@@ -1,5 +1,5 @@
 import { SyncStorageInterface } from '@qlover/fe-corekit';
-import { ImagicaAuthApiConfig, UserInfoResponseData } from './ImagicaAuthApi';
+import { ImagicaAuthApiConfig } from './ImagicaAuthApi';
 import type { ImagicaAuthServiceConfig } from './ImagicaAuthService';
 
 export const defaultDomains: Record<string, string> = {
@@ -30,9 +30,7 @@ export const defaultRequestConfig: () => ImagicaAuthApiConfig = () => ({
   }
 });
 
-export const defaultOptions: () => Partial<
-  ImagicaAuthServiceConfig<UserInfoResponseData>
-> = () => ({
+export const defaultOptions: () => Partial<ImagicaAuthServiceConfig> = () => ({
   /**
    * userStorage
    *
@@ -65,12 +63,12 @@ export const defaultOptions: () => Partial<
 
   tokenKey: 'imagica-token',
 
-  requestConfig: defaultRequestConfig
+  requestConfig: defaultRequestConfig()
 });
 
-export function mergedOptions<User, Opt extends ImagicaAuthServiceConfig<User>>(
+export function mergedOptions<Opt extends ImagicaAuthServiceConfig>(
   options: Opt
-): ImagicaAuthServiceConfig<User> {
+): ImagicaAuthServiceConfig {
   const defaultOpts = defaultOptions();
 
   const result = {

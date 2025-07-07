@@ -1,36 +1,43 @@
 import {
+  UserAuthApiInterface,
   UserAuthService,
+  UserAuthStore,
   type LoginResponseData,
   type UserAuthOptions
 } from '@qlover/corekit-bridge';
 import {
   ImagicaAuthApi,
   ImagicaAuthApiConfig,
-  type LoginWithGoogleRequest,
-  type UserInfoResponseData
+  type LoginWithGoogleRequest
 } from './ImagicaAuthApi';
 import { defaultRequestConfig, mergedOptions } from './consts';
+import { ImagicaAuthState } from './ImagicaAuthState';
 
-export interface ImagicaAuthServiceConfig<User> extends UserAuthOptions<User> {
+export interface ImagicaAuthServiceConfig
+  extends UserAuthOptions<ImagicaAuthState> {
+  api?: UserAuthApiInterface<ImagicaAuthState>;
   requestConfig?: ImagicaAuthApiConfig;
 }
 
-export class ImagicaAuthService<
-  User extends UserInfoResponseData = UserInfoResponseData,
-  Opt extends ImagicaAuthServiceConfig<User> = ImagicaAuthServiceConfig<User>
-> extends UserAuthService<User, Opt> {
-  constructor(options: Opt = {} as Opt) {
+export class ImagicaAuthService extends UserAuthService<ImagicaAuthState> {
+  declare readonly api: ImagicaAuthApi;
+
+  constructor(options: ImagicaAuthServiceConfig) {
     const { requestConfig, ...opts } = mergedOptions(options);
     const { api, ...restOpts } = opts;
 
     const service =
       api || new ImagicaAuthApi(requestConfig || defaultRequestConfig());
 
-    super({ ...restOpts, api: service } as Opt);
+    super(service, restOpts);
   }
 
-  override get api(): ImagicaAuthApi<User> {
-    return this.options.api as ImagicaAuthApi<User>;
+  override get store(): UserAuthStore<ImagicaAuthState> {
+    return super.store as UserAuthStore<ImagicaAuthState>;
+  }
+
+  getState(): ImagicaAuthState {
+    return this.store.state;
   }
 
   loginWithGoogle(params: LoginWithGoogleRequest): Promise<LoginResponseData> {

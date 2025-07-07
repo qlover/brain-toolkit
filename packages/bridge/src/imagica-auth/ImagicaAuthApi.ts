@@ -11,6 +11,7 @@ import {
   FetchURLPlugin,
   RequestAdapterFetch
 } from '@qlover/fe-corekit';
+import { ImagicaAuthState } from './ImagicaAuthState';
 
 export interface LoginRequest {
   email: string;
@@ -28,7 +29,7 @@ export interface UserInfoResponseDataProfile {
   da_email?: string;
   da_email_password?: string;
   certificate?: string;
-  permissions?: Permissions[];
+  permissions?: string[];
   profile_img_url?: string;
   amplitude_device_id?: unknown;
   email_verified?: boolean;
@@ -105,7 +106,7 @@ export interface ImagicaAuthApiConfig
 
 function parseAdapter(
   config: Partial<ImagicaAuthApiConfig>,
-  userAuthStore: UserAuthStoreInterface<UserInfoResponseData> | null
+  userAuthStore: UserAuthStoreInterface<ImagicaAuthState> | null
 ) {
   const { env, domains, ...restConfig } = config;
 
@@ -130,22 +131,20 @@ function parseAdapter(
  * User authentication API implementation
  * @since 0.0.1
  */
-export class ImagicaAuthApi<
-  User extends UserInfoResponseData = UserInfoResponseData
-> implements UserAuthApiInterface<User>
-{
+export class ImagicaAuthApi implements UserAuthApiInterface<ImagicaAuthState> {
   protected adapter: RequestAdapterFetch;
-  protected userAuthStore: UserAuthStoreInterface<User> | null = null;
+  protected userAuthStore: UserAuthStoreInterface<ImagicaAuthState> | null =
+    null;
 
   constructor(config: Partial<ImagicaAuthApiConfig>) {
     this.adapter = parseAdapter(config, this.userAuthStore);
   }
 
-  getStore(): UserAuthStoreInterface<User> | null {
+  getStore(): UserAuthStoreInterface<ImagicaAuthState> | null {
     return this.userAuthStore ?? null;
   }
 
-  setStore(store: UserAuthStoreInterface<User>): void {
+  setStore(store: UserAuthStoreInterface<ImagicaAuthState>): void {
     this.userAuthStore = store;
   }
 
@@ -191,8 +190,8 @@ export class ImagicaAuthApi<
     return Promise.resolve();
   }
 
-  async getUserInfo(params: GetUserInfoRequest): Promise<User> {
-    const response = await this.request<{}, User>({
+  async getUserInfo(params: GetUserInfoRequest): Promise<UserInfoResponseData> {
+    const response = await this.request<{}, UserInfoResponseData>({
       url: '/api/users/me.json',
       method: 'GET',
       token: params.token

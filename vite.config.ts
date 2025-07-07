@@ -17,5 +17,8 @@ export default defineConfig({
         'packages/element-sizer/__mocks__'
       )
     }
+  },
+  ssr: {
+    noExternal: ['@qlover/corekit-bridge', '@qlover/fe-corekit']
   }
 });
