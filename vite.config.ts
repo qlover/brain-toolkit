@@ -19,6 +19,6 @@ export default defineConfig({
     }
   },
   ssr: {
-    noExternal: ['@qlover/corekit-bridge', '@qlover/fe-corekit']
+    noExternal: ['@qlover/corekit-bridge']
   }
 });

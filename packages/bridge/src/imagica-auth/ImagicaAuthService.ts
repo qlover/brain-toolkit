@@ -36,6 +36,10 @@ export class ImagicaAuthService extends UserAuthService<ImagicaAuthState> {
     return super.store as UserAuthStore<ImagicaAuthState>;
   }
 
+  reset(): void {
+    this.store.reset();
+  }
+
   getState(): ImagicaAuthState {
     return this.store.state;
   }
