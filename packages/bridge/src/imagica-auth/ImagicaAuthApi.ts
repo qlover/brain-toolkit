@@ -11,7 +11,6 @@ import {
   FetchURLPlugin,
   RequestAdapterFetch
 } from '@qlover/fe-corekit';
-import { ImagicaAuthState } from './ImagicaAuthState';
 
 export interface LoginRequest {
   email: string;
@@ -106,7 +105,7 @@ export interface ImagicaAuthApiConfig
 
 function parseAdapter(
   config: Partial<ImagicaAuthApiConfig>,
-  userAuthStore: UserAuthStoreInterface<ImagicaAuthState> | null
+  userAuthStore: UserAuthStoreInterface<UserInfoResponseData> | null
 ) {
   const { env, domains, ...restConfig } = config;
 
@@ -131,20 +130,22 @@ function parseAdapter(
  * User authentication API implementation
  * @since 0.0.1
  */
-export class ImagicaAuthApi implements UserAuthApiInterface<ImagicaAuthState> {
+export class ImagicaAuthApi
+  implements UserAuthApiInterface<UserInfoResponseData>
+{
   protected adapter: RequestAdapterFetch;
-  protected userAuthStore: UserAuthStoreInterface<ImagicaAuthState> | null =
+  protected userAuthStore: UserAuthStoreInterface<UserInfoResponseData> | null =
     null;
 
   constructor(config: Partial<ImagicaAuthApiConfig>) {
     this.adapter = parseAdapter(config, this.userAuthStore);
   }
 
-  getStore(): UserAuthStoreInterface<ImagicaAuthState> | null {
+  getStore(): UserAuthStoreInterface<UserInfoResponseData> | null {
     return this.userAuthStore ?? null;
   }
 
-  setStore(store: UserAuthStoreInterface<ImagicaAuthState>): void {
+  setStore(store: UserAuthStoreInterface<UserInfoResponseData>): void {
     this.userAuthStore = store;
   }
 

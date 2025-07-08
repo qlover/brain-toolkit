@@ -1,18 +1,3 @@
-/**
- * ImagicaAuthApi test suite
- *
- * Significance: Comprehensive testing for Imagica authentication API
- * Core idea: Test all authentication methods and configurations
- * Main function: Ensure ImagicaAuthApi works correctly with different scenarios
- * Main purpose: Validate API interactions and error handling
- *
- * @example
- * ```ts
- * import { describe, it, expect } from 'vitest';
- * import { ImagicaAuthApi } from '../../src/imagica-auth/ImagicaAuthApi';
- * ```
- */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Import after mocking

@@ -1,21 +1,22 @@
 import {
-  UserAuthApiInterface,
-  UserAuthService,
-  UserAuthStore,
+  type PickUser,
+  type UserAuthOptions,
   type LoginResponseData,
-  type UserAuthOptions
+  UserAuthStore,
+  UserAuthService,
+  UserAuthApiInterface
 } from '@qlover/corekit-bridge';
 import {
+  type LoginWithGoogleRequest,
   ImagicaAuthApi,
-  ImagicaAuthApiConfig,
-  type LoginWithGoogleRequest
+  ImagicaAuthApiConfig
 } from './ImagicaAuthApi';
 import { defaultRequestConfig, mergedOptions } from './consts';
 import { ImagicaAuthState } from './ImagicaAuthState';
 
 export interface ImagicaAuthServiceConfig
   extends UserAuthOptions<ImagicaAuthState> {
-  api?: UserAuthApiInterface<ImagicaAuthState>;
+  api?: UserAuthApiInterface<PickUser<ImagicaAuthState>>;
   requestConfig?: ImagicaAuthApiConfig;
 }
 
