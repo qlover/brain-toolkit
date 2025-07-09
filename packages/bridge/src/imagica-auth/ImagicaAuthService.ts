@@ -13,6 +13,7 @@ import {
 } from './ImagicaAuthApi';
 import { defaultRequestConfig, mergedOptions } from './consts';
 import { ImagicaAuthState } from './ImagicaAuthState';
+import { ExecutorPlugin } from '@qlover/fe-corekit';
 
 export interface ImagicaAuthServiceConfig
   extends UserAuthOptions<ImagicaAuthState> {
@@ -23,7 +24,7 @@ export interface ImagicaAuthServiceConfig
 export class ImagicaAuthService extends UserAuthService<ImagicaAuthState> {
   declare readonly api: ImagicaAuthApi;
 
-  constructor(options: ImagicaAuthServiceConfig) {
+  constructor(options?: ImagicaAuthServiceConfig) {
     const { requestConfig, ...opts } = mergedOptions(options);
     const { api, ...restOpts } = opts;
 
@@ -35,6 +36,12 @@ export class ImagicaAuthService extends UserAuthService<ImagicaAuthState> {
 
   override get store(): UserAuthStore<ImagicaAuthState> {
     return super.store as UserAuthStore<ImagicaAuthState>;
+  }
+
+  use(plugin: ExecutorPlugin): this {
+    this.api.usePlugin(plugin);
+
+    return this;
   }
 
   reset(): void {

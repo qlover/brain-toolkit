@@ -11,6 +11,7 @@ import {
   FetchURLPlugin,
   RequestAdapterFetch
 } from '@qlover/fe-corekit';
+import { apiIdentifier } from './consts';
 
 export interface LoginRequest {
   email: string;
@@ -34,15 +35,15 @@ export interface UserInfoResponseDataProfile {
   email_verified?: boolean;
 }
 
-export interface UserInfoResponseData {
-  id?: number;
-  email?: string;
-  name?: string;
+export interface UserInfoResponseData extends LoginResponseData {
+  id: number;
+  email: string;
+  name: string;
   first_name?: string;
   middle_name?: string;
   last_name?: string;
   profile?: UserInfoResponseDataProfile;
-  auth_token?: {
+  auth_token: {
     key: string;
   };
   is_guest?: boolean;
@@ -79,6 +80,13 @@ export interface RegisterRequest {
 
 export interface GetUserInfoRequest {
   token?: string;
+}
+
+export interface LogoutResponseData {
+  /**
+   * logout success is : "logged out"
+   */
+  message?: string;
 }
 
 export interface ImagicaAuthApiConfig
@@ -149,6 +157,10 @@ export class ImagicaAuthApi
     this.userAuthStore = store;
   }
 
+  getConfig(): ImagicaAuthApiConfig {
+    return this.adapter.getConfig();
+  }
+
   usePlugin(plugin: ExecutorPlugin): void {
     this.adapter.usePlugin(plugin);
   }
@@ -166,7 +178,8 @@ export class ImagicaAuthApi
       LoginWithGoogleRequest,
       LoginResponseData
     >({
-      url: '/api/auth/google/imagica/token',
+      requestId: apiIdentifier.loginWithGoogle,
+      url: apiIdentifier.loginWithGoogle,
       method: 'POST',
       data: params
     });
@@ -179,21 +192,37 @@ export class ImagicaAuthApi
    * @param params 注册参数
    * @returns 注册响应数据
    */
-  register(params: RegisterRequest): Promise<LoginResponseData> {
-    return this.request<RegisterRequest, LoginResponseData>({
-      url: '/api/auth/token.json',
+  async register(params: RegisterRequest): Promise<UserInfoResponseData> {
+    const response = await this.request<RegisterRequest, UserInfoResponseData>({
+      requestId: apiIdentifier.register,
+      url: apiIdentifier.register,
       method: 'POST',
       data: params
     });
+
+    return response.data;
   }
 
-  logout(): Promise<void> {
-    return Promise.resolve();
+  /**
+   * 登出
+   * @returns 登出响应数据
+   */
+  async logout(): Promise<void> {
+    const response = await this.request<undefined, LogoutResponseData>({
+      requestId: apiIdentifier.logout,
+      url: apiIdentifier.logout,
+      method: 'GET'
+    });
+
+    // FIXME: corekit-bridge logout only return void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response.data as any;
   }
 
   async getUserInfo(params: GetUserInfoRequest): Promise<UserInfoResponseData> {
     const response = await this.request<{}, UserInfoResponseData>({
-      url: '/api/users/me.json',
+      requestId: apiIdentifier.getUserInfo,
+      url: apiIdentifier.getUserInfo,
       method: 'GET',
       token: params.token
     });
@@ -208,7 +237,8 @@ export class ImagicaAuthApi
    */
   async login(params: LoginRequest): Promise<LoginResponseData> {
     const response = await this.request<LoginRequest, LoginResponseData>({
-      url: '/api/auth/token.json',
+      requestId: apiIdentifier.login,
+      url: apiIdentifier.login,
       method: 'POST',
       data: params,
       authKey: false

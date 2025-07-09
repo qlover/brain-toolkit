@@ -1,6 +1,7 @@
 import { SyncStorageInterface } from '@qlover/fe-corekit';
 import { ImagicaAuthApiConfig } from './ImagicaAuthApi';
 import type { ImagicaAuthServiceConfig } from './ImagicaAuthService';
+import { ImagicaAuthState } from './ImagicaAuthState';
 
 export const defaultDomains: Record<string, string> = {
   development: 'https://api-dev.braininc.net',
@@ -10,6 +11,24 @@ export const defaultDomains: Record<string, string> = {
 const isBrowser = typeof window !== 'undefined';
 
 export const defaultEnv = 'production';
+
+export const apiIdentifier = {
+  login: '/api/auth/token.json',
+  register: '/api/users/signup.json',
+  getUserInfo: '/api/users/me.json',
+  loginWithGoogle: '/api/auth/google/imagica/token',
+  /**
+   * This api only support admin?
+   * @see https://ai-dev.braininc.net/admin/#/signin
+   */
+  logout: '/api/users/signout'
+};
+
+export const imagicaIdentifier = {
+  fatalError: 'imagica.auth.fatal.error',
+  notValidLoginResponse: 'imagica.auth.response.not_valid.login',
+  notValidUserInfo: 'imagica.auth.response.not_valid.user_info'
+};
 
 export const defaultRequestConfig: () => ImagicaAuthApiConfig = () => ({
   env: defaultEnv,
@@ -67,7 +86,7 @@ export const defaultOptions: () => Partial<ImagicaAuthServiceConfig> = () => ({
 });
 
 export function mergedOptions<Opt extends ImagicaAuthServiceConfig>(
-  options: Opt
+  options: Opt = {} as Opt
 ): ImagicaAuthServiceConfig {
   const defaultOpts = defaultOptions();
 
@@ -84,6 +103,13 @@ export function mergedOptions<Opt extends ImagicaAuthServiceConfig>(
         'Content-Type': 'application/json'
       };
     }
+  }
+
+  // set default state
+  if (!result.store) {
+    result.store = {
+      defaultState: () => new ImagicaAuthState()
+    };
   }
 
   return result;

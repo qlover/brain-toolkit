@@ -1,100 +1,117 @@
 # Testing Guide
 
-This document introduces the testing strategy, tool selection, and best practices for the brain-toolkit project.
+> This document briefly introduces the testing strategy and best practices for the **brain-toolkit** project in a monorepo scenario, using [Vitest](https://vitest.dev/) as the unified testing framework.
 
-## Testing Framework Selection
+---
 
-### Why Choose Vitest?
+## Why Choose Vitest
 
-We chose [Vitest](https://vitest.dev/) as our primary testing framework for the following reasons:
+1. **Perfect integration with Vite ecosystem**: Shares Vite configuration, TypeScript & ESM out of the box.
+2. **Modern features**: Parallel execution, HMR, built-in coverage statistics.
+3. **Jest-compatible API**: `describe / it / expect` APIs with no learning curve.
+4. **Monorepo friendly**: Can filter execution by workspace, easy to run package-level tests in parallel in CI.
 
-#### 1. **Perfect Integration with Vite Ecosystem**
-- Shares Vite configuration, no additional setup required
-- TypeScript and ESM support out of the box
-- Hot reload testing for excellent development experience
-
-#### 2. **Modern Features**
-- Native ES module support
-- Zero-config TypeScript
-- Parallel test execution for faster performance
-- Built-in code coverage reporting
-
-#### 3. **Jest-Compatible API**
-- Familiar `describe`, `it`, `expect` API
-- Rich assertion library
-- Comprehensive mocking capabilities
-
-#### 4. **Monorepo Friendly**
-- Supports workspace mode
-- Can run tests for specific packages
-- Automatic dependency handling
+---
 
 ## Test Types
 
-### Unit Tests
-Test individual functions, classes, or components.
+- **Unit Tests**: Verify the minimal behavior of functions, classes, or components.
+- **Integration Tests**: Verify collaboration and boundaries between multiple modules.
+- **End-to-End (E2E, introduce Playwright/Cypress as needed)**: Verify complete user workflows.
 
-```typescript
-// packages/element-sizer/src/__tests__/element-sizer.test.ts
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ElementResizer } from '../element-sizer';
+> ⚡️ In most cases, prioritize writing unit tests; only supplement with integration tests when cross-module interactions are complex.
 
-describe('ElementResizer', () => {
-  let mockElement: HTMLElement;
+---
 
-  beforeEach(() => {
-    // Create mock DOM element
-    mockElement = document.createElement('div');
-    document.body.appendChild(mockElement);
-  });
+## Test File Organization Standards
 
-  it('should create instance with default options', () => {
-    const resizer = new ElementResizer({ target: mockElement });
-    expect(resizer.target).toBe(mockElement);
-    expect(resizer.animationState).toBe('idle');
-  });
+### File Naming and Location
 
-  it('should expand element correctly', async () => {
-    const resizer = new ElementResizer({ target: mockElement });
-    resizer.expand();
-    expect(resizer.animationState).toBe('expanding');
-  });
-});
+```
+packages/
+├── package-name/
+│   ├── __tests__/           # Test files directory
+│   │   ├── Class.test.ts    # Class tests
+│   │   ├── utils/           # Utility function tests
+│   │   │   └── helper.test.ts
+│   │   └── integration/     # Integration tests
+│   ├── __mocks__/           # Mock files directory
+│   │   └── index.ts
+│   └── src/                 # Source code directory
 ```
 
-### Integration Tests
-Test interactions between multiple modules.
+### Test File Structure
 
 ```typescript
-// packages/element-sizer/src/__tests__/integration.test.ts
-import { describe, it, expect } from 'vitest';
-import { ElementResizer } from '../element-sizer';
+// Standard test file header comment
+/**
+ * ClassName test-suite
+ *
+ * Coverage:
+ * 1. constructor       – Constructor tests
+ * 2. methodName        – Method functionality tests
+ * 3. edge cases        – Edge case tests
+ * 4. error handling    – Error handling tests
+ */
 
-describe('ElementResizer Integration', () => {
-  it('should work with real DOM elements', () => {
-    // Create complete DOM structure
-    const container = document.createElement('div');
-    const content = document.createElement('div');
-    content.innerHTML = '<p>Test content</p>';
-    container.appendChild(content);
-    document.body.appendChild(container);
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { ClassName } from '../src/ClassName';
 
-    const resizer = new ElementResizer({
-      target: container,
-      placeholder: true,
-      expandClassName: 'expanded'
+describe('ClassName', () => {
+  // Test data and Mock objects
+  let instance: ClassName;
+  let mockDependency: MockType;
+
+  // Setup and cleanup
+  beforeEach(() => {
+    // Initialize test environment
+    mockDependency = createMockDependency();
+    instance = new ClassName(mockDependency);
+  });
+
+  afterEach(() => {
+    // Clean up test environment
+    vi.clearAllMocks();
+  });
+
+  // Constructor tests
+  describe('constructor', () => {
+    it('should create instance with valid parameters', () => {
+      expect(instance).toBeInstanceOf(ClassName);
     });
 
-    // Test complete expand/collapse flow
-    resizer.expand();
-    expect(container.classList.contains('expanded')).toBe(true);
+    it('should throw error with invalid parameters', () => {
+      expect(() => new ClassName(null)).toThrow();
+    });
+  });
+
+  // Method test grouping
+  describe('methodName', () => {
+    it('should handle normal case', () => {
+      // Test normal cases
+    });
+
+    it('should handle edge cases', () => {
+      // Test edge cases
+    });
+
+    it('should handle error cases', () => {
+      // Test error cases
+    });
+  });
+
+  // Integration tests
+  describe('integration tests', () => {
+    it('should work with dependent modules', () => {
+      // Test module collaboration
+    });
   });
 });
 ```
 
-## Test Configuration
+---
 
-### Vitest Configuration File
+## Vitest Global Configuration Example
 
 ```typescript
 // vitest.config.ts
@@ -103,48 +120,24 @@ import { resolve } from 'path';
 
 export default defineConfig({
   test: {
-    // Test environment
-    environment: 'jsdom',
-    
-    // Global settings
     globals: true,
-    
-    // Coverage configuration
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        '**/coverage/**'
-      ]
-    },
-    
-    // Test file matching patterns
-    include: ['**/__tests__/**/*.{test,spec}.{js,ts}'],
-    
-    // Set timeout
-    testTimeout: 10000,
-    
-    // Alias configuration - for mocking inter-package dependencies
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
     alias: {
-      '@brain-toolkit/element-sizer': resolve(__dirname, 'packages/element-sizer/__mocks__'),
-      // Example configuration for future packages
-      // '@brain-toolkit/package-a': resolve(__dirname, 'packages/package-a/__mocks__'),
-      // '@brain-toolkit/package-b': resolve(__dirname, 'packages/package-b/__mocks__'),
+      // Automatically mock certain packages in test environment, pointing to __mocks__ directory
+      '@brain-toolkit/element-sizer': resolve(
+        __dirname,
+        'packages/element-sizer/__mocks__'
+      )
     }
   }
 });
 ```
 
-### Package-Level Configuration
+### Package-level Scripts
 
-Each package can have its own test configuration:
-
-```json
-// packages/element-sizer/package.json
+```jsonc
+// packages/xxx/package.json (example)
 {
   "scripts": {
     "test": "vitest run",
@@ -154,360 +147,450 @@ Each package can have its own test configuration:
 }
 ```
 
-### __mocks__ Directory Configuration
+---
 
-To solve testing issues with inter-package dependencies in monorepo, we use the `__mocks__` directory to provide mock entries.
+## Testing Strategy
 
-#### Directory Structure
+### Test Grouping
 
-```
-packages/element-sizer/
-├── src/
-│   ├── __tests__/           # Test directory
-│   │   ├── unit/           # Unit tests
-│   │   ├── integration/    # Integration tests
-│   │   └── fixtures/       # Test data
-│   ├── element-sizer.ts
-│   └── index.ts
-├── __mocks__/               # Mock entry directory (for dependency mocks when other packages test)
-│   ├── index.ts            # Main mock entry
-│   ├── element-resizer.ts  # Detailed mock implementation
-│   └── utils.ts            # Utility function mocks
-├── dist/                   # Build output
-└── package.json
-```
+Each file is a test file, test content is organized by groups, such as describe as a group. Generally, there is only one describe at the root of a test file.
 
-#### Mock Entry File Example
+Content follows "small to large testing", for example: if the source file is a class, then test from constructor parameter passing, constructor, and each member method as groups.
 
-```typescript
-// packages/element-sizer/__mocks__/index.ts
-import { vi } from 'vitest';
+- Small to covering various parameter types for each method, large to the overall process affected when calling methods
+- As well as overall process testing and boundary testing
 
-// Create mock class for ElementResizer
-export class ElementResizer {
-  target: HTMLElement;
-  animationState: string = 'idle';
-  isAnimating: boolean = false;
+Source file (TestClass.ts):
 
-  constructor(options: { target: HTMLElement }) {
-    this.target = options.target;
-  }
-
-  expand = vi.fn(() => {
-    this.animationState = 'expanding';
-    // Simulate async operation
-    setTimeout(() => {
-      this.animationState = 'expanded';
-    }, 100);
-  });
-
-  collapse = vi.fn(() => {
-    this.animationState = 'collapsing';
-    setTimeout(() => {
-      this.animationState = 'collapsed';
-    }, 100);
-  });
-
-  fixedCurrentTargetRect = vi.fn();
-  cancelAnimation = vi.fn();
-}
-
-// Default export
-export default ElementResizer;
-
-// Other possible exports
-export const createElementResizer = vi.fn((options) => new ElementResizer(options));
-export const utils = {
-  calculateSize: vi.fn(),
-  animateElement: vi.fn()
+```ts
+type TestClassOptions = {
+  name: string;
 };
+
+class TestClass {
+  constructor(options: TestClassOptions) {}
+
+  getName(): string {
+    return this.options.name;
+  }
+
+  setName(name: string): void {
+    this.options.name = name;
+  }
+}
 ```
 
-#### Using Mocks in Other Packages
+Test file (TestClass.test.ts):
 
-Suppose we have a new package `package-a` that depends on `element-sizer`:
+```ts
+describe('TestClass', () => {
+  describe('TestClass.constructor', () => {
+    // ...
+  });
+  describe('TestClass.getName', () => {
+    // ...
+  });
 
-```typescript
-// packages/package-a/src/__tests__/component.test.ts
-import { describe, it, expect, vi } from 'vitest';
-import { ElementResizer } from '@brain-toolkit/element-sizer'; // Automatically points to mock
-import { MyComponent } from '../component';
-
-describe('MyComponent', () => {
-  it('should use ElementResizer correctly', () => {
-    const mockElement = document.createElement('div');
-    const component = new MyComponent(mockElement);
-    
-    // Since we're using mocks, ElementResizer here is the mocked version
-    expect(ElementResizer).toHaveBeenCalled();
-    
-    component.expand();
-    expect(ElementResizer.prototype.expand).toHaveBeenCalled();
+  describe('Overall process or boundary tests', () => {
+    it('should maintain consistency between getName after modifying name', () => {
+      const testClass = new TestClass({ name: 'test' });
+      testClass.setName('test2');
+      expect(testClass.getName()).toBe('test2');
+    });
   });
 });
 ```
 
-#### Advanced Mock Configuration
-
-For more complex mock requirements, you can create multiple mock files:
-
-```
-packages/element-sizer/__mocks__/
-├── index.ts                 # Main mock entry
-├── element-resizer.ts       # Detailed mock for ElementResizer class
-├── utils.ts                 # Mock for utility functions
-└── types.ts                 # Mock for type definitions
-```
+### Test Case Naming Conventions
 
 ```typescript
-// packages/element-sizer/__mocks__/element-resizer.ts
+describe('ClassName', () => {
+  describe('methodName', () => {
+    // Positive test cases
+    it('should return expected result when given valid input', () => {});
+    it('should handle multiple parameters correctly', () => {});
+
+    // Boundary test cases
+    it('should handle empty input', () => {});
+    it('should handle null/undefined input', () => {});
+    it('should handle maximum/minimum values', () => {});
+
+    // Error test cases
+    it('should throw error when given invalid input', () => {});
+    it('should handle network failure gracefully', () => {});
+
+    // Behavior test cases
+    it('should call dependency method with correct parameters', () => {});
+    it('should not call dependency when condition is false', () => {});
+  });
+});
+```
+
+### Test Data Management
+
+```typescript
+describe('DataProcessor', () => {
+  // Test data constants
+  const VALID_DATA = {
+    id: 1,
+    name: 'test',
+    items: ['a', 'b', 'c']
+  };
+
+  const INVALID_DATA = {
+    id: null,
+    name: '',
+    items: []
+  };
+
+  // Test data factory functions
+  const createTestUser = (overrides = {}) => ({
+    id: 1,
+    name: 'Test User',
+    email: 'test@example.com',
+    ...overrides
+  });
+
+  // Complex data structures
+  const createComplexTestData = () => ({
+    metadata: {
+      version: '1.0.0',
+      created: Date.now(),
+      tags: ['test', 'data']
+    },
+    users: [
+      createTestUser({ id: 1 }),
+      createTestUser({ id: 2, name: 'Another User' })
+    ]
+  });
+});
+```
+
+---
+
+## Mock Strategy
+
+### 1. Global Mock Directory
+
+Each package can expose a subdirectory with the same name, providing persistent Mocks for automatic use by other packages during testing.
+
+```typescript
+// packages/pkg-1/__mocks__/index.ts
 import { vi } from 'vitest';
 
-export class ElementResizer {
-  // Detailed mock implementation
-  private _target: HTMLElement;
-  private _state: string = 'idle';
-  
-  constructor(options: { target: HTMLElement }) {
-    this._target = options.target;
+export const MyUtility = {
+  doSomething: vi.fn(() => 'mocked'),
+  processData: vi.fn((input: string) => `processed-${input}`)
+};
+export default MyUtility;
+```
+
+### 2. File-level Mock
+
+```typescript
+// At the top of test file
+vi.mock('../src/Util', () => ({
+  Util: {
+    ensureDir: vi.fn(),
+    readFile: vi.fn()
   }
-  
-  get target() { return this._target; }
-  get animationState() { return this._state; }
-  get isAnimating() { return this._state.includes('ing'); }
-  
-  expand = vi.fn().mockImplementation(() => {
-    this._state = 'expanding';
-    return Promise.resolve();
+}));
+
+vi.mock('js-cookie', () => {
+  let store: Record<string, string> = {};
+
+  const get = vi.fn((key?: string) => {
+    if (typeof key === 'string') return store[key];
+    return { ...store };
   });
-  
-  collapse = vi.fn().mockImplementation(() => {
-    this._state = 'collapsing';
-    return Promise.resolve();
+
+  const set = vi.fn((key: string, value: string) => {
+    store[key] = value;
   });
+
+  const remove = vi.fn((key: string) => {
+    delete store[key];
+  });
+
+  const __resetStore = () => {
+    store = {};
+  };
+
+  return {
+    default: { get, set, remove, __resetStore }
+  };
+});
+```
+
+### 3. Dynamic Mock
+
+```typescript
+describe('ServiceClass', () => {
+  it('should handle API failure', async () => {
+    // Temporarily mock API call failure
+    vi.spyOn(apiClient, 'request').mockRejectedValue(
+      new Error('Network error')
+    );
+
+    await expect(service.fetchData()).rejects.toThrow('Network error');
+
+    // Restore original implementation
+    vi.restoreAllMocks();
+  });
+});
+```
+
+### 4. Mock Class Instances
+
+```typescript
+class MockStorage<Key = string> implements SyncStorageInterface<Key> {
+  public data = new Map<string, string>();
+  public calls: {
+    setItem: Array<{ key: Key; value: unknown; options?: unknown }>;
+    getItem: Array<{ key: Key; defaultValue?: unknown; options?: unknown }>;
+    removeItem: Array<{ key: Key; options?: unknown }>;
+    clear: number;
+  } = {
+    setItem: [],
+    getItem: [],
+    removeItem: [],
+    clear: 0
+  };
+
+  setItem<T>(key: Key, value: T, options?: unknown): void {
+    this.calls.setItem.push({ key, value, options });
+    this.data.set(String(key), String(value));
+  }
+
+  getItem<T>(key: Key, defaultValue?: T, options?: unknown): T | null {
+    this.calls.getItem.push({ key, defaultValue, options });
+    const value = this.data.get(String(key));
+    return (value ?? defaultValue ?? null) as T | null;
+  }
+
+  reset(): void {
+    this.data.clear();
+    this.calls = {
+      setItem: [],
+      getItem: [],
+      removeItem: [],
+      clear: 0
+    };
+  }
 }
 ```
 
-```typescript
-// packages/element-sizer/__mocks__/index.ts
-export { ElementResizer } from './element-resizer';
-export { mockUtils as utils } from './utils';
-export * from './types';
-```
+---
 
-#### Conditional Mocks
+## Test Environment Management
 
-Sometimes you may need different mock behaviors in different tests:
+### Lifecycle Hooks
 
 ```typescript
-// packages/package-a/src/__tests__/advanced.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+describe('ComponentTest', () => {
+  let component: Component;
+  let mockDependency: MockDependency;
 
-// Dynamic import to allow re-mocking
-const mockElementResizer = vi.hoisted(() => ({
-  ElementResizer: vi.fn()
-}));
+  beforeAll(() => {
+    // One-time setup before entire test suite runs
+    setupGlobalTestEnvironment();
+  });
 
-vi.mock('@brain-toolkit/element-sizer', () => mockElementResizer);
+  afterAll(() => {
+    // One-time cleanup after entire test suite runs
+    cleanupGlobalTestEnvironment();
+  });
 
-describe('Advanced Mock Tests', () => {
   beforeEach(() => {
+    // Setup before each test case
+    vi.useFakeTimers();
+    mockDependency = new MockDependency();
+    component = new Component(mockDependency);
+  });
+
+  afterEach(() => {
+    // Cleanup after each test case
+    vi.useRealTimers();
     vi.clearAllMocks();
-  });
-
-  it('should handle success case', () => {
-    // Configure successful mock behavior
-    mockElementResizer.ElementResizer.mockImplementation(() => ({
-      expand: vi.fn().mockResolvedValue(true),
-      animationState: 'expanded'
-    }));
-    
-    // Test code...
-  });
-
-  it('should handle error case', () => {
-    // Configure failure mock behavior
-    mockElementResizer.ElementResizer.mockImplementation(() => ({
-      expand: vi.fn().mockRejectedValue(new Error('Animation failed')),
-      animationState: 'error'
-    }));
-    
-    // Test code...
+    mockDependency.reset();
   });
 });
 ```
 
-## Testing Best Practices
-
-### 1. Test File Organization
-
-```
-packages/element-sizer/
-├── src/
-│   ├── __tests__/           # Test directory
-│   │   ├── unit/           # Unit tests
-│   │   ├── integration/    # Integration tests
-│   │   └── fixtures/       # Test data
-│   ├── element-sizer.ts
-│   └── index.ts
-├── __mocks__/               # Mock entry directory (for dependency mocks when other packages test)
-│   ├── index.ts            # Main mock entry
-│   ├── element-resizer.ts  # Detailed mock implementation
-│   └── utils.ts            # Utility function mocks
-├── dist/                   # Build output
-└── package.json
-```
-
-### 2. Naming Conventions
-
-- Test files: `*.test.ts` or `*.spec.ts`
-- Test descriptions: Use clear English descriptions
-- Test cases: Follow "should + action + expected result" format
-- Mock files: Same name as original file, placed in `__mocks__` directory
-
-### 3. Mock Strategies
-
-#### Browser API Mocks
+### File System Testing
 
 ```typescript
-// Mock DOM API
-vi.mock('window', () => ({
-  requestAnimationFrame: vi.fn((cb) => setTimeout(cb, 16)),
-  cancelAnimationFrame: vi.fn()
-}));
+describe('FileProcessor', () => {
+  const testDir = './test-files';
+  const testFilePath = path.join(testDir, 'test.json');
 
-// Mock third-party libraries
-vi.mock('some-library', () => ({
-  default: vi.fn(),
-  namedExport: vi.fn()
-}));
-```
+  beforeAll(() => {
+    // Create test directory and files
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir, { recursive: true });
+    }
+    fs.writeFileSync(testFilePath, JSON.stringify({ test: 'data' }));
+  });
 
-#### Inter-Package Dependency Mocks
+  afterAll(() => {
+    // Clean up test files
+    if (fs.existsSync(testDir)) {
+      fs.rmSync(testDir, { recursive: true, force: true });
+    }
+  });
 
-Through vitest alias configuration, automatically point package dependencies to `__mocks__` directory:
-
-```typescript
-// Direct import in tests will automatically use mock version
-import { ElementResizer } from '@brain-toolkit/element-sizer';
-
-// This actually imports packages/element-sizer/__mocks__/index.ts
-```
-
-#### Creating Package Mock Entries
-
-Each package should provide a `__mocks__` directory for easy use by other packages during testing:
-
-```typescript
-// packages/element-sizer/__mocks__/index.ts
-import { vi } from 'vitest';
-
-export class ElementResizer {
-  // Mock implementation, maintaining consistent interface with real API
-  target: HTMLElement;
-  animationState: string = 'idle';
-  
-  constructor(options: { target: HTMLElement }) {
-    this.target = options.target;
-  }
-  
-  expand = vi.fn();
-  collapse = vi.fn();
-  fixedCurrentTargetRect = vi.fn();
-  cancelAnimation = vi.fn();
-}
-
-export default ElementResizer;
-```
-
-### 4. Async Testing
-
-```typescript
-it('should handle async operations', async () => {
-  const resizer = new ElementResizer({ target: mockElement });
-  
-  // Using Promise
-  await resizer.expand();
-  expect(resizer.animationState).toBe('expanded');
-  
-  // Using waitFor
-  await vi.waitFor(() => {
-    expect(mockElement.style.height).toBe('auto');
+  it('should process file correctly', () => {
+    const processor = new FileProcessor();
+    const result = processor.processFile(testFilePath);
+    expect(result).toEqual({ test: 'data' });
   });
 });
 ```
+
+---
+
+## Boundary Testing and Error Handling
+
+### Boundary Value Testing
+
+```typescript
+describe('ValidationUtils', () => {
+  describe('validateAge', () => {
+    it('should handle boundary values', () => {
+      // Boundary value testing
+      expect(validateAge(0)).toBe(true); // Minimum value
+      expect(validateAge(150)).toBe(true); // Maximum value
+      expect(validateAge(-1)).toBe(false); // Below minimum
+      expect(validateAge(151)).toBe(false); // Above maximum
+    });
+
+    it('should handle edge cases', () => {
+      // Edge case testing
+      expect(validateAge(null)).toBe(false);
+      expect(validateAge(undefined)).toBe(false);
+      expect(validateAge(NaN)).toBe(false);
+      expect(validateAge(Infinity)).toBe(false);
+    });
+  });
+});
+```
+
+### Async Operation Testing
+
+```typescript
+describe('AsyncService', () => {
+  it('should handle successful async operation', async () => {
+    const service = new AsyncService();
+    const result = await service.fetchData();
+    expect(result).toBeDefined();
+  });
+
+  it('should handle async operation failure', async () => {
+    const service = new AsyncService();
+    vi.spyOn(service, 'apiCall').mockRejectedValue(new Error('API Error'));
+
+    await expect(service.fetchData()).rejects.toThrow('API Error');
+  });
+
+  it('should handle timeout', async () => {
+    vi.useFakeTimers();
+    const service = new AsyncService();
+
+    const promise = service.fetchDataWithTimeout(1000);
+    vi.advanceTimersByTime(1001);
+
+    await expect(promise).rejects.toThrow('Timeout');
+    vi.useRealTimers();
+  });
+});
+```
+
+### Type Safety Testing
+
+```typescript
+describe('TypeSafetyTests', () => {
+  it('should maintain type safety', () => {
+    const processor = new DataProcessor<User>();
+
+    // Use expectTypeOf for type checking
+    expectTypeOf(processor.process).parameter(0).toEqualTypeOf<User>();
+    expectTypeOf(processor.process).returns.toEqualTypeOf<ProcessedUser>();
+  });
+});
+```
+
+---
+
+## Performance Testing
+
+```typescript
+describe('PerformanceTests', () => {
+  it('should complete operation within time limit', async () => {
+    const startTime = Date.now();
+    const processor = new DataProcessor();
+
+    await processor.processLargeDataset(largeDataset);
+
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+
+    expect(duration).toBeLessThan(1000); // Should complete within 1 second
+  });
+});
+```
+
+---
 
 ## Running Tests
 
-### Basic Commands
-
 ```bash
-# Run all tests
+# Run all package tests
 pnpm test
+
+# Run only specified package
+pnpm --filter @brain-toolkit/element-sizer test
 
 # Watch mode
 pnpm test:watch
 
 # Generate coverage report
 pnpm test:coverage
-
-# Run tests for specific package
-pnpm --filter @brain-toolkit/element-sizer test
-
-# Run specific test file
-pnpm test element-sizer.test.ts
 ```
 
-### Testing in CI/CD
+In CI, you can use GitHub Actions:
 
 ```yaml
-# .github/workflows/test.yml
-name: Test
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: pnpm install
-      - run: pnpm test:coverage
-      - uses: codecov/codecov-action@v3
+# .github/workflows/test.yml (truncated)
+- run: pnpm install
+- run: pnpm test:coverage
+- uses: codecov/codecov-action@v3
 ```
 
-## Test Coverage
+---
 
-### Coverage Goals
+## Coverage Targets
 
-- **Statement Coverage**: >= 80%
-- **Branch Coverage**: >= 75%
-- **Function Coverage**: >= 85%
-- **Line Coverage**: >= 80%
+| Metric    | Target |
+| --------- | ------ |
+| Statement | ≥ 80%  |
+| Branch    | ≥ 75%  |
+| Function  | ≥ 85%  |
+| Line      | ≥ 80%  |
 
-### Viewing Coverage Reports
+Coverage reports are output to the `coverage/` directory by default, and `index.html` can be browsed locally.
 
-```bash
-# Generate coverage report
-pnpm test:coverage
+---
 
-# View detailed report in browser
-open coverage/index.html
-```
+## Debugging
 
-## Debugging Tests
+### VS Code Launch Configuration
 
-### VS Code Debug Configuration
-
-```json
-// .vscode/launch.json
+```jsonc
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Vitest Tests",
+      "name": "Debug Vitest",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
@@ -519,64 +602,61 @@ open coverage/index.html
 }
 ```
 
-### Debugging Tips
+> You can use `console.log` / `debugger` in test code to assist with debugging.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### Q1: How to Mock browser APIs?
+
+Use `vi.mock()` or globally override in `setupFiles`, for example:
 
 ```typescript
-// Use console.log for debugging
-it('should debug test', () => {
-  console.log('Debug info:', someVariable);
-  expect(someVariable).toBe(expectedValue);
-});
-
-// Use debugger breakpoints
-it('should use debugger', () => {
-  debugger; // Pause here
-  expect(true).toBe(true);
-});
+globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 16);
 ```
 
-## Common Issues
+### Q2: What to do when tests are slow?
 
-### Q: How to test DOM operations?
-A: Use jsdom environment, Vitest automatically provides DOM APIs.
+- Use `vi.useFakeTimers()` to accelerate time-related logic.
+- Split long integration processes into independent unit tests.
 
-### Q: How to mock browser APIs?
-A: Use `vi.mock()` or globally mock in `setupFiles`.
+### Q3: How to test TypeScript types?
 
-### Q: What to do when tests run slowly?
-A: Check for unnecessary async operations, use `vi.useFakeTimers()` to speed up time-related tests.
-
-### Q: How to test TypeScript types?
-A: Use `expectTypeOf` or `assertType` for type testing.
+Use `expectTypeOf`:
 
 ```typescript
 import { expectTypeOf } from 'vitest';
 
-it('should have correct types', () => {
-  expectTypeOf(resizer.target).toEqualTypeOf<HTMLElement>();
+expectTypeOf(MyUtility.doSomething).returns.toEqualTypeOf<string>();
+```
+
+### Q4: How to test private methods?
+
+```typescript
+// Access private methods through type assertion
+it('should test private method', () => {
+  const instance = new MyClass();
+  const result = (instance as any).privateMethod();
+  expect(result).toBe('expected');
 });
 ```
 
-### Q: How to test inter-package dependencies in monorepo?
-A: Use `__mocks__` directory and vitest alias configuration. Configure aliases in the root `vitest.config.ts` to point package names to corresponding `__mocks__` directories.
-
-### Q: What should the __mocks__ directory contain?
-A: 
-- `index.ts` - Main mock exports, maintaining the same API interface as the real package
-- Specific mock implementation files like `element-resizer.ts`, `utils.ts`, etc.
-- Mocks should provide the same interface as real implementations but use `vi.fn()` to create controllable functions
-
-### Q: How to keep mocks in sync with real implementations?
-A: 
-1. Add checks in CI/CD to ensure mock interfaces match real interfaces
-2. Use TypeScript type checking to verify mock correctness
-3. Regularly review and update mock implementations
-
-### Q: When to use vi.mock() vs __mocks__ directory?
-A: 
-- Use `__mocks__` directory: For persistent mocks of inter-package dependencies, shared across multiple test files
-- Use `vi.mock()`: For temporary mocks in specific tests, scenarios requiring different behaviors
+### Q5: How to handle testing with dependency injection?
 
 ```typescript
-export default ElementResizer;
-``` 
+describe('ServiceWithDependencies', () => {
+  let mockRepository: MockRepository;
+  let service: UserService;
+
+  beforeEach(() => {
+    mockRepository = new MockRepository();
+    service = new UserService(mockRepository);
+  });
+
+  it('should use injected dependency', () => {
+    service.getUser(1);
+    expect(mockRepository.findById).toHaveBeenCalledWith(1);
+  });
+});
+```

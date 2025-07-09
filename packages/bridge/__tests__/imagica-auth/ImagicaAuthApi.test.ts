@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// Import after mocking
 import { ImagicaAuthApi } from '../../src/imagica-auth/ImagicaAuthApi';
 
 describe('ImagicaAuthApi', () => {
@@ -10,7 +8,8 @@ describe('ImagicaAuthApi', () => {
     vi.clearAllMocks();
     api = new ImagicaAuthApi({
       env: 'development',
-      domains: { development: 'https://api-dev.example.com' }
+      domains: { development: 'https://api-dev.example.com' },
+      fetcher: vi.fn()
     });
   });
 
@@ -86,6 +85,7 @@ describe('ImagicaAuthApi', () => {
 
       expect(mockRequest).toHaveBeenCalledWith({
         url: '/api/auth/token.json',
+        requestId: '/api/auth/token.json',
         method: 'POST',
         data: loginData,
         authKey: false
@@ -112,6 +112,7 @@ describe('ImagicaAuthApi', () => {
       const result = await api.loginWithGoogle(googleData);
 
       expect(mockRequest).toHaveBeenCalledWith({
+        requestId: '/api/auth/google/imagica/token',
         url: '/api/auth/google/imagica/token',
         method: 'POST',
         data: googleData
@@ -137,6 +138,7 @@ describe('ImagicaAuthApi', () => {
       const result = await api.getUserInfo({ token: 'test-token' });
 
       expect(mockRequest).toHaveBeenCalledWith({
+        requestId: '/api/users/me.json',
         url: '/api/users/me.json',
         method: 'GET',
         token: 'test-token'
@@ -150,7 +152,23 @@ describe('ImagicaAuthApi', () => {
     });
 
     it('should handle logout', async () => {
-      await expect(api.logout()).resolves.toBeUndefined();
+      // Mock the request method to avoid actual network calls
+      const mockRequest = vi.spyOn(api, 'request').mockResolvedValue({
+        data: { message: 'logged out' },
+        status: 200,
+        statusText: 'OK',
+        headers: { 'Content-Type': 'application/json' },
+        config: { url: '/api/users/signout', method: 'GET' },
+        response: new Response()
+      });
+
+      await api.logout();
+
+      expect(mockRequest).toHaveBeenCalledWith({
+        requestId: '/api/users/signout',
+        url: '/api/users/signout',
+        method: 'GET'
+      });
     });
   });
 });
