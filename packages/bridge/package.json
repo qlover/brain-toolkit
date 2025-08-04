@@ -1,0 +1,49 @@
+{
+  "name": "@brain-toolkit/bridge",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/bridge"
+  },
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "keywords": [
+    "brain toolkit",
+    "imagica-auth",
+    "imagica",
+    "braininc",
+    "bridge"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@qlover/corekit-bridge": "^1.4.0",
+    "@qlover/fe-corekit": "^2.0.1"
+  }
+}

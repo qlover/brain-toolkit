@@ -5,7 +5,7 @@ import {
   writeFileSync,
   unlinkSync,
   mkdirSync,
-  rmdirSync,
+  rmSync,
   existsSync,
   readFileSync
 } from 'fs';
@@ -53,10 +53,10 @@ export const TEST = 'test.constant';
       unlinkSync(enLocaleFile);
     }
     // Remove test directories
-    rmdirSync(join(testDir, 'locales/zh'), { recursive: true });
-    rmdirSync(join(testDir, 'locales/en'), { recursive: true });
-    rmdirSync(join(testDir, 'locales'), { recursive: true });
-    rmdirSync(testDir, { recursive: true });
+    rmSync(join(testDir, 'locales/zh'), { recursive: true, force: true });
+    rmSync(join(testDir, 'locales/en'), { recursive: true, force: true });
+    rmSync(join(testDir, 'locales'), { recursive: true, force: true });
+    rmSync(testDir, { recursive: true, force: true });
   });
 
   it('should create plugin with default options', () => {

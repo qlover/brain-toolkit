@@ -1,100 +1,117 @@
 # 测试指南
 
-本文档介绍 brain-toolkit 项目的测试策略、工具选择和最佳实践。
+> 本文档简要介绍 **brain-toolkit** 项目在 monorepo 场景下的测试策略与最佳实践，使用 [Vitest](https://vitest.dev/) 作为统一测试框架。
 
-## 测试框架选择
+---
 
-### 为什么选择 Vitest？
+## 为何选择 Vitest
 
-我们选择 [Vitest](https://vitest.dev/) 作为主要测试框架，原因如下：
+1. **与 Vite 生态完美集成**：共享 Vite 配置，TypeScript & ESM 开箱即用。
+2. **现代特性**：并行执行、HMR、内置覆盖率统计。
+3. **Jest 兼容 API**：`describe / it / expect` 等 API 无学习成本。
+4. **Monorepo 友好**：可按 workspace 过滤执行，易于在 CI 中并行跑包级测试。
 
-#### 1. **与 Vite 生态完美集成**
-- 共享 Vite 的配置，无需额外配置
-- 支持 TypeScript、ESM 开箱即用
-- 热重载测试，开发体验极佳
-
-#### 2. **现代化特性**
-- 原生 ES 模块支持
-- TypeScript 零配置
-- 并行测试执行，速度更快
-- 内置代码覆盖率报告
-
-#### 3. **Jest 兼容的 API**
-- 熟悉的 `describe`、`it`、`expect` API
-- 丰富的断言库
-- Mock 功能完善
-
-#### 4. **monorepo 友好**
-- 支持 workspace 模式
-- 可以针对特定包运行测试
-- 依赖关系自动处理
+---
 
 ## 测试类型
 
-### 单元测试 (Unit Tests)
-测试单个函数、类或组件的功能。
+- **单元测试 (Unit)**：验证函数、类或组件的最小行为。
+- **集成测试 (Integration)**：验证多个模块的协作与边界。
+- **端到端 (E2E，视需要引入 Playwright/Cypress)**：验证完整用户流程。
 
-```typescript
-// packages/element-sizer/src/__tests__/element-sizer.test.ts
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ElementResizer } from '../element-sizer';
+> ⚡️ 在绝大多数情况下，优先编写单元测试；仅在跨模块交互复杂时再补充集成测试。
 
-describe('ElementResizer', () => {
-  let mockElement: HTMLElement;
+---
 
-  beforeEach(() => {
-    // 创建模拟 DOM 元素
-    mockElement = document.createElement('div');
-    document.body.appendChild(mockElement);
-  });
+## 测试文件组织规范
 
-  it('should create instance with default options', () => {
-    const resizer = new ElementResizer({ target: mockElement });
-    expect(resizer.target).toBe(mockElement);
-    expect(resizer.animationState).toBe('idle');
-  });
+### 文件命名与位置
 
-  it('should expand element correctly', async () => {
-    const resizer = new ElementResizer({ target: mockElement });
-    resizer.expand();
-    expect(resizer.animationState).toBe('expanding');
-  });
-});
+```
+packages/
+├── package-name/
+│   ├── __tests__/           # 测试文件目录
+│   │   ├── Class.test.ts    # 类测试
+│   │   ├── utils/           # 工具函数测试
+│   │   │   └── helper.test.ts
+│   │   └── integration/     # 集成测试
+│   ├── __mocks__/           # Mock 文件目录
+│   │   └── index.ts
+│   └── src/                 # 源代码目录
 ```
 
-### 集成测试 (Integration Tests)
-测试多个模块之间的交互。
+### 测试文件结构
 
 ```typescript
-// packages/element-sizer/src/__tests__/integration.test.ts
-import { describe, it, expect } from 'vitest';
-import { ElementResizer } from '../element-sizer';
+// 标准测试文件头部注释
+/**
+ * ClassName test-suite
+ *
+ * Coverage:
+ * 1. constructor       – 构造函数测试
+ * 2. methodName        – 方法功能测试
+ * 3. edge cases        – 边界情况测试
+ * 4. error handling    – 错误处理测试
+ */
 
-describe('ElementResizer Integration', () => {
-  it('should work with real DOM elements', () => {
-    // 创建完整的 DOM 结构
-    const container = document.createElement('div');
-    const content = document.createElement('div');
-    content.innerHTML = '<p>Test content</p>';
-    container.appendChild(content);
-    document.body.appendChild(container);
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { ClassName } from '../src/ClassName';
 
-    const resizer = new ElementResizer({
-      target: container,
-      placeholder: true,
-      expandClassName: 'expanded'
+describe('ClassName', () => {
+  // 测试数据和Mock对象
+  let instance: ClassName;
+  let mockDependency: MockType;
+
+  // 设置和清理
+  beforeEach(() => {
+    // 初始化测试环境
+    mockDependency = createMockDependency();
+    instance = new ClassName(mockDependency);
+  });
+
+  afterEach(() => {
+    // 清理测试环境
+    vi.clearAllMocks();
+  });
+
+  // 构造函数测试
+  describe('constructor', () => {
+    it('should create instance with valid parameters', () => {
+      expect(instance).toBeInstanceOf(ClassName);
     });
 
-    // 测试完整的展开/折叠流程
-    resizer.expand();
-    expect(container.classList.contains('expanded')).toBe(true);
+    it('should throw error with invalid parameters', () => {
+      expect(() => new ClassName(null)).toThrow();
+    });
+  });
+
+  // 方法测试分组
+  describe('methodName', () => {
+    it('should handle normal case', () => {
+      // 测试正常情况
+    });
+
+    it('should handle edge cases', () => {
+      // 测试边界情况
+    });
+
+    it('should handle error cases', () => {
+      // 测试错误情况
+    });
+  });
+
+  // 集成测试
+  describe('integration tests', () => {
+    it('should work with dependent modules', () => {
+      // 测试模块间协作
+    });
   });
 });
 ```
 
-## 测试配置
+---
 
-### Vitest 配置文件
+## Vitest 全局配置示例
 
 ```typescript
 // vitest.config.ts
@@ -103,48 +120,24 @@ import { resolve } from 'path';
 
 export default defineConfig({
   test: {
-    // 测试环境
-    environment: 'jsdom',
-    
-    // 全局设置
     globals: true,
-    
-    // 覆盖率配置
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        '**/coverage/**'
-      ]
-    },
-    
-    // 测试文件匹配模式
-    include: ['**/__tests__/**/*.{test,spec}.{js,ts}'],
-    
-    // 设置超时时间
-    testTimeout: 10000,
-    
-    // 别名配置 - 用于包间依赖的 Mock
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
     alias: {
-      '@brain-toolkit/element-sizer': resolve(__dirname, 'packages/element-sizer/__mocks__'),
-      // 未来添加更多包时的配置示例
-      // '@brain-toolkit/package-a': resolve(__dirname, 'packages/package-a/__mocks__'),
-      // '@brain-toolkit/package-b': resolve(__dirname, 'packages/package-b/__mocks__'),
+      // 在测试环境下自动 Mock 某些包，指向 __mocks__ 目录
+      '@brain-toolkit/element-sizer': resolve(
+        __dirname,
+        'packages/element-sizer/__mocks__'
+      )
     }
   }
 });
 ```
 
-### 包级别配置
+### 包级脚本
 
-每个包可以有自己的测试配置：
-
-```json
-// packages/element-sizer/package.json
+```jsonc
+// packages/xxx/package.json (示例)
 {
   "scripts": {
     "test": "vitest run",
@@ -154,360 +147,450 @@ export default defineConfig({
 }
 ```
 
-### __mocks__ 目录配置
+---
 
-为了解决 monorepo 中包间依赖的测试问题，我们使用 `__mocks__` 目录提供 Mock 入口。
+## 测试策略
 
-#### 目录结构
+### 测试分组
 
-```
-packages/element-sizer/
-├── src/
-│   ├── __tests__/           # 测试目录
-│   │   ├── unit/           # 单元测试
-│   │   ├── integration/    # 集成测试
-│   │   └── fixtures/       # 测试数据
-│   ├── element-sizer.ts
-│   └── index.ts
-├── __mocks__/               # Mock 入口目录 (用于其他包测试时的依赖 Mock)
-│   ├── index.ts            # 主 Mock 入口
-│   ├── element-resizer.ts  # 详细 Mock 实现
-│   └── utils.ts            # 工具函数 Mock
-├── dist/                   # 构建产物
-└── package.json
-```
+整个文件为一个测试文件, 测试内容以分组为单位，比如describe为一组测试，一般一个测试文件根只有一个describe
 
-#### Mock 入口文件示例
+内容按照从"小到大测试", 比如: 源文件中是 class 那么从构造器传递参数，构造器，每个成员方法为分组进行测试
 
-```typescript
-// packages/element-sizer/__mocks__/index.ts
-import { vi } from 'vitest';
+- 小到每个方法传递各种参数类型的覆盖，大到调用方法时影响的整体流程
+- 以及整体的流程测试，边界测试
 
-// 创建 ElementResizer 的 Mock 类
-export class ElementResizer {
-  target: HTMLElement;
-  animationState: string = 'idle';
-  isAnimating: boolean = false;
+源文件(TestClass.ts):
 
-  constructor(options: { target: HTMLElement }) {
-    this.target = options.target;
-  }
-
-  expand = vi.fn(() => {
-    this.animationState = 'expanding';
-    // 模拟异步操作
-    setTimeout(() => {
-      this.animationState = 'expanded';
-    }, 100);
-  });
-
-  collapse = vi.fn(() => {
-    this.animationState = 'collapsing';
-    setTimeout(() => {
-      this.animationState = 'collapsed';
-    }, 100);
-  });
-
-  fixedCurrentTargetRect = vi.fn();
-  cancelAnimation = vi.fn();
-}
-
-// 默认导出
-export default ElementResizer;
-
-// 其他可能的导出
-export const createElementResizer = vi.fn((options) => new ElementResizer(options));
-export const utils = {
-  calculateSize: vi.fn(),
-  animateElement: vi.fn()
+```ts
+type TestClassOptions = {
+  name: string;
 };
+
+class TestClass {
+  constructor(options: TestClassOptions) {}
+
+  getName(): string {
+    return this.options.name;
+  }
+
+  setName(name: string): void {
+    this.options.name = name;
+  }
+}
 ```
 
-#### 在其他包中使用 Mock
+测试文件(TestClass.test.ts):
 
-假设我们有一个新的包 `package-a` 需要依赖 `element-sizer`：
+```ts
+describe('TestClass', () => {
+  describe('TestClass.constructor', () => {
+    // ...
+  });
+  describe('TestClass.getName', () => {
+    // ...
+  });
 
-```typescript
-// packages/package-a/src/__tests__/component.test.ts
-import { describe, it, expect, vi } from 'vitest';
-import { ElementResizer } from '@brain-toolkit/element-sizer'; // 自动指向 Mock
-import { MyComponent } from '../component';
-
-describe('MyComponent', () => {
-  it('should use ElementResizer correctly', () => {
-    const mockElement = document.createElement('div');
-    const component = new MyComponent(mockElement);
-    
-    // 由于使用了 Mock，这里的 ElementResizer 是被 Mock 的版本
-    expect(ElementResizer).toHaveBeenCalled();
-    
-    component.expand();
-    expect(ElementResizer.prototype.expand).toHaveBeenCalled();
+  describe('整体流程或边界测试', () => {
+    it('应该在修改name后，getName保持一致', () => {
+      const testClass = new TestClass({ name: 'test' });
+      testClass.setName('test2');
+      expect(testClass.getName()).toBe('test2');
+    });
   });
 });
 ```
 
-#### 高级 Mock 配置
-
-对于更复杂的 Mock 需求，可以创建多个 Mock 文件：
-
-```
-packages/element-sizer/__mocks__/
-├── index.ts                 # 主 Mock 入口
-├── element-resizer.ts       # ElementResizer 类的详细 Mock
-├── utils.ts                 # 工具函数的 Mock
-└── types.ts                 # 类型定义的 Mock
-```
+### 测试用例命名规范
 
 ```typescript
-// packages/element-sizer/__mocks__/element-resizer.ts
+describe('ClassName', () => {
+  describe('methodName', () => {
+    // 正面测试用例
+    it('should return expected result when given valid input', () => {});
+    it('should handle multiple parameters correctly', () => {});
+
+    // 边界测试用例
+    it('should handle empty input', () => {});
+    it('should handle null/undefined input', () => {});
+    it('should handle maximum/minimum values', () => {});
+
+    // 错误测试用例
+    it('should throw error when given invalid input', () => {});
+    it('should handle network failure gracefully', () => {});
+
+    // 行为测试用例
+    it('should call dependency method with correct parameters', () => {});
+    it('should not call dependency when condition is false', () => {});
+  });
+});
+```
+
+### 测试数据管理
+
+```typescript
+describe('DataProcessor', () => {
+  // 测试数据常量
+  const VALID_DATA = {
+    id: 1,
+    name: 'test',
+    items: ['a', 'b', 'c']
+  };
+
+  const INVALID_DATA = {
+    id: null,
+    name: '',
+    items: []
+  };
+
+  // 测试数据工厂函数
+  const createTestUser = (overrides = {}) => ({
+    id: 1,
+    name: 'Test User',
+    email: 'test@example.com',
+    ...overrides
+  });
+
+  // 复杂数据结构
+  const createComplexTestData = () => ({
+    metadata: {
+      version: '1.0.0',
+      created: Date.now(),
+      tags: ['test', 'data']
+    },
+    users: [
+      createTestUser({ id: 1 }),
+      createTestUser({ id: 2, name: 'Another User' })
+    ]
+  });
+});
+```
+
+---
+
+## Mock 策略
+
+### 1. 全局 Mock 目录
+
+每个包可暴露同名子目录，提供持久 Mock，供其他包在测试时自动使用。
+
+```typescript
+// packages/pkg-1/__mocks__/index.ts
 import { vi } from 'vitest';
 
-export class ElementResizer {
-  // 详细的 Mock 实现
-  private _target: HTMLElement;
-  private _state: string = 'idle';
-  
-  constructor(options: { target: HTMLElement }) {
-    this._target = options.target;
+export const MyUtility = {
+  doSomething: vi.fn(() => 'mocked'),
+  processData: vi.fn((input: string) => `processed-${input}`)
+};
+export default MyUtility;
+```
+
+### 2. 文件级 Mock
+
+```typescript
+// 在测试文件顶部
+vi.mock('../src/Util', () => ({
+  Util: {
+    ensureDir: vi.fn(),
+    readFile: vi.fn()
   }
-  
-  get target() { return this._target; }
-  get animationState() { return this._state; }
-  get isAnimating() { return this._state.includes('ing'); }
-  
-  expand = vi.fn().mockImplementation(() => {
-    this._state = 'expanding';
-    return Promise.resolve();
+}));
+
+vi.mock('js-cookie', () => {
+  let store: Record<string, string> = {};
+
+  const get = vi.fn((key?: string) => {
+    if (typeof key === 'string') return store[key];
+    return { ...store };
   });
-  
-  collapse = vi.fn().mockImplementation(() => {
-    this._state = 'collapsing';
-    return Promise.resolve();
+
+  const set = vi.fn((key: string, value: string) => {
+    store[key] = value;
   });
+
+  const remove = vi.fn((key: string) => {
+    delete store[key];
+  });
+
+  const __resetStore = () => {
+    store = {};
+  };
+
+  return {
+    default: { get, set, remove, __resetStore }
+  };
+});
+```
+
+### 3. 动态 Mock
+
+```typescript
+describe('ServiceClass', () => {
+  it('should handle API failure', async () => {
+    // 临时 Mock API 调用失败
+    vi.spyOn(apiClient, 'request').mockRejectedValue(
+      new Error('Network error')
+    );
+
+    await expect(service.fetchData()).rejects.toThrow('Network error');
+
+    // 恢复原始实现
+    vi.restoreAllMocks();
+  });
+});
+```
+
+### 4. Mock 类实例
+
+```typescript
+class MockStorage<Key = string> implements SyncStorageInterface<Key> {
+  public data = new Map<string, string>();
+  public calls: {
+    setItem: Array<{ key: Key; value: unknown; options?: unknown }>;
+    getItem: Array<{ key: Key; defaultValue?: unknown; options?: unknown }>;
+    removeItem: Array<{ key: Key; options?: unknown }>;
+    clear: number;
+  } = {
+    setItem: [],
+    getItem: [],
+    removeItem: [],
+    clear: 0
+  };
+
+  setItem<T>(key: Key, value: T, options?: unknown): void {
+    this.calls.setItem.push({ key, value, options });
+    this.data.set(String(key), String(value));
+  }
+
+  getItem<T>(key: Key, defaultValue?: T, options?: unknown): T | null {
+    this.calls.getItem.push({ key, defaultValue, options });
+    const value = this.data.get(String(key));
+    return (value ?? defaultValue ?? null) as T | null;
+  }
+
+  reset(): void {
+    this.data.clear();
+    this.calls = {
+      setItem: [],
+      getItem: [],
+      removeItem: [],
+      clear: 0
+    };
+  }
 }
 ```
 
-```typescript
-// packages/element-sizer/__mocks__/index.ts
-export { ElementResizer } from './element-resizer';
-export { mockUtils as utils } from './utils';
-export * from './types';
-```
+---
 
-#### 条件 Mock
+## 测试环境管理
 
-有时你可能需要在不同的测试中使用不同的 Mock 行为：
+### 生命周期钩子
 
 ```typescript
-// packages/package-a/src/__tests__/advanced.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+describe('ComponentTest', () => {
+  let component: Component;
+  let mockDependency: MockDependency;
 
-// 动态导入以便重新 Mock
-const mockElementResizer = vi.hoisted(() => ({
-  ElementResizer: vi.fn()
-}));
+  beforeAll(() => {
+    // 整个测试套件运行前的一次性设置
+    setupGlobalTestEnvironment();
+  });
 
-vi.mock('@brain-toolkit/element-sizer', () => mockElementResizer);
+  afterAll(() => {
+    // 整个测试套件运行后的一次性清理
+    cleanupGlobalTestEnvironment();
+  });
 
-describe('Advanced Mock Tests', () => {
   beforeEach(() => {
+    // 每个测试用例前的设置
+    vi.useFakeTimers();
+    mockDependency = new MockDependency();
+    component = new Component(mockDependency);
+  });
+
+  afterEach(() => {
+    // 每个测试用例后的清理
+    vi.useRealTimers();
     vi.clearAllMocks();
-  });
-
-  it('should handle success case', () => {
-    // 配置成功的 Mock 行为
-    mockElementResizer.ElementResizer.mockImplementation(() => ({
-      expand: vi.fn().mockResolvedValue(true),
-      animationState: 'expanded'
-    }));
-    
-    // 测试代码...
-  });
-
-  it('should handle error case', () => {
-    // 配置失败的 Mock 行为
-    mockElementResizer.ElementResizer.mockImplementation(() => ({
-      expand: vi.fn().mockRejectedValue(new Error('Animation failed')),
-      animationState: 'error'
-    }));
-    
-    // 测试代码...
+    mockDependency.reset();
   });
 });
 ```
 
-## 测试最佳实践
-
-### 1. 测试文件组织
-
-```
-packages/element-sizer/
-├── src/
-│   ├── __tests__/           # 测试目录
-│   │   ├── unit/           # 单元测试
-│   │   ├── integration/    # 集成测试
-│   │   └── fixtures/       # 测试数据
-│   ├── element-sizer.ts
-│   └── index.ts
-├── __mocks__/               # Mock 入口目录 (用于其他包测试时的依赖 Mock)
-│   ├── index.ts            # 主 Mock 入口
-│   ├── element-resizer.ts  # 详细 Mock 实现
-│   └── utils.ts            # 工具函数 Mock
-├── dist/                   # 构建产物
-└── package.json
-```
-
-### 2. 命名规范
-
-- 测试文件：`*.test.ts` 或 `*.spec.ts`
-- 测试描述：使用清晰的英文描述
-- 测试用例：遵循 "should + 动作 + 期望结果" 格式
-- Mock 文件：与原文件同名，放在 `__mocks__` 目录下
-
-### 3. Mock 策略
-
-#### 浏览器 API Mock
+### 文件系统测试
 
 ```typescript
-// Mock DOM API
-vi.mock('window', () => ({
-  requestAnimationFrame: vi.fn((cb) => setTimeout(cb, 16)),
-  cancelAnimationFrame: vi.fn()
-}));
+describe('FileProcessor', () => {
+  const testDir = './test-files';
+  const testFilePath = path.join(testDir, 'test.json');
 
-// Mock 第三方库
-vi.mock('some-library', () => ({
-  default: vi.fn(),
-  namedExport: vi.fn()
-}));
-```
+  beforeAll(() => {
+    // 创建测试目录和文件
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir, { recursive: true });
+    }
+    fs.writeFileSync(testFilePath, JSON.stringify({ test: 'data' }));
+  });
 
-#### 包间依赖 Mock
+  afterAll(() => {
+    // 清理测试文件
+    if (fs.existsSync(testDir)) {
+      fs.rmSync(testDir, { recursive: true, force: true });
+    }
+  });
 
-通过 vitest 别名配置，自动将包依赖指向 `__mocks__` 目录：
-
-```typescript
-// 在测试中直接导入，会自动使用 Mock 版本
-import { ElementResizer } from '@brain-toolkit/element-sizer';
-
-// 这实际上导入的是 packages/element-sizer/__mocks__/index.ts
-```
-
-#### 创建包的 Mock 入口
-
-每个包都应该提供 `__mocks__` 目录，方便其他包在测试时使用：
-
-```typescript
-// packages/element-sizer/__mocks__/index.ts
-import { vi } from 'vitest';
-
-export class ElementResizer {
-  // Mock 实现，保持与真实 API 一致的接口
-  target: HTMLElement;
-  animationState: string = 'idle';
-  
-  constructor(options: { target: HTMLElement }) {
-    this.target = options.target;
-  }
-  
-  expand = vi.fn();
-  collapse = vi.fn();
-  fixedCurrentTargetRect = vi.fn();
-  cancelAnimation = vi.fn();
-}
-
-export default ElementResizer;
-```
-
-### 4. 异步测试
-
-```typescript
-it('should handle async operations', async () => {
-  const resizer = new ElementResizer({ target: mockElement });
-  
-  // 使用 Promise
-  await resizer.expand();
-  expect(resizer.animationState).toBe('expanded');
-  
-  // 使用 waitFor
-  await vi.waitFor(() => {
-    expect(mockElement.style.height).toBe('auto');
+  it('should process file correctly', () => {
+    const processor = new FileProcessor();
+    const result = processor.processFile(testFilePath);
+    expect(result).toEqual({ test: 'data' });
   });
 });
 ```
+
+---
+
+## 边界测试与错误处理
+
+### 边界值测试
+
+```typescript
+describe('ValidationUtils', () => {
+  describe('validateAge', () => {
+    it('should handle boundary values', () => {
+      // 边界值测试
+      expect(validateAge(0)).toBe(true); // 最小值
+      expect(validateAge(150)).toBe(true); // 最大值
+      expect(validateAge(-1)).toBe(false); // 小于最小值
+      expect(validateAge(151)).toBe(false); // 大于最大值
+    });
+
+    it('should handle edge cases', () => {
+      // 边界情况测试
+      expect(validateAge(null)).toBe(false);
+      expect(validateAge(undefined)).toBe(false);
+      expect(validateAge(NaN)).toBe(false);
+      expect(validateAge(Infinity)).toBe(false);
+    });
+  });
+});
+```
+
+### 异步操作测试
+
+```typescript
+describe('AsyncService', () => {
+  it('should handle successful async operation', async () => {
+    const service = new AsyncService();
+    const result = await service.fetchData();
+    expect(result).toBeDefined();
+  });
+
+  it('should handle async operation failure', async () => {
+    const service = new AsyncService();
+    vi.spyOn(service, 'apiCall').mockRejectedValue(new Error('API Error'));
+
+    await expect(service.fetchData()).rejects.toThrow('API Error');
+  });
+
+  it('should handle timeout', async () => {
+    vi.useFakeTimers();
+    const service = new AsyncService();
+
+    const promise = service.fetchDataWithTimeout(1000);
+    vi.advanceTimersByTime(1001);
+
+    await expect(promise).rejects.toThrow('Timeout');
+    vi.useRealTimers();
+  });
+});
+```
+
+### 类型安全测试
+
+```typescript
+describe('TypeSafetyTests', () => {
+  it('should maintain type safety', () => {
+    const processor = new DataProcessor<User>();
+
+    // 使用 expectTypeOf 进行类型检查
+    expectTypeOf(processor.process).parameter(0).toEqualTypeOf<User>();
+    expectTypeOf(processor.process).returns.toEqualTypeOf<ProcessedUser>();
+  });
+});
+```
+
+---
+
+## 性能测试
+
+```typescript
+describe('PerformanceTests', () => {
+  it('should complete operation within time limit', async () => {
+    const startTime = Date.now();
+    const processor = new DataProcessor();
+
+    await processor.processLargeDataset(largeDataset);
+
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+
+    expect(duration).toBeLessThan(1000); // 应在1秒内完成
+  });
+});
+```
+
+---
 
 ## 运行测试
 
-### 基本命令
-
 ```bash
-# 运行所有测试
+# 运行所有包测试
 pnpm test
+
+# 仅运行指定包
+pnpm --filter @brain-toolkit/element-sizer test
 
 # 监听模式
 pnpm test:watch
 
 # 生成覆盖率报告
 pnpm test:coverage
-
-# 运行特定包的测试
-pnpm --filter @brain-toolkit/element-sizer test
-
-# 运行特定测试文件
-pnpm test element-sizer.test.ts
 ```
 
-### CI/CD 中的测试
+在 CI 中，可借助 GitHub Actions：
 
 ```yaml
-# .github/workflows/test.yml
-name: Test
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: pnpm install
-      - run: pnpm test:coverage
-      - uses: codecov/codecov-action@v3
+# .github/workflows/test.yml (截断)
+- run: pnpm install
+- run: pnpm test:coverage
+- uses: codecov/codecov-action@v3
 ```
 
-## 测试覆盖率
+---
 
-### 覆盖率目标
+## 覆盖率目标
 
-- **语句覆盖率**: >= 80%
-- **分支覆盖率**: >= 75%
-- **函数覆盖率**: >= 85%
-- **行覆盖率**: >= 80%
+| 指标 | 目标  |
+| ---- | ----- |
+| 语句 | ≥ 80% |
+| 分支 | ≥ 75% |
+| 函数 | ≥ 85% |
+| 行数 | ≥ 80% |
 
-### 查看覆盖率报告
+覆盖率报告默认输出至 `coverage/` 目录，`index.html` 可本地浏览。
 
-```bash
-# 生成覆盖率报告
-pnpm test:coverage
+---
 
-# 在浏览器中查看详细报告
-open coverage/index.html
-```
+## 调试
 
-## 调试测试
+### VS Code Launch 配置
 
-### VS Code 调试配置
-
-```json
-// .vscode/launch.json
+```jsonc
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Vitest Tests",
+      "name": "Debug Vitest",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
@@ -519,63 +602,61 @@ open coverage/index.html
 }
 ```
 
-### 调试技巧
+> 在测试代码中可使用 `console.log` / `debugger` 辅助排查。
+
+---
+
+## 常见问题解答 (FAQ)
+
+### Q1 : 如何 Mock 浏览器 API？
+
+使用 `vi.mock()` 或在 `setupFiles` 中全局覆写，例如：
 
 ```typescript
-// 使用 console.log 调试
-it('should debug test', () => {
-  console.log('Debug info:', someVariable);
-  expect(someVariable).toBe(expectedValue);
-});
-
-// 使用 debugger 断点
-it('should use debugger', () => {
-  debugger; // 在此处暂停
-  expect(true).toBe(true);
-});
+globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 16);
 ```
 
-## 常见问题
+### Q2 : 测试过慢怎么办？
 
-### Q: 如何测试 DOM 操作？
-A: 使用 jsdom 环境，Vitest 会自动提供 DOM API。
+- 使用 `vi.useFakeTimers()` 加速时间相关逻辑。
+- 拆分长时间集成流程为独立单元测试。
 
-### Q: 如何 Mock 浏览器 API？
-A: 使用 `vi.mock()` 或在 `setupFiles` 中全局 Mock。
+### Q3 : 如何测试 TypeScript 类型？
 
-### Q: 测试运行缓慢怎么办？
-A: 检查是否有不必要的异步操作，使用 `vi.useFakeTimers()` 加速时间相关测试。
-
-### Q: 如何测试 TypeScript 类型？
-A: 使用 `expectTypeOf` 或 `assertType` 进行类型测试。
+利用 `expectTypeOf`：
 
 ```typescript
 import { expectTypeOf } from 'vitest';
 
-it('should have correct types', () => {
-  expectTypeOf(resizer.target).toEqualTypeOf<HTMLElement>();
+expectTypeOf(MyUtility.doSomething).returns.toEqualTypeOf<string>();
+```
+
+### Q4 : 如何测试私有方法？
+
+```typescript
+// 通过类型断言访问私有方法
+it('should test private method', () => {
+  const instance = new MyClass();
+  const result = (instance as any).privateMethod();
+  expect(result).toBe('expected');
 });
 ```
 
-### Q: 如何在 monorepo 中测试包间依赖？
-A: 使用 `__mocks__` 目录和 vitest 别名配置。在根目录的 `vitest.config.ts` 中配置别名，将包名指向对应的 `__mocks__` 目录。
-
-### Q: __mocks__ 目录应该包含什么？
-A: 
-- `index.ts` - 主要的 Mock 导出，保持与真实包相同的 API 接口
-- 具体的 Mock 实现文件，如 `element-resizer.ts`、`utils.ts` 等
-- Mock 应该提供与真实实现相同的接口，但使用 `vi.fn()` 创建可控的函数
-
-### Q: 如何更新 Mock 以保持与真实实现同步？
-A: 
-1. 在 CI/CD 中添加检查，确保 Mock 接口与真实接口一致
-2. 使用 TypeScript 类型检查来验证 Mock 的正确性
-3. 定期审查和更新 Mock 实现
-
-### Q: 什么时候应该使用 vi.mock() 而不是 __mocks__ 目录？
-A: 
-- 使用 `__mocks__` 目录：包间依赖的持久 Mock，多个测试文件共享
-- 使用 `vi.mock()`：特定测试的临时 Mock，需要不同行为的场景
+### Q5 : 如何处理依赖注入的测试？
 
 ```typescript
-export default ElementResizer;
+describe('ServiceWithDependencies', () => {
+  let mockRepository: MockRepository;
+  let service: UserService;
+
+  beforeEach(() => {
+    mockRepository = new MockRepository();
+    service = new UserService(mockRepository);
+  });
+
+  it('should use injected dependency', () => {
+    service.getUser(1);
+    expect(mockRepository.findById).toHaveBeenCalledWith(1);
+  });
+});
+```

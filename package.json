@@ -41,7 +41,7 @@
     "@nx/js": "20.6.4",
     "@qlover/env-loader": "^0.3.0",
     "@qlover/eslint-plugin-fe-dev": "^0.2.0",
-    "@qlover/fe-release": "^2.3.1",
+    "@qlover/fe-release": "^2.3.5",
     "@qlover/fe-scripts": "^0.11.6",
     "@qlover/fe-standard": "^0.0.4",
     "@qlover/scripts-context": "^0.2.1",
@@ -82,9 +82,6 @@
     "vite-plugin-static-copy": "^3.0.0",
     "vitest": "^3.0.5"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix"

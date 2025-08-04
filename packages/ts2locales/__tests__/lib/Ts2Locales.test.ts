@@ -12,7 +12,7 @@ import {
   writeFileSync,
   unlinkSync,
   mkdirSync,
-  rmdirSync,
+  rmSync,
   existsSync,
   readFileSync
 } from 'fs';
@@ -52,10 +52,10 @@ describe('Ts2Locales', () => {
       unlinkSync(enLocaleFile);
     }
     // Remove test directories
-    rmdirSync(join(testDir, 'locales/zh'), { recursive: true });
-    rmdirSync(join(testDir, 'locales/en'), { recursive: true });
-    rmdirSync(join(testDir, 'locales'), { recursive: true });
-    rmdirSync(testDir, { recursive: true });
+    rmSync(join(testDir, 'locales/zh'), { recursive: true, force: true });
+    rmSync(join(testDir, 'locales/en'), { recursive: true, force: true });
+    rmSync(join(testDir, 'locales'), { recursive: true, force: true });
+    rmSync(testDir, { recursive: true, force: true });
     // Restore console.warn
     consoleWarnSpy.mockRestore();
   });
