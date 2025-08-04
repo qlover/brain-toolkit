@@ -33,7 +33,7 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
       '@qlover/fe-release':
-        specifier: ^2.3.1
+        specifier: ^2.3.5
         version: 2.3.5(typescript@5.4.5)
       '@qlover/fe-scripts':
         specifier: ^0.11.6
@@ -171,11 +171,11 @@ importers:
   packages/bridge:
     dependencies:
       '@qlover/corekit-bridge':
-        specifier: ^1.3.3
-        version: 1.3.3(@types/node@22.16.0)(terser@5.43.1)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))
+        specifier: ^1.4.0
+        version: 1.4.0(@types/node@22.16.0)(terser@5.43.1)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))
       '@qlover/fe-corekit':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: ^2.0.1
+        version: 2.0.1
 
   packages/element-sizer: {}
 
@@ -1505,8 +1505,8 @@ packages:
     resolution: {integrity: sha512-YLT9Zo3oNPJoBjBc4q8G2mjU4tqIbf5CEOORbUUr48dCD9q3umJ3IPlVqOqDakPfd2HuwccBaqlGhN4Gmr5OWg==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@qlover/corekit-bridge@1.3.3':
-    resolution: {integrity: sha512-ys3lMd6YmBC2kJzD7aNy/RGnJcLZOCcOIQVHxPIeYCFiKsE70CoIp+AB3VBOjFqK2NbdrEoD+vvzaLrJJlzPuw==}
+  '@qlover/corekit-bridge@1.4.0':
+    resolution: {integrity: sha512-ZKOokOhL1gLkwcCga8jiatEwT5Lf+I6b0D9EEfHiLP99jHzniNljf4blAnO0S27tJcaXHw9TbOwKrNUiIQvf0w==}
 
   '@qlover/env-loader@0.3.0':
     resolution: {integrity: sha512-YjdtKpmwhgIZAkWjreA3BA3XjmxP+0xXbUSnbJACua4yV1twmW+9uP+pHM2jEi7emG5VqD1w9tT8bHC43/1a6g==}
@@ -1521,8 +1521,8 @@ packages:
   '@qlover/fe-corekit@1.4.1':
     resolution: {integrity: sha512-EcUZqdMstSDjdu9OTz9s1K5lSMVDSGbGDvK0N+vNeL3HfaGW/1K0ktgPbMN4jmKbelJGaxSDch/TYKABRBOGIQ==}
 
-  '@qlover/fe-corekit@1.5.0':
-    resolution: {integrity: sha512-sL2cJqZbZUlpWEm9kCc3wLYK96wVTjPD1EEs5oTkHiCHnO+UGYDlgW92/c0jMJMlqXox4xKA+3ojzmK8qRFnkg==}
+  '@qlover/fe-corekit@2.0.1':
+    resolution: {integrity: sha512-N8Y2pubf2KAz0HunErCErI3zSQeamsKxLjCThRB/E1dJ3E2aDxvccRpBAfCsIkjSvRE++ORrA1sA7V2aCdCwdw==}
 
   '@qlover/fe-release@2.3.5':
     resolution: {integrity: sha512-rS8tm0NekMWBA8s5SQbdNzru07MByg1e+YwHOcO0MbiWHI5ywla6W0DychzNYqcE+9VOGlVDCzJwPhE5hdcZ2Q==}
@@ -6457,9 +6457,9 @@ snapshots:
 
   '@pkgr/core@0.2.7': {}
 
-  '@qlover/corekit-bridge@1.3.3(@types/node@22.16.0)(terser@5.43.1)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))':
+  '@qlover/corekit-bridge@1.4.0(@types/node@22.16.0)(terser@5.43.1)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))':
     dependencies:
-      '@qlover/fe-corekit': 1.5.0
+      '@qlover/fe-corekit': 2.0.1
       '@qlover/logger': 0.1.1
       '@qlover/slice-store': 1.2.6
       js-cookie: 3.0.5
@@ -6493,7 +6493,7 @@ snapshots:
       lodash: 4.17.21
       merge: 2.1.1
 
-  '@qlover/fe-corekit@1.5.0':
+  '@qlover/fe-corekit@2.0.1':
     dependencies:
       '@types/lodash': 4.17.20
       axios: 1.10.0

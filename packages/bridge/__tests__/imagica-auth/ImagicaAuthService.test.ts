@@ -19,7 +19,10 @@ import {
   ImagicaAuthService,
   type ImagicaAuthServiceConfig
 } from '../../src/imagica-auth/ImagicaAuthService';
-import { ImagicaAuthApi } from '../../src/imagica-auth/ImagicaAuthApi';
+import {
+  ImagicaAuthApi,
+  UserInfoResponseData
+} from '../../src/imagica-auth/ImagicaAuthApi';
 import { ImagicaAuthState } from '../../src/imagica-auth/ImagicaAuthState';
 import type { ExecutorPlugin } from '@qlover/fe-corekit';
 import {
@@ -84,7 +87,7 @@ describe('ImagicaAuthService', () => {
     token: 'mock_token_123'
   };
 
-  const MOCK_USER_INFO = {
+  const MOCK_USER_INFO: UserInfoResponseData = {
     id: 1,
     email: 'test@example.com',
     name: 'Test User',
@@ -93,7 +96,10 @@ describe('ImagicaAuthService', () => {
       email_verified: true
     },
     feature_tags: ['feature1', 'feature2'],
-    roles: ['user']
+    roles: ['user'],
+    auth_token: {
+      key: 'mock_token_123'
+    }
   };
 
   // Setup and cleanup
@@ -132,13 +138,13 @@ describe('ImagicaAuthService', () => {
         api: new CustomApi()
       });
 
-      const customApi = {
+      const customApi: UserAuthApiInterface<UserInfoResponseData> = {
         getStore: () => null,
         setStore: () => {},
         login: () => Promise.resolve({}),
         register: () => Promise.resolve({}),
         logout: () => Promise.resolve(),
-        getUserInfo: () => Promise.resolve({})
+        getUserInfo: () => Promise.resolve({} as UserInfoResponseData)
       };
       const service2 = new ImagicaAuthService({
         api: customApi
