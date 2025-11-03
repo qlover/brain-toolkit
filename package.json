@@ -13,6 +13,7 @@
   "scripts": {
     "build": "pnpm -r --workspace-concurrency=4 run build && pnpm rebuild",
     "nx:build": "nx affected:build",
+    "nx:build:force": "pnpm nx run-many --target=build --all --skip-nx-cache --parallel --maxParallel=4",
     "prettier": "prettier --ignore-path .prettierignore **/*.{js,ts,json,cjs,mjs} --write",
     "lint": "eslint . --fix",
     "test": "vitest run",

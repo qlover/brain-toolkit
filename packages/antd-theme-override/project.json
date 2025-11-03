@@ -1,0 +1,23 @@
+{
+  "name": "@brain-toolkit/antd-theme-override",
+  "sourceRoot": "packages/antd-theme-override/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm build",
+        "cwd": "packages/antd-theme-override"
+      },
+      "inputs": [
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/vite.config.ts",
+        "{projectRoot}/package.json",
+        "{projectRoot}/README.md",
+        "{projectRoot}/README_EN.md"
+      ],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    }
+  }
+}

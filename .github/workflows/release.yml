@@ -37,7 +37,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm build
+      - run: pnpm nx:build:force
 
       - name: Release Pull Request
         run: npx fe-release -V -P --githubPR.push-change-labels --workspaces.change-labels=${{join(github.event.pull_request.labels.*.name,',')}} --changelog.ignore-non-updated-packages
@@ -72,7 +72,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm build
+      - run: pnpm nx:build:force
 
       - name: Create tag and publish
         run: npx fe-release -V --changelog.skip-changeset --workspaces.change-labels=${{join(github.event.pull_request.labels.*.name,',')}}

@@ -1,0 +1,24 @@
+{
+  "name": "@brain-toolkit/bridge",
+  "sourceRoot": "packages/bridge/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm build",
+        "cwd": "packages/bridge"
+      },
+      "inputs": [
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/tsup.config.ts",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/package.json",
+        "{projectRoot}/README.md",
+        "{projectRoot}/README_EN.md"
+      ],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    }
+  }
+}
