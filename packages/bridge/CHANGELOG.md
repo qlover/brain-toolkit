@@ -1,5 +1,18 @@
 # @brain-toolkit/bridge
 
+## 0.0.2
+
+### Patch Changes
+
+#### ✨ Features
+
+- Add new packages and enhance build scripts ([fdecb64](https://github.com/qlover/brain-toolkit/commit/fdecb64edda8daf459e2ef00e1b218848b424b88)) ([#19](https://github.com/qlover/brain-toolkit/pull/19))
+  - Introduced new packages: @brain-toolkit/antd-theme-override, @brain-toolkit/bridge, @brain-toolkit/element-sizer, and @brain-toolkit/ts2locales, each with their own build configurations.
+  - Updated package.json to include a new script for force building with Nx.
+  - Modified CI workflows to utilize the new nx:build:force command for building packages, addressing cache issues in CI environments.
+
+  Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+
 ## 0.0.1
 
 ### Patch Changes
