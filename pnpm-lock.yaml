@@ -153,6 +153,31 @@ importers:
         specifier: ^3.0.5
         version: 3.2.4(@types/node@22.16.0)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.43.1)(yaml@2.8.0)
 
+  packages/antd-override:
+    dependencies:
+      '@qlover/corekit-bridge':
+        specifier: ^1.6.6
+        version: 1.6.6(@types/node@22.16.0)(terser@5.43.1)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))
+      '@qlover/slice-store-react':
+        specifier: ^1.4.1
+        version: 1.4.1
+    devDependencies:
+      '@qlover/fe-corekit':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@types/react':
+        specifier: ^19.1.6
+        version: 19.1.8
+      antd:
+        specifier: ^5.25.3
+        version: 5.26.4(react-dom@19.1.0(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      vite:
+        specifier: ^6.1.0
+        version: 6.3.5(@types/node@22.16.0)(jiti@2.4.2)(terser@5.43.1)(yaml@2.8.0)
+
   packages/antd-theme-override:
     devDependencies:
       '@types/react':
@@ -1405,24 +1430,28 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@nx/nx-linux-arm64-musl@20.6.4':
     resolution: {integrity: sha512-ukjB1pmBvtinT0zeYJ1lWi7BAw6cDnPQnfXMbyV+afYnNRcgdDFzQaUpo3UUeai69Fo3TTr0SWx6DjMVifxJZw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@nx/nx-linux-x64-gnu@20.6.4':
     resolution: {integrity: sha512-+6DloqqB8ZzuZOY4A1PryuPD5hGoxbSafRN++sXUFvKx6mRYNyLGrn5APT3Kiq1qPBxkAxcsreexcu/wsTcrcw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@nx/nx-linux-x64-musl@20.6.4':
     resolution: {integrity: sha512-+ZuF6dobfGo5EN55syuUEdbYs9qxbLmTkGPMq66X7dZ/jm7kKTsVzDYnf9v3ynQCOq4DMFtdACneL32Ks22+NQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@nx/nx-win32-arm64-msvc@20.6.4':
     resolution: {integrity: sha512-z+Y8iwEPZ8L8SISh/tcyqEtAy9Ju6aB5kLe8E/E1Wwzy5DU/jNvqM9Wq4HRPMY0r1S4jzwC6x7W3/fkxeFjZ7A==}
@@ -1508,6 +1537,9 @@ packages:
   '@qlover/corekit-bridge@1.4.0':
     resolution: {integrity: sha512-ZKOokOhL1gLkwcCga8jiatEwT5Lf+I6b0D9EEfHiLP99jHzniNljf4blAnO0S27tJcaXHw9TbOwKrNUiIQvf0w==}
 
+  '@qlover/corekit-bridge@1.6.6':
+    resolution: {integrity: sha512-6IRshAv/U+WXkdvKMEPKlGdF7/ItxygNXHNx91pGN1wfHujlbH9D6465nrHrm/HZZHy8bJRdTx4kG+ypRYX/Aw==}
+
   '@qlover/env-loader@0.3.0':
     resolution: {integrity: sha512-YjdtKpmwhgIZAkWjreA3BA3XjmxP+0xXbUSnbJACua4yV1twmW+9uP+pHM2jEi7emG5VqD1w9tT8bHC43/1a6g==}
 
@@ -1524,6 +1556,9 @@ packages:
   '@qlover/fe-corekit@2.0.1':
     resolution: {integrity: sha512-N8Y2pubf2KAz0HunErCErI3zSQeamsKxLjCThRB/E1dJ3E2aDxvccRpBAfCsIkjSvRE++ORrA1sA7V2aCdCwdw==}
 
+  '@qlover/fe-corekit@2.1.0':
+    resolution: {integrity: sha512-rckj7nx21MFhael3dBpC1xHd83Wv9PGEOAYhHa5uDfizUru18sDDlseYlzpDI4KpRL34BMLoE0fqT91bLyJxTQ==}
+
   '@qlover/fe-release@2.3.5':
     resolution: {integrity: sha512-rS8tm0NekMWBA8s5SQbdNzru07MByg1e+YwHOcO0MbiWHI5ywla6W0DychzNYqcE+9VOGlVDCzJwPhE5hdcZ2Q==}
     hasBin: true
@@ -1538,11 +1573,20 @@ packages:
   '@qlover/logger@0.1.1':
     resolution: {integrity: sha512-6D7ifewsS05vV5AHM3oRYEZuhg6/1GiP+hATL1jFlWvmR1mW07yXb19txTOtnjJpFetd7TSrmxuytok2YcBwCQ==}
 
+  '@qlover/logger@0.2.0':
+    resolution: {integrity: sha512-Q1kKvMm8+oJ9wZHTIaBeQGRxrX59oUi3OVX6faUWjrQRdOCf5SRTq9QNmPWmnexqCgqVrZY+ja6MMVPv8BwtMQ==}
+
   '@qlover/scripts-context@0.2.1':
     resolution: {integrity: sha512-aOXeQFSnfhMzeCUz5ECpoFK9nkuLl6ukj+fIYH0DSlcG7qbgApRMzUor0TgtESg14fxo4H5jbHRZEF6A61pO0w==}
 
+  '@qlover/slice-store-react@1.4.1':
+    resolution: {integrity: sha512-t7mfNXChtDW63fWnynrVUXa3a78dw1VnR559/CcDg1ozeNHKxKnXt3xMz0bszK82a/0+fZN/3N0df7G8uy+/xw==}
+
   '@qlover/slice-store@1.2.6':
     resolution: {integrity: sha512-HlHCkFBCsQzOFKnc+lPLO7MtUrj2kb2GpBWZQCr6kuZXMpCP7gmitu1yV5itYO+7Bq4PeMmjQbXKW/802cJ5JA==}
+
+  '@qlover/slice-store@1.4.1':
+    resolution: {integrity: sha512-HkczkS+pEQ4x6YbQoq78hlOlAfkWyMdHHvWOpgNxXWFfpS/y1fS1E7pR7NRp7dt+1Ypad4jOhQS6ZkXiPW8fZQ==}
 
   '@rc-component/async-validator@5.0.4':
     resolution: {integrity: sha512-qgGdcVIF604M9EqjNF0hbUTz42bz/RDtxWdWuU5EQe3hi7M8ob54B6B35rOsvX5eSvIHIzT9iH1R3n+hk3CGfg==}
@@ -1695,56 +1739,67 @@ packages:
     resolution: {integrity: sha512-+xmiDGGaSfIIOXMzkhJ++Oa0Gwvl9oXUeIiwarsdRXSe27HUIvjbSIpPxvnNsRebsNdUo7uAiQVgBD1hVriwSQ==}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.44.2':
     resolution: {integrity: sha512-bDHvhzOfORk3wt8yxIra8N4k/N0MnKInCW5OGZaeDYa/hMrdPaJzo7CSkjKZqX4JFUWjUGm88lI6QJLCM7lDrA==}
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.44.2':
     resolution: {integrity: sha512-NMsDEsDiYghTbeZWEGnNi4F0hSbGnsuOG+VnNvxkKg0IGDvFh7UVpM/14mnMwxRxUf9AdAVJgHPvKXf6FpMB7A==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.44.2':
     resolution: {integrity: sha512-lb5bxXnxXglVq+7imxykIp5xMq+idehfl+wOgiiix0191av84OqbjUED+PRC5OA8eFJYj5xAGcpAZ0pF2MnW+A==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-loongarch64-gnu@4.44.2':
     resolution: {integrity: sha512-Yl5Rdpf9pIc4GW1PmkUGHdMtbx0fBLE1//SxDmuf3X0dUC57+zMepow2LK0V21661cjXdTn8hO2tXDdAWAqE5g==}
     cpu: [loong64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.44.2':
     resolution: {integrity: sha512-03vUDH+w55s680YYryyr78jsO1RWU9ocRMaeV2vMniJJW/6HhoTBwyyiiTPVHNWLnhsnwcQ0oH3S9JSBEKuyqw==}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-gnu@4.44.2':
     resolution: {integrity: sha512-iYtAqBg5eEMG4dEfVlkqo05xMOk6y/JXIToRca2bAWuqjrJYJlx/I7+Z+4hSrsWU8GdJDFPL4ktV3dy4yBSrzg==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-musl@4.44.2':
     resolution: {integrity: sha512-e6vEbgaaqz2yEHqtkPXa28fFuBGmUJ0N2dOJK8YUfijejInt9gfCSA7YDdJ4nYlv67JfP3+PSWFX4IVw/xRIPg==}
     cpu: [riscv64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-s390x-gnu@4.44.2':
     resolution: {integrity: sha512-evFOtkmVdY3udE+0QKrV5wBx7bKI0iHz5yEVx5WqDJkxp9YQefy4Mpx3RajIVcM6o7jxTvVd/qpC1IXUhGc1Mw==}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.44.2':
     resolution: {integrity: sha512-/bXb0bEsWMyEkIsUL2Yt5nFB5naLAwyOWMEviQfQY1x3l5WsLKgvZf66TM7UTfED6erckUVUJQ/jJ1FSpm3pRQ==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.44.2':
     resolution: {integrity: sha512-3D3OB1vSSBXmkGEZR27uiMRNiwN08/RVAcBKwhUYPaiZ8bcvdeEwWPvbnXvvXHY+A/7xluzcN+kaiOFNiOZwWg==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-win32-arm64-msvc@4.44.2':
     resolution: {integrity: sha512-VfU0fsMK+rwdK8mwODqYeM2hDrF2WiHaSmCBrS7gColkQft95/8tphyzv2EupVxn3iE0FI78wzffoULH1G+dkw==}
@@ -1825,24 +1880,28 @@ packages:
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@swc/core-linux-arm64-musl@1.5.29':
     resolution: {integrity: sha512-TERh2OICAJz+SdDIK9+0GyTUwF6r4xDlFmpoiHKHrrD/Hh3u+6Zue0d7jQ/he/i80GDn4tJQkHlZys+RZL5UZg==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@swc/core-linux-x64-gnu@1.5.29':
     resolution: {integrity: sha512-WMDPqU7Ji9dJpA+Llek2p9t7pcy7Bob8ggPUvgsIlv3R/eesF9DIzSbrgl6j3EAEPB9LFdSafsgf6kT/qnvqFg==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@swc/core-linux-x64-musl@1.5.29':
     resolution: {integrity: sha512-DO14glwpdKY4POSN0201OnGg1+ziaSVr6/RFzuSLggshwXeeyVORiHv3baj7NENhJhWhUy3NZlDsXLnRFkmhHQ==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@swc/core-win32-arm64-msvc@1.5.29':
     resolution: {integrity: sha512-V3Y1+a1zG1zpYXUMqPIHEMEOd+rHoVnIpO/KTyFwAmKVu8v+/xPEVx/AGoYE67x4vDAAvPQrKI3Aokilqa5yVg==}
@@ -4108,6 +4167,11 @@ packages:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
 
+  react-dom@18.3.1:
+    resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
+    peerDependencies:
+      react: ^18.3.1
+
   react-dom@19.1.0:
     resolution: {integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==}
     peerDependencies:
@@ -4252,6 +4316,9 @@ packages:
   saxes@6.0.0:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
+
+  scheduler@0.23.2:
+    resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
 
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
@@ -6477,6 +6544,26 @@ snapshots:
       - terser
       - ts-node
 
+  '@qlover/corekit-bridge@1.6.6(@types/node@22.16.0)(terser@5.43.1)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))':
+    dependencies:
+      '@qlover/fe-corekit': 2.1.0
+      '@qlover/logger': 0.2.0
+      '@qlover/slice-store': 1.2.6
+      js-cookie: 3.0.5
+      tailwindcss: 3.4.17(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.16.0)(typescript@5.8.2))
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
+    transitivePeerDependencies:
+      - '@types/node'
+      - debug
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - terser
+      - ts-node
+
   '@qlover/env-loader@0.3.0':
     dependencies:
       dotenv: 16.6.1
@@ -6494,6 +6581,13 @@ snapshots:
       merge: 2.1.1
 
   '@qlover/fe-corekit@2.0.1':
+    dependencies:
+      '@types/lodash': 4.17.20
+      axios: 1.10.0
+    transitivePeerDependencies:
+      - debug
+
+  '@qlover/fe-corekit@2.1.0':
     dependencies:
       '@types/lodash': 4.17.20
       axios: 1.10.0
@@ -6534,6 +6628,8 @@ snapshots:
 
   '@qlover/logger@0.1.1': {}
 
+  '@qlover/logger@0.2.0': {}
+
   '@qlover/scripts-context@0.2.1(typescript@5.4.5)':
     dependencies:
       '@qlover/logger': 0.1.1
@@ -6543,7 +6639,15 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@qlover/slice-store-react@1.4.1':
+    dependencies:
+      '@qlover/slice-store': 1.4.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@qlover/slice-store@1.2.6': {}
+
+  '@qlover/slice-store@1.4.1': {}
 
   '@rc-component/async-validator@5.0.4':
     dependencies:
@@ -9283,6 +9387,12 @@ snapshots:
       react: 18.3.1
       react-dom: 19.1.0(react@18.3.1)
 
+  react-dom@18.3.1(react@18.3.1):
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.3.1
+      scheduler: 0.23.2
+
   react-dom@19.1.0(react@18.3.1):
     dependencies:
       react: 18.3.1
@@ -9444,6 +9554,10 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+
+  scheduler@0.23.2:
+    dependencies:
+      loose-envify: 1.4.0
 
   scheduler@0.26.0: {}
 
