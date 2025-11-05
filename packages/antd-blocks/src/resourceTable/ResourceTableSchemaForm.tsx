@@ -60,7 +60,7 @@ export function ResourceTableSchemaForm<T>(
     (option: ResourceTableOption<T>, index: number) => {
       const { renderForm, formItemWrapProps, formItemProps, ...rest } = option;
       const unionKey = String(rest.key) + index;
-      
+
       if (!renderForm) return null;
 
       if (typeof renderForm === 'function') {

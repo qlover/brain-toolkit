@@ -49,4 +49,3 @@ export function getExtendedFormComponents(): Record<
     // switch: Switch,
   };
 }
-
