@@ -42,6 +42,23 @@ pnpm add @brain-toolkit/antd-blocks
 
 ## 🚀 快速开始
 
+### 在线示例
+
+想要快速体验？可以运行我们准备的交互式示例：
+
+```bash
+# 进入 antd-blocks 目录
+cd packages/antd-blocks
+
+# 安装依赖
+pnpm install
+
+# 启动示例
+pnpm dev:example
+```
+
+查看 [example/README.md](./example/README.md) 了解更多示例详情。
+
 ### 基础示例
 
 ```typescript

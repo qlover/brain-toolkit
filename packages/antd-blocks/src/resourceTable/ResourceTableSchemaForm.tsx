@@ -14,6 +14,7 @@ import type {
   ResourceTableOption
 } from './ResourceTableOption';
 import type { FormInstance } from 'antd/lib';
+import { NamePath } from 'antd/es/form/interface';
 
 const { Item: FormItem } = Form;
 
@@ -76,6 +77,7 @@ export function ResourceTableSchemaForm<T>(
         <FormItem
           data-testid={'AdminTableForm' + unionKey}
           key={unionKey}
+          name={option.dataIndex as NamePath}
           {...formItemWrapProps}
           label={formItemWrapProps?.label}
         >
