@@ -1,0 +1,73 @@
+{
+  "name": "@brain-toolkit/antd-blocks",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./resourceTable": {
+      "types": "./dist/resourceTable/index.d.ts",
+      "import": "./dist/resourceTable/index.js",
+      "require": "./dist/resourceTable/index.cjs"
+    },
+    "./resourceTable/*": {
+      "types": "./dist/resourceTable/*.d.ts",
+      "import": "./dist/resourceTable/*.js",
+      "require": "./dist/resourceTable/*.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "vite build",
+    "dev:example": "vite --config vite.example.config.ts",
+    "build:example": "vite build --config vite.example.config.ts",
+    "preview:example": "vite preview --config vite.example.config.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/antd-blocks"
+  },
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "keywords": [
+    "brain toolkit",
+    "antd override"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "@qlover/corekit-bridge": "^1.6.6",
+    "@qlover/slice-store-react": "^1.4.1",
+    "@qlover/fe-corekit": "^2.1.0",
+    "antd": "^5.25.3",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.1.1",
+    "vite": "^6.1.0",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}

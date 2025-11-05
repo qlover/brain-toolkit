@@ -1,15 +1,23 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     environment: 'jsdom',
     globals: true,
     watch: false,
     include: ['packages/**/__tests__/**/*.test.{ts,tsx}'],
     exclude: [
-      // workspace:* case link to local package, has __tests__ folder
-      'packages/**/node_modules/**'
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.changelog/**',
+      '**/.github/**',
+      '**/.husky/**',
+      '**/.vscode/**',
+      '**/.nx/**',
     ],
     alias: {
       '@brain-toolkit/element-sizer': resolve(
