@@ -18,12 +18,17 @@ import { useCallback, useEffect, useRef } from 'react';
  */
 export function useLifecycleCreated(callback: () => void) {
   const mounted = useRef(false);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!mounted.current) {
       mounted.current = true;
 
-      requestAnimationFrame(() => {
+      timerRef.current = requestAnimationFrame(() => {
+        if (timerRef.current) {
+          cancelAnimationFrame(timerRef.current);
+          timerRef.current = null;
+        }
         callback();
       });
     }
@@ -79,13 +84,18 @@ export function useLifecycleUpdated(
  */
 export function useLifecycleDestroyed(callback: () => void) {
   const isComponentMounted = useRef(false);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     isComponentMounted.current = true;
 
     return () => {
-      requestAnimationFrame(() => {
+      timerRef.current = requestAnimationFrame(() => {
         if (!isComponentMounted.current) {
+          if (timerRef.current) {
+            cancelAnimationFrame(timerRef.current);
+            timerRef.current = null;
+          }
           callback();
         }
       });
@@ -126,6 +136,7 @@ export function useLifecycle(
 ) {
   const mounted = useRef(false);
   const lifecycleRef = useRef(lifecycle);
+  const timerRef = useRef<number | null>(null);
 
   // Update ref when lifecycle changes
   useEffect(() => {
@@ -145,7 +156,11 @@ export function useLifecycle(
     if (!mounted.current) {
       mounted.current = true;
 
-      requestAnimationFrame(() => {
+      timerRef.current = requestAnimationFrame(() => {
+        if (timerRef.current) {
+          cancelAnimationFrame(timerRef.current);
+          timerRef.current = null;
+        }
         lifecycle.created();
       });
     } else {

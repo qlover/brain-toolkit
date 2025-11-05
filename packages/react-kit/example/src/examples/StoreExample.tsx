@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { useFactory, useStore } from '@brain-toolkit/react-kit';
-import type { StoreInterface } from '@qlover/corekit-bridge';
+import { StoreInterface } from '@qlover/corekit-bridge';
 
 /**
  * Simple Counter Store
@@ -15,33 +15,35 @@ interface CounterState {
   lastUpdated: number;
 }
 
-class CounterStore implements StoreInterface<CounterState> {
-  state: CounterState = {
-    count: 0,
-    lastUpdated: Date.now()
-  };
+class CounterStore extends StoreInterface<CounterState> {
+  constructor() {
+    super(() => ({
+      count: 0,
+      lastUpdated: Date.now()
+    }));
+  }
 
   increment() {
-    this.state = {
+    this.emit({
       ...this.state,
       count: this.state.count + 1,
       lastUpdated: Date.now()
-    };
+    });
   }
 
   decrement() {
-    this.state = {
+    this.emit({
       ...this.state,
       count: this.state.count - 1,
       lastUpdated: Date.now()
-    };
+    });
   }
 
   reset() {
-    this.state = {
+    this.emit({
       count: 0,
       lastUpdated: Date.now()
-    };
+    });
   }
 }
 
@@ -59,11 +61,13 @@ interface TodoState {
   filter: 'all' | 'active' | 'completed';
 }
 
-class TodoStore implements StoreInterface<TodoState> {
-  state: TodoState = {
-    todos: [],
-    filter: 'all'
-  };
+class TodoStore extends StoreInterface<TodoState> {
+  constructor() {
+    super(() => ({
+      todos: [],
+      filter: 'all'
+    }));
+  }
 
   addTodo(text: string) {
     const newTodo: Todo = {
@@ -71,33 +75,33 @@ class TodoStore implements StoreInterface<TodoState> {
       text,
       completed: false
     };
-    this.state = {
+    this.emit({
       ...this.state,
       todos: [...this.state.todos, newTodo]
-    };
+    });
   }
 
   toggleTodo(id: string) {
-    this.state = {
+    this.emit({
       ...this.state,
       todos: this.state.todos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
-    };
+    });
   }
 
   deleteTodo(id: string) {
-    this.state = {
+    this.emit({
       ...this.state,
       todos: this.state.todos.filter((todo) => todo.id !== id)
-    };
+    });
   }
 
   setFilter(filter: 'all' | 'active' | 'completed') {
-    this.state = {
+    this.emit({
       ...this.state,
       filter
-    };
+    });
   }
 }
 
@@ -141,7 +145,7 @@ function BasicStoreExample() {
  */
 function SelectorExample() {
   const store = useFactory(CounterStore);
-  
+
   // Only subscribe to count, not lastUpdated
   const count = useStore(store, (state) => state.count);
 
@@ -328,8 +332,8 @@ export function StoreExample() {
         <h1 className="page-title">useStore Hook</h1>
         <p className="page-description">
           The useStore hook provides reactive state management by subscribing to
-          store changes. Components automatically re-render when subscribed state
-          updates, making it perfect for building reactive UIs.
+          store changes. Components automatically re-render when subscribed
+          state updates, making it perfect for building reactive UIs.
         </p>
       </div>
 
@@ -353,7 +357,8 @@ export function StoreExample() {
             inference
           </li>
           <li>
-            🏪 <strong>Store Interface</strong>: Compatible with @qlover/corekit-bridge
+            🏪 <strong>Store Interface</strong>: Compatible with
+            @qlover/corekit-bridge
           </li>
           <li>
             ⚡ <strong>Performance</strong>: Only re-renders when selected state
@@ -364,4 +369,3 @@ export function StoreExample() {
     </div>
   );
 }
-
