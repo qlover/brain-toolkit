@@ -37,6 +37,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // External dependencies that shouldn't be bundled
+      // All dependencies are external, only bundle src code
       external: [
         'react',
         'react-dom',
