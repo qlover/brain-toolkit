@@ -43,7 +43,7 @@
     "url": "git+https://github.com/qlover/brain-toolkit.git",
     "directory": "packages/antd-blocks"
   },
-  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "homepage": "https://github.com/qlover/brain-toolkit/tree/main/packages/react-kit#readme",
   "keywords": [
     "brain toolkit",
     "antd override"

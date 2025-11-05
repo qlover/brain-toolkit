@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 /**
- * Vite configuration for antd-blocks examples
+ * Vite configuration for react-kit examples
  *
  * This configuration is used to run the interactive examples
  * in the example directory during development
@@ -13,16 +13,13 @@ export default defineConfig({
   root: resolve(__dirname, 'example'),
   publicDir: resolve(__dirname, 'example/public'),
   server: {
-    port: 3000,
+    port: 3010,
     open: true
   },
   resolve: {
     alias: {
-      '@brain-toolkit/antd-blocks': resolve(__dirname, 'src'),
-      '@brain-toolkit/antd-blocks/resourceTable': resolve(
-        __dirname,
-        'src/resourceTable'
-      )
+      '@brain-toolkit/react-kit': resolve(__dirname, 'src'),
+      '@brain-toolkit/react-kit/hooks': resolve(__dirname, 'src/hooks')
     }
   },
   build: {
