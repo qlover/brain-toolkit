@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { render, screen, act } from '@testing-library/react';
 import { useMountedClient } from '../../src/hooks/useMountedClient';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { useEffect, useState } from 'react';
 
 /**
@@ -70,7 +70,7 @@ describe('useMountedClient', () => {
         return <button data-testid="theme-button">🌙</button>;
       }
 
-      const { container } = render(<ThemeToggle />);
+      render(<ThemeToggle />);
 
       // Initially should show placeholder
       expect(screen.getByTestId('placeholder')).toBeTruthy();
@@ -198,12 +198,12 @@ describe('useMountedClient', () => {
 
       function LibraryComponent() {
         const mounted = useMountedClient();
-        const [lib, setLib] = useState<any>(null);
+        const [lib, setLib] = useState<{ name: string } | null>(null);
 
         useEffect(() => {
           if (!mounted) return;
 
-          loadLibrary().then((library) => {
+          loadLibrary().then((library: { name: string }) => {
             setLib(library);
           });
         }, [mounted]);
@@ -646,4 +646,3 @@ describe('useMountedClient', () => {
     });
   });
 });
-

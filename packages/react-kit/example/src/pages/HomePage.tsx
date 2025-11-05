@@ -37,30 +37,52 @@ export function HomePage() {
           reactive updates
         </li>
         <li>
-          <Link to="/mounted-client">useMountedClient</Link> - Execute client-side
-          code safely after mounting
+          <Link to="/mounted-client">useMountedClient</Link> - Execute
+          client-side code safely after mounting
         </li>
       </ul>
 
       <h2 className="home-subtitle">Key Features</h2>
       <ul className="feature-list">
-        <li>🚀 <strong>Easy to Use</strong>: Minimal setup and intuitive API</li>
-        <li>📦 <strong>Lightweight</strong>: Small bundle size with zero dependencies</li>
-        <li>🎯 <strong>Type Safe</strong>: Full TypeScript support</li>
-        <li>🔄 <strong>Reactive</strong>: Automatic updates and cleanup</li>
-        <li>🎨 <strong>Flexible</strong>: Works with any React application</li>
-        <li>📚 <strong>Well Documented</strong>: Clear examples and API documentation</li>
+        <li>
+          🚀 <strong>Easy to Use</strong>: Minimal setup and intuitive API
+        </li>
+        <li>
+          📦 <strong>Lightweight</strong>: Small bundle size with zero
+          dependencies
+        </li>
+        <li>
+          🎯 <strong>Type Safe</strong>: Full TypeScript support
+        </li>
+        <li>
+          🔄 <strong>Reactive</strong>: Automatic updates and cleanup
+        </li>
+        <li>
+          🎨 <strong>Flexible</strong>: Works with any React application
+        </li>
+        <li>
+          📚 <strong>Well Documented</strong>: Clear examples and API
+          documentation
+        </li>
       </ul>
 
       <h2 className="home-subtitle">Links</h2>
       <ul className="link-list">
         <li>
-          <a href="https://github.com/qlover/brain-toolkit" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://github.com/qlover/brain-toolkit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             GitHub Repository
           </a>
         </li>
         <li>
-          <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://react.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             React Documentation
           </a>
         </li>
@@ -68,4 +90,3 @@ export function HomePage() {
     </div>
   );
 }
-

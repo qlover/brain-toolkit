@@ -3,7 +3,13 @@
  *
  * Provides routing and layout for all examples
  */
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useLocation
+} from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { LifecycleExample } from './examples/LifecycleExample';
 import { FactoryExample } from './examples/FactoryExample';
@@ -84,4 +90,3 @@ export function App() {
     </BrowserRouter>
   );
 }
-

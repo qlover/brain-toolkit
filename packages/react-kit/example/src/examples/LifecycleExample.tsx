@@ -122,7 +122,10 @@ function DestroyedExample() {
         component to see it in action.
       </p>
       <div className="demo-section">
-        <button className="button primary" onClick={() => setShowChild(!showChild)}>
+        <button
+          className="button primary"
+          onClick={() => setShowChild(!showChild)}
+        >
           {showChild ? 'Unmount Child' : 'Mount Child'}
         </button>
         <button className="button" onClick={() => setLogs([])}>
@@ -195,4 +198,3 @@ export function LifecycleExample() {
     </div>
   );
 }
-

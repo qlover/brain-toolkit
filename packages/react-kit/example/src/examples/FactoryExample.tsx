@@ -16,26 +16,28 @@ class CounterService {
   constructor(initialCount: number = 0, id: string = 'default') {
     this._count = initialCount;
     this._id = id;
-    console.log(`CounterService ${id} created with initial count: ${initialCount}`);
+    console.log(
+      `CounterService ${id} created with initial count: ${initialCount}`
+    );
   }
 
-  get count() {
+  get count(): number {
     return this._count;
   }
 
-  get id() {
+  get id(): string {
     return this._id;
   }
 
-  increment() {
+  increment(): void {
     this._count++;
   }
 
-  decrement() {
+  decrement(): void {
     this._count--;
   }
 
-  reset() {
+  reset(): void {
     this._count = 0;
   }
 }
@@ -50,7 +52,7 @@ class Logger {
     this.namespace = namespace;
   }
 
-  log(message: string) {
+  log(message: string): string {
     return `[${this.namespace}] ${message}`;
   }
 }
@@ -60,7 +62,7 @@ class Logger {
  */
 function BasicFactoryExample() {
   const [count, setCount] = useState(0);
-  
+
   // Create a stable instance of CounterService
   // Instance is created once and reused across re-renders
   const counter = useFactory(CounterService, 10, 'basic-counter');
@@ -117,7 +119,11 @@ function DynamicFactoryExample() {
   const [recreateCount, setRecreateCount] = useState(0);
 
   // Instance will be recreated when initialValue changes
-  const counter = useFactory(CounterService, initialValue, `dynamic-${recreateCount}`);
+  const counter = useFactory(
+    CounterService,
+    initialValue,
+    `dynamic-${recreateCount}`
+  );
 
   const handleChangeInitial = (value: number) => {
     setInitialValue(value);
@@ -190,7 +196,14 @@ function MultipleInstancesExample() {
         maintains its own state and identity.
       </p>
       <div className="demo-section">
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '16px',
+            flexWrap: 'wrap'
+          }}
+        >
           <button
             className="button primary"
             onClick={() => addLog(logger1, 'Application started')}
@@ -275,4 +288,3 @@ export function FactoryExample() {
     </div>
   );
 }
-

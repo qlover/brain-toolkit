@@ -29,7 +29,13 @@ function BasicMountedExample() {
             border: `2px solid ${mounted ? '#52c41a' : '#faad14'}`
           }}
         >
-          <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+          <p
+            style={{
+              fontSize: '18px',
+              fontWeight: 'bold',
+              marginBottom: '8px'
+            }}
+          >
             Mounted Status: {mounted ? '✅ Mounted' : '⏳ Not Mounted'}
           </p>
           <p style={{ color: '#666' }}>
@@ -328,9 +334,9 @@ export function MountedClientExample() {
         <h1 className="page-title">useMountedClient Hook</h1>
         <p className="page-description">
           The useMountedClient hook is essential for SSR (Server-Side Rendering)
-          compatibility. It safely detects when your component has mounted on the
-          client, preventing hydration mismatches and enabling safe access to
-          browser APIs.
+          compatibility. It safely detects when your component has mounted on
+          the client, preventing hydration mismatches and enabling safe access
+          to browser APIs.
         </p>
       </div>
 
@@ -367,4 +373,3 @@ export function MountedClientExample() {
     </div>
   );
 }
-

@@ -2,8 +2,9 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useStore } from '../../src/hooks/useStore';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { StoreInterface, StoreStateInterface } from '@qlover/corekit-bridge';
+import { describe, it, expect, vi } from 'vitest';
+import { StoreInterface } from '@qlover/corekit-bridge';
+import type { StoreStateInterface } from '@qlover/corekit-bridge';
 
 /**
  * Test suite for useStore hook
@@ -20,22 +21,13 @@ describe('useStore', () => {
         count: number;
       }
 
-      class CounterStore implements StoreInterface<CounterState> {
-        state: CounterState = { count: 0 };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class CounterStore extends StoreInterface<CounterState> {
+        constructor() {
+          super(() => ({ count: 0 }));
         }
 
-        increment() {
-          this.state = { count: this.state.count + 1 };
-          this.notify();
-        }
-
-        notify() {
-          this.listeners.forEach((listener) => listener());
+        increment(): void {
+          this.emit({ count: this.state.count + 1 });
         }
       }
 
@@ -53,22 +45,13 @@ describe('useStore', () => {
         count: number;
       }
 
-      class CounterStore implements StoreInterface<CounterState> {
-        state: CounterState = { count: 0 };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class CounterStore extends StoreInterface<CounterState> {
+        constructor() {
+          super(() => ({ count: 0 }));
         }
 
-        increment() {
-          this.state = { count: this.state.count + 1 };
-          this.notify();
-        }
-
-        notify() {
-          this.listeners.forEach((listener) => listener());
+        increment(): void {
+          this.emit({ count: this.state.count + 1 });
         }
       }
 
@@ -99,16 +82,12 @@ describe('useStore', () => {
         };
       }
 
-      class UserStore implements StoreInterface<UserState> {
-        state: UserState = {
-          profile: { name: 'John', email: 'john@example.com' },
-          settings: { theme: 'dark', language: 'en' }
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class UserStore extends StoreInterface<UserState> {
+        constructor() {
+          super(() => ({
+            profile: { name: 'John', email: 'john@example.com' },
+            settings: { theme: 'dark', language: 'en' }
+          }));
         }
       }
 
@@ -131,17 +110,13 @@ describe('useStore', () => {
         todos: Array<{ id: number; text: string }>;
       }
 
-      class AppStore implements StoreInterface<AppState> {
-        state: AppState = {
-          user: { name: 'Alice', id: 1 },
-          settings: { theme: 'light' },
-          todos: []
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class AppStore extends StoreInterface<AppState> {
+        constructor() {
+          super(() => ({
+            user: { name: 'Alice', id: 1 },
+            settings: { theme: 'light' },
+            todos: []
+          }));
         }
       }
 
@@ -163,19 +138,15 @@ describe('useStore', () => {
         items: Array<{ id: number; text: string; completed: boolean }>;
       }
 
-      class TodoStore implements StoreInterface<TodoState> {
-        state: TodoState = {
-          items: [
-            { id: 1, text: 'Task 1', completed: true },
-            { id: 2, text: 'Task 2', completed: false },
-            { id: 3, text: 'Task 3', completed: true }
-          ]
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class TodoStore extends StoreInterface<TodoState> {
+        constructor() {
+          super(() => ({
+            items: [
+              { id: 1, text: 'Task 1', completed: true },
+              { id: 2, text: 'Task 2', completed: false },
+              { id: 3, text: 'Task 3', completed: true }
+            ]
+          }));
         }
       }
 
@@ -207,23 +178,19 @@ describe('useStore', () => {
         };
       }
 
-      class DeepStore implements StoreInterface<DeepState> {
-        state: DeepState = {
-          data: {
-            users: {
-              user1: { name: 'User 1', posts: ['post1', 'post2'] }
-            },
-            meta: {
-              lastUpdated: '2024-01-01',
-              version: 1
+      class DeepStore extends StoreInterface<DeepState> {
+        constructor() {
+          super(() => ({
+            data: {
+              users: {
+                user1: { name: 'User 1', posts: ['post1', 'post2'] }
+              },
+              meta: {
+                lastUpdated: '2024-01-01',
+                version: 1
+              }
             }
-          }
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+          }));
         }
       }
 
@@ -245,17 +212,13 @@ describe('useStore', () => {
         stats: { count: number };
       }
 
-      class MultiStore implements StoreInterface<MultiState> {
-        state: MultiState = {
-          user: { name: 'Bob' },
-          todos: ['task1', 'task2'],
-          stats: { count: 42 }
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class MultiStore extends StoreInterface<MultiState> {
+        constructor() {
+          super(() => ({
+            user: { name: 'Bob' },
+            todos: ['task1', 'task2'],
+            stats: { count: 42 }
+          }));
         }
       }
 
@@ -287,30 +250,20 @@ describe('useStore', () => {
         unrelated: string;
       }
 
-      class OptimizedStore implements StoreInterface<OptimizedState> {
-        state: OptimizedState = {
-          counter: 0,
-          unrelated: 'initial'
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class OptimizedStore extends StoreInterface<OptimizedState> {
+        constructor() {
+          super(() => ({
+            counter: 0,
+            unrelated: 'initial'
+          }));
         }
 
-        updateCounter(value: number) {
-          this.state = { ...this.state, counter: value };
-          this.notify();
+        updateCounter(value: number): void {
+          this.emit({ ...this.state, counter: value });
         }
 
-        updateUnrelated(value: string) {
-          this.state = { ...this.state, unrelated: value };
-          this.notify();
-        }
-
-        notify() {
-          this.listeners.forEach((listener) => listener());
+        updateUnrelated(value: string): void {
+          this.emit({ ...this.state, unrelated: value });
         }
       }
 
@@ -337,10 +290,10 @@ describe('useStore', () => {
 
       // Update unrelated field - selector should prevent re-render
       store.updateUnrelated('changed');
-      
+
       // Wait a bit to ensure no additional renders
       await new Promise((resolve) => setTimeout(resolve, 50));
-      
+
       // Render count should not increase significantly
       expect(renderSpy.mock.calls.length).toBeLessThanOrEqual(
         callsAfterCounterUpdate + 1
@@ -357,22 +310,13 @@ describe('useStore', () => {
         count: number;
       }
 
-      class CounterStore implements StoreInterface<CounterState> {
-        state: CounterState = { count: 0 };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class CounterStore extends StoreInterface<CounterState> {
+        constructor() {
+          super(() => ({ count: 0 }));
         }
 
-        increment() {
-          this.state = { count: this.state.count + 1 };
-          this.notify();
-        }
-
-        notify() {
-          this.listeners.forEach((listener) => listener());
+        increment(): void {
+          this.emit({ count: this.state.count + 1 });
         }
       }
 
@@ -410,28 +354,19 @@ describe('useStore', () => {
         settings: { theme: string };
       }
 
-      class UserStore implements StoreInterface<UserState> {
-        state: UserState = {
-          profile: { name: 'John', email: 'john@example.com' },
-          settings: { theme: 'dark' }
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class UserStore extends StoreInterface<UserState> {
+        constructor() {
+          super(() => ({
+            profile: { name: 'John', email: 'john@example.com' },
+            settings: { theme: 'dark' }
+          }));
         }
 
-        updateName(name: string) {
-          this.state = {
+        updateName(name: string): void {
+          this.emit({
             ...this.state,
             profile: { ...this.state.profile, name }
-          };
-          this.notify();
-        }
-
-        notify() {
-          this.listeners.forEach((listener) => listener());
+          });
         }
       }
 
@@ -470,13 +405,9 @@ describe('useStore', () => {
     it('should handle empty state', () => {
       interface EmptyState extends StoreStateInterface {}
 
-      class EmptyStore implements StoreInterface<EmptyState> {
-        state: EmptyState = {};
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class EmptyStore extends StoreInterface<EmptyState> {
+        constructor() {
+          super(() => ({}));
         }
       }
 
@@ -494,13 +425,9 @@ describe('useStore', () => {
         data?: { value: string };
       }
 
-      class OptionalStore implements StoreInterface<OptionalState> {
-        state: OptionalState = {};
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class OptionalStore extends StoreInterface<OptionalState> {
+        constructor() {
+          super(() => ({}));
         }
       }
 
@@ -520,13 +447,9 @@ describe('useStore', () => {
         value: string | null;
       }
 
-      class NullableStore implements StoreInterface<NullableState> {
-        state: NullableState = { value: null };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class NullableStore extends StoreInterface<NullableState> {
+        constructor() {
+          super(() => ({ value: null }));
         }
       }
 
@@ -546,13 +469,9 @@ describe('useStore', () => {
         items: number[];
       }
 
-      class ArrayStore implements StoreInterface<ArrayState> {
-        state: ArrayState = { items: [1, 2, 3, 4, 5] };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class ArrayStore extends StoreInterface<ArrayState> {
+        constructor() {
+          super(() => ({ items: [1, 2, 3, 4, 5] }));
         }
       }
 
@@ -577,17 +496,13 @@ describe('useStore', () => {
         active: boolean;
       }
 
-      class TypedStore implements StoreInterface<TypedState> {
-        state: TypedState = {
-          count: 0,
-          name: 'test',
-          active: true
-        };
-        listeners = new Set<() => void>();
-
-        subscribe(listener: () => void) {
-          this.listeners.add(listener);
-          return () => this.listeners.delete(listener);
+      class TypedStore extends StoreInterface<TypedState> {
+        constructor() {
+          super(() => ({
+            count: 0,
+            name: 'test',
+            active: true
+          }));
         }
       }
 
@@ -607,4 +522,3 @@ describe('useStore', () => {
     });
   });
 });
-
