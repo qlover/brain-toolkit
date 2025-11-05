@@ -8,20 +8,20 @@
   "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
-    "./react": {
-      "types": "./dist/react/index.d.ts",
-      "import": "./dist/react/index.js",
-      "require": "./dist/react/index.cjs"
-    },
-    "./vite": {
-      "types": "./dist/vite/index.d.ts",
-      "import": "./dist/vite/index.js",
-      "require": "./dist/vite/index.cjs"
-    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./resourceTable": {
+      "types": "./dist/resourceTable/index.d.ts",
+      "import": "./dist/resourceTable/index.js",
+      "require": "./dist/resourceTable/index.cjs"
+    },
+    "./resourceTable/*": {
+      "types": "./dist/resourceTable/*.d.ts",
+      "import": "./dist/resourceTable/*.js",
+      "require": "./dist/resourceTable/*.cjs"
     }
   },
   "files": [
@@ -32,6 +32,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "test": "vitest run",
     "build": "vite build"
   },
   "repository": {
@@ -56,9 +57,11 @@
   },
   "devDependencies": {
     "@types/react": "^19.1.6",
+    "@vitejs/plugin-react": "^4.3.4",
     "@qlover/fe-corekit": "^2.1.0",
     "antd": "^5.25.3",
     "react": "^18.3.1",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "vite-plugin-dts": "^4.5.4"
   }
 }

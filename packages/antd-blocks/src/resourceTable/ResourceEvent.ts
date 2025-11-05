@@ -5,13 +5,13 @@ import {
   type ResourceQuery,
   type ResourceStore
 } from '@qlover/corekit-bridge';
-import type {
-  ResourceTableEventCommonParams,
-  ResourceTableEventInterface
-} from '@/uikit/components/resourceTable';
-import { ResourceTableEventAction } from '@/uikit/components/resourceTable';
 import { ResourceEventStroe } from './ResourceEventStroe';
 import type { FormInstance } from 'antd';
+import {
+  ResourceTableEventAction,
+  ResourceTableEventCommonParams,
+  ResourceTableEventInterface
+} from './ResourceTableEventInterface';
 
 export class ResourceEvent implements ResourceTableEventInterface {
   readonly store: ResourceEventStroe;
