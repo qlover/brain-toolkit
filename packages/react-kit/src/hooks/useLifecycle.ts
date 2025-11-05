@@ -1,5 +1,5 @@
 import { type LifecycleInterface } from '@qlover/corekit-bridge';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * Lifecycle hook for component creation
@@ -125,13 +125,25 @@ export function useLifecycle(
   deps?: React.DependencyList
 ) {
   const mounted = useRef(false);
-  const isComponentMounted = useRef(false);
+  const lifecycleRef = useRef(lifecycle);
 
+  // Update ref when lifecycle changes
+  useEffect(() => {
+    lifecycleRef.current = lifecycle;
+  }, [lifecycle]);
+
+  // Use useCallback with empty deps to create a stable callback reference
+  const destroyedCallback = useCallback(() => {
+    lifecycleRef.current.destroyed();
+  }, []);
+
+  useLifecycleDestroyed(destroyedCallback);
+
+  // Handle created and updated lifecycle
   useEffect(() => {
     // Handle created lifecycle on first mount
     if (!mounted.current) {
       mounted.current = true;
-      isComponentMounted.current = true;
 
       requestAnimationFrame(() => {
         lifecycle.created();
@@ -142,16 +154,6 @@ export function useLifecycle(
         lifecycle.updated();
       }
     }
-
-    // Handle destroyed lifecycle on unmount
-    return () => {
-      requestAnimationFrame(() => {
-        if (!isComponentMounted.current) {
-          lifecycle.destroyed();
-        }
-      });
-      isComponentMounted.current = false;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
