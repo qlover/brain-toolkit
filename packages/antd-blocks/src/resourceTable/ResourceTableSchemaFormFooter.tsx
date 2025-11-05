@@ -69,7 +69,7 @@ export function ResourceTableSchemaFormFooter(props: {
 
   return (
     <div data-testid="AdminTableSchemaFormFooter">
-      <Form.Item>
+      <Form.Item key="submit-button">
         <Button
           block
           type="primary"
@@ -81,7 +81,7 @@ export function ResourceTableSchemaFormFooter(props: {
         </Button>
       </Form.Item>
 
-      <Form.Item>
+      <Form.Item key="cancel-button">
         <Button
           block
           disabled={loading}

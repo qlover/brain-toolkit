@@ -59,10 +59,12 @@ export function ResourceTableSchemaForm<T>(
   const renderItem = useCallback(
     (option: ResourceTableOption<T>, index: number) => {
       const { renderForm, formItemWrapProps, formItemProps, ...rest } = option;
+      const unionKey = String(rest.key) + index;
+      
       if (!renderForm) return null;
 
       if (typeof renderForm === 'function') {
-        return renderForm(rest, index);
+        return <div key={unionKey}>{renderForm(rest, index)}</div>;
       }
 
       const Component = schemaFormMap[renderForm];
@@ -72,7 +74,6 @@ export function ResourceTableSchemaForm<T>(
         return null;
       }
 
-      const unionKey = String(rest.key) + index;
       return (
         <FormItem
           data-testid={'AdminTableForm' + unionKey}

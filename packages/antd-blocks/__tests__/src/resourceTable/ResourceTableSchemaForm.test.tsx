@@ -6,6 +6,22 @@ import { ResourceTableSchemaForm } from '../../../src/resourceTable/ResourceTabl
 import { ResourceTableEventInterface } from '../../../src';
 import { ResourceTableContext } from '../../../src/resourceTable/ResourceTableContext';
 import * as SliceStoreReact from '@qlover/slice-store-react';
+import type { ResourceTableSchemaFormProps } from '../../../src/resourceTable/ResourceTableSchemaForm';
+
+// Mock matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  }))
+});
 
 // Mock dependencies
 vi.mock('@qlover/slice-store-react', () => ({
@@ -25,16 +41,31 @@ const MockSelectComponent = (props: any) => (
   <select data-testid="mock-select" {...props} />
 );
 
+// Test wrapper component that uses real Form.useForm()
+function TestWrapper(
+  props: Omit<ResourceTableSchemaFormProps<any>, 'formRef'>
+) {
+  const [form] = Form.useForm();
+  return <ResourceTableSchemaForm {...props} formRef={form} />;
+}
+
 describe('ResourceTableSchemaForm', () => {
   const mockOnSubmit = vi.fn();
+  const mockOnClosePopup = vi.fn();
+  const mockOnEdited = vi.fn();
   const mockStore = {
     getState: vi.fn(),
-    subscribe: vi.fn()
+    subscribe: vi.fn(),
+    state: {
+      selectedResource: null
+    }
   };
 
   const mockTableEvent = {
     store: mockStore,
-    onSubmit: mockOnSubmit
+    onSubmit: mockOnSubmit,
+    onClosePopup: mockOnClosePopup,
+    onEdited: mockOnEdited
   } as unknown as ResourceTableEventInterface;
 
   const mockTt = {
@@ -68,11 +99,8 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should render form with testid', () => {
-    const [form] = Form.useForm();
-
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={[]}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -84,7 +112,6 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should render form items based on options', () => {
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -107,8 +134,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -121,7 +147,6 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should render multiple form items', () => {
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -150,8 +175,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -167,7 +191,6 @@ describe('ResourceTableSchemaForm', () => {
   it('should disable form items when action is detail', () => {
     (SliceStoreReact.useSliceStore as any).mockReturnValue('detail');
 
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -180,8 +203,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -196,7 +218,6 @@ describe('ResourceTableSchemaForm', () => {
   it('should not disable form items when action is create', () => {
     (SliceStoreReact.useSliceStore as any).mockReturnValue('create');
 
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -209,8 +230,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -225,7 +245,6 @@ describe('ResourceTableSchemaForm', () => {
   it('should not disable form items when action is edit', () => {
     (SliceStoreReact.useSliceStore as any).mockReturnValue('edit');
 
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -238,8 +257,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -252,7 +270,6 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should render custom form using render function', () => {
-    const [form] = Form.useForm();
     const customRender = vi.fn(() => (
       <div data-testid="custom-form-item">Custom Form</div>
     ));
@@ -268,8 +285,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -282,7 +298,6 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should skip options without renderForm', () => {
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -294,8 +309,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     const { container } = render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -304,8 +318,14 @@ describe('ResourceTableSchemaForm', () => {
     );
 
     const formItems = container.querySelectorAll('.ant-form-item');
-    // Should only have the footer, no form items
-    expect(formItems.length).toBe(0);
+    // Should only have the footer form items (2 buttons)
+    expect(formItems.length).toBe(2);
+
+    // Verify no option form items were rendered
+    const optionFormItem = container.querySelector(
+      '[data-testid="AdminTableFormname0"]'
+    );
+    expect(optionFormItem).toBeNull();
   });
 
   it('should warn when component is not found', () => {
@@ -313,7 +333,6 @@ describe('ResourceTableSchemaForm', () => {
       .spyOn(console, 'warn')
       .mockImplementation(() => {});
 
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -326,8 +345,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -343,11 +361,10 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should use context formComponents', () => {
-    const contextFormComponents = {
+    const contextFormComponents: any = {
       input: MockInputComponent
     };
 
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -363,8 +380,7 @@ describe('ResourceTableSchemaForm', () => {
       <ResourceTableContext.Provider
         value={{ formComponents: contextFormComponents }}
       >
-        <ResourceTableSchemaForm
-          formRef={form}
+        <TestWrapper
           options={options}
           tableEvent={mockTableEvent}
           tt={mockTt}
@@ -376,15 +392,14 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should merge context and prop formComponents', () => {
-    const contextFormComponents = {
+    const contextFormComponents: any = {
       input: MockInputComponent
     };
 
-    const propFormComponents = {
+    const propFormComponents: any = {
       textarea: MockTextareaComponent
     };
 
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -408,8 +423,7 @@ describe('ResourceTableSchemaForm', () => {
       <ResourceTableContext.Provider
         value={{ formComponents: contextFormComponents }}
       >
-        <ResourceTableSchemaForm
-          formRef={form}
+        <TestWrapper
           options={options}
           tableEvent={mockTableEvent}
           tt={mockTt}
@@ -423,18 +437,15 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should render custom children instead of default footer', () => {
-    const [form] = Form.useForm();
-
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={[]}
         tableEvent={mockTableEvent}
         tt={mockTt}
         formComponents={defaultFormComponents}
       >
         <div data-testid="custom-footer">Custom Footer</div>
-      </ResourceTableSchemaForm>
+      </TestWrapper>
     );
 
     expect(screen.getByTestId('custom-footer')).toBeTruthy();
@@ -442,11 +453,9 @@ describe('ResourceTableSchemaForm', () => {
 
   it('should call onSubmit when form is submitted', async () => {
     const user = userEvent.setup();
-    const [form] = Form.useForm();
 
     const { container } = render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={[]}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -455,7 +464,7 @@ describe('ResourceTableSchemaForm', () => {
         <button type="submit" data-testid="submit-button">
           Submit
         </button>
-      </ResourceTableSchemaForm>
+      </TestWrapper>
     );
 
     const formElement = container.querySelector('form');
@@ -469,11 +478,8 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should use vertical layout by default', () => {
-    const [form] = Form.useForm();
-
     const { container } = render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={[]}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -486,11 +492,8 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should pass additional form props', () => {
-    const [form] = Form.useForm();
-
     const { container } = render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={[]}
         tableEvent={mockTableEvent}
         tt={mockTt}
@@ -504,7 +507,6 @@ describe('ResourceTableSchemaForm', () => {
   });
 
   it('should pass formItemProps to component', () => {
-    const [form] = Form.useForm();
     const options = [
       {
         key: 'name',
@@ -521,8 +523,7 @@ describe('ResourceTableSchemaForm', () => {
     ];
 
     render(
-      <ResourceTableSchemaForm
-        formRef={form}
+      <TestWrapper
         options={options}
         tableEvent={mockTableEvent}
         tt={mockTt}
