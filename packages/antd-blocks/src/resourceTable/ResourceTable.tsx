@@ -242,16 +242,20 @@ export function ResourceTable<T>(props: ResourceTableProps<T>) {
       scroll={{ x: true }}
       {...tableProps}
       columns={innerColumns}
-      pagination={{
-        pageSizeOptions: [10, 20, 50],
-        current: searchParams.page,
-        pageSize: searchParams.pageSize,
-        total: listState.result?.total,
-        onChange: (page, pageSize) => {
-          tableEvent?.onChangeParams({ resource, page, pageSize });
-        },
-        ...tableProps.pagination
-      }}
+      pagination={
+        tableProps.pagination === false
+          ? false
+          : {
+              pageSizeOptions: [10, 20, 50],
+              current: searchParams.page,
+              pageSize: searchParams.pageSize,
+              total: listState.result?.total,
+              onChange: (page, pageSize) => {
+                tableEvent?.onChangeParams({ resource, page, pageSize });
+              },
+              ...tableProps.pagination
+            }
+      }
     />
   );
 }

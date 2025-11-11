@@ -483,4 +483,21 @@ describe('ResourceTable', () => {
     expect(deleteButtons.length).toBe(mockDataSource.length);
     expect(detailButtons.length).toBe(mockDataSource.length);
   });
+
+  it('should not render pagination when pagination is false', () => {
+    (SliceStoreReact.useSliceStore as any)
+      .mockReturnValueOnce(defaultSearchParams)
+      .mockReturnValueOnce(defaultListState);
+
+    render(
+      <ResourceTable
+        columns={mockColumns}
+        tableEvent={mockTableEvent}
+        pagination={false}
+      />
+    );
+
+    const pagination = screen.queryByText('Pagination');
+    expect(pagination).toBeNull();
+  });
 });
