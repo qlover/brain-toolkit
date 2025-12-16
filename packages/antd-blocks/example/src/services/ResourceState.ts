@@ -26,7 +26,7 @@ export class ResourceState implements ResourceStateInterface {
   /**
    * Search and pagination parameters
    */
-  searchParams: ResourceQuery = {
+  public searchParams: ResourceQuery = {
     page: 1,
     pageSize: 10,
     orderBy: 'updated_at',
@@ -36,10 +36,10 @@ export class ResourceState implements ResourceStateInterface {
   /**
    * Initial load state
    */
-  initState = new RequestState<unknown>();
+  public initState = new RequestState<unknown>();
 
   /**
    * List/search operation state
    */
-  listState = new RequestState<unknown>();
+  public listState = new RequestState<unknown>();
 }

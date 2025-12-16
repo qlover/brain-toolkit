@@ -1,12 +1,10 @@
 /**
  *
  * @param {Parameters<import('tsup').Options['outExtension']>[0]} ctx
- * @param {import('tsup').NormalizedOptions} ctx.options
  * @param {import('tsup').Format} ctx.format
- * @param {string} ctx.pkgType
  * @returns {ReturnType<import('tsup').Options['outExtension']>}
  */
-export function outExtension({ options, format, pkgType }) {
+export function outExtension({ format }) {
   if (format === 'iife') {
     return { js: '.iife.js' };
   }
@@ -19,14 +17,12 @@ export function outExtension({ options, format, pkgType }) {
 }
 
 /**
- * 
+ *
  * @param {Parameters<import('tsup').Options['outExtension']>[0]} ctx
- * @param {import('tsup').NormalizedOptions} ctx.options
  * @param {import('tsup').Format} ctx.format
- * @param {string} ctx.pkgType
  * @returns {ReturnType<import('tsup').Options['outExtension']>}
  */
-export function outExtensionMini({ options, format, pkgType }) {
+export function outExtensionMini({ format }) {
   if (format === 'iife') {
     return { js: '.min.iife.js' };
   }

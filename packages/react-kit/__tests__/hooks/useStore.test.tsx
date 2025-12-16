@@ -26,7 +26,10 @@ describe('useStore', () => {
           super(() => ({ count: 0 }));
         }
 
-        increment(): void {
+        /**
+         * @override
+         */
+        public increment(): void {
           this.emit({ count: this.state.count + 1 });
         }
       }
@@ -50,7 +53,10 @@ describe('useStore', () => {
           super(() => ({ count: 0 }));
         }
 
-        increment(): void {
+        /**
+         * @override
+         */
+        public increment(): void {
           this.emit({ count: this.state.count + 1 });
         }
       }
@@ -258,11 +264,17 @@ describe('useStore', () => {
           }));
         }
 
-        updateCounter(value: number): void {
+        /**
+         * @override
+         */
+        public updateCounter(value: number): void {
           this.emit({ ...this.state, counter: value });
         }
 
-        updateUnrelated(value: string): void {
+        /**
+         * @override
+         */
+        public updateUnrelated(value: string): void {
           this.emit({ ...this.state, unrelated: value });
         }
       }
@@ -315,7 +327,10 @@ describe('useStore', () => {
           super(() => ({ count: 0 }));
         }
 
-        increment(): void {
+        /**
+         * @override
+         */
+        public increment(): void {
           this.emit({ count: this.state.count + 1 });
         }
       }
@@ -362,7 +377,10 @@ describe('useStore', () => {
           }));
         }
 
-        updateName(name: string): void {
+        /**
+         * @override
+         */
+        public updateName(name: string): void {
           this.emit({
             ...this.state,
             profile: { ...this.state.profile, name }

@@ -333,15 +333,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class TestLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -380,15 +389,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class MinimalLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           // Should still be called
         }
       }
@@ -421,15 +439,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class CounterLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -472,15 +499,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class ComponentLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -518,15 +554,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class MultiUpdateLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -578,15 +623,24 @@ describe('Lifecycle Hooks', () => {
         const [count, setCount] = useState(0);
 
         class StateLifecycle implements LifecycleInterface {
-          created(): void {
+          /**
+           * @override
+           */
+          public created(): void {
             lifecycleCalls.push({ method: 'created', count });
           }
 
-          updated(): void {
+          /**
+           * @override
+           */
+          public updated(): void {
             lifecycleCalls.push({ method: 'updated', count });
           }
 
-          destroyed(): void {
+          /**
+           * @override
+           */
+          public destroyed(): void {
             lifecycleCalls.push({ method: 'destroyed', count });
           }
         }
@@ -634,15 +688,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class EmptyDepsLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -679,15 +742,24 @@ describe('Lifecycle Hooks', () => {
       const error = new Error('Created error');
 
       class ErrorLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           throw error;
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           // Should still be called
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           // Should still be called
         }
       }
@@ -717,17 +789,26 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class AsyncLifecycle implements LifecycleInterface {
-        async created(): Promise<void> {
+        /**
+         * @override
+         */
+        public async created(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 10));
           calls.push('created');
         }
 
-        async updated(): Promise<void> {
+        /**
+         * @override
+         */
+        public async updated(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 10));
           calls.push('updated');
         }
 
-        async destroyed(): Promise<void> {
+        /**
+         * @override
+         */
+        public async destroyed(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 10));
           calls.push('destroyed');
         }

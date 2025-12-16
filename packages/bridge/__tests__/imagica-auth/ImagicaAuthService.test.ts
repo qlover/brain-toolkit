@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * ImagicaAuthService test-suite
  *
@@ -36,20 +35,38 @@ import {
 } from '@qlover/corekit-bridge';
 
 class CustomApi<User> implements UserAuthApiInterface<User> {
-  getStore(): UserAuthStoreInterface<User> | null {
+  /**
+   * @override
+   */
+  public getStore(): UserAuthStoreInterface<User> | null {
     return {} as UserAuthStoreInterface<User>;
   }
-  setStore(_store: UserAuthStoreInterface<User>): void {}
-  login(_params: unknown): Promise<LoginResponseData> {
+  /**
+   * @override
+   */
+  public setStore(_store: UserAuthStoreInterface<User>): void {}
+  /**
+   * @override
+   */
+  public login(_params: unknown): Promise<LoginResponseData> {
     return Promise.resolve({} as LoginResponseData);
   }
-  register(_params: unknown): Promise<LoginResponseData> {
+  /**
+   * @override
+   */
+  public register(_params: unknown): Promise<LoginResponseData> {
     return Promise.resolve({} as LoginResponseData);
   }
-  logout(): Promise<void> {
+  /**
+   * @override
+   */
+  public logout(): Promise<void> {
     return Promise.resolve();
   }
-  getUserInfo(_params?: unknown): Promise<User> {
+  /**
+   * @override
+   */
+  public getUserInfo(_params?: unknown): Promise<User> {
     return Promise.resolve({} as User);
   }
 }

@@ -17,7 +17,7 @@ export default defineConfig({
       '**/.github/**',
       '**/.husky/**',
       '**/.vscode/**',
-      '**/.nx/**',
+      '**/.nx/**'
     ],
     alias: {
       '@brain-toolkit/element-sizer': resolve(

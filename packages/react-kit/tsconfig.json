@@ -9,5 +9,12 @@
     "types": ["vite/client", "vitest/globals"]
   },
   "include": ["src", "package.json"],
-  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__", "example"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "ts-build",
+    "__tests__",
+    "__mocks__",
+    "example"
+  ]
 }

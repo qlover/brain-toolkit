@@ -40,7 +40,7 @@ export class ResourceTableState implements StoreStateInterface {
    *
    * @optional
    */
-  selectedResource?: unknown;
+  public selectedResource?: unknown;
 
   /**
    * Current action type
@@ -54,7 +54,7 @@ export class ResourceTableState implements StoreStateInterface {
    *
    * @optional
    */
-  action: ResourceTableEventActionType | undefined;
+  public action: ResourceTableEventActionType | undefined;
 
   /**
    * Whether the form popup is open
@@ -63,7 +63,7 @@ export class ResourceTableState implements StoreStateInterface {
    *
    * @default `false`
    */
-  openPopup: boolean = false;
+  public openPopup: boolean = false;
 
   /**
    * Create operation state
@@ -73,7 +73,7 @@ export class ResourceTableState implements StoreStateInterface {
    *
    * @default `new RequestState<unknown>()`
    */
-  createState = new RequestState<unknown>();
+  public createState = new RequestState<unknown>();
 
   /**
    * Delete operation state
@@ -82,7 +82,7 @@ export class ResourceTableState implements StoreStateInterface {
    *
    * @default `new RequestState<unknown>()`
    */
-  deleteState = new RequestState<unknown>();
+  public deleteState = new RequestState<unknown>();
 
   /**
    * Edit operation state
@@ -91,7 +91,7 @@ export class ResourceTableState implements StoreStateInterface {
    *
    * @default `new RequestState<unknown>()`
    */
-  editState = new RequestState<unknown>();
+  public editState = new RequestState<unknown>();
 }
 
 /**
@@ -165,7 +165,7 @@ export class ResourceEventStroe extends StoreInterface<ResourceTableState> {
    * store.changeCreateState(new RequestState(false, createdData).end());
    * ```
    */
-  changeCreateState(state: RequestState<unknown>): void {
+  public changeCreateState(state: RequestState<unknown>): void {
     this.emit({
       ...this.state,
       createState: state
@@ -189,7 +189,7 @@ export class ResourceEventStroe extends StoreInterface<ResourceTableState> {
    * store.changeEditState(new RequestState(false, updatedData).end());
    * ```
    */
-  changeEditState(state: RequestState<unknown>): void {
+  public changeEditState(state: RequestState<unknown>): void {
     this.emit({
       ...this.state,
       editState: state

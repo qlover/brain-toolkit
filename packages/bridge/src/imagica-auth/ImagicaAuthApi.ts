@@ -149,29 +149,35 @@ export class ImagicaAuthApi
     this.adapter = parseAdapter(config, this.userAuthStore);
   }
 
-  getStore(): UserAuthStoreInterface<UserInfoResponseData> | null {
+  /**
+   * @override
+   */
+  public getStore(): UserAuthStoreInterface<UserInfoResponseData> | null {
     return this.userAuthStore ?? null;
   }
 
-  setStore(store: UserAuthStoreInterface<UserInfoResponseData>): void {
+  /**
+   * @override
+   */
+  public setStore(store: UserAuthStoreInterface<UserInfoResponseData>): void {
     this.userAuthStore = store;
   }
 
-  getConfig(): ImagicaAuthApiConfig {
+  public getConfig(): ImagicaAuthApiConfig {
     return this.adapter.getConfig();
   }
 
-  usePlugin(plugin: ExecutorPlugin): void {
+  public usePlugin(plugin: ExecutorPlugin): void {
     this.adapter.usePlugin(plugin);
   }
 
-  request<T, R>(
+  public request<T, R>(
     params: Partial<ImagicaAuthApiConfig> & { data?: T }
   ): Promise<RequestAdapterResponse<T, R>> {
     return this.adapter.request<T, R>(params as RequestAdapterFetchConfig<T>);
   }
 
-  async loginWithGoogle(
+  public async loginWithGoogle(
     params: LoginWithGoogleRequest
   ): Promise<LoginResponseData> {
     const response = await this.request<
@@ -189,10 +195,13 @@ export class ImagicaAuthApi
 
   /**
    * 注册
+   * @override
    * @param params 注册参数
    * @returns 注册响应数据
    */
-  async register(params: RegisterRequest): Promise<UserInfoResponseData> {
+  public async register(
+    params: RegisterRequest
+  ): Promise<UserInfoResponseData> {
     const response = await this.request<RegisterRequest, UserInfoResponseData>({
       requestId: apiIdentifier.register,
       url: apiIdentifier.register,
@@ -205,9 +214,10 @@ export class ImagicaAuthApi
 
   /**
    * 登出
+   * @override
    * @returns 登出响应数据
    */
-  async logout(): Promise<void> {
+  public async logout(): Promise<void> {
     const response = await this.request<undefined, LogoutResponseData>({
       requestId: apiIdentifier.logout,
       url: apiIdentifier.logout,
@@ -219,7 +229,12 @@ export class ImagicaAuthApi
     return response.data as any;
   }
 
-  async getUserInfo(params: GetUserInfoRequest): Promise<UserInfoResponseData> {
+  /**
+   * @override
+   */
+  public async getUserInfo(
+    params: GetUserInfoRequest
+  ): Promise<UserInfoResponseData> {
     const response = await this.request<{}, UserInfoResponseData>({
       requestId: apiIdentifier.getUserInfo,
       url: apiIdentifier.getUserInfo,
@@ -232,10 +247,11 @@ export class ImagicaAuthApi
 
   /**
    * 登录
+   * @override
    * @param params 登录参数
    * @returns 登录响应数据
    */
-  async login(params: LoginRequest): Promise<LoginResponseData> {
+  public async login(params: LoginRequest): Promise<LoginResponseData> {
     const response = await this.request<LoginRequest, LoginResponseData>({
       requestId: apiIdentifier.login,
       url: apiIdentifier.login,

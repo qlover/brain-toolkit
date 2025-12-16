@@ -21,23 +21,23 @@ class CounterService {
     );
   }
 
-  get count(): number {
+  public get count(): number {
     return this._count;
   }
 
-  get id(): string {
+  public get id(): string {
     return this._id;
   }
 
-  increment(): void {
+  public increment(): void {
     this._count++;
   }
 
-  decrement(): void {
+  public decrement(): void {
     this._count--;
   }
 
-  reset(): void {
+  public reset(): void {
     this._count = 0;
   }
 }
@@ -52,7 +52,7 @@ class Logger {
     this.namespace = namespace;
   }
 
-  log(message: string): string {
+  public log(message: string): string {
     return `[${this.namespace}] ${message}`;
   }
 }

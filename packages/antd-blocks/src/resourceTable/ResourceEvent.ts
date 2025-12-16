@@ -106,7 +106,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    *
    * Handles reactive state updates for all CRUD operations
    */
-  readonly store: ResourceEventStroe;
+  public readonly store: ResourceEventStroe;
 
   constructor(
     /**
@@ -172,6 +172,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * Provides access to the underlying resource service for
    * custom operations or accessing service-specific methods.
    *
+   * @override
    * @returns Resource service instance
    *
    * @example
@@ -181,7 +182,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * console.log('Current state:', store.state);
    * ```
    */
-  getResource(): ResourceServiceInterface<
+  public getResource(): ResourceServiceInterface<
     unknown,
     ResourceStore<ResourceStateInterface>
   > {
@@ -296,6 +297,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * - Other actions: throws error
    * - Validates action type before processing
    *
+   * @override
    * @param values - Form values to submit
    * @returns Promise resolving to operation result
    *
@@ -316,7 +318,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * };
    * ```
    */
-  async onSubmit(values: unknown): Promise<unknown> {
+  public async onSubmit(values: unknown): Promise<unknown> {
     const action = this.store.state.action;
 
     if (
@@ -343,6 +345,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * when pagination, sorting, or filtering changes. Automatically
    * updates store state and refreshes data.
    *
+   * @override
    * @param params - Search parameters
    * @param {ResourceServiceInterface} [params.resource] - Resource service instance
    * @param {number} [params.page] - Page number (1-based)
@@ -366,7 +369,9 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * />
    * ```
    */
-  onChangeParams(params: ResourceTableEventCommonParams & ResourceQuery): void {
+  public onChangeParams(
+    params: ResourceTableEventCommonParams & ResourceQuery
+  ): void {
     const { resource, ...query } = params;
 
     if (resource) {
@@ -382,6 +387,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * Opens popup with empty form in CREATE mode. Resets form fields
    * to ensure no stale data from previous operations.
    *
+   * @override
    * @param params - Event parameters
    * @param {unknown} [params.dataSource] - Initial data for pre-filling form
    *
@@ -393,7 +399,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * </Button>
    * ```
    */
-  onCreated(params: ResourceTableEventCommonParams): void {
+  public onCreated(params: ResourceTableEventCommonParams): void {
     this.schemaFormRef?.resetFields();
     this.store.emit({
       ...this.store.state,
@@ -409,6 +415,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * Calls resource service remove method to delete the resource.
    * You may want to show a confirmation dialog before calling this method.
    *
+   * @override
    * @param _params - Event parameters
    * @param {unknown} _params.dataSource - Resource data to delete (must include ID)
    *
@@ -423,7 +430,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * </Popconfirm>
    * ```
    */
-  onDeleted(_params: ResourceTableEventCommonParams): void {
+  public onDeleted(_params: ResourceTableEventCommonParams): void {
     this.resource.remove(_params.dataSource);
   }
 
@@ -433,6 +440,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * Opens popup in DETAIL mode with form fields populated with
    * resource data. Form should be in read-only mode for viewing.
    *
+   * @override
    * @param _params - Event parameters
    * @param {unknown} _params.dataSource - Resource data to display
    *
@@ -444,7 +452,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * </Button>
    * ```
    */
-  onDetail(_params: ResourceTableEventCommonParams): void {
+  public onDetail(_params: ResourceTableEventCommonParams): void {
     const { dataSource } = _params;
 
     if (!dataSource) {
@@ -467,6 +475,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * Opens popup in EDIT mode with form fields pre-filled with
    * current resource data. Allows user to modify and submit changes.
    *
+   * @override
    * @param _params - Event parameters
    * @param {unknown} _params.dataSource - Resource data to edit (must include ID)
    *
@@ -478,7 +487,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * </Button>
    * ```
    */
-  onEdited(_params: ResourceTableEventCommonParams): void {
+  public onEdited(_params: ResourceTableEventCommonParams): void {
     const { dataSource } = _params;
 
     if (!dataSource) {
@@ -507,6 +516,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * - Updates store with new data on success
    * - Captures and stores error on failure
    *
+   * @override
    * @param _params - Event parameters
    * @param {ResourceServiceInterface} [_params.resource] - Resource service to refresh
    * @returns Promise resolving to search result or error
@@ -523,7 +533,9 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * await tableEvent.onRefresh({ resource: userService });
    * ```
    */
-  async onRefresh(_params: ResourceTableEventCommonParams): Promise<unknown> {
+  public async onRefresh(
+    _params: ResourceTableEventCommonParams
+  ): Promise<unknown> {
     const resource = this.resource;
     const resourceStore = resource.getStore();
 
@@ -557,6 +569,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * - Clears selected resource
    * - Resets action type to undefined
    *
+   * @override
    * @example
    * ```typescript
    * // Modal close handler
@@ -568,7 +581,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * </Modal>
    * ```
    */
-  onClosePopup(): void {
+  public onClosePopup(): void {
     if (
       this.store.state.createState.loading ||
       this.store.state.editState.loading
@@ -605,7 +618,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * }, []);
    * ```
    */
-  created(): void {
+  public created(): void {
     this.resource.created();
     this.store.reset();
   }
@@ -624,7 +637,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * });
    * ```
    */
-  updated(): void {
+  public updated(): void {
     this.resource.updated();
   }
 
@@ -650,7 +663,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * }, []);
    * ```
    */
-  destroyed(): void {
+  public destroyed(): void {
     this.resource.destroyed();
     this.store.reset();
   }

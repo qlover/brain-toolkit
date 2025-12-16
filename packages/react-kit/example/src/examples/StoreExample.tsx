@@ -23,7 +23,7 @@ class CounterStore extends StoreInterface<CounterState> {
     }));
   }
 
-  increment(): void {
+  public increment(): void {
     this.emit({
       ...this.state,
       count: this.state.count + 1,
@@ -31,7 +31,7 @@ class CounterStore extends StoreInterface<CounterState> {
     });
   }
 
-  decrement(): void {
+  public decrement(): void {
     this.emit({
       ...this.state,
       count: this.state.count - 1,
@@ -39,7 +39,7 @@ class CounterStore extends StoreInterface<CounterState> {
     });
   }
 
-  reset(): void {
+  public reset(): void {
     this.emit({
       count: 0,
       lastUpdated: Date.now()
@@ -69,7 +69,7 @@ class TodoStore extends StoreInterface<TodoState> {
     }));
   }
 
-  addTodo(text: string): void {
+  public addTodo(text: string): void {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text,
@@ -81,7 +81,7 @@ class TodoStore extends StoreInterface<TodoState> {
     });
   }
 
-  toggleTodo(id: string): void {
+  public toggleTodo(id: string): void {
     this.emit({
       ...this.state,
       todos: this.state.todos.map((todo) =>
@@ -90,14 +90,14 @@ class TodoStore extends StoreInterface<TodoState> {
     });
   }
 
-  deleteTodo(id: string): void {
+  public deleteTodo(id: string): void {
     this.emit({
       ...this.state,
       todos: this.state.todos.filter((todo) => todo.id !== id)
     });
   }
 
-  setFilter(filter: 'all' | 'active' | 'completed'): void {
+  public setFilter(filter: 'all' | 'active' | 'completed'): void {
     this.emit({
       ...this.state,
       filter

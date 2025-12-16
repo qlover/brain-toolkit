@@ -180,7 +180,7 @@ export class ElementResizer {
    * Gets the target element
    * @throws {Error} If target is not available
    */
-  get target(): HTMLElement {
+  public get target(): HTMLElement {
     const target = this.options.target;
     if (!target) {
       throw new Error('ElementResizer: target is required');
@@ -191,14 +191,14 @@ export class ElementResizer {
   /**
    * Gets the current animation state
    */
-  get animationState(): AnimationState {
+  public get animationState(): AnimationState {
     return this._animationState;
   }
 
   /**
    * Checks if animation is currently in progress
    */
-  get isAnimating(): boolean {
+  public get isAnimating(): boolean {
     return (
       this._animationState === AnimationState.EXPANDING ||
       this._animationState === AnimationState.COLLAPSING
@@ -209,7 +209,7 @@ export class ElementResizer {
    * Gets or creates the placeholder element based on configuration
    * @returns The placeholder element or null if not configured
    */
-  getPlaceholder(): HTMLElement | null {
+  public getPlaceholder(): HTMLElement | null {
     const { placeholder } = this.options;
 
     // Return cached placeholder if available
@@ -238,7 +238,7 @@ export class ElementResizer {
    * @param value - Numeric value or string with unit
    * @returns Formatted string with unit
    */
-  toUnit(value: string | number): string {
+  public toUnit(value: string | number): string {
     const { unit = 'px' } = this.options;
 
     // If value is a number, add the unit
@@ -300,7 +300,7 @@ export class ElementResizer {
   /**
    * Checks if placeholder should be auto-created
    */
-  get isAutoCreatePlaceholder(): boolean {
+  public get isAutoCreatePlaceholder(): boolean {
     const { placeholder } = this.options;
     return !(placeholder instanceof HTMLElement) && placeholder === true;
   }
@@ -310,7 +310,7 @@ export class ElementResizer {
    * @param options - Partial options to merge
    * @returns This instance for method chaining
    */
-  setOptions(options: Partial<ElementResizerOptions>): this {
+  public setOptions(options: Partial<ElementResizerOptions>): this {
     this.options = { ...this.options, ...options };
     return this;
   }
@@ -350,7 +350,7 @@ export class ElementResizer {
    * @param target - Target element
    * @returns Current computed dimensions
    */
-  getRelativeRect(target: HTMLElement): ElementResizerRect {
+  public getRelativeRect(target: HTMLElement): ElementResizerRect {
     const _getRelativeRect = this.options.getRelativeRect;
 
     if (_getRelativeRect && typeof _getRelativeRect === 'function') {
@@ -364,7 +364,7 @@ export class ElementResizer {
    * Expands the target element with smooth animation
    * @throws {Error} If already animating
    */
-  expand(): void {
+  public expand(): void {
     if (this.isAnimating) {
       console.warn('ElementResizer: Animation already in progress');
       return;
@@ -420,7 +420,7 @@ export class ElementResizer {
     }
   }
 
-  fixedCurrentTargetRect(): void {
+  public fixedCurrentTargetRect(): void {
     // If no placeholder exists, we can't perform the fixed positioning
     if (!this._placeholder) {
       return;
@@ -461,7 +461,7 @@ export class ElementResizer {
    * Collapses the target element with smooth animation
    * @throws {Error} If already animating or no previous expand state
    */
-  collapse(): void {
+  public collapse(): void {
     if (this.isAnimating) {
       console.warn('ElementResizer: Animation already in progress');
       return;
@@ -540,7 +540,7 @@ export class ElementResizer {
   /**
    * Cancels any ongoing animation and resets to idle state
    */
-  cancelAnimation(): void {
+  public cancelAnimation(): void {
     if (this._animationTimeoutId) {
       clearTimeout(this._animationTimeoutId);
       this._animationTimeoutId = null;
@@ -651,7 +651,7 @@ export class ElementResizer {
   /**
    * Destroys the instance and cleans up all resources
    */
-  destroy(): void {
+  public destroy(): void {
     this.cancelAnimation();
     this.cleanup();
 

@@ -15,8 +15,8 @@
     "nx:build": "nx affected:build",
     "nx:build:force": "pnpm nx run-many --target=build --all --skip-nx-cache --parallel --maxParallel=4",
     "prettier": "prettier --ignore-path .prettierignore **/*.{js,ts,json,cjs,mjs} --write",
-    "lint": "tsc --noEmit && eslint ./packages ./make",
-    "lint:fix": "eslint ./packages ./make --fix",
+    "lint": "pnpm type-check && eslint ./packages ./tools",
+    "lint:fix": "eslint ./packages ./tools --fix",
     "fix": "pnpm lint:fix && pnpm prettier",
     "test": "vitest run",
     "clean": "fe-clean",
@@ -24,7 +24,8 @@
     "commit": "fe-commit",
     "clean-branch": "fe-clean-branch",
     "check-packages": "fe-check-packages",
-    "prepare": "husky"
+    "prepare": "husky",
+    "type-check": "tsc --build"
   },
   "keywords": [
     "brain-toolkit",

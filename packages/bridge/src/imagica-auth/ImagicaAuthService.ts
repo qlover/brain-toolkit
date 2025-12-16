@@ -22,7 +22,7 @@ export interface ImagicaAuthServiceConfig
 }
 
 export class ImagicaAuthService extends UserAuthService<ImagicaAuthState> {
-  declare readonly api: ImagicaAuthApi;
+  declare public readonly api: ImagicaAuthApi;
 
   constructor(options?: ImagicaAuthServiceConfig) {
     const { requestConfig, ...opts } = mergedOptions(options);
@@ -34,25 +34,27 @@ export class ImagicaAuthService extends UserAuthService<ImagicaAuthState> {
     super(service, restOpts);
   }
 
-  override get store(): UserAuthStore<ImagicaAuthState> {
+  public override get store(): UserAuthStore<ImagicaAuthState> {
     return super.store as UserAuthStore<ImagicaAuthState>;
   }
 
-  use(plugin: ExecutorPlugin): this {
+  public use(plugin: ExecutorPlugin): this {
     this.api.usePlugin(plugin);
 
     return this;
   }
 
-  reset(): void {
+  public reset(): void {
     this.store.reset();
   }
 
-  getState(): ImagicaAuthState {
+  public getState(): ImagicaAuthState {
     return this.store.state;
   }
 
-  loginWithGoogle(params: LoginWithGoogleRequest): Promise<LoginResponseData> {
+  public loginWithGoogle(
+    params: LoginWithGoogleRequest
+  ): Promise<LoginResponseData> {
     return this.api.loginWithGoogle(params);
   }
 }

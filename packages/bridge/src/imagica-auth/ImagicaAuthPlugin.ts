@@ -11,9 +11,9 @@ import {
 import { apiIdentifier, imagicaIdentifier } from './consts';
 
 export class ImagicaAuthPlugin implements ExecutorPlugin<ImagicaAuthApiConfig> {
-  readonly pluginName: string = 'ImagicaApiPlugin';
+  public readonly pluginName: string = 'ImagicaApiPlugin';
 
-  isUserInfo(value: unknown): value is UserInfoResponseData {
+  public isUserInfo(value: unknown): value is UserInfoResponseData {
     return (
       typeof value === 'object' &&
       value !== null &&
@@ -23,7 +23,7 @@ export class ImagicaAuthPlugin implements ExecutorPlugin<ImagicaAuthApiConfig> {
     );
   }
 
-  isLoginResponse(value: unknown): value is LoginResponseData {
+  public isLoginResponse(value: unknown): value is LoginResponseData {
     return (
       typeof value === 'object' &&
       value !== null &&
@@ -33,14 +33,20 @@ export class ImagicaAuthPlugin implements ExecutorPlugin<ImagicaAuthApiConfig> {
     );
   }
 
-  enabled(
+  /**
+   * @override
+   */
+  public enabled(
     _name: keyof ExecutorPlugin,
     _context?: ExecutorContext<ImagicaAuthApiConfig>
   ): boolean {
     return true;
   }
 
-  onSuccess?(
+  /**
+   * @override
+   */
+  public onSuccess?(
     context: ExecutorContext<ImagicaAuthApiConfig>
   ): void | Promise<void> {
     const returnValue = context.returnValue as RequestAdapterResponse<

@@ -54,7 +54,13 @@ export default tseslint.config([
   {
     name: 'lint-packages',
     files: ['packages/**/*.{ts,tsx}'],
-    ignores: ['**/__tests__/**', '**/__mocks__/**', '**/tsup.config.ts'],
+    ignores: [
+      '**/__tests__/**',
+      '**/__mocks__/**',
+      '**/tsup.config.ts',
+      '**/vite.config.ts',
+      '**/vite.*.config.ts'
+    ],
     extends: [...tseslint.configs.recommended],
     languageOptions: {
       parserOptions: {
@@ -80,6 +86,24 @@ export default tseslint.config([
           argsIgnorePattern: '^_'
         }
       ],
+      '@typescript-eslint/ban-ts-comment': 'off'
+    }
+  },
+
+  // vite 配置文件使用宽松规则
+  {
+    name: 'lint-vite-config',
+    files: ['**/vite.config.ts', '**/vite.*.config.ts'],
+    extends: [...tseslint.configs.recommended],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/ban-ts-comment': 'off'
     }
   },
