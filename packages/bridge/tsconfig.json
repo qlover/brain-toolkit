@@ -1,11 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "sourceMap": false,
-    "inlineSourceMap": false,
-    "inlineSources": false,
-    "importHelpers": false,
-    "declaration": false
+    "composite": true,
+    "rootDir": ".",
+    "allowJs": false,
+    "esModuleInterop": false,
+    "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src"]
+  "include": ["src", "example", "package.json"],
+  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"]
 }

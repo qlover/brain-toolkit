@@ -43,7 +43,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@qlover/corekit-bridge": "^1.4.0",
-    "@qlover/fe-corekit": "^2.0.1"
+    "@qlover/corekit-bridge": "^1.8.1",
+    "@qlover/fe-corekit": "^2.3.1"
   }
 }

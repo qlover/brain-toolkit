@@ -13,7 +13,12 @@ export default defineConfig([
   {
     entry: ['src/index.ts'],
     format: 'esm',
-    dts: true,
+    dts: {
+      compilerOptions: {
+        composite: false,
+        incremental: false
+      }
+    },
     outDir: 'dist'
   }
 ]);

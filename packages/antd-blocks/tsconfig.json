@@ -1,28 +1,13 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "skipLibCheck": true,
-    "downlevelIteration": true,
-    "strict": true,
-    "allowUnusedLabels": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "outDir": "dist",
+    "composite": true,
+    "rootDir": ".",
     "allowJs": false,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-jsx",
+    "esModuleInterop": false,
     "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src", "__tests__"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src", "package.json"],
+  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__", "example"]
 }
