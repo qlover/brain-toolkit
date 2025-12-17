@@ -766,6 +766,10 @@ describe('Lifecycle Hooks', () => {
 
       const lifecycle = new ErrorLifecycle();
 
+      // Suppress console.error for this test since we expect an error
+      const originalError = console.error;
+      console.error = vi.fn();
+
       // Mock requestAnimationFrame to execute callback immediately
       const originalRAF = window.requestAnimationFrame;
       window.requestAnimationFrame = ((callback: FrameRequestCallback) => {
@@ -779,6 +783,7 @@ describe('Lifecycle Hooks', () => {
         }).toThrow(error);
       } finally {
         window.requestAnimationFrame = originalRAF;
+        console.error = originalError;
       }
     });
 
@@ -818,30 +823,33 @@ describe('Lifecycle Hooks', () => {
 
       const { rerender, unmount } = renderHook(() => useLifecycle(lifecycle));
 
-      // Wait for async created
+      // Wait for requestAnimationFrame and async created
+      // Need to wait for both RAF callback and the async operation inside created()
       await waitFor(
         () => {
           expect(calls).toContain('created');
         },
-        { timeout: 100 }
+        { timeout: 200, interval: 10 }
       );
 
       rerender();
 
+      // Wait for async updated
       await waitFor(
         () => {
           expect(calls).toContain('updated');
         },
-        { timeout: 100 }
+        { timeout: 200, interval: 10 }
       );
 
       unmount();
 
+      // Wait for requestAnimationFrame and async destroyed
       await waitFor(
         () => {
           expect(calls).toContain('destroyed');
         },
-        { timeout: 100 }
+        { timeout: 200, interval: 10 }
       );
     });
   });

@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useStore } from '../../src/hooks/useStore';
@@ -66,7 +66,9 @@ describe('useStore', () => {
 
       expect(result.current.count).toBe(0);
 
-      store.increment();
+      act(() => {
+        store.increment();
+      });
 
       await waitFor(() => {
         expect(result.current.count).toBe(1);
@@ -292,7 +294,9 @@ describe('useStore', () => {
       expect(renderSpy).toHaveBeenCalledTimes(1);
 
       // Update counter - should trigger re-render
-      store.updateCounter(1);
+      act(() => {
+        store.updateCounter(1);
+      });
       await waitFor(() => {
         expect(result.current).toBe(1);
       });
@@ -301,7 +305,9 @@ describe('useStore', () => {
       expect(callsAfterCounterUpdate).toBeGreaterThan(1);
 
       // Update unrelated field - selector should prevent re-render
-      store.updateUnrelated('changed');
+      act(() => {
+        store.updateUnrelated('changed');
+      });
 
       // Wait a bit to ensure no additional renders
       await new Promise((resolve) => setTimeout(resolve, 50));
