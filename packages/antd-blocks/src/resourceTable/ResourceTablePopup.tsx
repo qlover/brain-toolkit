@@ -12,14 +12,14 @@ export type PopupPlacements = {
   [key in Breakpoint]?: DrawerProps['placement'];
 };
 
-export interface ResourceTablePopupProps extends DrawerProps {
+export interface ResourceTablePopupProps extends Omit<DrawerProps, 'children'> {
   smPlacement?: DrawerProps['placement'];
   tt?: {
     create?: string;
     edit?: string;
     detail?: string;
   };
-  children: React.ReactNode;
+  children?: React.ReactNode;
   tableEvent: ResourceTableEventInterface;
 }
 
@@ -60,7 +60,7 @@ export function ResourceTablePopup(props: ResourceTablePopupProps) {
       {...drawerProps}
       placement={_placement}
     >
-      {children}
+      {children as DrawerProps['children']}
     </Drawer>
   );
 }

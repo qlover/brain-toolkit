@@ -183,20 +183,26 @@ export default tseslint.config([
     }
   },
 
-  // vitest (包含所有测试相关文件)
+  // vitest (包含所有测试相关文件) - 统一配置，启用类型检查
   restrictGlobals(
     {
       name: 'lint-vitest',
-      files: [
-        'packages/**/__tests__/**/*.{ts,tsx}',
-        'packages/**/__mocks__/**/*.{ts,tsx}'
+      files: ['packages/**/__tests__/**/*.{ts,tsx}'],
+      extends: [
+        ...tseslint.configs.recommended,
+        ...tseslint.configs.recommendedTypeChecked
       ],
-      extends: [...tseslint.configs.recommended],
       plugins: {
         '@qlover-eslint': qloverEslint,
         vitest
       },
       languageOptions: {
+        parserOptions: {
+          projectService: {
+            allowDefaultProject: ['**/__mocks__/**']
+          },
+          tsconfigRootDir: import.meta.dirname
+        },
         globals: {
           ...globals.browser,
           ...globals.node,
@@ -222,6 +228,70 @@ export default tseslint.config([
         ],
         '@typescript-eslint/ban-ts-comment': 'off',
         // Fix @typescript-eslint/no-unused-expressions rule configuration
+        '@typescript-eslint/no-unused-expressions': [
+          'error',
+          {
+            allowShortCircuit: true,
+            allowTernary: true,
+            allowTaggedTemplates: true
+          }
+        ],
+        // 启用类型检查规则 - 测试文件中放宽限制
+        '@typescript-eslint/no-unsafe-assignment': 'warn',
+        '@typescript-eslint/no-unsafe-member-access': 'warn',
+        '@typescript-eslint/no-unsafe-call': 'warn',
+        '@typescript-eslint/no-unsafe-return': 'warn',
+        '@typescript-eslint/no-unsafe-argument': 'warn',
+        // 测试文件中常见的问题，关闭或降级
+        '@typescript-eslint/unbound-method': 'off', // 测试中经常需要传递方法引用
+        '@typescript-eslint/require-await': 'warn', // 测试中可能有不需要 await 的 async 函数
+        '@typescript-eslint/no-unnecessary-type-assertion': 'warn' // 测试中可能需要类型断言
+      }
+    },
+    {
+      allowedGlobals: [
+        ...Object.keys(globals.browser),
+        ...Object.keys(globals.node),
+        ...Object.keys(vitest.environments.env.globals)
+      ],
+      allGlobals
+    }
+  ),
+
+  // __mocks__ 文件 - 基础规则，不进行类型检查
+  restrictGlobals(
+    {
+      name: 'lint-mocks',
+      files: ['packages/**/__mocks__/**/*.{ts,tsx}'],
+      extends: [...tseslint.configs.recommended],
+      plugins: {
+        '@qlover-eslint': qloverEslint,
+        vitest
+      },
+      languageOptions: {
+        globals: {
+          ...globals.browser,
+          ...globals.node,
+          ...vitest.environments.env.globals
+        }
+      },
+      rules: {
+        '@qlover-eslint/ts-class-method-return': 'error',
+        '@qlover-eslint/ts-class-member-accessibility': 'error',
+        '@qlover-eslint/ts-class-override': 'error',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-empty-object-type': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            vars: 'all',
+            varsIgnorePattern: '^_',
+            args: 'after-used',
+            argsIgnorePattern: '^_'
+          }
+        ],
+        '@typescript-eslint/ban-ts-comment': 'off',
         '@typescript-eslint/no-unused-expressions': [
           'error',
           {

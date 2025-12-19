@@ -4,7 +4,7 @@
  * Coverage:
  * 1. isBrainUserStoreInterface  - Type guard for store interfaces
  * 2. createBrainUserStore       - Store factory function
- * 3. Storage types                - localStorage, sessionStorage, custom
+ * 3. Storage types                - Custom storage, null storage
  * 4. Persistence options          - persistUserInfo behavior
  * 5. Feature tags integration     - FeatureTags creation
  * 6. User profile integration     - UserProfile creation
@@ -23,10 +23,6 @@ import { defaultBrainStoreOptions } from '../src/config/common';
 import { BrainUserStore } from '../src/BrainUserStore';
 import { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
 import { SyncStorageInterface } from '@qlover/fe-corekit';
-import {
-  Brain_STORAGE_CREDENTIAL_KEY,
-  Brain_STORAGE_PROFILE_KEY
-} from '../src/config/common';
 
 describe('createBrainUserStore', () => {
   // Mock storage implementation
@@ -73,9 +69,6 @@ describe('createBrainUserStore', () => {
       this.store.clear();
     }
 
-    /**
-     * @override
-     */
     public key(index: number): string | null {
       const keys = Array.from(this.store.keys());
       return keys[index] ?? null;
@@ -188,22 +181,6 @@ describe('createBrainUserStore', () => {
     });
 
     describe('with storage options', () => {
-      it('should create store with localStorage', () => {
-        const store = createBrainUserStore({
-          storage: 'localStorage'
-        });
-
-        expect(store).toBeInstanceOf(BrainUserStore);
-      });
-
-      it('should create store with sessionStorage', () => {
-        const store = createBrainUserStore({
-          storage: 'sessionStorage'
-        });
-
-        expect(store).toBeInstanceOf(BrainUserStore);
-      });
-
       it('should create store with custom storage', () => {
         const mockStorage = new MockStorage();
         const store = createBrainUserStore({
@@ -323,7 +300,6 @@ describe('createBrainUserStore', () => {
 
     it('should infer type from options', () => {
       const options: CreateBrainStoreOptions<readonly string[]> = {
-        storage: 'localStorage',
         persistUserInfo: true
       };
 
@@ -343,9 +319,7 @@ describe('createBrainUserStore', () => {
     });
 
     it('should work with CreateBrainStoreOptions type', () => {
-      const options: CreateBrainStoreOptions<readonly string[]> = {
-        storage: 'localStorage'
-      };
+      const options: CreateBrainStoreOptions<readonly string[]> = {};
 
       const store = createBrainUserStore(options);
       expect(store).toBeInstanceOf(BrainUserStore);
@@ -363,7 +337,6 @@ describe('createBrainUserStore', () => {
   describe('integration scenarios', () => {
     it('should support store reuse pattern', () => {
       const sharedStore = createBrainUserStore({
-        storage: 'localStorage',
         persistUserInfo: true
       });
 
@@ -378,7 +351,6 @@ describe('createBrainUserStore', () => {
     it('should support store factory pattern', () => {
       function createStore(persistent: boolean) {
         return createBrainUserStore({
-          storage: persistent ? 'localStorage' : 'sessionStorage',
           persistUserInfo: persistent
         });
       }
@@ -395,7 +367,7 @@ describe('createBrainUserStore', () => {
       const mockStorage = new MockStorage();
 
       const store = createBrainUserStore({
-        storage: useCustomStorage ? mockStorage : 'localStorage'
+        storage: useCustomStorage ? mockStorage : null
       });
 
       expect(store).toBeInstanceOf(BrainUserStore);
@@ -403,7 +375,6 @@ describe('createBrainUserStore', () => {
 
     it('should support options merging pattern', () => {
       const baseOptions: CreateBrainStoreOptions<readonly string[]> = {
-        storage: 'localStorage',
         persistUserInfo: false
       };
 
@@ -422,7 +393,6 @@ describe('createBrainUserStore', () => {
     it('should support multi-environment setup', () => {
       const createEnvStore = (env: 'development' | 'production') => {
         return createBrainUserStore({
-          storage: env === 'development' ? 'sessionStorage' : 'localStorage',
           persistUserInfo: env === 'production',
           credentialStorageKey: `${env}_token`
         });
@@ -438,11 +408,9 @@ describe('createBrainUserStore', () => {
     it('should support storage strategy selection', () => {
       const strategies = {
         persistent: {
-          storage: 'localStorage' as const,
           persistUserInfo: true
         },
         session: {
-          storage: 'sessionStorage' as const,
           persistUserInfo: false
         }
       };
@@ -535,9 +503,7 @@ describe('createBrainUserStore', () => {
     });
 
     it('should handle multiple store creations', () => {
-      const stores = Array.from({ length: 5 }, () =>
-        createBrainUserStore({})
-      );
+      const stores = Array.from({ length: 5 }, () => createBrainUserStore({}));
 
       stores.forEach((store) => {
         expect(store).toBeInstanceOf(BrainUserStore);

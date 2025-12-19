@@ -1,13 +1,5 @@
 import { requestDataSerializer } from '../utils/requestDataSerializer';
 
-export const PredefindStorage = {
-  localStorage: 'localStorage',
-  sessionStorage: 'sessionStorage'
-} as const;
-
-export type PredefindStorageType =
-  (typeof PredefindStorage)[keyof typeof PredefindStorage];
-
 export const BRAIN_DOMAINS = Object.freeze({
   development:
     'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method',
@@ -17,8 +9,6 @@ export const BRAIN_DOMAINS = Object.freeze({
 export const BRAIN_STORAGE_CREDENTIAL_KEY = 'brain_token';
 
 export const BRAIN_STORAGE_PROFILE_KEY = 'brain_profile';
-
-export const defaultStorageType = PredefindStorage.localStorage;
 
 export const defaultServiceName = 'brainUserService';
 

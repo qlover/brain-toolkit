@@ -18,8 +18,9 @@ import { createBrainUserOptions } from '../src/utils/createBrainUserOptions';
 import { BrainUserServiceOptions } from '../src/BrainUserService';
 import { BrainUserStore } from '../src/BrainUserStore';
 import { BrainUserGateway } from '../src/BrainUserGateway';
-import { defaultBrainUserOptions, PredefindStorage } from '../src/config/common';
+import { defaultBrainUserOptions } from '../src/config/common';
 import { RequestAdapterInterface } from '@qlover/fe-corekit';
+import { SyncStorageInterface } from '@qlover/fe-corekit';
 
 describe('createBrainUserOptions', () => {
   beforeEach(() => {
@@ -139,7 +140,6 @@ describe('createBrainUserOptions', () => {
     it('should use custom store options', () => {
       const config = createBrainUserOptions({
         store: {
-          storage: 'sessionStorage',
           persistUserInfo: true
         }
       });
@@ -157,9 +157,48 @@ describe('createBrainUserOptions', () => {
     });
 
     it('should create store with custom storage', () => {
+      class MockStorage implements SyncStorageInterface<string, unknown> {
+        private store: Map<string, string> = new Map();
+        /**
+         * @override
+         */
+        public get length(): number {
+          return this.store.size;
+        }
+        /**
+         * @override
+         */
+        public setItem<T>(key: string, value: T): void {
+          this.store.set(key, String(value));
+        }
+        /**
+         * @override
+         */
+        public getItem<T>(key: string): T | null {
+          const value = this.store.get(key);
+          return value !== undefined ? (value as T) : null;
+        }
+        /**
+         * @override
+         */
+        public removeItem(key: string): void {
+          this.store.delete(key);
+        }
+        /**
+         * @override
+         */
+        public clear(): void {
+          this.store.clear();
+        }
+        public key(index: number): string | null {
+          const keys = Array.from(this.store.keys());
+          return keys[index] ?? null;
+        }
+      }
+
       const config = createBrainUserOptions({
         store: {
-          storage: PredefindStorage.localStorage,
+          storage: new MockStorage(),
           persistUserInfo: true
         }
       });
@@ -361,7 +400,6 @@ describe('createBrainUserOptions', () => {
         serviceName: 'Brain-user',
         env: 'production',
         store: {
-          storage: 'localStorage',
           persistUserInfo: true,
           credentialStorageKey: 'auth_token'
         }
@@ -378,9 +416,6 @@ describe('createBrainUserOptions', () => {
           env,
           serviceName: `Brain-${env}`,
           store: {
-            storage: (env === 'development'
-              ? 'sessionStorage'
-              : 'localStorage') as any,
             persistUserInfo: env === 'production'
           }
         });
@@ -398,7 +433,6 @@ describe('createBrainUserOptions', () => {
       const config = createBrainUserOptions({
         gateway: customGateway,
         store: {
-          storage: 'localStorage',
           persistUserInfo: true
         }
       });
@@ -411,7 +445,6 @@ describe('createBrainUserOptions', () => {
       const createConfig = (persistent: boolean) => {
         return createBrainUserOptions({
           store: {
-            storage: persistent ? 'localStorage' : 'sessionStorage',
             persistUserInfo: persistent
           }
         });
@@ -458,7 +491,6 @@ describe('createBrainUserOptions', () => {
         logger: customLogger,
         gateway: customGateway,
         store: {
-          storage: 'localStorage',
           persistUserInfo: true,
           credentialStorageKey: 'custom_token'
         }
@@ -513,9 +545,7 @@ describe('createBrainUserOptions', () => {
     it('should handle null gateway with custom store', () => {
       const config = createBrainUserOptions({
         gateway: undefined,
-        store: {
-          storage: 'localStorage' as any
-        }
+        store: {}
       });
 
       expect(config.gateway).toBeInstanceOf(BrainUserGateway);

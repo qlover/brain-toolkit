@@ -2,76 +2,25 @@
  * common config test-suite
  *
  * Coverage:
- * 1. PredefindStorage        - Predefined storage type constants
- * 2. PredefindStorageType    - Storage type union
- * 3. BRAIN_DOMAINS         - API domain configuration
- * 4. Storage keys            - Credential and profile storage keys
- * 5. Default values          - Default configuration values
- * 6. defaultBrainUserOptions - Complete default options object
- * 7. Type safety             - Type constraints and inference
- * 8. Immutability            - Frozen objects
+ * 1. BRAIN_DOMAINS         - API domain configuration
+ * 2. Storage keys            - Credential and profile storage keys
+ * 3. Default values          - Default configuration values
+ * 4. defaultBrainUserOptions - Complete default options object
+ * 5. Type safety             - Type constraints and inference
+ * 6. Immutability            - Frozen objects
  */
 
 import { describe, it, expect } from 'vitest';
 import {
-  PredefindStorage,
   BRAIN_DOMAINS,
   BRAIN_STORAGE_CREDENTIAL_KEY,
   BRAIN_STORAGE_PROFILE_KEY,
-  defaultStorageType,
   defaultServiceName,
   defaultEnv,
-  defaultBrainUserOptions,
-  type PredefindStorageType
+  defaultBrainUserOptions
 } from '../src/config/common';
 
 describe('common config', () => {
-  describe('PredefindStorage', () => {
-    it('should have localStorage constant', () => {
-      expect(PredefindStorage.localStorage).toBe('localStorage');
-    });
-
-    it('should have sessionStorage constant', () => {
-      expect(PredefindStorage.sessionStorage).toBe('sessionStorage');
-    });
-
-    it('should have exactly 2 storage types', () => {
-      const keys = Object.keys(PredefindStorage);
-      expect(keys).toHaveLength(2);
-    });
-
-    it('should contain expected storage types', () => {
-      const keys = Object.keys(PredefindStorage);
-      expect(keys).toContain('localStorage');
-      expect(keys).toContain('sessionStorage');
-    });
-
-    it('should have matching key-value pairs', () => {
-      expect(PredefindStorage.localStorage).toBe('localStorage');
-      expect(PredefindStorage.sessionStorage).toBe('sessionStorage');
-    });
-  });
-
-  describe('PredefindStorageType', () => {
-    it('should accept localStorage as valid type', () => {
-      const storage: PredefindStorageType = 'localStorage';
-      expect(storage).toBe('localStorage');
-    });
-
-    it('should accept sessionStorage as valid type', () => {
-      const storage: PredefindStorageType = 'sessionStorage';
-      expect(storage).toBe('sessionStorage');
-    });
-
-    it('should work with PredefindStorage values', () => {
-      const storage1: PredefindStorageType = PredefindStorage.localStorage;
-      const storage2: PredefindStorageType = PredefindStorage.sessionStorage;
-
-      expect(storage1).toBe('localStorage');
-      expect(storage2).toBe('sessionStorage');
-    });
-  });
-
   describe('BRAIN_DOMAINS', () => {
     it('should have development domain', () => {
       expect(BRAIN_DOMAINS.development).toBe(
@@ -145,20 +94,12 @@ describe('common config', () => {
   });
 
   describe('default values', () => {
-    it('should have default storage type', () => {
-      expect(defaultStorageType).toBe('localStorage');
-    });
-
     it('should have default service name', () => {
       expect(defaultServiceName).toBe('brainUserService');
     });
 
     it('should have default environment', () => {
       expect(defaultEnv).toBe('development');
-    });
-
-    it('should use localStorage as default storage', () => {
-      expect(defaultStorageType).toBe(PredefindStorage.localStorage);
     });
   });
 
@@ -212,24 +153,6 @@ describe('common config', () => {
   });
 
   describe('type safety', () => {
-    it('should support PredefindStorageType union', () => {
-      const validTypes: PredefindStorageType[] = [
-        'localStorage',
-        'sessionStorage'
-      ];
-
-      validTypes.forEach((type) => {
-        expect(['localStorage', 'sessionStorage']).toContain(type);
-      });
-    });
-
-    it('should infer storage type from PredefindStorage', () => {
-      type StorageKeys = keyof typeof PredefindStorage;
-      const keys: StorageKeys[] = ['localStorage', 'sessionStorage'];
-
-      expect(keys).toHaveLength(2);
-    });
-
     it('should support domain key types', () => {
       type DomainKeys = keyof typeof BRAIN_DOMAINS;
       const keys: DomainKeys[] = ['development', 'production'];
@@ -244,11 +167,6 @@ describe('common config', () => {
       const domain = BRAIN_DOMAINS[env];
 
       expect(domain).toBe(BRAIN_DOMAINS.development);
-    });
-
-    it('should support storage type selection', () => {
-      const storageType: PredefindStorageType = PredefindStorage.localStorage;
-      expect(storageType).toBe('localStorage');
     });
 
     it('should support options merging pattern', () => {
@@ -298,12 +216,10 @@ describe('common config', () => {
       // Application can use defaults directly
       const config = {
         apiUrl: BRAIN_DOMAINS[defaultEnv],
-        storage: defaultStorageType,
         tokenKey: BRAIN_STORAGE_CREDENTIAL_KEY
       };
 
       expect(config.apiUrl).toBe(BRAIN_DOMAINS.development);
-      expect(config.storage).toBe('localStorage');
       expect(config.tokenKey).toBe('brain_token');
     });
 
@@ -323,16 +239,6 @@ describe('common config', () => {
       expect(prodConfig.env).toBe('production');
     });
 
-    it('should support storage strategy selection', () => {
-      function getStorage(persistent: boolean): PredefindStorageType {
-        return persistent
-          ? PredefindStorage.localStorage
-          : PredefindStorage.sessionStorage;
-      }
-
-      expect(getStorage(true)).toBe('localStorage');
-      expect(getStorage(false)).toBe('sessionStorage');
-    });
   });
 
   describe('edge cases', () => {
@@ -343,14 +249,6 @@ describe('common config', () => {
       domains.forEach(([_env, url]) => {
         expect(url).toMatch(/^https:\/\//);
       });
-    });
-
-    it('should handle storage type validation', () => {
-      const validStorageTypes = Object.values(PredefindStorage);
-
-      expect(validStorageTypes).toContain('localStorage');
-      expect(validStorageTypes).toContain('sessionStorage');
-      expect(validStorageTypes).toHaveLength(2);
     });
 
     it('should maintain reference equality for BRAIN_DOMAINS', () => {
@@ -371,7 +269,6 @@ describe('common config', () => {
     it('should have non-empty string constants', () => {
       expect(BRAIN_STORAGE_CREDENTIAL_KEY).toBeTruthy();
       expect(BRAIN_STORAGE_PROFILE_KEY).toBeTruthy();
-      expect(defaultStorageType).toBeTruthy();
       expect(defaultServiceName).toBeTruthy();
       expect(defaultEnv).toBeTruthy();
     });

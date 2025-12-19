@@ -18,14 +18,15 @@ import { NamePath } from 'antd/es/form/interface';
 
 const { Item: FormItem } = Form;
 
-export interface ResourceTableSchemaFormProps<T> extends FormProps {
+export interface ResourceTableSchemaFormProps<T>
+  extends Omit<FormProps, 'children'> {
   formComponents?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key in ResourceTableFormType]?: React.ComponentType<any>;
   };
   formRef: FormInstance<unknown>;
   options: ResourceTableOption<T>[];
-  children?: React.ReactNode;
+  children?: Exclude<React.ReactNode, bigint>;
   tableEvent: ResourceTableEventInterface;
   tt: ResourceTableLocales;
 }
@@ -102,7 +103,9 @@ export function ResourceTableSchemaForm<T>(
     >
       {options.map(renderItem)}
 
-      {children || (
+      {children ? (
+        (children as React.ReactElement | null | undefined)
+      ) : (
         <ResourceTableSchemaFormFooter tt={tt} tableEvent={tableEvent} />
       )}
     </Form>
