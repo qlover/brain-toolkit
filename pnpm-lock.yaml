@@ -59,6 +59,9 @@ importers:
       '@rollup/plugin-typescript':
         specifier: ^12.1.1
         version: 12.3.0(rollup@4.52.5)(tslib@2.8.1)(typescript@5.4.5)
+      '@rollup/rollup-win32-x64-msvc':
+        specifier: ^4.53.5
+        version: 4.53.5
       '@swc-node/register':
         specifier: ~1.9.1
         version: 1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.4.5)
@@ -171,6 +174,43 @@ importers:
         specifier: ^3.0.5
         version: 3.2.4(@types/node@22.19.0)(jiti@2.6.1)(jsdom@26.1.0)(terser@5.44.0)(yaml@2.8.1)
 
+  examples/imagica-user-example:
+    dependencies:
+      '@brain-toolkit/bridge':
+        specifier: workspace:*
+        version: link:../../packages/bridge
+      '@qlover/corekit-bridge':
+        specifier: ^1.9.0
+        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+      '@qlover/fe-corekit':
+        specifier: ^2.4.0
+        version: 2.4.0
+      '@qlover/slice-store-react':
+        specifier: ^1.4.1
+        version: 1.4.1
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.27
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.27)
+      '@vitejs/plugin-react':
+        specifier: ^4.7.0
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
+      typescript:
+        specifier: ~5.4.5
+        version: 5.4.5
+      vite:
+        specifier: ^6.1.0
+        version: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
+
   packages/antd-blocks:
     dependencies:
       '@ant-design/icons':
@@ -212,7 +252,7 @@ importers:
         version: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
       vite-plugin-dts:
         specifier: ^4.5.4
-        version: 4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.4.5)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
 
   packages/antd-theme-override:
     devDependencies:
@@ -229,14 +269,23 @@ importers:
         specifier: ^6.1.0
         version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
 
+  packages/brain-user:
+    dependencies:
+      '@qlover/corekit-bridge':
+        specifier: ^1.9.0
+        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+      '@qlover/fe-corekit':
+        specifier: ^2.4.0
+        version: 2.4.0
+
   packages/bridge:
     dependencies:
       '@qlover/corekit-bridge':
-        specifier: ^1.8.1
-        version: 1.8.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^1.9.0
+        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: ^2.4.0
+        version: 2.4.0
 
   packages/element-sizer: {}
 
@@ -244,10 +293,10 @@ importers:
     dependencies:
       '@qlover/corekit-bridge':
         specifier: ^1.6.6
-        version: 1.6.6(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
         specifier: ^2.1.0
-        version: 2.1.0
+        version: 2.4.0
       '@qlover/slice-store-react':
         specifier: ^1.4.1
         version: 1.4.1
@@ -275,7 +324,7 @@ importers:
         version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
       vite-plugin-dts:
         specifier: ^4.5.4
-        version: 4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.4.5)(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
 
   packages/ts2locales:
     devDependencies:
@@ -1664,8 +1713,8 @@ packages:
   '@qlover/corekit-bridge@1.6.6':
     resolution: {integrity: sha512-6IRshAv/U+WXkdvKMEPKlGdF7/ItxygNXHNx91pGN1wfHujlbH9D6465nrHrm/HZZHy8bJRdTx4kG+ypRYX/Aw==}
 
-  '@qlover/corekit-bridge@1.8.1':
-    resolution: {integrity: sha512-loVRRe5Ylct71bDsH0vQ2CmvTorIDv16yBI4H1i3HeHoCl/BwRXNONRpq605BidAVHVRnZLIMLSMX8QsW3WIng==}
+  '@qlover/corekit-bridge@1.9.0':
+    resolution: {integrity: sha512-RTKxXXBoRplpXQejjy7Eo0ry0LPmF388wWVvJU2kOG9amTUV5R4bQExLQ45g8SrKHJHOUbpPcuHoDXEFAczIoA==}
 
   '@qlover/env-loader@0.3.0':
     resolution: {integrity: sha512-YjdtKpmwhgIZAkWjreA3BA3XjmxP+0xXbUSnbJACua4yV1twmW+9uP+pHM2jEi7emG5VqD1w9tT8bHC43/1a6g==}
@@ -1687,6 +1736,9 @@ packages:
   '@qlover/fe-corekit@2.3.1':
     resolution: {integrity: sha512-+JquC+KLs06nliuRgjXeN9re54I5Migs/ewGrMT0bIcYU+vV935smcKGL2aiCEpfU2UHI5lA/EuP0YaX910KnA==}
 
+  '@qlover/fe-corekit@2.4.0':
+    resolution: {integrity: sha512-SYNG8rGIJsj60S//NCPmUPo41EEl+Ko/RRkyaeQPv4jp/A6ivdIV+3gaaWNu63//LyviUUhy2p7wPNUHZcZvnA==}
+
   '@qlover/fe-release@3.1.3':
     resolution: {integrity: sha512-1JC53aC48UD5Eq/ZLQB9Pc/Ircs/FXna8j08PM7jyPIJo+lYr8df5e08x3hpqvbJOoQUVLgyIqSjMHDL+5qSAw==}
     hasBin: true
@@ -1703,6 +1755,9 @@ packages:
 
   '@qlover/logger@0.3.1':
     resolution: {integrity: sha512-SHLn5R3rK9pZPHxsJOdguvUoejHUDfxwKKwOyMPyGDnMJ7AISF0lK6y/1ADFs7MTqB2TNo0d6UklMA48M0LPoA==}
+
+  '@qlover/logger@0.3.3':
+    resolution: {integrity: sha512-wWWxTSMkVw9HtvMKmeiVqH7IDjEXm0GNyacm1ZS4gP5Ge2NPdl7L0ctwiHmOogoInc5VGdiaf44d+ix5nrABrQ==}
 
   '@qlover/scripts-context@1.1.3':
     resolution: {integrity: sha512-5d4EIiTqKB8Dq9lMTSXAe2rv+33GWbxxujth0c9UdcPY9anG7wNiDKBjCgeeig7zgK7yHa0uUctFZO+y6z3NCg==}
@@ -2319,10 +2374,16 @@ packages:
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
+  '@types/prop-types@15.7.15':
+    resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
+
   '@types/react-dom@18.3.7':
     resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
     peerDependencies:
       '@types/react': ^18.0.0
+
+  '@types/react@18.3.27':
+    resolution: {integrity: sha512-cisd7gxkzjBKU2GgdYrTdtQx1SORymWyaAFhaxQPK9bYO9ot3Y5OikQRvY0VYQtvwjeQnizCINJAenh/V7MK2w==}
 
   '@types/react@19.2.2':
     resolution: {integrity: sha512-6mDvHUFSjyT2B2yeNx2nUgMxh9LtOWvkhIU3uePn2I2oyNymUAX1NIsdgviM4CH+JSrp2D2hsMvJOkxY+0wNRA==}
@@ -2952,6 +3013,9 @@ packages:
 
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+
+  csstype@3.2.3:
+    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
   cz-conventional-changelog@3.3.0:
     resolution: {integrity: sha512-U466fIzU5U22eES5lTNiNbZ+d8dfcHcssH4o7QsdWaCcRs/feIPCxKYSWkYBNs5mny7MvEfwpTLWjvbm94hecw==}
@@ -7042,10 +7106,10 @@ snapshots:
       - tsx
       - yaml
 
-  '@qlover/corekit-bridge@1.8.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)':
+  '@qlover/corekit-bridge@1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)':
     dependencies:
-      '@qlover/fe-corekit': 2.3.1
-      '@qlover/logger': 0.3.1
+      '@qlover/fe-corekit': 2.4.0
+      '@qlover/logger': 0.3.3
       '@qlover/slice-store': 1.4.1
       js-cookie: 3.0.5
       tailwindcss: 3.4.19(yaml@2.8.1)
@@ -7092,6 +7156,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@qlover/fe-corekit@2.4.0':
+    dependencies:
+      '@qlover/logger': 0.3.3
+      '@types/lodash': 4.17.20
+      axios: 1.13.2
+    transitivePeerDependencies:
+      - debug
+
   '@qlover/fe-release@3.1.3(typescript@5.4.5)':
     dependencies:
       '@octokit/rest': 21.1.1
@@ -7130,9 +7202,11 @@ snapshots:
 
   '@qlover/logger@0.3.1': {}
 
+  '@qlover/logger@0.3.3': {}
+
   '@qlover/scripts-context@1.1.3(typescript@5.4.5)':
     dependencies:
-      '@qlover/fe-corekit': 2.3.1
+      '@qlover/fe-corekit': 2.4.0
       chalk: 5.6.2
       cosmiconfig: 9.0.0(typescript@5.4.5)
     transitivePeerDependencies:
@@ -7429,8 +7503,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.52.5':
     optional: true
 
-  '@rollup/rollup-win32-x64-msvc@4.53.5':
-    optional: true
+  '@rollup/rollup-win32-x64-msvc@4.53.5': {}
 
   '@rushstack/node-core-library@5.18.0(@types/node@22.19.0)':
     dependencies:
@@ -7656,9 +7729,20 @@ snapshots:
 
   '@types/parse-json@4.0.2': {}
 
+  '@types/prop-types@15.7.15': {}
+
+  '@types/react-dom@18.3.7(@types/react@18.3.27)':
+    dependencies:
+      '@types/react': 18.3.27
+
   '@types/react-dom@18.3.7(@types/react@19.2.2)':
     dependencies:
       '@types/react': 19.2.2
+
+  '@types/react@18.3.27':
+    dependencies:
+      '@types/prop-types': 15.7.15
+      csstype: 3.2.3
 
   '@types/react@19.2.2':
     dependencies:
@@ -7907,6 +7991,19 @@ snapshots:
       path-browserify: 1.0.1
     optionalDependencies:
       typescript: 5.4.5
+
+  '@vue/language-core@2.2.0(typescript@5.8.2)':
+    dependencies:
+      '@volar/language-core': 2.4.23
+      '@vue/compiler-dom': 3.5.22
+      '@vue/compiler-vue2': 2.7.16
+      '@vue/shared': 3.5.22
+      alien-signals: 0.4.14
+      minimatch: 9.0.5
+      muggle-string: 0.4.1
+      path-browserify: 1.0.1
+    optionalDependencies:
+      typescript: 5.8.2
 
   '@vue/shared@3.5.22': {}
 
@@ -8425,6 +8522,8 @@ snapshots:
 
   csstype@3.1.3: {}
 
+  csstype@3.2.3: {}
+
   cz-conventional-changelog@3.3.0(@types/node@22.19.0)(typescript@5.4.5):
     dependencies:
       chalk: 2.4.2
@@ -8854,7 +8953,7 @@ snapshots:
     dependencies:
       magic-string: 0.30.21
       mlly: 1.8.0
-      rollup: 4.52.5
+      rollup: 4.53.5
 
   flat-cache@4.0.1:
     dependencies:
@@ -10494,7 +10593,7 @@ snapshots:
       postcss-nested: 6.2.0(postcss@8.5.6)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.11
-      sucrase: 3.35.0
+      sucrase: 3.35.1
     transitivePeerDependencies:
       - tsx
       - yaml
@@ -10777,18 +10876,18 @@ snapshots:
       - rollup
       - supports-color
 
-  vite-plugin-dts@4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.4.5)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)):
+  vite-plugin-dts@4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)):
     dependencies:
       '@microsoft/api-extractor': 7.54.0(@types/node@22.19.0)
       '@rollup/pluginutils': 5.3.0(rollup@4.53.5)
       '@volar/typescript': 2.4.23
-      '@vue/language-core': 2.2.0(typescript@5.4.5)
+      '@vue/language-core': 2.2.0(typescript@5.8.2)
       compare-versions: 6.1.1
       debug: 4.4.3
       kolorist: 1.8.0
       local-pkg: 1.1.2
       magic-string: 0.30.21
-      typescript: 5.4.5
+      typescript: 5.8.2
     optionalDependencies:
       vite: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
@@ -10796,18 +10895,18 @@ snapshots:
       - rollup
       - supports-color
 
-  vite-plugin-dts@4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.4.5)(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)):
+  vite-plugin-dts@4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)):
     dependencies:
       '@microsoft/api-extractor': 7.54.0(@types/node@22.19.0)
       '@rollup/pluginutils': 5.3.0(rollup@4.53.5)
       '@volar/typescript': 2.4.23
-      '@vue/language-core': 2.2.0(typescript@5.4.5)
+      '@vue/language-core': 2.2.0(typescript@5.8.2)
       compare-versions: 6.1.1
       debug: 4.4.3
       kolorist: 1.8.0
       local-pkg: 1.1.2
       magic-string: 0.30.21
-      typescript: 5.4.5
+      typescript: 5.8.2
     optionalDependencies:
       vite: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
