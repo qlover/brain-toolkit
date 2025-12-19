@@ -1,11 +1,9 @@
 import { UserService, UserServiceConfig } from '@qlover/corekit-bridge';
 import { BrainCredentials, BrainUser } from './types/BrainUserTypes';
 import {
-  BrainGetUserInfoRequest,
   BrainGoogleCredentials,
   BrainUserGatewayInterface,
-  BrainUserGoogleRequest,
-  BrainLoginRequest
+  BrainUserGoogleRequest
 } from './interface/BrainUserGatewayInterface';
 import { BrainUserApiConfig } from './BrainUserApi';
 import { createBrainUserOptions } from './utils/createBrainUserOptions';
@@ -363,8 +361,7 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  */
 export class BrainUserService<
     Tags extends readonly string[],
-    Config extends
-      BrainUserServiceOptions<Tags> = BrainUserServiceOptions<Tags>
+    Config extends BrainUserServiceOptions<Tags> = BrainUserServiceOptions<Tags>
   >
   extends UserService<BrainUser, BrainCredentials, string>
   implements BrainUserGatewayInterface
@@ -389,66 +386,4 @@ export class BrainUserService<
   ): Promise<BrainGoogleCredentials> {
     return super.execute('loginWithGoogle', params);
   }
-
-  /**
-   * Login
-   *
-   * @override
-   * @param params - Login request parameters
-   * @returns Promise resolving to credentials or null
-   */
-  public login(
-    params: BrainLoginRequest
-  ): Promise<BrainCredentials | null> {
-    return super.execute('login', params);
-  }
-
-  /**
-   * Logout
-   *
-   * @override
-   * @param params - Optional logout parameters
-   * @returns Promise resolving to void
-   */
-  public logout<Params = unknown, Result = void>(
-    params?: Params
-  ): Promise<Result> {
-    return super.execute('logout', params);
-  }
-
-  /**
-   * Register a new user
-   *
-   * @override
-   * @param params - User registration parameters
-   * @returns Promise resolving to user information or null
-   */
-  public register<Params>(params: Params): Promise<BrainUser | null> {
-    return super.register(params);
-  }
-
-  /**
-   * Get user information
-   *
-   * @override
-   * @param params - Optional parameters for fetching user info
-   * @returns Promise resolving to user information or null
-   */
-  public getUserInfo<Params>(params?: Params): Promise<BrainUser | null> {
-    return super.getUserInfo(params);
-  }
-
-  /**
-   * Refresh user information
-   *
-   * @override
-   * @param params - Optional parameters for refreshing user info
-   * @returns Promise resolving to user information or null
-   */
-  public refreshUserInfo<Params = BrainGetUserInfoRequest>(
-    params?: Params
-  ): Promise<BrainUser | null> {
-    return super.refreshUserInfo(params);
-  }
 }
-

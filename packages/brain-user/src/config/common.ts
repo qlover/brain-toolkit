@@ -1,4 +1,3 @@
-import { CreateBrainStoreOptions } from '../utils/createBrainUserStore';
 import { requestDataSerializer } from '../utils/requestDataSerializer';
 
 export const PredefindStorage = {
@@ -26,11 +25,10 @@ export const defaultServiceName = 'brainUserService';
 export const defaultEnv = 'development';
 
 export const defaultBrainStoreOptions = {
-  storage: defaultStorageType,
   persistUserInfo: false,
   storageKey: BRAIN_STORAGE_PROFILE_KEY,
   credentialStorageKey: BRAIN_STORAGE_CREDENTIAL_KEY
-} as CreateBrainStoreOptions<string[]>;
+} as const;
 
 export const defaultBrainUserOptions = {
   env: defaultEnv,
@@ -42,4 +40,3 @@ export const defaultBrainUserOptions = {
   requiredToken: true,
   requestDataSerializer: requestDataSerializer
 } as const;
-
