@@ -3,18 +3,18 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": ".",
+    "outDir": "../../ts-build/antd-blocks",
     "allowJs": false,
     "jsx": "react-jsx",
     "esModuleInterop": false,
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@brain-toolkit/antd-blocks": ["./src"],
+      "@brain-toolkit/antd-blocks/*": ["./src/*"]
+    }
   },
-  "include": ["src", "package.json"],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "ts-build",
-    "__tests__",
-    "__mocks__",
-    "example"
-  ]
+  "include": ["src", "package.json", "example/src"],
+  "exclude": ["dist", "node_modules", "__tests__", "__mocks__"],
+  "references": []
 }

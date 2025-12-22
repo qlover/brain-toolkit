@@ -4,10 +4,10 @@
     "target": "ESNEXT",
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
-    "outDir": "ts-build",
     "baseUrl": "./",
-    "rootDir": "src",
     "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -20,7 +20,29 @@
     "checkJs": false,
     "incremental": true,
     "strict": true,
-    "types": ["vitest/globals"]
+    "jsx": "react-jsx",
+    "types": ["vitest/globals"],
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "paths": {
+      "@brain-toolkit/antd-blocks": ["./packages/antd-blocks/src"],
+      "@brain-toolkit/antd-blocks/*": ["./packages/antd-blocks/src/*"],
+      "@brain-toolkit/react-kit": ["./packages/react-kit/src"],
+      "@brain-toolkit/react-kit/*": ["./packages/react-kit/src/*"],
+      "@brain-toolkit/antd-theme-override": [
+        "./packages/antd-theme-override/src"
+      ],
+      "@brain-toolkit/antd-theme-override/*": [
+        "./packages/antd-theme-override/src/*"
+      ],
+      "@brain-toolkit/bridge": ["./packages/bridge/src"],
+      "@brain-toolkit/bridge/*": ["./packages/bridge/src/*"],
+      "@brain-toolkit/element-sizer": ["./packages/element-sizer/src"],
+      "@brain-toolkit/element-sizer/*": ["./packages/element-sizer/src/*"],
+      "@brain-toolkit/ts2locales": ["./packages/ts2locales/src"],
+      "@brain-toolkit/ts2locales/*": ["./packages/ts2locales/src/*"],
+      "@brain-toolkit/brain-user": ["./packages/brain-user/src"],
+      "@brain-toolkit/brain-user/*": ["./packages/brain-user/src/*"]
+    }
   },
   "ts-node": {
     "esm": true,

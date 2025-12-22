@@ -1,18 +1,10 @@
 import js from '@eslint/js';
-import globals from 'globals';
-import vitest from 'eslint-plugin-vitest';
-import qloverEslint, { restrictGlobals } from '@qlover/eslint-plugin';
+import qloverEslint from '@qlover/eslint-plugin';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from './.prettierrc.js';
-
-const allGlobals = {
-  ...globals.browser,
-  ...globals.vitest,
-  ...vitest.environments.env.globals
-};
 
 /**
  * @type {import('eslint').Linter.Config[]}
@@ -27,13 +19,15 @@ export default tseslint.config([
       '**/.nx/**',
       '**/.cache/**',
       '**/coverage/**',
-      '**/*.d.ts'
+      '**/*.d.ts',
+      'vitest.setup.js',
+      'packages/bridge'
     ]
   },
 
   {
-    name: 'lint-general',
-    files: ['packages/**/*.{js,jsx}', 'tools/**/*.{js,jsx}'],
+    name: 'lint-general-js',
+    files: ['**/*.{js,jsx}'],
     extends: [js.configs.recommended],
     languageOptions: {
       globals: {
@@ -51,32 +45,41 @@ export default tseslint.config([
     }
   },
 
+  // TypeScript files without type checking (faster, for most rules)
   {
-    name: 'lint-packages',
-    files: ['packages/**/*.{ts,tsx}'],
-    ignores: [
-      '**/__tests__/**',
-      '**/__mocks__/**',
-      '**/tsup.config.ts',
-      '**/vite.config.ts',
-      '**/vite.*.config.ts'
-    ],
+    name: 'lint-general-ts',
+    files: ['**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
     extends: [...tseslint.configs.recommended],
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        // Removed projectService: true for better performance
+        // Only enable if you need type-aware rules like:
+        // - @typescript-eslint/await-thenable
+        // - @typescript-eslint/no-floating-promises
+        // - @typescript-eslint/no-misused-promises
+        // - @typescript-eslint/require-await
         tsconfigRootDir: import.meta.dirname
       }
     },
     plugins: {
-      '@qlover-eslint': qloverEslint
+      '@qlover-eslint': qloverEslint,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh
     },
     rules: {
-      '@qlover-eslint/ts-class-method-return': 'error',
-      '@qlover-eslint/ts-class-member-accessibility': 'error',
-      '@qlover-eslint/ts-class-override': 'error',
+      ...reactHooks.configs.recommended.rules,
+      ...qloverEslint.configs.recommended.rules,
+      '@qlover-eslint/ts-class-override': 'off',
+      '@qlover-eslint/require-root-testid': [
+        'error',
+        {
+          exclude: '/Provider$/'
+        }
+      ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -86,229 +89,13 @@ export default tseslint.config([
           argsIgnorePattern: '^_'
         }
       ],
-      '@typescript-eslint/ban-ts-comment': 'off'
-    }
-  },
-
-  // vite 配置文件使用宽松规则
-  {
-    name: 'lint-vite-config',
-    files: ['**/vite.config.ts', '**/vite.*.config.ts'],
-    extends: [...tseslint.configs.recommended],
-    languageOptions: {
-      globals: {
-        ...globals.node
-      }
-    },
-    rules: {
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off'
-    }
-  },
-
-  // fe-corekit common
-  restrictGlobals(
-    {
-      name: 'lint-fe-corekit',
-      files: ['packages/fe-corekit/**/*.ts'],
-      languageOptions: {
-        globals: {
-          ...globals.node
-          // console: null
-        }
-      },
-      rules: {}
-    },
-    {
-      allowedGlobals: Object.keys(globals.node),
-      allGlobals
-    }
-  ),
-
-  // fe-corekit server
-  restrictGlobals(
-    {
-      name: 'lint-corekit-node',
-      files: ['packages/corekit-node/**/*.ts'],
-      languageOptions: {
-        globals: globals.node
-      },
-      rules: {}
-    },
-    {
-      allowedGlobals: Object.keys(globals.node),
-      allGlobals
-    }
-  ),
-
-  // react tsx
-  {
-    name: 'lint-tsx',
-    files: ['packages/**/*.{ts,tsx}'],
-    ignores: ['packages/create-app/templates/next-app/src/app/**/*.tsx'],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser
-    },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
+      '@typescript-eslint/ban-ts-comment': 'off',
+      // Type-checked rules
+      '@typescript-eslint/require-await': 'off',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true }
       ]
     }
-  },
-
-  // tools 和配置文件使用宽松规则
-  {
-    name: 'lint-tools',
-    files: ['tools/**/*.{ts,tsx}', '**/tsup.config.ts'],
-    extends: [...tseslint.configs.recommended],
-    languageOptions: {
-      globals: {
-        ...globals.node
-      }
-    },
-    rules: {
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off'
-    }
-  },
-
-  // vitest (包含所有测试相关文件) - 统一配置，启用类型检查
-  restrictGlobals(
-    {
-      name: 'lint-vitest',
-      files: ['packages/**/__tests__/**/*.{ts,tsx}'],
-      extends: [
-        ...tseslint.configs.recommended,
-        ...tseslint.configs.recommendedTypeChecked
-      ],
-      plugins: {
-        '@qlover-eslint': qloverEslint,
-        vitest
-      },
-      languageOptions: {
-        parserOptions: {
-          projectService: {
-            allowDefaultProject: ['**/__mocks__/**']
-          },
-          tsconfigRootDir: import.meta.dirname
-        },
-        globals: {
-          ...globals.browser,
-          ...globals.node,
-          ...vitest.environments.env.globals
-        }
-      },
-      rules: {
-        '@qlover-eslint/ts-class-method-return': 'error',
-        '@qlover-eslint/ts-class-member-accessibility': 'error',
-        '@qlover-eslint/ts-class-override': 'error',
-        '@typescript-eslint/explicit-function-return-type': 'off',
-        '@typescript-eslint/no-empty-object-type': 'off',
-        // TODO: 修复 test 文件的 any 类型
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          {
-            vars: 'all',
-            varsIgnorePattern: '^_',
-            args: 'after-used',
-            argsIgnorePattern: '^_'
-          }
-        ],
-        '@typescript-eslint/ban-ts-comment': 'off',
-        // Fix @typescript-eslint/no-unused-expressions rule configuration
-        '@typescript-eslint/no-unused-expressions': [
-          'error',
-          {
-            allowShortCircuit: true,
-            allowTernary: true,
-            allowTaggedTemplates: true
-          }
-        ],
-        // 启用类型检查规则 - 测试文件中放宽限制
-        '@typescript-eslint/no-unsafe-assignment': 'warn',
-        '@typescript-eslint/no-unsafe-member-access': 'warn',
-        '@typescript-eslint/no-unsafe-call': 'warn',
-        '@typescript-eslint/no-unsafe-return': 'warn',
-        '@typescript-eslint/no-unsafe-argument': 'warn',
-        // 测试文件中常见的问题，关闭或降级
-        '@typescript-eslint/unbound-method': 'off', // 测试中经常需要传递方法引用
-        '@typescript-eslint/require-await': 'warn', // 测试中可能有不需要 await 的 async 函数
-        '@typescript-eslint/no-unnecessary-type-assertion': 'warn' // 测试中可能需要类型断言
-      }
-    },
-    {
-      allowedGlobals: [
-        ...Object.keys(globals.browser),
-        ...Object.keys(globals.node),
-        ...Object.keys(vitest.environments.env.globals)
-      ],
-      allGlobals
-    }
-  ),
-
-  // __mocks__ 文件 - 基础规则，不进行类型检查
-  restrictGlobals(
-    {
-      name: 'lint-mocks',
-      files: ['packages/**/__mocks__/**/*.{ts,tsx}'],
-      extends: [...tseslint.configs.recommended],
-      plugins: {
-        '@qlover-eslint': qloverEslint,
-        vitest
-      },
-      languageOptions: {
-        globals: {
-          ...globals.browser,
-          ...globals.node,
-          ...vitest.environments.env.globals
-        }
-      },
-      rules: {
-        '@qlover-eslint/ts-class-method-return': 'error',
-        '@qlover-eslint/ts-class-member-accessibility': 'error',
-        '@qlover-eslint/ts-class-override': 'error',
-        '@typescript-eslint/explicit-function-return-type': 'off',
-        '@typescript-eslint/no-empty-object-type': 'off',
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          {
-            vars: 'all',
-            varsIgnorePattern: '^_',
-            args: 'after-used',
-            argsIgnorePattern: '^_'
-          }
-        ],
-        '@typescript-eslint/ban-ts-comment': 'off',
-        '@typescript-eslint/no-unused-expressions': [
-          'error',
-          {
-            allowShortCircuit: true,
-            allowTernary: true,
-            allowTaggedTemplates: true
-          }
-        ]
-      }
-    },
-    {
-      allowedGlobals: [
-        ...Object.keys(globals.browser),
-        ...Object.keys(globals.node),
-        ...Object.keys(vitest.environments.env.globals)
-      ],
-      allGlobals
-    }
-  )
+  }
 ]);

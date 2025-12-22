@@ -45,7 +45,7 @@ describe('ResourceTablePopup', () => {
 
     // Default mock implementations
     (SliceStoreReact.useSliceStore as any).mockImplementation(
-      (store: any, selector: any) => {
+      (_store: any, selector: any) => {
         // First call returns openPopup state
         if (
           selector.name === 'openPopup' ||

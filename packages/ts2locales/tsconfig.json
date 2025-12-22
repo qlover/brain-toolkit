@@ -2,11 +2,20 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": ".",
+    "rootDir": "src",
+    "outDir": "../../ts-build/ts2locales",
     "allowJs": false,
     "esModuleInterop": false,
     "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src", "example", "package.json"],
-  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"]
+  "include": ["src", "package.json"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "ts-build",
+    "__tests__",
+    "__mocks__",
+    "example"
+  ],
+  "references": []
 }

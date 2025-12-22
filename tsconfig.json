@@ -5,11 +5,14 @@
   },
   "files": [],
   "references": [
+    { "path": "./tsconfig.test.json" },
     { "path": "./packages/react-kit" },
     { "path": "./packages/antd-blocks" },
     { "path": "./packages/antd-theme-override" },
     { "path": "./packages/bridge" },
     { "path": "./packages/element-sizer" },
-    { "path": "./packages/ts2locales" }
+    { "path": "./packages/ts2locales" },
+    { "path": "./packages/brain-user" },
+    { "path": "./examples/brain-user-example" }
   ]
 }

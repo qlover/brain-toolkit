@@ -3,18 +3,18 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": ".",
+    "outDir": "../../ts-build/react-kit",
     "allowJs": false,
     "jsx": "react-jsx",
     "esModuleInterop": false,
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@brain-toolkit/react-kit": ["./src"],
+      "@brain-toolkit/react-kit/*": ["./src/*"]
+    }
   },
-  "include": ["src", "package.json"],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "ts-build",
-    "__tests__",
-    "__mocks__",
-    "example"
-  ]
+  "include": ["src", "package.json", "example/src"],
+  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"],
+  "references": []
 }

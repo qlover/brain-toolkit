@@ -2,12 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": ".",
+    "rootDir": "src",
+    "outDir": "../../ts-build/brain-user",
     "allowJs": false,
     "esModuleInterop": false,
     "types": ["vite/client", "vitest/globals"]
   },
   "include": ["src", "package.json"],
-  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"]
+  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"],
+  "references": []
 }
 
