@@ -113,7 +113,7 @@ function BasicStoreExample() {
   const state = useStore(store);
 
   return (
-    <div className="example-card">
+    <div data-testid="BasicStoreExample" className="example-card">
       <h3 className="example-title">Basic useStore Example</h3>
       <p className="page-description">
         Subscribe to store state and trigger re-renders when state changes. The
@@ -150,7 +150,7 @@ function SelectorExample() {
   const count = useStore(store, (state) => state.count);
 
   return (
-    <div className="example-card">
+    <div data-testid="SelectorExample" className="example-card">
       <h3 className="example-title">Selector Example</h3>
       <p className="page-description">
         Use a selector to subscribe to specific parts of the state. This
@@ -203,7 +203,7 @@ function TodoStoreExample() {
   };
 
   return (
-    <div className="example-card">
+    <div data-testid="TodoStoreExample" className="example-card">
       <h3 className="example-title">Todo List with Store</h3>
       <p className="page-description">
         A complete todo list application using useStore for state management.
@@ -280,7 +280,7 @@ function TodoStoreExample() {
           ) : (
             filteredTodos.map((todo) => (
               <div
-                key={todo.id}
+                data-testid="TodoStoreExample" key={todo.id}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -327,7 +327,7 @@ function TodoStoreExample() {
  */
 export function StoreExample() {
   return (
-    <div>
+    <div data-testid="StoreExample">
       <div className="page-header">
         <h1 className="page-title">useStore Hook</h1>
         <p className="page-description">

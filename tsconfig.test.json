@@ -1,16 +1,29 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": ".",
     "noEmit": true,
     "skipLibCheck": true,
+    "types": ["vite/client", "vitest/globals"],
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo"
   },
   "include": [
     "packages/**/*.test.ts",
+    "packages/**/*.test.tsx",
     "packages/**/*.spec.ts",
+    "packages/**/*.spec.tsx",
     "packages/**/src/**/*.ts",
     "packages/**/src/**/*.tsx"
   ],
-  "exclude": ["**/node_modules/*", "**/dist", "**/build"]
+  "exclude": ["**/node_modules/*", "**/dist", "**/build"],
+  "references": [
+    { "path": "./packages/react-kit" },
+    { "path": "./packages/antd-blocks" },
+    { "path": "./packages/antd-theme-override" },
+    { "path": "./packages/bridge" },
+    { "path": "./packages/element-sizer" },
+    { "path": "./packages/ts2locales" },
+    { "path": "./packages/brain-user" }
+  ]
 }

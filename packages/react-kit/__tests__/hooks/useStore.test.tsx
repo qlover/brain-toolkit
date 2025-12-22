@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useStore } from '../../src/hooks/useStore';
 import { describe, it, expect, vi } from 'vitest';
 import { StoreInterface } from '@qlover/corekit-bridge';
+
 import type { StoreStateInterface } from '@qlover/corekit-bridge';
 
 /**
@@ -427,7 +428,7 @@ describe('useStore', () => {
      * Test with empty state
      */
     it('should handle empty state', () => {
-      interface EmptyState extends StoreStateInterface {}
+      type EmptyState = StoreStateInterface;
 
       class EmptyStore extends StoreInterface<EmptyState> {
         constructor() {

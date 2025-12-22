@@ -138,7 +138,7 @@ export function WithFormExample() {
           guest: 'gray'
         };
         return (
-          <span style={{ color: colors[role as keyof typeof colors] }}>
+          <span data-testid="columns" style={{ color: colors[role as keyof typeof colors] }}>
             {role.toUpperCase()}
           </span>
         );
@@ -172,7 +172,7 @@ export function WithFormExample() {
   ];
 
   return (
-    <Card title="With Form Example - Full CRUD with Form Popup">
+    <Card data-testid="WithFormExample" title="With Form Example - Full CRUD with Form Popup">
       <ResourceTableProvider formComponents={formComponents}>
         {/* Header with create and refresh buttons */}
         <ResourceTableHeader

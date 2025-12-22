@@ -65,7 +65,7 @@ export function ResourceTableSchemaForm<T>(
       if (!renderForm) return null;
 
       if (typeof renderForm === 'function') {
-        return <div key={unionKey}>{renderForm(rest, index)}</div>;
+        return <div data-testid="renderItem" key={unionKey}>{renderForm(rest, index)}</div>;
       }
 
       const Component = schemaFormMap[renderForm];

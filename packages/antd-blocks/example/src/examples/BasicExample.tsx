@@ -64,7 +64,7 @@ export function BasicExample() {
   ];
 
   return (
-    <Card title="Basic Example - Simple User Table">
+    <Card data-testid="BasicExample" title="Basic Example - Simple User Table">
       <ResourceTable columns={columns} tableEvent={tableEvent} />
     </Card>
   );

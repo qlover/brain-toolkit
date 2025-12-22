@@ -20,8 +20,7 @@ export default tseslint.config([
       '**/.cache/**',
       '**/coverage/**',
       '**/*.d.ts',
-      'vitest.setup.js',
-      'packages/bridge'
+      'vitest.setup.js'
     ]
   },
 
@@ -49,7 +48,6 @@ export default tseslint.config([
   {
     name: 'lint-general-ts',
     files: ['**/*.{ts,tsx}'],
-    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
     extends: [...tseslint.configs.recommended],
     languageOptions: {
       parserOptions: {
@@ -79,7 +77,7 @@ export default tseslint.config([
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -96,6 +94,17 @@ export default tseslint.config([
         'warn',
         { allowConstantExport: true }
       ]
+    }
+  },
+
+  // Test files
+  {
+    name: 'lint-test-ts',
+    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    extends: [...tseslint.configs.recommended],
+    rules: {
+      '@qlover-eslint/require-root-testid': 'off',
+      '@typescript-eslint/no-explicit-any': 'off'
     }
   }
 ]);

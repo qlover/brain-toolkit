@@ -22,7 +22,7 @@ function CreatedExample() {
   });
 
   return (
-    <div className="example-card">
+    <div data-testid="CreatedExample" className="example-card">
       <h3 className="example-title">useLifecycleCreated Example</h3>
       <p className="page-description">
         This hook runs once when the component is mounted, similar to{' '}
@@ -31,7 +31,7 @@ function CreatedExample() {
       <div className="log-section">
         <h4>Lifecycle Logs:</h4>
         {logs.map((log, index) => (
-          <div key={index} className="log-item">
+          <div data-testid="CreatedExample" key={index} className="log-item">
             {log}
           </div>
         ))}
@@ -56,7 +56,7 @@ function UpdatedExample() {
   }, [count]);
 
   return (
-    <div className="example-card">
+    <div data-testid="UpdatedExample" className="example-card">
       <h3 className="example-title">useLifecycleUpdated Example</h3>
       <p className="page-description">
         This hook runs after every update (but not on initial mount). Click the
@@ -77,7 +77,7 @@ function UpdatedExample() {
           <div className="log-item">No updates yet. Click Increment!</div>
         ) : (
           logs.map((log, index) => (
-            <div key={index} className="log-item">
+            <div data-testid="UpdatedExample" key={index} className="log-item">
               {log}
             </div>
           ))
@@ -102,7 +102,7 @@ function DestroyedExample() {
 
     return (
       <div
-        style={{
+        data-testid="ChildComponent" style={{
           padding: '16px',
           background: '#e6f7ff',
           borderRadius: '4px',
@@ -115,7 +115,7 @@ function DestroyedExample() {
   };
 
   return (
-    <div className="example-card">
+    <div data-testid="DestroyedExample" className="example-card">
       <h3 className="example-title">useLifecycleDestroyed Example</h3>
       <p className="page-description">
         This hook runs cleanup when the component unmounts. Toggle the child
@@ -141,7 +141,7 @@ function DestroyedExample() {
           </div>
         ) : (
           logs.map((log, index) => (
-            <div key={index} className="log-item">
+            <div data-testid="DestroyedExample" key={index} className="log-item">
               {log}
             </div>
           ))
@@ -156,7 +156,7 @@ function DestroyedExample() {
  */
 export function LifecycleExample() {
   return (
-    <div>
+    <div data-testid="LifecycleExample">
       <div className="page-header">
         <h1 className="page-title">useLifecycle Hooks</h1>
         <p className="page-description">

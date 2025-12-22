@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 export function HomePage() {
   return (
-    <div className="home-content">
+    <div data-testid="HomePage" className="home-content">
       <h1 className="home-title">@brain-toolkit/react-kit Examples</h1>
       <p className="home-text">
         Welcome to the react-kit example showcase! This interactive demo
