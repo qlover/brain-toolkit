@@ -22,7 +22,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "type-check": "tsc --build"
   },
   "repository": {
     "type": "git",

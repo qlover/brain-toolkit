@@ -22,7 +22,6 @@
     "strict": true,
     "jsx": "react-jsx",
     "types": ["vitest/globals"],
-    "tsBuildInfoFile": ".tsbuildinfo",
     "paths": {
       "@brain-toolkit/antd-blocks": ["./packages/antd-blocks/src"],
       "@brain-toolkit/antd-blocks/*": ["./packages/antd-blocks/src/*"],

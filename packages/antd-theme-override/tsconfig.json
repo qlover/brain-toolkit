@@ -3,10 +3,11 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": "src",
-    "outDir": "../../ts-build/antd-theme-override",
+    "outDir": "./ts-build",
     "allowJs": false,
     "esModuleInterop": false,
     "jsx": "react-jsx",
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
     "types": ["vite/client", "vitest/globals"]
   },
   "include": ["src", "package.json"],

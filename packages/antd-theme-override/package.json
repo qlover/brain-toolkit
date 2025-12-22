@@ -32,7 +32,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "type-check": "tsc --build"
   },
   "repository": {
     "type": "git",

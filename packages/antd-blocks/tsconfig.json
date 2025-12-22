@@ -3,10 +3,11 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": ".",
-    "outDir": "../../ts-build/antd-blocks",
+    "outDir": "./ts-build",
     "allowJs": false,
     "jsx": "react-jsx",
     "esModuleInterop": false,
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
     "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {

@@ -3,9 +3,10 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": "src",
-    "outDir": "../../ts-build/element-sizer",
+    "outDir": "./ts-build",
     "allowJs": false,
     "esModuleInterop": false,
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
     "types": ["vite/client", "vitest/globals"]
   },
   "include": ["src", "package.json"],
