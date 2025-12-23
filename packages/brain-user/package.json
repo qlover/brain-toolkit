@@ -19,6 +19,7 @@
     "dist",
     "package.json",
     "README.md",
+    "README.en.md",
     "CHANGELOG.md"
   ],
   "scripts": {
@@ -32,11 +33,10 @@
   },
   "homepage": "https://github.com/qlover/brain-toolkit#readme",
   "keywords": [
-    "brain toolkit",
     "brain-user",
-    "brain",
-    "braininc",
-    "user"
+    "brain user",
+    "imagica user",
+    "brain toolkit"
   ],
   "author": "qlover",
   "license": "ISC",
