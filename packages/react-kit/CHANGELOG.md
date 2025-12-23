@@ -1,5 +1,29 @@
 # @brain-toolkit/react-kit
 
+## 0.2.1
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- Update package.json and README files to enhance formatting and add new package details ([88c5ad5](https://github.com/qlover/brain-toolkit/commit/88c5ad5b277c98a4189ce175c89732f491f4734e)) ([#27](https://github.com/qlover/brain-toolkit/pull/27))
+  - Modified the prettier script in package.json to include markdown files for formatting.
+  - Updated README files to improve table formatting and added a new online demo link for the @brain-toolkit/brain-user package.
+  - Enhanced documentation for the @brain-toolkit/element-sizer and @brain-toolkit/antd-theme-override packages with clearer examples and configuration options.
+  - Cleaned up whitespace and formatting inconsistencies across various documentation files.
+
+#### ♻️ Refactors
+
+- **brain-user:** Restructure example project and enhance user authentication features ([51624c9](https://github.com/qlover/brain-toolkit/commit/51624c9c9c15c1acfbae8448919515dce61fd1ac)) ([#27](https://github.com/qlover/brain-toolkit/pull/27))
+  - Updated the example project for the @brain-toolkit/brain-user package to improve user authentication flows.
+  - Replaced the previous App and GoogleLoginPage components with a new MainApp component that manages routing between login and home pages.
+  - Introduced a new LoginPage component for handling both password and Google login methods.
+  - Added a HomePage component to display user information post-authentication.
+  - Implemented a UserServiceProvider for centralized user service management and state handling.
+  - Enhanced the LocalStorage utility for better state persistence.
+  - Updated package.json to reflect changes in dependencies and scripts.
+  - Removed obsolete files and components to streamline the project structure.
+
 ## 0.2.0
 
 ### Minor Changes
