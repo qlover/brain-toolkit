@@ -1,5 +1,21 @@
 # @brain-toolkit/antd-blocks
 
+## 0.1.1
+
+### Patch Changes
+
+#### ♻️ Refactors
+
+- **brain-user:** Restructure example project and enhance user authentication features ([51624c9](https://github.com/qlover/brain-toolkit/commit/51624c9c9c15c1acfbae8448919515dce61fd1ac)) ([#27](https://github.com/qlover/brain-toolkit/pull/27))
+  - Updated the example project for the @brain-toolkit/brain-user package to improve user authentication flows.
+  - Replaced the previous App and GoogleLoginPage components with a new MainApp component that manages routing between login and home pages.
+  - Introduced a new LoginPage component for handling both password and Google login methods.
+  - Added a HomePage component to display user information post-authentication.
+  - Implemented a UserServiceProvider for centralized user service management and state handling.
+  - Enhanced the LocalStorage utility for better state persistence.
+  - Updated package.json to reflect changes in dependencies and scripts.
+  - Removed obsolete files and components to streamline the project structure.
+
 ## 0.1.0
 
 ### Minor Changes

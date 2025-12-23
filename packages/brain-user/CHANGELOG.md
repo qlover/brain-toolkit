@@ -1,5 +1,21 @@
 # @brain-toolkit/brain-user
 
+## 0.1.1
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- Update package.json and README files to enhance formatting and add new package details ([88c5ad5](https://github.com/qlover/brain-toolkit/commit/88c5ad5b277c98a4189ce175c89732f491f4734e)) ([#27](https://github.com/qlover/brain-toolkit/pull/27))
+  - Modified the prettier script in package.json to include markdown files for formatting.
+  - Updated README files to improve table formatting and added a new online demo link for the @brain-toolkit/brain-user package.
+  - Enhanced documentation for the @brain-toolkit/element-sizer and @brain-toolkit/antd-theme-override packages with clearer examples and configuration options.
+  - Cleaned up whitespace and formatting inconsistencies across various documentation files.
+
+- Update demo links in README files for brain-user package ([53afb21](https://github.com/qlover/brain-toolkit/commit/53afb214bec417150fe9d2c024cba6e6ef765315)) ([#27](https://github.com/qlover/brain-toolkit/pull/27))
+  - Changed the online demo links in README.md, README.en.md, and the Chinese README.md to point to the new Vercel deployment URL.
+  - Enhanced the tsup configuration to drop console statements from the output, improving the production build quality.
+
 ## 0.1.0
 
 ### Minor Changes
