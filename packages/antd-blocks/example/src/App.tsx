@@ -33,7 +33,7 @@ const { Title, Paragraph, Link: AntLink } = Typography;
  */
 function HomePage() {
   return (
-    <div style={{ padding: '24px' }}>
+    <div data-testid="HomePage" style={{ padding: '24px' }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Title level={2}>@brain-toolkit/antd-blocks Examples</Title>
@@ -169,7 +169,7 @@ function AppLayout() {
   const location = useLocation();
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout data-testid="AppLayout" style={{ minHeight: '100vh' }}>
       {/* Sidebar Navigation */}
       <Sider
         theme="light"
@@ -240,7 +240,7 @@ function AppLayout() {
  */
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter data-testid="App">
       <AppLayout />
     </BrowserRouter>
   );

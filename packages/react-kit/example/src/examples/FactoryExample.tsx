@@ -21,23 +21,23 @@ class CounterService {
     );
   }
 
-  get count(): number {
+  public get count(): number {
     return this._count;
   }
 
-  get id(): string {
+  public get id(): string {
     return this._id;
   }
 
-  increment(): void {
+  public increment(): void {
     this._count++;
   }
 
-  decrement(): void {
+  public decrement(): void {
     this._count--;
   }
 
-  reset(): void {
+  public reset(): void {
     this._count = 0;
   }
 }
@@ -52,7 +52,7 @@ class Logger {
     this.namespace = namespace;
   }
 
-  log(message: string): string {
+  public log(message: string): string {
     return `[${this.namespace}] ${message}`;
   }
 }
@@ -83,7 +83,7 @@ function BasicFactoryExample() {
   };
 
   return (
-    <div className="example-card">
+    <div data-testid="BasicFactoryExample" className="example-card">
       <h3 className="example-title">Basic useFactory Example</h3>
       <p className="page-description">
         Create a stable service instance that persists across component
@@ -137,7 +137,7 @@ function DynamicFactoryExample() {
   };
 
   return (
-    <div className="example-card">
+    <div data-testid="DynamicFactoryExample" className="example-card">
       <h3 className="example-title">Dynamic Recreation Example</h3>
       <p className="page-description">
         When constructor arguments change, the instance is automatically
@@ -189,7 +189,7 @@ function MultipleInstancesExample() {
   };
 
   return (
-    <div className="example-card">
+    <div data-testid="MultipleInstancesExample" className="example-card">
       <h3 className="example-title">Multiple Instances Example</h3>
       <p className="page-description">
         Create multiple service instances in the same component. Each instance
@@ -232,7 +232,7 @@ function MultipleInstancesExample() {
             <div className="log-item">No logs yet. Click a button to log!</div>
           ) : (
             logs.map((log, index) => (
-              <div key={index} className="log-item">
+              <div data-testid="MultipleInstancesExample" key={index} className="log-item">
                 {log}
               </div>
             ))
@@ -248,7 +248,7 @@ function MultipleInstancesExample() {
  */
 export function FactoryExample() {
   return (
-    <div>
+    <div data-testid="FactoryExample">
       <div className="page-header">
         <h1 className="page-title">useFactory Hook</h1>
         <p className="page-description">

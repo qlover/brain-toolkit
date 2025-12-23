@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 import pkg from './package.json';
-import { toPureCamelCase } from '../../make/toPureCamelCase';
-import { outExtension, outExtensionMini } from '../../make/outExtension';
+import { toPureCamelCase } from '../../tools/toPureCamelCase';
+import { outExtension, outExtensionMini } from '../../tools/outExtension';
 
 const pkgName = toPureCamelCase(pkg.name);
 export default defineConfig([
@@ -21,7 +21,13 @@ export default defineConfig([
     entry: ['src/index.ts'],
     format: ['esm'],
     splitting: false,
-    dts: true,
+    dts: {
+      compilerOptions: {
+        composite: false,
+        incremental: false,
+        tsBuildInfoFile: undefined
+      }
+    },
     treeshake: true
   },
   {

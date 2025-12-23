@@ -17,7 +17,7 @@ describe('useFactory', () => {
      */
     it('should create instance from class constructor without arguments', () => {
       class SimpleService {
-        value = 42;
+        public value = 42;
       }
 
       const { result } = renderHook(() => useFactory(SimpleService));
@@ -71,7 +71,7 @@ describe('useFactory', () => {
       const constructorSpy = vi.fn();
 
       class StableService {
-        id = Math.random();
+        public id = Math.random();
         constructor() {
           constructorSpy();
         }
@@ -340,13 +340,13 @@ describe('useFactory', () => {
         constructor(private initialValue: number) {
           this.state = { count: this.initialValue };
         }
-        state: { count: number };
+        public state: { count: number };
 
-        increment(): void {
+        public increment(): void {
           this.state.count++;
         }
 
-        getCount(): number {
+        public getCount(): number {
           return this.state.count;
         }
       }
@@ -379,7 +379,7 @@ describe('useFactory', () => {
     it('should work with service having multiple dependencies', () => {
       class Logger {
         constructor(public prefix: string) {}
-        log(message: string): string {
+        public log(message: string): string {
           return `[${this.prefix}] ${message}`;
         }
       }
@@ -408,13 +408,13 @@ describe('useFactory', () => {
 
         constructor(public multiplier: number) {}
 
-        multiply(value: number): number {
+        public multiply(value: number): number {
           const result = value * this.multiplier;
           this.history.push(result);
           return result;
         }
 
-        getHistory(): number[] {
+        public getHistory(): number[] {
           return this.history;
         }
       }
@@ -463,7 +463,7 @@ describe('useFactory', () => {
 
         constructor(public publicValue: string) {}
 
-        getSecret(): string {
+        public getSecret(): string {
           return this.secret;
         }
       }
@@ -562,8 +562,8 @@ describe('useFactory', () => {
      */
     it('should correctly infer return type from class', () => {
       class TypedService {
-        value: number = 42;
-        name: string = 'test';
+        public value: number = 42;
+        public name: string = 'test';
       }
 
       const { result } = renderHook(() => useFactory(TypedService));
@@ -585,11 +585,11 @@ describe('useFactory', () => {
       const constructorSpy = vi.fn();
 
       class SingletonService {
-        id = Math.random();
+        public id = Math.random();
         constructor() {
           constructorSpy();
         }
-        getId(): number {
+        public getId(): number {
           return this.id;
         }
       }
@@ -632,7 +632,7 @@ describe('useFactory', () => {
         constructor(public apiUrl: string) {
           constructorSpy(apiUrl);
         }
-        getUrl(): string {
+        public getUrl(): string {
           return this.apiUrl;
         }
       }
@@ -676,11 +676,11 @@ describe('useFactory', () => {
       class CounterService {
         private count = 0;
 
-        increment(): void {
+        public increment(): void {
           this.count++;
         }
 
-        getCount(): number {
+        public getCount(): number {
           return this.count;
         }
       }
@@ -752,7 +752,7 @@ describe('useFactory', () => {
           constructorSpy(baseUrl, timeout);
         }
 
-        getConfig(): string {
+        public getConfig(): string {
           return `${this.baseUrl} (timeout: ${this.timeout}ms)`;
         }
       }
@@ -810,17 +810,17 @@ describe('useFactory', () => {
     it('should work with store pattern - recreation on initial value change', async () => {
       const user = userEvent.setup();
       class TodoStore {
-        todos: string[];
+        public todos: string[];
 
         constructor(initialTodos: string[]) {
           this.todos = [...initialTodos];
         }
 
-        addTodo(todo: string): void {
+        public addTodo(todo: string): void {
           this.todos.push(todo);
         }
 
-        getTodos(): string[] {
+        public getTodos(): string[] {
           return this.todos;
         }
       }
@@ -890,7 +890,7 @@ describe('useFactory', () => {
           constructorSpy(config);
         }
 
-        getInfo(): string {
+        public getInfo(): string {
           return `${this.config.url}:${this.config.port}`;
         }
       }

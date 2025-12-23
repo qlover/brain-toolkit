@@ -1,18 +1,19 @@
 import { vi } from 'vitest';
-import { ElementResizerOptions, AnimationState } from '../src';
+import type { ElementResizerOptions } from '../src';
+import { AnimationState } from '../src';
 
 export type { ElementResizerOptions, AnimationState } from '../src';
 
 export class ElementResizer {
-  target: HTMLElement;
-  animationState: AnimationState = AnimationState.IDLE;
-  isAnimating: boolean = false;
+  public target: HTMLElement;
+  public animationState: AnimationState = AnimationState.IDLE;
+  public isAnimating: boolean = false;
 
   constructor(options: ElementResizerOptions = {}) {
     this.target = options.target || document.createElement('div');
   }
 
-  expand = vi.fn().mockImplementation(() => {
+  public expand = vi.fn().mockImplementation(() => {
     this.animationState = AnimationState.EXPANDING;
     // 模拟异步动画
     setTimeout(() => {
@@ -23,7 +24,7 @@ export class ElementResizer {
     return Promise.resolve();
   });
 
-  collapse = vi.fn().mockImplementation(() => {
+  public collapse = vi.fn().mockImplementation(() => {
     this.animationState = AnimationState.COLLAPSING;
     // 模拟异步动画
     setTimeout(() => {
@@ -34,7 +35,7 @@ export class ElementResizer {
     return Promise.resolve();
   });
 
-  fixedCurrentTargetRect = vi.fn().mockImplementation(() => {
+  public fixedCurrentTargetRect = vi.fn().mockImplementation(() => {
     // Mock implementation
     return {
       width: 100,
@@ -44,7 +45,7 @@ export class ElementResizer {
     };
   });
 
-  cancelAnimation = vi.fn().mockImplementation(() => {
+  public cancelAnimation = vi.fn().mockImplementation(() => {
     this.isAnimating = false;
     this.animationState = AnimationState.IDLE;
   });

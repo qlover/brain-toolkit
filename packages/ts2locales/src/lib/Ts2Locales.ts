@@ -176,7 +176,7 @@ export class Ts2Locales {
     return metadata;
   }
 
-  parse(content: string): SourceParseValue[] {
+  public parse(content: string): SourceParseValue[] {
     const resultsMap = new Map<string, SourceParseValue>();
 
     let match;
@@ -236,7 +236,7 @@ export class Ts2Locales {
    * @param source - Source file path
    * @returns Array of extracted internationalization information objects
    */
-  getSourceParseValue(source: string): SourceParseValue[] {
+  public getSourceParseValue(source: string): SourceParseValue[] {
     return this.parse(readFileSync(source, 'utf-8'));
   }
 
@@ -247,7 +247,7 @@ export class Ts2Locales {
    * @param sourceParseValues - Array of internationalization information extracted from the source file
    * @returns Object containing the localization content
    */
-  create(
+  public create(
     locale: string,
     sourceParseValues: SourceParseValue[]
   ): Record<string, string> {
@@ -275,7 +275,7 @@ export class Ts2Locales {
    * @param value - Object containing source file path and target file path
    * @returns Returns a Promise indicating the completion of the generation operation
    */
-  async generate(value: Ts2LocalesValue): Promise<void> {
+  public async generate(value: Ts2LocalesValue): Promise<void> {
     const { source, target } = value;
 
     if (!existsSync(source)) {

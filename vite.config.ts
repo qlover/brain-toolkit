@@ -4,6 +4,22 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Fix for @qlover/corekit-bridge directory import issue
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+    alias: {
+      '@brain-toolkit/element-sizer': resolve(
+        __dirname,
+        'packages/element-sizer/__mocks__'
+      )
+    }
+  },
+  server: {
+    fs: {
+      // Allow serving files from node_modules
+      allow: ['..']
+    }
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -17,13 +33,16 @@ export default defineConfig({
       '**/.github/**',
       '**/.husky/**',
       '**/.vscode/**',
-      '**/.nx/**',
+      '**/.nx/**'
     ],
-    alias: {
-      '@brain-toolkit/element-sizer': resolve(
-        __dirname,
-        'packages/element-sizer/__mocks__'
-      )
+    // Setup file for test environment
+    setupFiles: ['./vitest.setup.js'],
+    // Server configuration for test environment
+    server: {
+      deps: {
+        // Inline problematic dependencies to avoid ES module issues
+        inline: ['@qlover/corekit-bridge']
+      }
     }
   }
 });

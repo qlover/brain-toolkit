@@ -1,5 +1,5 @@
-import { SyncStorageInterface } from '@qlover/fe-corekit';
-import { ImagicaAuthApiConfig } from './ImagicaAuthApi';
+import type { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { ImagicaAuthApiConfig } from './ImagicaAuthApi';
 import type { ImagicaAuthServiceConfig } from './ImagicaAuthService';
 import { ImagicaAuthState } from './ImagicaAuthState';
 

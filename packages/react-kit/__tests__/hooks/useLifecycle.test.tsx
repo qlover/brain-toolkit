@@ -333,15 +333,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class TestLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -380,15 +389,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class MinimalLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           // Should still be called
         }
       }
@@ -421,15 +439,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class CounterLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -472,15 +499,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class ComponentLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -518,15 +554,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class MultiUpdateLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -578,15 +623,24 @@ describe('Lifecycle Hooks', () => {
         const [count, setCount] = useState(0);
 
         class StateLifecycle implements LifecycleInterface {
-          created(): void {
+          /**
+           * @override
+           */
+          public created(): void {
             lifecycleCalls.push({ method: 'created', count });
           }
 
-          updated(): void {
+          /**
+           * @override
+           */
+          public updated(): void {
             lifecycleCalls.push({ method: 'updated', count });
           }
 
-          destroyed(): void {
+          /**
+           * @override
+           */
+          public destroyed(): void {
             lifecycleCalls.push({ method: 'destroyed', count });
           }
         }
@@ -634,15 +688,24 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class EmptyDepsLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           calls.push('created');
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           calls.push('updated');
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           calls.push('destroyed');
         }
       }
@@ -679,20 +742,33 @@ describe('Lifecycle Hooks', () => {
       const error = new Error('Created error');
 
       class ErrorLifecycle implements LifecycleInterface {
-        created(): void {
+        /**
+         * @override
+         */
+        public created(): void {
           throw error;
         }
 
-        updated(): void {
+        /**
+         * @override
+         */
+        public updated(): void {
           // Should still be called
         }
 
-        destroyed(): void {
+        /**
+         * @override
+         */
+        public destroyed(): void {
           // Should still be called
         }
       }
 
       const lifecycle = new ErrorLifecycle();
+
+      // Suppress console.error for this test since we expect an error
+      const originalError = console.error;
+      console.error = vi.fn();
 
       // Mock requestAnimationFrame to execute callback immediately
       const originalRAF = window.requestAnimationFrame;
@@ -707,6 +783,7 @@ describe('Lifecycle Hooks', () => {
         }).toThrow(error);
       } finally {
         window.requestAnimationFrame = originalRAF;
+        console.error = originalError;
       }
     });
 
@@ -717,17 +794,26 @@ describe('Lifecycle Hooks', () => {
       const calls: string[] = [];
 
       class AsyncLifecycle implements LifecycleInterface {
-        async created(): Promise<void> {
+        /**
+         * @override
+         */
+        public async created(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 10));
           calls.push('created');
         }
 
-        async updated(): Promise<void> {
+        /**
+         * @override
+         */
+        public async updated(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 10));
           calls.push('updated');
         }
 
-        async destroyed(): Promise<void> {
+        /**
+         * @override
+         */
+        public async destroyed(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 10));
           calls.push('destroyed');
         }
@@ -737,30 +823,33 @@ describe('Lifecycle Hooks', () => {
 
       const { rerender, unmount } = renderHook(() => useLifecycle(lifecycle));
 
-      // Wait for async created
+      // Wait for requestAnimationFrame and async created
+      // Need to wait for both RAF callback and the async operation inside created()
       await waitFor(
         () => {
           expect(calls).toContain('created');
         },
-        { timeout: 100 }
+        { timeout: 200, interval: 10 }
       );
 
       rerender();
 
+      // Wait for async updated
       await waitFor(
         () => {
           expect(calls).toContain('updated');
         },
-        { timeout: 100 }
+        { timeout: 200, interval: 10 }
       );
 
       unmount();
 
+      // Wait for requestAnimationFrame and async destroyed
       await waitFor(
         () => {
           expect(calls).toContain('destroyed');
         },
-        { timeout: 100 }
+        { timeout: 200, interval: 10 }
       );
     });
   });

@@ -1,11 +1,22 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "sourceMap": false,
-    "inlineSourceMap": false,
-    "inlineSources": false,
-    "importHelpers": false,
-    "declaration": false
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "./ts-build",
+    "allowJs": false,
+    "esModuleInterop": false,
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
+    "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src"]
+  "include": ["src", "package.json"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "ts-build",
+    "__tests__",
+    "__mocks__",
+    "example"
+  ],
+  "references": []
 }

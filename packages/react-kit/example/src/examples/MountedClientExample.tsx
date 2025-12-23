@@ -13,7 +13,7 @@ function BasicMountedExample() {
   const mounted = useMountedClient();
 
   return (
-    <div className="example-card">
+    <div data-testid="BasicMountedExample" className="example-card">
       <h3 className="example-title">Basic Mounted Client Example</h3>
       <p className="page-description">
         The useMountedClient hook returns <code>false</code> during SSR and
@@ -73,7 +73,7 @@ function BrowserAPIExample() {
 
   if (!mounted) {
     return (
-      <div className="example-card">
+      <div data-testid="BrowserAPIExample" className="example-card">
         <h3 className="example-title">Window Size Tracker</h3>
         <p className="page-description">
           This example safely accesses browser APIs like <code>window</code>.
@@ -88,7 +88,7 @@ function BrowserAPIExample() {
   }
 
   return (
-    <div className="example-card">
+    <div data-testid="BrowserAPIExample" className="example-card">
       <h3 className="example-title">Window Size Tracker</h3>
       <p className="page-description">
         This example safely accesses browser APIs like <code>window</code>.
@@ -139,7 +139,7 @@ function ClientOnlyContentExample() {
   }, [mounted]);
 
   return (
-    <div className="example-card">
+    <div data-testid="ClientOnlyContentExample" className="example-card">
       <h3 className="example-title">Client Information</h3>
       <p className="page-description">
         Display client-only information safely. During SSR or initial render, a
@@ -254,7 +254,7 @@ function LocalStorageExample() {
 
   if (!mounted) {
     return (
-      <div className="example-card">
+      <div data-testid="LocalStorageExample" className="example-card">
         <h3 className="example-title">LocalStorage Example</h3>
         <p className="page-description">
           Safely access localStorage without SSR errors.
@@ -269,7 +269,7 @@ function LocalStorageExample() {
   }
 
   return (
-    <div className="example-card">
+    <div data-testid="LocalStorageExample" className="example-card">
       <h3 className="example-title">LocalStorage Example</h3>
       <p className="page-description">
         Safely access localStorage without SSR errors. Your data persists across
@@ -329,7 +329,7 @@ function LocalStorageExample() {
  */
 export function MountedClientExample() {
   return (
-    <div>
+    <div data-testid="MountedClientExample">
       <div className="page-header">
         <h1 className="page-title">useMountedClient Hook</h1>
         <p className="page-description">

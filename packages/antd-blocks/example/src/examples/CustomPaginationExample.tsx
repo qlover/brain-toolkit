@@ -62,7 +62,7 @@ export function CustomPaginationExample() {
   ];
 
   return (
-    <Card title="Custom Pagination Example - Enhanced Pagination">
+    <Card data-testid="CustomPaginationExample" title="Custom Pagination Example - Enhanced Pagination">
       <ResourceTable
         columns={columns}
         tableEvent={tableEvent}

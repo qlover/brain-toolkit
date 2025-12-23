@@ -12,13 +12,13 @@
  * const users = await userService.search({ page: 1, pageSize: 10 });
  * ```
  */
-import {
+import type {
   ResourceServiceInterface,
-  ResourceStore,
   ResourceStateInterface,
   ResourceQuery
 } from '@qlover/corekit-bridge';
-import { User } from './types';
+import { ResourceStore } from '@qlover/corekit-bridge';
+import type { User } from './types';
 import { ResourceState } from './ResourceState';
 
 /**
@@ -110,31 +110,33 @@ export class UserService
   implements
     ResourceServiceInterface<User, ResourceStore<ResourceStateInterface>>
 {
-  store = new ResourceStore(() => new ResourceState());
+  public store = new ResourceStore(() => new ResourceState());
 
   // Interface required properties (not used in this mock example)
-  unionKey = 'users' as const;
-  serviceName = 'UserService' as const;
+  public unionKey = 'users' as const;
+  public serviceName = 'UserService' as const;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  resourceApi = null as any; // Mock services don't need actual API
-  export = async () => ({}); // Mock export function
+  public resourceApi = null as any; // Mock services don't need actual API
+  public export = async () => ({}); // Mock export function
 
   /**
    * Get the resource store instance
    *
+   * @override
    * @returns Resource store for state management
    */
-  getStore(): ResourceStore<ResourceStateInterface> {
+  public getStore(): ResourceStore<ResourceStateInterface> {
     return this.store;
   }
 
   /**
    * Create a new user
    *
+   * @override
    * @param data - User data to create
    * @returns Newly created user with assigned ID
    */
-  async create(data: unknown): Promise<User> {
+  public async create(data: unknown): Promise<User> {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -151,10 +153,11 @@ export class UserService
   /**
    * Update an existing user
    *
+   * @override
    * @param data - Partial user data with ID
    * @returns Updated user
    */
-  async update(data: Partial<User>): Promise<User> {
+  public async update(data: Partial<User>): Promise<User> {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -170,9 +173,10 @@ export class UserService
   /**
    * Remove a user
    *
+   * @override
    * @param data - User data containing ID to remove
    */
-  async remove(data: unknown): Promise<void> {
+  public async remove(data: unknown): Promise<void> {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -188,10 +192,11 @@ export class UserService
   /**
    * Search users with pagination
    *
+   * @override
    * @param query - Search query with page and pageSize
    * @returns Paginated list of users
    */
-  async search(query: ResourceQuery): Promise<ResourceListResult<User>> {
+  public async search(query: ResourceQuery): Promise<ResourceListResult<User>> {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -209,8 +214,10 @@ export class UserService
 
   /**
    * Lifecycle hook - called when component is created
-   */
-  created(): void {
+
+   * @override
+      */
+  public created(): void {
     // Initialize if needed
     console.log('UserService created');
     this.search({ page: 1, pageSize: 10 });
@@ -218,15 +225,19 @@ export class UserService
 
   /**
    * Lifecycle hook - called when component is updated
-   */
-  updated(): void {
+
+   * @override
+      */
+  public updated(): void {
     // Handle updates if needed
   }
 
   /**
    * Lifecycle hook - called when component is destroyed
-   */
-  destroyed(): void {
+
+   * @override
+      */
+  public destroyed(): void {
     // Cleanup if needed
     console.log('UserService destroyed');
   }

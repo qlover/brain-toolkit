@@ -14,18 +14,19 @@ import type {
   ResourceTableOption
 } from './ResourceTableOption';
 import type { FormInstance } from 'antd/lib';
-import { NamePath } from 'antd/es/form/interface';
+import type { NamePath } from 'antd/es/form/interface';
 
 const { Item: FormItem } = Form;
 
-export interface ResourceTableSchemaFormProps<T> extends FormProps {
+export interface ResourceTableSchemaFormProps<T>
+  extends Omit<FormProps, 'children'> {
   formComponents?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key in ResourceTableFormType]?: React.ComponentType<any>;
   };
   formRef: FormInstance<unknown>;
   options: ResourceTableOption<T>[];
-  children?: React.ReactNode;
+  children?: Exclude<React.ReactNode, bigint>;
   tableEvent: ResourceTableEventInterface;
   tt: ResourceTableLocales;
 }
@@ -64,7 +65,7 @@ export function ResourceTableSchemaForm<T>(
       if (!renderForm) return null;
 
       if (typeof renderForm === 'function') {
-        return <div key={unionKey}>{renderForm(rest, index)}</div>;
+        return <div data-testid="renderItem" key={unionKey}>{renderForm(rest, index)}</div>;
       }
 
       const Component = schemaFormMap[renderForm];
@@ -102,7 +103,9 @@ export function ResourceTableSchemaForm<T>(
     >
       {options.map(renderItem)}
 
-      {children || (
+      {children ? (
+        (children as React.ReactElement | null | undefined)
+      ) : (
         <ResourceTableSchemaFormFooter tt={tt} tableEvent={tableEvent} />
       )}
     </Form>

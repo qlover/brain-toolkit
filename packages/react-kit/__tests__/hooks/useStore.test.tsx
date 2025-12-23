@@ -1,9 +1,10 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useStore } from '../../src/hooks/useStore';
 import { describe, it, expect, vi } from 'vitest';
 import { StoreInterface } from '@qlover/corekit-bridge';
+
 import type { StoreStateInterface } from '@qlover/corekit-bridge';
 
 /**
@@ -26,7 +27,10 @@ describe('useStore', () => {
           super(() => ({ count: 0 }));
         }
 
-        increment(): void {
+        /**
+         * @override
+         */
+        public increment(): void {
           this.emit({ count: this.state.count + 1 });
         }
       }
@@ -50,7 +54,10 @@ describe('useStore', () => {
           super(() => ({ count: 0 }));
         }
 
-        increment(): void {
+        /**
+         * @override
+         */
+        public increment(): void {
           this.emit({ count: this.state.count + 1 });
         }
       }
@@ -60,7 +67,9 @@ describe('useStore', () => {
 
       expect(result.current.count).toBe(0);
 
-      store.increment();
+      act(() => {
+        store.increment();
+      });
 
       await waitFor(() => {
         expect(result.current.count).toBe(1);
@@ -258,11 +267,17 @@ describe('useStore', () => {
           }));
         }
 
-        updateCounter(value: number): void {
+        /**
+         * @override
+         */
+        public updateCounter(value: number): void {
           this.emit({ ...this.state, counter: value });
         }
 
-        updateUnrelated(value: string): void {
+        /**
+         * @override
+         */
+        public updateUnrelated(value: string): void {
           this.emit({ ...this.state, unrelated: value });
         }
       }
@@ -280,7 +295,9 @@ describe('useStore', () => {
       expect(renderSpy).toHaveBeenCalledTimes(1);
 
       // Update counter - should trigger re-render
-      store.updateCounter(1);
+      act(() => {
+        store.updateCounter(1);
+      });
       await waitFor(() => {
         expect(result.current).toBe(1);
       });
@@ -289,7 +306,9 @@ describe('useStore', () => {
       expect(callsAfterCounterUpdate).toBeGreaterThan(1);
 
       // Update unrelated field - selector should prevent re-render
-      store.updateUnrelated('changed');
+      act(() => {
+        store.updateUnrelated('changed');
+      });
 
       // Wait a bit to ensure no additional renders
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -315,7 +334,10 @@ describe('useStore', () => {
           super(() => ({ count: 0 }));
         }
 
-        increment(): void {
+        /**
+         * @override
+         */
+        public increment(): void {
           this.emit({ count: this.state.count + 1 });
         }
       }
@@ -362,7 +384,10 @@ describe('useStore', () => {
           }));
         }
 
-        updateName(name: string): void {
+        /**
+         * @override
+         */
+        public updateName(name: string): void {
           this.emit({
             ...this.state,
             profile: { ...this.state.profile, name }
@@ -403,7 +428,7 @@ describe('useStore', () => {
      * Test with empty state
      */
     it('should handle empty state', () => {
-      interface EmptyState extends StoreStateInterface {}
+      type EmptyState = StoreStateInterface;
 
       class EmptyStore extends StoreInterface<EmptyState> {
         constructor() {

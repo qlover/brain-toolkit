@@ -1,28 +1,21 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "skipLibCheck": true,
-    "downlevelIteration": true,
-    "strict": true,
-    "allowUnusedLabels": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "outDir": "dist",
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "./ts-build",
     "allowJs": false,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "vitest/globals"]
+    "esModuleInterop": false,
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
+    "types": ["vite/client", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@brain-toolkit/react-kit": ["./src"],
+      "@brain-toolkit/react-kit/*": ["./src/*"]
+    }
   },
-  "include": ["src", "__tests__"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src", "package.json", "example/src"],
+  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"],
+  "references": []
 }

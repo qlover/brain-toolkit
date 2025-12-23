@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ResourceTablePopup } from '../../../src/resourceTable/ResourceTablePopup';
-import { ResourceTableEventInterface } from '../../../src';
+import type { ResourceTableEventInterface } from '../../../src';
 import { ResourceTableContext } from '../../../src/resourceTable/ResourceTableContext';
 import * as SliceStoreReact from '@qlover/slice-store-react';
 import { Grid } from 'antd';
@@ -45,7 +45,7 @@ describe('ResourceTablePopup', () => {
 
     // Default mock implementations
     (SliceStoreReact.useSliceStore as any).mockImplementation(
-      (store: any, selector: any) => {
+      (_store: any, selector: any) => {
         // First call returns openPopup state
         if (
           selector.name === 'openPopup' ||

@@ -13,16 +13,19 @@
   "scripts": {
     "build": "pnpm -r --workspace-concurrency=4 run build && pnpm rebuild",
     "nx:build": "nx affected:build",
-    "nx:build:force": "pnpm nx run-many --target=build --all --skip-nx-cache --parallel --maxParallel=4",
+    "nx:build:force": "pnpm nx run-many --target=build --all --skip-nx-cache --parallel --maxParallel=4 --exclude=examples/*",
     "prettier": "prettier --ignore-path .prettierignore **/*.{js,ts,json,cjs,mjs} --write",
-    "lint": "eslint . --fix",
+    "lint": "eslint --cache --cache-location node_modules/.cache/eslint --max-warnings 0",
+    "lint:fix": "eslint ./packages ./tools --fix --cache --cache-location node_modules/.cache/eslint",
+    "fix": "pnpm lint:fix && pnpm prettier",
     "test": "vitest run",
     "clean": "fe-clean",
     "clean:build": "fe-clean -f packages/*/dist -r",
     "commit": "fe-commit",
     "clean-branch": "fe-clean-branch",
     "check-packages": "fe-check-packages",
-    "prepare": "husky"
+    "prepare": "husky",
+    "type-check": "tsc --build --force"
   },
   "keywords": [
     "brain-toolkit",
@@ -40,21 +43,23 @@
     "@commitlint/config-conventional": "^19.7.1",
     "@eslint/js": "^9.13.0",
     "@nx/js": "20.6.4",
-    "@qlover/env-loader": "^0.3.0",
-    "@qlover/eslint-plugin-fe-dev": "^0.2.0",
-    "@qlover/fe-release": "^2.3.5",
-    "@qlover/fe-scripts": "^0.11.6",
+    "@qlover/env-loader": "^0.4.0",
+    "@qlover/eslint-plugin": "^1.1.0",
+    "@qlover/fe-release": "3.2.0",
+    "@qlover/fe-scripts": "^1.1.0",
     "@qlover/fe-standard": "^0.0.4",
-    "@qlover/scripts-context": "^0.2.1",
+    "@qlover/scripts-context": "^1.2.1",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.1",
+    "@rollup/rollup-win32-x64-msvc": "^4.53.5",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/jsdom": "^21.1.7",
     "@types/lodash": "^4.17.16",
@@ -92,8 +97,5 @@
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix"
     ]
-  },
-  "dependencies": {
-    "@testing-library/react-hooks": "^8.0.1"
   }
 }

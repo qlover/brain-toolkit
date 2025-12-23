@@ -1,5 +1,6 @@
 import type { Plugin } from 'vite';
-import { Ts2Locales, Ts2LocalesValue } from '../lib/Ts2Locales';
+import type { Ts2LocalesValue } from '../lib/Ts2Locales';
+import { Ts2Locales } from '../lib/Ts2Locales';
 
 type Ts2LocalesOptions = {
   /**

@@ -22,13 +22,29 @@ export default defineConfig([
   {
     entry: ['src/index.ts'],
     format: 'esm',
-    dts: true,
+    splitting: false,
+    bundle: false,
+    dts: {
+      compilerOptions: {
+        composite: false,
+        incremental: false,
+        tsBuildInfoFile: undefined
+      }
+    },
     outDir: 'dist'
   },
   {
     entry: ['src/vite/index.ts'],
     format: 'esm',
-    dts: true,
+    splitting: false,
+    bundle: false,
+    dts: {
+      compilerOptions: {
+        composite: false,
+        incremental: false,
+        tsBuildInfoFile: undefined
+      }
+    },
     outDir: 'dist/vite'
   }
 ]);

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ResourceTableAction } from '../../../src/resourceTable/ResourceTableAction';
-import { ResourceTableEventInterface } from '../../../src';
+import type { ResourceTableEventInterface } from '../../../src';
 
 describe('ResourceTableAction', () => {
   const mockOnEdited = vi.fn();

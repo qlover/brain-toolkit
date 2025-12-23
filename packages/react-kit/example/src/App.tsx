@@ -49,14 +49,14 @@ function AppLayout() {
   const location = useLocation();
 
   return (
-    <div className="app-container">
+    <div data-testid="AppLayout" className="app-container">
       {/* Sidebar Navigation */}
       <div className="sidebar">
         <div className="sidebar-header">React Kit</div>
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <Link
-              key={item.key}
+              data-testid="AppLayout" key={item.key}
               to={item.key}
               className={`nav-item ${location.pathname === item.key ? 'active' : ''}`}
             >
@@ -85,7 +85,7 @@ function AppLayout() {
  */
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter data-testid="App">
       <AppLayout />
     </BrowserRouter>
   );

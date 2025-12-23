@@ -23,7 +23,7 @@ class CounterStore extends StoreInterface<CounterState> {
     }));
   }
 
-  increment(): void {
+  public increment(): void {
     this.emit({
       ...this.state,
       count: this.state.count + 1,
@@ -31,7 +31,7 @@ class CounterStore extends StoreInterface<CounterState> {
     });
   }
 
-  decrement(): void {
+  public decrement(): void {
     this.emit({
       ...this.state,
       count: this.state.count - 1,
@@ -39,7 +39,7 @@ class CounterStore extends StoreInterface<CounterState> {
     });
   }
 
-  reset(): void {
+  public reset(): void {
     this.emit({
       count: 0,
       lastUpdated: Date.now()
@@ -69,7 +69,7 @@ class TodoStore extends StoreInterface<TodoState> {
     }));
   }
 
-  addTodo(text: string): void {
+  public addTodo(text: string): void {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text,
@@ -81,7 +81,7 @@ class TodoStore extends StoreInterface<TodoState> {
     });
   }
 
-  toggleTodo(id: string): void {
+  public toggleTodo(id: string): void {
     this.emit({
       ...this.state,
       todos: this.state.todos.map((todo) =>
@@ -90,14 +90,14 @@ class TodoStore extends StoreInterface<TodoState> {
     });
   }
 
-  deleteTodo(id: string): void {
+  public deleteTodo(id: string): void {
     this.emit({
       ...this.state,
       todos: this.state.todos.filter((todo) => todo.id !== id)
     });
   }
 
-  setFilter(filter: 'all' | 'active' | 'completed'): void {
+  public setFilter(filter: 'all' | 'active' | 'completed'): void {
     this.emit({
       ...this.state,
       filter
@@ -113,7 +113,7 @@ function BasicStoreExample() {
   const state = useStore(store);
 
   return (
-    <div className="example-card">
+    <div data-testid="BasicStoreExample" className="example-card">
       <h3 className="example-title">Basic useStore Example</h3>
       <p className="page-description">
         Subscribe to store state and trigger re-renders when state changes. The
@@ -150,7 +150,7 @@ function SelectorExample() {
   const count = useStore(store, (state) => state.count);
 
   return (
-    <div className="example-card">
+    <div data-testid="SelectorExample" className="example-card">
       <h3 className="example-title">Selector Example</h3>
       <p className="page-description">
         Use a selector to subscribe to specific parts of the state. This
@@ -203,7 +203,7 @@ function TodoStoreExample() {
   };
 
   return (
-    <div className="example-card">
+    <div data-testid="TodoStoreExample" className="example-card">
       <h3 className="example-title">Todo List with Store</h3>
       <p className="page-description">
         A complete todo list application using useStore for state management.
@@ -280,7 +280,7 @@ function TodoStoreExample() {
           ) : (
             filteredTodos.map((todo) => (
               <div
-                key={todo.id}
+                data-testid="TodoStoreExample" key={todo.id}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -327,7 +327,7 @@ function TodoStoreExample() {
  */
 export function StoreExample() {
   return (
-    <div>
+    <div data-testid="StoreExample">
       <div className="page-header">
         <h1 className="page-title">useStore Hook</h1>
         <p className="page-description">
