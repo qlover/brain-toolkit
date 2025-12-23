@@ -7,6 +7,7 @@ This document provides detailed information about the packaging strategies, outp
 ### Main Output Formats
 
 #### 1. **CommonJS (CJS)**
+
 - **Purpose**: Node.js server-side environment
 - **Features**: Synchronous loading, uses `require()` and `module.exports`
 - **File Extension**: `.cjs` or `.js`
@@ -14,7 +15,9 @@ This document provides detailed information about the packaging strategies, outp
 ```javascript
 // Output example
 module.exports = {
-  ElementResizer: class ElementResizer { /* ... */ }
+  ElementResizer: class ElementResizer {
+    /* ... */
+  }
 };
 
 // Usage example
@@ -22,13 +25,16 @@ const { ElementResizer } = require('@brain-toolkit/element-sizer');
 ```
 
 #### 2. **ES Modules (ESM)**
+
 - **Purpose**: Modern browsers, Node.js (>=14), bundlers
 - **Features**: Static analysis, Tree-shaking friendly
 - **File Extension**: `.mjs` or `.js`
 
 ```javascript
 // Output example
-export class ElementResizer { /* ... */ }
+export class ElementResizer {
+  /* ... */
+}
 export default ElementResizer;
 
 // Usage example
@@ -36,6 +42,7 @@ import { ElementResizer } from '@brain-toolkit/element-sizer';
 ```
 
 #### 3. **Universal Module Definition (UMD)**
+
 - **Purpose**: Direct browser usage, compatible with multiple module systems
 - **Features**: Adaptive to AMD, CommonJS, global variables
 - **File Extension**: `.umd.js`
@@ -194,34 +201,34 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   // Entry files
   entry: ['src/index.ts'],
-  
+
   // Output formats
   format: ['cjs', 'esm', 'umd'],
-  
+
   // Generate type definition files
   dts: true,
-  
+
   // Clean output directory
   clean: true,
-  
+
   // Code splitting
   splitting: false,
-  
+
   // Source maps
   sourcemap: true,
-  
+
   // Minify code
   minify: false,
-  
+
   // Target environment
   target: 'es2018',
-  
+
   // External dependencies
   external: ['react', 'vue'],
-  
+
   // Global variable name (UMD)
   globalName: 'BrainToolkit',
-  
+
   // Custom esbuild options
   esbuildOptions(options) {
     options.banner = {
@@ -260,7 +267,7 @@ export default defineConfig([
     ],
     external: ['react', 'vue']
   },
-  
+
   // CJS build
   {
     input: 'src/index.ts',
@@ -269,14 +276,10 @@ export default defineConfig([
       format: 'cjs',
       sourcemap: true
     },
-    plugins: [
-      nodeResolve(),
-      commonjs(),
-      typescript()
-    ],
+    plugins: [nodeResolve(), commonjs(), typescript()],
     external: ['react', 'vue']
   },
-  
+
   // UMD build
   {
     input: 'src/index.ts',
@@ -305,16 +308,16 @@ export default defineConfig([
   "name": "@brain-toolkit/element-sizer",
   "version": "0.2.0",
   "type": "module",
-  
+
   // Main entry (CJS)
   "main": "./dist/index.cjs",
-  
+
   // ES module entry
   "module": "./dist/index.js",
-  
+
   // Browser entry
   "browser": "./dist/index.umd.js",
-  
+
   // TypeScript type definitions
   "types": "./dist/index.d.ts"
 }
@@ -332,14 +335,14 @@ export default defineConfig([
       "require": "./dist/index.cjs",
       "browser": "./dist/index.umd.js"
     },
-    
+
     // Subpath exports
     "./utils": {
       "types": "./dist/utils.d.ts",
       "import": "./dist/utils.js",
       "require": "./dist/utils.cjs"
     },
-    
+
     // Package info
     "./package.json": "./package.json"
   }
@@ -350,12 +353,7 @@ export default defineConfig([
 
 ```json
 {
-  "files": [
-    "dist",
-    "package.json",
-    "README.md",
-    "CHANGELOG.md"
-  ]
+  "files": ["dist", "package.json", "README.md", "CHANGELOG.md"]
 }
 ```
 
@@ -382,10 +380,7 @@ export default defineConfig({
 ```typescript
 // Small utility libraries can be inlined
 export default defineConfig({
-  noExternal: [
-    'tiny-utility',
-    'small-helper'
-  ]
+  noExternal: ['tiny-utility', 'small-helper']
 });
 ```
 
@@ -394,7 +389,7 @@ export default defineConfig({
 ```json
 // package.json
 {
-  "sideEffects": false,  // Mark as side-effect free
+  "sideEffects": false, // Mark as side-effect free
   "module": "./dist/index.js"
 }
 ```
@@ -414,8 +409,8 @@ export default defineConfig({
     index: 'src/index.ts',
     utils: 'src/utils/index.ts'
   },
-  splitting: true,  // Enable code splitting
-  format: ['esm']   // Only ESM supports splitting
+  splitting: true, // Enable code splitting
+  format: ['esm'] // Only ESM supports splitting
 });
 ```
 
@@ -436,9 +431,9 @@ export default defineConfig({
 ```typescript
 // tsup.config.ts
 export default defineConfig({
-  target: 'es2015',  // Support ES2015+
+  target: 'es2015', // Support ES2015+
   format: ['esm', 'umd'],
-  
+
   // Provide polyfills for older browsers
   esbuildOptions(options) {
     options.supported = {
@@ -517,21 +512,27 @@ try {
 ## Frequently Asked Questions
 
 ### Q: When do I need UMD format?
+
 A: When your package needs to be used directly in browsers via `<script>` tags, or when you need compatibility with AMD module systems.
 
 ### Q: How to choose the target version?
+
 A: Based on your target environment:
+
 - Node.js packages: `node14` or higher
 - Modern browsers: `es2018` or `es2020`
 - Legacy browser compatibility: `es2015` or `es5`
 
 ### Q: Do I need to provide all formats?
+
 A: Not necessarily. Choose based on actual use cases:
+
 - Pure Node.js packages: CJS + ESM
 - Pure browser packages: ESM + UMD
 - Universal packages: CJS + ESM + UMD
 
 ### Q: How to handle CSS and static assets?
+
 A: Use specialized plugins:
 
 ```typescript
@@ -539,10 +540,10 @@ A: Use specialized plugins:
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  
+
   // Copy static files
   publicDir: 'src/assets',
-  
+
   // Handle CSS
   esbuildOptions(options) {
     options.loader = {
@@ -553,9 +554,11 @@ export default defineConfig({
 ```
 
 ### Q: How to optimize bundle size?
-A: 
+
+A:
+
 1. Use Tree-shaking
 2. Mark `sideEffects: false`
 3. Properly configure `external` dependencies
 4. Enable code minification
-5. Use dynamic imports for code splitting 
+5. Use dynamic imports for code splitting

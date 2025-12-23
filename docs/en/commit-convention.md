@@ -26,31 +26,31 @@ This document provides detailed guidelines for commit message conventions in the
 
 ### Primary Types
 
-| Type | Description | Version Impact | Show in CHANGELOG |
-|------|-------------|----------------|-------------------|
-| `feat` | New feature | Minor | ✅ |
-| `fix` | Bug fix | Patch | ✅ |
-| `docs` | Documentation updates | - | ✅ |
-| `refactor` | Code refactoring | - | ✅ |
-| `perf` | Performance optimization | Patch | ✅ |
-| `build` | Build system or external dependency changes | - | ✅ |
+| Type       | Description                                 | Version Impact | Show in CHANGELOG |
+| ---------- | ------------------------------------------- | -------------- | ----------------- |
+| `feat`     | New feature                                 | Minor          | ✅                |
+| `fix`      | Bug fix                                     | Patch          | ✅                |
+| `docs`     | Documentation updates                       | -              | ✅                |
+| `refactor` | Code refactoring                            | -              | ✅                |
+| `perf`     | Performance optimization                    | Patch          | ✅                |
+| `build`    | Build system or external dependency changes | -              | ✅                |
 
 ### Supporting Types
 
-| Type | Description | Version Impact | Show in CHANGELOG |
-|------|-------------|----------------|-------------------|
-| `test` | Test-related | - | ❌ |
-| `chore` | Other miscellaneous | - | ❌ |
-| `style` | Code formatting | - | ❌ |
-| `ci` | CI/CD configuration | - | ❌ |
-| `revert` | Revert commit | - | ❌ |
+| Type     | Description         | Version Impact | Show in CHANGELOG |
+| -------- | ------------------- | -------------- | ----------------- |
+| `test`   | Test-related        | -              | ❌                |
+| `chore`  | Other miscellaneous | -              | ❌                |
+| `style`  | Code formatting     | -              | ❌                |
+| `ci`     | CI/CD configuration | -              | ❌                |
+| `revert` | Revert commit       | -              | ❌                |
 
 ### Special Types
 
-| Type | Description | Version Impact | Show in CHANGELOG |
-|------|-------------|----------------|-------------------|
-| `BREAKING CHANGE` | Breaking changes | Major | ✅ |
-| `release` | Release-related | - | ❌ |
+| Type              | Description      | Version Impact | Show in CHANGELOG |
+| ----------------- | ---------------- | -------------- | ----------------- |
+| `BREAKING CHANGE` | Breaking changes | Major          | ✅                |
+| `release`         | Release-related  | -              | ❌                |
 
 ## 🎯 Scope
 
@@ -267,7 +267,11 @@ module.exports = {
         'types'
       ]
     ],
-    'subject-case': [2, 'never', ['sentence-case', 'start-case', 'pascal-case', 'upper-case']],
+    'subject-case': [
+      2,
+      'never',
+      ['sentence-case', 'start-case', 'pascal-case', 'upper-case']
+    ],
     'subject-empty': [2, 'never'],
     'subject-full-stop': [2, 'never', '.'],
     'body-leading-blank': [1, 'always'],
@@ -579,4 +583,4 @@ If you encounter issues while using commit conventions:
 1. Check [Project Issues](https://github.com/qlover/brain-toolkit/issues)
 2. Refer to the troubleshooting section in this document
 3. Contact project maintainers
-4. Check commitlint error messages for specific guidance 
+4. Check commitlint error messages for specific guidance

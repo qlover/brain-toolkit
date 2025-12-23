@@ -7,6 +7,7 @@
 ### 主要输出格式
 
 #### 1. **CommonJS (CJS)**
+
 - **用途**: Node.js 服务器端环境
 - **特点**: 同步加载，使用 `require()` 和 `module.exports`
 - **文件扩展名**: `.cjs` 或 `.js`
@@ -14,7 +15,9 @@
 ```javascript
 // 输出示例
 module.exports = {
-  ElementResizer: class ElementResizer { /* ... */ }
+  ElementResizer: class ElementResizer {
+    /* ... */
+  }
 };
 
 // 使用示例
@@ -22,13 +25,16 @@ const { ElementResizer } = require('@brain-toolkit/element-sizer');
 ```
 
 #### 2. **ES Modules (ESM)**
+
 - **用途**: 现代浏览器、Node.js (>=14)、打包工具
 - **特点**: 静态分析、Tree-shaking 友好
 - **文件扩展名**: `.mjs` 或 `.js`
 
 ```javascript
 // 输出示例
-export class ElementResizer { /* ... */ }
+export class ElementResizer {
+  /* ... */
+}
 export default ElementResizer;
 
 // 使用示例
@@ -36,6 +42,7 @@ import { ElementResizer } from '@brain-toolkit/element-sizer';
 ```
 
 #### 3. **Universal Module Definition (UMD)**
+
 - **用途**: 浏览器直接引用、兼容多种模块系统
 - **特点**: 自适应 AMD、CommonJS、全局变量
 - **文件扩展名**: `.umd.js`
@@ -194,34 +201,34 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   // 入口文件
   entry: ['src/index.ts'],
-  
+
   // 输出格式
   format: ['cjs', 'esm', 'umd'],
-  
+
   // 生成类型定义文件
   dts: true,
-  
+
   // 清理输出目录
   clean: true,
-  
+
   // 代码分割
   splitting: false,
-  
+
   // 源码映射
   sourcemap: true,
-  
+
   // 压缩代码
   minify: false,
-  
+
   // 目标环境
   target: 'es2018',
-  
+
   // 外部依赖
   external: ['react', 'vue'],
-  
+
   // 全局变量名 (UMD)
   globalName: 'BrainToolkit',
-  
+
   // 自定义 esbuild 选项
   esbuildOptions(options) {
     options.banner = {
@@ -260,7 +267,7 @@ export default defineConfig([
     ],
     external: ['react', 'vue']
   },
-  
+
   // CJS 构建
   {
     input: 'src/index.ts',
@@ -269,14 +276,10 @@ export default defineConfig([
       format: 'cjs',
       sourcemap: true
     },
-    plugins: [
-      nodeResolve(),
-      commonjs(),
-      typescript()
-    ],
+    plugins: [nodeResolve(), commonjs(), typescript()],
     external: ['react', 'vue']
   },
-  
+
   // UMD 构建
   {
     input: 'src/index.ts',
@@ -305,16 +308,16 @@ export default defineConfig([
   "name": "@brain-toolkit/element-sizer",
   "version": "0.2.0",
   "type": "module",
-  
+
   // 主入口 (CJS)
   "main": "./dist/index.cjs",
-  
+
   // ES 模块入口
   "module": "./dist/index.js",
-  
+
   // 浏览器入口
   "browser": "./dist/index.umd.js",
-  
+
   // TypeScript 类型定义
   "types": "./dist/index.d.ts"
 }
@@ -332,14 +335,14 @@ export default defineConfig([
       "require": "./dist/index.cjs",
       "browser": "./dist/index.umd.js"
     },
-    
+
     // 子路径导出
     "./utils": {
       "types": "./dist/utils.d.ts",
       "import": "./dist/utils.js",
       "require": "./dist/utils.cjs"
     },
-    
+
     // 包信息
     "./package.json": "./package.json"
   }
@@ -350,12 +353,7 @@ export default defineConfig([
 
 ```json
 {
-  "files": [
-    "dist",
-    "package.json",
-    "README.md",
-    "CHANGELOG.md"
-  ]
+  "files": ["dist", "package.json", "README.md", "CHANGELOG.md"]
 }
 ```
 
@@ -382,10 +380,7 @@ export default defineConfig({
 ```typescript
 // 小型工具库可以内联
 export default defineConfig({
-  noExternal: [
-    'tiny-utility',
-    'small-helper'
-  ]
+  noExternal: ['tiny-utility', 'small-helper']
 });
 ```
 
@@ -394,7 +389,7 @@ export default defineConfig({
 ```json
 // package.json
 {
-  "sideEffects": false,  // 标记为无副作用
+  "sideEffects": false, // 标记为无副作用
   "module": "./dist/index.js"
 }
 ```
@@ -414,8 +409,8 @@ export default defineConfig({
     index: 'src/index.ts',
     utils: 'src/utils/index.ts'
   },
-  splitting: true,  // 启用代码分割
-  format: ['esm']   // 仅 ESM 支持分割
+  splitting: true, // 启用代码分割
+  format: ['esm'] // 仅 ESM 支持分割
 });
 ```
 
@@ -436,9 +431,9 @@ export default defineConfig({
 ```typescript
 // tsup.config.ts
 export default defineConfig({
-  target: 'es2015',  // 支持 ES2015+
+  target: 'es2015', // 支持 ES2015+
   format: ['esm', 'umd'],
-  
+
   // 为旧浏览器提供 polyfill
   esbuildOptions(options) {
     options.supported = {
@@ -517,21 +512,27 @@ try {
 ## 常见问题
 
 ### Q: 什么时候需要 UMD 格式？
+
 A: 当你的包需要通过 `<script>` 标签直接在浏览器中使用，或者需要兼容 AMD 模块系统时。
 
 ### Q: 如何选择 target 版本？
+
 A: 根据目标环境决定：
+
 - Node.js 包：`node14` 或更高
 - 现代浏览器：`es2018` 或 `es2020`
 - 兼容旧浏览器：`es2015` 或 `es5`
 
 ### Q: 是否需要同时提供所有格式？
+
 A: 不一定。根据实际使用场景选择：
+
 - 纯 Node.js 包：CJS + ESM
 - 纯浏览器包：ESM + UMD
 - 通用包：CJS + ESM + UMD
 
 ### Q: 如何处理 CSS 和静态资源？
+
 A: 使用专门的插件处理：
 
 ```typescript
@@ -539,10 +540,10 @@ A: 使用专门的插件处理：
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  
+
   // 复制静态文件
   publicDir: 'src/assets',
-  
+
   // 处理 CSS
   esbuildOptions(options) {
     options.loader = {
@@ -553,9 +554,11 @@ export default defineConfig({
 ```
 
 ### Q: 如何优化 bundle 大小？
-A: 
+
+A:
+
 1. 使用 Tree-shaking
 2. 标记 `sideEffects: false`
 3. 合理设置 `external` 依赖
 4. 启用代码压缩
-5. 使用动态导入进行代码分割 
+5. 使用动态导入进行代码分割

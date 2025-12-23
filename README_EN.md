@@ -74,11 +74,12 @@ pnpm add @brain-toolkit/element-sizer
 
 ## 📦 Package List
 
-| Package Name                                                       | Version                                                           | Description                                |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------ |
-| [@brain-toolkit/element-sizer](./packages/element-sizer/README_EN.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM element expand/collapse animation tool |
-| [@brain-toolkit/ts2locales](./packages/ts2locales/README_EN.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales) | TypeScript internationalization file generator |
+| Package Name                                                                   | Version                                                                 | Description                                         |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------- |
+| [@brain-toolkit/element-sizer](./packages/element-sizer/README_EN.md)          | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer)       | DOM element expand/collapse animation tool          |
+| [@brain-toolkit/ts2locales](./packages/ts2locales/README_EN.md)                | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales)          | TypeScript internationalization file generator      |
 | [@brain-toolkit/antd-theme-override](./packages/antd-theme-override/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/antd-theme-override) | Ant Design theme override and customization utility |
+| [@brain-toolkit/brain-user](./packages/brain-user/README.en.md)                | ![npm](https://img.shields.io/npm/v/@brain-toolkit/brain-user)          | Brain user authentication and management library    |
 
 ## 🛠️ Development Guide
 
@@ -127,7 +128,8 @@ pnpm check-packages
 ```
 brain-toolkit/
 ├── packages/                 # Subpackage directory
-│   └── element-sizer/        # DOM element animation tool
+│   ├── element-sizer/        # DOM element animation tool
+│   └── brain-user/           # Brain user authentication and management library
 ├── docs/                     # Documentation directory
 │   ├── zh/                   # Chinese documentation
 │   └── en/                   # English documentation

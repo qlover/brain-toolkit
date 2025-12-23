@@ -74,11 +74,12 @@ pnpm add @brain-toolkit/element-sizer
 
 ## 📦 包列表
 
-| 包名 | 版本 | 描述 |
-|------|------|------|
-| [@brain-toolkit/element-sizer](./packages/element-sizer/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer) | DOM 元素展开/折叠动画工具 |
-| [@brain-toolkit/ts2locales](./packages/ts2locales/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales) | TypeScript 国际化文件生成工具 |
+| 包名                                                                           | 版本                                                                    | 描述                            |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------- |
+| [@brain-toolkit/element-sizer](./packages/element-sizer/README.md)             | ![npm](https://img.shields.io/npm/v/@brain-toolkit/element-sizer)       | DOM 元素展开/折叠动画工具       |
+| [@brain-toolkit/ts2locales](./packages/ts2locales/README.md)                   | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales)          | TypeScript 国际化文件生成工具   |
 | [@brain-toolkit/antd-theme-override](./packages/antd-theme-override/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/antd-theme-override) | Ant Design 主题覆盖和自定义工具 |
+| [@brain-toolkit/brain-user](./packages/brain-user/README.md)                   | ![npm](https://img.shields.io/npm/v/@brain-toolkit/brain-user)          | Brain 用户认证和管理库          |
 
 ## 🛠️ 开发指南
 
@@ -127,7 +128,8 @@ pnpm check-packages
 ```
 brain-toolkit/
 ├── packages/                 # 子包目录
-│   └── element-sizer/        # DOM 元素动画工具
+│   ├── element-sizer/        # DOM 元素动画工具
+│   └── brain-user/           # Brain 用户认证和管理库
 ├── docs/                     # 文档目录
 │   ├── zh/                   # 中文文档
 │   └── en/                   # 英文文档

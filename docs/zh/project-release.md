@@ -42,7 +42,7 @@ git push origin feature/your-feature-name
 在 PR 上添加以下标签来控制版本号递增：
 
 - `increment:major` - 主版本号递增 (1.0.0 → 2.0.0)
-- `increment:minor` - 次版本号递增 (1.0.0 → 1.1.0)  
+- `increment:minor` - 次版本号递增 (1.0.0 → 1.1.0)
 - `increment:patch` - 补丁版本号递增 (1.0.0 → 1.0.1) **[默认]**
 
 ### 第二步：MergePR 自动化处理
@@ -70,6 +70,7 @@ pnpm build     # 构建所有包
 #### 2.3 生成 ReleasePR
 
 如果所有检查通过，系统会：
+
 - 自动生成每个包的 changelog
 - 更新版本号
 - 创建 ReleasePR
@@ -83,7 +84,7 @@ pnpm build     # 构建所有包
 ```json
 {
   "release": {
-    "autoMergeReleasePR": true  // 自动合并 ReleasePR
+    "autoMergeReleasePR": true // 自动合并 ReleasePR
   }
 }
 ```
@@ -91,6 +92,7 @@ pnpm build     # 构建所有包
 #### 3.2 发布到 GitHub 和 npm
 
 ReleasePR 合并后，系统会自动：
+
 - 创建 Git 标签
 - 发布 GitHub Release
 - 发布包到 npm 仓库
@@ -158,7 +160,7 @@ jobs:
     if: |
       github.event.pull_request.merged == true && 
       !contains(github.event.pull_request.labels.*.name, 'CI-Release')
-    
+
   release:
     # 当 PR 合并且包含 CI-Release 标签时执行
     if: |
@@ -194,17 +196,17 @@ NPM_TOKEN=npm_xxxxxxxxxxxxxxxxxxxx
 
 #### 提交类型
 
-| 类型 | 描述 | 示例 |
-|------|------|------|
-| `feat` | 新功能 | `feat(element-sizer): add resize animation` |
-| `fix` | 修复 bug | `fix(element-sizer): resolve memory leak` |
-| `docs` | 文档更新 | `docs: update installation guide` |
-| `refactor` | 代码重构 | `refactor: optimize animation logic` |
-| `perf` | 性能优化 | `perf: improve resize calculation` |
-| `test` | 测试相关 | `test: add unit tests for resizer` |
-| `build` | 构建相关 | `build: update rollup config` |
-| `ci` | CI/CD 相关 | `ci: add release workflow` |
-| `chore` | 其他杂项 | `chore: update dependencies` |
+| 类型       | 描述       | 示例                                        |
+| ---------- | ---------- | ------------------------------------------- |
+| `feat`     | 新功能     | `feat(element-sizer): add resize animation` |
+| `fix`      | 修复 bug   | `fix(element-sizer): resolve memory leak`   |
+| `docs`     | 文档更新   | `docs: update installation guide`           |
+| `refactor` | 代码重构   | `refactor: optimize animation logic`        |
+| `perf`     | 性能优化   | `perf: improve resize calculation`          |
+| `test`     | 测试相关   | `test: add unit tests for resizer`          |
+| `build`    | 构建相关   | `build: update rollup config`               |
+| `ci`       | CI/CD 相关 | `ci: add release workflow`                  |
+| `chore`    | 其他杂项   | `chore: update dependencies`                |
 
 #### 作用域 (Scope)
 
@@ -278,7 +280,7 @@ CI-Release                       # 发布标签 (系统自动添加)
 在 GitHub 仓库的 Actions 页面可以查看：
 
 - ✅ 构建状态
-- ✅ 测试结果  
+- ✅ 测试结果
 - ✅ 发布状态
 - ❌ 失败原因
 
@@ -312,6 +314,7 @@ npm view @brain-toolkit/element-sizer version
 **问题**: GitHub Actions 构建失败
 
 **解决方案**:
+
 ```bash
 # 本地验证构建
 pnpm install
@@ -328,6 +331,7 @@ pnpm build
 **问题**: 单元测试或集成测试失败
 
 **解决方案**:
+
 ```bash
 # 本地运行测试
 pnpm test
@@ -344,11 +348,13 @@ pnpm test:coverage
 **问题**: 包发布到 npm 失败
 
 **可能原因**:
+
 - npm 令牌过期或无效
 - 包名已存在且版本号重复
 - 网络连接问题
 
 **解决方案**:
+
 ```bash
 # 检查 npm 令牌
 npm whoami
@@ -366,6 +372,7 @@ npm view @brain-toolkit/element-sizer
 **问题**: 合并 PR 后没有创建 ReleasePR
 
 **检查项**:
+
 - PR 是否包含 `packages/` 目录的变更
 - GitHub Actions 是否正常运行
 - PAT_TOKEN 是否有效
@@ -376,6 +383,7 @@ npm view @brain-toolkit/element-sizer
 **问题**: 生成的版本号不符合预期
 
 **解决方案**:
+
 - 检查 PR 上的 `increment:` 标签
 - 确认 commit 信息符合 [Conventional Commits 规范](./commit-convention.md)
 - 查看 changelog 生成逻辑
@@ -385,6 +393,7 @@ npm view @brain-toolkit/element-sizer
 **问题**: 提交信息不符合规范导致 changelog 生成错误
 
 **解决方案**:
+
 - 参考 [提交规范指南](./commit-convention.md)
 - 使用 `pnpm commit` 进行交互式提交
 - 修改历史提交信息（如果需要）

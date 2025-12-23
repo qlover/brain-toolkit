@@ -57,7 +57,7 @@ resizer.collapse();
 ```html
 <div class="container">
   <button onclick="toggleElement()">切换显示</button>
-  
+
   <div id="collapsible-content" class="collapsible-item">
     <div class="content">
       <h3>可折叠内容</h3>
@@ -114,29 +114,29 @@ new ElementResizer(options?: ElementResizerOptions)
 interface ElementResizerOptions {
   /** 目标元素 - 需要展开/折叠的元素 */
   target?: HTMLElement;
-  
+
   /** 单位类型，默认为 "px" */
   unit?: string;
-  
+
   /** 占位符配置
    * - true: 自动创建占位符
    * - false: 不使用占位符
    * - HTMLElement: 使用指定的占位符元素
    */
   placeholder?: boolean | HTMLElement;
-  
+
   /** 展开状态时添加的 CSS 类名 */
   expandClassName?: string;
-  
+
   /** 折叠状态时添加的 CSS 类名 */
   collapseClassName?: string;
-  
+
   /** 动画持续时间（毫秒），覆盖 CSS transition 设置 */
   duration?: number;
-  
+
   /** 根容器元素，用于计算相对位置 */
   root?: HTMLElement | Document | Window;
-  
+
   /** 自定义相对位置计算函数 */
   getRelativeRect?: (
     target: HTMLElement,
@@ -148,6 +148,7 @@ interface ElementResizerOptions {
 #### 属性
 
 ##### `target: HTMLElement`
+
 获取目标元素。
 
 ```typescript
@@ -155,6 +156,7 @@ const targetElement = resizer.target;
 ```
 
 ##### `animationState: AnimationState`
+
 获取当前动画状态。
 
 ```typescript
@@ -165,6 +167,7 @@ console.log(resizer.animationState);
 ```
 
 ##### `isAnimating: boolean`
+
 检查是否正在执行动画。
 
 ```typescript
@@ -176,6 +179,7 @@ if (!resizer.isAnimating) {
 #### 方法
 
 ##### `expand(): void`
+
 展开目标元素。
 
 ```typescript
@@ -183,6 +187,7 @@ resizer.expand();
 ```
 
 ##### `collapse(): void`
+
 折叠目标元素。
 
 ```typescript
@@ -190,6 +195,7 @@ resizer.collapse();
 ```
 
 ##### `fixedCurrentTargetRect(): void`
+
 固定当前目标元素的位置和尺寸。
 
 ```typescript
@@ -197,6 +203,7 @@ resizer.fixedCurrentTargetRect();
 ```
 
 ##### `cancelAnimation(): void`
+
 取消当前正在进行的动画。
 
 ```typescript
@@ -204,6 +211,7 @@ resizer.cancelAnimation();
 ```
 
 ##### `setOptions(options: Partial<ElementResizerOptions>): ElementResizer`
+
 更新配置选项，支持链式调用。
 
 ```typescript
@@ -213,6 +221,7 @@ resizer
 ```
 
 ##### `getPlaceholder(): HTMLElement | null`
+
 获取占位符元素。
 
 ```typescript
@@ -223,6 +232,7 @@ if (placeholder) {
 ```
 
 ##### `getRelativeRect(target: HTMLElement): ElementResizerRect`
+
 获取目标元素的相对位置和尺寸。
 
 ```typescript
@@ -231,14 +241,16 @@ console.log(rect); // { top, left, width, height, right, bottom }
 ```
 
 ##### `toUnit(value: string | number): string`
+
 将数值转换为带单位的字符串。
 
 ```typescript
 console.log(resizer.toUnit(100)); // "100px"
-console.log(resizer.toUnit("50%")); // "50%"
+console.log(resizer.toUnit('50%')); // "50%"
 ```
 
 ##### `destroy(): void`
+
 销毁实例并清理资源。
 
 ```typescript
@@ -283,7 +295,7 @@ class AccordionItem {
 
   constructor(private element: HTMLElement) {
     const content = element.querySelector('.accordion-content') as HTMLElement;
-    
+
     this.resizer = new ElementResizer({
       target: content,
       placeholder: true,
@@ -328,7 +340,7 @@ class AnimatedModal {
 
   hide() {
     this.resizer.collapse();
-    
+
     // 动画完成后隐藏元素
     setTimeout(() => {
       this.modalElement.style.display = 'none';
@@ -372,8 +384,10 @@ class ExpandableCard {
   private detailsElement: HTMLElement;
 
   constructor(private cardElement: HTMLElement) {
-    this.detailsElement = cardElement.querySelector('.card-details') as HTMLElement;
-    
+    this.detailsElement = cardElement.querySelector(
+      '.card-details'
+    ) as HTMLElement;
+
     this.resizer = new ElementResizer({
       target: this.detailsElement,
       placeholder: true,
@@ -387,8 +401,10 @@ class ExpandableCard {
   }
 
   toggleDetails() {
-    if (this.resizer.animationState === 'collapsed' || 
-        this.resizer.animationState === 'idle') {
+    if (
+      this.resizer.animationState === 'collapsed' ||
+      this.resizer.animationState === 'idle'
+    ) {
       this.resizer.expand();
     } else if (this.resizer.animationState === 'expanded') {
       this.resizer.collapse();
@@ -407,9 +423,10 @@ const resizer = new ElementResizer({
   getRelativeRect: (target, container) => {
     // 自定义位置计算逻辑
     const targetRect = target.getBoundingClientRect();
-    const containerRect = container instanceof HTMLElement 
-      ? container.getBoundingClientRect()
-      : { top: 0, left: 0 };
+    const containerRect =
+      container instanceof HTMLElement
+        ? container.getBoundingClientRect()
+        : { top: 0, left: 0 };
 
     return {
       top: targetRect.top - containerRect.top,
@@ -473,8 +490,12 @@ setTimeout(() => resizer.collapse(), 3000);
 ```css
 .target-element {
   /* 必需：指定需要动画的属性 */
-  transition: width 300ms ease, height 300ms ease, top 300ms ease, left 300ms ease;
-  
+  transition:
+    width 300ms ease,
+    height 300ms ease,
+    top 300ms ease,
+    left 300ms ease;
+
   /* 或者使用 all */
   transition: all 300ms ease;
 }

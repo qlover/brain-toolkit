@@ -57,7 +57,7 @@ resizer.collapse();
 ```html
 <div class="container">
   <button onclick="toggleElement()">Toggle Display</button>
-  
+
   <div id="collapsible-content" class="collapsible-item">
     <div class="content">
       <h3>Collapsible Content</h3>
@@ -114,29 +114,29 @@ new ElementResizer(options?: ElementResizerOptions)
 interface ElementResizerOptions {
   /** Target element - element to be expanded/collapsed */
   target?: HTMLElement;
-  
+
   /** Unit type, defaults to "px" */
   unit?: string;
-  
+
   /** Placeholder configuration
    * - true: Auto-create placeholder
    * - false: Don't use placeholder
    * - HTMLElement: Use specified placeholder element
    */
   placeholder?: boolean | HTMLElement;
-  
+
   /** CSS class name added when element is expanded */
   expandClassName?: string;
-  
+
   /** CSS class name added when element is collapsed */
   collapseClassName?: string;
-  
+
   /** Animation duration in milliseconds (overrides CSS transition duration) */
   duration?: number;
-  
+
   /** Root container element for calculating relative position */
   root?: HTMLElement | Document | Window;
-  
+
   /** Custom relative position calculation function */
   getRelativeRect?: (
     target: HTMLElement,
@@ -148,6 +148,7 @@ interface ElementResizerOptions {
 #### Properties
 
 ##### `target: HTMLElement`
+
 Get the target element.
 
 ```typescript
@@ -155,6 +156,7 @@ const targetElement = resizer.target;
 ```
 
 ##### `animationState: AnimationState`
+
 Get the current animation state.
 
 ```typescript
@@ -165,6 +167,7 @@ console.log(resizer.animationState);
 ```
 
 ##### `isAnimating: boolean`
+
 Check if animation is currently in progress.
 
 ```typescript
@@ -176,6 +179,7 @@ if (!resizer.isAnimating) {
 #### Methods
 
 ##### `expand(): void`
+
 Expand the target element.
 
 ```typescript
@@ -183,6 +187,7 @@ resizer.expand();
 ```
 
 ##### `collapse(): void`
+
 Collapse the target element.
 
 ```typescript
@@ -190,6 +195,7 @@ resizer.collapse();
 ```
 
 ##### `fixedCurrentTargetRect(): void`
+
 Fix the current target element's position and size.
 
 ```typescript
@@ -197,6 +203,7 @@ resizer.fixedCurrentTargetRect();
 ```
 
 ##### `cancelAnimation(): void`
+
 Cancel the current animation in progress.
 
 ```typescript
@@ -204,6 +211,7 @@ resizer.cancelAnimation();
 ```
 
 ##### `setOptions(options: Partial<ElementResizerOptions>): ElementResizer`
+
 Update configuration options, supports method chaining.
 
 ```typescript
@@ -213,6 +221,7 @@ resizer
 ```
 
 ##### `getPlaceholder(): HTMLElement | null`
+
 Get the placeholder element.
 
 ```typescript
@@ -223,6 +232,7 @@ if (placeholder) {
 ```
 
 ##### `getRelativeRect(target: HTMLElement): ElementResizerRect`
+
 Get the relative position and size of the target element.
 
 ```typescript
@@ -231,14 +241,16 @@ console.log(rect); // { top, left, width, height, right, bottom }
 ```
 
 ##### `toUnit(value: string | number): string`
+
 Convert a numeric value to a string with units.
 
 ```typescript
 console.log(resizer.toUnit(100)); // "100px"
-console.log(resizer.toUnit("50%")); // "50%"
+console.log(resizer.toUnit('50%')); // "50%"
 ```
 
 ##### `destroy(): void`
+
 Destroy the instance and clean up resources.
 
 ```typescript
@@ -283,7 +295,7 @@ class AccordionItem {
 
   constructor(private element: HTMLElement) {
     const content = element.querySelector('.accordion-content') as HTMLElement;
-    
+
     this.resizer = new ElementResizer({
       target: content,
       placeholder: true,
@@ -328,7 +340,7 @@ class AnimatedModal {
 
   hide() {
     this.resizer.collapse();
-    
+
     // Hide element after animation completes
     setTimeout(() => {
       this.modalElement.style.display = 'none';
@@ -372,8 +384,10 @@ class ExpandableCard {
   private detailsElement: HTMLElement;
 
   constructor(private cardElement: HTMLElement) {
-    this.detailsElement = cardElement.querySelector('.card-details') as HTMLElement;
-    
+    this.detailsElement = cardElement.querySelector(
+      '.card-details'
+    ) as HTMLElement;
+
     this.resizer = new ElementResizer({
       target: this.detailsElement,
       placeholder: true,
@@ -387,8 +401,10 @@ class ExpandableCard {
   }
 
   toggleDetails() {
-    if (this.resizer.animationState === 'collapsed' || 
-        this.resizer.animationState === 'idle') {
+    if (
+      this.resizer.animationState === 'collapsed' ||
+      this.resizer.animationState === 'idle'
+    ) {
       this.resizer.expand();
     } else if (this.resizer.animationState === 'expanded') {
       this.resizer.collapse();
@@ -407,9 +423,10 @@ const resizer = new ElementResizer({
   getRelativeRect: (target, container) => {
     // Custom position calculation logic
     const targetRect = target.getBoundingClientRect();
-    const containerRect = container instanceof HTMLElement 
-      ? container.getBoundingClientRect()
-      : { top: 0, left: 0 };
+    const containerRect =
+      container instanceof HTMLElement
+        ? container.getBoundingClientRect()
+        : { top: 0, left: 0 };
 
     return {
       top: targetRect.top - containerRect.top,
@@ -473,8 +490,12 @@ The target element must have CSS transition properties set:
 ```css
 .target-element {
   /* Required: Specify properties to animate */
-  transition: width 300ms ease, height 300ms ease, top 300ms ease, left 300ms ease;
-  
+  transition:
+    width 300ms ease,
+    height 300ms ease,
+    top 300ms ease,
+    left 300ms ease;
+
   /* Or use all */
   transition: all 300ms ease;
 }

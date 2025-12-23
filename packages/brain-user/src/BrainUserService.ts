@@ -71,7 +71,6 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  * | `domains` | `Record<string, string>` | No | See below | Custom domain mapping for environments |
  * | `baseURL` | `string` | No | Auto from env | Override API base URL directly |
  * | `endpoints` | `Record<string, EndpointsType>` | No | `GATEWAY_BRAIN_USER_ENDPOINTS` | Custom API endpoints configuration (format: `'METHOD /path'`) |
- * | `timeout` | `number` | No | - | Request timeout in milliseconds |
  * | `headers` | `Record<string, string>` | No | - | Default headers for all requests |
  * | `responseType` | `'json' \| 'text' \| 'blob'` | No | `'json'` | Expected response type |
  *
@@ -254,7 +253,6 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  *
  *   // API configuration
  *   env: 'production',
- *   timeout: 30000,
  *   headers: {
  *     'X-App-Version': '1.0.0'
  *   },

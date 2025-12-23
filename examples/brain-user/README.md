@@ -2,6 +2,10 @@
 
 This is a simple Vite + React example project demonstrating how to use `@brain-toolkit/brain-user`.
 
+## 🌐 Online Demo
+
+[Live Demo on Vercel](https://brain-user-example.vercel.app)
+
 ## Features
 
 - Login/Logout functionality
@@ -52,4 +56,3 @@ const options = createBrainUserOptions({
 - This is a demonstration project and uses mock/test credentials
 - In a real application, you would need to configure proper API endpoints and authentication
 - The service automatically persists user information to localStorage when `persistUserInfo` is enabled
-
