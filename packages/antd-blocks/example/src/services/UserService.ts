@@ -132,6 +132,7 @@ export class UserService
   /**
    * Create a new user
    *
+   * @override
    * @param data - User data to create
    * @returns Newly created user with assigned ID
    */
@@ -152,6 +153,7 @@ export class UserService
   /**
    * Update an existing user
    *
+   * @override
    * @param data - Partial user data with ID
    * @returns Updated user
    */
@@ -171,6 +173,7 @@ export class UserService
   /**
    * Remove a user
    *
+   * @override
    * @param data - User data containing ID to remove
    */
   public async remove(data: unknown): Promise<void> {
@@ -189,6 +192,7 @@ export class UserService
   /**
    * Search users with pagination
    *
+   * @override
    * @param query - Search query with page and pageSize
    * @returns Paginated list of users
    */
@@ -210,7 +214,9 @@ export class UserService
 
   /**
    * Lifecycle hook - called when component is created
-   */
+
+   * @override
+      */
   public created(): void {
     // Initialize if needed
     console.log('UserService created');
@@ -219,14 +225,18 @@ export class UserService
 
   /**
    * Lifecycle hook - called when component is updated
-   */
+
+   * @override
+      */
   public updated(): void {
     // Handle updates if needed
   }
 
   /**
    * Lifecycle hook - called when component is destroyed
-   */
+
+   * @override
+      */
   public destroyed(): void {
     // Cleanup if needed
     console.log('UserService destroyed');

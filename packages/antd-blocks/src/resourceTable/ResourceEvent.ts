@@ -609,6 +609,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * - Reset store to default state
    * - Set up event listeners or subscriptions
    *
+   * @override
    * @example
    * ```typescript
    * // In React component
@@ -629,6 +630,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * Called when component is updated. Notifies resource service
    * to synchronize state changes.
    *
+   * @override
    * @example
    * ```typescript
    * // In React component
@@ -653,6 +655,7 @@ export class ResourceEvent implements ResourceTableEventInterface {
    * - Clean up event listeners or subscriptions
    * - Cancel pending requests
    *
+   * @override
    * @example
    * ```typescript
    * // In React component

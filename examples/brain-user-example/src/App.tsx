@@ -8,23 +8,38 @@ import {
 import { GatewayExecutor } from '@qlover/corekit-bridge';
 
 class LocalStorage implements SyncStorageInterface<string> {
-  getItem<T>(key: string, defaultValue?: T | undefined): T | null {
+  /**
+   * @override
+   */
+  public getItem<T>(key: string, defaultValue?: T | undefined): T | null {
     const value = localStorage.getItem(key);
     return value ? JSON.parse(value) : (defaultValue ?? null);
   }
-  setItem<T>(key: string, value: T): void {
+  /**
+   * @override
+   */
+  public setItem<T>(key: string, value: T): void {
     localStorage.setItem(key, JSON.stringify(value));
   }
-  removeItem(key: string): void {
+  /**
+   * @override
+   */
+  public removeItem(key: string): void {
     localStorage.removeItem(key);
   }
-  clear(): void {
+  /**
+   * @override
+   */
+  public clear(): void {
     localStorage.clear();
   }
-  key(index: number): string | null {
+  public key(index: number): string | null {
     return localStorage.key(index);
   }
-  get length(): number {
+  /**
+   * @override
+   */
+  public get length(): number {
     return localStorage.length;
   }
 }
@@ -95,7 +110,7 @@ export function App() {
 
     try {
       return JSON.stringify(user?.profile, null, 2);
-    } catch (err) {
+    } catch {
       return 'Invalid profile';
     }
   }, [user]);
@@ -120,7 +135,7 @@ export function App() {
       // Store will automatically update through useSliceStore
       setEmail('');
       setPassword('');
-    } catch (err) {
+    } catch {
       // Error is handled by store
     }
   };
@@ -129,7 +144,7 @@ export function App() {
     try {
       // Store will automatically update through useSliceStore
       await userService.getUserInfo();
-    } catch (err) {
+    } catch {
       // Error is handled by store
     }
   };
@@ -138,13 +153,13 @@ export function App() {
     try {
       // Store will automatically update through useSliceStore
       await userService.refreshUserInfo();
-    } catch (err) {
+    } catch {
       // Error is handled by store
     }
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div data-testid="App" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <h1>Brain User Service Example</h1>
 
       <div

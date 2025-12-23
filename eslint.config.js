@@ -97,6 +97,66 @@ export default tseslint.config([
     }
   },
 
+  // TypeScript files with type checking for ts-class-override rule
+  // This enables full type information for accurate interface/class method detection
+  {
+    name: 'lint-ts-class-override',
+    files: ['packages/**/*.{ts,tsx}', 'examples/**/*.{ts,tsx}'],
+    ignores: [
+      '**/dist/**',
+      '**/build/**',
+      '**/ts-build/**',
+      '**/node_modules/**',
+      '**/.nx/**',
+      '**/.cache/**',
+      '**/coverage/**',
+      '**/*.config.ts',
+      '**/*.d.ts',
+      '**/templates/**',
+      '**/*.test.ts',
+      '**/__mocks__/**',
+      '**/__tests__/**',
+      '**/*.spec.ts'
+    ],
+    extends: [...tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    plugins: {
+      '@qlover-eslint': qloverEslint
+    },
+    rules: {
+      // Only enable ts-class-override rule with full type information
+      '@qlover-eslint/ts-class-override': 'error',
+      // Disable other type-checked rules to avoid performance impact
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+      '@typescript-eslint/no-unsafe-literal-comparison': 'off',
+      '@typescript-eslint/no-unsafe-nullish-coalescing': 'off',
+      '@typescript-eslint/no-unsafe-optional-chaining': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/no-duplicate-type-constituents': 'off'
+    }
+  },
+
   // Test files
   {
     name: 'lint-test-ts',
