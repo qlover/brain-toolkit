@@ -13,6 +13,6 @@
     { "path": "./packages/element-sizer" },
     { "path": "./packages/ts2locales" },
     { "path": "./packages/brain-user" },
-    { "path": "./examples/brain-user-example" }
+    { "path": "./examples/brain-user" }
   ]
 }

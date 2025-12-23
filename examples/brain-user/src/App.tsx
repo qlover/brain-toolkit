@@ -1,48 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSliceStore } from '@qlover/slice-store-react';
-import { SyncStorageInterface } from '@qlover/fe-corekit';
-import {
-  BrainUserPluginInterface,
-  BrainUserService
-} from '@brain-toolkit/brain-user';
-import { GatewayExecutor } from '@qlover/corekit-bridge';
-
-class LocalStorage implements SyncStorageInterface<string> {
-  /**
-   * @override
-   */
-  public getItem<T>(key: string, defaultValue?: T | undefined): T | null {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : (defaultValue ?? null);
-  }
-  /**
-   * @override
-   */
-  public setItem<T>(key: string, value: T): void {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-  /**
-   * @override
-   */
-  public removeItem(key: string): void {
-    localStorage.removeItem(key);
-  }
-  /**
-   * @override
-   */
-  public clear(): void {
-    localStorage.clear();
-  }
-  public key(index: number): string | null {
-    return localStorage.key(index);
-  }
-  /**
-   * @override
-   */
-  public get length(): number {
-    return localStorage.length;
-  }
-}
+import type { BrainUserPluginInterface } from '@brain-toolkit/brain-user';
+import { BrainUserService } from '@brain-toolkit/brain-user';
+import { GatewayExecutor } from '@qlover/corekit-bridge/gateway-auth';
+import { localStorage } from './LocalStorage';
+import { UserInfo } from './UserInfo';
 
 const userServicePlugin: BrainUserPluginInterface = {
   pluginName: 'brainUserServicePlugin',
@@ -66,7 +28,7 @@ export function App() {
       new BrainUserService({
         env: 'development',
         store: {
-          storage: new LocalStorage()
+          storage: localStorage
         },
         executor: new GatewayExecutor()
       })
@@ -103,18 +65,6 @@ export function App() {
     }
   }, [userService]);
 
-  const profileString = useMemo(() => {
-    if (!user?.profile) {
-      return 'None';
-    }
-
-    try {
-      return JSON.stringify(user?.profile, null, 2);
-    } catch {
-      return 'Invalid profile';
-    }
-  }, [user]);
-
   const handleLogin = async () => {
     if (!email || !password) {
       return;
@@ -140,69 +90,35 @@ export function App() {
     }
   };
 
-  const handleGetUserInfo = async () => {
-    try {
-      // Store will automatically update through useSliceStore
-      await userService.getUserInfo();
-    } catch {
-      // Error is handled by store
-    }
-  };
-
-  const handleRefreshUserInfo = async () => {
-    try {
-      // Store will automatically update through useSliceStore
-      await userService.refreshUserInfo();
-    } catch {
-      // Error is handled by store
-    }
-  };
-
   return (
-    <div data-testid="App" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Brain User Service Example</h1>
-
+    <div data-testid="App" style={{ maxWidth: '500px', margin: '100px auto' }}>
       <div
         style={{
           backgroundColor: 'white',
-          padding: '20px',
+          padding: '40px',
           borderRadius: '8px',
-          marginTop: '20px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}
       >
-        <h2>Status</h2>
-        <div style={{ marginTop: '10px' }}>
-          <p>
-            <strong>Token:</strong> {token || 'Not logged in'}
-          </p>
-          <p>
-            <strong>User:</strong>{' '}
-            {user ? `${user.name} (${user.email})` : 'Not logged in'}
-          </p>
-        </div>
-      </div>
-
-      {!token && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            marginTop: '20px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}
+        <h1
+          style={{ textAlign: 'center', marginBottom: '30px', color: '#333' }}
         >
-          <h2>Login</h2>
-          <div style={{ marginTop: '15px' }}>
-            <div style={{ marginBottom: '15px' }}>
+          Login
+        </h1>
+
+        {token && user ? (
+          <UserInfo user={user} onLogout={handleLogout} loading={loading} />
+        ) : (
+          <>
+            <div style={{ marginBottom: '20px' }}>
               <label
                 htmlFor="email"
                 style={{
                   display: 'block',
-                  marginBottom: '5px',
+                  marginBottom: '8px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: '#333',
+                  fontSize: '14px'
                 }}
               >
                 Email:
@@ -216,7 +132,7 @@ export function App() {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
+                  padding: '10px 12px',
                   border: '1px solid #d9d9d9',
                   borderRadius: '4px',
                   fontSize: '14px',
@@ -229,14 +145,15 @@ export function App() {
                 }}
               />
             </div>
-            <div style={{ marginBottom: '15px' }}>
+            <div style={{ marginBottom: '25px' }}>
               <label
                 htmlFor="password"
                 style={{
                   display: 'block',
-                  marginBottom: '5px',
+                  marginBottom: '8px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: '#333',
+                  fontSize: '14px'
                 }}
               >
                 Password:
@@ -250,7 +167,7 @@ export function App() {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
+                  padding: '10px 12px',
                   border: '1px solid #d9d9d9',
                   borderRadius: '4px',
                   fontSize: '14px',
@@ -268,7 +185,7 @@ export function App() {
               disabled={loading || !email || !password}
               style={{
                 width: '100%',
-                padding: '10px 20px',
+                padding: '12px 20px',
                 backgroundColor: '#1890ff',
                 color: 'white',
                 border: 'none',
@@ -282,163 +199,24 @@ export function App() {
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
 
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          marginTop: '20px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}
-      >
-        <h2>Actions</h2>
-        <div
-          style={{
-            display: 'flex',
-            gap: '10px',
-            flexWrap: 'wrap',
-            marginTop: '10px'
-          }}
-        >
-          {token && (
-            <button
-              onClick={handleLogout}
-              disabled={loading}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#ff4d4f',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1
-              }}
-            >
-              Logout
-            </button>
-          )}
-          {token && (
-            <>
-              <button
-                onClick={handleGetUserInfo}
-                disabled={loading}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#52c41a',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1
-                }}
-              >
-                Get User Info
-              </button>
-              <button
-                onClick={handleRefreshUserInfo}
-                disabled={loading}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#722ed1',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1
-                }}
-              >
-                Refresh User Info
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {error instanceof Error && (
-        <div
-          style={{
-            backgroundColor: '#fff2f0',
-            border: '1px solid #ffccc7',
-            color: '#cf1322',
-            padding: '15px',
-            borderRadius: '4px',
-            marginTop: '20px'
-          }}
-        >
-          <strong>Error:</strong> {error.message}
-        </div>
-      )}
-
-      {loading && (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '20px',
-            color: '#666'
-          }}
-        >
-          Loading...
-        </div>
-      )}
-
-      {user && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            marginTop: '20px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}
-        >
-          <h2>User Details</h2>
-          <pre
-            style={{
-              backgroundColor: '#f5f5f5',
-              padding: '15px',
-              borderRadius: '4px',
-              overflow: 'auto',
-              marginTop: '10px',
-              fontSize: '14px'
-            }}
-          >
-            {JSON.stringify(user, null, 2)}
-          </pre>
-        </div>
-      )}
-
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          marginTop: '20px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}
-      >
-        <h2>Store Information</h2>
-        <div style={{ marginTop: '10px' }}>
-          <p>
-            <strong>Feature Tags:</strong>{' '}
-            {user?.feature_tags?.join(', ') || 'None'}
-          </p>
+        {error instanceof Error && (
           <div
             style={{
-              backgroundColor: '#f5f5f5',
-              padding: '15px',
+              backgroundColor: '#fff2f0',
+              border: '1px solid #ffccc7',
+              color: '#cf1322',
+              padding: '12px',
               borderRadius: '4px',
-              overflow: 'auto',
-              marginTop: '10px',
+              marginTop: '20px',
               fontSize: '14px'
             }}
           >
-            <strong>Profile</strong> <pre>{profileString}</pre>
+            <strong>Error:</strong> {error.message}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

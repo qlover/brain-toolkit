@@ -10,9 +10,10 @@
   },
   "dependencies": {
     "@brain-toolkit/brain-user": "workspace:*",
-    "@qlover/slice-store-react": "^1.4.1",
     "@qlover/corekit-bridge": "^1.9.0",
     "@qlover/fe-corekit": "^2.4.0",
+    "@qlover/slice-store-react": "^1.4.1",
+    "@react-oauth/google": "^0.13.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -24,4 +25,3 @@
     "vite": "^6.1.0"
   }
 }
-

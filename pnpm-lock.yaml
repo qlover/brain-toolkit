@@ -174,7 +174,7 @@ importers:
         specifier: ^3.0.5
         version: 3.2.4(@types/node@22.19.0)(jiti@2.6.1)(jsdom@26.1.0)(terser@5.44.0)(yaml@2.8.1)
 
-  examples/brain-user-example:
+  examples/brain-user:
     dependencies:
       '@brain-toolkit/brain-user':
         specifier: workspace:*
@@ -184,13 +184,13 @@ importers:
         version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
         specifier: ^2.4.0
-        version: 2.4.0
+        version: 2.5.0
       '@qlover/slice-store-react':
         specifier: ^1.4.1
         version: 1.4.1
       '@react-oauth/google':
-        specifier: ^0.12.1
-        version: 0.12.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.13.4
+        version: 0.13.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1736,9 +1736,6 @@ packages:
   '@qlover/fe-corekit@2.1.0':
     resolution: {integrity: sha512-rckj7nx21MFhael3dBpC1xHd83Wv9PGEOAYhHa5uDfizUru18sDDlseYlzpDI4KpRL34BMLoE0fqT91bLyJxTQ==}
 
-  '@qlover/fe-corekit@2.3.1':
-    resolution: {integrity: sha512-+JquC+KLs06nliuRgjXeN9re54I5Migs/ewGrMT0bIcYU+vV935smcKGL2aiCEpfU2UHI5lA/EuP0YaX910KnA==}
-
   '@qlover/fe-corekit@2.4.0':
     resolution: {integrity: sha512-SYNG8rGIJsj60S//NCPmUPo41EEl+Ko/RRkyaeQPv4jp/A6ivdIV+3gaaWNu63//LyviUUhy2p7wPNUHZcZvnA==}
 
@@ -1758,9 +1755,6 @@ packages:
 
   '@qlover/logger@0.2.0':
     resolution: {integrity: sha512-Q1kKvMm8+oJ9wZHTIaBeQGRxrX59oUi3OVX6faUWjrQRdOCf5SRTq9QNmPWmnexqCgqVrZY+ja6MMVPv8BwtMQ==}
-
-  '@qlover/logger@0.3.1':
-    resolution: {integrity: sha512-SHLn5R3rK9pZPHxsJOdguvUoejHUDfxwKKwOyMPyGDnMJ7AISF0lK6y/1ADFs7MTqB2TNo0d6UklMA48M0LPoA==}
 
   '@qlover/logger@0.3.3':
     resolution: {integrity: sha512-wWWxTSMkVw9HtvMKmeiVqH7IDjEXm0GNyacm1ZS4gP5Ge2NPdl7L0ctwiHmOogoInc5VGdiaf44d+ix5nrABrQ==}
@@ -1841,8 +1835,8 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@react-oauth/google@0.12.2':
-    resolution: {integrity: sha512-d1GVm2uD4E44EJft2RbKtp8Z1fp/gK8Lb6KHgs3pHlM0PxCXGLaq8LLYQYENnN4xPWO1gkL4apBtlPKzpLvZwg==}
+  '@react-oauth/google@0.13.4':
+    resolution: {integrity: sha512-hGKyNEH+/PK8M0sFEuo3MAEk0txtHpgs94tDQit+s2LXg7b6z53NtzHfqDvoB2X8O6lGB+FRg80hY//X6hfD+w==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
@@ -7163,14 +7157,6 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@qlover/fe-corekit@2.3.1':
-    dependencies:
-      '@qlover/logger': 0.3.1
-      '@types/lodash': 4.17.20
-      axios: 1.13.2
-    transitivePeerDependencies:
-      - debug
-
   '@qlover/fe-corekit@2.4.0':
     dependencies:
       '@qlover/logger': 0.3.3
@@ -7223,8 +7209,6 @@ snapshots:
 
   '@qlover/logger@0.2.0': {}
 
-  '@qlover/logger@0.3.1': {}
-
   '@qlover/logger@0.3.3': {}
 
   '@qlover/logger@0.4.0': {}
@@ -7232,7 +7216,7 @@ snapshots:
   '@qlover/scripts-context@1.2.1(typescript@5.4.5)':
     dependencies:
       '@qlover/env-loader': 0.3.1
-      '@qlover/fe-corekit': 2.3.1
+      '@qlover/fe-corekit': 2.5.0
       chalk: 5.6.2
       cosmiconfig: 9.0.0(typescript@5.4.5)
     transitivePeerDependencies:
@@ -7332,7 +7316,7 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       react-is: 18.3.1
 
-  '@react-oauth/google@0.12.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@react-oauth/google@0.13.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)

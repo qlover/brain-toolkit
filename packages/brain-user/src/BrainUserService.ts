@@ -378,13 +378,86 @@ export class BrainUserService<
   /**
    * Login with Google
    *
+   * Significance: Authenticate user using Google OAuth authorization code
+   * Core idea: Exchange Google authorization code for Brain credentials
+   * Main function: Handle Google OAuth login flow
+   * Main purpose: Provide secure Google authentication integration
+   *
+   * **Note:** This method does NOT automatically fetch user information.
+   * You need to manually call `refreshUserInfo()` after successful login
+   * to get the user details.
+   *
    * @override
-   * @param params - Google login request parameters
-   * @returns Promise resolving to Google credentials
+   * @param params - Google login request parameters containing authorization_code
+   * @returns Promise resolving to Google credentials (token and optional required_fields)
+   *
+   * @example
+   * ```ts
+   * const service = new BrainUserService({ env: 'production' });
+   *
+   * // Step 1: Login with Google authorization code
+   * const credentials = await service.loginWithGoogle({
+   *   authorization_code: 'google-oauth-code-from-google'
+   * });
+   *
+   * if (!credentials.token) {
+   *   throw new Error('Google login failed');
+   * }
+   *
+   * // Step 2: Get user information (required, not automatic)
+   * const userInfo = await service.refreshUserInfo(credentials);
+   *
+   * if (!userInfo) {
+   *   throw new Error('Failed to get user info');
+   * }
+   *
+   * // Step 3: Update store with user info and credentials
+   * service.getStore().success(userInfo, credentials);
+   *
+   * // Now you can access user information
+   * console.log('User logged in:', userInfo.name, userInfo.email);
+   * ```
+   *
+   * @example
+   * ```ts
+   * // Example with React component
+   * const handleGoogleLogin = async (googleAuthCode: string) => {
+   *   try {
+   *     const userService = new BrainUserService({
+   *       env: 'development',
+   *       executor: new GatewayExecutor()
+   *     });
+   *
+   *     // Login with Google
+   *     const brainCredentials = await userService.loginWithGoogle({
+   *       authorization_code: googleAuthCode
+   *     });
+   *
+   *     if (!brainCredentials.token) {
+   *       throw new Error('Google login failed');
+   *     }
+   *
+   *     // Get user info manually (required step)
+   *     const userInfo = await userService.refreshUserInfo(brainCredentials);
+   *
+   *     if (!userInfo) {
+   *       throw new Error('Failed to get user info');
+   *     }
+   *
+   *     // Update store
+   *     userService.getStore().success(userInfo, brainCredentials);
+   *
+   *     return userInfo;
+   *   } catch (error) {
+   *     console.error('Google login failed:', error);
+   *     throw error;
+   *   }
+   * };
+   * ```
    */
   public loginWithGoogle(
     params: BrainUserGoogleRequest
   ): Promise<BrainGoogleCredentials> {
-    return super.execute('loginWithGoogle', params);
+    return this.execute('loginWithGoogle', params);
   }
 }

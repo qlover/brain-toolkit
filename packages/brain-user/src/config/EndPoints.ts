@@ -21,7 +21,7 @@ export const GATEWAY_BRAIN_USER_ENDPOINTS = {
   login: 'POST /api/auth/token.json',
   register: 'POST /api/users/signup.json',
   getUserInfo: 'GET /api/users/me.json',
-  loginWithGoogle: 'POST /api/auth/google/brain/token',
+  loginWithGoogle: 'POST /api/auth/google/imagica/token',
   /**
    * This api only support admin?
    */
