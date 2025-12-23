@@ -1,5 +1,27 @@
 # @brain-toolkit/react-kit
 
+## 0.2.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- Enhance ESLint and TypeScript configurations for improved testing and code quality ([8f9f28f](https://github.com/qlover/brain-toolkit/commit/8f9f28f308d3702479998d58daa722a57f237484)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Updated ESLint configuration to enforce stricter rules, including setting '@typescript-eslint/no-explicit-any' to 'error'.
+  - Introduced a new linting configuration for test files, ensuring consistent linting practices across test cases.
+  - Modified TypeScript configuration to include additional file references and improve type-checking for test files.
+  - Added data-testid attributes to various components in the antd-blocks and react-kit packages for better testing support.
+  - Enhanced example components with data-testid attributes to facilitate testing and improve accessibility.
+
+#### ♻️ Refactors
+
+- Update ESLint and TypeScript configurations for improved performance and type safety ([b54b406](https://github.com/qlover/brain-toolkit/commit/b54b406d443d2ffd95c02ce8493f908ff59953a9)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Simplified ESLint configuration by removing unused globals and optimizing linting rules for JavaScript and TypeScript files.
+  - Introduced a new TypeScript configuration file for tests, enhancing type-checking and excluding unnecessary files.
+  - Updated package.json scripts for linting and type-checking to improve performance with caching.
+  - Refactored TypeScript settings across multiple packages to ensure consistent compiler options and output directories.
+  - Removed obsolete example files and configurations to streamline the project structure.
+
 ## 0.1.0
 
 ### Minor Changes

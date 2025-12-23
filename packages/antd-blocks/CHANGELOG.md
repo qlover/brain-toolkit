@@ -1,5 +1,52 @@
 # @brain-toolkit/antd-blocks
 
+## 0.1.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- Enhance ESLint configuration and update TypeScript interfaces ([e3702ba](https://github.com/qlover/brain-toolkit/commit/e3702badd9f9290be81fa18f3c4300afc1d176b4)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Updated ESLint configuration to include type-checking rules for Vitest and mock files, improving code quality checks.
+  - Refactored TypeScript interfaces in ResourceTablePopup and ResourceTableSchemaForm to omit children properties, enhancing type safety.
+  - Modified test cases in brain-user package to remove references to predefined storage types, streamlining the codebase.
+  - Adjusted linting scripts in package.json to improve performance with caching.
+
+- Enhance ESLint and TypeScript configurations for improved testing and code quality ([8f9f28f](https://github.com/qlover/brain-toolkit/commit/8f9f28f308d3702479998d58daa722a57f237484)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Updated ESLint configuration to enforce stricter rules, including setting '@typescript-eslint/no-explicit-any' to 'error'.
+  - Introduced a new linting configuration for test files, ensuring consistent linting practices across test cases.
+  - Modified TypeScript configuration to include additional file references and improve type-checking for test files.
+  - Added data-testid attributes to various components in the antd-blocks and react-kit packages for better testing support.
+  - Enhanced example components with data-testid attributes to facilitate testing and improve accessibility.
+
+- Enhance ESLint configuration and TypeScript support for improved code quality ([23dfaa3](https://github.com/qlover/brain-toolkit/commit/23dfaa336daa3f4113cc6ba09d61f6708e0cbda5)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Introduced a new linting configuration for TypeScript files, enabling the ts-class-override rule with full type information.
+  - Updated ESLint scripts in package.json for better caching and performance.
+  - Enhanced example components with data-testid attributes for improved testing capabilities.
+  - Updated the @qlover/eslint-plugin dependency to version 1.1.0 for additional linting features.
+  - Refactored error handling in example components to simplify catch blocks.
+
+- Enhance TypeScript and ESLint configurations for improved type safety and code quality ([f1338e6](https://github.com/qlover/brain-toolkit/commit/f1338e65317ce287db1db537b1d6e8dd167652c4)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Added `@typescript-eslint/consistent-type-imports` rule to enforce consistent type imports across the codebase.
+  - Updated TypeScript configuration to use `moduleResolution: "bundler"` for better module handling.
+  - Refactored imports in various test files and services to utilize `import type` for type-only imports, enhancing clarity and performance.
+  - Updated dependencies in `pnpm-lock.yaml` to include the latest version of `@react-oauth/google` for improved functionality.
+
+#### ♻️ Refactors
+
+- Update ESLint and TypeScript configurations for improved performance and type safety ([b54b406](https://github.com/qlover/brain-toolkit/commit/b54b406d443d2ffd95c02ce8493f908ff59953a9)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Simplified ESLint configuration by removing unused globals and optimizing linting rules for JavaScript and TypeScript files.
+  - Introduced a new TypeScript configuration file for tests, enhancing type-checking and excluding unnecessary files.
+  - Updated package.json scripts for linting and type-checking to improve performance with caching.
+  - Refactored TypeScript settings across multiple packages to ensure consistent compiler options and output directories.
+  - Removed obsolete example files and configurations to streamline the project structure.
+
+- Clean up imports and improve code formatting across multiple files ([009f1b7](https://github.com/qlover/brain-toolkit/commit/009f1b710c106ae97accfa7cfc4ca8c901f87290)) ([#25](https://github.com/qlover/brain-toolkit/pull/25))
+  - Refactored import statements to use consistent type-only imports for clarity and performance.
+  - Enhanced formatting in various files, including test cases and configuration files, for better readability.
+  - Removed unnecessary trailing whitespace in several files to maintain a clean codebase.
+  - Updated TypeScript configuration to ensure consistent exclusion patterns across packages.
+
 ## 0.0.1
 
 ### Patch Changes
