@@ -180,7 +180,7 @@ describe('EndPoints', () => {
 
     it('should have loginWithGoogle endpoint', () => {
       expect(GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle).toBe(
-        'POST /api/auth/google/brain/token'
+        'POST /api/auth/google/imagica/token'
       );
     });
 
@@ -247,7 +247,7 @@ describe('EndPoints', () => {
 
       expect(result).toEqual({
         method: 'POST',
-        url: '/api/auth/google/brain/token'
+        url: '/api/auth/google/imagica/token'
       });
     });
 

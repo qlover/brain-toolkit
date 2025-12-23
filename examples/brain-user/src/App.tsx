@@ -1,6 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSliceStore } from '@qlover/slice-store-react';
-import type { BrainUserPluginInterface } from '@brain-toolkit/brain-user';
+import type {
+  BrainUserPluginInterface,
+  BrainUserPluginContext,
+  BrainUserStateInterface,
+  BrainCredentials,
+  BrainUser
+} from '@brain-toolkit/brain-user';
 import { BrainUserService } from '@brain-toolkit/brain-user';
 import { GatewayExecutor } from '@qlover/corekit-bridge/gateway-auth';
 import { localStorage } from './LocalStorage';
@@ -9,13 +15,17 @@ import { UserInfo } from './UserInfo';
 const userServicePlugin: BrainUserPluginInterface = {
   pluginName: 'brainUserServicePlugin',
 
-  onRefreshUserInfoBefore(context) {
+  onRefreshUserInfoBefore(
+    context: BrainUserPluginContext<BrainUser, BrainCredentials>
+  ) {
     context.parameters.store.updateState({
       loading: true
     });
   },
 
-  onRefreshUserInfoSuccess(context) {
+  onRefreshUserInfoSuccess(
+    context: BrainUserPluginContext<BrainUser, BrainCredentials>
+  ) {
     context.parameters.store.updateState({
       loading: false
     });
@@ -43,10 +53,22 @@ export function App() {
     return userService.getStore();
   }, [userService]);
 
-  const token = useSliceStore(userStore, (state) => state.credential?.token);
-  const user = useSliceStore(userStore, (state) => state.result);
-  const loading = useSliceStore(userStore, (state) => state.loading);
-  const error = useSliceStore(userStore, (state) => state.error);
+  const token = useSliceStore(
+    userStore,
+    (state: BrainUserStateInterface) => state.credential?.token
+  );
+  const user = useSliceStore(
+    userStore,
+    (state: BrainUserStateInterface) => state.result
+  );
+  const loading = useSliceStore(
+    userStore,
+    (state: BrainUserStateInterface) => state.loading
+  );
+  const error = useSliceStore(
+    userStore,
+    (state: BrainUserStateInterface) => state.error
+  );
 
   // UI state (not from store)
   const [email, setEmail] = useState<string>('');

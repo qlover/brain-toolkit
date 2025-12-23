@@ -107,7 +107,7 @@ export interface BrainUserGatewayInterface
 
   logout<Params = unknown, Result = void>(params?: Params): Promise<Result>;
 
-  getUserInfo(params: BrainGetUserInfoRequest): Promise<BrainUser | null>;
+  getUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>;
 
   refreshUserInfo<Params = BrainGetUserInfoRequest>(
     params?: Params | undefined

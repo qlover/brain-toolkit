@@ -367,13 +367,86 @@ export class BrainUserService<
   extends UserService<BrainUser, BrainCredentials, string>
   implements BrainUserGatewayInterface
 {
+  /**
+   * Constructor for BrainUserService
+   *
+   * Significance: Initialize the service with configuration options
+   * Core idea: Transform user-provided options into complete service configuration
+   * Main function: Set up gateway, store, and other dependencies
+   * Main purpose: Create a ready-to-use user service instance
+   *
+   * @param options - Service configuration options
+   */
   constructor(options: Config) {
     super(createBrainUserOptions(options));
   }
 
+  /**
+   * Get the user store instance
+   *
+   * Significance: Access point for user state management
+   * Core idea: Provide type-safe access to BrainUserStore with feature tags
+   * Main function: Return the store instance with proper type casting
+   * Main purpose: Enable direct store access for advanced state management
+   *
+   * @returns BrainUserStore instance with type-safe feature tags support
+   *
+   * @example
+   * ```ts
+   * const service = new BrainUserService({ env: 'production' });
+   * const store = service.getStore();
+   *
+   * // Access user data
+   * const user = store.getUserMe();
+   * const token = store.getToken();
+   *
+   * // Access feature tags
+   * const hasGenUI = store.featureTags.hasGenUI();
+   *
+   * // Access user profile
+   * const email = store.userProfile.getDaEmail();
+   * ```
+   */
   public getStore(): BrainUserStore<Tags> {
     return super.getStore() as BrainUserStore<Tags>;
   }
+
+  /**
+   * Inherited Methods from UserService
+   *
+   * The following methods are inherited from UserService base class and are available
+   * on BrainUserService instances. They use the execute() method to call corresponding
+   * methods on the BrainUserGateway.
+   *
+   * ### Available Methods:
+   *
+   * - `register(params: BrainUserRegisterRequest): Promise<BrainUser | null>`
+   *   - Register a new user account
+   *   - Automatically logs in the user after successful registration
+   *
+   * - `login(params: BrainLoginRequest): Promise<BrainCredentials | null>`
+   *   - Login with email and password
+   *   - Returns credentials with authentication token
+   *
+   * - `getUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>`
+   *   - Get current user information
+   *   - Uses stored token if params.token is not provided
+   *
+   * - `refreshUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>`
+   *   - Refresh user information from server
+   *   - Updates store with latest user data
+   *
+   * - `logout(params?: unknown): Promise<void>`
+   *   - Logout current user
+   *   - Clears credentials and user data from store
+   *
+   * - `getCredential(): BrainCredentials | null`
+   *   - Get current authentication credentials
+   *   - Returns null if user is not logged in
+   *
+   * @see UserService for base implementation details
+   * @see BrainUserGatewayInterface for method signatures
+   */
 
   /**
    * Login with Google

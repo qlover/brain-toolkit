@@ -8,7 +8,7 @@ interface UserInfoProps {
 
 export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
   return (
-    <div>
+    <div data-testid="user-info">
       <div
         style={{
           textAlign: 'center',

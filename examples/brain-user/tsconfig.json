@@ -20,11 +20,7 @@
     "baseUrl": ".",
     "outDir": "./ts-build",
     "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
-    "paths": {
-      "@brain-toolkit/brain-user": ["../../packages/brain-user/src"]
-    },
     "types": ["vite/client"]
   },
-  "include": ["src"],
-  "references": [{ "path": "../../packages/brain-user" }]
+  "include": ["src"]
 }
