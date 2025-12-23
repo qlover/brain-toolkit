@@ -30,11 +30,11 @@ import { AntdThemeProvider } from '@brain-toolkit/antd-theme-override';
 
 function App() {
   return (
-    <AntdThemeProvider 
+    <AntdThemeProvider
       theme={{
         token: {
-          colorPrimary: '#00b96b',
-        },
+          colorPrimary: '#00b96b'
+        }
       }}
     >
       <YourApp />
@@ -56,44 +56,45 @@ export default {
     antdDeprecated({
       // Mode selection
       mode: 'noGlobals', // or 'overrideStatic'
-      
+
       // Type file generation path (optional)
       targetPath: './src/types/deprecated-antd.d.ts',
-      
+
       // CSS injection file path (optional)
       inLoadCssFile: './src/main.tsx',
-      
+
       // Override style file path (optional, only effective in overrideStatic mode)
       overriedCssFilePath: './src/styles/antd-override.css'
     })
   ]
-}
+};
 ```
 
 ## Configuration Options
 
 ### AntdThemeProvider Props
 
-| Prop Name | Type | Default | Description |
-|-----------|------|---------|-------------|
-| theme | ConfigProviderProps['theme'] | - | Ant Design theme configuration |
-| staticApi | AntdStaticApiInterface | - | Static API configuration |
-| children | ReactNode | - | Child components |
+| Prop Name | Type                         | Default | Description                    |
+| --------- | ---------------------------- | ------- | ------------------------------ |
+| theme     | ConfigProviderProps['theme'] | -       | Ant Design theme configuration |
+| staticApi | AntdStaticApiInterface       | -       | Static API configuration       |
+| children  | ReactNode                    | -       | Child components               |
 
 ### Vite Plugin Options
 
-| Option Name | Type | Default | Description |
-|-------------|------|---------|-------------|
-| mode | 'noGlobals' \| 'overrideStatic' | 'noGlobals' | Plugin working mode |
-| targetPath | string | './src/types/deprecated-antd.d.ts' | Type file generation path |
-| inLoadCssFile | string | './src/main.tsx' | CSS injection file path |
-| overriedCssFilePath | string | './src/styles/antd-override.css' | Override style file path |
+| Option Name         | Type                            | Default                            | Description               |
+| ------------------- | ------------------------------- | ---------------------------------- | ------------------------- |
+| mode                | 'noGlobals' \| 'overrideStatic' | 'noGlobals'                        | Plugin working mode       |
+| targetPath          | string                          | './src/types/deprecated-antd.d.ts' | Type file generation path |
+| inLoadCssFile       | string                          | './src/main.tsx'                   | CSS injection file path   |
+| overriedCssFilePath | string                          | './src/styles/antd-override.css'   | Override style file path  |
 
 ## Working Modes
 
 ### noGlobals Mode
 
 In this mode, the plugin will:
+
 - Generate type definition files to prohibit the use of Ant Design global APIs
 - Including: `message`, `Modal.confirm`, `notification`, etc.
 - Force developers to use component-based approaches for these functionalities
@@ -101,6 +102,7 @@ In this mode, the plugin will:
 ### overrideStatic Mode
 
 In this mode, the plugin will:
+
 - Allow the use of global APIs but override their default behavior through custom styles
 - Automatically inject override style files
 - Provide unified visual style management
@@ -108,13 +110,14 @@ In this mode, the plugin will:
 ## Best Practices
 
 1. **Theme Management**
+
 ```tsx
 // theme.ts
 export const myTheme = {
   token: {
     colorPrimary: '#00b96b',
-    borderRadius: 6,
-  },
+    borderRadius: 6
+  }
 };
 
 // App.tsx
@@ -130,6 +133,7 @@ function App() {
 ```
 
 2. **Global API Alternatives**
+
 ```tsx
 // Not recommended
 message.success('Operation successful');

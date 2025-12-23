@@ -276,10 +276,7 @@ uiDialog.setNotification(antd.notification);
 // 在 React 组件中使用
 function App() {
   return (
-    <AntdThemeProvider 
-      theme={myTheme}
-      staticApi={uiDialog}
-    >
+    <AntdThemeProvider theme={myTheme} staticApi={uiDialog}>
       <YourApp />
     </AntdThemeProvider>
   );
@@ -287,6 +284,7 @@ function App() {
 ```
 
 这种实现方式的优点：
+
 - 灵活性：可以动态设置各个 API 的实现
 - 可选性：可以只实现需要的 API
 - 可测试性：易于 mock 和测试
@@ -296,7 +294,6 @@ function App() {
 ## 常见问题
 
 1. **为什么要避免使用全局 API？**
-
    - 更好的可测试性
    - 更清晰的组件依赖关系
    - 更容易进行主题定制

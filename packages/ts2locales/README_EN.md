@@ -117,4 +117,3 @@ For the example code above, the following localization files will be generated:
 2. Language-specific translations use the `@local` prefix, such as `@localZh`, `@localEn`, etc.
 3. If a translation is not provided for a language, the `description` will be used as the default value
 4. Generated localization files will automatically merge with existing translations without overwriting unchanged content
-

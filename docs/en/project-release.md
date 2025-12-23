@@ -42,7 +42,7 @@ Create a Pull Request on GitHub with `master` as the target branch.
 Add the following labels to the PR to control version number increments:
 
 - `increment:major` - Major version increment (1.0.0 → 2.0.0)
-- `increment:minor` - Minor version increment (1.0.0 → 1.1.0)  
+- `increment:minor` - Minor version increment (1.0.0 → 1.1.0)
 - `increment:patch` - Patch version increment (1.0.0 → 1.0.1) **[Default]**
 
 ### Step 2: MergePR Automation
@@ -70,6 +70,7 @@ pnpm build     # Build all packages
 #### 2.3 Generate ReleasePR
 
 If all checks pass, the system will:
+
 - Automatically generate changelog for each package
 - Update version numbers
 - Create ReleasePR
@@ -83,7 +84,7 @@ Based on the `autoMergeReleasePR` configuration in `fe-config.json`:
 ```json
 {
   "release": {
-    "autoMergeReleasePR": true  // Auto-merge ReleasePR
+    "autoMergeReleasePR": true // Auto-merge ReleasePR
   }
 }
 ```
@@ -91,6 +92,7 @@ Based on the `autoMergeReleasePR` configuration in `fe-config.json`:
 #### 3.2 Publish to GitHub and npm
 
 After ReleasePR is merged, the system automatically:
+
 - Creates Git tags
 - Publishes GitHub Release
 - Publishes packages to npm registry
@@ -158,7 +160,7 @@ jobs:
     if: |
       github.event.pull_request.merged == true && 
       !contains(github.event.pull_request.labels.*.name, 'CI-Release')
-    
+
   release:
     # Execute when PR is merged and contains CI-Release label
     if: |
@@ -194,17 +196,17 @@ The project uses [Conventional Commits](https://www.conventionalcommits.org/) sp
 
 #### Commit Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | New feature | `feat(element-sizer): add resize animation` |
-| `fix` | Bug fix | `fix(element-sizer): resolve memory leak` |
-| `docs` | Documentation update | `docs: update installation guide` |
-| `refactor` | Code refactoring | `refactor: optimize animation logic` |
-| `perf` | Performance optimization | `perf: improve resize calculation` |
-| `test` | Test-related | `test: add unit tests for resizer` |
-| `build` | Build-related | `build: update rollup config` |
-| `ci` | CI/CD related | `ci: add release workflow` |
-| `chore` | Other miscellaneous | `chore: update dependencies` |
+| Type       | Description              | Example                                     |
+| ---------- | ------------------------ | ------------------------------------------- |
+| `feat`     | New feature              | `feat(element-sizer): add resize animation` |
+| `fix`      | Bug fix                  | `fix(element-sizer): resolve memory leak`   |
+| `docs`     | Documentation update     | `docs: update installation guide`           |
+| `refactor` | Code refactoring         | `refactor: optimize animation logic`        |
+| `perf`     | Performance optimization | `perf: improve resize calculation`          |
+| `test`     | Test-related             | `test: add unit tests for resizer`          |
+| `build`    | Build-related            | `build: update rollup config`               |
+| `ci`       | CI/CD related            | `ci: add release workflow`                  |
+| `chore`    | Other miscellaneous      | `chore: update dependencies`                |
 
 #### Scope
 
@@ -278,7 +280,7 @@ You can control which packages participate in the release through labels:
 View in the GitHub repository's Actions page:
 
 - ✅ Build status
-- ✅ Test results  
+- ✅ Test results
 - ✅ Release status
 - ❌ Failure reasons
 
@@ -312,6 +314,7 @@ View in the GitHub repository's Releases page:
 **Problem**: GitHub Actions build failure
 
 **Solution**:
+
 ```bash
 # Verify build locally
 pnpm install
@@ -328,6 +331,7 @@ pnpm build
 **Problem**: Unit tests or integration tests fail
 
 **Solution**:
+
 ```bash
 # Run tests locally
 pnpm test
@@ -344,11 +348,13 @@ pnpm test:coverage
 **Problem**: Package publishing to npm fails
 
 **Possible Causes**:
+
 - npm token expired or invalid
 - Package name exists and version number is duplicate
 - Network connection issues
 
 **Solution**:
+
 ```bash
 # Check npm token
 npm whoami
@@ -366,6 +372,7 @@ npm view @brain-toolkit/element-sizer
 **Problem**: ReleasePR not created after merging PR
 
 **Check Items**:
+
 - Does PR contain changes to `packages/` directory
 - Are GitHub Actions running normally
 - Is PAT_TOKEN valid
@@ -376,6 +383,7 @@ npm view @brain-toolkit/element-sizer
 **Problem**: Generated version number doesn't meet expectations
 
 **Solution**:
+
 - Check `increment:` labels on PR
 - Confirm commit messages follow [Conventional Commits specification](./commit-convention.md)
 - Review changelog generation logic
@@ -385,6 +393,7 @@ npm view @brain-toolkit/element-sizer
 **Problem**: Commit messages don't follow specification causing changelog generation errors
 
 **Solution**:
+
 - Refer to [Commit Convention Guide](./commit-convention.md)
 - Use `pnpm commit` for interactive commits
 - Modify commit history (if needed)

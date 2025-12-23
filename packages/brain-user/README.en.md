@@ -2,6 +2,10 @@
 
 Brain User Service - Complete user authentication and management library for Brain platform
 
+## 🌐 Online Demo
+
+[View Online Example](https://brain-toolkit-brain-user.vercel.app/) - Complete example project built with Vite + React
+
 ## Table of Contents
 
 - [Installation](#installation)
@@ -78,7 +82,6 @@ const service = new BrainUserService({
 | `domains`      | `Record<string, string>`                  | No       | See below                      | Custom domain mapping for environments                        |
 | `baseURL`      | `string`                                  | No       | Auto from env                  | Override API base URL directly                                |
 | `endpoints`    | `Record<string, EndpointsType>`           | No       | `GATEWAY_BRAIN_USER_ENDPOINTS` | Custom API endpoints configuration (format: `'METHOD /path'`) |
-| `timeout`      | `number`                                  | No       | -                              | Request timeout in milliseconds                               |
 | `headers`      | `Record<string, string>`                  | No       | -                              | Default headers for all requests                              |
 | `responseType` | `'json' \| 'text' \| 'blob'`              | No       | `'json'`                       | Expected response type                                        |
 
@@ -637,7 +640,6 @@ const service = new BrainUserService({
 
   // API configuration
   env: 'production',
-  timeout: 30000,
   headers: {
     'X-App-Version': '1.0.0'
   },

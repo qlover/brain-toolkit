@@ -67,4 +67,3 @@ example/
 
 - [React Kit Documentation](../README.md)
 - [GitHub Repository](https://github.com/qlover/brain-toolkit)
-

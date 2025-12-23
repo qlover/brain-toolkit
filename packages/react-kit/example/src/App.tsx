@@ -56,7 +56,8 @@ function AppLayout() {
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <Link
-              data-testid="AppLayout" key={item.key}
+              data-testid="AppLayout"
+              key={item.key}
               to={item.key}
               className={`nav-item ${location.pathname === item.key ? 'active' : ''}`}
             >

@@ -4,6 +4,10 @@ Brain User Service - 完整的用户认证和管理库，适用于 Brain 平台
 
 [English Documentation](./README.en.md)
 
+## 🌐 在线演示
+
+[查看在线示例](https://brain-toolkit-brain-user.vercel.app/) - 基于 Vite + React 的完整示例项目
+
 ## 目录
 
 - [安装](#安装)
@@ -80,7 +84,6 @@ const service = new BrainUserService({
 | `domains`      | `Record<string, string>`                  | 否   | 见下方                         | 自定义环境域名映射                            |
 | `baseURL`      | `string`                                  | 否   | 从 env 自动获取                | 直接覆盖 API 基础 URL                         |
 | `endpoints`    | `Record<string, EndpointsType>`           | 否   | `GATEWAY_BRAIN_USER_ENDPOINTS` | 自定义 API 端点配置（格式：`'METHOD /path'`） |
-| `timeout`      | `number`                                  | 否   | -                              | 请求超时时间（毫秒）                          |
 | `headers`      | `Record<string, string>`                  | 否   | -                              | 所有请求的默认请求头                          |
 | `responseType` | `'json' \| 'text' \| 'blob'`              | 否   | `'json'`                       | 期望的响应类型                                |
 
@@ -639,7 +642,6 @@ const service = new BrainUserService({
 
   // API 配置
   env: 'production',
-  timeout: 30000,
   headers: {
     'X-App-Version': '1.0.0'
   },

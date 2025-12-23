@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@brain-toolkit/brain-user": "workspace:*",
+    "@brain-toolkit/brain-user": "latest",
     "@qlover/corekit-bridge": "^1.9.0",
     "@qlover/fe-corekit": "^2.4.0",
     "@qlover/slice-store-react": "^1.4.1",

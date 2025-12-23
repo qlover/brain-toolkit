@@ -280,7 +280,8 @@ function TodoStoreExample() {
           ) : (
             filteredTodos.map((todo) => (
               <div
-                data-testid="TodoStoreExample" key={todo.id}
+                data-testid="TodoStoreExample"
+                key={todo.id}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

@@ -232,7 +232,11 @@ function MultipleInstancesExample() {
             <div className="log-item">No logs yet. Click a button to log!</div>
           ) : (
             logs.map((log, index) => (
-              <div data-testid="MultipleInstancesExample" key={index} className="log-item">
+              <div
+                data-testid="MultipleInstancesExample"
+                key={index}
+                className="log-item"
+              >
                 {log}
               </div>
             ))
