@@ -15,12 +15,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createBrainUserOptions } from '../src/utils/createBrainUserOptions';
-import { BrainUserServiceOptions } from '../src/BrainUserService';
+import type { BrainUserServiceOptions } from '../src/BrainUserService';
 import { BrainUserStore } from '../src/BrainUserStore';
 import { BrainUserGateway } from '../src/BrainUserGateway';
 import { defaultBrainUserOptions } from '../src/config/common';
-import { RequestAdapterInterface } from '@qlover/fe-corekit';
-import { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { RequestAdapterInterface } from '@qlover/fe-corekit';
+import type { SyncStorageInterface } from '@qlover/fe-corekit';
 
 describe('createBrainUserOptions', () => {
   beforeEach(() => {

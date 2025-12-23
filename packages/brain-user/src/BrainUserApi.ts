@@ -13,13 +13,14 @@ import type {
   BrainCredentials,
   BrainGoogleCredentials
 } from './interface/BrainUserGatewayInterface';
+import type {
+  EndpointsType} from './config/EndPoints';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
-  EndpointsType,
   parseEndpoint
 } from './config/EndPoints';
-import { BrainUser } from './types/BrainUserTypes';
-import { RequestCommonPluginConfig } from '@qlover/corekit-bridge';
+import type { BrainUser } from './types/BrainUserTypes';
+import type { RequestCommonPluginConfig } from '@qlover/corekit-bridge/request-plugins';
 
 export interface BrainUserApiConfig<T>
   extends RequestAdapterFetchConfig<T>,

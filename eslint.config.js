@@ -88,6 +88,13 @@ export default tseslint.config([
         }
       ],
       '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'separate-type-imports'
+        }
+      ],
       // Type-checked rules
       '@typescript-eslint/require-await': 'off',
       'react-refresh/only-export-components': [

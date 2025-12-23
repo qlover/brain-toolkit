@@ -7,8 +7,8 @@ import type {
   BrainCredentials,
   BrainGoogleCredentials
 } from './interface/BrainUserGatewayInterface';
-import { BrainUser } from './types/BrainUserTypes';
-import { BrainUserApi, BrainUserApiConfig } from './BrainUserApi';
+import type { BrainUser } from './types/BrainUserTypes';
+import type { BrainUserApi, BrainUserApiConfig } from './BrainUserApi';
 
 /**
  * Brain User Gateway - Business logic layer for user operations

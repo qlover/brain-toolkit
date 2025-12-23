@@ -1,11 +1,12 @@
-import {
+import type {
   RequestAdapterConfig,
+  RequestAdapterInterface} from '@qlover/fe-corekit';
+import {
   RequestAdapterFetch,
-  RequestAdapterInterface,
   FetchURLPlugin
 } from '@qlover/fe-corekit';
-import { RequestCommonPlugin } from '@qlover/corekit-bridge';
-import { BrainUserApiConfig } from '../BrainUserApi';
+import { RequestCommonPlugin } from '@qlover/corekit-bridge/request-plugins';
+import type { BrainUserApiConfig } from '../BrainUserApi';
 import type { BrainUserStoreInterface } from '../interface/BrainUserStoreInterface';
 
 /**

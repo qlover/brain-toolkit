@@ -3,7 +3,7 @@ import type {
   ExecutorPlugin,
   RequestAdapterResponse
 } from '@qlover/fe-corekit';
-import {
+import type {
   ImagicaAuthApiConfig,
   LoginResponseData,
   UserInfoResponseData

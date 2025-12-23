@@ -1,6 +1,6 @@
 import { PRE_FEATURE_TAGS } from './config/PreFeatureTags';
-import { BrainWebTagsCheckerInterface } from './interface/BrainWebTagsCheckerInterface';
-import { BrainUserFeatureTagType } from './types/BrainUserTypes';
+import type { BrainWebTagsCheckerInterface } from './interface/BrainWebTagsCheckerInterface';
+import type { BrainUserFeatureTagType } from './types/BrainUserTypes';
 import { snakeCaseToCamelCase, type SnakeToCamel } from './utils/caseConverter';
 
 /**

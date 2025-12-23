@@ -1,5 +1,5 @@
 import { UserAuthState } from '@qlover/corekit-bridge';
-import { UserInfoResponseData } from './ImagicaAuthApi';
+import type { UserInfoResponseData } from './ImagicaAuthApi';
 
 export class ImagicaAuthState<
   User extends UserInfoResponseData = UserInfoResponseData

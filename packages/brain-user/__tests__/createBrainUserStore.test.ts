@@ -21,8 +21,8 @@ import {
 } from '../src/utils/createBrainUserStore';
 import { defaultBrainStoreOptions } from '../src/config/common';
 import { BrainUserStore } from '../src/BrainUserStore';
-import { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
-import { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
+import type { SyncStorageInterface } from '@qlover/fe-corekit';
 
 describe('createBrainUserStore', () => {
   // Mock storage implementation

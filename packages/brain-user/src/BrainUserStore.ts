@@ -1,13 +1,16 @@
-import {
+import type {
   UserStateInterface,
-  UserStore,
   UserStoreOptions
-} from '@qlover/corekit-bridge';
-import { BrainUser } from './types/BrainUserTypes';
-import { BrainCredentials } from './interface/BrainUserGatewayInterface';
-import { createFeatureTags, DynamicFeatureTags } from './FeatureTags';
+} from '@qlover/corekit-bridge/gateway-auth';
+import {
+  UserStore
+} from '@qlover/corekit-bridge/gateway-auth';
+import type { BrainUser } from './types/BrainUserTypes';
+import type { BrainCredentials } from './interface/BrainUserGatewayInterface';
+import type { DynamicFeatureTags } from './FeatureTags';
+import { createFeatureTags } from './FeatureTags';
 import { UserProfile } from './UserProfile';
-import { BrainUserStoreInterface } from './interface/BrainUserStoreInterface';
+import type { BrainUserStoreInterface } from './interface/BrainUserStoreInterface';
 
 export interface BrainUserStateInterface
   extends UserStateInterface<BrainUser, BrainCredentials> {}

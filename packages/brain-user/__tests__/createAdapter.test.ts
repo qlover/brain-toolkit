@@ -17,12 +17,14 @@ import {
   isRequestAdapterInterface,
   type CreateAdapterType
 } from '../src/utils/createAdapter';
-import {
-  RequestAdapterFetch,
+import type {
   RequestAdapterInterface,
   RequestAdapterConfig
 } from '@qlover/fe-corekit';
-import { BrainUserApiConfig } from '../src/BrainUserApi';
+import {
+  RequestAdapterFetch
+} from '@qlover/fe-corekit';
+import type { BrainUserApiConfig } from '../src/BrainUserApi';
 import type { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
 
 describe('createAdapter', () => {

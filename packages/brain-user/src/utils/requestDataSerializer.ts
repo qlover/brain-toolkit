@@ -1,4 +1,4 @@
-import { ExecutorContext, RequestAdapterConfig } from '@qlover/fe-corekit';
+import type { ExecutorContext, RequestAdapterConfig } from '@qlover/fe-corekit';
 
 export const requestDataSerializer = (
   data: unknown,

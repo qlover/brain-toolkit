@@ -37,7 +37,6 @@ export default defineConfig([
     },
     minify: false,
     silent: true,
-    bundle: false,
     outDir: 'dist',
     external
   },
@@ -62,4 +61,3 @@ export default defineConfig([
     outDir: 'dist'
   }
 ]);
-

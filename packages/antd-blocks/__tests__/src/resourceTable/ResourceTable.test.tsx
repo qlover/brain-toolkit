@@ -1,7 +1,7 @@
  
 import { render, screen } from '@testing-library/react';
 import { ResourceTable } from '../../../src/resourceTable/ResourceTable';
-import { ResourceTableEventInterface } from '../../../src';
+import type { ResourceTableEventInterface } from '../../../src';
 import * as SliceStoreReact from '@qlover/slice-store-react';
 
 // Mock matchMedia

@@ -1,4 +1,4 @@
-import {
+import type {
   BrainUserProfileInterface,
   BrainUserPermissions
 } from './types/BrainUserTypes';

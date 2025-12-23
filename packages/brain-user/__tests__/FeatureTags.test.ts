@@ -23,7 +23,7 @@ import {
   type FeatureTagsOptions
 } from '../src/FeatureTags';
 import { PRE_FEATURE_TAGS } from '../src/config/PreFeatureTags';
-import { BrainUserFeatureTagType } from '../src/types/BrainUserTypes';
+import type { BrainUserFeatureTagType } from '../src/types/BrainUserTypes';
 
 describe('FeatureTags', () => {
   describe('constructor', () => {

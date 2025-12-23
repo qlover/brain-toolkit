@@ -1,7 +1,8 @@
-import { ConfigProvider, ConfigProviderProps } from 'antd';
-import { ReactNode } from 'react';
+import type { ConfigProviderProps } from 'antd';
+import { ConfigProvider } from 'antd';
+import type { ReactNode } from 'react';
 import { AntdStaticProvider } from './AntdStaticProvider';
-import { AntdStaticApiInterface } from './AntdStaticApiInterface';
+import type { AntdStaticApiInterface } from './AntdStaticApiInterface';
 
 export function AntdThemeProvider(
   props: ConfigProviderProps & {

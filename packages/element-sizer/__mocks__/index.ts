@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
-import { ElementResizerOptions, AnimationState } from '../src';
+import type { ElementResizerOptions} from '../src';
+import { AnimationState } from '../src';
 
 export type { ElementResizerOptions, AnimationState } from '../src';
 

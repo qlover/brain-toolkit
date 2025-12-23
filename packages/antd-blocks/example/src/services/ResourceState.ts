@@ -3,9 +3,10 @@
  *
  * Provides default state structure for resource management
  */
-import {
+import type {
   ResourceStateInterface,
-  ResourceQuery,
+  ResourceQuery} from '@qlover/corekit-bridge';
+import {
   RequestState
 } from '@qlover/corekit-bridge';
 

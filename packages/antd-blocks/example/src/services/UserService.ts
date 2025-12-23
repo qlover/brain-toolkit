@@ -12,13 +12,15 @@
  * const users = await userService.search({ page: 1, pageSize: 10 });
  * ```
  */
-import {
+import type {
   ResourceServiceInterface,
-  ResourceStore,
   ResourceStateInterface,
   ResourceQuery
 } from '@qlover/corekit-bridge';
-import { User } from './types';
+import {
+  ResourceStore
+} from '@qlover/corekit-bridge';
+import type { User } from './types';
 import { ResourceState } from './ResourceState';
 
 /**

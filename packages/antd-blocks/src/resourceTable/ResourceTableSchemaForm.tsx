@@ -14,7 +14,7 @@ import type {
   ResourceTableOption
 } from './ResourceTableOption';
 import type { FormInstance } from 'antd/lib';
-import { NamePath } from 'antd/es/form/interface';
+import type { NamePath } from 'antd/es/form/interface';
 
 const { Item: FormItem } = Form;
 

@@ -1,6 +1,6 @@
-import { UserServiceGateway } from '@qlover/corekit-bridge';
-import { BrainUser } from '../types/BrainUserTypes';
-import { BrainResponse } from './BrainResponse';
+import type { UserServiceGateway } from '@qlover/corekit-bridge/gateway-auth';
+import type { BrainUser } from '../types/BrainUserTypes';
+import type { BrainResponse } from './BrainResponse';
 
 export interface BrainUserGoogleRequest {
   /**

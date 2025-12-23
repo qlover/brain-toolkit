@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ResourceTableHeader } from '../../../src/resourceTable/ResourceTableHeader';
-import { ResourceTableEventInterface } from '../../../src';
+import type { ResourceTableEventInterface } from '../../../src';
 
 describe('ResourceTableHeader', () => {
   const mockResource = {

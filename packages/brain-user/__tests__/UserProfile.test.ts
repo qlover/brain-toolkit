@@ -18,7 +18,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { UserProfile } from '../src/UserProfile';
-import {
+import type {
   BrainUserProfileInterface,
   BrainUserPermissions
 } from '../src/types/BrainUserTypes';

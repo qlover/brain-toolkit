@@ -1,20 +1,22 @@
-import { UserServiceConfig } from '@qlover/corekit-bridge';
-import { BrainUserServiceOptions } from '../BrainUserService';
-import { BrainCredentials, BrainUser } from '../types/BrainUserTypes';
+import type { UserServiceConfig } from '@qlover/corekit-bridge/gateway-auth';
+import type { BrainUserServiceOptions } from '../BrainUserService';
+import type { BrainCredentials, BrainUser } from '../types/BrainUserTypes';
 import {
   defaultBrainStoreOptions,
   defaultBrainUserOptions
 } from '../config/common';
 import { BrainUserGateway } from '../BrainUserGateway';
-import { BrainUserApi, BrainUserApiConfig } from '../BrainUserApi';
+import type { BrainUserApiConfig } from '../BrainUserApi';
+import { BrainUserApi } from '../BrainUserApi';
 import { createAdapter } from './createAdapter';
+import type {
+  CreateBrainStoreOptions} from './createBrainUserStore';
 import {
   createBrainUserStore,
-  CreateBrainStoreOptions,
   isBrainUserStoreInterface
 } from './createBrainUserStore';
-import { BrainUserStore } from '../BrainUserStore';
-import { BrainUserStoreInterface } from '../interface/BrainUserStoreInterface';
+import type { BrainUserStore } from '../BrainUserStore';
+import type { BrainUserStoreInterface } from '../interface/BrainUserStoreInterface';
 
 /**
  * Create BrainUserService configuration options

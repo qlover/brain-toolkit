@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Form } from 'antd';
 import { ResourceTableSchemaForm } from '../../../src/resourceTable/ResourceTableSchemaForm';
-import { ResourceTableEventInterface } from '../../../src';
+import type { ResourceTableEventInterface } from '../../../src';
 import { ResourceTableContext } from '../../../src/resourceTable/ResourceTableContext';
 import * as SliceStoreReact from '@qlover/slice-store-react';
 import type { ResourceTableSchemaFormProps } from '../../../src/resourceTable/ResourceTableSchemaForm';

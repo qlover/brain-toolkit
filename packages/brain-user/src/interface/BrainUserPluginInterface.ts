@@ -1,10 +1,10 @@
-import {
+import type {
   UserPluginContext,
   UserServicePluginInterface
-} from '@qlover/corekit-bridge';
-import { BrainUser } from '../types/BrainUserTypes';
-import { BrainCredentials } from './BrainUserGatewayInterface';
-import { BrainUserStoreInterface } from './BrainUserStoreInterface';
+} from '@qlover/corekit-bridge/gateway-auth';
+import type { BrainUser } from '../types/BrainUserTypes';
+import type { BrainCredentials } from './BrainUserGatewayInterface';
+import type { BrainUserStoreInterface } from './BrainUserStoreInterface';
 
 export interface BrainUserPluginContext<
   User,

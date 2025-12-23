@@ -7,10 +7,12 @@ import {
 } from '@qlover/corekit-bridge';
 import { ResourceEventStroe } from './ResourceEventStroe';
 import type { FormInstance } from 'antd';
-import {
-  ResourceTableEventAction,
+import type {
   ResourceTableEventCommonParams,
   ResourceTableEventInterface
+} from './ResourceTableEventInterface';
+import {
+  ResourceTableEventAction
 } from './ResourceTableEventInterface';
 
 /**
