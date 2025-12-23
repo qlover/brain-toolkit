@@ -16,7 +16,8 @@ export default defineConfig([
     dts: {
       compilerOptions: {
         composite: false,
-        incremental: false
+        incremental: false,
+        tsBuildInfoFile: undefined
       }
     },
     outDir: 'dist'

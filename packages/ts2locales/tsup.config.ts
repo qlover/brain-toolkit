@@ -22,10 +22,13 @@ export default defineConfig([
   {
     entry: ['src/index.ts'],
     format: 'esm',
+    splitting: false,
+    bundle: false,
     dts: {
       compilerOptions: {
         composite: false,
-        incremental: false
+        incremental: false,
+        tsBuildInfoFile: undefined
       }
     },
     outDir: 'dist'
@@ -33,10 +36,13 @@ export default defineConfig([
   {
     entry: ['src/vite/index.ts'],
     format: 'esm',
+    splitting: false,
+    bundle: false,
     dts: {
       compilerOptions: {
         composite: false,
-        incremental: false
+        incremental: false,
+        tsBuildInfoFile: undefined
       }
     },
     outDir: 'dist/vite'
