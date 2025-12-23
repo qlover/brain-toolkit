@@ -11,9 +11,7 @@ import type {
   ResourceTableEventCommonParams,
   ResourceTableEventInterface
 } from './ResourceTableEventInterface';
-import {
-  ResourceTableEventAction
-} from './ResourceTableEventInterface';
+import { ResourceTableEventAction } from './ResourceTableEventInterface';
 
 /**
  * Default implementation of resource table event handling

@@ -82,9 +82,7 @@ describe('common config', () => {
     });
 
     it('should have different keys for credential and profile', () => {
-      expect(BRAIN_STORAGE_CREDENTIAL_KEY).not.toBe(
-        BRAIN_STORAGE_PROFILE_KEY
-      );
+      expect(BRAIN_STORAGE_CREDENTIAL_KEY).not.toBe(BRAIN_STORAGE_PROFILE_KEY);
     });
 
     it('should use Brain prefix', () => {
@@ -112,11 +110,8 @@ describe('common config', () => {
       expect(defaultBrainUserOptions.domains).toBe(BRAIN_DOMAINS);
     });
 
-
     it('should have serviceName property', () => {
-      expect(defaultBrainUserOptions.serviceName).toBe(
-        'brainUserService'
-      );
+      expect(defaultBrainUserOptions.serviceName).toBe('brainUserService');
     });
 
     it('should have responseType property', () => {
@@ -238,7 +233,6 @@ describe('common config', () => {
       expect(devConfig.env).toBe('development');
       expect(prodConfig.env).toBe('production');
     });
-
   });
 
   describe('edge cases', () => {
@@ -289,4 +283,3 @@ describe('common config', () => {
     });
   });
 });
-

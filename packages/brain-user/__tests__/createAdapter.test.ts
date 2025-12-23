@@ -21,9 +21,7 @@ import type {
   RequestAdapterInterface,
   RequestAdapterConfig
 } from '@qlover/fe-corekit';
-import {
-  RequestAdapterFetch
-} from '@qlover/fe-corekit';
+import { RequestAdapterFetch } from '@qlover/fe-corekit';
 import type { BrainUserApiConfig } from '../src/BrainUserApi';
 import type { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
 
@@ -38,7 +36,11 @@ describe('createAdapter', () => {
     /**
      * @override
      */
-    public setConfig(config: RequestAdapterConfig<unknown> | Partial<RequestAdapterConfig<unknown>>): void {
+    public setConfig(
+      config:
+        | RequestAdapterConfig<unknown>
+        | Partial<RequestAdapterConfig<unknown>>
+    ): void {
       Object.assign(this.config, config);
     }
 

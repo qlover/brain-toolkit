@@ -17,9 +17,7 @@ import type {
   ResourceStateInterface,
   ResourceQuery
 } from '@qlover/corekit-bridge';
-import {
-  ResourceStore
-} from '@qlover/corekit-bridge';
+import { ResourceStore } from '@qlover/corekit-bridge';
 import type { User } from './types';
 import { ResourceState } from './ResourceState';
 

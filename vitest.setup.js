@@ -24,7 +24,11 @@ if (typeof window !== 'undefined') {
     return {
       getPropertyValue: (prop) => {
         // Return default values for common properties used by rc-util
-        if (prop === 'overflow' || prop === 'overflowX' || prop === 'overflowY') {
+        if (
+          prop === 'overflow' ||
+          prop === 'overflowX' ||
+          prop === 'overflowY'
+        ) {
           return 'visible';
         }
         if (prop === 'width' || prop === 'height') {
@@ -41,9 +45,16 @@ if (typeof window !== 'undefined') {
       cssFloat: '',
       // Add all standard CSS properties with empty values
       ...Object.fromEntries(
-        ['display', 'position', 'top', 'left', 'right', 'bottom', 'margin', 'padding'].map(
-          (prop) => [prop, '']
-        )
+        [
+          'display',
+          'position',
+          'top',
+          'left',
+          'right',
+          'bottom',
+          'margin',
+          'padding'
+        ].map((prop) => [prop, ''])
       ),
       [Symbol.iterator]: function* () {}
     };

@@ -161,7 +161,9 @@ describe('EndPoints', () => {
 
   describe('GATEWAY_BRAIN_USER_ENDPOINTS', () => {
     it('should have login endpoint', () => {
-      expect(GATEWAY_BRAIN_USER_ENDPOINTS.login).toBe('POST /api/auth/token.json');
+      expect(GATEWAY_BRAIN_USER_ENDPOINTS.login).toBe(
+        'POST /api/auth/token.json'
+      );
     });
 
     it('should have register endpoint', () => {
@@ -171,7 +173,9 @@ describe('EndPoints', () => {
     });
 
     it('should have getUserInfo endpoint', () => {
-      expect(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).toBe('GET /api/users/me.json');
+      expect(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).toBe(
+        'GET /api/users/me.json'
+      );
     });
 
     it('should have loginWithGoogle endpoint', () => {
@@ -181,7 +185,9 @@ describe('EndPoints', () => {
     });
 
     it('should have logout endpoint', () => {
-      expect(GATEWAY_BRAIN_USER_ENDPOINTS.logout).toBe('POST /api/users/signout');
+      expect(GATEWAY_BRAIN_USER_ENDPOINTS.logout).toBe(
+        'POST /api/users/signout'
+      );
     });
 
     it('should be immutable (readonly)', () => {
@@ -235,7 +241,9 @@ describe('EndPoints', () => {
     });
 
     it('should parse loginWithGoogle endpoint', () => {
-      const result = parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle);
+      const result = parseEndpoint(
+        GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle
+      );
 
       expect(result).toEqual({
         method: 'POST',
@@ -492,4 +500,3 @@ describe('EndPoints', () => {
     });
   });
 });
-

@@ -9,8 +9,7 @@ import { BrainUserGateway } from '../BrainUserGateway';
 import type { BrainUserApiConfig } from '../BrainUserApi';
 import { BrainUserApi } from '../BrainUserApi';
 import { createAdapter } from './createAdapter';
-import type {
-  CreateBrainStoreOptions} from './createBrainUserStore';
+import type { CreateBrainStoreOptions } from './createBrainUserStore';
 import {
   createBrainUserStore,
   isBrainUserStoreInterface
@@ -51,7 +50,7 @@ export function createBrainUserOptions<Tags extends readonly string[]>(
     ...defaultBrainUserOptions,
     ...options
   };
-  
+
   const {
     executor,
     logger,
@@ -95,4 +94,3 @@ export function createBrainUserOptions<Tags extends readonly string[]>(
     logger: logger
   };
 }
-

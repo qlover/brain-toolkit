@@ -4,4 +4,3 @@ export type BrainResponse<T> = T & {
    */
   non_field_errors?: string[];
 };
-

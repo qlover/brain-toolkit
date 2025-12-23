@@ -123,7 +123,7 @@ export type SnakeToCamel<
  * snakeCaseToPascalCase('enable_feature_x', 'enable_'); // 'FeatureX'
  * snakeCaseToPascalCase('disable_android_asr', 'disable_'); // 'AndroidAsr'
  * snakeCaseToPascalCase('execution_agent'); // 'ExecutionAgent'
- * 
+ *
  * // Type inference example:
  * const result = snakeCaseToPascalCase('disable_amazon_search_graphql' as const, 'disable_');
  * // result type: 'AmazonSearchGraphql'
@@ -176,7 +176,7 @@ export function snakeCaseToPascalCase(
  * snakeCaseToCamelCase('test', 'has'); // 'hasTest'
  * snakeCaseToCamelCase('enable_feature_x', 'is', 'enable_'); // 'isFeatureX'
  * snakeCaseToCamelCase('admin_role', 'check'); // 'checkAdminRole'
- * 
+ *
  * // Type inference example:
  * const result = snakeCaseToCamelCase('disable_amazon_search_graphql' as const, 'has', 'disable_');
  * // result type: 'hasAmazonSearchGraphql'
@@ -221,4 +221,3 @@ export function convertTagToMethodName(
 ): string {
   return snakeCaseToCamelCase(tag, methodPrefix, removePrefix);
 }
-

@@ -5,10 +5,9 @@
  */
 import type {
   ResourceStateInterface,
-  ResourceQuery} from '@qlover/corekit-bridge';
-import {
-  RequestState
+  ResourceQuery
 } from '@qlover/corekit-bridge';
+import { RequestState } from '@qlover/corekit-bridge';
 
 /**
  * Default ResourceState implementation

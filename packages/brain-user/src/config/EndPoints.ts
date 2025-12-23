@@ -27,4 +27,3 @@ export const GATEWAY_BRAIN_USER_ENDPOINTS = {
    */
   logout: 'POST /api/users/signout'
 } as const;
-

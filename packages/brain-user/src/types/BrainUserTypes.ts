@@ -133,4 +133,3 @@ export interface BrainUser extends BrainCredentials {
    */
   account?: unknown;
 }
-

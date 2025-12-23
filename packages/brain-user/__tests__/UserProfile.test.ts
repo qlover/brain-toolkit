@@ -398,7 +398,9 @@ describe('UserProfile', () => {
       });
 
       expect(profileWithUndefinedValues.hasPermission('test')).toBe(true);
-      expect(profileWithUndefinedValues.getPermissionValues('test')).toBeUndefined();
+      expect(
+        profileWithUndefinedValues.getPermissionValues('test')
+      ).toBeUndefined();
     });
 
     it('should handle permissions with empty key', () => {
@@ -534,4 +536,3 @@ describe('UserProfile', () => {
     });
   });
 });
-

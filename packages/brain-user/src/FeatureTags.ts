@@ -111,10 +111,7 @@ export class FeatureTags<T extends readonly BrainUserFeatureTagType[] = []>
    * @param featureTag 要判断的 feature tag
    * @param isGuest 是否为游客, 如果是游客, 则返回 false(游客默认无权限)
    */
-  public has(
-    featureTag: BrainUserFeatureTagType,
-    isGuest?: boolean
-  ): boolean {
+  public has(featureTag: BrainUserFeatureTagType, isGuest?: boolean): boolean {
     if (isGuest) {
       return false;
     }
@@ -168,9 +165,8 @@ export class FeatureTags<T extends readonly BrainUserFeatureTagType[] = []>
  * // etc.
  * ```
  */
-export type DynamicFeatureTags<
-  T extends readonly BrainUserFeatureTagType[]
-> = FeatureTags<T> & DynamicFeatureTagsInterface<T>;
+export type DynamicFeatureTags<T extends readonly BrainUserFeatureTagType[]> =
+  FeatureTags<T> & DynamicFeatureTagsInterface<T>;
 
 /**
  * Create a type-safe FeatureTags instance with dynamic methods
@@ -207,4 +203,3 @@ export function createFeatureTags<
     preFeatureTags: options?.preFeatureTags ?? PRE_FEATURE_TAGS
   }) as DynamicFeatureTags<T>;
 }
-

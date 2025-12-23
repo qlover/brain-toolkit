@@ -8,13 +8,8 @@ import {
   type LoginResponseData,
   UserAuthService
 } from '@qlover/corekit-bridge';
-import type {
-  ImagicaAuthApiConfig
-} from './ImagicaAuthApi';
-import {
-  type LoginWithGoogleRequest,
-  ImagicaAuthApi
-} from './ImagicaAuthApi';
+import type { ImagicaAuthApiConfig } from './ImagicaAuthApi';
+import { type LoginWithGoogleRequest, ImagicaAuthApi } from './ImagicaAuthApi';
 import { defaultRequestConfig, mergedOptions } from './consts';
 import type { ImagicaAuthState } from './ImagicaAuthState';
 import type { ExecutorPlugin } from '@qlover/fe-corekit';

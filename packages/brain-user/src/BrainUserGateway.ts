@@ -143,4 +143,3 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
     return response.data ?? null;
   }
 }
-

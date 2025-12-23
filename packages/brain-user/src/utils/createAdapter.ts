@@ -1,10 +1,8 @@
 import type {
   RequestAdapterConfig,
-  RequestAdapterInterface} from '@qlover/fe-corekit';
-import {
-  RequestAdapterFetch,
-  FetchURLPlugin
+  RequestAdapterInterface
 } from '@qlover/fe-corekit';
+import { RequestAdapterFetch, FetchURLPlugin } from '@qlover/fe-corekit';
 import { RequestCommonPlugin } from '@qlover/corekit-bridge/request-plugins';
 import type { BrainUserApiConfig } from '../BrainUserApi';
 import type { BrainUserStoreInterface } from '../interface/BrainUserStoreInterface';
@@ -152,4 +150,3 @@ export function createAdapter<
 
   return fetchAdapter as RequestAdapterInterface<RequestAdapterConfig>;
 }
-

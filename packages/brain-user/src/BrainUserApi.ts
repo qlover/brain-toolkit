@@ -13,8 +13,7 @@ import type {
   BrainCredentials,
   BrainGoogleCredentials
 } from './interface/BrainUserGatewayInterface';
-import type {
-  EndpointsType} from './config/EndPoints';
+import type { EndpointsType } from './config/EndPoints';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
   parseEndpoint
@@ -162,10 +161,9 @@ export class BrainUserApi<Config extends BrainUserApiConfig<unknown>> {
   ): Promise<
     RequestAdapterResponse<BrainUserGoogleRequest, BrainGoogleCredentials>
   > {
-    return this.adapter.request<
-      BrainUserGoogleRequest,
-      BrainGoogleCredentials
-    >(this.createConfig(this.getEndpoints().loginWithGoogle, params));
+    return this.adapter.request<BrainUserGoogleRequest, BrainGoogleCredentials>(
+      this.createConfig(this.getEndpoints().loginWithGoogle, params)
+    );
   }
 
   /**
@@ -222,10 +220,7 @@ export class BrainUserApi<Config extends BrainUserApiConfig<unknown>> {
   public getUserInfo(
     params?: BrainGetUserInfoRequest
   ): Promise<
-    RequestAdapterResponse<
-      BrainGetUserInfoRequest,
-      BrainGetUserInfoResponse
-    >
+    RequestAdapterResponse<BrainGetUserInfoRequest, BrainGetUserInfoResponse>
   > {
     const _config = this.createConfig(
       this.getEndpoints().getUserInfo
@@ -241,4 +236,3 @@ export class BrainUserApi<Config extends BrainUserApiConfig<unknown>> {
     );
   }
 }
-

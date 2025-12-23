@@ -18,12 +18,8 @@ import {
   ImagicaAuthService,
   type ImagicaAuthServiceConfig
 } from '../../src/imagica-auth/ImagicaAuthService';
-import type {
-  UserInfoResponseData
-} from '../../src/imagica-auth/ImagicaAuthApi';
-import {
-  ImagicaAuthApi
-} from '../../src/imagica-auth/ImagicaAuthApi';
+import type { UserInfoResponseData } from '../../src/imagica-auth/ImagicaAuthApi';
+import { ImagicaAuthApi } from '../../src/imagica-auth/ImagicaAuthApi';
 import { ImagicaAuthState } from '../../src/imagica-auth/ImagicaAuthState';
 import type { ExecutorPlugin } from '@qlover/fe-corekit';
 import {

@@ -310,4 +310,3 @@ export function createBrainUserStore<Tags extends readonly string[]>(
     ...(options as CreateBrainStoreOptions<Tags>)
   });
 }
-

@@ -266,4 +266,3 @@ export class UserProfile {
     this.profile.email_verified = verified;
   }
 }
-

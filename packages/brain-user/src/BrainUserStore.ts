@@ -2,9 +2,7 @@ import type {
   UserStateInterface,
   UserStoreOptions
 } from '@qlover/corekit-bridge/gateway-auth';
-import {
-  UserStore
-} from '@qlover/corekit-bridge/gateway-auth';
+import { UserStore } from '@qlover/corekit-bridge/gateway-auth';
 import type { BrainUser } from './types/BrainUserTypes';
 import type { BrainCredentials } from './interface/BrainUserGatewayInterface';
 import type { DynamicFeatureTags } from './FeatureTags';
@@ -96,4 +94,3 @@ export class BrainUserStore<Tags extends readonly string[]>
     return this.userProfileHandler;
   }
 }
-

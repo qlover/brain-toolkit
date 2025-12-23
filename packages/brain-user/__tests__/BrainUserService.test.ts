@@ -67,7 +67,9 @@ describe('BrainUserService', () => {
     it('should initialize store property', () => {
       const service = new BrainUserService(defaultOptions);
 
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
       expect(store).toBeDefined();
       expect(typeof store.getToken).toBe('function');
     });
@@ -83,7 +85,9 @@ describe('BrainUserService', () => {
     it('should return promise', async () => {
       const service = new BrainUserService(defaultOptions);
 
-      const result = service.loginWithGoogle({ authorization_code: 'google-token' });
+      const result = service.loginWithGoogle({
+        authorization_code: 'google-token'
+      });
 
       expect(result).toBeInstanceOf(Promise);
 
@@ -195,7 +199,9 @@ describe('BrainUserService', () => {
 
     it('should allow setting credentials in store', () => {
       const service = new BrainUserService(defaultOptions);
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
 
       store.setCredential({ token: 'test-token' });
 
@@ -204,7 +210,9 @@ describe('BrainUserService', () => {
 
     it('should allow accessing feature tags', () => {
       const service = new BrainUserService(defaultOptions);
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
 
       const featureTags = store.getFeatureTags();
 
@@ -214,7 +222,9 @@ describe('BrainUserService', () => {
 
     it('should allow accessing user profile', () => {
       const service = new BrainUserService(defaultOptions);
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
 
       const userProfile = store.getUserProfile();
 
@@ -224,7 +234,9 @@ describe('BrainUserService', () => {
 
     it('should persist store state across operations', () => {
       const service = new BrainUserService(defaultOptions);
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
 
       store.setCredential({ token: 'persistent-token' });
       const token1 = store.getToken();
@@ -340,7 +352,9 @@ describe('BrainUserService', () => {
 
     it('should support feature tag checking', () => {
       const service = new BrainUserService(defaultOptions);
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
 
       const featureTags = store.getFeatureTags();
       const tags = featureTags.getFeatureTags();
@@ -350,7 +364,9 @@ describe('BrainUserService', () => {
 
     it('should support user profile management', () => {
       const service = new BrainUserService(defaultOptions);
-      const store = service.getStore() as unknown as BrainUserStoreInterface<readonly string[]>;
+      const store = service.getStore() as unknown as BrainUserStoreInterface<
+        readonly string[]
+      >;
 
       const userProfile = store.getUserProfile();
       const profile = userProfile.getProfile();
@@ -412,7 +428,6 @@ describe('BrainUserService', () => {
 
       expect(service).toBeInstanceOf(BrainUserService);
     });
-
   });
 
   describe('inherited methods', () => {

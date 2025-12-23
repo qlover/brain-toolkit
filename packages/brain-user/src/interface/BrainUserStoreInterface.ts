@@ -12,4 +12,3 @@ export interface BrainUserStoreInterface<Tags extends readonly string[]>
 
   getUserProfile(): UserProfile;
 }
-

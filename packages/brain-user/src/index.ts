@@ -39,4 +39,3 @@ export * from './utils/caseConverter';
 export * from './utils/createAdapter';
 export * from './utils/createBrainUserStore';
 export * from './utils/createBrainUserOptions';
-

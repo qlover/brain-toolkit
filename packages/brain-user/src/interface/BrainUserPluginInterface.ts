@@ -24,4 +24,3 @@ export interface BrainUserPluginInterface
     context: BrainUserPluginContext<BrainUser, BrainUser>
   ): Promise<void> | void;
 }
-

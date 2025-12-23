@@ -520,7 +520,9 @@ describe('BrainUserApi', () => {
         getUserInfo: 'GET /api/v2/users/profile.json'
       };
 
-      const adapterWithCustomEndpoints: RequestAdapterInterface<BrainUserApiConfig<unknown>> = {
+      const adapterWithCustomEndpoints: RequestAdapterInterface<
+        BrainUserApiConfig<unknown>
+      > = {
         ...mockAdapter,
         config: {
           ...mockAdapter.config,
@@ -546,7 +548,9 @@ describe('BrainUserApi', () => {
         login: 'POST /api/v2/auth/token.json'
       };
 
-      const adapterWithCustomEndpoints: RequestAdapterInterface<BrainUserApiConfig<unknown>> = {
+      const adapterWithCustomEndpoints: RequestAdapterInterface<
+        BrainUserApiConfig<unknown>
+      > = {
         ...mockAdapter,
         config: {
           ...mockAdapter.config,
@@ -587,7 +591,9 @@ describe('BrainUserApi', () => {
         logout: 'POST /api/v2/users/signout'
       };
 
-      const adapterWithCustomEndpoints: RequestAdapterInterface<BrainUserApiConfig<unknown>> = {
+      const adapterWithCustomEndpoints: RequestAdapterInterface<
+        BrainUserApiConfig<unknown>
+      > = {
         ...mockAdapter,
         config: {
           ...mockAdapter.config,

@@ -26,8 +26,7 @@ export interface BrainUserGoogleRequest {
   metadata?: Record<string, unknown>;
 }
 
-export type BrainUserGoogleResponse =
-  BrainResponse<BrainGoogleCredentials>;
+export type BrainUserGoogleResponse = BrainResponse<BrainGoogleCredentials>;
 
 export interface BrainGatewayRequestMetadata {
   /**
@@ -114,4 +113,3 @@ export interface BrainUserGatewayInterface
     params?: Params | undefined
   ): Promise<BrainUser | null>;
 }
-
