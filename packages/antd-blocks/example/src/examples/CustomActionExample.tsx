@@ -62,7 +62,10 @@ export function CustomActionExample() {
   ];
 
   return (
-    <Card data-testid="CustomActionExample" title="Custom Action Example - Customized Action Column">
+    <Card
+      data-testid="CustomActionExample"
+      title="Custom Action Example - Customized Action Column"
+    >
       <ResourceTable
         columns={columns}
         tableEvent={tableEvent}

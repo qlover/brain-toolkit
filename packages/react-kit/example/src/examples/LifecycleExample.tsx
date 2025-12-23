@@ -102,7 +102,8 @@ function DestroyedExample() {
 
     return (
       <div
-        data-testid="ChildComponent" style={{
+        data-testid="ChildComponent"
+        style={{
           padding: '16px',
           background: '#e6f7ff',
           borderRadius: '4px',
@@ -141,7 +142,11 @@ function DestroyedExample() {
           </div>
         ) : (
           logs.map((log, index) => (
-            <div data-testid="DestroyedExample" key={index} className="log-item">
+            <div
+              data-testid="DestroyedExample"
+              key={index}
+              className="log-item"
+            >
               {log}
             </div>
           ))

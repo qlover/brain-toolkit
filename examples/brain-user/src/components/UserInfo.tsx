@@ -46,26 +46,38 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           }}
         >
           <div style={{ marginBottom: '12px' }}>
-            <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+            <strong
+              style={{ color: '#666', display: 'inline-block', width: '120px' }}
+            >
               ID:
             </strong>
             <span style={{ color: '#333' }}>{user.id}</span>
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+            <strong
+              style={{ color: '#666', display: 'inline-block', width: '120px' }}
+            >
               Name:
             </strong>
             <span style={{ color: '#333' }}>{user.name}</span>
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+            <strong
+              style={{ color: '#666', display: 'inline-block', width: '120px' }}
+            >
               Email:
             </strong>
             <span style={{ color: '#333' }}>{user.email}</span>
           </div>
           {user.first_name && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 First Name:
               </strong>
               <span style={{ color: '#333' }}>{user.first_name}</span>
@@ -73,7 +85,13 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           )}
           {user.last_name && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 Last Name:
               </strong>
               <span style={{ color: '#333' }}>{user.last_name}</span>
@@ -81,7 +99,13 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           )}
           {user.profile?.phone_number && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 Phone:
               </strong>
               <span style={{ color: '#333' }}>{user.profile.phone_number}</span>
@@ -89,7 +113,13 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           )}
           {user.profile?.da_email && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 DA Email:
               </strong>
               <span style={{ color: '#333' }}>{user.profile.da_email}</span>
@@ -97,17 +127,33 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           )}
           {user.profile?.email_verified !== undefined && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 Email Verified:
               </strong>
-              <span style={{ color: user.profile.email_verified ? '#52c41a' : '#ff4d4f' }}>
+              <span
+                style={{
+                  color: user.profile.email_verified ? '#52c41a' : '#ff4d4f'
+                }}
+              >
                 {user.profile.email_verified ? 'Yes' : 'No'}
               </span>
             </div>
           )}
           {user.roles && user.roles.length > 0 && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 Roles:
               </strong>
               <span style={{ color: '#333' }}>{user.roles.join(', ')}</span>
@@ -115,7 +161,13 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           )}
           {user.is_superuser && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 Superuser:
               </strong>
               <span style={{ color: '#52c41a' }}>Yes</span>
@@ -123,7 +175,13 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
           )}
           {user.created_at && (
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#666', display: 'inline-block', width: '120px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '120px'
+                }}
+              >
                 Created At:
               </strong>
               <span style={{ color: '#333' }}>
@@ -156,4 +214,3 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
     </div>
   );
 }
-

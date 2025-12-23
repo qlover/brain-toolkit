@@ -52,7 +52,11 @@ export function NoActionExample() {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-      render: (email: string) => <a data-testid="columns" href={`mailto:${email}`}>{email}</a>
+      render: (email: string) => (
+        <a data-testid="columns" href={`mailto:${email}`}>
+          {email}
+        </a>
+      )
     }),
     createColumn<User>({
       title: 'Role',
@@ -65,7 +69,10 @@ export function NoActionExample() {
           guest: 'default'
         };
         return (
-          <Tag data-testid="columns" color={colorMap[role as keyof typeof colorMap]}>
+          <Tag
+            data-testid="columns"
+            color={colorMap[role as keyof typeof colorMap]}
+          >
             {role.toUpperCase()}
           </Tag>
         );
@@ -80,7 +87,10 @@ export function NoActionExample() {
   ];
 
   return (
-    <Card data-testid="NoActionExample" title="No Action Example - Read-Only Table">
+    <Card
+      data-testid="NoActionExample"
+      title="No Action Example - Read-Only Table"
+    >
       <ResourceTable
         columns={columns}
         tableEvent={tableEvent}

@@ -1,4 +1,3 @@
- 
 import { render, screen } from '@testing-library/react';
 import { ResourceTable } from '../../../src/resourceTable/ResourceTable';
 import type { ResourceTableEventInterface } from '../../../src';
