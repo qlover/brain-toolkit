@@ -4,7 +4,7 @@ This is a simple Vite + React example project demonstrating how to use `@brain-t
 
 ## 🌐 Online Demo
 
-[Live Demo on Vercel](https://brain-user-example.vercel.app)
+[Live Demo on Vercel](https://brain-toolkit-brain-user.vercel.app/)
 
 ## Features
 

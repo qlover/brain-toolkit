@@ -6,7 +6,7 @@ Brain User Service - 完整的用户认证和管理库，适用于 Brain 平台
 
 ## 🌐 在线演示
 
-[查看在线示例](https://brain-user-example.vercel.app) - 基于 Vite + React 的完整示例项目
+[查看在线示例](https://brain-toolkit-brain-user.vercel.app/) - 基于 Vite + React 的完整示例项目
 
 ## 目录
 

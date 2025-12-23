@@ -21,7 +21,10 @@ export default defineConfig([
     silent: true,
     bundle: false,
     outExtension: () => ({ js: '.cjs' }),
-    outDir: 'dist'
+    outDir: 'dist',
+    esbuildOptions(options) {
+      options.drop = ['console'];
+    }
   },
   // Main entry: ESM format with TypeScript declarations
   {
@@ -38,7 +41,10 @@ export default defineConfig([
     minify: false,
     silent: true,
     outDir: 'dist',
-    external
+    external,
+    esbuildOptions(options) {
+      options.drop = ['console'];
+    }
   },
   // Main entry: IIFE format for CDN usage
   {
@@ -49,7 +55,10 @@ export default defineConfig([
     silent: true,
     globalName: pkgName,
     outExtension: () => ({ js: '.iife.js' }),
-    outDir: 'dist'
+    outDir: 'dist',
+    esbuildOptions(options) {
+      options.drop = ['console'];
+    }
   },
   {
     entry: ['src/index.ts'],
@@ -58,6 +67,9 @@ export default defineConfig([
     minify: true,
     globalName: pkgName,
     outExtension: () => ({ js: '.min.iife.js' }),
-    outDir: 'dist'
+    outDir: 'dist',
+    esbuildOptions(options) {
+      options.drop = ['console'];
+    }
   }
 ]);

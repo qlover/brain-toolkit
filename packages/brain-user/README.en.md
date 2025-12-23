@@ -4,7 +4,7 @@ Brain User Service - Complete user authentication and management library for Bra
 
 ## 🌐 Online Demo
 
-[View Online Example](https://brain-user-example.vercel.app) - Complete example project built with Vite + React
+[View Online Example](https://brain-toolkit-brain-user.vercel.app/) - Complete example project built with Vite + React
 
 ## Table of Contents
 
