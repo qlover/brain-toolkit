@@ -57,7 +57,7 @@ function LoginForm() {
           authorization_code: tokenResponse.code
         });
 
-        if (!brainCredentials.token) {
+        if (!brainCredentials?.token) {
           throw new Error('Google login failed');
         }
 

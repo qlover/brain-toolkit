@@ -1,4 +1,4 @@
-﻿/**
+/**
  * BrainUserService test-suite
  *
  * Coverage:
@@ -41,6 +41,7 @@ describe('BrainUserService', () => {
       });
 
       expect(service).toBeInstanceOf(BrainUserService);
+      expect(service.serviceName).toBe('custom-user-service');
     });
 
     it('should create service with custom store options', () => {
@@ -72,6 +73,22 @@ describe('BrainUserService', () => {
       >;
       expect(store).toBeDefined();
       expect(typeof store.getToken).toBe('function');
+    });
+
+    it('should initialize members and methods', () => {
+      const service = new BrainUserService(defaultOptions);
+      expect(service.serviceName).toBe('brainUserService');
+      expect(service.getCredential).instanceOf(Function);
+      expect(service.gateway).toBeDefined();
+      expect(service.getStore).instanceOf(Function);
+      expect(service.logger).not.toBeDefined();
+      expect(service.use).instanceOf(Function);
+
+      // protecte property
+      expect(service['gateway']).toBeDefined();
+      expect(service['logger']).toBeUndefined();
+      expect(service.getStore()).toBeDefined();
+      expect(service['executor']).toBeUndefined();
     });
   });
 
@@ -271,12 +288,7 @@ describe('BrainUserService', () => {
     });
 
     it('should support custom config type', () => {
-      interface CustomConfig
-        extends BrainUserServiceOptions<readonly string[]> {
-        customField?: string;
-      }
-
-      const service = new BrainUserService<readonly string[], CustomConfig>({
+      const service = new BrainUserService<readonly string[]>({
         env: 'development',
         customField: 'custom-value'
       });
@@ -431,22 +443,10 @@ describe('BrainUserService', () => {
   });
 
   describe('inherited methods', () => {
-    it('should have execute method', () => {
-      const service = new BrainUserService(defaultOptions);
-
-      expect(typeof service.execute).toBe('function');
-    });
-
     it('should have getStore method', () => {
       const service = new BrainUserService(defaultOptions);
 
       expect(typeof service.getStore).toBe('function');
-    });
-
-    it('should have getGateway method', () => {
-      const service = new BrainUserService(defaultOptions);
-
-      expect(typeof service.getGateway).toBe('function');
     });
   });
 });

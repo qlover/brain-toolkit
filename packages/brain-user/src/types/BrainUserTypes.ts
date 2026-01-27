@@ -1,6 +1,4 @@
-import type { BrainGoogleCredentials } from '../interface/BrainUserGatewayInterface';
-
-export interface BrainCredentials extends BrainGoogleCredentials {}
+import type { BrainCredentials } from '../interface/BrainUserGatewayInterface';
 
 export interface BrainUserPermissions {
   key?: string;

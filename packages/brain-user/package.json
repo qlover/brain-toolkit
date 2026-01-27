@@ -44,7 +44,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@qlover/corekit-bridge": "^1.9.0",
-    "@qlover/fe-corekit": "^2.4.0"
+    "@qlover/corekit-bridge": "file:D:\\qrj\\workspace\\fe-base\\packages\\corekit-bridge",
+    "@qlover/fe-corekit": "file:D:\\qrj\\workspace\\fe-base\\packages\\fe-corekit",
+    "@qlover/logger": "^1.0.0",
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12"
   }
 }

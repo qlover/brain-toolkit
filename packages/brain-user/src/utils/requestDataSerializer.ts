@@ -1,15 +1,19 @@
-import type { ExecutorContext, RequestAdapterConfig } from '@qlover/fe-corekit';
+import type {
+  RequestAdapterConfig,
+  RequestPluginConfig
+} from '@qlover/fe-corekit';
 
 export const requestDataSerializer = (
   data: unknown,
-  context: ExecutorContext<RequestAdapterConfig<unknown>>
+  config: RequestAdapterConfig &
+    Omit<RequestPluginConfig, 'requestDataSerializer'>
 ) => {
   if (data instanceof FormData) {
     return data;
   }
 
   if (
-    context.parameters?.responseType === 'json' &&
+    config.responseType === 'json' &&
     typeof data === 'object' &&
     data != null
   ) {

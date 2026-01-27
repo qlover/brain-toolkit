@@ -1,4 +1,4 @@
-import type { UserStoreInterface } from '@qlover/corekit-bridge/gateway-auth';
+import type { UserStoreInterface } from '@qlover/corekit-bridge/gateway-service';
 import type { BrainUser } from '../types/BrainUserTypes';
 import type { BrainCredentials } from './BrainUserGatewayInterface';
 import type { DynamicFeatureTags } from '../FeatureTags';

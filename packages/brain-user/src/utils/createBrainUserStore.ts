@@ -1,4 +1,4 @@
-import { isUserStoreInterface } from '@qlover/corekit-bridge/gateway-auth';
+import { isUserStoreInterface } from '@qlover/corekit-bridge/gateway-service';
 import type { BrainUserStoreOptions } from '../BrainUserStore';
 import { BrainUserStore } from '../BrainUserStore';
 import { defaultBrainStoreOptions } from '../config/common';

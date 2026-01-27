@@ -1,4 +1,7 @@
 import { requestDataSerializer } from '../utils/requestDataSerializer';
+import type { BrainUserServiceOptions } from '../BrainUserService';
+import type { BrainUserStoreOptions } from '../BrainUserStore';
+import { GATEWAY_BRAIN_USER_ENDPOINTS } from './EndPoints';
 
 export const BRAIN_DOMAINS = Object.freeze({
   development:
@@ -14,19 +17,26 @@ export const defaultServiceName = 'brainUserService';
 
 export const defaultEnv = 'development';
 
-export const defaultBrainStoreOptions = {
+export const defaultBrainStoreOptions: BrainUserStoreOptions<
+  readonly string[]
+> = {
   persistUserInfo: false,
   storageKey: BRAIN_STORAGE_PROFILE_KEY,
   credentialStorageKey: BRAIN_STORAGE_CREDENTIAL_KEY
-} as const;
+};
 
-export const defaultBrainUserOptions = {
+export const defaultBrainUserOptions: BrainUserServiceOptions<
+  readonly string[]
+> = {
   env: defaultEnv,
   domains: BRAIN_DOMAINS,
+  endpoints: GATEWAY_BRAIN_USER_ENDPOINTS,
   serviceName: defaultServiceName,
   responseType: 'json',
+  headers: {
+    'Content-Type': 'application/json'
+  },
   tokenPrefix: 'token',
   authKey: 'Authorization',
-  requiredToken: true,
   requestDataSerializer: requestDataSerializer
-} as const;
+};

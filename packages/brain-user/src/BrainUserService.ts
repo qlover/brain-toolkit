@@ -1,17 +1,61 @@
-import type { UserServiceConfig } from '@qlover/corekit-bridge/gateway-auth';
-import { UserService } from '@qlover/corekit-bridge/gateway-auth';
-import type { BrainCredentials, BrainUser } from './types/BrainUserTypes';
+import type { BrainUser } from './types/BrainUserTypes';
 import type {
+  BrainCredentials,
   BrainGoogleCredentials,
   BrainUserGatewayInterface,
-  BrainUserGoogleRequest
+  BrainUserGoogleRequest,
+  BrainUserRegisterRequest,
+  BrainLoginRequest
 } from './interface/BrainUserGatewayInterface';
-import type { BrainUserApiConfig } from './BrainUserApi';
+import type { BrainUserGatewayConfig } from './interface/BrainUserGatewayInterface';
 import { createBrainUserOptions } from './utils/createBrainUserOptions';
 import type { CreateBrainStoreOptions } from './utils/createBrainUserStore';
-import type { RequestAdapterInterface } from '@qlover/fe-corekit';
+import type {
+  ExecutorContextInterface,
+  ExecutorInterface,
+  LifecyclePluginInterface,
+  RequestAdapterInterface
+} from '@qlover/fe-corekit';
 import type { BrainUserStoreInterface } from './interface/BrainUserStoreInterface';
+import type {
+  LoginParams,
+  UserServiceConfig
+} from '@qlover/corekit-bridge/gateway-service';
+import { UserService } from '@qlover/corekit-bridge/gateway-service';
 import type { BrainUserStore } from './BrainUserStore';
+import { omit } from 'lodash-es';
+import type { LoggerInterface } from '@qlover/logger';
+import { isBrainCredentials, isBrainUser } from './utils/typeGuard';
+
+export interface BrainUserContextOptions<
+  Tags extends readonly string[],
+  T = unknown
+> extends BrainUserGatewayConfig<T> {
+  serviceName: string | symbol;
+  gateway?: BrainUserGatewayInterface;
+  logger?: LoggerInterface;
+  store: BrainUserStore<Tags>;
+  actionName: string;
+
+  requestParams?: T;
+  requestConfig?: BrainUserGatewayConfig<T>;
+}
+
+const pickProps = [
+  'serviceName',
+  'gateway',
+  'logger',
+  'store',
+  'requestParams',
+  'requestConfig'
+];
+
+export type BrainUserContext<Tags extends readonly string[]> =
+  ExecutorContextInterface<BrainUserContextOptions<Tags>>;
+
+export interface BrainUserPlugin<
+  Tags extends readonly string[] = readonly string[]
+> extends LifecyclePluginInterface<BrainUserContext<Tags>> {}
 
 /**
  * Configuration options for BrainUserService
@@ -24,9 +68,9 @@ import type { BrainUserStore } from './BrainUserStore';
  */
 export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
   UserServiceConfig<BrainUser, BrainCredentials>,
-  'store'
+  'store' | 'gateway'
 > &
-  BrainUserApiConfig<unknown> & {
+  BrainUserGatewayConfig<unknown> & {
     /**
      * User store configuration
      *
@@ -36,11 +80,11 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
     store?: BrainUserStoreInterface<Tags> | CreateBrainStoreOptions<Tags>;
 
     /**
-     * Custom request adapter for HTTP communication
+     * Executor for async operations
      *
-     * @default `new RequestAdapterFetch(options)`
+     * @since 1.0.0
      */
-    requestAdapter?: RequestAdapterInterface<BrainUserApiConfig<unknown>>;
+    executor?: ExecutorInterface<BrainUserPlugin<Tags>>;
   };
 
 /**
@@ -296,7 +340,7 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  * });
  *
  * // 3. Get user information
- * const user = await service.getUserInfo();
+ * const user = await service.refreshUserInfo();
  *
  * // 4. Check permissions
  * if (service.store.featureTags.hasGenUI()) {
@@ -311,7 +355,7 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  *
  * ```ts
  * const service = new BrainUserService({ env: 'production' });
- *
+
  * // Register new user
  * const user = await service.register({
  *   email: 'user@example.com',
@@ -328,10 +372,10 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  *
  * ```ts
  * const service = new BrainUserService({ env: 'production' });
- *
+
  * // Refresh user info from server
  * const updatedUser = await service.refreshUserInfo();
- *
+
  * // Access updated profile
  * const email = service.store.userProfile.getDaEmail();
  * const isVerified = service.store.userProfile.isEmailVerified();
@@ -344,10 +388,10 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  *   env: 'production',
  *   store: { persistUserInfo: true }
  * });
- *
+
  * // Get user from store (works after page reload if persisted)
  * const user = service.store.getUserMe();
- *
+
  * if (user) {
  *   console.log('User is logged in:', user.email);
  * } else {
@@ -358,13 +402,22 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  * @template Tags - Array of feature tag strings for type-safe feature checking
  * @template Config - Service configuration type extending BrainUserServiceOptions
  */
-export class BrainUserService<
-    Tags extends readonly string[],
-    Config extends BrainUserServiceOptions<Tags> = BrainUserServiceOptions<Tags>
+export class BrainUserService<Tags extends readonly string[]>
+  extends UserService<
+    BrainUser,
+    BrainCredentials,
+    BrainUserGatewayConfig<unknown>
   >
-  extends UserService<BrainUser, BrainCredentials, string>
   implements BrainUserGatewayInterface
 {
+  protected readonly executor?: ExecutorInterface<BrainUserPlugin<Tags>>;
+
+  protected readonly adapter: RequestAdapterInterface<
+    BrainUserGatewayConfig<unknown>
+  >;
+
+  declare public getStore: () => BrainUserStore<Tags>;
+
   /**
    * Constructor for BrainUserService
    *
@@ -375,76 +428,48 @@ export class BrainUserService<
    *
    * @param options - Service configuration options
    */
-  constructor(options: Config) {
-    super(createBrainUserOptions(options));
+  constructor(options?: BrainUserServiceOptions<Tags>) {
+    const { executor, requestAdapter, gateway, ...restOptions } =
+      createBrainUserOptions(options);
+
+    super(gateway!, restOptions);
+
+    this.executor = executor;
+    this.adapter = requestAdapter!;
   }
 
-  /**
-   * Get the user store instance
-   *
-   * Significance: Access point for user state management
-   * Core idea: Provide type-safe access to BrainUserStore with feature tags
-   * Main function: Return the store instance with proper type casting
-   * Main purpose: Enable direct store access for advanced state management
-   *
-   * @returns BrainUserStore instance with type-safe feature tags support
-   *
-   * @example
-   * ```ts
-   * const service = new BrainUserService({ env: 'production' });
-   * const store = service.getStore();
-   *
-   * // Access user data
-   * const user = store.getUserMe();
-   * const token = store.getToken();
-   *
-   * // Access feature tags
-   * const hasGenUI = store.featureTags.hasGenUI();
-   *
-   * // Access user profile
-   * const email = store.userProfile.getDaEmail();
-   * ```
-   */
-  public getStore(): BrainUserStore<Tags> {
-    return super.getStore() as BrainUserStore<Tags>;
+  public override get gateway(): BrainUserGatewayInterface {
+    return super.gateway as BrainUserGatewayInterface;
   }
 
-  /**
-   * Inherited Methods from UserService
-   *
-   * The following methods are inherited from UserService base class and are available
-   * on BrainUserService instances. They use the execute() method to call corresponding
-   * methods on the BrainUserGateway.
-   *
-   * ### Available Methods:
-   *
-   * - `register(params: BrainUserRegisterRequest): Promise<BrainUser | null>`
-   *   - Register a new user account
-   *   - Automatically logs in the user after successful registration
-   *
-   * - `login(params: BrainLoginRequest): Promise<BrainCredentials | null>`
-   *   - Login with email and password
-   *   - Returns credentials with authentication token
-   *
-   * - `getUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>`
-   *   - Get current user information
-   *   - Uses stored token if params.token is not provided
-   *
-   * - `refreshUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>`
-   *   - Refresh user information from server
-   *   - Updates store with latest user data
-   *
-   * - `logout(params?: unknown): Promise<void>`
-   *   - Logout current user
-   *   - Clears credentials and user data from store
-   *
-   * - `getCredential(): BrainCredentials | null`
-   *   - Get current authentication credentials
-   *   - Returns null if user is not logged in
-   *
-   * @see UserService for base implementation details
-   * @see BrainUserGatewayInterface for method signatures
-   */
+  public getExecutor(): ExecutorInterface<BrainUserPlugin<Tags>> | undefined {
+    return this.executor;
+  }
+
+  public use(plugin: BrainUserPlugin<Tags>): this {
+    if (!this.executor) {
+      throw new Error(`${String(this.serviceName)} executor is not set`);
+    }
+
+    this.executor.use(plugin);
+
+    return this;
+  }
+
+  protected createOptions<T>(
+    action: string,
+    params?: T,
+    config?: BrainUserGatewayConfig<T>
+  ): BrainUserContextOptions<Tags, T> {
+    return {
+      serviceName: this.serviceName,
+      store: this.getStore() as BrainUserStore<Tags>,
+      logger: this.logger,
+      actionName: action,
+      requestParams: params,
+      requestConfig: config
+    };
+  }
 
   /**
    * Login with Google
@@ -528,7 +553,141 @@ export class BrainUserService<
    */
   public loginWithGoogle(
     params: BrainUserGoogleRequest
-  ): Promise<BrainGoogleCredentials> {
-    return this.execute('loginWithGoogle', params);
+  ): Promise<BrainGoogleCredentials | null> {
+    if (this.executor) {
+      return this.executor.exec(
+        this.createOptions('loginWithGoogle', params),
+        (ctx) =>
+          this.gateway!.loginWithGoogle(
+            omit(ctx.parameters, pickProps) as BrainUserGoogleRequest
+          )
+      );
+    }
+
+    return this.gateway.loginWithGoogle(params);
+  }
+
+  /**
+   * Register a new user
+   *
+   * @override
+   * @param params - User registration request parameters
+   * @returns Promise resolving to the registered user or null
+   */
+  public register<Params = BrainUserRegisterRequest>(
+    params: Params
+  ): Promise<BrainUser | null> {
+    if (this.executor) {
+      return this.executor.exec(this.createOptions('register', params), (ctx) =>
+        super.register(
+          ctx.parameters.requestParams,
+          omit(ctx.parameters, pickProps)
+        )
+      );
+    }
+
+    return super.register(params);
+  }
+
+  /**
+   * Login with email and password
+   *
+   * @override
+   * @param params - User login request parameters
+   * @returns Promise resolving to user credentials or null
+   */
+  public login(
+    params: LoginParams &
+      BrainUserGatewayConfig<unknown> &
+      Pick<BrainLoginRequest, 'metadata'>
+  ): Promise<BrainCredentials | null> {
+    if (this.executor) {
+      return this.executor.exec(this.createOptions('login', params), (ctx) =>
+        super.login(
+          ctx.parameters.requestParams!,
+          omit(ctx.parameters, pickProps)
+        )
+      );
+    }
+
+    return super.login(params);
+  }
+
+  /**
+   * Logout the current user
+   *
+   * @override
+   * @param params - Optional logout parameters
+   * @returns Promise resolving to the logout result
+   */
+  public logout<R = unknown>(params?: unknown): Promise<R> {
+    if (this.executor) {
+      return this.executor.exec(this.createOptions('logout', params), (ctx) =>
+        super.logout(
+          ctx.parameters.requestParams,
+          omit(ctx.parameters, pickProps)
+        )
+      );
+    }
+
+    return super.logout(params);
+  }
+
+  /**
+   * Get current user information
+   *
+   * @override
+   * @param params - Optional parameters for getting user info
+   * @returns Promise resolving to the current user or null
+   */
+  public getUserInfo<Params = BrainCredentials>(
+    params?: Params
+  ): Promise<BrainUser | null> {
+    if (this.executor) {
+      return this.executor.exec(
+        this.createOptions('getUserInfo', params),
+        (ctx) =>
+          super.getUserInfo(
+            ctx.parameters.requestParams!,
+            omit(ctx.parameters, pickProps)
+          )
+      );
+    }
+
+    return super.getUserInfo(params);
+  }
+
+  /**
+   * Refresh current user information from server
+   *
+   * @override
+   * @param params - Optional parameters for refreshing user info
+   * @returns Promise resolving to the refreshed user data or null
+   */
+  public refreshUserInfo<Params = BrainCredentials>(
+    params?: Params
+  ): Promise<BrainUser | null> {
+    if (this.executor) {
+      return this.executor.exec(
+        this.createOptions('refreshUserInfo', params),
+        (ctx) =>
+          super.refreshUserInfo(
+            ctx.parameters.requestParams,
+            omit(ctx.parameters, pickProps)
+          )
+      );
+    }
+
+    return super.refreshUserInfo(params);
+  }
+
+  public override isCredential(
+    credentials: unknown
+  ): credentials is BrainCredentials {
+    return isBrainCredentials(credentials);
+  }
+
+  public override isUser(user: unknown): user is BrainUser {
+    return isBrainUser(user);
   }
 }

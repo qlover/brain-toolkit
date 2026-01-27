@@ -1,14 +1,22 @@
+import type { BrainGatewayEndpointMethod } from './config/EndPoints';
 import type {
   BrainUserGoogleRequest,
   BrainUserGatewayInterface,
   BrainUserRegisterRequest,
   BrainLoginRequest,
-  BrainGetUserInfoRequest,
   BrainCredentials,
-  BrainGoogleCredentials
+  BrainGoogleCredentials,
+  BrainUserGatewayConfig
 } from './interface/BrainUserGatewayInterface';
 import type { BrainUser } from './types/BrainUserTypes';
-import type { BrainUserApi, BrainUserApiConfig } from './BrainUserApi';
+import {
+  RequestPlugin,
+  ResponsePlugin,
+  type RequestAdapterConfig,
+  type RequestAdapterInterface,
+  type RequestAdapterResponse
+} from '@qlover/fe-corekit';
+import { getEndpotionResult } from './utils/getEndpotions';
 
 /**
  * Brain User Gateway - Business logic layer for user operations
@@ -37,9 +45,77 @@ import type { BrainUserApi, BrainUserApiConfig } from './BrainUserApi';
  * ```
  */
 export class BrainUserGateway implements BrainUserGatewayInterface {
+  protected readonly requestPlugin: RequestPlugin;
+  protected readonly responsePlugin: ResponsePlugin;
   constructor(
-    protected brainUserApi: BrainUserApi<BrainUserApiConfig<unknown>>
-  ) {}
+    protected adapter: RequestAdapterInterface<BrainUserGatewayConfig<unknown>>
+  ) {
+    this.requestPlugin = new RequestPlugin();
+    this.responsePlugin = new ResponsePlugin();
+  }
+
+  public getAdapter(): RequestAdapterInterface<
+    BrainUserGatewayConfig<unknown>
+  > {
+    return this.adapter;
+  }
+
+  public setAdapter(
+    adapter: RequestAdapterInterface<BrainUserGatewayConfig<unknown>>
+  ): void {
+    this.adapter = adapter;
+  }
+
+  protected getEndpotion(
+    action: string,
+    config?: BrainUserGatewayConfig<unknown>
+  ):
+    | {
+        method: BrainGatewayEndpointMethod;
+        url: string;
+      }
+    | undefined {
+    return getEndpotionResult(
+      action,
+      config?.endpoints,
+      this.adapter.config.endpoints
+    );
+  }
+
+  protected handleConfig<T>(
+    action: string,
+    params: T,
+    config?: BrainUserGatewayConfig<T>
+  ): BrainUserGatewayConfig<T> {
+    const newConfig = this.requestPlugin.mergeConfig({
+      ...this.adapter.config,
+      ...config,
+      data: params
+    }) as BrainUserGatewayConfig<T>;
+
+    if (!(newConfig.url && newConfig.method)) {
+      return Object.assign(newConfig, this.getEndpotion(action, newConfig));
+    }
+
+    return newConfig;
+  }
+
+  protected async handleResponse<R>(
+    response: RequestAdapterResponse<unknown, unknown>,
+    config?: BrainUserGatewayConfig<unknown>
+  ): Promise<R> {
+    const result = await this.responsePlugin.handleResponse(
+      response,
+      config as RequestAdapterConfig
+    );
+
+    // When there is no result, we return origin response
+    if (!result) {
+      return response.data as R;
+    }
+
+    return result.data as R;
+  }
 
   /**
    * Login with Google
@@ -71,12 +147,15 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * });
    * ```
    */
-  public async loginWithGoogle(
-    params: BrainUserGoogleRequest
+  public loginWithGoogle(
+    params: BrainUserGoogleRequest,
+    config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
   ): Promise<BrainGoogleCredentials> {
-    const response = await this.brainUserApi.loginWithGoogle(params);
-
-    return response.data;
+    return this.adapter
+      .request(this.handleConfig('loginWithGoogle', params, config))
+      .then((response) => {
+        return this.handleResponse(response, response.config);
+      });
   }
 
   /**
@@ -108,12 +187,18 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * }
    * ```
    */
-  public async login(
-    params: BrainLoginRequest
+  public login(
+    params: BrainLoginRequest,
+    config?: BrainUserGatewayConfig<BrainLoginRequest>
   ): Promise<BrainCredentials | null> {
-    const response = await this.brainUserApi.login(params);
-
-    return response.data ?? null;
+    return this.adapter
+      .request<
+        BrainLoginRequest,
+        BrainCredentials
+      >(this.handleConfig('login', params, config))
+      .then((response) => {
+        return this.handleResponse(response, response.config);
+      });
   }
 
   /**
@@ -137,11 +222,14 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * ```
    */
   public async logout<Parmas = unknown, Result = void>(
-    _params?: Parmas
+    params?: Parmas,
+    config?: BrainUserGatewayConfig<Parmas>
   ): Promise<Result> {
-    await this.brainUserApi.logout();
-
-    return undefined as Result;
+    return this.adapter
+      .request(this.handleConfig('logout', params, config))
+      .then((response) => {
+        return this.handleResponse(response, response.config);
+      });
   }
 
   /**
@@ -179,11 +267,14 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * ```
    */
   public async register(
-    params: BrainUserRegisterRequest
+    params: BrainUserRegisterRequest,
+    config?: BrainUserGatewayConfig<BrainUserRegisterRequest>
   ): Promise<BrainCredentials & BrainUser> {
-    const response = await this.brainUserApi.register(params);
-
-    return response.data ?? null;
+    return this.adapter
+      .request(this.handleConfig('register', params, config))
+      .then((response) => {
+        return this.handleResponse(response, response.config);
+      });
   }
 
   /**
@@ -197,7 +288,7 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * This api is used to get the user info.
    *
    * @override
-   * @param params - Get user info parameters (optional, defaults to empty object)
+   * @param data - Get user info parameters (optional, defaults to empty object)
    * @param params.token - Optional authentication token (if not provided, uses token from store)
    * @returns Promise resolving to user data with credentials, or null if not found
    *
@@ -211,11 +302,19 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * ```
    */
   public async getUserInfo(
-    params: BrainGetUserInfoRequest = {}
+    data?: BrainCredentials,
+    config?: BrainUserGatewayConfig<BrainCredentials>
   ): Promise<BrainCredentials & BrainUser> {
-    const response = await this.brainUserApi.getUserInfo(params);
-
-    return response.data ?? null;
+    return this.adapter
+      .request(
+        this.handleConfig('getUserInfo', null, {
+          ...config,
+          token: data?.token ?? config?.token
+        })
+      )
+      .then((response) => {
+        return this.handleResponse(response, response.config);
+      });
   }
 
   /**
@@ -242,11 +341,10 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * const updatedUser = await gateway.refreshUserInfo({ token: 'auth-token' });
    * ```
    */
-  public async refreshUserInfo<Params = BrainGetUserInfoRequest>(
-    params?: Params | BrainGetUserInfoRequest
+  public async refreshUserInfo<Params extends BrainCredentials>(
+    params?: Params,
+    config?: BrainUserGatewayConfig<Params>
   ): Promise<BrainCredentials & BrainUser> {
-    const response = await this.brainUserApi.getUserInfo(params ?? {});
-
-    return response.data ?? null;
+    return this.getUserInfo(params, config);
   }
 }

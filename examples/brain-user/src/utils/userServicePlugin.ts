@@ -1,9 +1,4 @@
-import type {
-  BrainUserPluginInterface,
-  BrainUserPluginContext,
-  BrainCredentials,
-  BrainUser
-} from '@brain-toolkit/brain-user';
+import type { BrainUserPlugin } from '@brain-toolkit/brain-user';
 
 /**
  * User service plugin for handling loading state during user info refresh
@@ -19,23 +14,27 @@ import type {
  *   .use(userServicePlugin);
  * ```
  */
-export const userServicePlugin: BrainUserPluginInterface = {
+export const userServicePlugin: BrainUserPlugin = {
   pluginName: 'brainUserServicePlugin',
 
-  onRefreshUserInfoBefore(
-    context: BrainUserPluginContext<BrainUser, BrainCredentials>
-  ) {
-    context.parameters.store.updateState({
-      loading: true
-    });
-  },
-
-  onRefreshUserInfoSuccess(
-    context: BrainUserPluginContext<BrainUser, BrainCredentials>
-  ) {
-    context.parameters.store.updateState({
-      loading: false
-    });
+  onBefore(ctx): void {
+    console.log('onBefore', ctx);
   }
-};
 
+  // TODO: 需要实现
+  // onRefreshUserInfoBefore(
+  //   context: BrainUserPluginContext<BrainUser, BrainCredentials>
+  // ) {
+  //   context.parameters.store.updateState({
+  //     loading: true
+  //   });
+  // },
+
+  // onRefreshUserInfoSuccess(
+  //   context: BrainUserPluginContext<BrainUser, BrainCredentials>
+  // ) {
+  //   context.parameters.store.updateState({
+  //     loading: false
+  //   });
+  // }
+};

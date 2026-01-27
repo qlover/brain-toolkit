@@ -1,21 +1,20 @@
-import type { UserServiceConfig } from '@qlover/corekit-bridge/gateway-auth';
-import type { BrainUserServiceOptions } from '../BrainUserService';
-import type { BrainCredentials, BrainUser } from '../types/BrainUserTypes';
+import type {
+  BrainUserPlugin,
+  BrainUserServiceOptions
+} from '../BrainUserService';
 import {
   defaultBrainStoreOptions,
   defaultBrainUserOptions
 } from '../config/common';
 import { BrainUserGateway } from '../BrainUserGateway';
-import type { BrainUserApiConfig } from '../BrainUserApi';
-import { BrainUserApi } from '../BrainUserApi';
 import { createAdapter } from './createAdapter';
 import type { CreateBrainStoreOptions } from './createBrainUserStore';
 import {
   createBrainUserStore,
   isBrainUserStoreInterface
 } from './createBrainUserStore';
-import type { BrainUserStore } from '../BrainUserStore';
-import type { BrainUserStoreInterface } from '../interface/BrainUserStoreInterface';
+import type { BrainUserGatewayConfig } from '../interface/BrainUserGatewayInterface';
+import type { ExecutorInterface } from '@qlover/fe-corekit';
 
 /**
  * Create BrainUserService configuration options
@@ -42,24 +41,11 @@ import type { BrainUserStoreInterface } from '../interface/BrainUserStoreInterfa
  */
 export function createBrainUserOptions<Tags extends readonly string[]>(
   options?: BrainUserServiceOptions<Tags>
-): Omit<UserServiceConfig<BrainUser, BrainCredentials>, 'store'> & {
-  store: BrainUserStoreInterface<Tags>;
-} {
-  // merge options
-  const mergedOptions = {
+) {
+  const { serviceName, store, logger, executor, ...requestConfig } = {
     ...defaultBrainUserOptions,
     ...options
   };
-
-  const {
-    executor,
-    logger,
-    serviceName,
-    gateway,
-    store,
-    requestAdapter,
-    ...resetOptions
-  } = mergedOptions;
 
   // merge store options
   const storeOptions = isBrainUserStoreInterface(store)
@@ -73,24 +59,17 @@ export function createBrainUserOptions<Tags extends readonly string[]>(
     storeOptions as CreateBrainStoreOptions<Tags>
   );
 
-  // TODO: 合并 requestAdapter 配置, requestAdapter 接口为提供 setConfig 或 mergeConfig 方法
-  if (requestAdapter) {
-    Object.assign(requestAdapter.config, resetOptions, {
-      token: resetOptions.token || userStore.getToken.bind(userStore)
-    } as BrainUserApiConfig<unknown>);
-  }
+  const _requestAdapter = createAdapter(
+    requestConfig as BrainUserGatewayConfig<unknown>,
+    userStore
+  );
 
   return {
     serviceName: serviceName,
-    executor: executor,
-    gateway:
-      gateway ??
-      new BrainUserGateway(
-        new BrainUserApi(
-          createAdapter(requestAdapter ?? resetOptions, userStore)
-        )
-      ),
-    store: userStore as BrainUserStore<Tags>,
-    logger: logger
+    gateway: new BrainUserGateway(_requestAdapter),
+    store: userStore,
+    logger: logger,
+    executor: executor as ExecutorInterface<BrainUserPlugin<Tags>>,
+    requestAdapter: _requestAdapter
   };
 }

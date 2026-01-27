@@ -126,10 +126,6 @@ describe('common config', () => {
       expect(defaultBrainUserOptions.authKey).toBe('Authorization');
     });
 
-    it('should have requiredToken property', () => {
-      expect(defaultBrainUserOptions.requiredToken).toBe(true);
-    });
-
     it('should have all required properties', () => {
       expect(defaultBrainUserOptions).toHaveProperty('env');
       expect(defaultBrainUserOptions).toHaveProperty('domains');
@@ -137,7 +133,6 @@ describe('common config', () => {
       expect(defaultBrainUserOptions).toHaveProperty('responseType');
       expect(defaultBrainUserOptions).toHaveProperty('tokenPrefix');
       expect(defaultBrainUserOptions).toHaveProperty('authKey');
-      expect(defaultBrainUserOptions).toHaveProperty('requiredToken');
     });
 
     it('should use default values consistently', () => {

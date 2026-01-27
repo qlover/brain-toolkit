@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@brain-toolkit/brain-user": "latest",
-    "@qlover/corekit-bridge": "^2.0.0",
-    "@qlover/fe-corekit": "^3.0.0",
+    "@qlover/corekit-bridge": "file:D:\\qrj\\workspace\\fe-base\\packages\\corekit-bridge",
+    "@qlover/fe-corekit": "file:D:\\qrj\\workspace\\fe-base\\packages\\fe-corekit",
     "@qlover/slice-store-react": "^1.4.1",
     "@react-oauth/google": "^0.13.4",
     "react": "^18.3.1",
