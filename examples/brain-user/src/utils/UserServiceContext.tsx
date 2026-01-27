@@ -18,24 +18,18 @@ export interface UserServiceContextValue {
 
 export function UserServiceProvider({ children }: { children: ReactNode }) {
   const [userService] = useState(() => {
-    return (
-      new BrainUserService({
-        env: 'development',
-        // @ts-expect-error
-        logger: console,
-        store: {
-          storage: localStorage
-        },
-        executor: new LifecycleExecutor<
-          BrainUserContext<readonly string[]>,
-          BrainUserPlugin
-        >()
-      })
-        // TODO: 需要实现
-        .use(userServicePlugin)
-    );
+    return new BrainUserService({
+      // @ts-expect-error
+      logger: console,
+      store: {
+        storage: localStorage
+      },
+      executor: new LifecycleExecutor<
+        BrainUserContext<readonly string[]>,
+        BrainUserPlugin
+      >()
+    }).use(userServicePlugin);
   });
-  console.log(userService);
 
   const userStore = useMemo(() => {
     return userService.getStore();

@@ -17,24 +17,24 @@ import type { BrainUserPlugin } from '@brain-toolkit/brain-user';
 export const userServicePlugin: BrainUserPlugin = {
   pluginName: 'brainUserServicePlugin',
 
-  onBefore(ctx): void {
-    console.log('onBefore', ctx);
+  onBefore({ parameters: { actionName, store } }): void {
+    if (actionName === 'refreshUserInfo') {
+      store.updateState({
+        loading: true
+      });
+    }
+  },
+
+  onSuccess({ parameters: { actionName, store } }) {
+    if (actionName === 'loginWithGoogle') {
+      store.setCredential({
+        token: store.getCredential()?.token
+      });
+    }
+    if (actionName === 'refreshUserInfo') {
+      store.updateState({
+        loading: false
+      });
+    }
   }
-
-  // TODO: 需要实现
-  // onRefreshUserInfoBefore(
-  //   context: BrainUserPluginContext<BrainUser, BrainCredentials>
-  // ) {
-  //   context.parameters.store.updateState({
-  //     loading: true
-  //   });
-  // },
-
-  // onRefreshUserInfoSuccess(
-  //   context: BrainUserPluginContext<BrainUser, BrainCredentials>
-  // ) {
-  //   context.parameters.store.updateState({
-  //     loading: false
-  //   });
-  // }
 };

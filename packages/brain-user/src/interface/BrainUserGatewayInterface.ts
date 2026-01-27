@@ -88,7 +88,7 @@ export interface BrainUserGoogleRequest {
   metadata?: Record<string, unknown>;
 }
 
-export type BrainUserGoogleResponse = BrainResponse<BrainGoogleCredentials>;
+export type BrainUserGoogleResponse = BrainResponse<BrainCredentials>;
 
 export interface BrainGatewayRequestMetadata {
   /**
@@ -135,11 +135,11 @@ export interface BrainLoginRequest {
   metadata?: Record<string, unknown>;
 }
 
-export interface BrainCredentials {
+export interface BrainBaseCredentials {
   token?: string;
 }
 
-export interface BrainGoogleCredentials extends BrainCredentials {
+export interface BrainCredentials extends BrainBaseCredentials {
   existing?: boolean;
   required_fields?: {
     first_name?: string;
@@ -159,7 +159,7 @@ export interface BrainUserRequestConfig
 export interface BrainUserGatewayInterface
   extends UserServiceGateway<
     BrainUser,
-    BrainCredentials,
+    BrainBaseCredentials,
     BrainUserGatewayConfig<unknown>
   > {
   register(
@@ -189,5 +189,5 @@ export interface BrainUserGatewayInterface
 
   loginWithGoogle(
     config: BrainUserGatewayConfig<BrainUserGoogleRequest>
-  ): Promise<BrainGoogleCredentials | null>;
+  ): Promise<BrainCredentials | null>;
 }

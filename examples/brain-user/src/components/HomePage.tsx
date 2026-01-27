@@ -7,6 +7,9 @@ export function HomePage() {
   const token = useSliceStore(userStore, (state) => state.credential?.token);
   const user = useSliceStore(userStore, (state) => state.result);
   const loading = useSliceStore(userStore, (state) => state.loading);
+  const isLoginWithGoogle = useSliceStore(userStore, (state) =>
+    userService.isGoogleLogined(state.credential!)
+  );
 
   const handleLogout = async () => {
     try {
@@ -76,6 +79,13 @@ export function HomePage() {
           }}
         >
           首页
+          {isLoginWithGoogle ? (
+            <span style={{ fontSize: '14px', color: '#f00' }}>
+              (Google 登录)
+            </span>
+          ) : (
+            ''
+          )}
         </h1>
         <UserInfo user={user} onLogout={handleLogout} loading={loading} />
       </div>

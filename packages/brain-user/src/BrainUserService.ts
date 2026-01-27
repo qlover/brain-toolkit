@@ -1,7 +1,6 @@
 import type { BrainUser } from './types/BrainUserTypes';
 import type {
   BrainCredentials,
-  BrainGoogleCredentials,
   BrainUserGatewayInterface,
   BrainUserGoogleRequest,
   BrainUserRegisterRequest,
@@ -14,6 +13,7 @@ import type {
   ExecutorContextInterface,
   ExecutorInterface,
   LifecyclePluginInterface,
+  RequestAdapterConfig,
   RequestAdapterInterface
 } from '@qlover/fe-corekit';
 import type { BrainUserStoreInterface } from './interface/BrainUserStoreInterface';
@@ -553,13 +553,15 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public loginWithGoogle(
     params: BrainUserGoogleRequest
-  ): Promise<BrainGoogleCredentials | null> {
+  ): Promise<BrainCredentials | null> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('loginWithGoogle', params),
         (ctx) =>
           this.gateway!.loginWithGoogle(
-            omit(ctx.parameters, pickProps) as BrainUserGoogleRequest
+            Object.assign(omit(ctx.parameters, pickProps), {
+              data: ctx.parameters.requestParams
+            } as RequestAdapterConfig<BrainUserGoogleRequest>)
           )
       );
     }
@@ -689,5 +691,15 @@ export class BrainUserService<Tags extends readonly string[]>
 
   public override isUser(user: unknown): user is BrainUser {
     return isBrainUser(user);
+  }
+
+  /**
+   * Whether the user is logged in with Google
+   *
+   * @param credential
+   * @returns
+   */
+  public isGoogleLogined(credential?: BrainCredentials): boolean {
+    return (credential ?? this.getCredential())?.existing ?? false;
   }
 }

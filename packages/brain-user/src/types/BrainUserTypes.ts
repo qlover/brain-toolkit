@@ -1,5 +1,3 @@
-import type { BrainCredentials } from '../interface/BrainUserGatewayInterface';
-
 export interface BrainUserPermissions {
   key?: string;
   value?: string[];
@@ -53,7 +51,7 @@ export interface BrainUserProfileInterface {
  */
 export type BrainUserFeatureTagType = string;
 
-export interface BrainUser extends BrainCredentials {
+export interface BrainUser {
   id: number;
   email: string;
   name: string;

@@ -205,6 +205,21 @@ function LoginForm() {
           >
             {isLoading ? '登录中...' : '登录'}
           </button>
+          {error instanceof Error && (
+            <div
+              style={{
+                backgroundColor: '#fff2f0',
+                border: '1px solid #ffccc7',
+                color: '#cf1322',
+                padding: '12px',
+                borderRadius: '4px',
+                marginTop: '20px',
+                fontSize: '14px'
+              }}
+            >
+              <strong>错误:</strong> {error.message}
+            </div>
+          )}
         </div>
 
         {/* Divider */}
@@ -289,22 +304,6 @@ function LoginForm() {
             )}
           </button>
         </div>
-
-        {error instanceof Error && (
-          <div
-            style={{
-              backgroundColor: '#fff2f0',
-              border: '1px solid #ffccc7',
-              color: '#cf1322',
-              padding: '12px',
-              borderRadius: '4px',
-              marginTop: '20px',
-              fontSize: '14px'
-            }}
-          >
-            <strong>错误:</strong> {error.message}
-          </div>
-        )}
       </div>
     </div>
   );

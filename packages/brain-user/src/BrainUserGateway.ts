@@ -5,7 +5,6 @@ import type {
   BrainUserRegisterRequest,
   BrainLoginRequest,
   BrainCredentials,
-  BrainGoogleCredentials,
   BrainUserGatewayConfig
 } from './interface/BrainUserGatewayInterface';
 import type { BrainUser } from './types/BrainUserTypes';
@@ -90,7 +89,7 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
     const newConfig = this.requestPlugin.mergeConfig({
       ...this.adapter.config,
       ...config,
-      data: params
+      data: params ?? config?.data
     }) as BrainUserGatewayConfig<T>;
 
     if (!(newConfig.url && newConfig.method)) {
@@ -148,11 +147,10 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * ```
    */
   public loginWithGoogle(
-    params: BrainUserGoogleRequest,
-    config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
-  ): Promise<BrainGoogleCredentials> {
+    config: BrainUserGatewayConfig<BrainUserGoogleRequest>
+  ): Promise<BrainCredentials> {
     return this.adapter
-      .request(this.handleConfig('loginWithGoogle', params, config))
+      .request(this.handleConfig('loginWithGoogle', config.data, config))
       .then((response) => {
         return this.handleResponse(response, response.config);
       });
