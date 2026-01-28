@@ -1,5 +1,40 @@
 # @brain-toolkit/brain-user
 
+## 0.2.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **brain-user:** Add comprehensive tests for handleResponse method in BrainUserGateway ([6a46da1](https://github.com/qlover/brain-toolkit/commit/6a46da172fcd98b5d7fa1481aae43a60b1a33b2b)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Introduced a TestableBrainUserGateway class to expose the protected handleResponse method for testing.
+  - Added multiple test cases to validate the behavior of handleResponse with various response scenarios, including handling of null, undefined, arrays, and primitive types.
+  - Updated the BrainUserGateway implementation to ensure it returns result.data instead of result, improving response handling consistency.
+
+#### ♻️ Refactors
+
+- **brain-user:** Update package configurations and dependencies ([bb0149e](https://github.com/qlover/brain-toolkit/commit/bb0149ee36736ee17eeea3563164b054ab52fe25)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Refactored package.json to streamline clean scripts and update dependency paths for local development.
+  - Upgraded various dependencies in pnpm-lock.yaml to their latest versions, enhancing compatibility and functionality.
+  - Improved Vite configuration for better module resolution and code organization.
+  - Removed obsolete test files and added new type guard tests to ensure type safety for user-related data structures.
+
+- **brain-user:** Update dependencies and enhance error handling in LoginPage ([0469830](https://github.com/qlover/brain-toolkit/commit/04698303b912bc57ec790ac9717f652c6e38111c)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Updated dependencies in package.json for @qlover/corekit-bridge and @qlover/fe-corekit to their latest versions.
+  - Enhanced the LoginPage component by adding error display functionality to improve user feedback during login attempts.
+  - Refactored UserServiceProvider to streamline user service initialization.
+  - Improved user service plugin to handle loading states more effectively during user actions.
+
+- **brain-user:** Enhance BrainUserGateway and update tests for improved functionality ([1cd01f3](https://github.com/qlover/brain-toolkit/commit/1cd01f32f859bd9a14fa0e286e1da0baac63642c)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Added path aliases for '@brain-toolkit/brain-user' in Vite configuration for better module resolution.
+  - Refactored BrainUserGateway methods to improve handling of request parameters and responses.
+  - Updated tests in BrainUserGateway to ensure correct handling of API responses and error cases.
+  - Adjusted expectations in tests to reflect changes in response handling, ensuring consistency and reliability.
+
+- **brain-user:** Remove unused getEndpotionResult utility function ([dd7166b](https://github.com/qlover/brain-toolkit/commit/dd7166b60569fac44213067df07d1d1bf1c5543d)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Deleted the getEndpotionResult function from utils, as it is no longer needed in the current implementation.
+  - This cleanup helps streamline the codebase and eliminate obsolete code.
+
 ## 0.1.1
 
 ### Patch Changes
