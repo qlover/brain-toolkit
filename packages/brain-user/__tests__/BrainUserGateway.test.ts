@@ -25,10 +25,14 @@ import {
 describe('BrainUserGateway', () => {
   let mockAdapter: RequestAdapterInterface<any>;
 
+  const mockRequestResponse = {
+    data: {}
+  };
+
   beforeEach(() => {
     mockAdapter = {
       config: {},
-      request: vi.fn().mockResolvedValue({ data: {} }),
+      request: vi.fn().mockResolvedValue(mockRequestResponse),
       getConfig: vi.fn(),
       setConfig: vi.fn()
     };
@@ -54,6 +58,7 @@ describe('BrainUserGateway', () => {
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           data: params,
+          headers: {},
           requestId: GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle,
           method: 'POST',
           url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle).url
@@ -145,7 +150,7 @@ describe('BrainUserGateway', () => {
         password: 'password123'
       });
 
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it('should handle API errors', async () => {
@@ -181,8 +186,7 @@ describe('BrainUserGateway', () => {
     it('should return undefined', async () => {
       const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.logout();
-
-      expect(result).toBeUndefined();
+      expect(result).toBe(mockRequestResponse.data);
     });
 
     it('should handle API errors', async () => {
@@ -198,7 +202,7 @@ describe('BrainUserGateway', () => {
       const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.logout({ reason: 'user_initiated' });
 
-      expect(result).toBeUndefined();
+      expect(result).toBe(mockRequestResponse.data);
     });
   });
 
@@ -292,7 +296,11 @@ describe('BrainUserGateway', () => {
       // Verify that the request was called with the correct endpoint and params
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: params,
+          data: undefined,
+          headers: {
+            Authorization: 'auth-token'
+          },
+          token: params.token,
           requestId: GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo,
           method: 'GET',
           url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).url
@@ -348,10 +356,12 @@ describe('BrainUserGateway', () => {
       // Verify that the request was called with the correct endpoint
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: params,
+          data: undefined,
           requestId: GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo,
           method: 'GET',
-          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).url
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).url,
+          headers: {},
+          token: undefined
         })
       );
     });
@@ -433,6 +443,8 @@ describe('BrainUserGateway', () => {
       });
       const userInfo = await gateway.getUserInfo({});
       expect(userInfo.email).toBe('user@gmail.com');
+
+      mockAdapter.request = vi.fn().mockResolvedValueOnce({});
 
       // Logout
       await gateway.logout();
@@ -560,7 +572,7 @@ describe('BrainUserGateway', () => {
         password: 'test'
       });
 
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it('should handle malformed API response', async () => {
@@ -596,8 +608,8 @@ describe('BrainUserGateway', () => {
     it('should handle logout without errors', async () => {
       const gateway = new BrainUserGateway(mockAdapter);
 
-      await expect(gateway.logout()).resolves.toBeUndefined();
-      await expect(gateway.logout()).resolves.toBeUndefined();
+      await expect(gateway.logout()).resolves.toBe(mockRequestResponse.data);
+      await expect(gateway.logout()).resolves.toBe(mockRequestResponse.data);
     });
   });
 });

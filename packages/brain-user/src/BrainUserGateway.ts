@@ -1,4 +1,8 @@
-import type { BrainGatewayEndpointMethod } from './config/EndPoints';
+import type { EndpointsType } from './config/EndPoints';
+import {
+  GATEWAY_BRAIN_USER_ENDPOINTS,
+  parseEndpoint
+} from './config/EndPoints';
 import type {
   BrainUserGoogleRequest,
   BrainUserGatewayInterface,
@@ -15,7 +19,6 @@ import {
   type RequestAdapterInterface,
   type RequestAdapterResponse
 } from '@qlover/fe-corekit';
-import { getEndpotionResult } from './utils/getEndpotions';
 
 /**
  * Brain User Gateway - Business logic layer for user operations
@@ -65,20 +68,13 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
     this.adapter = adapter;
   }
 
-  protected getEndpotion(
+  protected getEndpotint(
     action: string,
-    config?: BrainUserGatewayConfig<unknown>
-  ):
-    | {
-        method: BrainGatewayEndpointMethod;
-        url: string;
-      }
-    | undefined {
-    return getEndpotionResult(
-      action,
-      config?.endpoints,
-      this.adapter.config.endpoints
-    );
+    endpoints?: Record<string, EndpointsType>
+  ): EndpointsType | undefined {
+    return (endpoints ?? GATEWAY_BRAIN_USER_ENDPOINTS)[
+      action as keyof typeof GATEWAY_BRAIN_USER_ENDPOINTS
+    ];
   }
 
   protected handleConfig<T>(
@@ -86,14 +82,21 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
     params: T,
     config?: BrainUserGatewayConfig<T>
   ): BrainUserGatewayConfig<T> {
-    const newConfig = this.requestPlugin.mergeConfig({
+    let newConfig = this.requestPlugin.mergeConfig({
       ...this.adapter.config,
       ...config,
       data: params ?? config?.data
     }) as BrainUserGatewayConfig<T>;
 
-    if (!(newConfig.url && newConfig.method)) {
-      return Object.assign(newConfig, this.getEndpotion(action, newConfig));
+    // parse endpoint
+    const endpoint = this.getEndpotint(action, newConfig?.endpoints);
+
+    if (endpoint) {
+      newConfig.requestId = endpoint;
+    }
+
+    if (endpoint && !(newConfig.url && newConfig.method)) {
+      newConfig = Object.assign(newConfig, parseEndpoint(endpoint));
     }
 
     return newConfig;
@@ -108,12 +111,12 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
       config as RequestAdapterConfig
     );
 
-    // When there is no result, we return origin response
-    if (!result) {
+    // 原样返回
+    if (result === undefined) {
       return response.data as R;
     }
 
-    return result.data as R;
+    return result as R;
   }
 
   /**
@@ -147,10 +150,11 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    * ```
    */
   public loginWithGoogle(
-    config: BrainUserGatewayConfig<BrainUserGoogleRequest>
+    params: BrainUserGoogleRequest,
+    config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
   ): Promise<BrainCredentials> {
     return this.adapter
-      .request(this.handleConfig('loginWithGoogle', config.data, config))
+      .request(this.handleConfig('loginWithGoogle', params, config))
       .then((response) => {
         return this.handleResponse(response, response.config);
       });

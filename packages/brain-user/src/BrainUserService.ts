@@ -13,7 +13,6 @@ import type {
   ExecutorContextInterface,
   ExecutorInterface,
   LifecyclePluginInterface,
-  RequestAdapterConfig,
   RequestAdapterInterface
 } from '@qlover/fe-corekit';
 import type { BrainUserStoreInterface } from './interface/BrainUserStoreInterface';
@@ -559,9 +558,8 @@ export class BrainUserService<Tags extends readonly string[]>
         this.createOptions('loginWithGoogle', params),
         (ctx) =>
           this.gateway!.loginWithGoogle(
-            Object.assign(omit(ctx.parameters, pickProps), {
-              data: ctx.parameters.requestParams
-            } as RequestAdapterConfig<BrainUserGoogleRequest>)
+            ctx.parameters.requestParams!,
+            omit(ctx.parameters, pickProps)
           )
       );
     }

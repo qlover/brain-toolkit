@@ -188,6 +188,7 @@ export interface BrainUserGatewayInterface
   ): Promise<BrainUser | null>;
 
   loginWithGoogle(
-    config: BrainUserGatewayConfig<BrainUserGoogleRequest>
+    params: BrainUserGoogleRequest,
+    config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
   ): Promise<BrainCredentials | null>;
 }
