@@ -116,7 +116,7 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
       return response.data as R;
     }
 
-    return result as R;
+    return result.data as R;
   }
 
   /**

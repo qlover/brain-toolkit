@@ -16,11 +16,25 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrainUserGateway } from '../src/BrainUserGateway';
-import type { RequestAdapterInterface } from '@qlover/fe-corekit';
+import type {
+  RequestAdapterInterface,
+  RequestAdapterResponse
+} from '@qlover/fe-corekit';
+import type { BrainUserGatewayConfig } from '../src/interface/BrainUserGatewayInterface';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
   parseEndpoint
 } from '@brain-toolkit/brain-user';
+
+// Test class to expose protected handleResponse method
+class TestableBrainUserGateway extends BrainUserGateway {
+  public async testHandleResponse<R>(
+    response: RequestAdapterResponse<unknown, unknown>,
+    config?: BrainUserGatewayConfig<unknown>
+  ): Promise<R> {
+    return this.handleResponse<R>(response, config);
+  }
+}
 
 describe('BrainUserGateway', () => {
   let mockAdapter: RequestAdapterInterface<any>;
@@ -43,6 +57,230 @@ describe('BrainUserGateway', () => {
       const gateway = new BrainUserGateway(mockAdapter);
 
       expect(gateway).toBeInstanceOf(BrainUserGateway);
+    });
+  });
+
+  describe('handleResponse', () => {
+    it('should return response.data when responsePlugin.handleResponse returns undefined', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { token: 'test-token', email: 'test@example.com' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      // Mock responsePlugin.handleResponse to return undefined
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(mockResponse.data);
+      expect(gateway['responsePlugin'].handleResponse).toHaveBeenCalledWith(
+        mockResponse,
+        undefined
+      );
+    });
+
+    it('should return result.data when responsePlugin.handleResponse returns a result object', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { original: 'data' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      const transformedData = { token: 'transformed-token', id: 123 };
+      const mockResult = {
+        data: transformedData,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK'
+      };
+
+      // Mock responsePlugin.handleResponse to return transformed result
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        mockResult as any
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(transformedData);
+      expect(gateway['responsePlugin'].handleResponse).toHaveBeenCalledWith(
+        mockResponse,
+        undefined
+      );
+    });
+
+    it('should pass config parameter to responsePlugin.handleResponse', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { test: 'data' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      const mockConfig: BrainUserGatewayConfig<unknown> = {
+        url: '/test',
+        method: 'GET',
+        token: 'test-token'
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      await gateway.testHandleResponse(mockResponse, mockConfig);
+
+      expect(gateway['responsePlugin'].handleResponse).toHaveBeenCalledWith(
+        mockResponse,
+        mockConfig
+      );
+    });
+
+    it('should handle null response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: null,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle undefined response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: undefined,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should handle array response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const arrayData = [{ id: 1 }, { id: 2 }, { id: 3 }];
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: arrayData,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(arrayData);
+    });
+
+    it('should handle primitive type response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: 'string-response',
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse<string>(mockResponse);
+
+      expect(result).toBe('string-response');
+    });
+
+    it('should return result.data when responsePlugin returns result with different data structure', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { original: 'data' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      const transformedData = {
+        user: { id: 1, name: 'Test User' },
+        metadata: { timestamp: Date.now() }
+      };
+      const mockResult = {
+        data: transformedData,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK'
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        mockResult as any
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(transformedData);
+      expect(result).not.toEqual(mockResponse.data);
+    });
+
+    it('should handle empty object response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: {},
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual({});
     });
   });
 
