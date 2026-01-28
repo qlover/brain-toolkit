@@ -11,6 +11,14 @@ export default defineConfig({
       '@brain-toolkit/element-sizer': resolve(
         __dirname,
         'packages/element-sizer/__mocks__'
+      ),
+      '@brain-toolkit/brain-user': resolve(
+        __dirname,
+        'packages/brain-user/src'
+      ),
+      '@brain-toolkit/brain-user/*': resolve(
+        __dirname,
+        'packages/brain-user/src/*'
       )
     }
   },

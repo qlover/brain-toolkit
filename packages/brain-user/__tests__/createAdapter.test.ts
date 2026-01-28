@@ -16,14 +16,14 @@ import {
   createAdapter,
   isRequestAdapterInterface,
   type CreateAdapterType
-} from '../src/utils/createAdapter';
+} from '@brain-toolkit/brain-user/utils/createAdapter';
 import type {
   RequestAdapterInterface,
   RequestAdapterConfig
 } from '@qlover/fe-corekit';
 import { RequestAdapterFetch } from '@qlover/fe-corekit';
-import type { BrainUserApiConfig } from '../src/BrainUserApi';
-import type { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
+import type { BrainUserStoreInterface } from '@brain-toolkit/brain-user/interface/BrainUserStoreInterface';
+import type { BrainUserGatewayConfig } from '@brain-toolkit/brain-user/interface/BrainUserGatewayInterface';
 
 describe('createAdapter', () => {
   // Mock adapter implementation
@@ -73,7 +73,7 @@ describe('createAdapter', () => {
     });
 
     it('should return false for config objects', () => {
-      const config: BrainUserApiConfig<unknown> = {
+      const config: BrainUserGatewayConfig<unknown> = {
         env: 'development',
         domains: { development: 'https://dev.api.com' }
       };
@@ -178,7 +178,7 @@ describe('createAdapter', () => {
 
     describe('with config object', () => {
       it('should create new adapter from config with baseURL', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const result = createAdapter(config);
@@ -188,7 +188,7 @@ describe('createAdapter', () => {
       });
 
       it('should create adapter from env and domains', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           env: 'development',
           domains: {
             development: 'https://dev.api.example.com',
@@ -202,7 +202,7 @@ describe('createAdapter', () => {
       });
 
       it('should prioritize baseURL over env/domains', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://custom.api.com',
           env: 'development',
           domains: {
@@ -215,7 +215,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle production environment', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           env: 'production',
           domains: {
             development: 'https://dev.api.example.com',
@@ -228,7 +228,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle custom environment names', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           env: 'staging',
           domains: {
             development: 'https://dev.api.example.com',
@@ -244,7 +244,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle missing env in domains', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           env: 'nonexistent',
           domains: {
             development: 'https://dev.api.example.com'
@@ -258,7 +258,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle config without env', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           domains: {
             development: 'https://dev.api.example.com'
           }
@@ -269,7 +269,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle config without domains', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           env: 'development'
         };
         const result = createAdapter(config);
@@ -278,7 +278,7 @@ describe('createAdapter', () => {
       });
 
       it('should pass through additional config options', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com',
           timeout: 10000,
           headers: {
@@ -299,7 +299,7 @@ describe('createAdapter', () => {
 
     describe('edge cases', () => {
       it('should handle empty config object', () => {
-        const config: BrainUserApiConfig<unknown> = {};
+        const config: BrainUserGatewayConfig<unknown> = {};
         const result = createAdapter(config);
 
         expect(result).toBeInstanceOf(RequestAdapterFetch);
@@ -307,7 +307,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle null baseURL', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: null as any
         };
         const result = createAdapter(config);
@@ -316,7 +316,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle empty string baseURL', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: ''
         };
         const result = createAdapter(config);
@@ -325,7 +325,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle empty domains object', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           env: 'development',
           domains: {}
         };
@@ -342,12 +342,14 @@ describe('createAdapter', () => {
         const adapter = new MockAdapter({
           baseURL: 'https://api.example.com'
         });
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
 
-        const type1: CreateAdapterType<BrainUserApiConfig<unknown>> = adapter;
-        const type2: CreateAdapterType<BrainUserApiConfig<unknown>> = config;
+        const type1: CreateAdapterType<BrainUserGatewayConfig<unknown>> =
+          adapter;
+        const type2: CreateAdapterType<BrainUserGatewayConfig<unknown>> =
+          config;
 
         const result1 = createAdapter(type1);
         const result2 = createAdapter(type2);
@@ -357,7 +359,7 @@ describe('createAdapter', () => {
       });
 
       it('should work with generic type parameter', () => {
-        interface CustomConfig extends BrainUserApiConfig<unknown> {
+        interface CustomConfig extends BrainUserGatewayConfig<unknown> {
           customField?: string;
         }
 
@@ -384,11 +386,11 @@ describe('createAdapter', () => {
       });
 
       it('should support different config types', () => {
-        interface Config1 extends BrainUserApiConfig<unknown> {
+        interface Config1 extends BrainUserGatewayConfig<unknown> {
           feature1?: boolean;
         }
 
-        interface Config2 extends BrainUserApiConfig<unknown> {
+        interface Config2 extends BrainUserGatewayConfig<unknown> {
           feature2?: string;
         }
 
@@ -458,7 +460,7 @@ describe('createAdapter', () => {
       });
 
       it('should support adapter configuration merging', () => {
-        const baseConfig: BrainUserApiConfig<unknown> = {
+        const baseConfig: BrainUserGatewayConfig<unknown> = {
           env: 'development',
           domains: {
             development: 'https://dev.api.com',
@@ -466,7 +468,7 @@ describe('createAdapter', () => {
           }
         };
 
-        const customConfig: BrainUserApiConfig<unknown> = {
+        const customConfig: BrainUserGatewayConfig<unknown> = {
           ...baseConfig,
           timeout: 5000,
           headers: { 'X-Custom': 'value' }
@@ -558,7 +560,7 @@ describe('createAdapter', () => {
       });
 
       it('should add FetchURLPlugin when creating new adapter', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const adapter = createAdapter(config);
@@ -569,7 +571,7 @@ describe('createAdapter', () => {
       });
 
       it('should add RequestCommonPlugin when creating new adapter', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const adapter = createAdapter(config, mockUserStore);
@@ -580,7 +582,7 @@ describe('createAdapter', () => {
       });
 
       it('should configure RequestCommonPlugin with token from userStore', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const adapter = createAdapter(config, mockUserStore);
@@ -591,7 +593,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle null userStore gracefully', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const adapter = createAdapter(config, null);
@@ -601,7 +603,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle undefined userStore gracefully', () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const adapter = createAdapter(config, undefined);
@@ -622,7 +624,7 @@ describe('createAdapter', () => {
       });
 
       it('should handle GET requests without body (plugin responsibility)', async () => {
-        const config: BrainUserApiConfig<unknown> = {
+        const config: BrainUserGatewayConfig<unknown> = {
           baseURL: 'https://api.example.com'
         };
         const adapter = createAdapter(config, mockUserStore);

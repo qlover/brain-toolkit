@@ -1,7 +1,3 @@
-import type { BrainGoogleCredentials } from '../interface/BrainUserGatewayInterface';
-
-export interface BrainCredentials extends BrainGoogleCredentials {}
-
 export interface BrainUserPermissions {
   key?: string;
   value?: string[];
@@ -55,7 +51,7 @@ export interface BrainUserProfileInterface {
  */
 export type BrainUserFeatureTagType = string;
 
-export interface BrainUser extends BrainCredentials {
+export interface BrainUser {
   id: number;
   email: string;
   name: string;

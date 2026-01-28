@@ -1,9 +1,4 @@
-import type {
-  BrainUserPluginInterface,
-  BrainUserPluginContext,
-  BrainCredentials,
-  BrainUser
-} from '@brain-toolkit/brain-user';
+import type { BrainUserPlugin } from '@brain-toolkit/brain-user';
 
 /**
  * User service plugin for handling loading state during user info refresh
@@ -19,23 +14,27 @@ import type {
  *   .use(userServicePlugin);
  * ```
  */
-export const userServicePlugin: BrainUserPluginInterface = {
+export const userServicePlugin: BrainUserPlugin = {
   pluginName: 'brainUserServicePlugin',
 
-  onRefreshUserInfoBefore(
-    context: BrainUserPluginContext<BrainUser, BrainCredentials>
-  ) {
-    context.parameters.store.updateState({
-      loading: true
-    });
+  onBefore({ parameters: { actionName, store } }): void {
+    if (actionName === 'refreshUserInfo') {
+      store.updateState({
+        loading: true
+      });
+    }
   },
 
-  onRefreshUserInfoSuccess(
-    context: BrainUserPluginContext<BrainUser, BrainCredentials>
-  ) {
-    context.parameters.store.updateState({
-      loading: false
-    });
+  onSuccess({ parameters: { actionName, store } }) {
+    if (actionName === 'loginWithGoogle') {
+      store.setCredential({
+        token: store.getCredential()?.token
+      });
+    }
+    if (actionName === 'refreshUserInfo') {
+      store.updateState({
+        loading: false
+      });
+    }
   }
 };
-

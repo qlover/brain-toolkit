@@ -1,4 +1,4 @@
-﻿/**
+/**
  * BrainUserGateway test-suite
  *
  * Coverage:
@@ -16,40 +16,292 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrainUserGateway } from '../src/BrainUserGateway';
-import { BrainUserApi } from '../src/BrainUserApi';
-import type { RequestAdapterInterface } from '@qlover/fe-corekit';
+import type {
+  RequestAdapterInterface,
+  RequestAdapterResponse
+} from '@qlover/fe-corekit';
+import type { BrainUserGatewayConfig } from '../src/interface/BrainUserGatewayInterface';
+import {
+  GATEWAY_BRAIN_USER_ENDPOINTS,
+  parseEndpoint
+} from '@brain-toolkit/brain-user';
+
+// Test class to expose protected handleResponse method
+class TestableBrainUserGateway extends BrainUserGateway {
+  public async testHandleResponse<R>(
+    response: RequestAdapterResponse<unknown, unknown>,
+    config?: BrainUserGatewayConfig<unknown>
+  ): Promise<R> {
+    return this.handleResponse<R>(response, config);
+  }
+}
 
 describe('BrainUserGateway', () => {
   let mockAdapter: RequestAdapterInterface<any>;
-  let mockApi: BrainUserApi<any>;
+
+  const mockRequestResponse = {
+    data: {}
+  };
 
   beforeEach(() => {
     mockAdapter = {
       config: {},
-      request: vi.fn().mockResolvedValue({ data: {} }),
+      request: vi.fn().mockResolvedValue(mockRequestResponse),
       getConfig: vi.fn(),
       setConfig: vi.fn()
     };
-    mockApi = new BrainUserApi(mockAdapter);
   });
 
   describe('constructor', () => {
     it('should create gateway instance with API', () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       expect(gateway).toBeInstanceOf(BrainUserGateway);
     });
   });
 
+  describe('handleResponse', () => {
+    it('should return response.data when responsePlugin.handleResponse returns undefined', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { token: 'test-token', email: 'test@example.com' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      // Mock responsePlugin.handleResponse to return undefined
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(mockResponse.data);
+      expect(gateway['responsePlugin'].handleResponse).toHaveBeenCalledWith(
+        mockResponse,
+        undefined
+      );
+    });
+
+    it('should return result.data when responsePlugin.handleResponse returns a result object', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { original: 'data' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      const transformedData = { token: 'transformed-token', id: 123 };
+      const mockResult = {
+        data: transformedData,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK'
+      };
+
+      // Mock responsePlugin.handleResponse to return transformed result
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        mockResult as any
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(transformedData);
+      expect(gateway['responsePlugin'].handleResponse).toHaveBeenCalledWith(
+        mockResponse,
+        undefined
+      );
+    });
+
+    it('should pass config parameter to responsePlugin.handleResponse', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { test: 'data' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      const mockConfig: BrainUserGatewayConfig<unknown> = {
+        url: '/test',
+        method: 'GET',
+        token: 'test-token'
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      await gateway.testHandleResponse(mockResponse, mockConfig);
+
+      expect(gateway['responsePlugin'].handleResponse).toHaveBeenCalledWith(
+        mockResponse,
+        mockConfig
+      );
+    });
+
+    it('should handle null response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: null,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle undefined response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: undefined,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should handle array response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const arrayData = [{ id: 1 }, { id: 2 }, { id: 3 }];
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: arrayData,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(arrayData);
+    });
+
+    it('should handle primitive type response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: 'string-response',
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse<string>(mockResponse);
+
+      expect(result).toBe('string-response');
+    });
+
+    it('should return result.data when responsePlugin returns result with different data structure', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: { original: 'data' },
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      const transformedData = {
+        user: { id: 1, name: 'Test User' },
+        metadata: { timestamp: Date.now() }
+      };
+      const mockResult = {
+        data: transformedData,
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK'
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        mockResult as any
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual(transformedData);
+      expect(result).not.toEqual(mockResponse.data);
+    });
+
+    it('should handle empty object response.data correctly', async () => {
+      const gateway = new TestableBrainUserGateway(mockAdapter);
+      const mockResponse: RequestAdapterResponse<unknown, unknown> = {
+        data: {},
+        config: {} as any,
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+        response: {} as any
+      };
+
+      vi.spyOn(gateway['responsePlugin'], 'handleResponse').mockResolvedValue(
+        undefined
+      );
+
+      const result = await gateway.testHandleResponse(mockResponse);
+
+      expect(result).toEqual({});
+    });
+  });
+
   describe('loginWithGoogle', () => {
     it('should call API loginWithGoogle method', async () => {
-      const spy = vi.spyOn(mockApi, 'loginWithGoogle');
-      const gateway = new BrainUserGateway(mockApi);
+      const spy = vi.spyOn(mockAdapter, 'request');
+      const gateway = new BrainUserGateway(mockAdapter);
 
       const params = { authorization_code: 'google-token' };
       await gateway.loginWithGoogle(params);
 
-      expect(spy).toHaveBeenCalledWith(params);
+      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: params,
+          headers: {},
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle,
+          method: 'POST',
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle).url
+        })
+      );
     });
 
     it('should return credentials from API response', async () => {
@@ -60,7 +312,7 @@ describe('BrainUserGateway', () => {
         data: expectedCredentials
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.loginWithGoogle({
         authorization_code: 'google-token'
       });
@@ -72,7 +324,7 @@ describe('BrainUserGateway', () => {
       const error = new Error('Google login failed');
       mockAdapter.request = vi.fn().mockRejectedValue(error);
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(
         gateway.loginWithGoogle({ authorization_code: 'invalid-token' })
@@ -82,13 +334,22 @@ describe('BrainUserGateway', () => {
 
   describe('login', () => {
     it('should call API login method', async () => {
-      const spy = vi.spyOn(mockApi, 'login');
-      const gateway = new BrainUserGateway(mockApi);
+      const spy = vi.spyOn(mockAdapter, 'request');
+      const gateway = new BrainUserGateway(mockAdapter);
 
       const params = { email: 'test@example.com', password: 'password123' };
       await gateway.login(params);
 
-      expect(spy).toHaveBeenCalledWith(params);
+      expect(spy).toHaveBeenCalled();
+      // Verify that the request was called with the correct endpoint and params
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: params,
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.login,
+          method: 'POST',
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.login).url
+        })
+      );
     });
 
     it('should return credentials from API response', async () => {
@@ -97,7 +358,7 @@ describe('BrainUserGateway', () => {
         data: expectedCredentials
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.login({
         email: 'test@example.com',
         password: 'password123'
@@ -109,7 +370,7 @@ describe('BrainUserGateway', () => {
     it('should return null when API response data is null', async () => {
       mockAdapter.request = vi.fn().mockResolvedValue({ data: null });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.login({
         email: 'test@example.com',
         password: 'password123'
@@ -121,20 +382,20 @@ describe('BrainUserGateway', () => {
     it('should return null when API response data is undefined', async () => {
       mockAdapter.request = vi.fn().mockResolvedValue({ data: undefined });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.login({
         email: 'test@example.com',
         password: 'password123'
       });
 
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it('should handle API errors', async () => {
       const error = new Error('Invalid credentials');
       mockAdapter.request = vi.fn().mockRejectedValue(error);
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(
         gateway.login({ email: 'test@example.com', password: 'wrong' })
@@ -144,42 +405,49 @@ describe('BrainUserGateway', () => {
 
   describe('logout', () => {
     it('should call API logout method', async () => {
-      const spy = vi.spyOn(mockApi, 'logout');
-      const gateway = new BrainUserGateway(mockApi);
+      const spy = vi.spyOn(mockAdapter, 'request');
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await gateway.logout();
 
       expect(spy).toHaveBeenCalled();
+      // Verify that the request was called with the correct endpoint
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.logout,
+          method: 'POST',
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.logout).url
+        })
+      );
     });
 
     it('should return undefined', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.logout();
-
-      expect(result).toBeUndefined();
+      expect(result).toBe(mockRequestResponse.data);
     });
 
     it('should handle API errors', async () => {
       const error = new Error('Logout failed');
       mockAdapter.request = vi.fn().mockRejectedValue(error);
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(gateway.logout()).rejects.toThrow('Logout failed');
     });
 
     it('should accept optional params', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.logout({ reason: 'user_initiated' });
 
-      expect(result).toBeUndefined();
+      expect(result).toBe(mockRequestResponse.data);
     });
   });
 
   describe('register', () => {
     it('should call API register method', async () => {
-      const spy = vi.spyOn(mockApi, 'register');
-      const gateway = new BrainUserGateway(mockApi);
+      const spy = vi.spyOn(mockAdapter, 'request');
+      const gateway = new BrainUserGateway(mockAdapter);
 
       const params = {
         email: 'new@example.com',
@@ -189,7 +457,16 @@ describe('BrainUserGateway', () => {
       };
       await gateway.register(params);
 
-      expect(spy).toHaveBeenCalledWith(params);
+      expect(spy).toHaveBeenCalled();
+      // Verify that the request was called with the correct endpoint and params
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: params,
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.register,
+          method: 'POST',
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.register).url
+        })
+      );
     });
 
     it('should return user data with credentials from API response', async () => {
@@ -203,7 +480,7 @@ describe('BrainUserGateway', () => {
         data: expectedData
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.register({
         email: 'new@example.com',
         password: 'password123',
@@ -217,7 +494,7 @@ describe('BrainUserGateway', () => {
     it('should return null when API response data is null', async () => {
       mockAdapter.request = vi.fn().mockResolvedValue({ data: null });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.register({
         email: 'new@example.com',
         password: 'password123',
@@ -232,7 +509,7 @@ describe('BrainUserGateway', () => {
       const error = new Error('Email already exists');
       mockAdapter.request = vi.fn().mockRejectedValue(error);
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(
         gateway.register({
@@ -247,13 +524,26 @@ describe('BrainUserGateway', () => {
 
   describe('getUserInfo', () => {
     it('should call API getUserInfo method', async () => {
-      const spy = vi.spyOn(mockApi, 'getUserInfo');
-      const gateway = new BrainUserGateway(mockApi);
+      const spy = vi.spyOn(mockAdapter, 'request');
+      const gateway = new BrainUserGateway(mockAdapter);
 
       const params = { token: 'auth-token' };
       await gateway.getUserInfo(params);
 
-      expect(spy).toHaveBeenCalledWith(params);
+      expect(spy).toHaveBeenCalled();
+      // Verify that the request was called with the correct endpoint and params
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: undefined,
+          headers: {
+            Authorization: 'auth-token'
+          },
+          token: params.token,
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo,
+          method: 'GET',
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).url
+        })
+      );
     });
 
     it('should return user data with credentials from API response', async () => {
@@ -267,7 +557,7 @@ describe('BrainUserGateway', () => {
         data: expectedData
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.getUserInfo({ token: 'auth-token' });
 
       expect(result).toEqual(expectedData);
@@ -276,7 +566,7 @@ describe('BrainUserGateway', () => {
     it('should return null when API response data is null', async () => {
       mockAdapter.request = vi.fn().mockResolvedValue({ data: null });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.getUserInfo({});
 
       expect(result).toBeNull();
@@ -286,7 +576,7 @@ describe('BrainUserGateway', () => {
       const error = new Error('User not found');
       mockAdapter.request = vi.fn().mockRejectedValue(error);
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(gateway.getUserInfo({})).rejects.toThrow('User not found');
     });
@@ -294,13 +584,24 @@ describe('BrainUserGateway', () => {
 
   describe('refreshUserInfo', () => {
     it('should call API getUserInfo method', async () => {
-      const spy = vi.spyOn(mockApi, 'getUserInfo');
-      const gateway = new BrainUserGateway(mockApi);
+      const spy = vi.spyOn(mockAdapter, 'request');
+      const gateway = new BrainUserGateway(mockAdapter);
 
       const params = {};
       await gateway.refreshUserInfo(params);
 
-      expect(spy).toHaveBeenCalledWith(params);
+      expect(spy).toHaveBeenCalled();
+      // Verify that the request was called with the correct endpoint
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: undefined,
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo,
+          method: 'GET',
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).url,
+          headers: {},
+          token: undefined
+        })
+      );
     });
 
     it('should return updated user data from API response', async () => {
@@ -314,7 +615,7 @@ describe('BrainUserGateway', () => {
         data: expectedData
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.refreshUserInfo({});
 
       expect(result).toEqual(expectedData);
@@ -330,7 +631,7 @@ describe('BrainUserGateway', () => {
         data: expectedData
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.refreshUserInfo();
 
       expect(result).toEqual(expectedData);
@@ -339,7 +640,7 @@ describe('BrainUserGateway', () => {
     it('should return null when API response data is null', async () => {
       mockAdapter.request = vi.fn().mockResolvedValue({ data: null });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.refreshUserInfo({});
 
       expect(result).toBeNull();
@@ -349,7 +650,7 @@ describe('BrainUserGateway', () => {
       const error = new Error('Refresh failed');
       mockAdapter.request = vi.fn().mockRejectedValue(error);
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(gateway.refreshUserInfo({})).rejects.toThrow(
         'Refresh failed'
@@ -359,7 +660,7 @@ describe('BrainUserGateway', () => {
 
   describe('integration scenarios', () => {
     it('should support complete authentication flow', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       // Login with Google
       mockAdapter.request = vi.fn().mockResolvedValueOnce({
@@ -381,12 +682,14 @@ describe('BrainUserGateway', () => {
       const userInfo = await gateway.getUserInfo({});
       expect(userInfo.email).toBe('user@gmail.com');
 
+      mockAdapter.request = vi.fn().mockResolvedValueOnce({});
+
       // Logout
       await gateway.logout();
     });
 
     it('should support registration and immediate login flow', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       // Register
       mockAdapter.request = vi.fn().mockResolvedValueOnce({
@@ -409,7 +712,7 @@ describe('BrainUserGateway', () => {
     });
 
     it('should support user info refresh after update', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       // Initial user info
       mockAdapter.request = vi.fn().mockResolvedValueOnce({
@@ -439,7 +742,7 @@ describe('BrainUserGateway', () => {
 
   describe('real-world usage patterns', () => {
     it('should handle Google OAuth flow', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       mockAdapter.request = vi.fn().mockResolvedValue({
         data: {
@@ -455,7 +758,7 @@ describe('BrainUserGateway', () => {
     });
 
     it('should handle email/password login flow', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       mockAdapter.request = vi.fn().mockResolvedValue({
         data: { token: 'auth-token-123' }
@@ -470,7 +773,7 @@ describe('BrainUserGateway', () => {
     });
 
     it('should handle user registration with profile data', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       mockAdapter.request = vi.fn().mockResolvedValue({
         data: {
@@ -501,13 +804,13 @@ describe('BrainUserGateway', () => {
     it('should handle empty API response', async () => {
       mockAdapter.request = vi.fn().mockResolvedValue({});
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.login({
         email: 'test',
         password: 'test'
       });
 
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it('should handle malformed API response', async () => {
@@ -515,14 +818,14 @@ describe('BrainUserGateway', () => {
         data: { unexpected: 'format' }
       });
 
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
       const result = await gateway.getUserInfo({});
 
       expect(result).toEqual({ unexpected: 'format' });
     });
 
     it('should handle multiple concurrent requests', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
       mockAdapter.request = vi.fn().mockResolvedValue({
         data: { token: 'token', email: 'user@example.com', id: 1 }
@@ -541,10 +844,10 @@ describe('BrainUserGateway', () => {
     });
 
     it('should handle logout without errors', async () => {
-      const gateway = new BrainUserGateway(mockApi);
+      const gateway = new BrainUserGateway(mockAdapter);
 
-      await expect(gateway.logout()).resolves.toBeUndefined();
-      await expect(gateway.logout()).resolves.toBeUndefined();
+      await expect(gateway.logout()).resolves.toBe(mockRequestResponse.data);
+      await expect(gateway.logout()).resolves.toBe(mockRequestResponse.data);
     });
   });
 });

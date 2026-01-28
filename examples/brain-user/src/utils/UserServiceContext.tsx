@@ -1,24 +1,33 @@
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { GatewayExecutor } from '@qlover/corekit-bridge/gateway-auth';
+import type {
+  BrainUserContext,
+  BrainUserPlugin
+} from '@brain-toolkit/brain-user';
 import { BrainUserService } from '@brain-toolkit/brain-user';
 import { localStorage } from './LocalStorage';
-import { userServicePlugin } from './userServicePlugin';
 import { UserServiceContext } from './useUserService';
+import { LifecycleExecutor } from '@qlover/fe-corekit';
+import { userServicePlugin } from './userServicePlugin';
+import type { BrainUserStore } from '@brain-toolkit/brain-user';
 
 export interface UserServiceContextValue {
   userService: BrainUserService<readonly string[]>;
-  userStore: ReturnType<BrainUserService<readonly string[]>['getStore']>;
+  userStore: BrainUserStore<readonly string[]>;
 }
 
 export function UserServiceProvider({ children }: { children: ReactNode }) {
   const [userService] = useState(() => {
     return new BrainUserService({
-      env: 'development',
+      // @ts-expect-error
+      logger: console,
       store: {
         storage: localStorage
       },
-      executor: new GatewayExecutor()
+      executor: new LifecycleExecutor<
+        BrainUserContext<readonly string[]>,
+        BrainUserPlugin
+      >()
     }).use(userServicePlugin);
   });
 

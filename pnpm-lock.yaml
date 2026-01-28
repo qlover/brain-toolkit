@@ -27,23 +27,23 @@ importers:
         specifier: 20.6.4
         version: 20.6.4(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.4.5))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@20.6.4(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.4.5))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
       '@qlover/env-loader':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^1.0.0
+        version: 1.0.0
       '@qlover/eslint-plugin':
-        specifier: ^1.1.0
-        version: 1.1.0(@typescript-eslint/parser@8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5))(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5)
+        specifier: ^2.0.0
+        version: 2.0.0(@typescript-eslint/parser@8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5))(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5)
       '@qlover/fe-release':
-        specifier: 3.2.0
-        version: 3.2.0(typescript@5.4.5)
+        specifier: 4.0.0
+        version: 4.0.0(typescript@5.4.5)
       '@qlover/fe-scripts':
-        specifier: ^1.1.0
-        version: 1.1.0(@types/node@22.19.0)(typescript@5.4.5)
+        specifier: ^2.0.0
+        version: 2.0.0(@types/node@22.19.0)(typescript@5.4.5)
       '@qlover/fe-standard':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.0.6
+        version: 0.0.6
       '@qlover/scripts-context':
-        specifier: ^1.2.1
-        version: 1.2.1(typescript@5.4.5)
+        specifier: ^2.0.0
+        version: 2.0.0(typescript@5.4.5)
       '@rollup/plugin-commonjs':
         specifier: ^28.0.1
         version: 28.0.9(rollup@4.52.5)
@@ -180,11 +180,11 @@ importers:
         specifier: latest
         version: 0.1.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/corekit-bridge':
-        specifier: ^1.9.0
-        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^2.1.1
+        version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^2.4.0
-        version: 2.5.0
+        specifier: ^3.1.1
+        version: 3.1.1
       '@qlover/slice-store-react':
         specifier: ^1.4.1
         version: 1.4.1
@@ -206,13 +206,13 @@ importers:
         version: 18.3.7(@types/react@18.3.27)
       '@vitejs/plugin-react':
         specifier: ^4.7.0
-        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
+        version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
 
   packages/antd-blocks:
     dependencies:
@@ -275,11 +275,21 @@ importers:
   packages/brain-user:
     dependencies:
       '@qlover/corekit-bridge':
-        specifier: ^1.9.0
-        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^2.1.1
+        version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^2.4.0
-        version: 2.4.0
+        specifier: ^3.1.1
+        version: 3.1.1
+      '@qlover/logger':
+        specifier: ^1.0.0
+        version: 1.0.0
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.23
+    devDependencies:
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
 
   packages/bridge:
     dependencies:
@@ -1718,14 +1728,14 @@ packages:
   '@qlover/corekit-bridge@1.9.0':
     resolution: {integrity: sha512-RTKxXXBoRplpXQejjy7Eo0ry0LPmF388wWVvJU2kOG9amTUV5R4bQExLQ45g8SrKHJHOUbpPcuHoDXEFAczIoA==}
 
-  '@qlover/env-loader@0.3.1':
-    resolution: {integrity: sha512-W8nquNgwAeD1YFtfUiHQoqjIrc5C6axdQ4MC6GEdPglQ++p+tCwcEe1bFaglGRJcRcb0wvRUWDici9b5xefZ2Q==}
+  '@qlover/corekit-bridge@2.1.1':
+    resolution: {integrity: sha512-B0arXzbd07cYkRXNwOKCcYUF+paFSmJ4j3ZKlejszjW50Sp0GF5qS9QVrsOqbbY6dxirepSoqylUgHKCJYMRTA==}
 
-  '@qlover/env-loader@0.4.0':
-    resolution: {integrity: sha512-KJMauG4LwKRU0C358+943NrkDeOHlJpUhYvKSp+O9Rz+/utwM0qu406w+ntdDMupJtzkKkOVeiSZ2HUXrkId/A==}
+  '@qlover/env-loader@1.0.0':
+    resolution: {integrity: sha512-4ZajhhpNSHY/1eTlBihqE9/nY0HC2A7pSLdp33qKpyGssPcQzJ50GAfQTbtbqVV2g7bZdxh/SCz8oWqzU+7nZg==}
 
-  '@qlover/eslint-plugin@1.1.0':
-    resolution: {integrity: sha512-ZQiwiEgPufypFOXiUuxIYF/Eqa2VxHTJueCAN9x60JO4zXOraq2PoIapgTiO6sB9+K0zOu0h7rAlcQ79Sosr6g==}
+  '@qlover/eslint-plugin@2.0.0':
+    resolution: {integrity: sha512-jaYlaYiiHpFffZoLOh7DiOJcBs68MYYk/3CvOkXy4CAv5Qt3Nf7dHRybCjZ6KjN57HAVxMTuuP5bSEQkQ7CNPA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       '@typescript-eslint/parser': '>=6.0.0'
@@ -1741,16 +1751,22 @@ packages:
   '@qlover/fe-corekit@2.5.0':
     resolution: {integrity: sha512-R8/RZKSrfjLiLksfauVfQzcDaPLkJ1PxsoZKPYnc4bOfhOusxdgOiQ63bL2fjx8HnfJV3wroiZfJsKeC1DQ8jQ==}
 
-  '@qlover/fe-release@3.2.0':
-    resolution: {integrity: sha512-uEqnQ16EGeqPGF/end8BOzEJVvg8C2ItgPTUKnmEn6dWQ6okXIttUTDnwA3yCQwhreDWNF/iRiT1U5FK4SMfJw==}
+  '@qlover/fe-corekit@3.0.0':
+    resolution: {integrity: sha512-WfX6aksm28YKUfaKekswmSN0ylSbVKZ4Cf6eH86r72gvJ+XQ70C93TUZGR9QRvu5kEU6QG8sES7GpbqgCicESg==}
+
+  '@qlover/fe-corekit@3.1.1':
+    resolution: {integrity: sha512-m7UKoShAkvwSaCmLgZWI7D+IlF+uqdn3vYqRAFD4Jn//7o12DLIvgbyeHXDt0Rb1RkqvOwS62aDKquTgxmrhtw==}
+
+  '@qlover/fe-release@4.0.0':
+    resolution: {integrity: sha512-grRKb71f1PY22KAxszrCgT44e45e05UKkj8PfZ6hrwcbo5ebWArVyixazg7GQ/EwygQnNI1SmonZut+JkXg6wQ==}
     hasBin: true
 
-  '@qlover/fe-scripts@1.1.0':
-    resolution: {integrity: sha512-vheoMTS/NdhNBnmOlcE6tT3D9gS948444TeFZ40IQC9naIMPFqKCJU7RKzM6HOADkErcKPMAe/ex7Ejh4SuaLg==}
+  '@qlover/fe-scripts@2.0.0':
+    resolution: {integrity: sha512-Ze2PAq04uD5KtnHrI8227QornltXWY6JDLGKgIvy7GVViXrLOCFP6fs93L/LH+4r+FqMZe+fJB+BKZHIGz88Vg==}
     hasBin: true
 
-  '@qlover/fe-standard@0.0.4':
-    resolution: {integrity: sha512-tKkilDE1IRaFpt6koWLropb9TPRILX+U97td2k669Vcei9OXaDNytPPOFjVz7b2jhB8QyJSMBotlMwDhJoK3Mg==}
+  '@qlover/fe-standard@0.0.6':
+    resolution: {integrity: sha512-xDe5v5bVvoMH/AID4TbZHmU28rXVLrDCvwVMKDyDh6f5LC6PnLIxChqxUWo+pIwb9hQeh5FA0nvEOMsavP7KKw==}
 
   '@qlover/logger@0.2.0':
     resolution: {integrity: sha512-Q1kKvMm8+oJ9wZHTIaBeQGRxrX59oUi3OVX6faUWjrQRdOCf5SRTq9QNmPWmnexqCgqVrZY+ja6MMVPv8BwtMQ==}
@@ -1761,11 +1777,11 @@ packages:
   '@qlover/logger@0.4.0':
     resolution: {integrity: sha512-S+rujm+QNhbmvmllLwNNtu4rgv3k4Ivx3m9W/k0MCPRcmRi9KAXw+TifHhHQFOfh8R+fVtKFduaGGH0N/wdELA==}
 
-  '@qlover/scripts-context@1.2.1':
-    resolution: {integrity: sha512-PEnwu8LLW4l6XIyVglDKx3mlb59ghEFPOYrQfALcg0V8POscbnsWg7mtHb+wIlxYLfVKUoC2vvpDscd3gGBTxg==}
+  '@qlover/logger@1.0.0':
+    resolution: {integrity: sha512-XpZcg+Xe9pK5uqil9E/oEBBXTrgTgrS7X6xDSF9VbJX0fMKVCpr6mLQbs+927r2qCNLbCopQmd0SxV9CqbYQ/A==}
 
-  '@qlover/scripts-context@1.3.0':
-    resolution: {integrity: sha512-EyLHSzMS+g9KP04Y2299OHKaeJWMIgnOwvQ/6ZtbMWMamX9HFYqFHffHXhlr/pSVJNx2nRgHTIbY2HEg10B1zQ==}
+  '@qlover/scripts-context@2.0.0':
+    resolution: {integrity: sha512-0bNF0/2SWsLYublNbYlS7aV/3kbAmoFnwwD2dohzrPi4UJwfntblUuPtF++fP6W9KSREDI4e0Z1qM7wlNtF10Q==}
 
   '@qlover/slice-store-react@1.4.1':
     resolution: {integrity: sha512-t7mfNXChtDW63fWnynrVUXa3a78dw1VnR559/CcDg1ozeNHKxKnXt3xMz0bszK82a/0+fZN/3N0df7G8uy+/xw==}
@@ -2344,6 +2360,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/lodash-es@4.17.12':
+    resolution: {integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==}
+
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
@@ -2638,6 +2657,10 @@ packages:
 
   any-promise@1.3.0:
     resolution: {integrity: sha512-7UvmKalWRt1wgjL1RrGxoSJW/0QZFIegpeGvZG9kjp8vrRu55XTHbwnqq2GpXm9uLbcuhxm3IqX9OB4MZR1b2A==}
+
+  any-signal@4.2.0:
+    resolution: {integrity: sha512-LndMvYuAPf4rC195lk7oSFuHOYFpOszIYrNYv0gHAvz+aEhE9qPZLhmrIz5pXP2BSsPOXvsuHDXEGaiQhIh9wA==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   anymatch@3.1.3:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
@@ -3696,6 +3719,10 @@ packages:
   is-module@1.0.0:
     resolution: {integrity: sha512-51ypPSPCoTEIN9dy5Oy+h4pShgJmPCygKfyRCISBI+JoWT/2oJvK8QPxmwv7b/p239jXrm9M1mlQbyKJ5A152g==}
 
+  is-network-error@1.3.0:
+    resolution: {integrity: sha512-6oIwpsgRfnDiyEDLMay/GqCl3HoAtH5+RUKW29gYkL0QA+ipzpDLA16yQs7/RHCSu+BwgbJaOUqa4A99qNVQVw==}
+    engines: {node: '>=16'}
+
   is-number@7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
@@ -3883,6 +3910,9 @@ packages:
   locate-path@7.2.0:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  lodash-es@4.17.23:
+    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -4168,6 +4198,10 @@ packages:
   p-map@7.0.3:
     resolution: {integrity: sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==}
     engines: {node: '>=18'}
+
+  p-retry@7.1.1:
+    resolution: {integrity: sha512-J5ApzjyRkkf601HpEeykoiCvzHQjWxPAHhyjFcEUP2SWq0+35NKh8TLhpLw+Dkq5TZBFvUM6UigdE9hIVYTl5w==}
+    engines: {node: '>=20'}
 
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
@@ -7126,15 +7160,32 @@ snapshots:
       - tsx
       - yaml
 
-  '@qlover/env-loader@0.3.1':
+  '@qlover/corekit-bridge@2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)':
+    dependencies:
+      '@qlover/fe-corekit': 3.1.1
+      '@qlover/logger': 1.0.0
+      '@qlover/slice-store': 1.4.1
+      js-cookie: 3.0.5
+      tailwindcss: 3.4.19(yaml@2.8.1)
+      vite: 5.4.21(@types/node@22.19.0)(terser@5.44.0)
+    transitivePeerDependencies:
+      - '@types/node'
+      - debug
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - terser
+      - tsx
+      - yaml
+
+  '@qlover/env-loader@1.0.0':
     dependencies:
       dotenv: 16.6.1
 
-  '@qlover/env-loader@0.4.0':
-    dependencies:
-      dotenv: 16.6.1
-
-  '@qlover/eslint-plugin@1.1.0(@typescript-eslint/parser@8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5))(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5)':
+  '@qlover/eslint-plugin@2.0.0(@typescript-eslint/parser@8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5))(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5)':
     dependencies:
       '@typescript-eslint/parser': 8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5)
       eslint: 9.39.1(jiti@2.6.1)
@@ -7163,13 +7214,31 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@qlover/fe-release@3.2.0(typescript@5.4.5)':
+  '@qlover/fe-corekit@3.0.0':
+    dependencies:
+      any-signal: 4.2.0
+      axios: 1.13.2
+      lodash-es: 4.17.23
+      p-retry: 7.1.1
+    transitivePeerDependencies:
+      - debug
+
+  '@qlover/fe-corekit@3.1.1':
+    dependencies:
+      any-signal: 4.2.0
+      axios: 1.13.2
+      lodash-es: 4.17.23
+      p-retry: 7.1.1
+    transitivePeerDependencies:
+      - debug
+
+  '@qlover/fe-release@4.0.0(typescript@5.4.5)':
     dependencies:
       '@octokit/rest': 21.1.1
-      '@qlover/env-loader': 0.4.0
-      '@qlover/fe-corekit': 2.5.0
-      '@qlover/logger': 0.4.0
-      '@qlover/scripts-context': 1.3.0(typescript@5.4.5)
+      '@qlover/env-loader': 1.0.0
+      '@qlover/fe-corekit': 3.0.0
+      '@qlover/logger': 1.0.0
+      '@qlover/scripts-context': 2.0.0(typescript@5.4.5)
       commander: 11.1.0
       find-workspaces: 0.3.1
       gitlog: 5.1.0
@@ -7178,13 +7247,13 @@ snapshots:
       - supports-color
       - typescript
 
-  '@qlover/fe-scripts@1.1.0(@types/node@22.19.0)(typescript@5.4.5)':
+  '@qlover/fe-scripts@2.0.0(@types/node@22.19.0)(typescript@5.4.5)':
     dependencies:
       '@commitlint/config-conventional': 19.8.1
       '@octokit/rest': 21.1.1
-      '@qlover/env-loader': 0.4.0
-      '@qlover/fe-corekit': 2.5.0
-      '@qlover/scripts-context': 1.3.0(typescript@5.4.5)
+      '@qlover/env-loader': 1.0.0
+      '@qlover/fe-corekit': 3.0.0
+      '@qlover/scripts-context': 2.0.0(typescript@5.4.5)
       commander: 11.1.0
       commitizen: 4.3.1(@types/node@22.19.0)(typescript@5.4.5)
       find-workspaces: 0.3.1
@@ -7195,7 +7264,7 @@ snapshots:
       - debug
       - typescript
 
-  '@qlover/fe-standard@0.0.4': {}
+  '@qlover/fe-standard@0.0.6': {}
 
   '@qlover/logger@0.2.0': {}
 
@@ -7203,22 +7272,15 @@ snapshots:
 
   '@qlover/logger@0.4.0': {}
 
-  '@qlover/scripts-context@1.2.1(typescript@5.4.5)':
-    dependencies:
-      '@qlover/env-loader': 0.3.1
-      '@qlover/fe-corekit': 2.5.0
-      chalk: 5.6.2
-      cosmiconfig: 9.0.0(typescript@5.4.5)
-    transitivePeerDependencies:
-      - debug
-      - typescript
+  '@qlover/logger@1.0.0': {}
 
-  '@qlover/scripts-context@1.3.0(typescript@5.4.5)':
+  '@qlover/scripts-context@2.0.0(typescript@5.4.5)':
     dependencies:
-      '@qlover/env-loader': 0.4.0
-      '@qlover/fe-corekit': 2.5.0
+      '@qlover/env-loader': 1.0.0
+      '@qlover/fe-corekit': 3.0.0
       chalk: 5.6.2
       cosmiconfig: 9.0.0(typescript@5.4.5)
+      lodash-es: 4.17.23
     transitivePeerDependencies:
       - debug
       - typescript
@@ -7724,6 +7786,10 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/lodash-es@4.17.12':
+    dependencies:
+      '@types/lodash': 4.17.20
+
   '@types/lodash@4.17.20': {}
 
   '@types/node@12.20.55': {}
@@ -8166,6 +8232,8 @@ snapshots:
       - moment
 
   any-promise@1.3.0: {}
+
+  any-signal@4.2.0: {}
 
   anymatch@3.1.3:
     dependencies:
@@ -9259,6 +9327,8 @@ snapshots:
 
   is-module@1.0.0: {}
 
+  is-network-error@1.3.0: {}
+
   is-number@7.0.0: {}
 
   is-obj@2.0.0: {}
@@ -9432,6 +9502,8 @@ snapshots:
   locate-path@7.2.0:
     dependencies:
       p-locate: 6.0.0
+
+  lodash-es@4.17.23: {}
 
   lodash.camelcase@4.3.0: {}
 
@@ -9730,6 +9802,10 @@ snapshots:
       aggregate-error: 3.1.0
 
   p-map@7.0.3: {}
+
+  p-retry@7.1.1:
+    dependencies:
+      is-network-error: 1.3.0
 
   p-try@2.2.0: {}
 

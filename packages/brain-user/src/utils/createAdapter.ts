@@ -2,19 +2,19 @@ import type {
   RequestAdapterConfig,
   RequestAdapterInterface
 } from '@qlover/fe-corekit';
-import { RequestAdapterFetch, FetchURLPlugin } from '@qlover/fe-corekit';
-import { RequestCommonPlugin } from '@qlover/corekit-bridge/request-plugins';
-import type { BrainUserApiConfig } from '../BrainUserApi';
+import { RequestAdapterFetch } from '@qlover/fe-corekit';
+import type { BrainUserGatewayConfig } from '../interface/BrainUserGatewayInterface';
 import type { BrainUserStoreInterface } from '../interface/BrainUserStoreInterface';
+import { defaultBrainUserOptions } from '../config/common';
 
 /**
  * Type definition for adapter creation options
  *
- * Can be either a RequestAdapterInterface instance or BrainUserApiConfig
+ * Can be either a RequestAdapterInterface instance or BrainUserGatewayConfig
  */
-export type CreateAdapterType<Config extends BrainUserApiConfig<unknown>> =
+export type CreateAdapterType<Config extends BrainUserGatewayConfig<unknown>> =
   | RequestAdapterInterface<Config>
-  | BrainUserApiConfig<unknown>;
+  | BrainUserGatewayConfig<unknown>;
 
 /**
  * Type guard to check if the value is a RequestAdapterInterface
@@ -36,7 +36,7 @@ export type CreateAdapterType<Config extends BrainUserApiConfig<unknown>> =
  * ```
  */
 export function isRequestAdapterInterface(
-  options: CreateAdapterType<BrainUserApiConfig<unknown>>
+  options: CreateAdapterType<BrainUserGatewayConfig<unknown>>
 ): options is RequestAdapterInterface<RequestAdapterConfig> {
   if (!options || typeof options !== 'object') {
     return false;
@@ -92,7 +92,7 @@ function parseBaseURL(
  * Main function: Initialize or return a request adapter with FetchURLPlugin and RequestCommonPlugin
  * Main purpose: Simplify adapter setup with automatic configuration and proper request handling
  *
- * @param options - Either a RequestAdapterInterface instance or BrainUserApiConfig
+ * @param options - Either a RequestAdapterInterface instance or BrainUserGatewayConfig
  * @param userStore - Optional user store for token retrieval
  * @returns A RequestAdapterInterface instance ready for use with plugins configured
  *
@@ -110,43 +110,26 @@ function parseBaseURL(
  * ```
  */
 export function createAdapter<
-  Config extends BrainUserApiConfig<unknown>,
+  Config extends BrainUserGatewayConfig<unknown>,
   Tags extends readonly string[] = readonly string[]
 >(
   options: CreateAdapterType<Config>,
-  userStore?: BrainUserStoreInterface<Tags> | null
+  _userStore?: BrainUserStoreInterface<Tags> | null
 ): RequestAdapterInterface<RequestAdapterConfig> {
   if (isRequestAdapterInterface(options)) {
     return options;
   }
 
-  const config = options as BrainUserApiConfig<unknown>;
-  const { env, domains, baseURL, ...restOptions } = config;
+  const config = options as BrainUserGatewayConfig<unknown>;
+  const { env, domains, baseURL, endpoints, ...restOptions } = config;
 
-  // Create a new RequestAdapterFetch with the baseURL
-  const fetchAdapter = new RequestAdapterFetch({
+  return new RequestAdapterFetch({
+    ...defaultBrainUserOptions,
     ...restOptions,
+    endpoints: {
+      ...defaultBrainUserOptions.endpoints,
+      ...endpoints
+    },
     baseURL: parseBaseURL(baseURL, env, domains)
   });
-
-  // Add FetchURLPlugin for URL handling
-  fetchAdapter.usePlugin(new FetchURLPlugin());
-
-  // Add RequestCommonPlugin for token and common request handling
-  // This plugin handles GET/HEAD requests without body, token injection, etc.
-  fetchAdapter.usePlugin(
-    new RequestCommonPlugin({
-      token: userStore?.getToken.bind(userStore),
-      ...restOptions
-    })
-  );
-
-  // fetchAdapter.usePlugin({
-  //   pluginName: 'request-logger',
-  //   onBefore(context) {
-  //     console.log('[before] request-logger', context.parameters);
-  //   }
-  // });
-
-  return fetchAdapter as RequestAdapterInterface<RequestAdapterConfig>;
 }

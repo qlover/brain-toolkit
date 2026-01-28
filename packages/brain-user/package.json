@@ -44,7 +44,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@qlover/corekit-bridge": "^1.9.0",
-    "@qlover/fe-corekit": "^2.4.0"
+    "@qlover/corekit-bridge": "^2.1.1",
+    "@qlover/fe-corekit": "^3.1.1",
+    "@qlover/logger": "^1.0.0",
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12"
   }
 }
