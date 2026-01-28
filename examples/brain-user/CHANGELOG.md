@@ -1,5 +1,23 @@
 # examples/brain-user
 
+## 0.2.0
+
+### Minor Changes
+
+#### ♻️ Refactors
+
+- **brain-user:** Update package configurations and dependencies ([bb0149e](https://github.com/qlover/brain-toolkit/commit/bb0149ee36736ee17eeea3563164b054ab52fe25)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Refactored package.json to streamline clean scripts and update dependency paths for local development.
+  - Upgraded various dependencies in pnpm-lock.yaml to their latest versions, enhancing compatibility and functionality.
+  - Improved Vite configuration for better module resolution and code organization.
+  - Removed obsolete test files and added new type guard tests to ensure type safety for user-related data structures.
+
+- **brain-user:** Update dependencies and enhance error handling in LoginPage ([0469830](https://github.com/qlover/brain-toolkit/commit/04698303b912bc57ec790ac9717f652c6e38111c)) ([#29](https://github.com/qlover/brain-toolkit/pull/29))
+  - Updated dependencies in package.json for @qlover/corekit-bridge and @qlover/fe-corekit to their latest versions.
+  - Enhanced the LoginPage component by adding error display functionality to improve user feedback during login attempts.
+  - Refactored UserServiceProvider to streamline user service initialization.
+  - Improved user service plugin to handle loading states more effectively during user actions.
+
 ## 0.1.1
 
 ### Patch Changes
