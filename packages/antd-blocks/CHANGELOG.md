@@ -1,5 +1,16 @@
 # @brain-toolkit/antd-blocks
 
+## 0.1.2
+
+### Patch Changes
+
+#### ♻️ Refactors
+
+- Update dependencies for @qlover/corekit-bridge and @qlover/fe-corekit in antd-blocks and react-kit packages ([e731d45](https://github.com/qlover/brain-toolkit/commit/e731d45a64d9659f2dbb2544f914b7f251113d9d)) ([#31](https://github.com/qlover/brain-toolkit/pull/31))
+  - Upgraded @qlover/corekit-bridge from version 1.6.6 to 2.1.1.
+  - Upgraded @qlover/fe-corekit from version 2.1.0 to 3.1.1.
+  - Updated pnpm-lock.yaml to reflect these changes and ensure compatibility across the project.
+
 ## 0.1.1
 
 ### Patch Changes
