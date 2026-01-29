@@ -206,13 +206,13 @@ importers:
         version: 18.3.7(@types/react@18.3.27)
       '@vitejs/plugin-react':
         specifier: ^4.7.0
-        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
+        version: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
 
   packages/antd-blocks:
     dependencies:
@@ -220,11 +220,11 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@qlover/corekit-bridge':
-        specifier: ^1.6.6
-        version: 1.6.6(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^2.1.1
+        version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^3.1.1
+        version: 3.1.1
       '@qlover/slice-store-react':
         specifier: ^1.4.1
         version: 1.4.1
@@ -243,7 +243,7 @@ importers:
         version: 18.3.7(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
-        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -252,10 +252,10 @@ importers:
         version: 7.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       vite:
         specifier: ^6.1.0
-        version: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
+        version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
       vite-plugin-dts:
         specifier: ^4.5.4
-        version: 4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
 
   packages/antd-theme-override:
     devDependencies:
@@ -305,11 +305,11 @@ importers:
   packages/react-kit:
     dependencies:
       '@qlover/corekit-bridge':
-        specifier: ^1.6.6
-        version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^2.1.1
+        version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^2.1.0
-        version: 2.4.0
+        specifier: ^3.1.1
+        version: 3.1.1
       '@qlover/slice-store-react':
         specifier: ^1.4.1
         version: 1.4.1
@@ -1722,9 +1722,6 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@qlover/corekit-bridge@1.6.6':
-    resolution: {integrity: sha512-6IRshAv/U+WXkdvKMEPKlGdF7/ItxygNXHNx91pGN1wfHujlbH9D6465nrHrm/HZZHy8bJRdTx4kG+ypRYX/Aw==}
-
   '@qlover/corekit-bridge@1.9.0':
     resolution: {integrity: sha512-RTKxXXBoRplpXQejjy7Eo0ry0LPmF388wWVvJU2kOG9amTUV5R4bQExLQ45g8SrKHJHOUbpPcuHoDXEFAczIoA==}
 
@@ -1741,9 +1738,6 @@ packages:
       '@typescript-eslint/parser': '>=6.0.0'
       eslint: '>=8.0.0'
       typescript: '>=4.0.0'
-
-  '@qlover/fe-corekit@2.1.0':
-    resolution: {integrity: sha512-rckj7nx21MFhael3dBpC1xHd83Wv9PGEOAYhHa5uDfizUru18sDDlseYlzpDI4KpRL34BMLoE0fqT91bLyJxTQ==}
 
   '@qlover/fe-corekit@2.4.0':
     resolution: {integrity: sha512-SYNG8rGIJsj60S//NCPmUPo41EEl+Ko/RRkyaeQPv4jp/A6ivdIV+3gaaWNu63//LyviUUhy2p7wPNUHZcZvnA==}
@@ -1767,9 +1761,6 @@ packages:
 
   '@qlover/fe-standard@0.0.6':
     resolution: {integrity: sha512-xDe5v5bVvoMH/AID4TbZHmU28rXVLrDCvwVMKDyDh6f5LC6PnLIxChqxUWo+pIwb9hQeh5FA0nvEOMsavP7KKw==}
-
-  '@qlover/logger@0.2.0':
-    resolution: {integrity: sha512-Q1kKvMm8+oJ9wZHTIaBeQGRxrX59oUi3OVX6faUWjrQRdOCf5SRTq9QNmPWmnexqCgqVrZY+ja6MMVPv8BwtMQ==}
 
   '@qlover/logger@0.3.3':
     resolution: {integrity: sha512-wWWxTSMkVw9HtvMKmeiVqH7IDjEXm0GNyacm1ZS4gP5Ge2NPdl7L0ctwiHmOogoInc5VGdiaf44d+ix5nrABrQ==}
@@ -4966,11 +4957,6 @@ packages:
     resolution: {integrity: sha512-MeQTA1r0litLUf0Rp/iisCaL8761lKAZHaimlbGK4j0HysC4PLfqygQj9srcs0m2RdtDYnF8UuYyKpbjHYp7Jw==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  tailwindcss@3.4.18:
-    resolution: {integrity: sha512-6A2rnmW5xZMdw11LYjhcI5846rt9pbLSabY5XPxo+XWdxwZaFEn47Go4NzFiHu9sNNmr/kXivP1vStfvMaK1GQ==}
-    engines: {node: '>=14.0.0'}
-    hasBin: true
-
   tailwindcss@3.4.19:
     resolution: {integrity: sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==}
     engines: {node: '>=14.0.0'}
@@ -7118,27 +7104,6 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@qlover/corekit-bridge@1.6.6(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)':
-    dependencies:
-      '@qlover/fe-corekit': 2.1.0
-      '@qlover/logger': 0.2.0
-      '@qlover/slice-store': 1.4.1
-      js-cookie: 3.0.5
-      tailwindcss: 3.4.18(yaml@2.8.1)
-      vite: 5.4.21(@types/node@22.19.0)(terser@5.44.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
-
   '@qlover/corekit-bridge@1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)':
     dependencies:
       '@qlover/fe-corekit': 2.4.0
@@ -7190,13 +7155,6 @@ snapshots:
       '@typescript-eslint/parser': 8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.4.5)
       eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.4.5
-
-  '@qlover/fe-corekit@2.1.0':
-    dependencies:
-      '@types/lodash': 4.17.20
-      axios: 1.13.2
-    transitivePeerDependencies:
-      - debug
 
   '@qlover/fe-corekit@2.4.0':
     dependencies:
@@ -7265,8 +7223,6 @@ snapshots:
       - typescript
 
   '@qlover/fe-standard@0.0.6': {}
-
-  '@qlover/logger@0.2.0': {}
 
   '@qlover/logger@0.3.3': {}
 
@@ -10651,34 +10607,6 @@ snapshots:
     dependencies:
       '@pkgr/core': 0.2.9
 
-  tailwindcss@3.4.18(yaml@2.8.1):
-    dependencies:
-      '@alloc/quick-lru': 5.2.0
-      arg: 5.0.2
-      chokidar: 3.6.0
-      didyoumean: 1.2.2
-      dlv: 1.1.3
-      fast-glob: 3.3.3
-      glob-parent: 6.0.2
-      is-glob: 4.0.3
-      jiti: 1.21.7
-      lilconfig: 3.1.3
-      micromatch: 4.0.8
-      normalize-path: 3.0.0
-      object-hash: 3.0.0
-      picocolors: 1.1.1
-      postcss: 8.5.6
-      postcss-import: 15.1.0(postcss@8.5.6)
-      postcss-js: 4.1.0(postcss@8.5.6)
-      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.6)(yaml@2.8.1)
-      postcss-nested: 6.2.0(postcss@8.5.6)
-      postcss-selector-parser: 6.1.2
-      resolve: 1.22.11
-      sucrase: 3.35.1
-    transitivePeerDependencies:
-      - tsx
-      - yaml
-
   tailwindcss@3.4.19(yaml@2.8.1):
     dependencies:
       '@alloc/quick-lru': 5.2.0
@@ -10952,25 +10880,6 @@ snapshots:
       typescript: 5.4.5
     optionalDependencies:
       vite: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
-    transitivePeerDependencies:
-      - '@types/node'
-      - rollup
-      - supports-color
-
-  vite-plugin-dts@4.5.4(@types/node@22.19.0)(rollup@4.53.5)(typescript@5.8.2)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)):
-    dependencies:
-      '@microsoft/api-extractor': 7.54.0(@types/node@22.19.0)
-      '@rollup/pluginutils': 5.3.0(rollup@4.53.5)
-      '@volar/typescript': 2.4.23
-      '@vue/language-core': 2.2.0(typescript@5.8.2)
-      compare-versions: 6.1.1
-      debug: 4.4.3
-      kolorist: 1.8.0
-      local-pkg: 1.1.2
-      magic-string: 0.30.21
-      typescript: 5.8.2
-    optionalDependencies:
-      vite: 6.4.1(@types/node@22.19.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - rollup
