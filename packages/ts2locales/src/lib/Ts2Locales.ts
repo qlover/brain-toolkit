@@ -50,7 +50,7 @@ export type Ts2LocalesValue = {
   source: string;
 
   /**
-   * @description The path to the target file
+   * @description The path to the target file. Supports placeholders: {{lng}}, {{ns}}
    * @example
    *
    * ```ts
@@ -58,14 +58,28 @@ export type Ts2LocalesValue = {
    *  source: './config/ErrorIdentifier.ts',
    *  target: './locales/{{lng}}/common.json'
    * }
-   * // or
+   * // or with namespace (requires resolveNs):
    * {
    *  source: './config/ErrorIdentifier.ts',
-   *  target: './locales/common.{{lng}}.json'
+   *  target: './public/locales/{{lng}}/{{ns}}.json',
+   *  resolveNs: (key) => key.split(':')[0],
+   *  resolveKeyInFile: (key, ns) => key.slice(ns.length + 1)  // optional, default keeps full key
    * }
    * ```
    */
   target: string;
+  /**
+   * Required when target contains `{{ns}}`. Extracts namespace from each key.
+   * Must return a string; otherwise an error is thrown.
+   * @example (key) => key.split(':')[0] for "common:theme.default" -> "common"
+   */
+  resolveNs?: (key: string) => string;
+  /**
+   * Optional. Defines the key used inside each ns JSON file.
+   * When not provided, the original key is kept (e.g. "common:theme.default").
+   * @example (key, ns) => key.slice(ns.length + 1) for "theme.default" in common.json
+   */
+  resolveKeyInFile?: (key: string, ns: string) => string;
 };
 
 // 支持的语言代码类型
@@ -276,10 +290,17 @@ export class Ts2Locales {
    * @returns Returns a Promise indicating the completion of the generation operation
    */
   public async generate(value: Ts2LocalesValue): Promise<void> {
-    const { source, target } = value;
+    const { source, target, resolveNs, resolveKeyInFile } = value;
 
     if (!existsSync(source)) {
       throw new Error(`Source file ${source} does not exist`);
+    }
+
+    const useNs = target.includes('{{ns}}');
+    if (useNs && !resolveNs) {
+      throw new Error(
+        `Target "${target}" contains {{ns}} but resolveNs is not provided`
+      );
     }
 
     // 1. Get internationalization information from the source file
@@ -289,23 +310,52 @@ export class Ts2Locales {
       // 2. Create localization file content
       const localeJSONContent = this.create(locale, sourceParseValues);
 
-      // 3. Read target file path
-      const targetPath = target.replace('{{lng}}', locale);
-
-      // 4. Write to target file, merge content if file exists
-      if (existsSync(targetPath)) {
-        const targetFile = readFileSync(targetPath, 'utf-8');
-        const targetFileJson = JSON.parse(targetFile);
-        const mergedFile = { ...targetFileJson, ...localeJSONContent };
-        writeFileSync(targetPath, JSON.stringify(mergedFile, null, 2));
-      } else {
-        // If it doesn't exist, create directory path and new file
-        const dirPath = dirname(targetPath);
-        if (!existsSync(dirPath)) {
-          mkdirSync(dirPath, { recursive: true });
+      if (useNs && resolveNs) {
+        // Group by namespace, then write one file per ns
+        const grouped = new Map<string, Record<string, string>>();
+        for (const [key, content] of Object.entries(localeJSONContent)) {
+          const ns = resolveNs(key);
+          if (typeof ns !== 'string') {
+            throw new Error(
+              `resolveNs must return a string for key "${key}", got: ${typeof ns}`
+            );
+          }
+          const keyInFile = resolveKeyInFile ? resolveKeyInFile(key, ns) : key;
+          const record = grouped.get(ns) ?? {};
+          record[keyInFile] = content;
+          grouped.set(ns, record);
         }
-        writeFileSync(targetPath, JSON.stringify(localeJSONContent, null, 2));
+        for (const [ns, content] of grouped) {
+          const targetPath = target
+            .replace('{{lng}}', locale)
+            .replace('{{ns}}', ns);
+          this.writeTargetFile(targetPath, content);
+        }
+      } else {
+        const targetPath = target.replace('{{lng}}', locale);
+        this.writeTargetFile(targetPath, localeJSONContent);
       }
+    }
+  }
+
+  /**
+   * Writes or merges content to target path
+   */
+  private writeTargetFile(
+    targetPath: string,
+    localeJSONContent: Record<string, string>
+  ): void {
+    if (existsSync(targetPath)) {
+      const targetFile = readFileSync(targetPath, 'utf-8');
+      const targetFileJson = JSON.parse(targetFile);
+      const mergedFile = { ...targetFileJson, ...localeJSONContent };
+      writeFileSync(targetPath, JSON.stringify(mergedFile, null, 2));
+    } else {
+      const dirPath = dirname(targetPath);
+      if (!existsSync(dirPath)) {
+        mkdirSync(dirPath, { recursive: true });
+      }
+      writeFileSync(targetPath, JSON.stringify(localeJSONContent, null, 2));
     }
   }
 }

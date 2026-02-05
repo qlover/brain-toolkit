@@ -752,4 +752,356 @@ export const NO_TRANSLATIONS = 'test.no.translations';
       ).rejects.toThrow();
     });
   });
+
+  describe('generate with {{ns}} (namespace)', () => {
+    const nsTargetTemplate = join(testDir, 'locales/{{lng}}/{{ns}}.json');
+
+    it('should throw when target contains {{ns}} but resolveNs is not provided', async () => {
+      const content = `
+/**
+ * @description Theme key
+ * @localZh 默认主题
+ * @localEn Default Theme
+ */
+export const THEME_DEFAULT = 'common:theme.default';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await expect(
+        ts2locales.generate({
+          source: sourceFile,
+          target: nsTargetTemplate
+        })
+      ).rejects.toThrow(
+        /Target .* contains \{\{ns\}\} but resolveNs is not provided/
+      );
+    });
+
+    it('should throw when resolveNs returns non-string', async () => {
+      const content = `
+/**
+ * @description Theme key
+ * @localZh 默认主题
+ * @localEn Default Theme
+ */
+export const THEME_DEFAULT = 'common:theme.default';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await expect(
+        ts2locales.generate({
+          source: sourceFile,
+          target: nsTargetTemplate,
+          resolveNs: () => undefined as unknown as string
+        })
+      ).rejects.toThrow(
+        'resolveNs must return a string for key "common:theme.default", got: undefined'
+      );
+
+      await expect(
+        ts2locales.generate({
+          source: sourceFile,
+          target: nsTargetTemplate,
+          resolveNs: () => 123 as unknown as string
+        })
+      ).rejects.toThrow(
+        'resolveNs must return a string for key "common:theme.default", got: number'
+      );
+    });
+
+    it('should split by ns and write multiple files (default: full key in file)', async () => {
+      const content = `
+/**
+ * @description Default theme
+ * @localZh 默认主题
+ * @localEn Default Theme
+ */
+export const THEME_DEFAULT = 'common:theme.default';
+
+/**
+ * @description Dark theme
+ * @localZh 深色主题
+ * @localEn Dark Theme
+ */
+export const THEME_DARK = 'page:theme.dark';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: nsTargetTemplate,
+        resolveNs: (key) => key.split(':')[0]
+      });
+
+      const zhCommon = readFileSync(
+        join(testDir, 'locales/zh/common.json'),
+        'utf8'
+      );
+      const zhPage = readFileSync(
+        join(testDir, 'locales/zh/page.json'),
+        'utf8'
+      );
+      const enCommon = readFileSync(
+        join(testDir, 'locales/en/common.json'),
+        'utf8'
+      );
+      const enPage = readFileSync(
+        join(testDir, 'locales/en/page.json'),
+        'utf8'
+      );
+
+      expect(JSON.parse(zhCommon)).toEqual({
+        'common:theme.default': '默认主题'
+      });
+      expect(JSON.parse(zhPage)).toEqual({
+        'page:theme.dark': '深色主题'
+      });
+      expect(JSON.parse(enCommon)).toEqual({
+        'common:theme.default': 'Default Theme'
+      });
+      expect(JSON.parse(enPage)).toEqual({
+        'page:theme.dark': 'Dark Theme'
+      });
+    });
+
+    it('should use resolveKeyInFile when provided (strip ns prefix in file)', async () => {
+      const content = `
+/**
+ * @description Default theme
+ * @localZh 默认主题
+ * @localEn Default Theme
+ */
+export const THEME_DEFAULT = 'common:theme.default';
+
+/**
+ * @description Dark theme
+ * @localZh 深色主题
+ * @localEn Dark Theme
+ */
+export const THEME_DARK = 'page:theme.dark';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: nsTargetTemplate,
+        resolveNs: (key) => key.split(':')[0],
+        resolveKeyInFile: (key, ns) => key.slice(ns.length + 1)
+      });
+
+      const zhCommon = readFileSync(
+        join(testDir, 'locales/zh/common.json'),
+        'utf8'
+      );
+      const zhPage = readFileSync(
+        join(testDir, 'locales/zh/page.json'),
+        'utf8'
+      );
+      const enCommon = readFileSync(
+        join(testDir, 'locales/en/common.json'),
+        'utf8'
+      );
+
+      expect(JSON.parse(zhCommon)).toEqual({
+        'theme.default': '默认主题'
+      });
+      expect(JSON.parse(zhPage)).toEqual({
+        'theme.dark': '深色主题'
+      });
+      expect(JSON.parse(enCommon)).toEqual({
+        'theme.default': 'Default Theme'
+      });
+    });
+
+    it('should put multiple keys in same ns into one file', async () => {
+      const content = `
+/**
+ * @description Default theme
+ * @localZh 默认主题
+ * @localEn Default Theme
+ */
+export const THEME_DEFAULT = 'common:theme.default';
+
+/**
+ * @description Primary button
+ * @localZh 主要按钮
+ * @localEn Primary Button
+ */
+export const BTN_PRIMARY = 'common:button.primary';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: nsTargetTemplate,
+        resolveNs: (key) => key.split(':')[0]
+      });
+
+      const zhCommon = readFileSync(
+        join(testDir, 'locales/zh/common.json'),
+        'utf8'
+      );
+      const enCommon = readFileSync(
+        join(testDir, 'locales/en/common.json'),
+        'utf8'
+      );
+
+      expect(JSON.parse(zhCommon)).toEqual({
+        'common:theme.default': '默认主题',
+        'common:button.primary': '主要按钮'
+      });
+      expect(JSON.parse(enCommon)).toEqual({
+        'common:theme.default': 'Default Theme',
+        'common:button.primary': 'Primary Button'
+      });
+    });
+
+    it('should merge with existing ns files when they exist', async () => {
+      const commonZhPath = join(testDir, 'locales/zh/common.json');
+      const commonEnPath = join(testDir, 'locales/en/common.json');
+      writeFileSync(
+        commonZhPath,
+        JSON.stringify({ 'common:existing': '已有项' })
+      );
+      writeFileSync(
+        commonEnPath,
+        JSON.stringify({ 'common:existing': 'Existing item' })
+      );
+
+      const content = `
+/**
+ * @description New key
+ * @localZh 新项
+ * @localEn New item
+ */
+export const NEW = 'common:new.key';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: nsTargetTemplate,
+        resolveNs: (key) => key.split(':')[0]
+      });
+
+      const zhCommon = readFileSync(commonZhPath, 'utf8');
+      const enCommon = readFileSync(commonEnPath, 'utf8');
+
+      expect(JSON.parse(zhCommon)).toEqual({
+        'common:existing': '已有项',
+        'common:new.key': '新项'
+      });
+      expect(JSON.parse(enCommon)).toEqual({
+        'common:existing': 'Existing item',
+        'common:new.key': 'New item'
+      });
+    });
+
+    it('should create directory when ns file does not exist', async () => {
+      const content = `
+/**
+ * @description Only page ns
+ * @localZh 仅页面
+ * @localEn Page only
+ */
+export const PAGE_ONLY = 'page:only';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: nsTargetTemplate,
+        resolveNs: (key) => key.split(':')[0]
+      });
+
+      expect(existsSync(join(testDir, 'locales/zh/page.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales/en/page.json'))).toBe(true);
+      expect(
+        JSON.parse(readFileSync(join(testDir, 'locales/zh/page.json'), 'utf8'))
+      ).toEqual({
+        'page:only': '仅页面'
+      });
+    });
+
+    it('should allow custom ns extraction logic', async () => {
+      const content = `
+/**
+ * @description Foo
+ * @localZh 福
+ * @localEn Foo
+ */
+export const FOO = 'module_foo:bar';
+
+/**
+ * @description Baz
+ * @localZh 巴
+ * @localEn Baz
+ */
+export const BAZ = 'module_baz:qux';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: nsTargetTemplate,
+        resolveNs: (key) =>
+          key.startsWith('module_')
+            ? key.split(':')[0].replace('module_', '')
+            : 'common'
+      });
+
+      expect(
+        JSON.parse(readFileSync(join(testDir, 'locales/zh/foo.json'), 'utf8'))
+      ).toEqual({
+        'module_foo:bar': '福'
+      });
+      expect(
+        JSON.parse(readFileSync(join(testDir, 'locales/zh/baz.json'), 'utf8'))
+      ).toEqual({
+        'module_baz:qux': '巴'
+      });
+    });
+  });
+
+  describe('generate without {{ns}} (resolveNs ignored)', () => {
+    it('should write single file and ignore resolveNs/resolveKeyInFile when target has no {{ns}}', async () => {
+      const content = `
+/**
+ * @description Test
+ * @localZh 测试
+ * @localEn Test
+ */
+export const TEST = 'test.constant';
+`;
+      writeFileSync(sourceFile, content);
+
+      const ts2locales = new Ts2Locales(['zh', 'en']);
+      await ts2locales.generate({
+        source: sourceFile,
+        target: join(testDir, 'locales/{{lng}}/single.json'),
+        resolveNs: (key) => key.split(':')[0],
+        resolveKeyInFile: (key, ns) => key.slice(ns.length + 1)
+      });
+
+      expect(existsSync(join(testDir, 'locales/zh/single.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales/en/single.json'))).toBe(true);
+      expect(
+        JSON.parse(
+          readFileSync(join(testDir, 'locales/zh/single.json'), 'utf8')
+        )
+      ).toEqual({
+        'test.constant': '测试'
+      });
+      // No namespace splitting: single file with one key
+      expect(existsSync(join(testDir, 'locales/zh/common.json'))).toBe(false);
+    });
+  });
 });
