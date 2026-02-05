@@ -1,5 +1,16 @@
 # @brain-toolkit/ts2locales
 
+## 0.4.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **ts2locales:** upgrade vite dependency and enhance test coverage for namespace handling ([3c13031](https://github.com/qlover/brain-toolkit/commit/3c13031cfde9b2e04fbd204d1304616bce6a19a6)) ([#33](https://github.com/qlover/brain-toolkit/pull/33))
+  - Updated vite dependency in package.json from version 6.1.0 to 7.2.4.
+  - Added comprehensive tests for namespace handling in Ts2Locales, including error cases and file generation with multiple keys.
+  - Enhanced documentation in Ts2Locales.ts to clarify usage of resolveNs and resolveKeyInFile options.
+
 ## 0.3.1
 
 ### Patch Changes
