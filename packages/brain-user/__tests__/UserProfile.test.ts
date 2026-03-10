@@ -38,7 +38,7 @@ describe('UserProfile', () => {
         { key: 'ably_api_key', value: ['key123'] }
       ],
       profile_img_url:
-        'https://s3.amazonaws.com/Brain-user-profile-images/123.jpg',
+        'https://sss.test.com/Brain-user-profile-images/123.jpg',
       amplitude_device_id: 'device123',
       email_verified: true
     };
@@ -285,7 +285,7 @@ describe('UserProfile', () => {
   describe('profile image operations', () => {
     it('should get profile image URL', () => {
       expect(profile.getProfileImageUrl()).toBe(
-        'https://s3.amazonaws.com/Brain-user-profile-images/123.jpg'
+        'https://sss.test.com/Brain-user-profile-images/123.jpg'
       );
     });
 
@@ -494,7 +494,7 @@ describe('UserProfile', () => {
   describe('real-world usage patterns', () => {
     it('should support S3 profile image URL pattern', () => {
       const s3Url =
-        'https://s3.amazonaws.com/Brain-user-profile-images/user-123.jpg';
+        'https://sss.test.com/Brain-user-profile-images/user-123.jpg';
       profile.setProfileImageUrl(s3Url);
 
       expect(profile.hasProfileImage()).toBe(true);

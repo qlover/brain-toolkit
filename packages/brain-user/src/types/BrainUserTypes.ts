@@ -35,7 +35,7 @@ export interface BrainUserProfileInterface {
    *
    * 该地址可能是一个 s3 地址需要下载
    *
-   * @example "https://s3.amazonaws.com/brain-user-profile-images/1234567890.jpg"
+   * @example "https://sss.test.com/brain-user-profile-images/1234567890.jpg"
    */
   profile_img_url?: string;
   amplitude_device_id?: unknown;
