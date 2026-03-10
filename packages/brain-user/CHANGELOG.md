@@ -1,5 +1,15 @@
 # @brain-toolkit/brain-user
 
+## 0.2.1
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- **user-profile:** update profile image URL to new domain in tests and types ([6757ef7](https://github.com/qlover/brain-toolkit/commit/6757ef7db037eabcc4ba43267889abb0e3722b2a)) ([#35](https://github.com/qlover/brain-toolkit/pull/35))
+  - Changed profile image URL from 'https://s3.amazonaws.com' to 'https://sss.test.com' in UserProfile test cases and type definitions.
+  - Ensured consistency across the UserProfile interface and related tests to reflect the updated image hosting location.
+
 ## 0.2.0
 
 ### Minor Changes
