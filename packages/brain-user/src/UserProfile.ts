@@ -17,7 +17,7 @@ import type {
  *   phone_number: '+1234567890',
  *   da_email: 'user@example.com',
  *   permissions: [{ key: 'restricted_resources', value: ['exec-poll'] }],
- *   profile_img_url: 'https://s3.amazonaws.com/brain-user-profile-images/123.jpg',
+ *   profile_img_url: 'https://sss.test.com/brain-user-profile-images/123.jpg',
  *   email_verified: true
  * });
  *
