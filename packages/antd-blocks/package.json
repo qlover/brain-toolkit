@@ -56,9 +56,9 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
-    "@qlover/corekit-bridge": "^2.1.1",
-    "@qlover/slice-store-react": "^1.4.1",
-    "@qlover/fe-corekit": "^3.1.1",
+    "@qlover/corekit-bridge": "^2",
+    "@qlover/slice-store-react": "^1.4.2",
+    "@qlover/fe-corekit": "^3",
     "antd": "^5.25.3",
     "react": "^18.3.1"
   },
@@ -70,5 +70,9 @@
     "react-router-dom": "^7.1.1",
     "vite": "^6.1.0",
     "vite-plugin-dts": "^4.5.4"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "antd": ">=5.0.0"
   }
 }
