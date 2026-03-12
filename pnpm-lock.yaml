@@ -180,14 +180,14 @@ importers:
         specifier: latest
         version: 0.1.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/corekit-bridge':
-        specifier: ^2.1.1
+        specifier: ^2
         version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^3.1.1
+        specifier: ^3
         version: 3.1.1
       '@qlover/slice-store-react':
-        specifier: ^1.4.1
-        version: 1.4.1
+        specifier: ^1.4.2
+        version: 1.4.2(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-oauth/google':
         specifier: ^0.13.4
         version: 0.13.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -220,14 +220,14 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@qlover/corekit-bridge':
-        specifier: ^2.1.1
+        specifier: ^2
         version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^3.1.1
+        specifier: ^3
         version: 3.1.1
       '@qlover/slice-store-react':
-        specifier: ^1.4.1
-        version: 1.4.1
+        specifier: ^1.4.2
+        version: 1.4.2(@types/react@19.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       antd:
         specifier: ^5.25.3
         version: 5.28.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -275,10 +275,10 @@ importers:
   packages/brain-user:
     dependencies:
       '@qlover/corekit-bridge':
-        specifier: ^2.1.1
+        specifier: ^2
         version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^3.1.1
+        specifier: ^3
         version: 3.1.1
       '@qlover/logger':
         specifier: ^1.0.0
@@ -298,21 +298,21 @@ importers:
         version: 1.9.0(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
         specifier: ^2.3.1
-        version: 2.4.0
+        version: 2.5.0
 
   packages/element-sizer: {}
 
   packages/react-kit:
     dependencies:
       '@qlover/corekit-bridge':
-        specifier: ^2.1.1
+        specifier: ^2
         version: 2.1.1(@types/node@22.19.0)(terser@5.44.0)(yaml@2.8.1)
       '@qlover/fe-corekit':
-        specifier: ^3.1.1
+        specifier: ^3
         version: 3.1.1
       '@qlover/slice-store-react':
-        specifier: ^1.4.1
-        version: 1.4.1
+        specifier: ^1.4.2
+        version: 1.4.2(@types/react@19.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1934,8 +1934,17 @@ packages:
   '@qlover/scripts-context@2.0.0':
     resolution: {integrity: sha512-0bNF0/2SWsLYublNbYlS7aV/3kbAmoFnwwD2dohzrPi4UJwfntblUuPtF++fP6W9KSREDI4e0Z1qM7wlNtF10Q==}
 
-  '@qlover/slice-store-react@1.4.1':
-    resolution: {integrity: sha512-t7mfNXChtDW63fWnynrVUXa3a78dw1VnR559/CcDg1ozeNHKxKnXt3xMz0bszK82a/0+fZN/3N0df7G8uy+/xw==}
+  '@qlover/slice-store-react@1.4.2':
+    resolution: {integrity: sha512-yhYoWhQDdUCeXJlwiZHoA7i1ujEYcz9Gv9ZBDtu5y/yVG45uQLneXfB8GvcjFu8l3nLTrRebUg5DVVUi+IGCJw==}
+    peerDependencies:
+      '@types/react': '>=18'
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   '@qlover/slice-store@1.4.1':
     resolution: {integrity: sha512-HkczkS+pEQ4x6YbQoq78hlOlAfkWyMdHHvWOpgNxXWFfpS/y1fS1E7pR7NRp7dt+1Ypad4jOhQS6ZkXiPW8fZQ==}
@@ -7550,11 +7559,21 @@ snapshots:
       - debug
       - typescript
 
-  '@qlover/slice-store-react@1.4.1':
+  '@qlover/slice-store-react@1.4.2(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@qlover/slice-store': 1.4.1
-      react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 18.3.27
+      react: 18.3.1
+
+  '@qlover/slice-store-react@1.4.2(@types/react@19.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@qlover/slice-store': 1.4.1
+      react-dom: 18.3.1(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 19.2.2
+      react: 18.3.1
 
   '@qlover/slice-store@1.4.1': {}
 
@@ -11189,7 +11208,7 @@ snapshots:
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
+      vite: 7.3.1(@types/node@22.19.0)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
