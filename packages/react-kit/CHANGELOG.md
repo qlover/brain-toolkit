@@ -1,5 +1,17 @@
 # @brain-toolkit/react-kit
 
+## 0.2.3
+
+### Patch Changes
+
+#### ♻️ Refactors
+
+- Update package dependencies for @qlover/corekit-bridge, @qlover/fe-corekit, and @qlover/slice-store-react ([8663165](https://github.com/qlover/brain-toolkit/commit/8663165afa9880e1a66821ed727238abe6ae78cd)) ([#37](https://github.com/qlover/brain-toolkit/pull/37))
+  - Changed version specifiers for @qlover/corekit-bridge and @qlover/fe-corekit to use major version ranges.
+  - Upgraded @qlover/slice-store-react from version 1.4.1 to 1.4.2 across multiple package.json files.
+  - Added peerDependencies for react and antd in relevant packages to ensure compatibility with version 18.0.0 and above.
+  - Updated pnpm-lock.yaml to reflect these changes and maintain consistency across the project.
+
 ## 0.2.2
 
 ### Patch Changes
