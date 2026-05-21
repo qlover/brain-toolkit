@@ -1,5 +1,31 @@
 # @brain-toolkit/brain-user
 
+## 0.2.3
+
+### Patch Changes
+
+#### ✨ Features
+
+- Implement userly access token exchange and enhance HomePage component ([a6c389c](https://github.com/qlover/brain-toolkit/commit/a6c389cba621eb631aacb57327e5dc9950910ec6)) ([#39](https://github.com/qlover/brain-toolkit/pull/39))
+  - Added functionality to exchange brain-user token for userly access_token via new `fetchUserlyAccessToken` utility.
+  - Updated HomePage component to handle access token retrieval and display relevant token information.
+  - Introduced `getDeviceUid` utility for stable device identification.
+  - Enhanced UserInfo component to show brain token, access token, and expiration details with refresh capability.
+  - Updated MainApp and LoginPage components to integrate new access token logic and improve user experience.
+
+#### ♻️ Refactors
+
+- Replace useSliceStore with useBrainUserStore in components and update tsconfig.json ([ce7d4a3](https://github.com/qlover/brain-toolkit/commit/ce7d4a301cd2b9c2349628e1597f65255b50cee8)) ([#39](https://github.com/qlover/brain-toolkit/pull/39))
+  - Updated HomePage, LoginPage, and MainApp components to utilize the new useBrainUserStore hook instead of useSliceStore for state management.
+  - Modified tsconfig.json to include references to the brain-user package, improving project structure.
+  - Adjusted LocalStorage and related tests to align with the new StorageInterface type.
+
+- Update domain constants and endpoint paths in brain-user package ([15598fb](https://github.com/qlover/brain-toolkit/commit/15598fb4251dc1d5649d0d652e1f60e34eacd06d)) ([#39](https://github.com/qlover/brain-toolkit/pull/39))
+  - Renamed BRAIN_USERLY_DOMAINS to BRAIN_DOMAINS for consistency across the codebase.
+  - Updated domain URLs to remove the invoke path, simplifying the structure.
+  - Adjusted endpoint definitions to include the new BRAIN_USER_INVOKE_PATH for API calls.
+  - Enhanced tests to reflect changes in domain structure and ensure correct endpoint usage.
+
 ## 0.2.2
 
 ### Patch Changes
