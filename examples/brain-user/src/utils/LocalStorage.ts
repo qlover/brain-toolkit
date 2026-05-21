@@ -1,6 +1,6 @@
-import type { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { StorageInterface } from '@qlover/fe-corekit';
 
-class LocalStorage implements SyncStorageInterface<string> {
+class LocalStorage implements StorageInterface<string, unknown> {
   protected storage: Storage;
 
   constructor() {
@@ -35,9 +35,7 @@ class LocalStorage implements SyncStorageInterface<string> {
   public key(index: number): string | null {
     return this.storage.key(index);
   }
-  /**
-   * @override
-   */
+
   public get length(): number {
     return this.storage.length;
   }

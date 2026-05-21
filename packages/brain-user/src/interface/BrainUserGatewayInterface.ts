@@ -24,9 +24,15 @@ export interface BrainUserGatewayConfig<T>
    *
    * You can override the domains, to use different domains
    *
-   * @default `{ development: 'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method', production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'}`
+   * @default `{ development: 'https://api.dev.brain.ai', production: 'https://api.brain.ai' }`
    */
   domains?: Record<string, string>;
+
+  /**
+   * Optional override for userly `access_token` base URL.
+   * When omitted, falls back to {@link BrainUserGatewayConfig.domains `domains`} or `BRAIN_DOMAINS`.
+   */
+  userlyDomains?: Record<string, string>;
 
   /**
    * Custom API endpoints configuration
@@ -140,11 +146,40 @@ export interface BrainBaseCredentials {
 }
 
 export interface BrainCredentials extends BrainBaseCredentials {
+  /**
+   * HS256 JWT from userly `auth/access_token` (matrix-runtime / benchmark)
+   */
+  access_token?: string;
+  expires_in?: number;
+  refresh_token?: string;
   existing?: boolean;
   required_fields?: {
     first_name?: string;
     last_name?: string;
   };
+}
+
+/**
+ * Request parameters for exchanging brain-user `token` → userly `access_token`
+ */
+export interface BrainAccessTokenRequest {
+  /** brain-user token; defaults to `config.token` when omitted */
+  token?: string;
+  /** @default `en` — sent as `X-Brain-User-Lang` */
+  lang?: string;
+  /** e.g. `35.1814,136.9064` — sent as `X-Brain-User-Location` */
+  location?: string;
+  /** sent as `X-APP-VERSION` */
+  appVersion?: string;
+  /** stable device id — sent as `X-Brain-Device-Uid` */
+  deviceUid?: string;
+}
+
+/** Response from `POST auth/access_token` (userly) */
+export interface BrainAccessToken {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
 }
 
 export interface BrainUserRequestConfig
@@ -159,36 +194,21 @@ export interface BrainUserRequestConfig
 export interface BrainUserGatewayInterface
   extends UserServiceGateway<
     BrainUser,
-    BrainBaseCredentials,
+    BrainCredentials,
     BrainUserGatewayConfig<unknown>
   > {
-  register(
-    params: BrainUserRegisterRequest,
-    config?: BrainUserGatewayConfig<BrainUserRegisterRequest>
-  ): Promise<BrainUser | null>;
-
-  login(
-    params: BrainLoginRequest,
-    config?: BrainUserGatewayConfig<BrainLoginRequest>
-  ): Promise<BrainCredentials | null>;
-
-  logout<Params = unknown, Result = void>(
-    params?: Params,
-    config?: BrainUserGatewayConfig<Params>
-  ): Promise<Result>;
-
-  getUserInfo(
-    params?: BrainCredentials,
-    config?: BrainUserGatewayConfig<BrainCredentials>
-  ): Promise<BrainUser | null>;
-
-  refreshUserInfo<Params extends BrainCredentials>(
-    params?: Params | undefined,
-    config?: BrainUserGatewayConfig<Params>
-  ): Promise<BrainUser | null>;
-
   loginWithGoogle(
     params: BrainUserGoogleRequest,
     config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
-  ): Promise<BrainCredentials | null>;
+  ): Promise<BrainCredentials>;
+
+  /**
+   * Exchange brain-user `token` for userly `access_token` (HS256 JWT).
+   *
+   * `Authorization: token <brain-user-token>` plus optional `X-Brain-*` headers.
+   */
+  getAccessToken(
+    params?: BrainAccessTokenRequest,
+    config?: BrainUserGatewayConfig<BrainAccessTokenRequest>
+  ): Promise<BrainAccessToken>;
 }

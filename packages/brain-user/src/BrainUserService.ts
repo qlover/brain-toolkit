@@ -4,7 +4,9 @@ import type {
   BrainUserGatewayInterface,
   BrainUserGoogleRequest,
   BrainUserRegisterRequest,
-  BrainLoginRequest
+  BrainLoginRequest,
+  BrainAccessTokenRequest,
+  BrainAccessToken
 } from './interface/BrainUserGatewayInterface';
 import type { BrainUserGatewayConfig } from './interface/BrainUserGatewayInterface';
 import { createBrainUserOptions } from './utils/createBrainUserOptions';
@@ -146,8 +148,8 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  *
  * ```ts
  * {
- *   development: 'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method',
- *   production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'
+ *   development: 'https://api.dev.brain.ai',
+ *   production: 'https://api.brain.ai'
  * }
  * ```
  *
@@ -552,7 +554,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public loginWithGoogle(
     params: BrainUserGoogleRequest
-  ): Promise<BrainCredentials | null> {
+  ): Promise<BrainCredentials> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('loginWithGoogle', params),
@@ -576,7 +578,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public register<Params = BrainUserRegisterRequest>(
     params: Params
-  ): Promise<BrainUser | null> {
+  ): Promise<BrainUser> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('register', params), (ctx) =>
         super.register(
@@ -600,7 +602,7 @@ export class BrainUserService<Tags extends readonly string[]>
     params: LoginParams &
       BrainUserGatewayConfig<unknown> &
       Pick<BrainLoginRequest, 'metadata'>
-  ): Promise<BrainCredentials | null> {
+  ): Promise<BrainCredentials> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('login', params), (ctx) =>
         super.login(
@@ -642,7 +644,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public getUserInfo<Params = BrainCredentials>(
     params?: Params
-  ): Promise<BrainUser | null> {
+  ): Promise<BrainUser> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('getUserInfo', params),
@@ -666,7 +668,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public refreshUserInfo<Params = BrainCredentials>(
     params?: Params
-  ): Promise<BrainUser | null> {
+  ): Promise<BrainUser> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('refreshUserInfo', params),
@@ -679,6 +681,80 @@ export class BrainUserService<Tags extends readonly string[]>
     }
 
     return super.refreshUserInfo(params);
+  }
+
+  /**
+   * Exchange brain-user token for userly `access_token` (HS256 JWT).
+   *
+   * Uses {@link BrainUserGateway.getAccessToken}. Pass `token` or rely on store credential.
+   *
+   * @override
+   * @example
+   * ```ts
+   * const access = await service.getAccessToken({
+   *   lang: 'en',
+   *   deviceUid: getDeviceId()
+   * });
+   * service.mergeAccessToken(access);
+   * ```
+   */
+  public getAccessToken(
+    params?: BrainAccessTokenRequest
+  ): Promise<BrainAccessToken> {
+    const token =
+      params?.token ?? this.getCredential()?.token ?? undefined;
+    const requestParams: BrainAccessTokenRequest = {
+      ...params,
+      token
+    };
+
+    if (this.executor) {
+      return this.executor.exec(
+        this.createOptions('getAccessToken', requestParams),
+        (ctx) =>
+          this.gateway.getAccessToken(
+            ctx.parameters.requestParams,
+            omit(ctx.parameters, pickProps)
+          )
+      );
+    }
+
+    return this.gateway.getAccessToken(requestParams);
+  }
+
+  /**
+   * Fetch userly access_token and merge into the current credential in the store.
+   */
+  public async fetchAndStoreAccessToken(
+    params?: BrainAccessTokenRequest
+  ): Promise<BrainCredentials> {
+    const current = this.getCredential() ?? {};
+    const token = params?.token ?? current.token;
+    if (!token) {
+      throw new Error(
+        `${String(this.serviceName)}: brain-user token is required before getAccessToken`
+      );
+    }
+
+    const access = await this.getAccessToken({ ...params, token });
+    const merged: BrainCredentials = {
+      ...current,
+      ...access
+    };
+    this.getStore().setCredential(merged);
+    return merged;
+  }
+
+  /**
+   * Merge userly access_token fields into store credential without calling the API.
+   */
+  public mergeAccessToken(access: BrainAccessToken): BrainCredentials {
+    const merged: BrainCredentials = {
+      ...(this.getCredential() ?? {}),
+      ...access
+    };
+    this.getStore().setCredential(merged);
+    return merged;
   }
 
   public override isCredential(

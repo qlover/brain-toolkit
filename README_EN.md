@@ -45,7 +45,7 @@ brain-toolkit is a collection of tools specifically designed for AI frontend app
 
 ### Requirements
 
-- Node.js >= 18.19.0
+- Node.js >= 20.19.0
 - pnpm >= 8.0.0
 
 ### Installation

@@ -1,15 +1,20 @@
 import type { EndpointsType } from './config/EndPoints';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
+  GATEWAY_BRAIN_USERLY_ENDPOINTS,
   parseEndpoint
 } from './config/EndPoints';
+import { BRAIN_DOMAINS, defaultEnv } from './config/common';
+import { resolveBaseURL } from './utils/createAdapter';
 import type {
   BrainUserGoogleRequest,
   BrainUserGatewayInterface,
   BrainUserRegisterRequest,
   BrainLoginRequest,
   BrainCredentials,
-  BrainUserGatewayConfig
+  BrainUserGatewayConfig,
+  BrainAccessTokenRequest,
+  BrainAccessToken
 } from './interface/BrainUserGatewayInterface';
 import type { BrainUser } from './types/BrainUserTypes';
 import {
@@ -72,9 +77,33 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
     action: string,
     endpoints?: Record<string, EndpointsType>
   ): EndpointsType | undefined {
-    return (endpoints ?? GATEWAY_BRAIN_USER_ENDPOINTS)[
-      action as keyof typeof GATEWAY_BRAIN_USER_ENDPOINTS
-    ];
+    const merged = {
+      ...GATEWAY_BRAIN_USER_ENDPOINTS,
+      ...GATEWAY_BRAIN_USERLY_ENDPOINTS,
+      ...endpoints
+    };
+    return merged[action as keyof typeof merged];
+  }
+
+  protected buildAccessTokenHeaders(
+    params?: BrainAccessTokenRequest,
+    config?: BrainUserGatewayConfig<BrainAccessTokenRequest>
+  ): Record<string, string> {
+    const headers: Record<string, string> = {
+      ...(config?.headers as Record<string, string> | undefined)
+    };
+    const lang = params?.lang ?? 'en';
+    headers['X-Brain-User-Lang'] = lang;
+    if (params?.location) {
+      headers['X-Brain-User-Location'] = params.location;
+    }
+    if (params?.appVersion) {
+      headers['X-APP-VERSION'] = params.appVersion;
+    }
+    if (params?.deviceUid) {
+      headers['X-Brain-Device-Uid'] = params.deviceUid;
+    }
+    return headers;
   }
 
   protected handleConfig<T>(
@@ -192,7 +221,7 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
   public login(
     params: BrainLoginRequest,
     config?: BrainUserGatewayConfig<BrainLoginRequest>
-  ): Promise<BrainCredentials | null> {
+  ): Promise<BrainCredentials> {
     return this.adapter
       .request<
         BrainLoginRequest,
@@ -348,5 +377,64 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
     config?: BrainUserGatewayConfig<Params>
   ): Promise<BrainCredentials & BrainUser> {
     return this.getUserInfo(params, config);
+  }
+
+  /**
+   * Exchange brain-user token for userly access_token (HS256 JWT).
+   *
+   * Significance: Bridge brain-user login token to matrix-runtime / benchmark JWT
+   * Core idea: POST to userly `auth/access_token` with `Authorization: token <token>`
+   * Main function: Call userly access_token API with optional device/locale headers
+   * Main purpose: Obtain `access_token` after brain-user authentication
+   *
+   * @override
+   * @param params - Optional token override and `X-Brain-*` / `X-APP-VERSION` headers
+   * @param config - Gateway config; uses `userlyDomains` or `domains` / `env` for base URL
+   * @returns userly access token payload
+   *
+   * @example
+   * ```ts
+   * const brainToken = credentials.token!;
+   * const { access_token, expires_in } = await gateway.getAccessToken({
+   *   token: brainToken,
+   *   lang: 'en',
+   *   location: '35.1814,136.9064',
+   *   appVersion: '1.0.0',
+   *   deviceUid: 'stable-device-id'
+   * });
+   * ```
+   */
+  public getAccessToken(
+    params?: BrainAccessTokenRequest,
+    config?: BrainUserGatewayConfig<BrainAccessTokenRequest>
+  ): Promise<BrainAccessToken> {
+    const mergedConfig = this.adapter.config;
+    const env = config?.env ?? mergedConfig.env ?? defaultEnv;
+    const domains =
+      config?.userlyDomains ??
+      config?.domains ??
+      mergedConfig.domains ??
+      BRAIN_DOMAINS;
+    const baseURL = resolveBaseURL({
+      baseURL: config?.baseURL,
+      env,
+      domains
+    });
+    const token = params?.token ?? config?.token;
+
+    return this.adapter
+      .request(
+        this.handleConfig('accessToken', null, {
+          ...config,
+          baseURL,
+          token,
+          data: undefined,
+          headers: this.buildAccessTokenHeaders(params, config),
+          requiredToken: true
+        })
+      )
+      .then((response) => {
+        return this.handleResponse<BrainAccessToken>(response, response.config);
+      });
   }
 }

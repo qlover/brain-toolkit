@@ -23,6 +23,8 @@ import type {
 import type { BrainUserGatewayConfig } from '../src/interface/BrainUserGatewayInterface';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
+  GATEWAY_BRAIN_USERLY_ENDPOINTS,
+  BRAIN_DOMAINS,
   parseEndpoint
 } from '@brain-toolkit/brain-user';
 
@@ -655,6 +657,57 @@ describe('BrainUserGateway', () => {
       await expect(gateway.refreshUserInfo({})).rejects.toThrow(
         'Refresh failed'
       );
+    });
+  });
+
+  describe('getAccessToken', () => {
+    it('should call userly access_token endpoint with brain token and headers', async () => {
+      const spy = vi.spyOn(mockAdapter, 'request');
+      vi.mocked(mockAdapter.getConfig).mockReturnValue({ env: 'development' });
+      Object.defineProperty(mockAdapter, 'config', {
+        value: { env: 'development' },
+        writable: true
+      });
+      const gateway = new BrainUserGateway(mockAdapter);
+
+      await gateway.getAccessToken({
+        token: 'brain-user-token',
+        lang: 'en',
+        location: '35.1814,136.9064',
+        appVersion: '1.0.0',
+        deviceUid: 'device-123'
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseURL: BRAIN_DOMAINS.development,
+          token: 'brain-user-token',
+          requiredToken: true,
+          requestId: GATEWAY_BRAIN_USERLY_ENDPOINTS.accessToken,
+          method: 'POST',
+          url: parseEndpoint(GATEWAY_BRAIN_USERLY_ENDPOINTS.accessToken).url,
+          headers: expect.objectContaining({
+            'X-Brain-User-Lang': 'en',
+            'X-Brain-User-Location': '35.1814,136.9064',
+            'X-APP-VERSION': '1.0.0',
+            'X-Brain-Device-Uid': 'device-123'
+          })
+        })
+      );
+    });
+
+    it('should return access_token payload from API response', async () => {
+      const expected = {
+        access_token: 'eyJ.test',
+        expires_in: 86400,
+        refresh_token: ''
+      };
+      mockAdapter.request = vi.fn().mockResolvedValue({ data: expected });
+
+      const gateway = new BrainUserGateway(mockAdapter);
+      const result = await gateway.getAccessToken({ token: 'brain-token' });
+
+      expect(result).toEqual(expected);
     });
   });
 

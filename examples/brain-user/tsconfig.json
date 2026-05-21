@@ -19,5 +19,6 @@
     "baseUrl": "../../",
     "types": ["vite/client"]
   },
-  "include": ["src", "../../packages/brain-user/src"]
+  "include": ["src"],
+  "references": [{ "path": "../../packages/brain-user" }]
 }

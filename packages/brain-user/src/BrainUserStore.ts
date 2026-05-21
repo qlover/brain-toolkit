@@ -80,6 +80,13 @@ export class BrainUserStore<Tags extends readonly string[]>
     return super.getCredential()?.token ?? '';
   }
 
+  /*
+* @override
+ userly HS256 JWT from `auth/access_token` (matrix-runtime / benchmark) * userly HS256 JWT from `auth/access_token` (matrix-runtime / benchmark) */
+  public getAccessToken(): string {
+    return super.getCredential()?.access_token ?? '';
+  }
+
   /**
    * @override
    */

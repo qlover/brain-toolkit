@@ -19,7 +19,7 @@ import type { BrainUserServiceOptions } from '../src/BrainUserService';
 import { BrainUserStore } from '../src/BrainUserStore';
 import { BrainUserGateway } from '../src/BrainUserGateway';
 import { defaultBrainUserOptions } from '../src/config/common';
-import type { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { StorageInterface } from '@qlover/fe-corekit';
 
 describe('createBrainUserOptions', () => {
   beforeEach(() => {
@@ -158,7 +158,7 @@ describe('createBrainUserOptions', () => {
     });
 
     it('should create store with custom storage', () => {
-      class MockStorage implements SyncStorageInterface<string, unknown> {
+      class MockStorage implements StorageInterface<string, unknown> {
         private store: Map<string, string> = new Map();
         /**
          * @override

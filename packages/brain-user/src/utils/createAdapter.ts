@@ -72,12 +72,13 @@ export function isRequestAdapterInterface(
  * // Returns: 'https://dev.api.com'
  * ```
  */
-function parseBaseURL(
-  baseURL?: string,
-  env?: string,
-  domains?: Record<string, string>
-): string {
-  if (typeof baseURL === 'string' && baseURL !== null) {
+export function resolveBaseURL(options?: {
+  baseURL?: string;
+  env?: string;
+  domains?: Record<string, string>;
+}): string {
+  const { baseURL, env, domains } = options ?? {};
+  if (typeof baseURL === 'string' && baseURL !== '') {
     return baseURL;
   }
 
@@ -130,6 +131,6 @@ export function createAdapter<
       ...defaultBrainUserOptions.endpoints,
       ...endpoints
     },
-    baseURL: parseBaseURL(baseURL, env, domains)
+    baseURL: resolveBaseURL({ baseURL, env, domains })
   });
 }

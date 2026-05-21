@@ -1,15 +1,44 @@
-import { useSliceStore } from '@qlover/slice-store-react';
+import { useState } from 'react';
 import { useUserService } from '../utils/useUserService';
+import { useBrainUserStore } from '../utils/useBrainUserStore';
+import { getDeviceUid } from '../utils/deviceUid';
 import { UserInfo } from './UserInfo';
+
+function truncateToken(value: string, head = 12, tail = 8): string {
+  if (value.length <= head + tail + 3) {
+    return value;
+  }
+  return `${value.slice(0, head)}…${value.slice(-tail)}`;
+}
 
 export function HomePage() {
   const { userService, userStore } = useUserService();
-  const token = useSliceStore(userStore, (state) => state.credential?.token);
-  const user = useSliceStore(userStore, (state) => state.result);
-  const loading = useSliceStore(userStore, (state) => state.loading);
-  const isLoginWithGoogle = useSliceStore(userStore, (state) =>
+  const credential = useBrainUserStore(userStore, (state) => state.credential);
+  const token = credential?.token;
+  const accessToken = credential?.access_token;
+  const expiresIn = credential?.expires_in;
+  const user = useBrainUserStore(userStore, (state) => state.result);
+  const loading = useBrainUserStore(userStore, (state) => state.loading);
+  const [accessTokenLoading, setAccessTokenLoading] = useState(false);
+  const isLoginWithGoogle = useBrainUserStore(userStore, (state) =>
     userService.isGoogleLogined(state.credential!)
   );
+
+  const handleRefreshAccessToken = async () => {
+    setAccessTokenLoading(true);
+    try {
+      await userService.fetchAndStoreAccessToken({
+        token,
+        lang: navigator.language?.split('-')[0] ?? 'en',
+        appVersion: '1.0.0',
+        deviceUid: getDeviceUid()
+      });
+    } catch (err) {
+      console.error('Failed to fetch access_token:', err);
+    } finally {
+      setAccessTokenLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -87,7 +116,16 @@ export function HomePage() {
             ''
           )}
         </h1>
-        <UserInfo user={user} onLogout={handleLogout} loading={loading} />
+        <UserInfo
+          user={user}
+          brainToken={token ? truncateToken(token) : undefined}
+          accessToken={accessToken ? truncateToken(accessToken) : undefined}
+          expiresIn={expiresIn}
+          accessTokenLoading={accessTokenLoading || (Boolean(token) && !accessToken)}
+          onRefreshAccessToken={handleRefreshAccessToken}
+          onLogout={handleLogout}
+          loading={loading}
+        />
       </div>
     </div>
   );

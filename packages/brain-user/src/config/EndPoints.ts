@@ -17,13 +17,28 @@ export function parseEndpoint(endpoint: EndpointsType): {
   return { method: method.toUpperCase() as BrainGatewayEndpointMethod, url };
 }
 
+/** brain-user-system invoke path (relative to {@link BRAIN_DOMAINS}) */
+export const BRAIN_USER_INVOKE_PATH = '/v1.0/invoke/brain-user-system/method';
+
 export const GATEWAY_BRAIN_USER_ENDPOINTS = {
-  login: 'POST /api/auth/token.json',
-  register: 'POST /api/users/signup.json',
-  getUserInfo: 'GET /api/users/me.json',
-  loginWithGoogle: 'POST /api/auth/google/imagica/token',
+  login: `POST ${BRAIN_USER_INVOKE_PATH}/api/auth/token.json`,
+  register: `POST ${BRAIN_USER_INVOKE_PATH}/api/users/signup.json`,
+  getUserInfo: `GET ${BRAIN_USER_INVOKE_PATH}/api/users/me.json`,
+  loginWithGoogle: `POST ${BRAIN_USER_INVOKE_PATH}/api/auth/google/imagica/token`,
   /**
    * This api only support admin?
    */
-  logout: 'POST /api/users/signout'
+  logout: `POST ${BRAIN_USER_INVOKE_PATH}/api/users/signout`
+} as const;
+
+/** userly invoke path (relative to {@link BRAIN_DOMAINS}) */
+export const BRAIN_USERLY_INVOKE_PATH = '/v1.0/invoke/userly/method';
+
+/**
+ * userly gateway endpoints (matrix-runtime / benchmark JWT)
+ *
+ * Base URL: {@link BRAIN_DOMAINS}
+ */
+export const GATEWAY_BRAIN_USERLY_ENDPOINTS = {
+  accessToken: `POST ${BRAIN_USERLY_INVOKE_PATH}/auth/access_token`
 } as const;

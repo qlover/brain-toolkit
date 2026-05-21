@@ -19,7 +19,7 @@ export const userServicePlugin: BrainUserPlugin = {
 
   onBefore({ parameters: { actionName, store } }): void {
     if (actionName === 'refreshUserInfo') {
-      store.updateState({
+      store.emit({
         loading: true
       });
     }
@@ -32,7 +32,7 @@ export const userServicePlugin: BrainUserPlugin = {
       });
     }
     if (actionName === 'refreshUserInfo') {
-      store.updateState({
+      store.emit({
         loading: false
       });
     }

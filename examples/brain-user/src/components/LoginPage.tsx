@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import { useSliceStore } from '@qlover/slice-store-react';
 import { useUserService } from '../utils/useUserService';
+import { useBrainUserStore } from '../utils/useBrainUserStore';
+import { fetchUserlyAccessToken } from '../utils/fetchUserlyAccessToken';
 
 function LoginForm() {
   const { userService, userStore } = useUserService();
-  const loading = useSliceStore(userStore, (state) => state.loading);
-  const error = useSliceStore(
-    userStore,
-    (state) => state.error
-  ) as Error | null;
+  const loading = useBrainUserStore(userStore, (state) => state.loading);
+  const error = useBrainUserStore(userStore, (state) => state.error) as
+    | Error
+    | null;
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -37,8 +37,8 @@ function LoginForm() {
         throw new Error('Failed to get user info');
       }
 
-      // Update store with user info and credentials
       userService.getStore().success(userInfo, credentials);
+      await fetchUserlyAccessToken(userService);
 
       setPassword('');
     } catch (err) {
@@ -68,6 +68,7 @@ function LoginForm() {
         }
 
         userService.getStore().success(userInfo, brainCredentials);
+        await fetchUserlyAccessToken(userService);
       } catch (err) {
         console.error('Google login failed:', err);
       } finally {
