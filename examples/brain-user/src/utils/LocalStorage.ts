@@ -35,9 +35,7 @@ class LocalStorage implements StorageInterface<string, unknown> {
   public key(index: number): string | null {
     return this.storage.key(index);
   }
-  /**
-   * @override
-   */
+
   public get length(): number {
     return this.storage.length;
   }
