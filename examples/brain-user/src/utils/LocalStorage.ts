@@ -1,6 +1,6 @@
-import type { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { StorageInterface } from '@qlover/fe-corekit';
 
-class LocalStorage implements SyncStorageInterface<string> {
+class LocalStorage implements StorageInterface<string, unknown> {
   protected storage: Storage;
 
   constructor() {

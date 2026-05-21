@@ -22,11 +22,11 @@ import {
 import { defaultBrainStoreOptions } from '../src/config/common';
 import { BrainUserStore } from '../src/BrainUserStore';
 import type { BrainUserStoreInterface } from '../src/interface/BrainUserStoreInterface';
-import type { SyncStorageInterface } from '@qlover/fe-corekit';
+import type { StorageInterface } from '@qlover/fe-corekit';
 
 describe('createBrainUserStore', () => {
   // Mock storage implementation
-  class MockStorage implements SyncStorageInterface<string, unknown> {
+  class MockStorage implements StorageInterface<string, unknown> {
     private store: Map<string, string> = new Map();
 
     /**

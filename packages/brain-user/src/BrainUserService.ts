@@ -552,7 +552,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public loginWithGoogle(
     params: BrainUserGoogleRequest
-  ): Promise<BrainCredentials | null> {
+  ): Promise<BrainCredentials> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('loginWithGoogle', params),
@@ -576,7 +576,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public register<Params = BrainUserRegisterRequest>(
     params: Params
-  ): Promise<BrainUser | null> {
+  ): Promise<BrainUser> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('register', params), (ctx) =>
         super.register(
@@ -600,7 +600,7 @@ export class BrainUserService<Tags extends readonly string[]>
     params: LoginParams &
       BrainUserGatewayConfig<unknown> &
       Pick<BrainLoginRequest, 'metadata'>
-  ): Promise<BrainCredentials | null> {
+  ): Promise<BrainCredentials> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('login', params), (ctx) =>
         super.login(
@@ -642,7 +642,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public getUserInfo<Params = BrainCredentials>(
     params?: Params
-  ): Promise<BrainUser | null> {
+  ): Promise<BrainUser> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('getUserInfo', params),
@@ -666,7 +666,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public refreshUserInfo<Params = BrainCredentials>(
     params?: Params
-  ): Promise<BrainUser | null> {
+  ): Promise<BrainUser> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('refreshUserInfo', params),

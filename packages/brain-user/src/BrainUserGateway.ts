@@ -192,7 +192,7 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
   public login(
     params: BrainLoginRequest,
     config?: BrainUserGatewayConfig<BrainLoginRequest>
-  ): Promise<BrainCredentials | null> {
+  ): Promise<BrainCredentials> {
     return this.adapter
       .request<
         BrainLoginRequest,

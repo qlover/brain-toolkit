@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import { useSliceStore } from '@qlover/slice-store-react';
 import { useUserService } from '../utils/useUserService';
+import { useBrainUserStore } from '../utils/useBrainUserStore';
 
 function LoginForm() {
   const { userService, userStore } = useUserService();
-  const loading = useSliceStore(userStore, (state) => state.loading);
-  const error = useSliceStore(
-    userStore,
-    (state) => state.error
-  ) as Error | null;
+  const loading = useBrainUserStore(userStore, (state) => state.loading);
+  const error = useBrainUserStore(userStore, (state) => state.error) as
+    | Error
+    | null;
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loginLoading, setLoginLoading] = useState(false);

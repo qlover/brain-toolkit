@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { useSliceStore } from '@qlover/slice-store-react';
 import { useUserService } from '../utils/useUserService';
+import { useBrainUserStore } from '../utils/useBrainUserStore';
 import { LoginPage } from './LoginPage';
 import { HomePage } from './HomePage';
 
 export function MainApp() {
   const { userService, userStore } = useUserService();
-  const token = useSliceStore(userStore, (state) => state.credential?.token);
-  const user = useSliceStore(userStore, (state) => state.result);
+  const token = useBrainUserStore(userStore, (state) => state.credential?.token);
+  const user = useBrainUserStore(userStore, (state) => state.result);
   const refreshingRef = useRef(false);
 
   useEffect(() => {

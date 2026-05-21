@@ -159,36 +159,11 @@ export interface BrainUserRequestConfig
 export interface BrainUserGatewayInterface
   extends UserServiceGateway<
     BrainUser,
-    BrainBaseCredentials,
+    BrainCredentials,
     BrainUserGatewayConfig<unknown>
   > {
-  register(
-    params: BrainUserRegisterRequest,
-    config?: BrainUserGatewayConfig<BrainUserRegisterRequest>
-  ): Promise<BrainUser | null>;
-
-  login(
-    params: BrainLoginRequest,
-    config?: BrainUserGatewayConfig<BrainLoginRequest>
-  ): Promise<BrainCredentials | null>;
-
-  logout<Params = unknown, Result = void>(
-    params?: Params,
-    config?: BrainUserGatewayConfig<Params>
-  ): Promise<Result>;
-
-  getUserInfo(
-    params?: BrainCredentials,
-    config?: BrainUserGatewayConfig<BrainCredentials>
-  ): Promise<BrainUser | null>;
-
-  refreshUserInfo<Params extends BrainCredentials>(
-    params?: Params | undefined,
-    config?: BrainUserGatewayConfig<Params>
-  ): Promise<BrainUser | null>;
-
   loginWithGoogle(
     params: BrainUserGoogleRequest,
     config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
-  ): Promise<BrainCredentials | null>;
+  ): Promise<BrainCredentials>;
 }

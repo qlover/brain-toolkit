@@ -1,13 +1,13 @@
-import { useSliceStore } from '@qlover/slice-store-react';
 import { useUserService } from '../utils/useUserService';
+import { useBrainUserStore } from '../utils/useBrainUserStore';
 import { UserInfo } from './UserInfo';
 
 export function HomePage() {
   const { userService, userStore } = useUserService();
-  const token = useSliceStore(userStore, (state) => state.credential?.token);
-  const user = useSliceStore(userStore, (state) => state.result);
-  const loading = useSliceStore(userStore, (state) => state.loading);
-  const isLoginWithGoogle = useSliceStore(userStore, (state) =>
+  const token = useBrainUserStore(userStore, (state) => state.credential?.token);
+  const user = useBrainUserStore(userStore, (state) => state.result);
+  const loading = useBrainUserStore(userStore, (state) => state.loading);
+  const isLoginWithGoogle = useBrainUserStore(userStore, (state) =>
     userService.isGoogleLogined(state.credential!)
   );
 
