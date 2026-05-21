@@ -1,5 +1,17 @@
 # @brain-toolkit/brain-user
 
+## 0.2.4
+
+### Patch Changes
+
+#### 📝 Documentation
+
+- **brain-user:** expand README with access_token and TypeScript types ([746e8ff](https://github.com/qlover/brain-toolkit/commit/746e8ff9542a251ebee9da0236884297b189e286)) ([#42](https://github.com/qlover/brain-toolkit/pull/42))
+
+  Document userly JWT exchange, data model types, API methods, and usage examples in Chinese and English README.
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 0.2.3
 
 ### Patch Changes
