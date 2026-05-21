@@ -13,26 +13,25 @@
 import { describe, it, expect } from 'vitest';
 import {
   BRAIN_DOMAINS,
-  BRAIN_USERLY_DOMAINS,
   BRAIN_STORAGE_CREDENTIAL_KEY,
   BRAIN_STORAGE_PROFILE_KEY,
   defaultServiceName,
   defaultEnv,
   defaultBrainUserOptions
 } from '../src/config/common';
+import {
+  BRAIN_USER_INVOKE_PATH,
+  GATEWAY_BRAIN_USER_ENDPOINTS
+} from '../src/config/EndPoints';
 
 describe('common config', () => {
   describe('BRAIN_DOMAINS', () => {
     it('should have development domain', () => {
-      expect(BRAIN_DOMAINS.development).toBe(
-        'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method'
-      );
+      expect(BRAIN_DOMAINS.development).toBe('https://api.dev.brain.ai');
     });
 
     it('should have production domain', () => {
-      expect(BRAIN_DOMAINS.production).toBe(
-        'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'
-      );
+      expect(BRAIN_DOMAINS.production).toBe('https://api.brain.ai');
     });
 
     it('should have exactly 2 domains', () => {
@@ -48,24 +47,6 @@ describe('common config', () => {
 
     it('should be frozen (immutable)', () => {
       expect(Object.isFrozen(BRAIN_DOMAINS)).toBe(true);
-    });
-  });
-
-  describe('BRAIN_USERLY_DOMAINS', () => {
-    it('should have development userly domain', () => {
-      expect(BRAIN_USERLY_DOMAINS.development).toBe(
-        'https://brus-dev.api.brain.ai/v1.0/invoke/userly/method'
-      );
-    });
-
-    it('should have production userly domain', () => {
-      expect(BRAIN_USERLY_DOMAINS.production).toBe(
-        'https://brus.api.brain.ai/v1.0/invoke/userly/method'
-      );
-    });
-
-    it('should be frozen (immutable)', () => {
-      expect(Object.isFrozen(BRAIN_USERLY_DOMAINS)).toBe(true);
     });
 
     it('should not allow modifications', () => {
@@ -84,10 +65,15 @@ describe('common config', () => {
       expect(BRAIN_DOMAINS.production).toContain('brain.ai');
     });
 
-    it('should have consistent API path structure', () => {
-      const expectedPath = '/v1.0/invoke/brain-user-system/method';
-      expect(BRAIN_DOMAINS.development).toContain(expectedPath);
-      expect(BRAIN_DOMAINS.production).toContain(expectedPath);
+    it('should not include invoke path in domain URLs', () => {
+      expect(BRAIN_DOMAINS.development).not.toContain('/v1.0/invoke');
+      expect(BRAIN_DOMAINS.production).not.toContain('/v1.0/invoke');
+    });
+
+    it('should include invoke path on default endpoints', () => {
+      Object.values(GATEWAY_BRAIN_USER_ENDPOINTS).forEach((endpoint) => {
+        expect(endpoint).toContain(BRAIN_USER_INVOKE_PATH);
+      });
     });
   });
 

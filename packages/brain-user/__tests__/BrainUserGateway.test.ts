@@ -24,7 +24,7 @@ import type { BrainUserGatewayConfig } from '../src/interface/BrainUserGatewayIn
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
   GATEWAY_BRAIN_USERLY_ENDPOINTS,
-  BRAIN_USERLY_DOMAINS,
+  BRAIN_DOMAINS,
   parseEndpoint
 } from '@brain-toolkit/brain-user';
 
@@ -680,7 +680,7 @@ describe('BrainUserGateway', () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          baseURL: BRAIN_USERLY_DOMAINS.development,
+          baseURL: BRAIN_DOMAINS.development,
           token: 'brain-user-token',
           requiredToken: true,
           requestId: GATEWAY_BRAIN_USERLY_ENDPOINTS.accessToken,

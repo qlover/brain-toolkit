@@ -4,15 +4,8 @@ import type { BrainUserStoreOptions } from '../BrainUserStore';
 import { GATEWAY_BRAIN_USER_ENDPOINTS } from './EndPoints';
 
 export const BRAIN_DOMAINS = Object.freeze({
-  development:
-    'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method',
-  production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'
-});
-
-/** userly invoke base — used for `auth/access_token` (HS256 JWT for matrix-runtime) */
-export const BRAIN_USERLY_DOMAINS = Object.freeze({
-  development: 'https://brus-dev.api.brain.ai/v1.0/invoke/userly/method',
-  production: 'https://brus.api.brain.ai/v1.0/invoke/userly/method'
+  development: 'https://api.dev.brain.ai',
+  production: 'https://api.brain.ai'
 });
 
 export const BRAIN_STORAGE_CREDENTIAL_KEY = 'brain_token';

@@ -13,6 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseEndpoint,
+  BRAIN_USER_INVOKE_PATH,
   GATEWAY_BRAIN_USER_ENDPOINTS,
   type BrainGatewayEndpointMethod,
   type EndpointsType
@@ -162,31 +163,31 @@ describe('EndPoints', () => {
   describe('GATEWAY_BRAIN_USER_ENDPOINTS', () => {
     it('should have login endpoint', () => {
       expect(GATEWAY_BRAIN_USER_ENDPOINTS.login).toBe(
-        'POST /api/auth/token.json'
+        `POST ${BRAIN_USER_INVOKE_PATH}/api/auth/token.json`
       );
     });
 
     it('should have register endpoint', () => {
       expect(GATEWAY_BRAIN_USER_ENDPOINTS.register).toBe(
-        'POST /api/users/signup.json'
+        `POST ${BRAIN_USER_INVOKE_PATH}/api/users/signup.json`
       );
     });
 
     it('should have getUserInfo endpoint', () => {
       expect(GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo).toBe(
-        'GET /api/users/me.json'
+        `GET ${BRAIN_USER_INVOKE_PATH}/api/users/me.json`
       );
     });
 
     it('should have loginWithGoogle endpoint', () => {
       expect(GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle).toBe(
-        'POST /api/auth/google/imagica/token'
+        `POST ${BRAIN_USER_INVOKE_PATH}/api/auth/google/imagica/token`
       );
     });
 
     it('should have logout endpoint', () => {
       expect(GATEWAY_BRAIN_USER_ENDPOINTS.logout).toBe(
-        'POST /api/users/signout'
+        `POST ${BRAIN_USER_INVOKE_PATH}/api/users/signout`
       );
     });
 
@@ -218,7 +219,7 @@ describe('EndPoints', () => {
 
       expect(result).toEqual({
         method: 'POST',
-        url: '/api/auth/token.json'
+        url: `${BRAIN_USER_INVOKE_PATH}/api/auth/token.json`
       });
     });
 
@@ -227,7 +228,7 @@ describe('EndPoints', () => {
 
       expect(result).toEqual({
         method: 'POST',
-        url: '/api/users/signup.json'
+        url: `${BRAIN_USER_INVOKE_PATH}/api/users/signup.json`
       });
     });
 
@@ -236,7 +237,7 @@ describe('EndPoints', () => {
 
       expect(result).toEqual({
         method: 'GET',
-        url: '/api/users/me.json'
+        url: `${BRAIN_USER_INVOKE_PATH}/api/users/me.json`
       });
     });
 
@@ -247,7 +248,7 @@ describe('EndPoints', () => {
 
       expect(result).toEqual({
         method: 'POST',
-        url: '/api/auth/google/imagica/token'
+        url: `${BRAIN_USER_INVOKE_PATH}/api/auth/google/imagica/token`
       });
     });
 
@@ -256,7 +257,7 @@ describe('EndPoints', () => {
 
       expect(result).toEqual({
         method: 'POST',
-        url: '/api/users/signout'
+        url: `${BRAIN_USER_INVOKE_PATH}/api/users/signout`
       });
     });
 

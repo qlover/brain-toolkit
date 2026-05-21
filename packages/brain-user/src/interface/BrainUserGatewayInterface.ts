@@ -24,14 +24,13 @@ export interface BrainUserGatewayConfig<T>
    *
    * You can override the domains, to use different domains
    *
-   * @default `{ development: 'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method', production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'}`
+   * @default `{ development: 'https://api.dev.brain.ai', production: 'https://api.brain.ai' }`
    */
   domains?: Record<string, string>;
 
   /**
-   * userly invoke domains (for `access_token` exchange)
-   *
-   * @default `BRAIN_USERLY_DOMAINS` from package config
+   * Optional override for userly `access_token` base URL.
+   * When omitted, falls back to {@link BrainUserGatewayConfig.domains `domains`} or `BRAIN_DOMAINS`.
    */
   userlyDomains?: Record<string, string>;
 

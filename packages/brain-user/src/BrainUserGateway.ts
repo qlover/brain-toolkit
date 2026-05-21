@@ -4,7 +4,7 @@ import {
   GATEWAY_BRAIN_USERLY_ENDPOINTS,
   parseEndpoint
 } from './config/EndPoints';
-import { BRAIN_USERLY_DOMAINS, defaultEnv } from './config/common';
+import { BRAIN_DOMAINS, defaultEnv } from './config/common';
 import { resolveBaseURL } from './utils/createAdapter';
 import type {
   BrainUserGoogleRequest,
@@ -389,7 +389,7 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
    *
    * @override
    * @param params - Optional token override and `X-Brain-*` / `X-APP-VERSION` headers
-   * @param config - Gateway config; uses `userlyDomains` / `env` for userly base URL
+   * @param config - Gateway config; uses `userlyDomains` or `domains` / `env` for base URL
    * @returns userly access token payload
    *
    * @example
@@ -410,11 +410,15 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
   ): Promise<BrainAccessToken> {
     const mergedConfig = this.adapter.config;
     const env = config?.env ?? mergedConfig.env ?? defaultEnv;
-    const userlyDomains = config?.userlyDomains ?? BRAIN_USERLY_DOMAINS;
+    const domains =
+      config?.userlyDomains ??
+      config?.domains ??
+      mergedConfig.domains ??
+      BRAIN_DOMAINS;
     const baseURL = resolveBaseURL({
       baseURL: config?.baseURL,
       env,
-      domains: userlyDomains
+      domains
     });
     const token = params?.token ?? config?.token;
 

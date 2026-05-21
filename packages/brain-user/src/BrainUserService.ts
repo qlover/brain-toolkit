@@ -148,8 +148,8 @@ export type BrainUserServiceOptions<Tags extends readonly string[]> = Omit<
  *
  * ```ts
  * {
- *   development: 'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method',
- *   production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'
+ *   development: 'https://api.dev.brain.ai',
+ *   production: 'https://api.brain.ai'
  * }
  * ```
  *
