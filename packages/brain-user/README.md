@@ -14,6 +14,7 @@ Brain User Service - 完整的用户认证和管理库，适用于 Brain 平台
 - [快速开始](#快速开始)
 - [功能特性](#功能特性)
 - [配置选项](#配置选项)
+- [数据模型参考](#数据模型参考)
 - [API 参考](#api-参考)
 - [使用示例](#使用示例)
 - [常见用例](#常见用例)
@@ -42,11 +43,15 @@ const credentials = await service.loginWithGoogle({
 // 获取用户信息
 const user = await service.getUserInfo();
 console.log(user.email, user.name);
+
+// 可选：换取 userly access_token
+await service.fetchAndStoreAccessToken({ lang: 'en', deviceUid: 'device-id' });
 ```
 
 ## 功能特性
 
 - 🔐 **身份认证**: Google OAuth、邮箱密码登录、用户注册
+- 🎫 **Userly JWT**: 将 brain-user `token` 换取 userly `access_token`（HS256，用于 matrix-runtime / benchmark）
 - 👤 **用户管理**: 获取用户信息、刷新用户数据、管理用户资料
 - 🏷️ **功能标签**: 类型安全的功能权限检查
 - 💾 **状态管理**: 内置 store，支持多种存储机制（localStorage/sessionStorage/Cookie），需手动配置持久化
@@ -78,14 +83,17 @@ const service = new BrainUserService({
 
 #### API 配置选项
 
-| 属性           | 类型                                      | 必填 | 默认值                         | 说明                                          |
-| -------------- | ----------------------------------------- | ---- | ------------------------------ | --------------------------------------------- |
-| `env`          | `'development' \| 'production' \| string` | 否   | `'development'`                | 环境标识，用于确定 API 域名                   |
-| `domains`      | `Record<string, string>`                  | 否   | 见下方                         | 自定义环境域名映射                            |
-| `baseURL`      | `string`                                  | 否   | 从 env 自动获取                | 直接覆盖 API 基础 URL                         |
-| `endpoints`    | `Record<string, EndpointsType>`           | 否   | `GATEWAY_BRAIN_USER_ENDPOINTS` | 自定义 API 端点配置（格式：`'METHOD /path'`） |
-| `headers`      | `Record<string, string>`                  | 否   | -                              | 所有请求的默认请求头                          |
-| `responseType` | `'json' \| 'text' \| 'blob'`              | 否   | `'json'`                       | 期望的响应类型                                |
+| 属性                    | 类型                                      | 必填 | 默认值                                   | 说明                                                           |
+| ----------------------- | ----------------------------------------- | ---- | ---------------------------------------- | -------------------------------------------------------------- |
+| `env`                   | `'development' \| 'production' \| string` | 否   | `'development'`                          | 环境标识，用于确定 API 域名                                    |
+| `domains`               | `Record<string, string>`                  | 否   | 见下方                                   | brain-user API 的环境域名（不含 invoke 路径）                  |
+| `userlyDomains`         | `Record<string, string>`                  | 否   | 同 `domains`                             | userly `access_token` 接口的域名覆盖；未设置时回退到 `domains` |
+| `baseURL`               | `string`                                  | 否   | 从 env 自动获取                          | 直接覆盖 API 基础 URL                                          |
+| `endpoints`             | `Record<string, EndpointsType>`           | 否   | 见下方「默认端点」                       | 自定义 API 端点（格式：`'METHOD /path'`）                      |
+| `headers`               | `Record<string, string>`                  | 否   | `{ 'Content-Type': 'application/json' }` | 所有请求的默认请求头                                           |
+| `responseType`          | `'json' \| 'text' \| 'blob'`              | 否   | `'json'`                                 | 期望的响应类型                                                 |
+| `requestDataSerializer` | `RequestDataSerializer`                   | 否   | 内置 snake_case 序列化                   | 请求体字段命名转换（如 camelCase → snake_case）                |
+| `requestAdapter`        | `RequestAdapterInterface`                 | 否   | `RequestAdapterFetch`                    | 自定义 HTTP 适配器（见下方独立表）                             |
 
 #### 认证配置选项
 
@@ -98,27 +106,182 @@ const service = new BrainUserService({
 
 #### 存储配置选项
 
-| 属性                         | 类型                                                         | 必填 | 默认值           | 说明                     |
-| ---------------------------- | ------------------------------------------------------------ | ---- | ---------------- | ------------------------ |
-| `store.storage`              | `'localStorage' \| 'sessionStorage' \| SyncStorageInterface` | 否   | `'localStorage'` | 用户数据的存储机制       |
-| `store.persistUserInfo`      | `boolean`                                                    | 否   | `false`          | 是否持久化用户信息到存储 |
-| `store.credentialStorageKey` | `string`                                                     | 否   | `'brain_token'`  | 存储凭证的键名           |
-| `store.featureTags`          | `DynamicFeatureTags`                                         | 否   | 自动创建         | 功能标签处理器实例       |
-| `store.userProfile`          | `UserProfile`                                                | 否   | 自动创建         | 用户资料处理器实例       |
-
-#### 自定义适配器选项
-
-| 属性             | 类型                      | 必填 | 默认值                | 说明                       |
-| ---------------- | ------------------------- | ---- | --------------------- | -------------------------- |
-| `requestAdapter` | `RequestAdapterInterface` | 否   | `RequestAdapterFetch` | 自定义 HTTP 通信请求适配器 |
+| 属性                         | 类型                                                         | 必填 | 默认值            | 说明                                         |
+| ---------------------------- | ------------------------------------------------------------ | ---- | ----------------- | -------------------------------------------- |
+| `store.storage`              | `'localStorage' \| 'sessionStorage' \| SyncStorageInterface` | 否   | `'localStorage'`  | 用户数据的存储机制                           |
+| `store.persistUserInfo`      | `boolean`                                                    | 否   | `false`           | 是否持久化用户信息到存储                     |
+| `store.storageKey`           | `string`                                                     | 否   | `'brain_profile'` | 持久化用户资料时的存储键名                   |
+| `store.credentialStorageKey` | `string`                                                     | 否   | `'brain_token'`   | 存储凭证（含 `token`、`access_token`）的键名 |
+| `store.featureTags`          | `DynamicFeatureTags`                                         | 否   | 自动创建          | 功能标签处理器实例                           |
+| `store.userProfile`          | `UserProfile`                                                | 否   | 自动创建          | 用户资料处理器实例                           |
 
 ### 默认域名配置
 
+域名仅包含 host，invoke 路径由 `endpoints` 拼接：
+
 ```ts
+import { BRAIN_DOMAINS } from '@brain-toolkit/brain-user';
+
+// BRAIN_DOMAINS 默认值：
 {
-  development: 'https://brus-dev.api.brain.ai/v1.0/invoke/brain-user-system/method',
-  production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'
+  development: 'https://api.dev.brain.ai',
+  production: 'https://api.brain.ai'
 }
+```
+
+### 默认端点（`endpoints`）
+
+```ts
+import {
+  GATEWAY_BRAIN_USER_ENDPOINTS,
+  GATEWAY_BRAIN_USERLY_ENDPOINTS
+} from '@brain-toolkit/brain-user';
+
+// brain-user-system
+GATEWAY_BRAIN_USER_ENDPOINTS.login; // POST .../api/auth/token.json
+GATEWAY_BRAIN_USER_ENDPOINTS.register;
+GATEWAY_BRAIN_USER_ENDPOINTS.getUserInfo;
+GATEWAY_BRAIN_USER_ENDPOINTS.loginWithGoogle;
+GATEWAY_BRAIN_USER_ENDPOINTS.logout;
+
+// userly（access_token）
+GATEWAY_BRAIN_USERLY_ENDPOINTS.accessToken; // POST .../auth/access_token
+```
+
+## 数据模型参考
+
+类型均从 `@brain-toolkit/brain-user` 导出，与源码一致。IDE 中可直接跳转定义。
+
+```ts
+import type {
+  BrainCredentials,
+  BrainAccessToken,
+  BrainAccessTokenRequest,
+  BrainUser,
+  BrainUserProfileInterface,
+  BrainUserPermissions,
+  BrainUserGoogleRequest,
+  BrainLoginRequest,
+  BrainUserRegisterRequest
+} from '@brain-toolkit/brain-user';
+```
+
+### 凭证与用户
+
+`BrainCredentials`：登录或 `fetchAndStoreAccessToken` 后写入 store。`token` 为 brain-user 令牌（`Authorization: token <token>`）；`access_token` 为 userly HS256 JWT。
+
+```ts
+interface BrainCredentials {
+  /** brain-user 认证令牌 */
+  token?: string;
+  /** userly JWT（matrix-runtime / benchmark） */
+  access_token?: string;
+  expires_in?: number;
+  refresh_token?: string;
+  /** Google 登录：是否已有账号 */
+  existing?: boolean;
+  required_fields?: {
+    first_name?: string;
+    last_name?: string;
+  };
+}
+```
+
+`getAccessToken` / `fetchAndStoreAccessToken`：
+
+```ts
+interface BrainAccessTokenRequest {
+  /** 默认取 store 中的 token */
+  token?: string;
+  /** 默认 `'en'` → `X-Brain-User-Lang` */
+  lang?: string;
+  /** → `X-Brain-User-Location`，如 `'35.1814,136.9064'` */
+  location?: string;
+  /** → `X-APP-VERSION` */
+  appVersion?: string;
+  /** → `X-Brain-Device-Uid` */
+  deviceUid?: string;
+}
+
+interface BrainAccessToken {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
+}
+```
+
+```ts
+interface BrainUser {
+  id: number;
+  email: string;
+  name: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  profile?: BrainUserProfileInterface;
+  auth_token: { key: string };
+  is_guest?: boolean;
+  is_superuser?: boolean;
+  is_active?: boolean;
+  roles?: string[];
+  created_at?: string;
+  referral_enabled?: boolean;
+  referred_by?: unknown;
+  is_live?: unknown;
+  promocode?: string;
+  tags?: string[];
+  /** 含 `disable_*` 时禁用对应功能 */
+  feature_tags?: readonly string[];
+  is_supernatural?: boolean;
+  is_decentralized?: boolean;
+  account?: unknown;
+}
+
+interface BrainUserProfileInterface {
+  phone_number?: string;
+  da_email?: string;
+  da_email_password?: string;
+  certificate?: string;
+  permissions?: BrainUserPermissions[];
+  profile_img_url?: string;
+  amplitude_device_id?: unknown;
+  email_verified?: boolean;
+}
+
+interface BrainUserPermissions {
+  key?: string;
+  value?: string[];
+}
+```
+
+### API 请求体
+
+```ts
+interface BrainUserGoogleRequest {
+  authorization_code?: string;
+  id_token?: string;
+  /** brain web 常用 metadata.mode: 'creator' | 'sharer' | 'editor' */
+  metadata?: Record<string, unknown>;
+}
+
+interface BrainLoginRequest {
+  email: string;
+  password: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface BrainUserRegisterRequest {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  otp?: string;
+  metadata?: Record<string, unknown>;
+  roles?: string[];
+}
+
+/** getUserInfo / refreshUserInfo 可传 { token }，省略则用 store */
+type GetUserInfoParams = Pick<BrainCredentials, 'token'>;
 ```
 
 ## API 参考
@@ -129,33 +292,19 @@ const service = new BrainUserService({
 
 #### 方法
 
-##### `loginWithGoogle(params: BrainUserGoogleRequest): Promise<BrainGoogleCredentials>`
+##### `loginWithGoogle(params: BrainUserGoogleRequest): Promise<BrainCredentials>`
 
-使用 Google OAuth 授权码登录。
-
-**注意：** 此方法不会自动获取用户信息。登录成功后需要手动调用 `refreshUserInfo()` 来获取用户详情。
+使用 Google OAuth 登录。不会自动拉取用户信息，需再调用 `refreshUserInfo`。
 
 ```ts
-const credentials = await service.loginWithGoogle({
+const credentials: BrainCredentials = await service.loginWithGoogle({
   authorization_code: 'google-oauth-code'
 });
-
-// 然后刷新用户信息
-const userInfo = await service.refreshUserInfo(credentials);
+const userInfo: BrainUser = await service.refreshUserInfo(credentials);
 service.getStore().success(userInfo, credentials);
 ```
 
-**参数：**
-
-- `params.authorization_code` (可选): Google OAuth 授权码
-- `params.id_token` (可选): Google ID 令牌
-- `params.metadata` (可选): 额外的元数据（例如，brain web 的 `mode`）
-
-**返回：** Promise，解析为包含 token 和可选 required_fields 的 Google 凭证
-
 ##### `login(params: BrainLoginRequest): Promise<BrainCredentials | null>`
-
-使用邮箱和密码登录。
 
 ```ts
 const credentials = await service.login({
@@ -164,20 +313,10 @@ const credentials = await service.login({
 });
 ```
 
-**参数：**
-
-- `params.email`: 用户邮箱地址
-- `params.password`: 用户密码
-- `params.metadata` (可选): 额外的元数据
-
-**返回：** Promise，解析为凭证或 null
-
 ##### `register(params: BrainUserRegisterRequest): Promise<BrainUser>`
 
-注册新用户账户。
-
 ```ts
-const user = await service.register({
+const user: BrainUser = await service.register({
   email: 'user@example.com',
   password: 'securePassword123',
   first_name: 'John',
@@ -185,61 +324,26 @@ const user = await service.register({
 });
 ```
 
-**参数：**
-
-- `params.email`: 用户邮箱地址
-- `params.password`: 用户密码
-- `params.first_name`: 用户名字
-- `params.last_name`: 用户姓氏
-- `params.otp` (可选): 验证码
-- `params.metadata` (可选): 额外的元数据
-- `params.roles` (可选): 用户角色数组
-
-**返回：** Promise，解析为包含凭证的用户数据
-
-##### `getUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>`
-
-获取当前用户信息。
+##### `getUserInfo(params?: GetUserInfoParams): Promise<BrainUser | null>`
 
 ```ts
 const user = await service.getUserInfo();
-// 或使用显式令牌
-const user = await service.getUserInfo({ token: 'auth-token' });
+const userWithToken = await service.getUserInfo({ token: 'auth-token' });
 ```
 
-**参数：**
-
-- `params.token` (可选): 认证令牌（如果未提供，则使用存储的令牌）
-
-**返回：** Promise，解析为用户数据或 null
-
-##### `refreshUserInfo(params?: BrainGetUserInfoRequest): Promise<BrainUser | null>`
-
-从服务器刷新用户信息。
+##### `refreshUserInfo(params?: GetUserInfoParams): Promise<BrainUser | null>`
 
 ```ts
-const updatedUser = await service.refreshUserInfo();
+const updatedUser: BrainUser | null = await service.refreshUserInfo();
 ```
 
-**参数：**
-
-- `params.token` (可选): 认证令牌（如果未提供，则使用存储的令牌）
-
-**返回：** Promise，解析为更新的用户数据或 null
-
 ##### `logout(params?: unknown): Promise<void>`
-
-登出当前用户。
 
 ```ts
 await service.logout();
 ```
 
-**返回：** Promise，解析为 void
-
 ##### `getStore(): BrainUserStore<Tags>`
-
-获取用户 store 实例以访问状态。
 
 ```ts
 const store = service.getStore();
@@ -247,20 +351,44 @@ const user = store.getUserMe();
 const token = store.getCredential()?.token;
 ```
 
-**返回：** BrainUserStore 实例
-
 ##### `getCredential(): BrainCredentials | null`
 
-获取当前用户凭证。
-
 ```ts
-const credential = service.getCredential();
-if (credential?.token) {
-  // 用户已认证
-}
+const credential: BrainCredentials | null = service.getCredential();
 ```
 
-**返回：** 凭证对象或 null
+##### `getAccessToken(params?: BrainAccessTokenRequest): Promise<BrainAccessToken>`
+
+换取 userly JWT，**不**写入 store。
+
+```ts
+const access: BrainAccessToken = await service.getAccessToken({
+  lang: 'en',
+  appVersion: '1.0.0',
+  deviceUid: 'stable-device-id'
+});
+```
+
+##### `fetchAndStoreAccessToken(params?: BrainAccessTokenRequest): Promise<BrainCredentials>`
+
+换取并合并进 store（需已有 `token`）。
+
+```ts
+const merged: BrainCredentials = await service.fetchAndStoreAccessToken({
+  lang: 'en',
+  deviceUid: getDeviceUid()
+});
+```
+
+##### `mergeAccessToken(access: BrainAccessToken): BrainCredentials`
+
+```ts
+const credential: BrainCredentials = service.mergeAccessToken({
+  access_token: 'eyJ...',
+  expires_in: 3600,
+  refresh_token: 'rt_...'
+});
+```
 
 ### BrainUserStore
 
@@ -275,6 +403,18 @@ if (credential?.token) {
 ##### `getCredential(): BrainCredentials | null`
 
 从 store 获取当前凭证。
+
+##### `getToken(): string`
+
+返回当前凭证中的 brain-user `token`，无则空字符串。
+
+##### `getAccessToken(): string`
+
+返回当前凭证中的 userly `access_token`，无则空字符串。
+
+```ts
+const jwt = service.getStore().getAccessToken();
+```
 
 ##### `featureTags: DynamicFeatureTags`
 
@@ -309,6 +449,69 @@ const hasPermission = service
 ```
 
 ## 使用示例
+
+### Userly `access_token`（登录后换取 JWT）
+
+brain-user 登录只得到 `token`；调用 matrix-runtime / benchmark 等 userly 服务时需要 HS256 `access_token`。
+
+```ts
+import { BrainUserService } from '@brain-toolkit/brain-user';
+
+const service = new BrainUserService({ env: 'production' });
+
+// 1. 先完成 brain-user 登录（Google / 邮箱等）
+await service.loginWithGoogle({ authorization_code: '...' });
+const userInfo = await service.refreshUserInfo();
+service.getStore().success(userInfo, service.getCredential()!);
+
+// 2. 一键换取并写入 store（推荐）
+await service.fetchAndStoreAccessToken({
+  lang: 'en',
+  appVersion: '1.0.0',
+  deviceUid: 'your-stable-device-id'
+});
+
+// 3. 读取 JWT
+const brainToken = service.getStore().getToken();
+const userlyJwt = service.getStore().getAccessToken();
+const expiresIn = service.getCredential()?.expires_in;
+```
+
+分步调用（需自行合并到 store）：
+
+```ts
+const access = await service.getAccessToken({
+  token: service.getCredential()?.token
+});
+service.mergeAccessToken(access);
+```
+
+登录后自动换取（避免重复请求时可判断 `credential.access_token`）：
+
+```ts
+async function ensureUserlyAccessToken(service: BrainUserService) {
+  const credential = service.getCredential();
+  if (!credential?.token || credential.access_token) return;
+
+  await service.fetchAndStoreAccessToken({
+    lang: navigator.language?.split('-')[0] ?? 'en',
+    appVersion: '1.0.0',
+    deviceUid: getDeviceUid()
+  });
+}
+```
+
+自定义 userly 域名（与 brain-user 域名分离时）：
+
+```ts
+const service = new BrainUserService({
+  env: 'staging',
+  domains: { staging: 'https://api.staging.brain.ai' },
+  userlyDomains: { staging: 'https://userly.staging.brain.ai' }
+});
+```
+
+凭证会随 `store.credentialStorageKey`（默认 `brain_token`）持久化，`access_token` 与 `token` 保存在同一 JSON 对象中。
 
 ### 基础用法（最小配置）
 
@@ -496,11 +699,14 @@ const service = new BrainUserService({
 
 ## 常见用例
 
-### 用户认证流程
+### 用户认证流程（含 access_token）
 
 ```ts
 // 1. 初始化服务
-const service = new BrainUserService({ env: 'production' });
+const service = new BrainUserService({
+  env: 'production',
+  store: { persistUserInfo: true }
+});
 
 // 2. 使用 Google 登录
 const credentials = await service.loginWithGoogle({
@@ -511,12 +717,21 @@ const credentials = await service.loginWithGoogle({
 const userInfo = await service.refreshUserInfo(credentials);
 service.getStore().success(userInfo, credentials);
 
-// 4. 检查权限
+// 4. 换取 userly access_token（matrix-runtime 等）
+await service.fetchAndStoreAccessToken({
+  deviceUid: 'stable-device-id',
+  lang: 'en'
+});
+
+// 5. 检查权限
 if (service.getStore().featureTags.hasGenUI()) {
   // 用户有 Gen UI 权限
 }
 
-// 5. 登出
+// 6. 调用下游 API 时使用 userly JWT
+const jwt = service.getStore().getAccessToken();
+
+// 7. 登出
 await service.logout();
 ```
 
@@ -648,11 +863,16 @@ const service = new BrainUserService({
 
   // 认证配置
   authKey: 'Authorization',
-  tokenPrefix: 'Bearer',
+  tokenPrefix: 'token',
   requiredToken: true,
   storageKey: 'user_profile',
 
-  // 存储配置
+  // userly JWT（可选独立域名）
+  userlyDomains: {
+    production: 'https://api.brain.ai'
+  },
+
+  // 存储配置（token + access_token 同一键）
   store: {
     storage: new CookieStorage({
       expires: 7,
@@ -668,6 +888,12 @@ const service = new BrainUserService({
   requestAdapter: new RequestAdapterFetch({
     timeout: 15000
   })
+});
+
+// 登录后换取 access_token
+await service.fetchAndStoreAccessToken({
+  appVersion: '1.0.0',
+  deviceUid: 'device-1'
 });
 ```
 
