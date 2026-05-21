@@ -27,3 +27,12 @@ export const GATEWAY_BRAIN_USER_ENDPOINTS = {
    */
   logout: 'POST /api/users/signout'
 } as const;
+
+/**
+ * userly gateway endpoints (matrix-runtime / benchmark JWT)
+ *
+ * Base URL: {@link BRAIN_USERLY_DOMAINS}
+ */
+export const GATEWAY_BRAIN_USERLY_ENDPOINTS = {
+  accessToken: 'POST auth/access_token'
+} as const;

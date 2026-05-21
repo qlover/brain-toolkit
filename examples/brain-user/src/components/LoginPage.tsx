@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { useUserService } from '../utils/useUserService';
 import { useBrainUserStore } from '../utils/useBrainUserStore';
+import { fetchUserlyAccessToken } from '../utils/fetchUserlyAccessToken';
 
 function LoginForm() {
   const { userService, userStore } = useUserService();
@@ -36,8 +37,8 @@ function LoginForm() {
         throw new Error('Failed to get user info');
       }
 
-      // Update store with user info and credentials
       userService.getStore().success(userInfo, credentials);
+      await fetchUserlyAccessToken(userService);
 
       setPassword('');
     } catch (err) {
@@ -67,6 +68,7 @@ function LoginForm() {
         }
 
         userService.getStore().success(userInfo, brainCredentials);
+        await fetchUserlyAccessToken(userService);
       } catch (err) {
         console.error('Google login failed:', err);
       } finally {

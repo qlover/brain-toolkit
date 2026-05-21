@@ -2,11 +2,25 @@ import type { BrainUser } from '@brain-toolkit/brain-user';
 
 interface UserInfoProps {
   user: BrainUser;
+  brainToken?: string;
+  accessToken?: string;
+  expiresIn?: number;
+  accessTokenLoading?: boolean;
+  onRefreshAccessToken?: () => void;
   onLogout?: () => void;
   loading?: boolean;
 }
 
-export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
+export function UserInfo({
+  user,
+  brainToken,
+  accessToken,
+  expiresIn,
+  accessTokenLoading = false,
+  onRefreshAccessToken,
+  onLogout,
+  loading = false
+}: UserInfoProps) {
   return (
     <div data-testid="user-info">
       <div
@@ -190,6 +204,87 @@ export function UserInfo({ user, onLogout, loading = false }: UserInfoProps) {
             </div>
           )}
         </div>
+
+        <h2
+          style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: '#333',
+            borderBottom: '2px solid #722ed1',
+            paddingBottom: '10px'
+          }}
+        >
+          Tokens (userly)
+        </h2>
+        <div
+          style={{
+            backgroundColor: '#f9f0ff',
+            padding: '20px',
+            borderRadius: '6px',
+            marginBottom: '20px',
+            border: '1px solid #d3adf7'
+          }}
+        >
+          <div style={{ marginBottom: '12px' }}>
+            <strong
+              style={{ color: '#666', display: 'inline-block', width: '140px' }}
+            >
+              brain token:
+            </strong>
+            <code style={{ fontSize: '13px', wordBreak: 'break-all' }}>
+              {brainToken ?? '—'}
+            </code>
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <strong
+              style={{ color: '#666', display: 'inline-block', width: '140px' }}
+            >
+              access_token:
+            </strong>
+            <code style={{ fontSize: '13px', wordBreak: 'break-all' }}>
+              {accessTokenLoading && !accessToken
+                ? '获取中…'
+                : (accessToken ?? '未获取')}
+            </code>
+          </div>
+          {expiresIn !== undefined && expiresIn > 0 && (
+            <div style={{ marginBottom: '12px' }}>
+              <strong
+                style={{
+                  color: '#666',
+                  display: 'inline-block',
+                  width: '140px'
+                }}
+              >
+                expires_in:
+              </strong>
+              <span style={{ color: '#333' }}>{expiresIn}s</span>
+            </div>
+          )}
+          {onRefreshAccessToken && (
+            <button
+              type="button"
+              onClick={onRefreshAccessToken}
+              disabled={accessTokenLoading || loading}
+              style={{
+                marginTop: '8px',
+                padding: '8px 16px',
+                backgroundColor: '#722ed1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor:
+                  accessTokenLoading || loading ? 'not-allowed' : 'pointer',
+                opacity: accessTokenLoading || loading ? 0.6 : 1,
+                fontSize: '14px'
+              }}
+            >
+              {accessTokenLoading ? '刷新 access_token…' : '刷新 access_token'}
+            </button>
+          )}
+        </div>
+
         {onLogout && (
           <button
             onClick={onLogout}

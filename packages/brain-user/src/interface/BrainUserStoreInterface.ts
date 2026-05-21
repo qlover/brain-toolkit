@@ -8,6 +8,8 @@ export interface BrainUserStoreInterface<Tags extends readonly string[]>
   extends UserStoreInterface<BrainUser, BrainCredentials> {
   getToken(): string;
 
+  getAccessToken(): string;
+
   getFeatureTags(): DynamicFeatureTags<Tags>;
 
   getUserProfile(): UserProfile;

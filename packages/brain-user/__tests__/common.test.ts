@@ -13,6 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   BRAIN_DOMAINS,
+  BRAIN_USERLY_DOMAINS,
   BRAIN_STORAGE_CREDENTIAL_KEY,
   BRAIN_STORAGE_PROFILE_KEY,
   defaultServiceName,
@@ -47,6 +48,24 @@ describe('common config', () => {
 
     it('should be frozen (immutable)', () => {
       expect(Object.isFrozen(BRAIN_DOMAINS)).toBe(true);
+    });
+  });
+
+  describe('BRAIN_USERLY_DOMAINS', () => {
+    it('should have development userly domain', () => {
+      expect(BRAIN_USERLY_DOMAINS.development).toBe(
+        'https://brus-dev.api.brain.ai/v1.0/invoke/userly/method'
+      );
+    });
+
+    it('should have production userly domain', () => {
+      expect(BRAIN_USERLY_DOMAINS.production).toBe(
+        'https://brus.api.brain.ai/v1.0/invoke/userly/method'
+      );
+    });
+
+    it('should be frozen (immutable)', () => {
+      expect(Object.isFrozen(BRAIN_USERLY_DOMAINS)).toBe(true);
     });
 
     it('should not allow modifications', () => {

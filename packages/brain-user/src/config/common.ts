@@ -9,6 +9,12 @@ export const BRAIN_DOMAINS = Object.freeze({
   production: 'https://brus.api.brain.ai/v1.0/invoke/brain-user-system/method'
 });
 
+/** userly invoke base — used for `auth/access_token` (HS256 JWT for matrix-runtime) */
+export const BRAIN_USERLY_DOMAINS = Object.freeze({
+  development: 'https://brus-dev.api.brain.ai/v1.0/invoke/userly/method',
+  production: 'https://brus.api.brain.ai/v1.0/invoke/userly/method'
+});
+
 export const BRAIN_STORAGE_CREDENTIAL_KEY = 'brain_token';
 
 export const BRAIN_STORAGE_PROFILE_KEY = 'brain_profile';

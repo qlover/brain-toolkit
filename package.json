@@ -25,7 +25,8 @@
     "clean-branch": "fe-clean-branch",
     "check-packages": "fe-check-packages",
     "prepare": "husky",
-    "type-check": "tsc --build --force"
+    "type-check": "tsc --build --force",
+    "dev:brain-user": "pnpm --filter examples/brain-user dev"
   },
   "keywords": [
     "brain-toolkit",

@@ -29,6 +29,13 @@ export interface BrainUserGatewayConfig<T>
   domains?: Record<string, string>;
 
   /**
+   * userly invoke domains (for `access_token` exchange)
+   *
+   * @default `BRAIN_USERLY_DOMAINS` from package config
+   */
+  userlyDomains?: Record<string, string>;
+
+  /**
    * Custom API endpoints configuration
    *
    * Allows you to override default API endpoints for different operations.
@@ -140,11 +147,40 @@ export interface BrainBaseCredentials {
 }
 
 export interface BrainCredentials extends BrainBaseCredentials {
+  /**
+   * HS256 JWT from userly `auth/access_token` (matrix-runtime / benchmark)
+   */
+  access_token?: string;
+  expires_in?: number;
+  refresh_token?: string;
   existing?: boolean;
   required_fields?: {
     first_name?: string;
     last_name?: string;
   };
+}
+
+/**
+ * Request parameters for exchanging brain-user `token` → userly `access_token`
+ */
+export interface BrainAccessTokenRequest {
+  /** brain-user token; defaults to `config.token` when omitted */
+  token?: string;
+  /** @default `en` — sent as `X-Brain-User-Lang` */
+  lang?: string;
+  /** e.g. `35.1814,136.9064` — sent as `X-Brain-User-Location` */
+  location?: string;
+  /** sent as `X-APP-VERSION` */
+  appVersion?: string;
+  /** stable device id — sent as `X-Brain-Device-Uid` */
+  deviceUid?: string;
+}
+
+/** Response from `POST auth/access_token` (userly) */
+export interface BrainAccessToken {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
 }
 
 export interface BrainUserRequestConfig
@@ -166,4 +202,14 @@ export interface BrainUserGatewayInterface
     params: BrainUserGoogleRequest,
     config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
   ): Promise<BrainCredentials>;
+
+  /**
+   * Exchange brain-user `token` for userly `access_token` (HS256 JWT).
+   *
+   * `Authorization: token <brain-user-token>` plus optional `X-Brain-*` headers.
+   */
+  getAccessToken(
+    params?: BrainAccessTokenRequest,
+    config?: BrainUserGatewayConfig<BrainAccessTokenRequest>
+  ): Promise<BrainAccessToken>;
 }
