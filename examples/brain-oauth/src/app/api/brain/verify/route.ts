@@ -1,7 +1,6 @@
-import { ExecutorError } from '@qlover/fe-corekit';
+import { API_BRAIN_VERIFY } from '@config/apiRoutes';
 import { BrainAuthController } from '@server/controllers/BrainAuthController';
 import { NextApiServer } from '@server/NextApiServer';
-import { LoginValidator } from '@shared/validators/LoginValidator';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
@@ -19,21 +18,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const server = new NextApiServer('api/brain/verify', req);
-  const result = await server.run(async ({ parameters: { IOC } }) => {
-    const body = await IOC(LoginValidator).getThrow(requestBody);
-    try {
-      return await IOC(BrainAuthController).verifyBrainLogin(
-        body.email,
-        body.password
-      );
-    } catch (err) {
-      throw new ExecutorError(
-        'brain_auth_failed',
-        err instanceof Error ? err.message : 'Brain login failed'
-      );
-    }
-  });
+  const server = new NextApiServer(API_BRAIN_VERIFY, req);
+  const result = await server.run(async ({ parameters: { IOC } }) =>
+    IOC(BrainAuthController).verifyBrainLogin(requestBody)
+  );
 
   if (!result.success) {
     const status = result.id === 'brain_auth_failed' ? 401 : 400;

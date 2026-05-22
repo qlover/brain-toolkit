@@ -143,39 +143,6 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
       noValidate
       className="space-y-4"
     >
-      <div className="space-y-3">
-        <button
-          type="button"
-          className={socialBtnClass}
-          aria-label={tt.withGoogleTitle}
-          title={tt.withGoogleTitle}
-        >
-          <IconGoogle />
-          <span>{tt.withGoogle}</span>
-        </button>
-        <button
-          type="button"
-          className={socialBtnClass}
-          aria-label="GitHub"
-          title="Sign in with GitHub"
-        >
-          <IconGitHub />
-          <span>GitHub</span>
-        </button>
-      </div>
-
-      <div className="text-secondary-text my-6 flex items-center gap-4 text-xs">
-        <span
-          className="h-px flex-1 border-primary-border"
-          style={{ minWidth: 0 }}
-        />
-        <span>{tt.continueWith}</span>
-        <span
-          className="h-px flex-1 border-primary-border"
-          style={{ minWidth: 0 }}
-        />
-      </div>
-
       {submitError && (
         <div
           role="alert"
