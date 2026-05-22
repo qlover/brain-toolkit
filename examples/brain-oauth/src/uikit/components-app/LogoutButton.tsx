@@ -2,7 +2,9 @@
 
 import { LogoutOutlined } from '@ant-design/icons';
 import { Tooltip } from 'antd';
+import { clsx } from 'clsx';
 import { useCallback } from 'react';
+import { headerActionButtonClassName } from './headerStyles';
 import {
   COMMON_LOGOUT_DIALOG_CONTENT,
   COMMON_LOGOUT_DIALOG_TITLE
@@ -11,7 +13,8 @@ import { I } from '@config/ioc-identifiter';
 import { useI18nMapping } from '../hook/useI18nMapping';
 import { useIOC } from '../hook/useIOC';
 
-export function LogoutButton() {
+export function LogoutButton(props: { showLabel?: boolean }) {
+  const { showLabel = false } = props;
   const dialogHandler = useIOC(I.DialogHandler);
   const userService = useIOC(I.UserServiceInterface);
   const routerService = useIOC(I.RouterServiceInterface);
@@ -32,14 +35,32 @@ export function LogoutButton() {
     });
   }, [tt, dialogHandler, userService, routerService]);
 
+  const control = (
+    <button
+      type="button"
+      data-testid="LogoutIcon"
+      className={clsx(
+        showLabel
+          ? clsx(
+              headerActionButtonClassName,
+              'hover:text-red-500 hover:border-red-500/40'
+            )
+          : 'text-primary-text hover:text-red-500 cursor-pointer text-lg transition-colors border-0 bg-transparent p-0'
+      )}
+      onClick={onClick}
+    >
+      <LogoutOutlined className={showLabel ? 'text-base' : undefined} />
+      {showLabel && <span className="hidden sm:inline">{tt.title}</span>}
+    </button>
+  );
+
+  if (showLabel) {
+    return control;
+  }
+
   return (
-    <Tooltip data-testid="LogoutIcon" title={tt.title} placement="right">
-      <span
-        className="text-primary-text hover:text-red-500 cursor-pointer text-lg transition-colors"
-        onClick={onClick}
-      >
-        <LogoutOutlined />
-      </span>
+    <Tooltip title={tt.title} placement="bottom">
+      {control}
     </Tooltip>
   );
 }

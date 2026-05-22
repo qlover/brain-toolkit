@@ -2,10 +2,11 @@
 
 import { TranslationOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
-import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { useMountedClient } from '@brain-toolkit/react-kit';
 import { useCallback, useMemo, useTransition } from 'react';
 import { usePathname, useRouter } from '@/i18n/routing';
+import { headerActionButtonClassName } from './headerStyles';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
 import type { ItemType } from 'antd/es/menu/interface';
@@ -15,7 +16,7 @@ export function LanguageSwitcher() {
   const router = useRouter();
   const currentLocale = useLocale() as LocaleType;
   const [isPending, startTransition] = useTransition();
-  const params = useParams();
+  const mounted = useMountedClient();
 
   const options: ItemType[] = useMemo(() => {
     return i18nConfig.supportedLngs.map(
@@ -23,7 +24,6 @@ export function LanguageSwitcher() {
         ({
           type: 'item',
           key: lang,
-          value: lang,
           label:
             i18nConfig.localeNames[lang as keyof typeof i18nConfig.localeNames]
         }) as ItemType
@@ -31,17 +31,14 @@ export function LanguageSwitcher() {
   }, []);
 
   const handleLanguageChange = useCallback(
-    async (value: string) => {
-      if (isPending) return;
+    (value: string) => {
+      if (!mounted || isPending || value === currentLocale) return;
 
       startTransition(() => {
-        // @ts-expect-error -- TypeScript will validate that only known `params`
-        // are used in combination with a given `pathname`. Since the two will
-        // always match for the current route, we can skip runtime checks.
-        router.replace({ pathname, params }, { locale: value });
+        router.replace(pathname, { locale: value });
       });
     },
-    [pathname, router, isPending, params]
+    [pathname, router, isPending, currentLocale, mounted]
   );
 
   const nextLocale = useMemo(() => {
@@ -51,10 +48,15 @@ export function LanguageSwitcher() {
     ];
   }, [currentLocale]);
 
+  const currentLocaleLabel =
+    i18nConfig.localeNames[
+      currentLocale as keyof typeof i18nConfig.localeNames
+    ];
+
   return (
     <Dropdown
       data-testid="LanguageSwitcherDropdown"
-      trigger={['hover']}
+      trigger={['click']}
       menu={{
         selectedKeys: [currentLocale],
         items: options,
@@ -63,13 +65,16 @@ export function LanguageSwitcher() {
         }
       }}
     >
-      <span
+      <button
+        type="button"
         data-testid="LanguageSwitcher"
-        className="text-primary-text hover:text-primary-text-hover cursor-pointer text-lg transition-colors"
+        className={headerActionButtonClassName}
+        disabled={!mounted || isPending}
         onClick={() => handleLanguageChange(nextLocale)}
       >
-        <TranslationOutlined />
-      </span>
+        <TranslationOutlined className="text-base shrink-0" />
+        <span className="hidden sm:inline">{currentLocaleLabel}</span>
+      </button>
     </Dropdown>
   );
 }

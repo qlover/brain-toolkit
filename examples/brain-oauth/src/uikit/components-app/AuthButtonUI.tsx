@@ -9,6 +9,7 @@ import {
 } from '@config/i18n-identifier/common/common';
 import { ROUTE_LOGIN, ROUTE_REGISTER, ROUTE_REQUEST_LOGS } from '@config/route';
 import { LogoutButton } from './LogoutButton';
+import { headerActionButtonClassName } from './headerStyles';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 
 /**
@@ -27,15 +28,21 @@ import { useWarnTranslations } from '../hook/useWarnTranslations';
  *   tree as the root layout (IOCProvider → … → AppRoutePage → AuthButtonUI → LogoutButton).
  *   So useIOC() always has access to the IOC context.
  */
-const linkBase =
-  'inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0';
-const linkPrimary =
-  'bg-brand text-on-brand hover:bg-brand-hover focus:ring-brand';
-const linkSecondary =
-  'border border-primary-border text-primary-text hover:bg-elevated focus:ring-brand';
+const linkSecondary = clsx(
+  headerActionButtonClassName,
+  'focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-0'
+);
+const linkPrimary = clsx(
+  headerActionButtonClassName,
+  'bg-brand text-on-brand border-transparent hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-0'
+);
 
-export function AuthButtonUI(props: { hasAuth: boolean }) {
-  const { hasAuth } = props;
+export function AuthButtonUI(props: {
+  hasAuth: boolean;
+  loginOnly?: boolean;
+  showLogoutLabel?: boolean;
+}) {
+  const { hasAuth, loginOnly = false, showLogoutLabel = false } = props;
   const t = useWarnTranslations();
 
   if (hasAuth) {
@@ -45,13 +52,18 @@ export function AuthButtonUI(props: { hasAuth: boolean }) {
         className="flex items-center gap-2"
         data-auth={hasAuth}
       >
-        <Link
-          href={ROUTE_REQUEST_LOGS}
-          className={clsx(linkBase, linkSecondary)}
-        >
-          {t(COMMON_AUTH_NAV_REQUEST_LOGS)}
-        </Link>
-        <LogoutButton data-testid="logout-button" />
+        {!loginOnly && (
+          <Link
+            href={ROUTE_REQUEST_LOGS}
+            className={linkSecondary}
+          >
+            {t(COMMON_AUTH_NAV_REQUEST_LOGS)}
+          </Link>
+        )}
+        <LogoutButton
+          data-testid="logout-button"
+          showLabel={showLogoutLabel}
+        />
       </div>
     );
   }
@@ -62,12 +74,20 @@ export function AuthButtonUI(props: { hasAuth: boolean }) {
       className="flex items-center gap-1.5"
       data-auth={hasAuth}
     >
-      <Link href={ROUTE_LOGIN} className={clsx(linkBase, linkPrimary)}>
-        {t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
+      <Link
+        href={ROUTE_LOGIN}
+        className={clsx(linkPrimary, 'max-w-[5.5rem] sm:max-w-none')}
+        title={t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
+      >
+        <span className="truncate sm:whitespace-normal">
+          {t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
+        </span>
       </Link>
-      <Link href={ROUTE_REGISTER} className={clsx(linkBase, linkSecondary)}>
-        {t(COMMON_AUTH_NAV_SIGN_UP)}
-      </Link>
+      {!loginOnly && (
+        <Link href={ROUTE_REGISTER} className={linkSecondary}>
+          {t(COMMON_AUTH_NAV_SIGN_UP)}
+        </Link>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { createNavigation } from 'next-intl/navigation';
 import { defineRouting } from 'next-intl/routing';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
-import { ROUTE_LOGIN, ROUTE_REGISTER, ROUTE_REQUEST_LOGS } from '@config/route';
+import { ROUTE_LOGIN, ROUTE_REGISTER, ROUTE_REQUEST_LOGS, ROUTE_DASHBOARD_APPS } from '@config/route';
 
 const locales = i18nConfig.supportedLngs;
 
@@ -13,7 +13,7 @@ export const routing = defineRouting({
 
   defaultLocale: i18nConfig.fallbackLng,
 
-  localePrefix: useLocaleRoutes ? undefined : 'as-needed',
+  localePrefix: useLocaleRoutes ? 'always' : 'as-needed',
 
   pathnames: {
     '/': {
@@ -31,6 +31,14 @@ export const routing = defineRouting({
     [ROUTE_REQUEST_LOGS]: {
       en: '/admin/request-logs',
       zh: '/admin/request-logs'
+    },
+    [ROUTE_DASHBOARD_APPS]: {
+      en: '/dashboard/apps',
+      zh: '/dashboard/apps'
+    },
+    '/about': {
+      en: '/about',
+      zh: '/about'
     }
   }
 });

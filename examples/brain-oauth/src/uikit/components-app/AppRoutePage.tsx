@@ -1,6 +1,8 @@
+'use client';
+
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
-import { Suspense, type HTMLAttributes } from 'react';
+import { Suspense, type HTMLAttributes, type ReactNode } from 'react';
 import { AdminButton } from './AdminButton';
 import { AppBridge } from './AppBridge';
 import { AuthButton } from './AuthButton';
@@ -15,10 +17,15 @@ export interface AppRoutePageTT {
 
 export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   showAdminButton?: boolean;
+  showHeaderLogo?: boolean;
   mainProps?: HTMLAttributes<HTMLElement>;
   showAuthButton?: boolean;
+  authButtonLoginOnly?: boolean;
+  /** Show text label on logout control (home header). */
+  authButtonShowLogoutLabel?: boolean;
   headerClassName?: string;
   headerHref?: string;
+  headerNav?: ReactNode;
   tt: AppRoutePageTT;
 }
 
@@ -35,15 +42,20 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
 export function AppRoutePage({
   children,
   showAdminButton,
+  showHeaderLogo = true,
   mainProps,
   headerClassName,
   showAuthButton,
+  authButtonLoginOnly,
+  authButtonShowLogoutLabel,
+  headerNav,
   tt,
   headerHref = '/',
   ...props
 }: AppRoutePageProps) {
   const locale = useLocale();
   const adminTitle = tt.adminTitle;
+  const showHeaderLeading = showHeaderLogo || headerNav != null;
 
   return (
     <div
@@ -54,43 +66,52 @@ export function AppRoutePage({
       <AppBridge />
       <header
         data-testid="BaseHeader"
-        className="h-14 bg-secondary border-b border-c-border sticky top-0 z-50"
+        className="relative h-16 bg-primary/80 backdrop-blur-md border-b border-primary-border sticky top-0 z-50"
       >
         <div
           className={clsx(
-            'flex items-center justify-between h-full px-4 mx-auto max-w-7xl',
+            'flex items-center h-full gap-2 px-3 sm:px-4 mx-auto max-w-7xl min-w-0',
+            showHeaderLeading ? 'justify-between' : 'justify-end',
             headerClassName
           )}
         >
-          <div className="flex items-center">
-            <LocaleLink
-              data-testid="BaseHeaderLogo"
-              title={tt.title}
-              href={headerHref}
-              locale={locale}
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
-              <span
-                data-testid="base-header-app-name"
-                className="text-lg font-semibold text-primary-text"
-              >
-                {tt.title}
-              </span>
-            </LocaleLink>
-          </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            {showAdminButton && (
+          {showHeaderLeading && (
+            <div className="flex items-center min-w-0 flex-1">
+              {showHeaderLogo && (
+                <LocaleLink
+                  data-testid="BaseHeaderLogo"
+                  title={tt.title}
+                  href={headerHref}
+                  locale={locale}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 shrink"
+                >
+                  <span
+                    data-testid="base-header-app-name"
+                    className="text-base sm:text-lg font-semibold text-primary-text truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none"
+                  >
+                    {tt.title}
+                  </span>
+                </LocaleLink>
+              )}
+              {headerNav}
+            </div>
+          )}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
+            {showAuthButton && (
               <Suspense>
-                <AdminButton adminTitle={adminTitle} locale={locale} />
+                <AuthButton
+                  loginOnly={authButtonLoginOnly}
+                  showLogoutLabel={authButtonShowLogoutLabel}
+                />
               </Suspense>
             )}
 
-            <LanguageSwitcher key="language-switcher" />
             <ThemeSwitcher key="theme-switcher" />
+            <LanguageSwitcher key="language-switcher" />
 
-            {showAuthButton && (
+            {showAdminButton && (
               <Suspense>
-                <AuthButton />
+                <AdminButton adminTitle={adminTitle} locale={locale} />
               </Suspense>
             )}
           </div>
