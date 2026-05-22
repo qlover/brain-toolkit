@@ -25,6 +25,7 @@ import { I } from '@config/ioc-identifiter';
 import { type SupportedTheme, themeConfig } from '@config/theme';
 import { useIOC } from '../hook/useIOC';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
+import { headerActionButtonClassName } from './headerStyles';
 import type { ItemType } from 'antd/es/menu/interface';
 
 const { supportedThemes, storageKey } = themeConfig;
@@ -120,25 +121,34 @@ export function ThemeSwitcher() {
     return supportedThemes[targetIndex % supportedThemes.length];
   }, [currentTheme]);
 
+  const ThemeIcon =
+    mounted && resolvedTheme === 'dark' ? MoonOutlined : SunOutlined;
+
   return (
     <Dropdown
       data-testid="ThemeSwitcherDropdown"
-      trigger={['hover']}
+      trigger={['click']}
       menu={{
         items: themeOptions,
         selectedKeys: mounted ? [resolvedTheme!] : undefined,
         onClick: ({ key }) => {
+          if (!mounted) return;
           setTheme(key);
         }
       }}
     >
-      <span
+      <button
+        type="button"
         data-testid="ThemeSwitcher"
-        className="text-primary-text hover:text-primary-text-hover cursor-pointer text-lg transition-colors"
-        onClick={() => setTheme(nextTheme)}
+        className={headerActionButtonClassName}
+        disabled={!mounted}
+        onClick={() => {
+          if (!mounted) return;
+          setTheme(nextTheme);
+        }}
       >
-        <SunOutlined />
-      </span>
+        <ThemeIcon className="text-base" />
+      </button>
     </Dropdown>
   );
 }
