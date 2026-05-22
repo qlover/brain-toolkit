@@ -3,15 +3,13 @@ import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import {
+  BRAIN_SESSION_COOKIE,
+  parseBrainSessionCookie,
+  type BrainSessionPayload
+} from '../utils/brainSessionUtils';
 
-export type BrainSessionPayload = {
-  userId: number;
-  email: string;
-  name: string;
-  brainToken: string;
-};
-
-const COOKIE_NAME = 'brain_oauth_session';
+export type { BrainSessionPayload };
 
 /**
  * HttpOnly session cookie for Brain-authenticated users during OAuth authorize.
@@ -28,7 +26,7 @@ export class BrainSessionService {
     const secret = this.requireSecret();
     const token = jwt.sign(payload, secret, { expiresIn: '7d' });
     const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, token, {
+    cookieStore.set(BRAIN_SESSION_COOKIE, token, {
       httpOnly: true,
       secure: this.config.isProduction,
       sameSite: 'lax',
@@ -42,22 +40,14 @@ export class BrainSessionService {
   }
 
   public async getSession(): Promise<BrainSessionPayload | null> {
-    const secret = this.requireSecret();
     const cookieStore = await cookies();
-    const raw = cookieStore.get(COOKIE_NAME)?.value;
-    if (!raw) {
-      return null;
-    }
-    try {
-      return jwt.verify(raw, secret) as BrainSessionPayload;
-    } catch {
-      return null;
-    }
+    const raw = cookieStore.get(BRAIN_SESSION_COOKIE)?.value;
+    return parseBrainSessionCookie(raw, this.requireSecret());
   }
 
   public async clearSession(): Promise<void> {
     const cookieStore = await cookies();
-    cookieStore.delete(COOKIE_NAME);
+    cookieStore.delete(BRAIN_SESSION_COOKIE);
   }
 
   protected requireSecret(): string {

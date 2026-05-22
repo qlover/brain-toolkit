@@ -5,62 +5,58 @@ import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { SupabaseBridge } from '../repositorys/SupabaseBridge';
+import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
+import { BrainSessionService } from './BrainSessionService';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 
 @injectable()
 export class ServerAuth implements ServerAuthInterface {
-  protected userTokenKey: string;
   constructor(
-    @inject(I.AppConfig) protected server: SeedServerConfigInterface,
-    @inject(SupabaseBridge) protected supabase: SupabaseBridge
-  ) {
-    this.userTokenKey = server.userTokenKey;
-  }
+    @inject(BrainSessionService) protected brainSession: BrainSessionService,
+    @inject(I.AppConfig) protected config: SeedServerConfigInterface
+  ) {}
 
   /**
    * @override
+   * Session is established by {@link BrainSessionService.setSession} during Brain login.
    */
-  public async setAuth(credential_token: string): Promise<void> {
-    const cookieStore = await cookies();
-
-    cookieStore.set(this.userTokenKey, credential_token);
+  public async setAuth(_credential_token: string): Promise<void> {
+    // no-op: brain_oauth_session is the single source of truth
   }
 
   /**
    * @override
    */
   public async hasAuth(): Promise<boolean> {
-    const supabase = await this.supabase.getSupabase();
-
-    const { data } = await supabase.auth.getClaims();
-
-    return !!data?.claims;
+    return this.brainSession.hasSession();
   }
 
   /**
    * @override
    */
   public async getAuth(): Promise<string> {
-    const cookieStore = await cookies();
-    return cookieStore.get(this.userTokenKey)?.value || '';
+    const session = await this.brainSession.getSession();
+    return session?.brainToken ?? '';
   }
 
   /**
    * @override
    */
   public async clear(): Promise<void> {
-    const cookieStore = await cookies();
-    cookieStore.delete(this.userTokenKey);
+    await this.brainSession.clearSession();
+
+    const legacyKey = this.config.userTokenKey;
+    if (legacyKey) {
+      const cookieStore = await cookies();
+      cookieStore.delete(legacyKey);
+    }
   }
 
   /**
    * @override
    */
   public async throwIfNotAuth(): Promise<void> {
-    const hasAuth = await this.hasAuth();
-
-    if (!hasAuth) {
+    if (!(await this.hasAuth())) {
       throw new ExecutorError(API_NOT_AUTHORIZED, 'Not authorized');
     }
   }
@@ -69,10 +65,11 @@ export class ServerAuth implements ServerAuthInterface {
    * @override
    */
   public async getUser(): Promise<UserSchema | null> {
-    const supabase = await this.supabase.getSupabase();
+    const session = await this.brainSession.getSession();
+    if (!session) {
+      return null;
+    }
 
-    const { data } = await supabase.auth.getUser();
-
-    return data.user ? this.supabase.toUserSchema(data.user) : null;
+    return brainSessionToUserSchema(session, this.config.adminUserIds);
   }
 }

@@ -10,10 +10,8 @@ import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import { ServerAuth } from '../services/ServerAuth';
 import { UserService } from '../services/UserService';
 import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
-import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 import type {
   UserLoginContext,
   UserServiceInterface
@@ -27,7 +25,6 @@ import type {
 export class UserController {
   protected stringEncryptor: StringEncryptor;
   constructor(
-    @inject(ServerAuth) protected serverAuth: ServerAuthInterface,
     @inject(LoginValidator)
     protected loginValidator: ValidatorInterface<LoginSchema>,
     @inject(SearchParamsValidator)
@@ -62,15 +59,11 @@ export class UserController {
     }
     const body = await this.loginValidator.getThrow(requestBody);
 
-    const user = await this.userService.login({
+    return await this.userService.login({
       email: body.email,
       password: body.password,
       loginContext: serverLoginContext
     });
-
-    await this.serverAuth.setAuth(user.credential_token);
-
-    return user;
   }
 
   public async register(requestBody: LoginSchema): Promise<UserSchema> {
@@ -110,7 +103,7 @@ export class UserController {
   }
 
   /**
-   * Paged `request_logs` for the current Supabase session (RLS).
+   * Paged `request_logs` for the current Brain session user.
    * Response shape matches {@link ResourceSearchResult}.
    */
   public async searchRequestLogsForCurrentUser(
