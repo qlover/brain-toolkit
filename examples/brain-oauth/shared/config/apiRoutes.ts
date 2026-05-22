@@ -6,13 +6,13 @@
  */
 
 /**
- * API path: `/api/ai/completions`
+ * API path: `/api/brain/verify`
  *
- * @see [src/app/api/ai/completions/route.ts](../../src/app/api/ai/completions/route.ts)
+ * @see [src/app/api/brain/verify/route.ts](../../src/app/api/brain/verify/route.ts)
  *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/ai/completions/route.ts`
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/brain/verify/route.ts`
  */
-export const API_AI_COMPLETIONS = '/api/ai/completions' as const;
+export const API_BRAIN_VERIFY = '/api/brain/verify' as const;
 
 /**
  * API path: `/api/callback`
@@ -31,15 +31,6 @@ export const API_CALLBACK = '/api/callback' as const;
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/locales/json/route.ts`
  */
 export const API_LOCALES_JSON = '/api/locales/json' as const;
-
-/**
- * API path: `/api/openapi`
- *
- * @see [src/app/api/openapi/route.ts](../../src/app/api/openapi/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/openapi/route.ts`
- */
-export const API_OPENAPI = '/api/openapi' as const;
 
 /**
  * API path: `/api/reference`
@@ -96,10 +87,9 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
-  | typeof API_AI_COMPLETIONS
+  | typeof API_BRAIN_VERIFY
   | typeof API_CALLBACK
   | typeof API_LOCALES_JSON
-  | typeof API_OPENAPI
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGOUT

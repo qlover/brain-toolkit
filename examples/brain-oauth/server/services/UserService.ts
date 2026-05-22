@@ -1,15 +1,16 @@
 import { ExecutorError, type EncryptorInterface } from '@qlover/fe-corekit';
-import { Session, User } from '@supabase/supabase-js';
-import { isString } from 'lodash';
 import { inject, injectable } from '@shared/container';
 import { API_USER_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
+import { BrainAuthService } from './BrainAuthService';
+import { BrainSessionService } from './BrainSessionService';
 import { ServerAuth } from './ServerAuth';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import { SupabaseBridge } from '../repositorys/SupabaseBridge';
 import { PasswordEncrypt } from '../utils/PasswordEncrypt';
+import type { BrainAuthServiceInterface } from '../interfaces/BrainAuthServiceInterface';
 import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 import type {
@@ -31,9 +32,12 @@ export class UserService implements UserServiceInterface {
   constructor(
     @inject(ServerAuth)
     protected userAuth: ServerAuthInterface,
+    @inject(BrainAuthService)
+    protected brainAuthService: BrainAuthServiceInterface,
+    @inject(BrainSessionService)
+    protected brainSession: BrainSessionService,
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
-    @inject(SupabaseBridge) protected supabaseBridge: SupabaseBridge,
     @inject(RequestLogsRepository)
     protected requestLogsRepository: RequestLogsRepositoryInterface
   ) {}
@@ -42,65 +46,43 @@ export class UserService implements UserServiceInterface {
    * @override
    */
   public async register(
-    params: UserServiceRegisterParams
+    _params: UserServiceRegisterParams
   ): Promise<UserSchema> {
-    const supabase = await this.supabaseBridge.getSupabase();
-
-    // TODO: 检查 username, 是否重复
-    // const user = await this.userRepository.getUserByEmail(params.email);
-    // if (!isEmpty(user)) {
-    //   throw new Error(API_USER_ALREADY_EXISTS);
-    // }
-
-    const result = await supabase.auth.signUp({
-      email: params.email,
-      password: params.password,
-
-      options: {
-        emailRedirectTo: `${this.appConfig.appHost}/api/callback`
-      }
-    });
-    this.supabaseBridge.throwIfError(result);
-
-    if (!result.data.user) {
-      throw new Error(API_USER_NOT_FOUND);
-    }
-
-    return this.supabaseBridge.toUserSchema(result.data.user);
+    throw new ExecutorError(
+      'registration_not_supported',
+      'Registration is handled by the Brain platform'
+    );
   }
 
   /**
    * @override
    */
   public async login(params: UserLoginParams): Promise<UserSchema> {
-    const supabase = await this.supabaseBridge.getSupabase();
-
-    if (params.authCode) {
-      const ares = await supabase.auth.exchangeCodeForSession(params.authCode);
-      this.supabaseBridge.throwIfError(ares);
-    }
-
-    const result = await supabase.auth.signInWithPassword({
+    await this.brainAuthService.verifyLogin({
       email: params.email,
       password: params.password
     });
-    this.supabaseBridge.throwIfError(result);
 
-    this.logger.info('supbase login succees', result.data);
+    this.logger.info('Brain login success', { email: params.email });
 
     await this.requestLogsRepository.insertEvent({
       event_category: 'auth',
       event_type: 'login',
       success: true,
       payload: {
-        auth_provider: 'supabase',
+        auth_provider: 'brain',
         user_agent: params.loginContext?.userAgent ?? null,
         ip_address: params.loginContext?.ipAddress ?? null,
-        login_method: params.authCode ? 'oauth' : 'password'
+        login_method: 'password'
       }
     });
 
-    return this.supabaseBridge.toUserSchema(result.data.user!);
+    const session = await this.brainSession.getSession();
+    if (!session) {
+      throw new ExecutorError(API_USER_NOT_FOUND, 'Brain session missing after login');
+    }
+
+    return brainSessionToUserSchema(session, this.appConfig.adminUserIds);
   }
 
   /**
@@ -112,38 +94,13 @@ export class UserService implements UserServiceInterface {
       event_type: 'logout',
       success: true,
       payload: {
-        auth_provider: 'supabase',
+        auth_provider: 'brain',
         user_agent: context?.userAgent ?? null,
         ip_address: context?.ipAddress ?? null
       }
     });
 
-    const supabase = await this.supabaseBridge.getSupabase();
-
-    const response = await supabase.auth.signOut();
-
-    this.supabaseBridge.throwIfError(response);
-  }
-
-  public async exchangeSessionForCode(code: string): Promise<{
-    user: User;
-    session: Session;
-  }> {
-    if (code == null || !isString(code)) {
-      throw new ExecutorError('code is required');
-    }
-
-    const supabase = await this.supabaseBridge.getSupabase();
-    const response = await supabase.auth.exchangeCodeForSession(code);
-    this.supabaseBridge.throwIfError(response);
-
-    this.logger.debug('exchangeSessionForCode', response.data);
-
-    if (!response.data.user) {
-      throw new ExecutorError(API_USER_NOT_FOUND);
-    }
-
-    return response.data;
+    await this.userAuth.clear();
   }
 
   /**
@@ -157,14 +114,12 @@ export class UserService implements UserServiceInterface {
    * @override
    */
   public async getUser(): Promise<UserSchema> {
-    const supabase = await this.supabaseBridge.getSupabase();
-    const response = await supabase.auth.getUser();
-    this.supabaseBridge.throwIfError(response);
+    const user = await this.userAuth.getUser();
 
-    if (!response.data.user) {
+    if (!user) {
       throw new ExecutorError(API_USER_NOT_FOUND);
     }
 
-    return this.supabaseBridge.toUserSchema(response.data.user);
+    return user;
   }
 }

@@ -2,7 +2,9 @@
 
 > English: [README.en.md](./README.en.md)
 
-**TL;DR**：`npm install` → 将 `.env.template` 复制为 `.env` 并按注释填写 → `npm run dev`（默认端口 **3100**，`APP_ENV=localhost`）→ 生产：`npm run build` 后 `npm start`（默认端口 **3101**）。
+**TL;DR**：`npm install` → 将 `.env.template` 复制为 `.env` 并按注释填写 → `npm run dev`（默认端口 **3102**，`APP_ENV=localhost`）→ 生产：`npm run build` 后 `npm start`（默认端口 **3101**）。
+
+**文档**：产品与技术设计见 [docs/prd.html](./docs/prd.html)；**分阶段开发步骤**见 [docs/DEVELOPMENT_PLAN.md](./docs/DEVELOPMENT_PLAN.md)。
 
 基于 **Next.js** 的全栈应用（分层思路与早期 **brain-oauth** 一致）：**清晰分层**、**前后端职责分离**、**面向接口编程**。契约集中在 `shared/`，服务端与客户端通过 **接口 + IOC（Inversify + 项目内 SimpleIOCContainer 等）** 装配。
 

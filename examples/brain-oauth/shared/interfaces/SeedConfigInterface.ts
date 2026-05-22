@@ -18,6 +18,15 @@ export interface SeedServerConfigInterface extends SeedConfigInterface {
 
   readonly openaiBaseUrl: string;
   readonly openaiApiKey: string;
+
+  /** Brain user-system API base URL (server-only). */
+  readonly brainApiBase: string;
+  readonly brainApiTimeout: number;
+  /** HttpOnly OAuth session cookie signing secret. */
+  readonly sessionSecret: string;
+  /** AES-256-GCM key for encrypted Brain tokens in DB. */
+  readonly encryptionKey: string;
+  readonly adminUserIds: number[];
 }
 export interface SeedSrcConfigInterface extends SeedConfigInterface {
   readonly stringEncryptorKey: string;

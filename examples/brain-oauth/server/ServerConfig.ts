@@ -29,6 +29,25 @@ export class ServerConfig implements SeedServerConfigInterface {
   public readonly stringEncryptorKey: string =
     process.env.NEXT_PUBLIC_STRING_ENCRYPT_KEY ?? '';
 
+  public readonly brainApiBase: string =
+    process.env.BRAIN_API_BASE ??
+    'https://api.dev.brain.ai/v1.0/invoke/brain-user-system/method/api';
+
+  public readonly brainApiTimeout: number = Number(
+    process.env.BRAIN_API_TIMEOUT ?? 10000
+  );
+
+  public readonly sessionSecret: string = process.env.SESSION_SECRET ?? '';
+
+  public readonly encryptionKey: string = process.env.ENCRYPTION_KEY ?? '';
+
+  public readonly adminUserIds: number[] = (process.env.ADMIN_USER_IDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map(Number)
+    .filter((n) => Number.isFinite(n));
+
   public readonly logPrefixTemplate: string =
     process.env.LOG_PREFIX_TEMPLATE ?? logPrefixTemplate;
 }

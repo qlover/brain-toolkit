@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { FeatureItem } from '@/uikit/components/FeatureItem';
 import { LoginForm } from '@/uikit/components/LoginForm';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
@@ -80,7 +81,9 @@ export default async function LoginPage(props: PageParamsProps) {
           </h2>
           <p className="text-secondary-text mb-8">{tt.subtitle}</p>
 
-          <LoginForm tt={tt} />
+          <Suspense fallback={<p className="text-secondary-text">{tt.subtitle}</p>}>
+            <LoginForm tt={tt} />
+          </Suspense>
         </div>
       </div>
     </AppRoutePage>
