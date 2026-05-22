@@ -1,13 +1,15 @@
 'use client';
 
-import { type SubmitEvent, useMemo, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
+import { BrainAuthGateway } from '@/impls/BrainAuthGateway';
 import { LoginValidator } from '@shared/validators/LoginValidator';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_REGISTER } from '@config/route';
+import { ROUTE_DASHBOARD_APPS, ROUTE_REGISTER } from '@config/route';
 import type { LoginSchema } from '@schemas/LoginSchema';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 
@@ -61,9 +63,9 @@ const socialBtnClass =
 export function LoginForm(props: { tt: LoginI18nInterface }) {
   const { tt } = props;
   const t = useWarnTranslations();
-  const userService = useIOC(I.UserServiceInterface);
+  const searchParams = useSearchParams();
+  const brainAuth = useIOC(BrainAuthGateway);
   const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
-  const routerService = useIOC(I.RouterServiceInterface);
   const formValidator = useMemo(() => new LoginValidator(), []);
 
   const [email, setEmail] = useState(appConfig.testLoginEmail);
@@ -73,7 +75,7 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<LoginSchema>>({});
 
-  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitError(null);
     setFieldErrors({});
@@ -109,9 +111,20 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
 
     setLoading(true);
     try {
-      await userService.login(payload);
+      await brainAuth.verify(payload);
       setSuccess(true);
-      routerService.replaceHome();
+
+      const redirectTarget =
+        searchParams?.get('redirect') ??
+        searchParams?.get('returnUrl') ??
+        ROUTE_DASHBOARD_APPS;
+
+      if (redirectTarget.startsWith('http')) {
+        window.location.href = redirectTarget;
+        return;
+      }
+
+      window.location.assign(redirectTarget);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Login failed');
     } finally {

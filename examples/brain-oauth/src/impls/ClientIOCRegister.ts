@@ -2,6 +2,7 @@ import { CookieStorage } from '@qlover/corekit-bridge';
 import { Base64Serializer, StorageExecutor } from '@qlover/fe-corekit';
 import { I18nService } from '@/impls/I18nService';
 import { RouterService } from '@/impls/RouterService';
+import { BrainAuthGateway } from '@/impls/BrainAuthGateway';
 import { UserService } from '@/impls/UserService';
 import { ZustandCounterService } from '@/impls/ZustandCounterService';
 import { StringEncryptor } from '@shared/StringEncryptor';
@@ -37,6 +38,7 @@ export const ClientIOCRegister: IOCRegisterInterface<IOCContainerInterface> = {
     ioc.bind(I.I18nServiceInterface, new I18nService());
     ioc.bind(I.RouterServiceInterface, ioc.get(RouterService));
     ioc.bind(I.UserServiceInterface, ioc.get(UserService));
+    ioc.bind(BrainAuthGateway, ioc.get(BrainAuthGateway));
     ioc.bind(I.ZustandCounterServiceInterface, new ZustandCounterService());
 
     new AppApiRegister(JSON).register(ioc);
