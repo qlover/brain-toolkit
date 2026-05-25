@@ -11,6 +11,8 @@ export type RequestLogInsert = {
   success?: boolean;
   /** API/request correlation id when known (e.g. AppApiResult.requestId). */
   request_id?: string | null;
+  /** Optional log record kind (e.g. `brain-oauth`). */
+  record_type?: string | null;
   payload?: Record<string, unknown> | null;
 };
 

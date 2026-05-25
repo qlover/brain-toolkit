@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { AppApiResult } from '@interfaces/AppApiInterface';
 import { BootstrapServer } from '@server/BootstrapServer';
 import { RequestLogsRepository } from '@server/repositorys/RequestLogsRepository';
+import { resolveBrainOauthRequestLogRecordType } from '@server/utils/requestLogRecordType';
 import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
 import { ApiResultFactory } from './utils/ApiResultFactory';
 import type {
@@ -62,6 +63,7 @@ export class NextApiServer extends BootstrapServer {
       event_type: 'http.request',
       success,
       request_id: correlationId?.trim() ? correlationId : null,
+      record_type: resolveBrainOauthRequestLogRecordType(req.nextUrl.pathname),
       payload: {
         http_method: req.method,
         http_path: req.nextUrl.pathname,
