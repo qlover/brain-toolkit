@@ -2,7 +2,13 @@ import { createNavigation } from 'next-intl/navigation';
 import { defineRouting } from 'next-intl/routing';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
-import { ROUTE_LOGIN, ROUTE_REGISTER, ROUTE_REQUEST_LOGS, ROUTE_DASHBOARD_APPS } from '@config/route';
+import {
+  ROUTE_DASHBOARD_APPS,
+  ROUTE_LOGIN,
+  ROUTE_OAUTH_AUTHORIZE,
+  ROUTE_REGISTER,
+  ROUTE_REQUEST_LOGS
+} from '@config/route';
 
 const locales = i18nConfig.supportedLngs;
 
@@ -35,6 +41,10 @@ export const routing = defineRouting({
     [ROUTE_DASHBOARD_APPS]: {
       en: '/dashboard/apps',
       zh: '/dashboard/apps'
+    },
+    [ROUTE_OAUTH_AUTHORIZE]: {
+      en: '/oauth/authorize',
+      zh: '/oauth/authorize'
     },
     '/about': {
       en: '/about',

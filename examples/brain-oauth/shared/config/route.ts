@@ -20,6 +20,9 @@ export const ROUTE_HOME = '/' as const;
 /** Developer console app list (PRD default post-login redirect). */
 export const ROUTE_DASHBOARD_APPS = '/dashboard/apps' as const;
 
+/** OAuth 2.0 authorization consent page. */
+export const ROUTE_OAUTH_AUTHORIZE = '/oauth/authorize' as const;
+
 /** Routes that are allowed without authentication (public routes). */
 export const AUTH_ROUTES = [ROUTE_HOME, ROUTE_LOGIN, ROUTE_REGISTER] as const;
 
