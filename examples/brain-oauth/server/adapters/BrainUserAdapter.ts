@@ -82,4 +82,16 @@ export class BrainUserAdapter {
   public getUserInfo(token: string): Promise<BrainCredentials & BrainUser> {
     return this.gateway.getUserInfo({ token });
   }
+
+  /**
+   * Fetches user profile using an OAuth access_token (userly JWT, Bearer scheme).
+   */
+  public getUserInfoByAccessToken(
+    accessToken: string
+  ): Promise<BrainCredentials & BrainUser> {
+    return this.gateway.getUserInfo(
+      { token: accessToken },
+      { tokenPrefix: 'Bearer' }
+    );
+  }
 }
