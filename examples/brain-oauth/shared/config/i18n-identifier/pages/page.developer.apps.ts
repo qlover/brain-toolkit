@@ -1,0 +1,216 @@
+/**
+ * @description Developer apps page title
+ * @localZh 我的 OAuth 应用
+ * @localEn My OAuth Applications
+ */
+export const DEVELOPER_APPS_TITLE = 'developer_apps:title';
+
+/**
+ * @description Developer apps page description
+ * @localZh 管理您的 OAuth 2.0 应用，创建和管理客户端凭证
+ * @localEn Manage your OAuth 2.0 applications, create and manage client credentials
+ */
+export const DEVELOPER_APPS_DESCRIPTION = 'developer_apps:description';
+
+/**
+ * @description Developer apps page keywords
+ * @localZh OAuth, 开发者, 应用管理, 客户端
+ * @localEn OAuth, developer, application management, client
+ */
+export const DEVELOPER_APPS_KEYWORDS = 'developer_apps:keywords';
+
+/**
+ * @description Create new app button text
+ * @localZh 创建新应用
+ * @localEn Create New App
+ */
+export const DEVELOPER_APPS_CREATE_BUTTON = 'developer_apps:create_button';
+
+/**
+ * @description Edit app button text
+ * @localZh 编辑
+ * @localEn Edit
+ */
+export const DEVELOPER_APPS_EDIT_BUTTON = 'developer_apps:edit_button';
+
+/**
+ * @description Delete app button text
+ * @localZh 删除
+ * @localEn Delete
+ */
+export const DEVELOPER_APPS_DELETE_BUTTON = 'developer_apps:delete_button';
+
+/**
+ * @description Rotate secret button text
+ * @localZh 重置密钥
+ * @localEn Rotate Secret
+ */
+export const DEVELOPER_APPS_ROTATE_SECRET_BUTTON = 'developer_apps:rotate_secret_button';
+
+/**
+ * @description Client ID label
+ * @localZh Client ID
+ * @localEn Client ID
+ */
+export const DEVELOPER_APPS_CLIENT_ID_LABEL = 'developer_apps:client_id_label';
+
+/**
+ * @description Redirect URIs label
+ * @localZh 重定向 URI
+ * @localEn Redirect URIs
+ */
+export const DEVELOPER_APPS_REDIRECT_URIS_LABEL = 'developer_apps:redirect_uris_label';
+
+/**
+ * @description Created at label
+ * @localZh 创建于
+ * @localEn Created at
+ */
+export const DEVELOPER_APPS_CREATED_AT_LABEL = 'developer_apps:created_at_label';
+
+/**
+ * @description Status enabled badge text
+ * @localZh 已启用
+ * @localEn Enabled
+ */
+export const DEVELOPER_APPS_STATUS_ENABLED = 'developer_apps:status_enabled';
+
+/**
+ * @description Create modal title
+ * @localZh 创建 OAuth 应用
+ * @localEn Create OAuth Application
+ */
+export const DEVELOPER_APPS_CREATE_MODAL_TITLE = 'developer_apps:create_modal_title';
+
+/**
+ * @description Edit modal title
+ * @localZh 编辑应用
+ * @localEn Edit Application
+ */
+export const DEVELOPER_APPS_EDIT_MODAL_TITLE = 'developer_apps:edit_modal_title';
+
+/**
+ * @description Application name form label
+ * @localZh 应用名称
+ * @localEn Application Name
+ */
+export const DEVELOPER_APPS_APP_NAME_LABEL = 'developer_apps:app_name_label';
+
+/**
+ * @description Application name required validation message
+ * @localZh 请输入应用名称
+ * @localEn Please enter application name
+ */
+export const DEVELOPER_APPS_APP_NAME_REQUIRED = 'developer_apps:app_name_required';
+
+/**
+ * @description Redirect URIs textarea placeholder
+ * @localZh https://your-app.com/callback\nhttps://localhost:3000/callback
+ * @localEn https://your-app.com/callback\nhttps://localhost:3000/callback
+ */
+export const DEVELOPER_APPS_REDIRECT_URIS_PLACEHOLDER = 'developer_apps:redirect_uris_placeholder';
+
+/**
+ * @description Redirect URIs hint text
+ * @localZh 支持多个回调地址，每行一个，必须使用 HTTPS (本地开发可用 http://localhost)。
+ * @localEn Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).
+ */
+export const DEVELOPER_APPS_REDIRECT_URIS_HINT = 'developer_apps:redirect_uris_hint';
+
+/**
+ * @description Client URI form label
+ * @localZh 应用主页 URL (可选)
+ * @localEn Application Homepage URL (Optional)
+ */
+export const DEVELOPER_APPS_CLIENT_URI_LABEL = 'developer_apps:client_uri_label';
+
+/**
+ * @description Cancel button text
+ * @localZh 取消
+ * @localEn Cancel
+ */
+export const DEVELOPER_APPS_CANCEL_BUTTON = 'developer_apps:cancel_button';
+
+/**
+ * @description Create submit button text
+ * @localZh 创建应用
+ * @localEn Create Application
+ */
+export const DEVELOPER_APPS_CREATE_SUBMIT_BUTTON = 'developer_apps:create_submit_button';
+
+/**
+ * @description Save submit button text
+ * @localZh 保存修改
+ * @localEn Save Changes
+ */
+export const DEVELOPER_APPS_SAVE_SUBMIT_BUTTON = 'developer_apps:save_submit_button';
+
+/**
+ * @description Delete confirmation dialog title
+ * @localZh 删除应用
+ * @localEn Delete Application
+ */
+export const DEVELOPER_APPS_DELETE_CONFIRM_TITLE = 'developer_apps:delete_confirm_title';
+
+/**
+ * @description Delete confirmation dialog content
+ * @localZh 永久删除该应用？此操作不可恢复。
+ * @localEn Permanently delete this application? This action cannot be undone.
+ */
+export const DEVELOPER_APPS_DELETE_CONFIRM_CONTENT = 'developer_apps:delete_confirm_content';
+
+/**
+ * @description Rotate secret confirmation dialog title
+ * @localZh 重置密钥
+ * @localEn Rotate Secret
+ */
+export const DEVELOPER_APPS_ROTATE_SECRET_CONFIRM_TITLE = 'developer_apps:rotate_secret_confirm_title';
+
+/**
+ * @description Rotate secret confirmation dialog content
+ * @localZh 重置密钥将导致旧密钥立即失效，确定继续吗？
+ * @localEn Rotating the secret will immediately invalidate the old one. Continue?
+ */
+export const DEVELOPER_APPS_ROTATE_SECRET_CONFIRM_CONTENT = 'developer_apps:rotate_secret_confirm_content';
+
+/**
+ * @description Toast message for successful app creation
+ * @localZh 应用创建成功！
+ * @localEn Application created successfully!
+ */
+export const DEVELOPER_APPS_TOAST_CREATE_SUCCESS = 'developer_apps:toast_create_success';
+
+/**
+ * @description Toast message for successful app update
+ * @localZh 应用信息已更新
+ * @localEn Application updated successfully
+ */
+export const DEVELOPER_APPS_TOAST_UPDATE_SUCCESS = 'developer_apps:toast_update_success';
+
+/**
+ * @description Toast message for successful app deletion
+ * @localZh 应用已删除
+ * @localEn Application deleted
+ */
+export const DEVELOPER_APPS_TOAST_DELETE_SUCCESS = 'developer_apps:toast_delete_success';
+
+/**
+ * @description Toast message for successful secret rotation
+ * @localZh 新密钥已生成，请妥善保存
+ * @localEn New secret generated, please save it securely
+ */
+export const DEVELOPER_APPS_TOAST_ROTATE_SUCCESS = 'developer_apps:toast_rotate_success';
+
+/**
+ * @description Toast message for operation error
+ * @localZh 操作失败，请稍后重试
+ * @localEn Operation failed, please try again later
+ */
+export const DEVELOPER_APPS_TOAST_ERROR = 'developer_apps:toast_error';
+
+/**
+ * @description Empty state message when no apps exist
+ * @localZh 暂无应用，点击"创建新应用"开始
+ * @localEn No applications yet. Click "Create New App" to get started.
+ */
+export const DEVELOPER_APPS_EMPTY_STATE = 'developer_apps:empty_state';

@@ -6,6 +6,7 @@ import { Suspense, type HTMLAttributes, type ReactNode } from 'react';
 import { AdminButton } from './AdminButton';
 import { AppBridge } from './AppBridge';
 import { AuthButton } from './AuthButton';
+import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { LocaleLink } from '../components/LocaleLink';
@@ -13,10 +14,12 @@ import { LocaleLink } from '../components/LocaleLink';
 export interface AppRoutePageTT {
   title: string;
   adminTitle: string;
+  developerTitle?: string;
 }
 
 export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   showAdminButton?: boolean;
+  showDeveloperButton?: boolean;
   showHeaderLogo?: boolean;
   mainProps?: HTMLAttributes<HTMLElement>;
   showAuthButton?: boolean;
@@ -42,6 +45,7 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
 export function AppRoutePage({
   children,
   showAdminButton,
+  showDeveloperButton,
   showHeaderLogo = true,
   mainProps,
   headerClassName,
@@ -55,6 +59,7 @@ export function AppRoutePage({
 }: AppRoutePageProps) {
   const locale = useLocale();
   const adminTitle = tt.adminTitle;
+  const developerTitle = tt.developerTitle || '';
   const showHeaderLeading = showHeaderLogo || headerNav != null;
 
   return (
@@ -108,6 +113,12 @@ export function AppRoutePage({
 
             <ThemeSwitcher key="theme-switcher" />
             <LanguageSwitcher key="language-switcher" />
+
+            {showDeveloperButton && developerTitle && (
+              <Suspense>
+                <DeveloperButton developerTitle={developerTitle} locale={locale} />
+              </Suspense>
+            )}
 
             {showAdminButton && (
               <Suspense>

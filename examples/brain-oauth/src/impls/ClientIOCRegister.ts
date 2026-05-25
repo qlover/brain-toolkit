@@ -12,6 +12,7 @@ import { IOCIdentifier as I } from '@config/ioc-identifiter';
 import { AppApiRegister } from './appApi/AppApiRegister';
 import { dialogHandler, logger, JSON, appConfig } from './globals';
 import { LocalStorage } from './LocalStorage';
+import { OAuthClientsApi } from './appApi/OAuthClientsApi';
 import type {
   IOCContainerInterface,
   IOCRegisterInterface
@@ -42,6 +43,7 @@ export const ClientIOCRegister: IOCRegisterInterface<IOCContainerInterface> = {
     ioc.bind(BrainAuthGateway, ioc.get(BrainAuthGateway));
     ioc.bind(OAuthConsentGateway, ioc.get(OAuthConsentGateway));
     ioc.bind(I.ZustandCounterServiceInterface, new ZustandCounterService());
+    ioc.bind(OAuthClientsApi, ioc.get(OAuthClientsApi));
 
     new AppApiRegister(JSON).register(ioc);
   }

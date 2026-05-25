@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>开发者控制台 - Brain OAuth (密钥展示优化)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background 0.2s;
+    }
+
+    .dark body {
+      background-color: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .dark .bg-white {
+      background-color: #1e293b;
+    }
+
+    .dark .bg-gray-50 {
+      background-color: #0f172a;
+    }
+
+    .dark .border-gray-200 {
+      border-color: #334155;
+    }
+
+    .dark .text-gray-900 {
+      color: #f1f5f9;
+    }
+
+    .dark .text-gray-600 {
+      color: #cbd5e1;
+    }
+
+    .dark .text-gray-500 {
+      color: #94a3b8;
+    }
+
+    .dark .bg-gray-100 {
+      background-color: #334155;
+    }
+
+    .dark code {
+      background-color: #0f172a;
+      color: #facc15;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900">
+  <div class="min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-brain text-2xl text-indigo-600"></i>
+            <span class="font-bold text-xl text-gray-900 dark:text-white">Brain OAuth</span>
+            <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">开发者控制台</span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button id="themeToggle"
+              class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+              <i id="themeIcon" class="fas fa-moon"></i>
+            </button>
+            <button id="logoutBtn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600">退出</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-wrap justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">我的 OAuth 应用</h1>
+        <button id="createAppBtn"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm">
+          <i class="fas fa-plus"></i> 创建新应用
+        </button>
+      </div>
+
+      <!-- 应用列表容器 -->
+      <div id="appsList" class="space-y-4">
+        <!-- 动态渲染 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 创建应用模态框 -->
+  <div id="createModal" class="fixed inset-0 z-20 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">创建 OAuth 应用</h3>
+        <button id="closeCreateModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="createAppForm">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">应用名称 *</label>
+          <input type="text" name="client_name" required
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">重定向 URI (每行一个) *</label>
+          <textarea name="redirect_uris" rows="3" required
+            placeholder="https://your-app.com/callback&#10;https://localhost:3000/callback"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"></textarea>
+          <p class="text-xs text-gray-500 mt-1">必须使用 HTTPS (本地开发可用 http://localhost)。</p>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">应用主页 URL (可选)</label>
+          <input type="url" name="client_uri"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button type="button" id="cancelCreate"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">取消</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">创建应用</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 创建成功后显示密钥的模态框 (关键) -->
+  <div id="credentialsModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">新应用凭据</h3>
+        <button id="closeCredentialsModal" class="text-gray-400 hover:text-gray-600"><i
+            class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client ID</label>
+          <div class="flex items-center gap-2">
+            <code id="newClientId" class="flex-1 bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm break-all"></code>
+            <button id="copyClientId" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-copy"></i></button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Secret</label>
+          <div class="flex items-center gap-2">
+            <code id="newClientSecret" class="flex-1 bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm break-all"></code>
+            <button id="copyClientSecret" class="text-indigo-600 hover:text-indigo-800"><i
+                class="fas fa-copy"></i></button>
+          </div>
+          <p class="text-xs text-red-500 mt-1">⚠️ 此密钥仅显示一次，请立即保存到安全位置。关闭后无法再次查看！</p>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6">
+        <button id="confirmCredentials"
+          class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">我已保存，关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑应用模态框 (不含secret，有重置密钥按钮) -->
+  <div id="editModal" class="fixed inset-0 z-20 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">编辑应用</h3>
+        <button id="closeEditModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="editAppForm">
+        <input type="hidden" name="client_id" id="edit_client_id">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">应用名称</label>
+          <input type="text" name="client_name" id="edit_client_name" required
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">重定向 URI (每行一个)</label>
+          <textarea name="redirect_uris" id="edit_redirect_uris" rows="3" required
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"></textarea>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">应用主页 URL</label>
+          <input type="url" name="client_uri" id="edit_client_uri"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+        </div>
+        <div class="flex flex-wrap gap-3 justify-between items-center mt-6">
+          <div>
+            <button type="button" id="editRotateSecret"
+              class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm">重置密钥</button>
+            <button type="button" id="editDeleteApp"
+              class="ml-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">删除应用</button>
+          </div>
+          <div class="flex gap-3">
+            <button type="button" id="cancelEdit"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50">取消</button>
+            <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">保存修改</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // 模拟数据 (实际会从 API 获取)
+    let mockApps = [
+      { client_id: "demo_client_123", client_name: "演示应用", redirect_uris: ["https://app.example.com/callback", "https://localhost:3000/callback"], client_uri: "", created_at: "2026-05-20" },
+      { client_id: "internal_admin_456", client_name: "内部管理后台", redirect_uris: ["https://admin.brain.internal/callback"], client_uri: "", created_at: "2026-05-18" }
+    ];
+
+    // 主题切换
+    const html = document.documentElement;
+    let isDark = localStorage.getItem('theme') === 'dark';
+    function setTheme(dark) {
+      if (dark) html.classList.add('dark'); else html.classList.remove('dark');
+      document.getElementById('themeIcon').className = dark ? 'fas fa-sun' : 'fas fa-moon';
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+    setTheme(isDark);
+    document.getElementById('themeToggle').addEventListener('click', () => { isDark = !isDark; setTheme(isDark); });
+
+    // 渲染应用列表
+    function renderApps() {
+      const container = document.getElementById('appsList');
+      if (!mockApps.length) {
+        container.innerHTML = `<div class="text-center py-12 text-gray-500 dark:text-gray-400">暂无应用，点击“创建新应用”开始</div>`;
+        return;
+      }
+      container.innerHTML = mockApps.map(app => `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+                    <div class="flex flex-wrap justify-between items-start gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${escapeHtml(app.client_name)}</h3>
+                                <span class="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-2 py-0.5 rounded-full">已启用</span>
+                            </div>
+                            <div class="mt-2 flex items-center gap-2">
+                                <code class="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Client ID: ${app.client_id}</code>
+                                <button class="copy-client-id text-indigo-600 text-sm" data-client-id="${app.client_id}" title="复制 Client ID"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">重定向 URI: <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">${app.redirect_uris.join(', ')}</code></p>
+                            <p class="text-xs text-gray-400 mt-1">创建于 ${app.created_at}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="edit-app-btn text-indigo-600 dark:text-indigo-400 hover:underline text-sm" data-client-id="${app.client_id}"><i class="fas fa-edit"></i> 编辑</button>
+                            <button class="rotate-secret-btn text-amber-600 dark:text-amber-400 hover:underline text-sm" data-client-id="${app.client_id}"><i class="fas fa-key"></i> 重置密钥</button>
+                            <button class="delete-app-btn text-red-600 dark:text-red-400 hover:underline text-sm" data-client-id="${app.client_id}"><i class="fas fa-trash"></i> 删除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+      // 绑定复制client_id事件
+      document.querySelectorAll('.copy-client-id').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const clientId = btn.getAttribute('data-client-id');
+          navigator.clipboard.writeText(clientId);
+          showToast('Client ID 已复制', 'success');
+        });
+      });
+      document.querySelectorAll('.edit-app-btn').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.getAttribute('data-client-id'))));
+      document.querySelectorAll('.rotate-secret-btn').forEach(btn => btn.addEventListener('click', () => rotateSecret(btn.getAttribute('data-client-id'))));
+      document.querySelectorAll('.delete-app-btn').forEach(btn => btn.addEventListener('click', () => deleteApp(btn.getAttribute('data-client-id'))));
+    }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+
+    // 创建应用模态框
+    const createModal = document.getElementById('createModal');
+    const credentialsModal = document.getElementById('credentialsModal');
+    function openCreateModal() { createModal.classList.remove('hidden'); createModal.classList.add('flex'); }
+    function closeCreateModal() { createModal.classList.add('hidden'); createModal.classList.remove('flex'); }
+    document.getElementById('createAppBtn').addEventListener('click', openCreateModal);
+    document.getElementById('closeCreateModal').addEventListener('click', closeCreateModal);
+    document.getElementById('cancelCreate').addEventListener('click', closeCreateModal);
+
+    // 处理创建表单提交
+    document.getElementById('createAppForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const client_name = formData.get('client_name');
+      const redirectUrisRaw = formData.get('redirect_uris');
+      const redirect_uris = redirectUrisRaw.split(/\r?\n/).filter(u => u.trim());
+      const client_uri = formData.get('client_uri');
+      if (!client_name || redirect_uris.length === 0) {
+        showToast('请填写应用名称和至少一个重定向URI', 'error');
+        return;
+      }
+      // 生成新的凭据
+      const newClientId = 'client_' + Math.random().toString(36).substring(2, 15);
+      const newSecret = Math.random().toString(36).substring(2, 20) + Math.random().toString(36).substring(2, 8);
+      // 添加到模拟数据
+      mockApps.push({
+        client_id: newClientId,
+        client_name,
+        redirect_uris,
+        client_uri: client_uri || '',
+        created_at: new Date().toISOString().slice(0, 10)
+      });
+      renderApps();
+      closeCreateModal();
+      // 显示凭据模态框
+      document.getElementById('newClientId').innerText = newClientId;
+      document.getElementById('newClientSecret').innerText = newSecret;
+      credentialsModal.classList.remove('hidden');
+      credentialsModal.classList.add('flex');
+    });
+
+    // 复制 client_id/secret
+    document.getElementById('copyClientId').addEventListener('click', () => {
+      const text = document.getElementById('newClientId').innerText;
+      navigator.clipboard.writeText(text);
+      showToast('Client ID 已复制', 'success');
+    });
+    document.getElementById('copyClientSecret').addEventListener('click', () => {
+      const text = document.getElementById('newClientSecret').innerText;
+      navigator.clipboard.writeText(text);
+      showToast('Client Secret 已复制', 'success');
+    });
+    function closeCredentialsModal() {
+      credentialsModal.classList.add('hidden');
+      credentialsModal.classList.remove('flex');
+    }
+    document.getElementById('closeCredentialsModal').addEventListener('click', closeCredentialsModal);
+    document.getElementById('confirmCredentials').addEventListener('click', closeCredentialsModal);
+
+    // 编辑应用
+    const editModal = document.getElementById('editModal');
+    function openEditModal(clientId) {
+      const app = mockApps.find(a => a.client_id === clientId);
+      if (!app) return;
+      document.getElementById('edit_client_id').value = app.client_id;
+      document.getElementById('edit_client_name').value = app.client_name;
+      document.getElementById('edit_redirect_uris').value = app.redirect_uris.join('\n');
+      document.getElementById('edit_client_uri').value = app.client_uri || '';
+      editModal.classList.remove('hidden');
+      editModal.classList.add('flex');
+    }
+    function closeEditModal() { editModal.classList.add('hidden'); editModal.classList.remove('flex'); }
+    document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+    document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+    document.getElementById('editAppForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const client_id = document.getElementById('edit_client_id').value;
+      const app = mockApps.find(a => a.client_id === client_id);
+      if (app) {
+        app.client_name = document.getElementById('edit_client_name').value;
+        const urisRaw = document.getElementById('edit_redirect_uris').value;
+        app.redirect_uris = urisRaw.split(/\r?\n/).filter(u => u.trim());
+        app.client_uri = document.getElementById('edit_client_uri').value;
+        renderApps();
+        closeEditModal();
+        showToast('应用信息已更新', 'success');
+      }
+    });
+
+    // 重置密钥
+    async function rotateSecret(clientId) {
+      if (!confirm('重置密钥将使旧密钥立即失效，确定继续吗？')) return;
+      const newSecret = Math.random().toString(36).substring(2, 20) + Math.random().toString(36).substring(2, 8);
+      showToast(`新密钥: ${newSecret} (请妥善保存，仅显示一次)`, 'info', 10000);
+      // 实际应调用 API 更新数据库中的 client_secret_hash
+    }
+    // 删除应用
+    async function deleteApp(clientId) {
+      if (!confirm('删除应用不可恢复，确定删除吗？')) return;
+      mockApps = mockApps.filter(a => a.client_id !== clientId);
+      renderApps();
+      showToast('应用已删除', 'success');
+    }
+
+    // 编辑模态框中的重置密钥和删除按钮
+    document.getElementById('editRotateSecret').addEventListener('click', () => {
+      const clientId = document.getElementById('edit_client_id').value;
+      rotateSecret(clientId);
+    });
+    document.getElementById('editDeleteApp').addEventListener('click', () => {
+      const clientId = document.getElementById('edit_client_id').value;
+      if (confirm('永久删除该应用？')) {
+        mockApps = mockApps.filter(a => a.client_id !== clientId);
+        renderApps();
+        closeEditModal();
+        showToast('应用已删除', 'success');
+      }
+    });
+
+    function showToast(msg, type = 'info', duration = 4000) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm';
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), duration);
+    }
+
+    renderApps();
+  </script>
+</body>
+
+</html>

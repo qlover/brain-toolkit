@@ -24,6 +24,34 @@ export const API_BRAIN_VERIFY = '/api/brain/verify' as const;
 export const API_CALLBACK = '/api/callback' as const;
 
 /**
+ * API path: `/api/clients`
+ *
+ * @see [src/app/api/clients/route.ts](../../src/app/api/clients/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/clients/route.ts`
+ */
+export const API_CLIENTS = '/api/clients' as const;
+
+/**
+ * API path: `/api/clients/:clientId`
+ *
+ * @see [src/app/api/clients/[clientId]/route.ts](../../src/app/api/clients/[clientId]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/clients/[clientId]/route.ts`
+ */
+export const API_CLIENTS_2 = '/api/clients/:clientId' as const;
+
+/**
+ * API path: `/api/clients/:clientId/rotate-secret`
+ *
+ * @see [src/app/api/clients/[clientId]/rotate-secret/route.ts](../../src/app/api/clients/[clientId]/rotate-secret/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/clients/[clientId]/rotate-secret/route.ts`
+ */
+export const API_CLIENTS_ROTATE_SECRET =
+  '/api/clients/:clientId/rotate-secret' as const;
+
+/**
  * API path: `/api/locales/json`
  *
  * @see [src/app/api/locales/json/route.ts](../../src/app/api/locales/json/route.ts)
@@ -98,6 +126,9 @@ export const API_USER_SESSION = '/api/user/session' as const;
 export type ApiRoutePath =
   | typeof API_BRAIN_VERIFY
   | typeof API_CALLBACK
+  | typeof API_CLIENTS
+  | typeof API_CLIENTS_2
+  | typeof API_CLIENTS_ROTATE_SECRET
   | typeof API_LOCALES_JSON
   | typeof API_OAUTH_CONSENT
   | typeof API_REFERENCE
