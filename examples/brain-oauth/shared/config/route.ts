@@ -23,8 +23,23 @@ export const ROUTE_DASHBOARD_APPS = '/dashboard/apps' as const;
 /** OAuth 2.0 authorization consent page. */
 export const ROUTE_OAUTH_AUTHORIZE = '/oauth/authorize' as const;
 
+/** OAuth 2.0 token endpoint (machine-to-machine, no locale prefix). */
+export const ROUTE_OAUTH_TOKEN = '/oauth/token' as const;
+
+/** OAuth machine endpoints that skip session and locale middleware. */
+export const OAUTH_MACHINE_ROUTES = [ROUTE_OAUTH_TOKEN] as const;
+
 /** Routes that are allowed without authentication (public routes). */
 export const AUTH_ROUTES = [ROUTE_HOME, ROUTE_LOGIN, ROUTE_REGISTER] as const;
+
+/**
+ * Returns true if pathname is an OAuth machine endpoint (token, userinfo, etc.).
+ */
+export function isOAuthMachinePath(pathname: string): boolean {
+  return OAUTH_MACHINE_ROUTES.some(
+    (route) => pathname === route || pathname.endsWith(route)
+  );
+}
 
 /**
  * Returns true if pathname is a public route (no auth required).

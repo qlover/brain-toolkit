@@ -1,5 +1,6 @@
 import { injectable } from '@shared/container';
 import { createAdminClient } from '@shared/supabase/admin';
+import { verifyClientSecret } from '@server/utils/clientSecretHash';
 import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
 
 /**
@@ -20,5 +21,30 @@ export class OAuthClientsRepository {
     }
 
     return (data as OAuthClientRow | null) ?? null;
+  }
+
+  public async verifyClientCredentials(
+    clientId: string,
+    clientSecret: string | undefined
+  ): Promise<OAuthClientRow> {
+    const client = await this.findByClientId(clientId);
+    if (!client) {
+      throw new Error('invalid_client');
+    }
+
+    if (client.confidential) {
+      if (!clientSecret?.trim()) {
+        throw new Error('invalid_client');
+      }
+      const valid = await verifyClientSecret(
+        clientSecret,
+        client.client_secret_hash
+      );
+      if (!valid) {
+        throw new Error('invalid_client');
+      }
+    }
+
+    return client;
   }
 }

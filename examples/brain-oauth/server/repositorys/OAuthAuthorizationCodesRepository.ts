@@ -1,5 +1,6 @@
 import { injectable } from '@shared/container';
 import { createAdminClient } from '@shared/supabase/admin';
+import type { OAuthAuthorizationCodeRow } from '@schemas/oauth/OAuthAuthorizeSchema';
 
 export type CreateAuthorizationCodeInput = {
   code: string;
@@ -30,5 +31,28 @@ export class OAuthAuthorizationCodesRepository {
     if (error) {
       throw new Error(error.message);
     }
+  }
+
+  /**
+   * Atomically marks a valid, unused, non-expired code as used and returns the row.
+   */
+  public async consumeCode(
+    code: string
+  ): Promise<OAuthAuthorizationCodeRow | null> {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('brain_oauth_authorization_codes')
+      .update({ used: true })
+      .eq('code', code)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data as OAuthAuthorizationCodeRow | null) ?? null;
   }
 }

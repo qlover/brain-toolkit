@@ -1,19 +1,22 @@
-// src/middleware.ts
-
-// Import the Next.js middleware helper from next-intl
-import createMiddleware from 'next-intl/middleware';
-
 // Import your routing configuration which contains all locales, defaultLocale, and pathnames
+import { isOAuthMachinePath } from '@config/route';
 import { updateSession } from '@shared/supabase/proxy';
 import { routing } from './i18n/routing';
-import type { NextRequest } from 'next/server';
-
-// Export the middleware created by next-intl
-// This middleware will handle locale detection, redirects, and internationalized routing automatically
-// export default createMiddleware(routing);
+import { NextResponse, type NextRequest } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
 
 export default async function proxy(request: NextRequest) {
-  await updateSession(request);
+  const pathname = request.nextUrl.pathname;
+
+  if (isOAuthMachinePath(pathname)) {
+    return NextResponse.next({ request });
+  }
+
+  const sessionResponse = await updateSession(request);
+  if (sessionResponse.headers.get('Location')) {
+    return sessionResponse;
+  }
+
   return createMiddleware(routing)(request);
 }
 
