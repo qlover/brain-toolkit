@@ -8,14 +8,17 @@ import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
+import type { DeveloperAppsPageProps } from '@/uikit/components-app/developer/apps/DeveloperAppsPage';
 import type { OAuthClientListItem } from '@schemas/oauth/OAuthAuthorizeSchema';
 import type { PagesRouteParamsType } from '@server/render/PagesRouteParams';
 import { PagesRouteParams } from '@server/render/PagesRouteParams';
 import type { GetStaticPropsContext } from 'next';
 
-const DeveloperAppsPageComponent = dynamic(
+const DeveloperAppsPageComponent = dynamic<DeveloperAppsPageProps>(
   () =>
-    import('./DeveloperAppsPage').then((mod) => mod.DeveloperAppsPageComponent),
+    import('@/uikit/components-app/developer/apps/DeveloperAppsPage').then(
+      (mod) => mod.DeveloperAppsPageComponent
+    ),
   { ssr: false }
 );
 

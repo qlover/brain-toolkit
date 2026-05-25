@@ -20,7 +20,7 @@ import {
 } from 'react';
 import { Link } from '@/i18n/routing';
 import { OAuthConsentGateway } from '@/impls/OAuthConsentGateway';
-import { readAppApiJson } from '@/pages/[locale]/developer/apps/readAppApiJson';
+import { readAppApiJson } from '@/uikit/components-app/developer/apps/readAppApiJson';
 import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GET } from '../../src/app/userinfo/route';
+import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
+import { GET } from '@/app/userinfo/route';
 
 const getUserInfo = vi.fn();
 
@@ -49,6 +50,7 @@ describe('GET /userinfo route', () => {
 
     expect(res.status).toBe(401);
     expect(body.error).toBe('invalid_token');
+    expect(body.error_id).toBe(API_OAUTH_INVALID_TOKEN);
     expect(getUserInfo).not.toHaveBeenCalled();
   });
 
@@ -56,7 +58,7 @@ describe('GET /userinfo route', () => {
     const { OAuthUserInfoError } = await import(
       '@server/utils/oauthUserInfoError'
     );
-    getUserInfo.mockRejectedValue(new OAuthUserInfoError('invalid_token', 401));
+    getUserInfo.mockRejectedValue(new OAuthUserInfoError());
 
     const req = new NextRequest('http://localhost/userinfo', {
       headers: { authorization: 'Bearer bad' }
@@ -67,5 +69,6 @@ describe('GET /userinfo route', () => {
 
     expect(res.status).toBe(401);
     expect(body.error).toBe('invalid_token');
+    expect(body.error_id).toBe(API_OAUTH_INVALID_TOKEN);
   });
 });

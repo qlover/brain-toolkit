@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  API_OAUTH_INVALID_CLIENT,
+  API_OAUTH_INVALID_GRANT,
+  API_OAUTH_UNSUPPORTED_GRANT_TYPE
+} from '@config/i18n-identifier/api';
 import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
 import type { OAuthAuthorizationCodesRepository } from '@server/repositorys/OAuthAuthorizationCodesRepository';
 import type { OAuthClientsRepository } from '@server/repositorys/OAuthClientsRepository';
@@ -6,13 +11,19 @@ import { hashOpaqueToken } from '@server/repositorys/OAuthCredentialsRepository'
 import type { OAuthCredentialsRepository } from '@server/repositorys/OAuthCredentialsRepository';
 import type { OAuthRefreshTokensRepository } from '@server/repositorys/OAuthRefreshTokensRepository';
 import { OAuthTokenService } from '@server/services/OAuthTokenService';
-import type { OAuthTokenError } from '@server/utils/oauthTokenError';
 import {
   testAuthCode,
   testOAuthClient,
   testRefreshTokenRow,
   testServerConfig
 } from '../helpers/oauthFixtures';
+
+/** Shape asserted on {@link OAuthTokenError} rejects (RFC `error` + i18n `errorId`). */
+type OAuthTokenErrorExpect = {
+  errorId: string;
+  error: string;
+  status: number;
+};
 
 describe('OAuthTokenService', () => {
   const clientsRepo = {
@@ -99,9 +110,10 @@ describe('OAuthTokenService', () => {
         client_secret: 'secret'
       })
     ).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_GRANT,
       error: 'invalid_grant',
       status: 400
-    } satisfies Partial<OAuthTokenError>);
+    } satisfies OAuthTokenErrorExpect);
   });
 
   it('throws invalid_grant on redirect_uri mismatch', async () => {
@@ -115,7 +127,10 @@ describe('OAuthTokenService', () => {
         client_id: 'client_test',
         client_secret: 'secret'
       })
-    ).rejects.toMatchObject({ error: 'invalid_grant' });
+    ).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_GRANT,
+      error: 'invalid_grant'
+    } satisfies Partial<OAuthTokenErrorExpect>);
   });
 
   it('throws unsupported_grant_type when client disallows grant', async () => {
@@ -132,7 +147,10 @@ describe('OAuthTokenService', () => {
         client_id: 'client_test',
         client_secret: 'secret'
       })
-    ).rejects.toMatchObject({ error: 'unsupported_grant_type' });
+    ).rejects.toMatchObject({
+      errorId: API_OAUTH_UNSUPPORTED_GRANT_TYPE,
+      error: 'unsupported_grant_type'
+    } satisfies Partial<OAuthTokenErrorExpect>);
   });
 
   it('exchanges refresh_token and rotates middleware refresh token', async () => {
@@ -182,7 +200,10 @@ describe('OAuthTokenService', () => {
         client_id: 'client_test',
         client_secret: 'secret'
       })
-    ).rejects.toMatchObject({ error: 'invalid_grant' });
+    ).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_GRANT,
+      error: 'invalid_grant'
+    } satisfies Partial<OAuthTokenErrorExpect>);
   });
 
   it('throws invalid_client when client verification fails', async () => {
@@ -197,6 +218,10 @@ describe('OAuthTokenService', () => {
         client_id: 'bad',
         client_secret: 'wrong'
       })
-    ).rejects.toMatchObject({ error: 'invalid_client', status: 401 });
+    ).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_CLIENT,
+      error: 'invalid_client',
+      status: 401
+    } satisfies OAuthTokenErrorExpect);
   });
 });

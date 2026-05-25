@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
 import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
 import { OAuthUserInfoService } from '@server/services/OAuthUserInfoService';
 import { OAuthUserInfoError } from '@server/utils/oauthUserInfoError';
+
+type OAuthUserInfoErrorExpect = {
+  errorId: string;
+  error: 'invalid_token';
+  status?: number;
+};
 
 describe('OAuthUserInfoService', () => {
   const brainAdapter = {
@@ -63,9 +70,10 @@ describe('OAuthUserInfoService', () => {
       OAuthUserInfoError
     );
     await expect(service.getUserInfo('bad')).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_TOKEN,
       error: 'invalid_token',
       status: 401
-    });
+    } satisfies OAuthUserInfoErrorExpect);
   });
 
   it('throws invalid_token when email is missing', async () => {
@@ -77,7 +85,8 @@ describe('OAuthUserInfoService', () => {
     });
 
     await expect(service.getUserInfo('token')).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_TOKEN,
       error: 'invalid_token'
-    });
+    } satisfies Partial<OAuthUserInfoErrorExpect>);
   });
 });

@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { API_BRAIN_VERIFY } from '@config/apiRoutes';
+import {
+  API_OAUTH_BRAIN_AUTH_FAILED,
+  API_OAUTH_INVALID_REQUEST
+} from '@config/i18n-identifier/api';
 import { BrainAuthController } from '@server/controllers/BrainAuthController';
 import { NextApiServer } from '@server/NextApiServer';
 
@@ -13,7 +17,11 @@ export async function POST(req: NextRequest) {
     requestBody = await req.json();
   } catch {
     return NextResponse.json(
-      { success: false, id: 'invalid_request', message: 'Invalid JSON' },
+      {
+        success: false,
+        id: API_OAUTH_INVALID_REQUEST,
+        message: 'Invalid JSON'
+      },
       { status: 400 }
     );
   }
@@ -24,7 +32,7 @@ export async function POST(req: NextRequest) {
   );
 
   if (!result.success) {
-    const status = result.id === 'brain_auth_failed' ? 401 : 400;
+    const status = result.id === API_OAUTH_BRAIN_AUTH_FAILED ? 401 : 400;
     return NextResponse.json(result, { status });
   }
 

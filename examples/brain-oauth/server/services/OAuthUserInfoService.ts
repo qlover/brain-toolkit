@@ -29,19 +29,19 @@ export class OAuthUserInfoService {
         await this.brainAdapter.getUserInfoByAccessToken(accessToken);
       return this.toUserInfoResponse(profile);
     } catch {
-      throw new OAuthUserInfoError('invalid_token', 401);
+      throw new OAuthUserInfoError();
     }
   }
 
   protected toUserInfoResponse(profile: BrainUser): OAuthUserInfoResponse {
     const sub = String(profile.id);
     if (!sub || sub === 'NaN') {
-      throw new OAuthUserInfoError('invalid_token', 401);
+      throw new OAuthUserInfoError();
     }
 
     const email = profile.email?.trim();
     if (!email) {
-      throw new OAuthUserInfoError('invalid_token', 401);
+      throw new OAuthUserInfoError();
     }
 
     const nameFromParts = [profile.first_name, profile.last_name]

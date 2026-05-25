@@ -62,7 +62,7 @@ function parseRedirectUris(raw: string): string[] {
     .filter((uri) => uri.length > 0);
 }
 
-interface DeveloperAppsPageProps {
+export interface DeveloperAppsPageProps {
   initialApps: OAuthClientListItem[];
 }
 
