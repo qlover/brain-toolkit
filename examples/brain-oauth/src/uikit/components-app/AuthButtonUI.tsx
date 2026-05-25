@@ -7,8 +7,8 @@ import {
   COMMON_USER_AUTH_FAILED_GO_TO_LOGIN
 } from '@config/i18n-identifier/common/common';
 import { ROUTE_LOGIN, ROUTE_REGISTER } from '@config/route';
-import { LogoutButton } from './LogoutButton';
 import { headerActionButtonClassName } from './headerStyles';
+import { LogoutButton } from './LogoutButton';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 
 /**
@@ -51,10 +51,7 @@ export function AuthButtonUI(props: {
         className="flex items-center gap-2"
         data-auth={hasAuth}
       >
-        <LogoutButton
-          data-testid="logout-button"
-          showLabel={showLogoutLabel}
-        />
+        <LogoutButton data-testid="logout-button" showLabel={showLogoutLabel} />
       </div>
     );
   }

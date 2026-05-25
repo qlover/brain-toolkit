@@ -20,7 +20,9 @@ export type { BrainSessionPayload };
  */
 @injectable()
 export class BrainSessionService {
-  constructor(@inject(I.AppConfig) protected config: SeedServerConfigInterface) {}
+  constructor(
+    @inject(I.AppConfig) protected config: SeedServerConfigInterface
+  ) {}
 
   public async setSession(payload: BrainSessionPayload): Promise<void> {
     const secret = this.requireSecret();

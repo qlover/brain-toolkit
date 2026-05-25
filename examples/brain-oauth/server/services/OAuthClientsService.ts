@@ -1,13 +1,14 @@
 import { inject, injectable } from '@shared/container';
-import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
 import type {
   OAuthClientListItem,
   OAuthClientDetail,
+  OAuthClientRow,
   OAuthClientCreate,
   OAuthClientUpdate,
   OAuthClientCreateResponse,
   OAuthClientSecretRotateResponse
 } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
 
 /**
  * Business logic for OAuth client management in developer console.
@@ -22,7 +23,9 @@ export class OAuthClientsService {
   /**
    * List all OAuth clients owned by a user
    */
-  public async listForOwner(ownerUserId: number): Promise<OAuthClientListItem[]> {
+  public async listForOwner(
+    ownerUserId: number
+  ): Promise<OAuthClientListItem[]> {
     return this.clientsRepo.listByOwner(ownerUserId);
   }
 
@@ -34,7 +37,7 @@ export class OAuthClientsService {
     clientId: string
   ): Promise<OAuthClientDetail> {
     const client = await this.clientsRepo.findByClientId(clientId);
-    
+
     if (!client) {
       throw new Error('Client not found');
     }
@@ -125,7 +128,7 @@ export class OAuthClientsService {
     await this.clientsRepo.delete(ownerUserId, clientId);
   }
 
-  private mapToDetail(row: any): OAuthClientDetail {
+  private mapToDetail(row: OAuthClientRow): OAuthClientDetail {
     return {
       client_id: row.client_id,
       client_name: row.client_name,

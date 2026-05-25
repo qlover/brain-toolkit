@@ -62,7 +62,11 @@ export function HomeHeaderNav({ tt }: HomeHeaderNavProps) {
         aria-label={menuOpen ? 'Close menu' : 'Open menu'}
         onClick={() => setMenuOpen((open) => !open)}
       >
-        {menuOpen ? <CloseOutlined className="text-base" /> : <MenuOutlined className="text-base" />}
+        {menuOpen ? (
+          <CloseOutlined className="text-base" />
+        ) : (
+          <MenuOutlined className="text-base" />
+        )}
       </button>
 
       <div
@@ -70,7 +74,9 @@ export function HomeHeaderNav({ tt }: HomeHeaderNavProps) {
         data-testid="HomeHeaderNavMobilePanel"
         className={clsx(
           'md:hidden fixed left-0 right-0 top-16 z-40 border-b border-primary-border bg-primary/95 backdrop-blur-md shadow-sm',
-          menuOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'
+          menuOpen
+            ? 'visible opacity-100'
+            : 'invisible opacity-0 pointer-events-none'
         )}
       >
         <nav

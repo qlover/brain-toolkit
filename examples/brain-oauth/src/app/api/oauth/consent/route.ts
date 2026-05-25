@@ -1,6 +1,6 @@
+import { NextResponse, type NextRequest } from 'next/server';
 import { OAuthConsentController } from '@server/controllers/OAuthConsentController';
 import { NextApiServer } from '@server/NextApiServer';
-import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * OAuth consent submission: allow or deny authorization for a registered client.

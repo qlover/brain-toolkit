@@ -1,20 +1,25 @@
 import { injectable } from '@shared/container';
 import { createAdminClient } from '@shared/supabase/admin';
-import { verifyClientSecret, hashClientSecret } from '@server/utils/clientSecretHash';
-import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
-import type { 
-  OAuthClientListItem, 
+import type {
+  OAuthClientRow,
+  OAuthClientListItem,
   OAuthClientDetail,
   OAuthClientCreate,
-  OAuthClientUpdate 
+  OAuthClientUpdate
 } from '@schemas/oauth/OAuthAuthorizeSchema';
+import {
+  verifyClientSecret,
+  hashClientSecret
+} from '@server/utils/clientSecretHash';
 
 /**
  * Reads and manages registered OAuth clients from Supabase (service role).
  */
 @injectable()
 export class OAuthClientsRepository {
-  public async findByClientId(clientId: string): Promise<OAuthClientRow | null> {
+  public async findByClientId(
+    clientId: string
+  ): Promise<OAuthClientRow | null> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('brain_oauth_clients')
@@ -29,11 +34,15 @@ export class OAuthClientsRepository {
     return (data as OAuthClientRow | null) ?? null;
   }
 
-  public async listByOwner(ownerUserId: number): Promise<OAuthClientListItem[]> {
+  public async listByOwner(
+    ownerUserId: number
+  ): Promise<OAuthClientListItem[]> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('brain_oauth_clients')
-      .select('client_id, client_name, client_uri, logo_uri, redirect_uris, created_at, updated_at')
+      .select(
+        'client_id, client_name, client_uri, logo_uri, redirect_uris, created_at, updated_at'
+      )
       .eq('owner_user_id', ownerUserId)
       .order('created_at', { ascending: false });
 
@@ -49,10 +58,12 @@ export class OAuthClientsRepository {
     input: OAuthClientCreate
   ): Promise<{ client: OAuthClientRow; clientSecret: string }> {
     const supabase = createAdminClient();
-    
+
     // Generate client_id and client_secret
     const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
-    const clientSecret = Math.random().toString(36).substring(2, 20) + Math.random().toString(36).substring(2, 20);
+    const clientSecret =
+      Math.random().toString(36).substring(2, 20) +
+      Math.random().toString(36).substring(2, 20);
     const clientSecretHash = await hashClientSecret(clientSecret);
 
     const { data, error } = await supabase
@@ -87,7 +98,7 @@ export class OAuthClientsRepository {
     input: OAuthClientUpdate
   ): Promise<OAuthClientDetail> {
     const supabase = createAdminClient();
-    
+
     const { data, error } = await supabase
       .from('brain_oauth_clients')
       .update({
@@ -117,9 +128,11 @@ export class OAuthClientsRepository {
     clientId: string
   ): Promise<{ clientSecret: string }> {
     const supabase = createAdminClient();
-    
+
     // Generate new secret
-    const clientSecret = Math.random().toString(36).substring(2, 20) + Math.random().toString(36).substring(2, 20);
+    const clientSecret =
+      Math.random().toString(36).substring(2, 20) +
+      Math.random().toString(36).substring(2, 20);
     const clientSecretHash = await hashClientSecret(clientSecret);
 
     const { error } = await supabase
@@ -140,7 +153,7 @@ export class OAuthClientsRepository {
 
   public async delete(ownerUserId: number, clientId: string): Promise<void> {
     const supabase = createAdminClient();
-    
+
     const { error } = await supabase
       .from('brain_oauth_clients')
       .delete()

@@ -1,9 +1,9 @@
 // Import your routing configuration which contains all locales, defaultLocale, and pathnames
-import { isOAuthMachinePath } from '@config/route';
-import { updateSession } from '@shared/supabase/proxy';
-import { routing } from './i18n/routing';
 import { NextResponse, type NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { updateSession } from '@shared/supabase/proxy';
+import { isOAuthMachinePath } from '@config/route';
+import { routing } from './i18n/routing';
 
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

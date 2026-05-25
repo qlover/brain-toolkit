@@ -1,12 +1,8 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { OAuthClientCreateSchema } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
-import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
-import { 
-  OAuthClientCreateSchema,
-  OAuthClientUpdateSchema
-} from '@schemas/oauth/OAuthAuthorizeSchema';
+import type { NextRequest } from 'next/server';
 
 /**
  * @swagger

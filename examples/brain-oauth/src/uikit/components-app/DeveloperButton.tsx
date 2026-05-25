@@ -8,7 +8,10 @@ import { useUserAuth } from '../hook/useUserAuth';
  * Client component: Developer console button
  * Shows when user is authenticated
  */
-export function DeveloperButton(props: { developerTitle: string; locale?: string }) {
+export function DeveloperButton(props: {
+  developerTitle: string;
+  locale?: string;
+}) {
   const { developerTitle, locale } = props;
   const { success, loading } = useUserAuth();
 

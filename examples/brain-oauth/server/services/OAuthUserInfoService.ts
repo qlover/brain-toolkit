@@ -1,8 +1,8 @@
-import type { BrainUser } from '@brain-toolkit/brain-user';
 import { inject, injectable } from '@shared/container';
 import type { OAuthUserInfoResponse } from '@schemas/oauth/OAuthUserInfoSchema';
 import { BrainUserAdapter } from '../adapters/BrainUserAdapter';
 import { OAuthUserInfoError } from '../utils/oauthUserInfoError';
+import type { BrainUser } from '@brain-toolkit/brain-user';
 
 /**
  * OAuth 2.0 / OIDC userinfo endpoint (`GET /userinfo`).
@@ -21,11 +21,12 @@ export class OAuthUserInfoService {
     @inject(BrainUserAdapter) protected brainAdapter: BrainUserAdapter
   ) {}
 
-  public async getUserInfo(accessToken: string): Promise<OAuthUserInfoResponse> {
+  public async getUserInfo(
+    accessToken: string
+  ): Promise<OAuthUserInfoResponse> {
     try {
-      const profile = await this.brainAdapter.getUserInfoByAccessToken(
-        accessToken
-      );
+      const profile =
+        await this.brainAdapter.getUserInfoByAccessToken(accessToken);
       return this.toUserInfoResponse(profile);
     } catch {
       throw new OAuthUserInfoError('invalid_token', 401);

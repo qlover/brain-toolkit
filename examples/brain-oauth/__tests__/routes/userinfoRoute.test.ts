@@ -1,12 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '../../src/app/userinfo/route';
 
 const getUserInfo = vi.fn();
 
 vi.mock('@server/BootstrapServer', () => ({
   BootstrapServer: class MockBootstrapServer {
-    getIOC() {
+    public getIOC(): unknown {
       return () => ({
         getUserInfo
       });

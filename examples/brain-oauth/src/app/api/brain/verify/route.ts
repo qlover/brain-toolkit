@@ -1,7 +1,7 @@
+import { NextResponse, type NextRequest } from 'next/server';
 import { API_BRAIN_VERIFY } from '@config/apiRoutes';
 import { BrainAuthController } from '@server/controllers/BrainAuthController';
 import { NextApiServer } from '@server/NextApiServer';
-import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * Brain email/password login for OAuth middleware session.

@@ -36,14 +36,16 @@ export class OAuthCredentialsRepository {
     }
   ): Promise<void> {
     const supabase = createAdminClient();
-    const { error } = await supabase.from('brain_oauth_user_credentials').upsert(
-      {
-        user_id: userId,
-        ...fields,
-        updated_at: new Date().toISOString()
-      },
-      { onConflict: 'user_id' }
-    );
+    const { error } = await supabase
+      .from('brain_oauth_user_credentials')
+      .upsert(
+        {
+          user_id: userId,
+          ...fields,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'user_id' }
+      );
 
     if (error) {
       throw new Error(error.message);

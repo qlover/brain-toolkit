@@ -12,8 +12,8 @@ import {
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
 import { useCallback, useMemo, useState } from 'react';
-import { useIOC } from '@/uikit/hook/useIOC';
 import { OAuthConsentGateway } from '@/impls/OAuthConsentGateway';
+import { useIOC } from '@/uikit/hook/useIOC';
 import type { OAuthAuthorizeI18nInterface } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import { resolveScopeLabel } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import type { OAuthAuthorizePageData } from '@server/services/OAuthAuthorizeService';
@@ -61,9 +61,7 @@ export function OAuthAuthorizeCard({
 
         window.location.assign(redirectUrl);
       } catch (err) {
-        setErrorMessage(
-          err instanceof Error ? err.message : tt.errorConsent
-        );
+        setErrorMessage(err instanceof Error ? err.message : tt.errorConsent);
         setLoading(false);
       }
     },
@@ -161,7 +159,11 @@ export function OAuthAuthorizeCard({
           </button>
           <div className="mt-2 space-y-2 pl-1">
             {scopeLabels.map(({ scope, label }) => (
-              <div key={scope} className="flex items-start gap-2">
+              <div
+                data-testid="OAuthAuthorizeCard"
+                key={scope}
+                className="flex items-start gap-2"
+              >
                 <CheckCircleOutlined className="text-green-500 text-sm mt-0.5 shrink-0" />
                 <span className="text-sm text-primary-text">{label}</span>
               </div>

@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { OAuthTokenService } from '@server/services/OAuthTokenService';
-import { OAuthTokenError } from '@server/utils/oauthTokenError';
-import { hashOpaqueToken } from '@server/repositorys/OAuthCredentialsRepository';
-import type { OAuthClientsRepository } from '@server/repositorys/OAuthClientsRepository';
-import type { OAuthAuthorizationCodesRepository } from '@server/repositorys/OAuthAuthorizationCodesRepository';
-import type { OAuthRefreshTokensRepository } from '@server/repositorys/OAuthRefreshTokensRepository';
-import type { OAuthCredentialsRepository } from '@server/repositorys/OAuthCredentialsRepository';
 import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
+import type { OAuthAuthorizationCodesRepository } from '@server/repositorys/OAuthAuthorizationCodesRepository';
+import type { OAuthClientsRepository } from '@server/repositorys/OAuthClientsRepository';
+import { hashOpaqueToken } from '@server/repositorys/OAuthCredentialsRepository';
+import type { OAuthCredentialsRepository } from '@server/repositorys/OAuthCredentialsRepository';
+import type { OAuthRefreshTokensRepository } from '@server/repositorys/OAuthRefreshTokensRepository';
+import { OAuthTokenService } from '@server/services/OAuthTokenService';
+import type { OAuthTokenError } from '@server/utils/oauthTokenError';
 import {
   testAuthCode,
   testOAuthClient,

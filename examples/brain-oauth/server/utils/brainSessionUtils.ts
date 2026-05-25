@@ -31,7 +31,9 @@ export function brainSessionToUserSchema(
   return {
     id: String(session.userId),
     email: session.email,
-    role: adminUserIds.includes(session.userId) ? UserRole.ADMIN : UserRole.USER,
+    role: adminUserIds.includes(session.userId)
+      ? UserRole.ADMIN
+      : UserRole.USER,
     password: '',
     credential_token: session.brainToken,
     created_at: new Date().toISOString(),

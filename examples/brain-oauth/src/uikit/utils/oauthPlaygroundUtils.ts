@@ -48,7 +48,9 @@ export function buildAuthorizeUrl(
 /**
  * Parses code / error from the redirect URL returned by consent (no browser navigation).
  */
-export function parseOAuthCallbackUrl(redirectUrl: string): OAuthCallbackParams {
+export function parseOAuthCallbackUrl(
+  redirectUrl: string
+): OAuthCallbackParams {
   const url = new URL(redirectUrl);
   return {
     code: url.searchParams.get('code') ?? undefined,

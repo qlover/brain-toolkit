@@ -9,16 +9,22 @@ import {
   LoadingOutlined,
   PlusOutlined
 } from '@ant-design/icons';
+import { message } from 'antd';
+import { clsx } from 'clsx';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent
+} from 'react';
 import { Link } from '@/i18n/routing';
-import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
-import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
 import {
   DeveloperConfirmDialog,
   type DeveloperConfirmOptions
 } from '@/uikit/components-app/developer/DeveloperConfirmDialog';
 import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
+import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import {
   oauthCardClass,
   oauthDangerButtonClass,
@@ -28,6 +34,8 @@ import {
   oauthSecondaryButtonClass,
   oauthWarningButtonClass
 } from '@/uikit/styles/oauthUiStyles';
+import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
+import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import type {
   OAuthClientListItem,
   OAuthClientCreate,
@@ -36,18 +44,16 @@ import type {
   OAuthClientSecretRotateResponse,
   OAuthClientUpdate
 } from '@schemas/oauth/OAuthAuthorizeSchema';
-import { readAppApiJson } from './readAppApiJson';
-import { clsx } from 'clsx';
-import { message } from 'antd';
-import {
-  OAuthClientCredentialsModal,
-  type OAuthCredentials
-} from './OAuthClientCredentialsModal';
 import {
   OAuthClientAppForm,
   emptyOAuthClientFormValues,
   type OAuthClientFormValues
 } from './OAuthClientAppForm';
+import {
+  OAuthClientCredentialsModal,
+  type OAuthCredentials
+} from './OAuthClientCredentialsModal';
+import { readAppApiJson } from './readAppApiJson';
 
 function parseRedirectUris(raw: string): string[] {
   return raw
@@ -72,7 +78,9 @@ export function DeveloperAppsPageComponent({
   const [loading, setLoading] = useState(true);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingApp, setEditingApp] = useState<OAuthClientListItem | null>(null);
+  const [editingApp, setEditingApp] = useState<OAuthClientListItem | null>(
+    null
+  );
   const [credentials, setCredentials] = useState<OAuthCredentials | null>(null);
   const [credentialsModalVisible, setCredentialsModalVisible] = useState(false);
   const [confirmOptions, setConfirmOptions] =
@@ -101,8 +109,7 @@ export function DeveloperAppsPageComponent({
       redirectUrisHint:
         tt.redirectUrisHint ||
         'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).',
-      clientUriLabel:
-        tt.clientUriLabel || 'Application Homepage URL (Optional)'
+      clientUriLabel: tt.clientUriLabel || 'Application Homepage URL (Optional)'
     }),
     [tt]
   );
@@ -141,7 +148,9 @@ export function DeveloperAppsPageComponent({
       setApps(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Load apps error:', error);
-      message.error(tt.toastError || 'Operation failed, please try again later');
+      message.error(
+        tt.toastError || 'Operation failed, please try again later'
+      );
     } finally {
       setLoading(false);
     }
@@ -161,7 +170,9 @@ export function DeveloperAppsPageComponent({
       await copyText(clientId);
       message.success(tt.copyClientIdSuccess || 'Client ID copied');
     } catch {
-      message.error(tt.toastError || 'Operation failed, please try again later');
+      message.error(
+        tt.toastError || 'Operation failed, please try again later'
+      );
     }
   };
 
@@ -176,7 +187,9 @@ export function DeveloperAppsPageComponent({
         message.success(tt.copySecretSuccess || 'Client Secret copied');
       }
     } catch {
-      message.error(tt.toastError || 'Operation failed, please try again later');
+      message.error(
+        tt.toastError || 'Operation failed, please try again later'
+      );
     }
   };
 
@@ -234,7 +247,9 @@ export function DeveloperAppsPageComponent({
       });
     } catch (error) {
       console.error('Create app error:', error);
-      message.error(tt.toastError || 'Operation failed, please try again later');
+      message.error(
+        tt.toastError || 'Operation failed, please try again later'
+      );
     }
   };
 
@@ -291,10 +306,14 @@ export function DeveloperAppsPageComponent({
       setEditingApp(null);
       resetEditForm();
 
-      message.success(tt.toastUpdateSuccess || 'Application updated successfully');
+      message.success(
+        tt.toastUpdateSuccess || 'Application updated successfully'
+      );
     } catch (error) {
       console.error('Update app error:', error);
-      message.error(tt.toastError || 'Operation failed, please try again later');
+      message.error(
+        tt.toastError || 'Operation failed, please try again later'
+      );
     }
   };
 
@@ -318,16 +337,17 @@ export function DeveloperAppsPageComponent({
             throw new Error('Failed to rotate secret');
           }
 
-          const data = await readAppApiJson<OAuthClientSecretRotateResponse>(
-            response
-          );
+          const data =
+            await readAppApiJson<OAuthClientSecretRotateResponse>(response);
           showCredentialsModal({
             clientId,
             clientSecret: data.client_secret
           });
         } catch (error) {
           console.error('Rotate secret error:', error);
-          message.error(tt.toastError || 'Operation failed, please try again later');
+          message.error(
+            tt.toastError || 'Operation failed, please try again later'
+          );
           throw error;
         }
       }
@@ -361,7 +381,9 @@ export function DeveloperAppsPageComponent({
           message.success(tt.toastDeleteSuccess || 'Application deleted');
         } catch (error) {
           console.error('Delete app error:', error);
-          message.error(tt.toastError || 'Operation failed, please try again later');
+          message.error(
+            tt.toastError || 'Operation failed, please try again later'
+          );
           throw error;
         }
       }
@@ -400,7 +422,10 @@ export function DeveloperAppsPageComponent({
                   </h1>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  <Link href={ROUTE_OAUTH_PLAYGROUND} className={oauthSecondaryButtonClass}>
+                  <Link
+                    href={ROUTE_OAUTH_PLAYGROUND}
+                    className={oauthSecondaryButtonClass}
+                  >
                     <ExperimentOutlined />
                     {tt.playgroundLink || 'OAuth playground'}
                   </Link>
@@ -440,6 +465,7 @@ export function DeveloperAppsPageComponent({
                 <div className="space-y-4">
                   {apps.map((app) => (
                     <article
+                      data-testid="DeveloperAppsPageComponent"
                       key={app.client_id}
                       className={clsx(
                         oauthElevatedPanelClass,
@@ -468,9 +494,13 @@ export function DeveloperAppsPageComponent({
                             </code>
                             <button
                               type="button"
-                              onClick={() => void handleCopyClientId(app.client_id)}
+                              onClick={() =>
+                                void handleCopyClientId(app.client_id)
+                              }
                               className={oauthGhostActionClass}
-                              aria-label={tt.copyClientIdSuccess || 'Copy Client ID'}
+                              aria-label={
+                                tt.copyClientIdSuccess || 'Copy Client ID'
+                              }
                             >
                               <CopyOutlined />
                             </button>
@@ -589,7 +619,9 @@ export function DeveloperAppsPageComponent({
             setCreateValues((prev) => ({ ...prev, ...patch }));
             setCreateFieldErrors((prev) => {
               const next = { ...prev };
-              for (const key of Object.keys(patch) as (keyof OAuthClientFormValues)[]) {
+              for (const key of Object.keys(
+                patch
+              ) as (keyof OAuthClientFormValues)[]) {
                 delete next[key];
               }
               return next;
@@ -617,7 +649,9 @@ export function DeveloperAppsPageComponent({
                   <button
                     type="button"
                     className={oauthWarningButtonClass}
-                    onClick={() => void handleRotateSecret(editingApp.client_id)}
+                    onClick={() =>
+                      void handleRotateSecret(editingApp.client_id)
+                    }
                   >
                     <KeyOutlined />
                     {tt.rotateSecretButton || 'Rotate Secret'}
@@ -671,7 +705,9 @@ export function DeveloperAppsPageComponent({
             setEditValues((prev) => ({ ...prev, ...patch }));
             setEditFieldErrors((prev) => {
               const next = { ...prev };
-              for (const key of Object.keys(patch) as (keyof OAuthClientFormValues)[]) {
+              for (const key of Object.keys(
+                patch
+              ) as (keyof OAuthClientFormValues)[]) {
                 delete next[key];
               }
               return next;

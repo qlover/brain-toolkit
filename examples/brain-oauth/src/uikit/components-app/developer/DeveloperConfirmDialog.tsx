@@ -47,7 +47,9 @@ export function DeveloperConfirmDialog({
   if (!options) return null;
 
   const okClass =
-    options.variant === 'danger' ? oauthDangerButtonClass : oauthPrimaryButtonClass;
+    options.variant === 'danger'
+      ? oauthDangerButtonClass
+      : oauthPrimaryButtonClass;
 
   return (
     <DeveloperOverlayModal

@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
-import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
+import type { NextRequest } from 'next/server';
 
 /**
  * @swagger

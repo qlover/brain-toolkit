@@ -1,7 +1,7 @@
-import type { NextRequest } from 'next/server';
 import { REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH } from '@schemas/RequestLogSchema';
 import type { BootstrapServer } from '@server/BootstrapServer';
 import { RequestLogsRepository } from '@server/repositorys/RequestLogsRepository';
+import type { NextRequest } from 'next/server';
 
 export type LogRequestEventInput = {
   event_category: string;
@@ -17,7 +17,9 @@ export type LogRequestEventInput = {
 
 function clientIp(req: NextRequest): string | null {
   const forwarded = req.headers.get('x-forwarded-for');
-  return forwarded?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
+  return (
+    forwarded?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null
+  );
 }
 
 /**
@@ -31,21 +33,23 @@ export function logRequestEvent(
   const requestId = input.request_id?.trim() ? input.request_id : null;
   const httpPath = input.http_path ?? req.nextUrl.pathname;
 
-  void server.getIOC()(RequestLogsRepository).insertEvent({
-    event_category: input.event_category,
-    event_type: input.event_type,
-    success: input.success,
-    request_id: requestId,
-    record_type: REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH,
-    payload: {
-      http_method: input.http_method ?? req.method,
-      http_path: httpPath,
-      http_status: input.http_status ?? null,
-      duration_ms: input.duration_ms ?? null,
-      user_agent: req.headers.get('user-agent'),
-      ip_address: clientIp(req),
-      correlation_id: requestId,
-      ...input.payload
-    }
-  });
+  void server
+    .getIOC()(RequestLogsRepository)
+    .insertEvent({
+      event_category: input.event_category,
+      event_type: input.event_type,
+      success: input.success,
+      request_id: requestId,
+      record_type: REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH,
+      payload: {
+        http_method: input.http_method ?? req.method,
+        http_path: httpPath,
+        http_status: input.http_status ?? null,
+        duration_ms: input.duration_ms ?? null,
+        user_agent: req.headers.get('user-agent'),
+        ip_address: clientIp(req),
+        correlation_id: requestId,
+        ...input.payload
+      }
+    });
 }

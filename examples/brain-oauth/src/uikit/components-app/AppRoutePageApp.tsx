@@ -50,7 +50,10 @@ export function AppRoutePageApp({
         <>
           {showDeveloperButton && developerTitle && (
             <Suspense>
-              <DeveloperButton developerTitle={developerTitle} locale={locale} />
+              <DeveloperButton
+                developerTitle={developerTitle}
+                locale={locale}
+              />
             </Suspense>
           )}
           {showAdminButton && (

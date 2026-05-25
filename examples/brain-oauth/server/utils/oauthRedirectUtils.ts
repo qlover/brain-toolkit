@@ -21,8 +21,5 @@ export function parseScopeList(scope: string | undefined): string[] {
     return ['openid', 'profile', 'email'];
   }
 
-  return scope
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  return scope.trim().split(/\s+/).filter(Boolean);
 }

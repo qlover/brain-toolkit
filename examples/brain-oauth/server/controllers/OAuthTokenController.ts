@@ -1,6 +1,6 @@
 import { inject, injectable } from '@shared/container';
-import { OAuthTokenService } from '../services/OAuthTokenService';
 import type { OAuthTokenResponse } from '@schemas/oauth/OAuthClientSchema';
+import { OAuthTokenService } from '../services/OAuthTokenService';
 
 /**
  * HTTP entry for OAuth token exchange (`POST /oauth/token`).

@@ -171,8 +171,7 @@ export const PAGE_OAUTH_PLAYGROUND_DENY = 'page_oauth_playground:deny';
  * @localZh 换取 access_token
  * @localEn Exchange access_token
  */
-export const PAGE_OAUTH_PLAYGROUND_EXCHANGE =
-  'page_oauth_playground:exchange';
+export const PAGE_OAUTH_PLAYGROUND_EXCHANGE = 'page_oauth_playground:exchange';
 
 /**
  * @description Fetch userinfo button
@@ -187,24 +186,21 @@ export const PAGE_OAUTH_PLAYGROUND_FETCH_USERINFO =
  * @localZh 模拟回调结果（未外跳）
  * @localEn Simulated callback (no redirect)
  */
-export const PAGE_OAUTH_PLAYGROUND_CALLBACK =
-  'page_oauth_playground:callback';
+export const PAGE_OAUTH_PLAYGROUND_CALLBACK = 'page_oauth_playground:callback';
 
 /**
  * @description Response label
  * @localZh 响应
  * @localEn Response
  */
-export const PAGE_OAUTH_PLAYGROUND_RESPONSE =
-  'page_oauth_playground:response';
+export const PAGE_OAUTH_PLAYGROUND_RESPONSE = 'page_oauth_playground:response';
 
 /**
  * @description Validation ok
  * @localZh 参数有效，可进行授权。
  * @localEn Parameters are valid. You can authorize.
  */
-export const PAGE_OAUTH_PLAYGROUND_VALID_OK =
-  'page_oauth_playground:valid__ok';
+export const PAGE_OAUTH_PLAYGROUND_VALID_OK = 'page_oauth_playground:valid__ok';
 
 /**
  * @description Copy
@@ -226,8 +222,7 @@ export const PAGE_OAUTH_PLAYGROUND_RANDOM_STATE =
  * @localZh OAuth 测试台
  * @localEn OAuth playground
  */
-export const PAGE_OAUTH_PLAYGROUND_NAV_LINK =
-  'page_oauth_playground:nav__link';
+export const PAGE_OAUTH_PLAYGROUND_NAV_LINK = 'page_oauth_playground:nav__link';
 
 /**
  * @description Footer note about simulated redirect

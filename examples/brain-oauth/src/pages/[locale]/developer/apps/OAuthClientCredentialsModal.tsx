@@ -1,8 +1,11 @@
 'use client';
 
-import { CopyableCredential } from './CopyableCredential';
 import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
-import { oauthLabelClass, oauthPrimaryButtonClass } from '@/uikit/styles/oauthUiStyles';
+import {
+  oauthLabelClass,
+  oauthPrimaryButtonClass
+} from '@/uikit/styles/oauthUiStyles';
+import { CopyableCredential } from './CopyableCredential';
 
 export interface OAuthCredentials {
   clientId: string;
@@ -43,7 +46,11 @@ export function OAuthClientCredentialsModal(props: {
       closeOnBackdrop={false}
       footer={
         <div className="flex justify-end">
-          <button type="button" className={oauthPrimaryButtonClass} onClick={onClose}>
+          <button
+            type="button"
+            className={oauthPrimaryButtonClass}
+            onClick={onClose}
+          >
             {confirmLabel}
           </button>
         </div>

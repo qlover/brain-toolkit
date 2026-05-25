@@ -8,10 +8,13 @@ import { OAuthUserInfoService } from '../services/OAuthUserInfoService';
 @injectable()
 export class OAuthUserInfoController {
   constructor(
-    @inject(OAuthUserInfoService) protected userInfoService: OAuthUserInfoService
+    @inject(OAuthUserInfoService)
+    protected userInfoService: OAuthUserInfoService
   ) {}
 
-  public async getUserInfo(accessToken: string): Promise<OAuthUserInfoResponse> {
+  public async getUserInfo(
+    accessToken: string
+  ): Promise<OAuthUserInfoResponse> {
     return await this.userInfoService.getUserInfo(accessToken);
   }
 }

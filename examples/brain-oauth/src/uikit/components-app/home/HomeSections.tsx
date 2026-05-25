@@ -11,10 +11,7 @@ import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
 import { API_REFERENCE } from '@config/apiRoutes';
 import type { HomeI18nInterface } from '@config/i18n-mapping/HomeI18n';
-import {
-  ROUTE_DASHBOARD_APPS,
-  ROUTE_REGISTER
-} from '@config/route';
+import { ROUTE_DASHBOARD_APPS, ROUTE_REGISTER } from '@config/route';
 
 const primaryButtonClassName =
   'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-md';
@@ -33,10 +30,7 @@ export { HomeHeaderNav } from './HomeHeaderNav';
 
 export function HomeHero({ tt }: HomeSectionProps) {
   return (
-    <section
-      data-testid="HomeHero"
-      className="py-10 sm:py-16 md:py-24"
-    >
+    <section data-testid="HomeHero" className="py-10 sm:py-16 md:py-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="inline-flex max-w-full items-center gap-2 bg-brand/10 text-brand px-3 py-1 rounded-full text-xs sm:text-sm mb-4 sm:mb-6">
           <CheckCircleOutlined className="shrink-0" />
@@ -89,7 +83,7 @@ export function HomeFeatures({ tt }: HomeSectionProps) {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           {features.map((feature) => (
-            <div key={feature.label}>
+            <div data-testid="HomeFeatures" key={feature.label}>
               <div className={featureIconWrapClassName}>{feature.icon}</div>
               <p className="font-medium text-primary-text">{feature.label}</p>
             </div>
@@ -102,10 +96,7 @@ export function HomeFeatures({ tt }: HomeSectionProps) {
 
 export function HomeApiSnippet() {
   return (
-    <section
-      data-testid="HomeApiSnippet"
-      className="bg-elevated py-8 sm:py-12"
-    >
+    <section data-testid="HomeApiSnippet" className="bg-elevated py-8 sm:py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-xl bg-primary shadow-sm border border-primary-border p-5">
           <p className="text-sm font-mono text-secondary-text break-all">
@@ -113,8 +104,8 @@ export function HomeApiSnippet() {
             /oauth/authorize?client_id=your_app&amp;redirect_uri=...
           </p>
           <p className="text-sm font-mono text-secondary-text mt-2 break-all">
-            <span className="text-brand">POST</span>{' '}
-            /oauth/token -d &quot;grant_type=authorization_code&amp;code=...&quot;
+            <span className="text-brand">POST</span> /oauth/token -d
+            &quot;grant_type=authorization_code&amp;code=...&quot;
           </p>
         </div>
       </div>
