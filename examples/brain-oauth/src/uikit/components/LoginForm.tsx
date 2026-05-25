@@ -9,7 +9,7 @@ import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import { LoginValidator } from '@shared/validators/LoginValidator';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_DASHBOARD_APPS, ROUTE_REGISTER } from '@config/route';
+import { ROUTE_DEVELOPER_APPS, ROUTE_REGISTER } from '@config/route';
 import type { LoginSchema } from '@schemas/LoginSchema';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 
@@ -73,7 +73,7 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
       const redirectTarget =
         searchParams?.get('redirect') ??
         searchParams?.get('returnUrl') ??
-        ROUTE_DASHBOARD_APPS;
+        ROUTE_DEVELOPER_APPS;
 
       if (redirectTarget.startsWith('http')) {
         window.location.href = redirectTarget;
