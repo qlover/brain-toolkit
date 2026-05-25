@@ -16,7 +16,9 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "fix": "npm run lint:fix && npm run format",
-    "type-check": "tsc --build --force"
+    "type-check": "tsc --build --force",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
     "@brain-toolkit/brain-user": "workspace:*",
