@@ -10,6 +10,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': resolve(__dirname, 'src'),
       '@server': resolve(__dirname, 'server'),
       '@schemas': resolve(__dirname, 'shared/schemas'),
       '@config': resolve(__dirname, 'shared/config'),

@@ -1,11 +1,11 @@
 import { inject, injectable } from '@shared/container';
 import type {
-  OAuthClientCreateResponseSchema,
-  OAuthClientCreateSchema,
-  OAuthClientDetailSchema,
-  OAuthClientListItemSchema,
-  OAuthClientSecretRotateResponseSchema,
-  OAuthClientUpdateSchema
+  OAuthClientCreate,
+  OAuthClientCreateResponse,
+  OAuthClientDetail,
+  OAuthClientListItem,
+  OAuthClientSecretRotateResponse,
+  OAuthClientUpdate
 } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { OAuthClientsService } from '../services/OAuthClientsService';
 import { ServerAuth } from '../services/ServerAuth';
@@ -26,7 +26,7 @@ export class OAuthClientsController {
   /**
    * List all OAuth clients owned by the current user
    */
-  public async list(): Promise<OAuthClientListItemSchema[]> {
+  public async list(): Promise<OAuthClientListItem[]> {
     const ownerId = await this.requireOwnerUserId();
     return this.clientsService.listForOwner(ownerId);
   }
@@ -35,8 +35,8 @@ export class OAuthClientsController {
    * Create a new OAuth client
    */
   public async create(
-    body: OAuthClientCreateSchema
-  ): Promise<OAuthClientCreateResponseSchema> {
+    body: OAuthClientCreate
+  ): Promise<OAuthClientCreateResponse> {
     const ownerId = await this.requireOwnerUserId();
     return this.clientsService.create(ownerId, body);
   }
@@ -44,7 +44,7 @@ export class OAuthClientsController {
   /**
    * Get detailed information about a specific OAuth client
    */
-  public async get(clientId: string): Promise<OAuthClientDetailSchema> {
+  public async get(clientId: string): Promise<OAuthClientDetail> {
     const ownerId = await this.requireOwnerUserId();
     return this.clientsService.getByClientId(ownerId, clientId);
   }
@@ -54,8 +54,8 @@ export class OAuthClientsController {
    */
   public async update(
     clientId: string,
-    body: OAuthClientUpdateSchema
-  ): Promise<OAuthClientDetailSchema> {
+    body: OAuthClientUpdate
+  ): Promise<OAuthClientDetail> {
     const ownerId = await this.requireOwnerUserId();
     return this.clientsService.update(ownerId, clientId, body);
   }
@@ -65,7 +65,7 @@ export class OAuthClientsController {
    */
   public async rotateSecret(
     clientId: string
-  ): Promise<OAuthClientSecretRotateResponseSchema> {
+  ): Promise<OAuthClientSecretRotateResponse> {
     const ownerId = await this.requireOwnerUserId();
     return this.clientsService.rotateSecret(ownerId, clientId);
   }

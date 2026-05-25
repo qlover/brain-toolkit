@@ -2,6 +2,11 @@ import { randomBytes } from 'crypto';
 import { ExecutorError } from '@qlover/fe-corekit';
 import { inject, injectable } from '@shared/container';
 import { OAuthConsentBodyValidator } from '@shared/validators/OAuthAuthorizeValidator';
+import {
+  API_OAUTH_ACCESS_DENIED,
+  API_OAUTH_INVALID_REQUEST
+} from '@config/i18n-identifier/api';
+import { oauthI18nIdToRedirectError } from '@config/oauthErrors';
 import type { OAuthConsentBody } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { BrainSessionService } from './BrainSessionService';
 import { OAuthAuthorizeService } from './OAuthAuthorizeService';
@@ -45,7 +50,7 @@ export class OAuthConsentService {
       body = await this.consentValidator.getThrow(requestBody);
     } catch {
       throw new ExecutorError(
-        'invalid_request',
+        API_OAUTH_INVALID_REQUEST,
         'Invalid consent request body'
       );
     }
@@ -53,7 +58,7 @@ export class OAuthConsentService {
     const session = await this.brainSession.getSession();
     if (!session) {
       throw new ExecutorError(
-        'access_denied',
+        API_OAUTH_ACCESS_DENIED,
         'User session expired. Please sign in again.'
       );
     }
@@ -78,7 +83,7 @@ export class OAuthConsentService {
     if (body.action === 'deny') {
       return {
         redirectUrl: buildOAuthRedirectUrl(data.redirectUri, {
-          error: 'access_denied',
+          error: oauthI18nIdToRedirectError(API_OAUTH_ACCESS_DENIED),
           error_description: 'The resource owner denied the request',
           state: data.state
         })

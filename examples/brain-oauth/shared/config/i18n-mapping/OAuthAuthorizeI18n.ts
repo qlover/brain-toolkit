@@ -1,3 +1,9 @@
+import {
+  API_OAUTH_INVALID_REQUEST,
+  API_OAUTH_INVALID_SCOPE,
+  API_OAUTH_UNAUTHORIZED_CLIENT,
+  API_OAUTH_UNSUPPORTED_RESPONSE_TYPE
+} from '../i18n-identifier/api';
 import { COMMON_ADMIN_TITLE } from '../i18n-identifier/common/common';
 import * as i18nKeys from '../i18n-identifier/pages/page.oauth-authorize';
 
@@ -45,14 +51,14 @@ export function resolveAuthorizeErrorMessage(
   fallback: string
 ): string {
   switch (errorKey) {
-    case 'unauthorized_client':
+    case API_OAUTH_UNAUTHORIZED_CLIENT:
       return fallback.includes('redirect_uri')
         ? tt.errorRedirect
         : tt.errorClient;
-    case 'invalid_scope':
+    case API_OAUTH_INVALID_SCOPE:
       return tt.errorScope;
-    case 'invalid_request':
-    case 'unsupported_response_type':
+    case API_OAUTH_INVALID_REQUEST:
+    case API_OAUTH_UNSUPPORTED_RESPONSE_TYPE:
       return tt.errorInvalid;
     default:
       return fallback || tt.errorInvalid;

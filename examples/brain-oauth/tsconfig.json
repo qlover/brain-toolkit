@@ -36,8 +36,8 @@
     "server/**/*.ts",
     "shared/**/*.ts",
     "tools/**/*.ts",
-    ".next/types/**/*.ts",
+    "__tests__/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next/types"]
 }

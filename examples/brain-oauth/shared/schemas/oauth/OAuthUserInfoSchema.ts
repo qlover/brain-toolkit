@@ -10,7 +10,8 @@ export const OAuthUserInfoResponseSchema = z.object({
 export type OAuthUserInfoResponse = z.infer<typeof OAuthUserInfoResponseSchema>;
 
 export const OAuthUserInfoErrorResponseSchema = z.object({
-  error: z.literal('invalid_token')
+  error: z.literal('invalid_token'),
+  error_id: z.string().optional()
 });
 
 export type OAuthUserInfoErrorResponse = z.infer<

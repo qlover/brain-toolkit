@@ -2,6 +2,7 @@ import { ExecutorError } from '@qlover/fe-corekit';
 import { inject, injectable } from '@shared/container';
 import { LoginValidator } from '@shared/validators/LoginValidator';
 import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
+import { API_OAUTH_BRAIN_AUTH_FAILED } from '@config/i18n-identifier/api';
 import type { LoginSchema } from '@schemas/LoginSchema';
 import { BrainAuthService } from '../services/BrainAuthService';
 import type {
@@ -36,7 +37,7 @@ export class BrainAuthController {
       });
     } catch (err) {
       throw new ExecutorError(
-        'brain_auth_failed',
+        API_OAUTH_BRAIN_AUTH_FAILED,
         err instanceof Error ? err.message : 'Brain login failed'
       );
     }

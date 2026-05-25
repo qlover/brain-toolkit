@@ -1,3 +1,7 @@
+import {
+  API_OAUTH_INVALID_REQUEST,
+  API_OAUTH_SERVER_ERROR
+} from '@config/i18n-identifier/api';
 import { BootstrapServer } from '@server/BootstrapServer';
 import { OAuthTokenController } from '@server/controllers/OAuthTokenController';
 import { logRequestEvent } from '@server/utils/logRequestEvent';
@@ -50,7 +54,7 @@ export async function POST(req: NextRequest) {
       started,
       oauthTokenErrorResponse(
         new OAuthTokenError(
-          'invalid_request',
+          API_OAUTH_INVALID_REQUEST,
           400,
           'Unable to parse request body'
         )
@@ -65,7 +69,11 @@ export async function POST(req: NextRequest) {
       req,
       started,
       oauthTokenErrorResponse(
-        new OAuthTokenError('invalid_request', 400, 'grant_type is required')
+        new OAuthTokenError(
+          API_OAUTH_INVALID_REQUEST,
+          400,
+          'grant_type is required'
+        )
       ),
       false,
       { grant_type: null }
@@ -107,7 +115,11 @@ export async function POST(req: NextRequest) {
       req,
       started,
       oauthTokenErrorResponse(
-        new OAuthTokenError('server_error', 500, 'Internal server error')
+        new OAuthTokenError(
+          API_OAUTH_SERVER_ERROR,
+          500,
+          'Internal server error'
+        )
       ),
       false,
       { grant_type: grantType }

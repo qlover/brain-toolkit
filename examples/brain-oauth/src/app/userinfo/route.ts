@@ -18,9 +18,7 @@ export async function GET(req: NextRequest) {
   );
 
   if (!accessToken) {
-    return oauthUserInfoErrorResponse(
-      new OAuthUserInfoError('invalid_token', 401)
-    );
+    return oauthUserInfoErrorResponse(new OAuthUserInfoError());
   }
 
   const IOC = new BootstrapServer('/userinfo').getIOC();
@@ -37,8 +35,6 @@ export async function GET(req: NextRequest) {
       return oauthUserInfoErrorResponse(err);
     }
 
-    return oauthUserInfoErrorResponse(
-      new OAuthUserInfoError('invalid_token', 401)
-    );
+    return oauthUserInfoErrorResponse(new OAuthUserInfoError());
   }
 }

@@ -1,5 +1,11 @@
 import { randomBytes } from 'crypto';
 import { inject, injectable } from '@shared/container';
+import {
+  API_OAUTH_INVALID_CLIENT,
+  API_OAUTH_INVALID_GRANT,
+  API_OAUTH_INVALID_REQUEST,
+  API_OAUTH_UNSUPPORTED_GRANT_TYPE
+} from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type { OAuthTokenResponse } from '@schemas/oauth/OAuthClientSchema';
 import {
@@ -58,7 +64,7 @@ export class OAuthTokenService {
       request = OAuthTokenRequestSchema.parse(rawFields);
     } catch {
       throw new OAuthTokenError(
-        'invalid_request',
+        API_OAUTH_INVALID_REQUEST,
         400,
         'Malformed token request'
       );
@@ -71,11 +77,11 @@ export class OAuthTokenService {
         request.client_secret
       );
     } catch {
-      throw new OAuthTokenError('invalid_client', 401);
+      throw new OAuthTokenError(API_OAUTH_INVALID_CLIENT, 401);
     }
 
     if (!client.grant_types.includes(request.grant_type)) {
-      throw new OAuthTokenError('unsupported_grant_type', 400);
+      throw new OAuthTokenError(API_OAUTH_UNSUPPORTED_GRANT_TYPE, 400);
     }
 
     if (request.grant_type === 'authorization_code') {
@@ -92,18 +98,26 @@ export class OAuthTokenService {
     const authCode = await this.authCodesRepo.consumeCode(request.code);
     if (!authCode) {
       throw new OAuthTokenError(
-        'invalid_grant',
+        API_OAUTH_INVALID_GRANT,
         400,
         'Authorization code is invalid, expired, or already used'
       );
     }
 
     if (authCode.client_id !== verifiedClientId) {
-      throw new OAuthTokenError('invalid_grant', 400, 'client_id mismatch');
+      throw new OAuthTokenError(
+        API_OAUTH_INVALID_GRANT,
+        400,
+        'client_id mismatch'
+      );
     }
 
     if (authCode.redirect_uri !== request.redirect_uri) {
-      throw new OAuthTokenError('invalid_grant', 400, 'redirect_uri mismatch');
+      throw new OAuthTokenError(
+        API_OAUTH_INVALID_GRANT,
+        400,
+        'redirect_uri mismatch'
+      );
     }
 
     const brainTokens = await this.fetchBrainAccessToken(authCode.user_id);
@@ -135,7 +149,7 @@ export class OAuthTokenService {
       new Date(stored.expires_at) <= new Date()
     ) {
       throw new OAuthTokenError(
-        'invalid_grant',
+        API_OAUTH_INVALID_GRANT,
         400,
         'Refresh token is invalid'
       );
@@ -166,7 +180,7 @@ export class OAuthTokenService {
 
     if (!sessionToken) {
       throw new OAuthTokenError(
-        'invalid_grant',
+        API_OAUTH_INVALID_GRANT,
         400,
         'User credentials expired. Re-authorization required.'
       );
@@ -191,7 +205,7 @@ export class OAuthTokenService {
       };
     } catch {
       throw new OAuthTokenError(
-        'invalid_grant',
+        API_OAUTH_INVALID_GRANT,
         400,
         'Failed to obtain access token from Brain'
       );

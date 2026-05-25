@@ -30,6 +30,7 @@ export type OAuthTokenRequest = z.infer<typeof OAuthTokenRequestSchema>;
 
 export const OAuthTokenErrorResponseSchema = z.object({
   error: z.string(),
+  error_id: z.string().optional(),
   error_description: z.string().optional()
 });
 

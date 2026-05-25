@@ -1,5 +1,11 @@
 import { inject, injectable } from '@shared/container';
 import { OAuthAuthorizeQueryValidator } from '@shared/validators/OAuthAuthorizeValidator';
+import {
+  API_OAUTH_INVALID_REQUEST,
+  API_OAUTH_INVALID_SCOPE,
+  API_OAUTH_UNAUTHORIZED_CLIENT,
+  API_OAUTH_UNSUPPORTED_RESPONSE_TYPE
+} from '@config/i18n-identifier/api';
 import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
 import { parseScopeList } from '../utils/oauthRedirectUtils';
@@ -53,7 +59,7 @@ export class OAuthAuthorizeService {
       return {
         ok: false,
         error: {
-          errorKey: 'invalid_request',
+          errorKey: API_OAUTH_INVALID_REQUEST,
           message: 'Missing or invalid authorization request parameters.'
         }
       };
@@ -63,7 +69,7 @@ export class OAuthAuthorizeService {
       return {
         ok: false,
         error: {
-          errorKey: 'unsupported_response_type',
+          errorKey: API_OAUTH_UNSUPPORTED_RESPONSE_TYPE,
           message: 'Only response_type=code is supported.'
         }
       };
@@ -74,7 +80,7 @@ export class OAuthAuthorizeService {
       return {
         ok: false,
         error: {
-          errorKey: 'unauthorized_client',
+          errorKey: API_OAUTH_UNAUTHORIZED_CLIENT,
           message: 'Unknown client_id.'
         }
       };
@@ -84,7 +90,7 @@ export class OAuthAuthorizeService {
       return {
         ok: false,
         error: {
-          errorKey: 'unauthorized_client',
+          errorKey: API_OAUTH_UNAUTHORIZED_CLIENT,
           message: 'redirect_uri is not registered for this client.'
         }
       };
@@ -98,7 +104,7 @@ export class OAuthAuthorizeService {
       return {
         ok: false,
         error: {
-          errorKey: 'invalid_scope',
+          errorKey: API_OAUTH_INVALID_SCOPE,
           message: `Scope "${invalidScope}" is not allowed for this client.`
         }
       };
