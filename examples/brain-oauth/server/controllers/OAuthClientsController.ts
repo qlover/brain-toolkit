@@ -79,16 +79,21 @@ export class OAuthClientsController {
   }
 
   /**
-   * Resolves Brain owner id from session
+   * Resolves Brain owner id from the authenticated session user.
    */
   protected async requireOwnerUserId(): Promise<number> {
     await this.serverAuth.throwIfNotAuth();
-    const session = await this.serverAuth.getSession();
-    
-    if (!session?.userId) {
+    const user = await this.serverAuth.getUser();
+
+    if (!user?.id) {
       throw new Error('User not authenticated');
     }
 
-    return session.userId;
+    const ownerId = Number(user.id);
+    if (!Number.isFinite(ownerId)) {
+      throw new Error('User not authenticated');
+    }
+
+    return ownerId;
   }
 }

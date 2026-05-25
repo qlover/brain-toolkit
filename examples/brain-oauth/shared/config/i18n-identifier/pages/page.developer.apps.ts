@@ -214,3 +214,64 @@ export const DEVELOPER_APPS_TOAST_ERROR = 'developer_apps:toast_error';
  * @localEn No applications yet. Click "Create New App" to get started.
  */
 export const DEVELOPER_APPS_EMPTY_STATE = 'developer_apps:empty_state';
+
+/**
+ * @description Developer console subtitle in page header
+ * @localZh 开发者控制台
+ * @localEn Developer Console
+ */
+export const DEVELOPER_APPS_CONSOLE_SUBTITLE = 'developer_apps:console_subtitle';
+
+/**
+ * @description Credentials modal title after create or rotate secret
+ * @localZh 新应用凭据
+ * @localEn New Application Credentials
+ */
+export const DEVELOPER_APPS_CREDENTIALS_MODAL_TITLE =
+  'developer_apps:credentials_modal_title';
+
+/**
+ * @description Client secret label in credentials modal
+ * @localZh Client Secret
+ * @localEn Client Secret
+ */
+export const DEVELOPER_APPS_CLIENT_SECRET_LABEL =
+  'developer_apps:client_secret_label';
+
+/**
+ * @description One-time secret warning in credentials modal
+ * @localZh 此密钥仅显示一次，请立即保存到安全位置。关闭后无法再次查看！
+ * @localEn This secret is shown only once. Save it securely now — you cannot view it again after closing.
+ */
+export const DEVELOPER_APPS_SECRET_WARNING = 'developer_apps:secret_warning';
+
+/**
+ * @description Confirm button in credentials modal
+ * @localZh 我已保存，关闭
+ * @localEn I have saved it, close
+ */
+export const DEVELOPER_APPS_CREDENTIALS_CONFIRM =
+  'developer_apps:credentials_confirm';
+
+/**
+ * @description Toast after copying client id
+ * @localZh Client ID 已复制
+ * @localEn Client ID copied
+ */
+export const DEVELOPER_APPS_COPY_CLIENT_ID_SUCCESS =
+  'developer_apps:copy_client_id_success';
+
+/**
+ * @description Toast after copying client secret
+ * @localZh Client Secret 已复制
+ * @localEn Client Secret copied
+ */
+export const DEVELOPER_APPS_COPY_SECRET_SUCCESS =
+  'developer_apps:copy_secret_success';
+
+/**
+ * @description Loading apps list
+ * @localZh 加载应用中…
+ * @localEn Loading applications…
+ */
+export const DEVELOPER_APPS_LOADING = 'developer_apps:loading';

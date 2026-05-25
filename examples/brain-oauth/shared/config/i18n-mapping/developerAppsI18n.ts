@@ -1,8 +1,11 @@
 import * as developerAppsKeys from '../i18n-identifier/pages/page.developer.apps';
+import { PAGE_HOME_TITLE } from '../i18n-identifier/pages/page.home';
 import * as commonKeys from '../i18n-identifier/common/common';
 
 export const developerAppsI18n = Object.freeze({
   // basic meta properties
+  /** App brand in header (from page_home; requires page_home in page messages). */
+  appBrandTitle: PAGE_HOME_TITLE,
   title: developerAppsKeys.DEVELOPER_APPS_TITLE,
   description: developerAppsKeys.DEVELOPER_APPS_DESCRIPTION,
   content: developerAppsKeys.DEVELOPER_APPS_DESCRIPTION,
@@ -50,5 +53,14 @@ export const developerAppsI18n = Object.freeze({
   toastError: developerAppsKeys.DEVELOPER_APPS_TOAST_ERROR,
 
   // empty state
-  emptyState: developerAppsKeys.DEVELOPER_APPS_EMPTY_STATE
+  emptyState: developerAppsKeys.DEVELOPER_APPS_EMPTY_STATE,
+
+  consoleSubtitle: developerAppsKeys.DEVELOPER_APPS_CONSOLE_SUBTITLE,
+  credentialsModalTitle: developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_MODAL_TITLE,
+  clientSecretLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_SECRET_LABEL,
+  secretWarning: developerAppsKeys.DEVELOPER_APPS_SECRET_WARNING,
+  credentialsConfirm: developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_CONFIRM,
+  copyClientIdSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_CLIENT_ID_SUCCESS,
+  copySecretSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_SECRET_SUCCESS,
+  loading: developerAppsKeys.DEVELOPER_APPS_LOADING
 });

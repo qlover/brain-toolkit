@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 import { ClientSeo } from '@/uikit/components/ClientSeo';
 import { UserAuthFailed } from '@/uikit/components/UserAuthFailed';
-import { PagesRoutePage } from '@/uikit/components-pages/PagesRoutePage';
+import { AppRoutePagePages } from '@/uikit/components-app/AppRoutePagePages';
 import { WithUserAuth } from '@/uikit/components-pages/WithUserAuth';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { i18nConfig } from '@config/i18n';
@@ -25,7 +25,7 @@ interface DeveloperAppsProps {
   initialApps: OAuthClientListItem[];
 }
 
-const namespace = 'developer_apps';
+const pageNamespaces = ['developer_apps', 'page_home'] as const;
 
 export default function DeveloperApps({ initialApps }: DeveloperAppsProps) {
   const i18nInterface = useMemo(() => {
@@ -38,14 +38,19 @@ export default function DeveloperApps({ initialApps }: DeveloperAppsProps) {
 
   return (
     <WithUserAuth failedElement={<UserAuthFailed />}>
-      <PagesRoutePage
-        tt={{ title: seoMetadata.title, adminTitle: seoMetadata.adminTitle }}
+      <AppRoutePagePages
+        tt={{
+          title: seoMetadata.appBrandTitle ?? seoMetadata.title,
+          headerSubtitle: seoMetadata.consoleSubtitle,
+          adminTitle: seoMetadata.adminTitle
+        }}
         showAdminButton={false}
-        showDeveloperButton
+        showAuthButton
+        authButtonShowLogoutLabel
       >
         <ClientSeo i18nInterface={seoMetadata} />
         <DeveloperAppsPageComponent initialApps={initialApps} />
-      </PagesRoutePage>
+      </AppRoutePagePages>
     </WithUserAuth>
   );
 }
@@ -54,7 +59,7 @@ export async function getStaticProps({
   params
 }: GetStaticPropsContext<PagesRouteParamsType>) {
   const pageParams = new PagesRouteParams(params);
-  const messages = await pageParams.getI18nMessages(namespace);
+  const messages = await pageParams.getI18nMessages([...pageNamespaces]);
 
   // Fetch initial apps list (server-side)
   // For now, we'll fetch on client side in the component

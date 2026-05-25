@@ -1,41 +1,189 @@
 'use client';
 
-import { EditOutlined, DeleteOutlined, KeyOutlined, PlusOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import {
+  CopyOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  KeyOutlined,
+  PlusOutlined
+} from '@ant-design/icons';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
-import type { OAuthClientListItem, OAuthClientCreate, OAuthClientUpdate } from '@schemas/oauth/OAuthAuthorizeSchema';
-import { message, Modal, Form, Input, Button } from 'antd';
-const { TextArea } = Input;
+import type {
+  OAuthClientListItem,
+  OAuthClientCreate,
+  OAuthClientCreateResponse,
+  OAuthClientDetail,
+  OAuthClientSecretRotateResponse,
+  OAuthClientUpdate
+} from '@schemas/oauth/OAuthAuthorizeSchema';
+import { readAppApiJson } from './readAppApiJson';
+import { message, Modal, Button, Spin } from 'antd';
+import { clsx } from 'clsx';
+import {
+  OAuthClientCredentialsModal,
+  type OAuthCredentials
+} from './OAuthClientCredentialsModal';
+import {
+  OAuthClientAppForm,
+  emptyOAuthClientFormValues,
+  type OAuthClientFormValues
+} from './OAuthClientAppForm';
+
+const modalCancelButtonClass =
+  'inline-flex items-center justify-center px-4 py-2 rounded-lg border border-primary-border bg-primary text-primary-text font-medium hover:bg-elevated transition';
+const modalSubmitButtonClass =
+  'inline-flex items-center justify-center px-4 py-2 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-sm disabled:opacity-60';
+
+function parseRedirectUris(raw: string): string[] {
+  return raw
+    .split('\n')
+    .map((uri) => uri.trim())
+    .filter((uri) => uri.length > 0);
+}
 
 interface DeveloperAppsPageProps {
   initialApps: OAuthClientListItem[];
 }
 
-export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPageProps) {
+async function copyText(text: string) {
+  await navigator.clipboard.writeText(text);
+}
+
+export function DeveloperAppsPageComponent({
+  initialApps
+}: DeveloperAppsPageProps) {
   const tt = useI18nMapping(developerAppsI18n);
   const [apps, setApps] = useState<OAuthClientListItem[]>(initialApps);
+  const [loading, setLoading] = useState(true);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingApp, setEditingApp] = useState<OAuthClientListItem | null>(null);
-  const [form] = Form.useForm();
-  const [createForm] = Form.useForm();
+  const [credentials, setCredentials] = useState<OAuthCredentials | null>(null);
+  const [credentialsModalVisible, setCredentialsModalVisible] = useState(false);
+  const [createValues, setCreateValues] = useState<OAuthClientFormValues>(
+    emptyOAuthClientFormValues
+  );
+  const [createFieldErrors, setCreateFieldErrors] = useState<
+    Partial<Record<keyof OAuthClientFormValues, string>>
+  >({});
+  const [editValues, setEditValues] = useState<OAuthClientFormValues>(
+    emptyOAuthClientFormValues
+  );
+  const [editFieldErrors, setEditFieldErrors] = useState<
+    Partial<Record<keyof OAuthClientFormValues, string>>
+  >({});
 
-  const handleCreateApp = async (values: any) => {
+  const formLabels = useMemo(
+    () => ({
+      appNameLabel: tt.appNameLabel || 'Application Name',
+      appNameRequired: tt.appNameRequired || 'Please enter application name',
+      redirectUrisLabel: tt.redirectUrisLabel || 'Redirect URIs (one per line)',
+      redirectUrisPlaceholder:
+        tt.redirectUrisPlaceholder ||
+        'https://your-app.com/callback\nhttps://localhost:3000/callback',
+      redirectUrisHint:
+        tt.redirectUrisHint ||
+        'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).',
+      clientUriLabel:
+        tt.clientUriLabel || 'Application Homepage URL (Optional)'
+    }),
+    [tt]
+  );
+
+  const resetCreateForm = () => {
+    setCreateValues(emptyOAuthClientFormValues);
+    setCreateFieldErrors({});
+  };
+
+  const resetEditForm = () => {
+    setEditValues(emptyOAuthClientFormValues);
+    setEditFieldErrors({});
+  };
+
+  const validateFormValues = (
+    values: OAuthClientFormValues
+  ): Partial<Record<keyof OAuthClientFormValues, string>> | null => {
+    const errors: Partial<Record<keyof OAuthClientFormValues, string>> = {};
+    if (!values.client_name.trim()) {
+      errors.client_name = formLabels.appNameRequired;
+    }
+    if (parseRedirectUris(values.redirect_uris).length === 0) {
+      errors.redirect_uris = formLabels.appNameRequired;
+    }
+    return Object.keys(errors).length > 0 ? errors : null;
+  };
+
+  const loadApps = useCallback(async () => {
+    setLoading(true);
     try {
-      const redirectUris = values.redirect_uris
-        .split('\n')
-        .map((uri: string) => uri.trim())
-        .filter((uri: string) => uri.length > 0);
-
-      if (redirectUris.length === 0) {
-        message.error(tt.toastError || 'Please enter at least one redirect URI');
-        return;
+      const response = await fetch('/api/clients');
+      if (!response.ok) {
+        throw new Error('Failed to load applications');
       }
+      const data = await readAppApiJson<OAuthClientListItem[]>(response);
+      setApps(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Load apps error:', error);
+      message.error(tt.toastError || 'Operation failed, please try again later');
+    } finally {
+      setLoading(false);
+    }
+  }, [tt.toastError]);
 
+  useEffect(() => {
+    void loadApps();
+  }, [loadApps]);
+
+  const showCredentialsModal = (next: OAuthCredentials) => {
+    setCredentials(next);
+    setCredentialsModalVisible(true);
+  };
+
+  const handleCopyClientId = async (clientId: string) => {
+    try {
+      await copyText(clientId);
+      message.success(tt.copyClientIdSuccess || 'Client ID copied');
+    } catch {
+      message.error(tt.toastError || 'Operation failed, please try again later');
+    }
+  };
+
+  const handleCopyFromCredentialsModal = async (field: 'id' | 'secret') => {
+    if (!credentials) return;
+    try {
+      if (field === 'id') {
+        await copyText(credentials.clientId);
+        message.success(tt.copyClientIdSuccess || 'Client ID copied');
+      } else {
+        await copyText(credentials.clientSecret);
+        message.success(tt.copySecretSuccess || 'Client Secret copied');
+      }
+    } catch {
+      message.error(tt.toastError || 'Operation failed, please try again later');
+    }
+  };
+
+  const closeCredentialsModal = () => {
+    setCredentialsModalVisible(false);
+    setCredentials(null);
+  };
+
+  const handleCreateApp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const validationErrors = validateFormValues(createValues);
+    if (validationErrors) {
+      setCreateFieldErrors(validationErrors);
+      return;
+    }
+    setCreateFieldErrors({});
+
+    try {
+      const redirectUris = parseRedirectUris(createValues.redirect_uris);
       const payload: OAuthClientCreate = {
-        client_name: values.client_name,
-        client_uri: values.client_uri || undefined,
+        client_name: createValues.client_name.trim(),
+        client_uri: createValues.client_uri.trim() || undefined,
         redirect_uris: redirectUris
       };
 
@@ -49,9 +197,8 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
         throw new Error('Failed to create application');
       }
 
-      const data = await response.json();
-      
-      // Add to local state
+      const data = await readAppApiJson<OAuthClientCreateResponse>(response);
+
       const newApp: OAuthClientListItem = {
         client_id: data.client_id,
         client_name: data.client_name,
@@ -60,38 +207,37 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
         created_at: data.created_at,
         updated_at: data.created_at
       };
-      
-      setApps([...apps, newApp]);
+
+      setApps((prev) => [...prev, newApp]);
       setCreateModalVisible(false);
-      createForm.resetFields();
-      
-      message.success(
-        `${tt.toastCreateSuccess || 'Application created successfully!'}\nClient ID: ${data.client_id}\nClient Secret: ${data.client_secret}`,
-        8
-      );
+      resetCreateForm();
+
+      showCredentialsModal({
+        clientId: data.client_id,
+        clientSecret: data.client_secret
+      });
     } catch (error) {
       console.error('Create app error:', error);
       message.error(tt.toastError || 'Operation failed, please try again later');
     }
   };
 
-  const handleEditApp = async (values: any) => {
+  const handleEditApp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!editingApp) return;
 
+    const validationErrors = validateFormValues(editValues);
+    if (validationErrors) {
+      setEditFieldErrors(validationErrors);
+      return;
+    }
+    setEditFieldErrors({});
+
     try {
-      const redirectUris = values.redirect_uris
-        .split('\n')
-        .map((uri: string) => uri.trim())
-        .filter((uri: string) => uri.length > 0);
-
-      if (redirectUris.length === 0) {
-        message.error(tt.toastError || 'Please enter at least one redirect URI');
-        return;
-      }
-
+      const redirectUris = parseRedirectUris(editValues.redirect_uris);
       const payload: OAuthClientUpdate = {
-        client_name: values.client_name,
-        client_uri: values.client_uri || undefined,
+        client_name: editValues.client_name.trim(),
+        client_uri: editValues.client_uri.trim() || undefined,
         redirect_uris: redirectUris
       };
 
@@ -105,23 +251,26 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
         throw new Error('Failed to update application');
       }
 
-      const updatedApp = await response.json();
-      
-      // Update local state
-      setApps(apps.map(app => 
-        app.client_id === editingApp.client_id ? {
-          ...app,
-          client_name: updatedApp.client_name,
-          client_uri: updatedApp.client_uri,
-          redirect_uris: updatedApp.redirect_uris,
-          updated_at: updatedApp.updated_at
-        } : app
-      ));
-      
+      const updatedApp = await readAppApiJson<OAuthClientDetail>(response);
+
+      setApps((prev) =>
+        prev.map((app) =>
+          app.client_id === editingApp.client_id
+            ? {
+                ...app,
+                client_name: updatedApp.client_name,
+                client_uri: updatedApp.client_uri,
+                redirect_uris: updatedApp.redirect_uris,
+                updated_at: updatedApp.updated_at
+              }
+            : app
+        )
+      );
+
       setEditModalVisible(false);
       setEditingApp(null);
-      form.resetFields();
-      
+      resetEditForm();
+
       message.success(tt.toastUpdateSuccess || 'Application updated successfully');
     } catch (error) {
       console.error('Update app error:', error);
@@ -132,10 +281,11 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
   const handleRotateSecret = async (clientId: string) => {
     Modal.confirm({
       title: tt.rotateSecretConfirmTitle || 'Rotate Secret',
-      content: tt.rotateSecretConfirmContent || 'Rotating the secret will immediately invalidate the old one. Continue?',
+      content:
+        tt.rotateSecretConfirmContent ||
+        'Rotating the secret will immediately invalidate the old one. Continue?',
       okText: tt.rotateSecretButton || 'Rotate Secret',
       cancelText: tt.cancelButton || 'Cancel',
-      okType: 'warning',
       onOk: async () => {
         try {
           const response = await fetch(`/api/clients/${clientId}/rotate-secret`, {
@@ -146,11 +296,13 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
             throw new Error('Failed to rotate secret');
           }
 
-          const data = await response.json();
-          message.success(
-            `${tt.toastRotateSuccess || 'New secret generated'}:\n${data.client_secret}`,
-            8
+          const data = await readAppApiJson<OAuthClientSecretRotateResponse>(
+            response
           );
+          showCredentialsModal({
+            clientId,
+            clientSecret: data.client_secret
+          });
         } catch (error) {
           console.error('Rotate secret error:', error);
           message.error(tt.toastError || 'Operation failed, please try again later');
@@ -162,7 +314,9 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
   const handleDeleteApp = async (clientId: string) => {
     Modal.confirm({
       title: tt.deleteConfirmTitle || 'Delete Application',
-      content: tt.deleteConfirmContent || 'Permanently delete this application? This action cannot be undone.',
+      content:
+        tt.deleteConfirmContent ||
+        'Permanently delete this application? This action cannot be undone.',
       okText: tt.deleteButton || 'Delete',
       okType: 'danger',
       cancelText: tt.cancelButton || 'Cancel',
@@ -176,7 +330,7 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
             throw new Error('Failed to delete application');
           }
 
-          setApps(apps.filter(app => app.client_id !== clientId));
+          setApps((prev) => prev.filter((app) => app.client_id !== clientId));
           message.success(tt.toastDeleteSuccess || 'Application deleted');
         } catch (error) {
           console.error('Delete app error:', error);
@@ -188,245 +342,277 @@ export function DeveloperAppsPageComponent({ initialApps }: DeveloperAppsPagePro
 
   const openEditModal = (app: OAuthClientListItem) => {
     setEditingApp(app);
-    form.setFieldsValue({
+    setEditValues({
       client_name: app.client_name,
       client_uri: app.client_uri || '',
       redirect_uris: app.redirect_uris.join('\n')
     });
+    setEditFieldErrors({});
     setEditModalVisible(true);
+  };
+
+  const openCreateModal = () => {
+    resetCreateForm();
+    setCreateModalVisible(true);
   };
 
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="flex flex-wrap justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary-text">{tt.title || 'My OAuth Applications'}</h1>
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <h1 className="text-2xl font-bold text-primary-text">
+            {tt.title || 'My OAuth Applications'}
+          </h1>
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => setCreateModalVisible(true)}
-            className="inline-flex items-center gap-2"
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 shadow-sm"
           >
             {tt.createButton || 'Create New App'}
           </Button>
         </div>
 
-        {/* Apps List */}
-        <div className="space-y-4">
-          {apps.length === 0 ? (
-            <div className="text-center py-12 text-secondary-text">
-              {tt.emptyState || 'No applications yet. Click "Create New App" to get started.'}
-            </div>
-          ) : (
-            apps.map((app) => (
-              <div
-                key={app.client_id}
-                className="bg-elevated rounded-xl shadow-sm border border-c-border p-5"
-              >
-                <div className="flex flex-wrap justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold text-primary-text">
-                        {app.client_name}
-                      </h3>
-                      <span className="text-xs bg-brand/10 text-brand px-2 py-0.5 rounded-full">
-                        {tt.statusEnabled || 'Enabled'}
-                      </span>
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <Spin tip={tt.loading || 'Loading applications…'} />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {apps.length === 0 ? (
+              <div className="text-center py-12 text-secondary-text rounded-xl border border-dashed border-primary-border bg-elevated/50">
+                {tt.emptyState ||
+                  'No applications yet. Click "Create New App" to get started.'}
+              </div>
+            ) : (
+              apps.map((app) => (
+                <div
+                  key={app.client_id}
+                  className="bg-elevated rounded-xl shadow-sm border border-primary-border p-5 transition-colors hover:border-brand/30"
+                >
+                  <div className="flex flex-wrap justify-between items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-lg font-semibold text-primary-text">
+                          {app.client_name}
+                        </h3>
+                        <span
+                          className={clsx(
+                            'text-xs px-2 py-0.5 rounded-full font-medium',
+                            'bg-green-100 text-green-800',
+                            'dark:bg-green-900/30 dark:text-green-300'
+                          )}
+                        >
+                          {tt.statusEnabled || 'Enabled'}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap min-w-0">
+                        <code className="text-sm bg-secondary text-primary-text px-2 py-1 rounded-lg font-mono border border-primary-border/40 break-all">
+                          {tt.clientIdLabel || 'Client ID'}: {app.client_id}
+                        </code>
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<CopyOutlined />}
+                          onClick={() => void handleCopyClientId(app.client_id)}
+                          className="text-brand hover:text-brand-hover"
+                          aria-label={tt.copyClientIdSuccess || 'Copy Client ID'}
+                        />
+                      </div>
+                      <p className="text-sm text-secondary-text mt-2 break-words">
+                        {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
+                        <code className="bg-secondary text-primary-text px-1.5 py-0.5 rounded text-xs font-mono">
+                          {app.redirect_uris.join(', ')}
+                        </code>
+                      </p>
+                      <p className="text-xs text-muted-text mt-2">
+                        {tt.createdAtLabel || 'Created at'}{' '}
+                        {new Date(app.created_at).toLocaleDateString()}
+                      </p>
                     </div>
-                    <p className="text-sm text-secondary-text mt-1">
-                      {tt.clientIdLabel || 'Client ID'}:{' '}
-                      <code className="bg-secondary px-1 rounded">
-                        {app.client_id}
-                      </code>
-                    </p>
-                    <p className="text-sm text-secondary-text mt-1">
-                      {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
-                      <code className="bg-secondary px-1 rounded">
-                        {app.redirect_uris.join(', ')}
-                      </code>
-                    </p>
-                    <p className="text-xs text-muted-text mt-2">
-                      {tt.createdAtLabel || 'Created at'}{' '}
-                      {new Date(app.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      type="link"
-                      icon={<EditOutlined />}
-                      onClick={() => openEditModal(app)}
-                      className="text-brand hover:text-brand-hover"
-                    >
-                      {tt.editButton || 'Edit'}
-                    </Button>
-                    <Button
-                      type="link"
-                      icon={<KeyOutlined />}
-                      onClick={() => handleRotateSecret(app.client_id)}
-                      className="text-warning hover:text-warning-hover"
-                    >
-                      {tt.rotateSecretButton || 'Rotate Secret'}
-                    </Button>
-                    <Button
-                      type="link"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleDeleteApp(app.client_id)}
-                    >
-                      {tt.deleteButton || 'Delete'}
-                    </Button>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 shrink-0">
+                      <Button
+                        type="link"
+                        icon={<EditOutlined />}
+                        onClick={() => openEditModal(app)}
+                        className="text-brand hover:text-brand-hover px-2"
+                      >
+                        {tt.editButton || 'Edit'}
+                      </Button>
+                      <Button
+                        type="link"
+                        icon={<KeyOutlined />}
+                        onClick={() => void handleRotateSecret(app.client_id)}
+                        className="text-amber-600 hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300 px-2"
+                      >
+                        {tt.rotateSecretButton || 'Rotate Secret'}
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => void handleDeleteApp(app.client_id)}
+                        className="px-2"
+                      >
+                        {tt.deleteButton || 'Delete'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Create Modal */}
+      <OAuthClientCredentialsModal
+        open={credentialsModalVisible}
+        credentials={credentials}
+        title={tt.credentialsModalTitle || 'New Application Credentials'}
+        clientIdLabel={tt.clientIdLabel || 'Client ID'}
+        clientSecretLabel={tt.clientSecretLabel || 'Client Secret'}
+        secretWarning={
+          tt.secretWarning ||
+          'This secret is shown only once. Save it securely now.'
+        }
+        confirmLabel={tt.credentialsConfirm || 'I have saved it, close'}
+        onCopyClientId={() => void handleCopyFromCredentialsModal('id')}
+        onCopySecret={() => void handleCopyFromCredentialsModal('secret')}
+        onClose={closeCredentialsModal}
+      />
+
       <Modal
-        title={tt.createModalTitle || 'Create OAuth Application'}
+        title={
+          <span className="text-primary-text">
+            {tt.createModalTitle || 'Create OAuth Application'}
+          </span>
+        }
         open={createModalVisible}
         onCancel={() => {
           setCreateModalVisible(false);
-          createForm.resetFields();
+          resetCreateForm();
         }}
         footer={null}
         width={600}
+        destroyOnClose
       >
-        <Form
-          form={createForm}
-          layout="vertical"
-          onFinish={handleCreateApp}
-          labelCol={{ style: { color: 'var(--text-secondary)' } }}
-        >
-          <Form.Item
-            name="client_name"
-            label={tt.appNameLabel || 'Application Name'}
-            rules={[{ required: true, message: tt.appNameRequired || 'Please enter application name' }]}
-          >
-            <Input placeholder="My Application" />
-          </Form.Item>
-
-          <Form.Item
-            name="redirect_uris"
-            label={tt.redirectUrisLabel || 'Redirect URIs (one per line)'}
-            rules={[{ required: true, message: 'Please enter at least one redirect URI' }]}
-          >
-            <TextArea
-              rows={3}
-              placeholder={tt.redirectUrisPlaceholder || 'https://your-app.com/callback\nhttps://localhost:3000/callback'}
-            />
-          </Form.Item>
-          <p className="text-xs text-muted-text mt-1 -mt-2 mb-4">
-            {tt.redirectUrisHint || 'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).'}
-          </p>
-
-          <Form.Item
-            name="client_uri"
-            label={tt.clientUriLabel || 'Application Homepage URL (Optional)'}
-          >
-            <Input type="url" placeholder="https://your-app.com" />
-          </Form.Item>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <Button onClick={() => {
-              setCreateModalVisible(false);
-              createForm.resetFields();
-            }}>
-              {tt.cancelButton || 'Cancel'}
-            </Button>
-            <Button type="primary" htmlType="submit">
-              {tt.createSubmitButton || 'Create Application'}
-            </Button>
-          </div>
-        </Form>
+        <OAuthClientAppForm
+          formId="create-oauth-client"
+          values={createValues}
+          fieldErrors={createFieldErrors}
+          labels={formLabels}
+          onChange={(patch) => {
+            setCreateValues((prev) => ({ ...prev, ...patch }));
+            setCreateFieldErrors((prev) => {
+              const next = { ...prev };
+              for (const key of Object.keys(patch) as (keyof OAuthClientFormValues)[]) {
+                delete next[key];
+              }
+              return next;
+            });
+          }}
+          onSubmit={handleCreateApp}
+          footer={
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                className={modalCancelButtonClass}
+                onClick={() => {
+                  setCreateModalVisible(false);
+                  resetCreateForm();
+                }}
+              >
+                {tt.cancelButton || 'Cancel'}
+              </button>
+              <button type="submit" className={modalSubmitButtonClass}>
+                {tt.createSubmitButton || 'Create Application'}
+              </button>
+            </div>
+          }
+        />
       </Modal>
 
-      {/* Edit Modal */}
       <Modal
-        title={tt.editModalTitle || 'Edit Application'}
+        title={
+          <span className="text-primary-text">
+            {tt.editModalTitle || 'Edit Application'}
+          </span>
+        }
         open={editModalVisible}
         onCancel={() => {
           setEditModalVisible(false);
           setEditingApp(null);
-          form.resetFields();
+          resetEditForm();
         }}
         footer={null}
         width={600}
+        destroyOnClose
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleEditApp}
-          labelCol={{ style: { color: 'var(--text-secondary)' } }}
-        >
-          <Form.Item
-            name="client_name"
-            label={tt.appNameLabel || 'Application Name'}
-            rules={[{ required: true, message: tt.appNameRequired || 'Please enter application name' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="redirect_uris"
-            label={tt.redirectUrisLabel || 'Redirect URIs (one per line)'}
-            rules={[{ required: true, message: 'Please enter at least one redirect URI' }]}
-          >
-            <TextArea rows={3} />
-          </Form.Item>
-
-          <Form.Item
-            name="client_uri"
-            label={tt.clientUriLabel || 'Application Homepage URL (Optional)'}
-          >
-            <Input type="url" />
-          </Form.Item>
-
-          <div className="flex flex-wrap gap-3 justify-between items-center mt-6">
-            <div className="flex gap-2">
-              {editingApp && (
-                <>
-                  <Button
-                    type="default"
-                    icon={<KeyOutlined />}
-                    onClick={() => handleRotateSecret(editingApp.client_id)}
-                    className="text-warning hover:text-warning-hover"
-                  >
-                    {tt.rotateSecretButton || 'Rotate Secret'}
-                  </Button>
-                  <Button
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => {
-                      setEditModalVisible(false);
-                      setEditingApp(null);
-                      if (editingApp) {
-                        handleDeleteApp(editingApp.client_id);
-                      }
-                    }}
-                  >
-                    {tt.deleteButton || 'Delete'}
-                  </Button>
-                </>
-              )}
+        <OAuthClientAppForm
+          formId="edit-oauth-client"
+          values={editValues}
+          fieldErrors={editFieldErrors}
+          labels={formLabels}
+          onChange={(patch) => {
+            setEditValues((prev) => ({ ...prev, ...patch }));
+            setEditFieldErrors((prev) => {
+              const next = { ...prev };
+              for (const key of Object.keys(patch) as (keyof OAuthClientFormValues)[]) {
+                delete next[key];
+              }
+              return next;
+            });
+          }}
+          onSubmit={handleEditApp}
+          footer={
+            <div className="flex flex-wrap gap-3 justify-between items-center mt-6">
+              <div className="flex flex-wrap gap-2">
+                {editingApp && (
+                  <>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition"
+                      onClick={() => void handleRotateSecret(editingApp.client_id)}
+                    >
+                      <KeyOutlined />
+                      {tt.rotateSecretButton || 'Rotate Secret'}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition"
+                      onClick={() => {
+                        const clientId = editingApp.client_id;
+                        setEditModalVisible(false);
+                        setEditingApp(null);
+                        resetEditForm();
+                        void handleDeleteApp(clientId);
+                      }}
+                    >
+                      <DeleteOutlined />
+                      {tt.deleteButton || 'Delete'}
+                    </button>
+                  </>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className={modalCancelButtonClass}
+                  onClick={() => {
+                    setEditModalVisible(false);
+                    setEditingApp(null);
+                    resetEditForm();
+                  }}
+                >
+                  {tt.cancelButton || 'Cancel'}
+                </button>
+                <button type="submit" className={modalSubmitButtonClass}>
+                  {tt.saveSubmitButton || 'Save Changes'}
+                </button>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Button onClick={() => {
-                setEditModalVisible(false);
-                setEditingApp(null);
-                form.resetFields();
-              }}>
-                {tt.cancelButton || 'Cancel'}
-              </Button>
-              <Button type="primary" htmlType="submit">
-                {tt.saveSubmitButton || 'Save Changes'}
-              </Button>
-            </div>
-          </div>
-        </Form>
+          }
+        />
       </Modal>
     </>
   );
