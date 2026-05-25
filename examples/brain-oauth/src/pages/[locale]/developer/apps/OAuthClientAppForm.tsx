@@ -1,6 +1,7 @@
 'use client';
 
 import type { FormEvent, ReactNode } from 'react';
+import { oauthInputClass, oauthLabelClass } from '@/uikit/styles/oauthUiStyles';
 
 export type OAuthClientFormValues = {
   client_name: string;
@@ -14,10 +15,7 @@ export const emptyOAuthClientFormValues: OAuthClientFormValues = {
   client_uri: ''
 };
 
-const labelClass = 'text-primary-text mb-1.5 block text-sm font-medium';
-const inputClass =
-  'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-xl border bg-bg-container px-4 py-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
-const textareaClass = `${inputClass} resize-y min-h-[5.5rem]`;
+const textareaClass = `${oauthInputClass} resize-y min-h-[5.5rem]`;
 
 export interface OAuthClientAppFormLabels {
   appNameLabel: string;
@@ -35,7 +33,7 @@ export function OAuthClientAppForm(props: {
   labels: OAuthClientAppFormLabels;
   onChange: (patch: Partial<OAuthClientFormValues>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  footer: ReactNode;
+  footer?: ReactNode | null;
 }) {
   const { formId, values, fieldErrors = {}, labels, onChange, onSubmit, footer } =
     props;
@@ -43,7 +41,7 @@ export function OAuthClientAppForm(props: {
   return (
     <form id={formId} onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
-        <label htmlFor={`${formId}-client_name`} className={labelClass}>
+        <label htmlFor={`${formId}-client_name`} className={oauthLabelClass}>
           {labels.appNameLabel} <span className="text-red-500">*</span>
         </label>
         <input
@@ -54,7 +52,7 @@ export function OAuthClientAppForm(props: {
           value={values.client_name}
           onChange={(e) => onChange({ client_name: e.target.value })}
           placeholder="My Application"
-          className={inputClass}
+          className={oauthInputClass}
           aria-invalid={!!fieldErrors.client_name}
           aria-describedby={
             fieldErrors.client_name ? `${formId}-client_name-error` : undefined
@@ -72,7 +70,7 @@ export function OAuthClientAppForm(props: {
       </div>
 
       <div>
-        <label htmlFor={`${formId}-redirect_uris`} className={labelClass}>
+        <label htmlFor={`${formId}-redirect_uris`} className={oauthLabelClass}>
           {labels.redirectUrisLabel} <span className="text-red-500">*</span>
         </label>
         <textarea
@@ -102,7 +100,7 @@ export function OAuthClientAppForm(props: {
         ) : (
           <p
             id={`${formId}-redirect_uris-hint`}
-            className="text-xs text-muted-text mt-1"
+            className="text-xs text-secondary-text mt-1"
           >
             {labels.redirectUrisHint}
           </p>
@@ -110,7 +108,7 @@ export function OAuthClientAppForm(props: {
       </div>
 
       <div>
-        <label htmlFor={`${formId}-client_uri`} className={labelClass}>
+        <label htmlFor={`${formId}-client_uri`} className={oauthLabelClass}>
           {labels.clientUriLabel}
         </label>
         <input
@@ -120,7 +118,7 @@ export function OAuthClientAppForm(props: {
           value={values.client_uri}
           onChange={(e) => onChange({ client_uri: e.target.value })}
           placeholder="https://your-app.com"
-          className={inputClass}
+          className={oauthInputClass}
           aria-invalid={!!fieldErrors.client_uri}
         />
         {fieldErrors.client_uri && (
@@ -130,7 +128,7 @@ export function OAuthClientAppForm(props: {
         )}
       </div>
 
-      {footer}
+      {footer ?? null}
     </form>
   );
 }

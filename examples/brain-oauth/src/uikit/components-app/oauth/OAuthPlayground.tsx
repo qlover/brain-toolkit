@@ -4,12 +4,15 @@ import {
   CheckCircleOutlined,
   CopyOutlined,
   ExperimentOutlined,
+  ExclamationCircleOutlined,
+  InfoCircleOutlined,
   LoadingOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Card, Checkbox, Input, Select, Steps, Typography } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocale } from '@/i18n/routing';
+import { clsx } from 'clsx';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link } from '@/i18n/routing';
+import { useLocale } from 'next-intl';
 import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -29,17 +32,99 @@ import {
   type OAuthCallbackParams
 } from '@/uikit/utils/oauthPlaygroundUtils';
 
-function JsonBlock({ value }: { value: unknown }) {
-  return (
-    <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-elevated border border-primary-border p-3 text-xs text-primary-text">
-      {JSON.stringify(value, null, 2)}
-    </pre>
-  );
-}
+const labelClass =
+  'text-secondary-text mb-1.5 block text-xs font-medium uppercase tracking-wide';
+const inputClass =
+  'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-lg border bg-bg-container px-3 py-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
+const primaryButtonClass =
+  'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed';
+const secondaryButtonClass =
+  'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-primary-border bg-primary text-primary-text font-medium hover:bg-elevated transition disabled:opacity-60 disabled:cursor-not-allowed';
 
 type ValidateResult =
   | { valid: true; data: OAuthAuthorizePageData }
   | { valid: false; error: { errorKey: string; message: string } };
+
+function PlaygroundAlert(props: {
+  variant: 'error' | 'success' | 'warning' | 'info';
+  children: ReactNode;
+  onClose?: () => void;
+}) {
+  const { variant, children, onClose } = props;
+  const styles = {
+    error:
+      'bg-red-50 dark:bg-red-900/30 border-red-500 text-red-700 dark:text-red-300',
+    success:
+      'bg-green-50 dark:bg-green-900/25 border-green-500 text-green-800 dark:text-green-300',
+    warning:
+      'bg-amber-50 dark:bg-amber-950/30 border-amber-500 text-amber-900 dark:text-amber-200',
+    info: 'bg-brand/5 border-brand/40 text-primary-text'
+  }[variant];
+
+  return (
+    <div
+      role="alert"
+      className={clsx(
+        'border-l-4 p-3 rounded-lg text-sm flex items-start gap-2',
+        styles
+      )}
+    >
+      {variant === 'error' && (
+        <ExclamationCircleOutlined className="mt-0.5 shrink-0" />
+      )}
+      {variant === 'success' && (
+        <CheckCircleOutlined className="mt-0.5 shrink-0" />
+      )}
+      {variant === 'warning' && (
+        <ExclamationCircleOutlined className="mt-0.5 shrink-0" />
+      )}
+      {variant === 'info' && <InfoCircleOutlined className="mt-0.5 shrink-0" />}
+      <div className="flex-1 min-w-0">{children}</div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-secondary-text hover:text-primary-text shrink-0"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PlaygroundSection(props: {
+  title: string;
+  step: number;
+  extra?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="border-b border-primary-border last:border-b-0">
+      <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 bg-elevated/50">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand text-sm font-semibold">
+            {props.step}
+          </span>
+          <h3 className="text-base font-semibold text-primary-text truncate">
+            {props.title}
+          </h3>
+        </div>
+        {props.extra}
+      </div>
+      <div className="px-5 sm:px-6 py-5 space-y-4">{props.children}</div>
+    </section>
+  );
+}
+
+function JsonBlock({ value }: { value: unknown }) {
+  return (
+    <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-secondary border border-primary-border p-3 text-xs font-mono text-primary-text">
+      {JSON.stringify(value, null, 2)}
+    </pre>
+  );
+}
 
 export function OAuthPlayground() {
   const tt = usePageI18nMapping<OAuthPlaygroundI18nInterface>();
@@ -88,7 +173,9 @@ export function OAuthPlayground() {
         setClientId(list[0].client_id);
       }
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to load clients');
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Failed to load clients'
+      );
     } finally {
       setClientsLoading(false);
     }
@@ -170,7 +257,9 @@ export function OAuthPlayground() {
       );
       setValidateResult(result);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Validation failed');
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Validation failed'
+      );
     } finally {
       setValidating(false);
     }
@@ -230,7 +319,9 @@ export function OAuthPlayground() {
       const json = await res.json();
       setTokenResponse({ status: res.status, body: json });
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Token exchange failed');
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Token exchange failed'
+      );
     } finally {
       setTokenLoading(false);
     }
@@ -277,282 +368,361 @@ export function OAuthPlayground() {
     return 0;
   }, [validateResult, callback, tokenResponse, userinfoResponse]);
 
-  const stepItems = [
-    { title: tt.stepSession },
-    { title: tt.stepClient },
-    { title: tt.stepAuthorize },
-    { title: tt.stepToken },
-    { title: tt.stepUserinfo }
+  const stepTitles = [
+    tt.stepSession,
+    tt.stepClient,
+    tt.stepAuthorize,
+    tt.stepToken,
+    tt.stepUserinfo
   ];
 
+  const toggleScope = (scope: string) => {
+    setSelectedScopes((prev) =>
+      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope]
+    );
+    setValidateResult(null);
+  };
+
+  const hasAccessToken =
+    tokenResponse &&
+    typeof tokenResponse === 'object' &&
+    tokenResponse !== null &&
+    'body' in tokenResponse &&
+    (tokenResponse as { body: { access_token?: string } }).body?.access_token;
+
   return (
-    <div
-      data-testid="OAuthPlayground"
-      className="max-w-4xl mx-auto w-full px-4 py-8 space-y-6"
-    >
-      <div className="flex items-start gap-3">
-        <ExperimentOutlined className="text-2xl text-brand mt-1" />
-        <div>
-          <Typography.Title level={3} className="!mb-1 !text-primary-text">
-            {tt.title}
-          </Typography.Title>
-          <Typography.Paragraph className="!mb-0 text-secondary-text">
-            {tt.intro}
-          </Typography.Paragraph>
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 items-start justify-center px-4 py-8 sm:py-12">
+        <div
+          data-testid="OAuthPlayground"
+          className="w-full max-w-3xl bg-primary rounded-2xl shadow-xl border border-primary-border overflow-hidden"
+        >
+          <div className="p-6 sm:p-8 border-b border-primary-border">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand text-xl shrink-0">
+                <ExperimentOutlined />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-semibold text-primary-text">
+                  {tt.title}
+                </h1>
+                <p className="text-sm text-secondary-text mt-1 leading-relaxed">
+                  {tt.intro}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              {stepTitles.map((title, index) => (
+                <span
+                  key={title}
+                  className={clsx(
+                    'text-xs px-3 py-1 rounded-full border font-medium transition-colors',
+                    index <= currentStep
+                      ? 'bg-brand/10 text-brand border-brand/30'
+                      : 'bg-elevated text-secondary-text border-primary-border'
+                  )}
+                >
+                  {index + 1}. {title}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {errorMessage && (
+            <div className="px-5 sm:px-6 pt-5">
+              <PlaygroundAlert
+                variant="error"
+                onClose={() => setErrorMessage(null)}
+              >
+                {errorMessage}
+              </PlaygroundAlert>
+            </div>
+          )}
+
+          <PlaygroundSection title={tt.stepSession} step={1}>
+            {authLoading ? (
+              <p className="text-secondary-text text-sm flex items-center gap-2">
+                <LoadingOutlined spin />
+                …
+              </p>
+            ) : success && user ? (
+              <p className="text-primary-text text-sm flex items-center gap-2">
+                <CheckCircleOutlined className="text-green-500 shrink-0" />
+                <span>
+                  {tt.signedInAs}{' '}
+                  <strong className="font-semibold">{user.email}</strong>
+                </span>
+              </p>
+            ) : (
+              <PlaygroundAlert variant="warning">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span>{tt.loginRequired}</span>
+                  <Link href={ROUTE_LOGIN} className={primaryButtonClass}>
+                    {tt.goLogin}
+                  </Link>
+                </div>
+              </PlaygroundAlert>
+            )}
+          </PlaygroundSection>
+
+          <PlaygroundSection
+            title={tt.stepClient}
+            step={2}
+            extra={
+              <button
+                type="button"
+                className={clsx(secondaryButtonClass, 'text-sm py-1.5 px-3')}
+                onClick={() => void loadClients()}
+                disabled={!success || clientsLoading}
+              >
+                <ReloadOutlined />
+              </button>
+            }
+          >
+            <div>
+              <label htmlFor="playground-client" className={labelClass}>
+                {tt.clientLabel}
+              </label>
+              <select
+                id="playground-client"
+                className={inputClass}
+                disabled={!success || clientsLoading}
+                value={clientId ?? ''}
+                onChange={(e) => setClientId(e.target.value)}
+              >
+                {clients.length === 0 && (
+                  <option value="">—</option>
+                )}
+                {clients.map((c) => (
+                  <option key={c.client_id} value={c.client_id}>
+                    {c.client_name} ({c.client_id})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {clientDetail && (
+              <div className="space-y-4 rounded-xl bg-elevated border border-primary-border p-4">
+                <div>
+                  <label htmlFor="playground-redirect" className={labelClass}>
+                    {tt.redirectLabel}
+                  </label>
+                  <select
+                    id="playground-redirect"
+                    className={inputClass}
+                    value={redirectUri}
+                    onChange={(e) => {
+                      setRedirectUri(e.target.value);
+                      setValidateResult(null);
+                    }}
+                  >
+                    {clientDetail.redirect_uris.map((uri) => (
+                      <option key={uri} value={uri}>
+                        {uri}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <p className={labelClass}>{tt.scopeLabel}</p>
+                  <div className="space-y-2">
+                    {clientDetail.scopes.map((scope) => (
+                      <label
+                        key={scope}
+                        className="flex items-center gap-2 text-sm text-primary-text cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedScopes.includes(scope)}
+                          onChange={() => toggleScope(scope)}
+                          className="w-4 h-4 rounded border-primary-border text-brand focus:ring-brand"
+                        />
+                        <code className="text-xs font-mono bg-secondary px-2 py-0.5 rounded">
+                          {scope}
+                        </code>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="playground-state" className={labelClass}>
+                    {tt.stateLabel}
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      id="playground-state"
+                      type="text"
+                      className={inputClass}
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      placeholder="optional"
+                    />
+                    <button
+                      type="button"
+                      className={secondaryButtonClass}
+                      onClick={() => setState(randomStateValue())}
+                    >
+                      {tt.randomState}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className={secondaryButtonClass}
+                  disabled={!success || validating}
+                  onClick={() => void validateParams()}
+                >
+                  {validating && <LoadingOutlined spin />}
+                  {tt.validate}
+                </button>
+
+                {validateResult?.valid && (
+                  <PlaygroundAlert variant="success">{tt.validOk}</PlaygroundAlert>
+                )}
+                {validateResult && !validateResult.valid && (
+                  <PlaygroundAlert variant="error">
+                    <p>{validateResult.error.message}</p>
+                    <p className="text-xs mt-1 opacity-80 font-mono">
+                      {validateResult.error.errorKey}
+                    </p>
+                  </PlaygroundAlert>
+                )}
+
+                {authorizeUrl && (
+                  <div>
+                    <p className={labelClass}>{tt.authorizeUrl}</p>
+                    <div className="flex gap-2">
+                      <textarea
+                        readOnly
+                        value={authorizeUrl}
+                        rows={3}
+                        className={clsx(inputClass, 'font-mono text-xs resize-y')}
+                      />
+                      <button
+                        type="button"
+                        title={tt.copy}
+                        className={secondaryButtonClass}
+                        onClick={() => void copyText(authorizeUrl)}
+                      >
+                        <CopyOutlined />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </PlaygroundSection>
+
+          <PlaygroundSection title={tt.stepAuthorize} step={3}>
+            <p className="text-sm text-secondary-text">
+              {validateResult?.valid
+                ? validateResult.data.clientName
+                : tt.validate}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={primaryButtonClass}
+                disabled={
+                  !success || !validateResult?.valid || consentLoading
+                }
+                onClick={() => void submitConsent('allow')}
+              >
+                {consentLoading && <LoadingOutlined spin />}
+                {tt.allow}
+              </button>
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                disabled={
+                  !success || !validateResult?.valid || consentLoading
+                }
+                onClick={() => void submitConsent('deny')}
+              >
+                {tt.deny}
+              </button>
+            </div>
+
+            {redirectPreview && (
+              <div className="rounded-xl bg-secondary border border-primary-border p-4 space-y-2">
+                <p className={labelClass}>{tt.callback}</p>
+                <textarea
+                  readOnly
+                  value={redirectPreview}
+                  rows={2}
+                  className={clsx(inputClass, 'font-mono text-xs')}
+                />
+                {callback && <JsonBlock value={callback} />}
+              </div>
+            )}
+          </PlaygroundSection>
+
+          <PlaygroundSection title={tt.stepToken} step={4}>
+            <div>
+              <label htmlFor="playground-secret" className={labelClass}>
+                {tt.secretLabel}
+              </label>
+              <input
+                id="playground-secret"
+                type="password"
+                autoComplete="off"
+                className={inputClass}
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+                placeholder="client_secret"
+              />
+            </div>
+            <button
+              type="button"
+              className={primaryButtonClass}
+              disabled={!callback?.code || !clientSecret.trim() || tokenLoading}
+              onClick={() => void exchangeToken()}
+            >
+              {tokenLoading && <LoadingOutlined spin />}
+              {tt.exchange}
+            </button>
+            {tokenResponse != null && (
+              <div>
+                <p className={labelClass}>{tt.response}</p>
+                <JsonBlock value={tokenResponse} />
+              </div>
+            )}
+          </PlaygroundSection>
+
+          <PlaygroundSection title={tt.stepUserinfo} step={5}>
+            <button
+              type="button"
+              className={primaryButtonClass}
+              disabled={!hasAccessToken || userinfoLoading}
+              onClick={() => void fetchUserinfo()}
+            >
+              {userinfoLoading && <LoadingOutlined spin />}
+              {tt.fetchUserinfo}
+            </button>
+            {userinfoResponse != null && (
+              <div>
+                <p className={labelClass}>{tt.response}</p>
+                <JsonBlock value={userinfoResponse} />
+              </div>
+            )}
+          </PlaygroundSection>
+
+          <div className="px-5 sm:px-6 py-4 bg-amber-50 dark:bg-amber-950/30 border-t border-primary-border">
+            <p className="text-sm text-primary-text flex items-start gap-2">
+              <InfoCircleOutlined className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <span>{tt.simulatedNote}</span>
+            </p>
+          </div>
         </div>
       </div>
 
-      <Steps current={currentStep} items={stepItems} size="small" />
-
-      {errorMessage && (
-        <Alert type="error" showIcon message={errorMessage} closable onClose={() => setErrorMessage(null)} />
-      )}
-
-      <Card title={tt.stepSession} size="small">
-        {authLoading ? (
-          <LoadingOutlined spin />
-        ) : success && user ? (
-          <p className="text-primary-text">
-            <CheckCircleOutlined className="text-green-500 mr-2" />
-            {tt.signedInAs}{' '}
-            <strong>{user.email ?? user.name}</strong>
-          </p>
-        ) : (
-          <Alert
-            type="warning"
-            showIcon
-            message={tt.loginRequired}
-            action={
-              <Link href={ROUTE_LOGIN}>
-                <Button size="small" type="primary">
-                  {tt.goLogin}
-                </Button>
-              </Link>
-            }
-          />
-        )}
-      </Card>
-
-      <Card
-        title={tt.stepClient}
-        size="small"
-        extra={
-          <Button
-            type="text"
-            size="small"
-            icon={<ReloadOutlined />}
-            onClick={() => void loadClients()}
-            disabled={!success || clientsLoading}
-          />
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-secondary-text mb-1">
-              {tt.clientLabel}
-            </label>
-            <Select
-              className="w-full"
-              loading={clientsLoading}
-              disabled={!success}
-              value={clientId}
-              onChange={setClientId}
-              options={clients.map((c) => ({
-                value: c.client_id,
-                label: `${c.client_name} (${c.client_id})`
-              }))}
-              placeholder="Select a registered client"
-            />
-          </div>
-
-          {clientDetail && (
-            <>
-              <div>
-                <label className="block text-sm text-secondary-text mb-1">
-                  {tt.redirectLabel}
-                </label>
-                <Select
-                  className="w-full"
-                  value={redirectUri}
-                  onChange={setRedirectUri}
-                  options={clientDetail.redirect_uris.map((uri) => ({
-                    value: uri,
-                    label: uri
-                  }))}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-secondary-text mb-1">
-                  {tt.scopeLabel}
-                </label>
-                <Checkbox.Group
-                  className="flex flex-col gap-1"
-                  value={selectedScopes}
-                  onChange={(values) => setSelectedScopes(values as string[])}
-                  options={clientDetail.scopes.map((scope) => ({
-                    label: scope,
-                    value: scope
-                  }))}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-secondary-text mb-1">
-                  {tt.stateLabel}
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    placeholder="optional"
-                  />
-                  <Button onClick={() => setState(randomStateValue())}>
-                    {tt.randomState}
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                type="default"
-                loading={validating}
-                disabled={!success}
-                onClick={() => void validateParams()}
-              >
-                {tt.validate}
-              </Button>
-
-              {validateResult?.valid && (
-                <Alert type="success" showIcon message={tt.validOk} />
-              )}
-              {validateResult && !validateResult.valid && (
-                <Alert
-                  type="error"
-                  showIcon
-                  message={validateResult.error.message}
-                  description={validateResult.error.errorKey}
-                />
-              )}
-
-              {authorizeUrl && (
-                <div>
-                  <label className="block text-sm text-secondary-text mb-1">
-                    {tt.authorizeUrl}
-                  </label>
-                  <div className="flex gap-2">
-                    <Input.TextArea
-                      value={authorizeUrl}
-                      readOnly
-                      autoSize={{ minRows: 2, maxRows: 4 }}
-                    />
-                    <Button
-                      icon={<CopyOutlined />}
-                      onClick={() => void copyText(authorizeUrl)}
-                      title={tt.copy}
-                    />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </Card>
-
-      <Card title={tt.stepAuthorize} size="small">
-        <p className="text-sm text-secondary-text mb-3">
-          {validateResult?.valid
-            ? `${tt.stepAuthorize}: ${validateResult.data.clientName}`
-            : tt.validate}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="primary"
-            disabled={!success || !validateResult?.valid || consentLoading}
-            loading={consentLoading}
-            onClick={() => void submitConsent('allow')}
-          >
-            {tt.allow}
-          </Button>
-          <Button
-            disabled={!success || !validateResult?.valid || consentLoading}
-            loading={consentLoading}
-            onClick={() => void submitConsent('deny')}
-          >
-            {tt.deny}
-          </Button>
-        </div>
-
-        {redirectPreview && (
-          <div className="mt-4">
-            <Typography.Text type="secondary">{tt.callback}</Typography.Text>
-            <Input.TextArea
-              className="mt-1 font-mono text-xs"
-              value={redirectPreview}
-              readOnly
-              autoSize={{ minRows: 2, maxRows: 3 }}
-            />
-            {callback && <JsonBlock value={callback} />}
-          </div>
-        )}
-      </Card>
-
-      <Card title={tt.stepToken} size="small">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm text-secondary-text mb-1">
-              {tt.secretLabel}
-            </label>
-            <Input.Password
-              value={clientSecret}
-              onChange={(e) => setClientSecret(e.target.value)}
-              placeholder="client_secret"
-              autoComplete="off"
-            />
-          </div>
-          <Button
-            type="primary"
-            disabled={!callback?.code || !clientSecret.trim()}
-            loading={tokenLoading}
-            onClick={() => void exchangeToken()}
-          >
-            {tt.exchange}
-          </Button>
-          {tokenResponse != null && (
-            <>
-              <Typography.Text type="secondary">{tt.response}</Typography.Text>
-              <JsonBlock value={tokenResponse} />
-            </>
-          )}
-        </div>
-      </Card>
-
-      <Card title={tt.stepUserinfo} size="small">
-        <Button
-          type="primary"
-          disabled={
-            !tokenResponse ||
-            !(
-              typeof tokenResponse === 'object' &&
-              tokenResponse !== null &&
-              'body' in tokenResponse &&
-              (tokenResponse as { body: { access_token?: string } }).body
-                ?.access_token
-            )
-          }
-          loading={userinfoLoading}
-          onClick={() => void fetchUserinfo()}
-        >
-          {tt.fetchUserinfo}
-        </Button>
-        {userinfoResponse != null && (
-          <>
-            <Typography.Text type="secondary" className="block mt-3">
-              {tt.response}
-            </Typography.Text>
-            <JsonBlock value={userinfoResponse} />
-          </>
-        )}
-      </Card>
+      <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border bg-primary">
+        <p>© 2026 {tt.title}</p>
+      </footer>
     </div>
   );
 }

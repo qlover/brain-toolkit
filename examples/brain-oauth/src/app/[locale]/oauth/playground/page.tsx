@@ -43,6 +43,7 @@ export default async function OAuthPlaygroundPage(props: OAuthPlaygroundPageProp
         tt={{ title: tt.title, adminTitle: tt.adminTitle }}
         showAuthButton
         authButtonShowLogoutLabel
+        mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
         <OAuthPlayground />
       </AppRoutePage>

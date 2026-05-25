@@ -47,6 +47,7 @@ export default function DeveloperApps({ initialApps }: DeveloperAppsProps) {
         showAdminButton={false}
         showAuthButton
         authButtonShowLogoutLabel
+        mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
         <ClientSeo i18nInterface={seoMetadata} />
         <DeveloperAppsPageComponent initialApps={initialApps} />

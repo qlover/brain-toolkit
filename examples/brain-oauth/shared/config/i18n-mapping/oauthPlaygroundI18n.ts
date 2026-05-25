@@ -36,5 +36,6 @@ export const oauthPlaygroundI18n = Object.freeze({
   copy: i18nKeys.PAGE_OAUTH_PLAYGROUND_COPY,
   randomState: i18nKeys.PAGE_OAUTH_PLAYGROUND_RANDOM_STATE,
   navLink: i18nKeys.PAGE_OAUTH_PLAYGROUND_NAV_LINK,
+  simulatedNote: i18nKeys.PAGE_OAUTH_PLAYGROUND_SIMULATED_NOTE,
   adminTitle: COMMON_ADMIN_TITLE
 });

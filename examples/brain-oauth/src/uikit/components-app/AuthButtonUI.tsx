@@ -3,11 +3,10 @@
 import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
 import {
-  COMMON_AUTH_NAV_REQUEST_LOGS,
   COMMON_AUTH_NAV_SIGN_UP,
   COMMON_USER_AUTH_FAILED_GO_TO_LOGIN
 } from '@config/i18n-identifier/common/common';
-import { ROUTE_LOGIN, ROUTE_REGISTER, ROUTE_REQUEST_LOGS } from '@config/route';
+import { ROUTE_LOGIN, ROUTE_REGISTER } from '@config/route';
 import { LogoutButton } from './LogoutButton';
 import { headerActionButtonClassName } from './headerStyles';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
@@ -52,14 +51,6 @@ export function AuthButtonUI(props: {
         className="flex items-center gap-2"
         data-auth={hasAuth}
       >
-        {!loginOnly && (
-          <Link
-            href={ROUTE_REQUEST_LOGS}
-            className={linkSecondary}
-          >
-            {t(COMMON_AUTH_NAV_REQUEST_LOGS)}
-          </Link>
-        )}
         <LogoutButton
           data-testid="logout-button"
           showLabel={showLogoutLabel}

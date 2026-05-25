@@ -228,3 +228,11 @@ export const PAGE_OAUTH_PLAYGROUND_RANDOM_STATE =
  */
 export const PAGE_OAUTH_PLAYGROUND_NAV_LINK =
   'page_oauth_playground:nav__link';
+
+/**
+ * @description Footer note about simulated redirect
+ * @localZh 仅在站内模拟回调，不会跳转到外部 redirect_uri。
+ * @localEn Simulated callback only — no navigation to external redirect_uri.
+ */
+export const PAGE_OAUTH_PLAYGROUND_SIMULATED_NOTE =
+  'page_oauth_playground:simulated__note';
