@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const OAuthClientRowSchema = z.object({
   id: z.number(),
   client_id: z.string(),
+  client_secret_hash: z.string(),
   client_name: z.string(),
   client_uri: z.string().nullable().optional(),
   logo_uri: z.string().nullable().optional(),
