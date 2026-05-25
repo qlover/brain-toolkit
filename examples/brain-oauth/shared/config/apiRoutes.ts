@@ -33,6 +33,15 @@ export const API_CALLBACK = '/api/callback' as const;
 export const API_LOCALES_JSON = '/api/locales/json' as const;
 
 /**
+ * API path: `/api/oauth/consent`
+ *
+ * @see [src/app/api/oauth/consent/route.ts](../../src/app/api/oauth/consent/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/oauth/consent/route.ts`
+ */
+export const API_OAUTH_CONSENT = '/api/oauth/consent' as const;
+
+/**
  * API path: `/api/reference`
  *
  * @see [src/app/api/reference/route.ts](../../src/app/api/reference/route.ts)
@@ -90,6 +99,7 @@ export type ApiRoutePath =
   | typeof API_BRAIN_VERIFY
   | typeof API_CALLBACK
   | typeof API_LOCALES_JSON
+  | typeof API_OAUTH_CONSENT
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGOUT

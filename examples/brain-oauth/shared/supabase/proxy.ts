@@ -12,7 +12,9 @@ export async function updateSession(request: NextRequest) {
 
   if (!session && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
+    const returnPath = `${pathname}${request.nextUrl.search}`;
     url.pathname = ROUTE_LOGIN;
+    url.search = `redirect=${encodeURIComponent(returnPath)}`;
     return NextResponse.redirect(url);
   }
 
