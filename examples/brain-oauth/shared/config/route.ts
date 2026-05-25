@@ -23,6 +23,9 @@ export const ROUTE_DASHBOARD_APPS = '/dashboard/apps' as const;
 /** OAuth 2.0 authorization consent page. */
 export const ROUTE_OAUTH_AUTHORIZE = '/oauth/authorize' as const;
 
+/** In-app OAuth flow playground (developer testing). */
+export const ROUTE_OAUTH_PLAYGROUND = '/oauth/playground' as const;
+
 /** OAuth 2.0 token endpoint (machine-to-machine, no locale prefix). */
 export const ROUTE_OAUTH_TOKEN = '/oauth/token' as const;
 

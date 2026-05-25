@@ -4,12 +4,30 @@ import {
   CopyOutlined,
   EditOutlined,
   DeleteOutlined,
+  ExperimentOutlined,
   KeyOutlined,
+  LoadingOutlined,
   PlusOutlined
 } from '@ant-design/icons';
+import { Link } from '@/i18n/routing';
+import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
+import {
+  DeveloperConfirmDialog,
+  type DeveloperConfirmOptions
+} from '@/uikit/components-app/developer/DeveloperConfirmDialog';
+import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
+import {
+  oauthCardClass,
+  oauthDangerButtonClass,
+  oauthElevatedPanelClass,
+  oauthGhostActionClass,
+  oauthPrimaryButtonClass,
+  oauthSecondaryButtonClass,
+  oauthWarningButtonClass
+} from '@/uikit/styles/oauthUiStyles';
 import type {
   OAuthClientListItem,
   OAuthClientCreate,
@@ -19,8 +37,8 @@ import type {
   OAuthClientUpdate
 } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { readAppApiJson } from './readAppApiJson';
-import { message, Modal, Button, Spin } from 'antd';
 import { clsx } from 'clsx';
+import { message } from 'antd';
 import {
   OAuthClientCredentialsModal,
   type OAuthCredentials
@@ -30,11 +48,6 @@ import {
   emptyOAuthClientFormValues,
   type OAuthClientFormValues
 } from './OAuthClientAppForm';
-
-const modalCancelButtonClass =
-  'inline-flex items-center justify-center px-4 py-2 rounded-lg border border-primary-border bg-primary text-primary-text font-medium hover:bg-elevated transition';
-const modalSubmitButtonClass =
-  'inline-flex items-center justify-center px-4 py-2 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-sm disabled:opacity-60';
 
 function parseRedirectUris(raw: string): string[] {
   return raw
@@ -62,6 +75,8 @@ export function DeveloperAppsPageComponent({
   const [editingApp, setEditingApp] = useState<OAuthClientListItem | null>(null);
   const [credentials, setCredentials] = useState<OAuthCredentials | null>(null);
   const [credentialsModalVisible, setCredentialsModalVisible] = useState(false);
+  const [confirmOptions, setConfirmOptions] =
+    useState<DeveloperConfirmOptions | null>(null);
   const [createValues, setCreateValues] = useState<OAuthClientFormValues>(
     emptyOAuthClientFormValues
   );
@@ -118,7 +133,7 @@ export function DeveloperAppsPageComponent({
   const loadApps = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/clients');
+      const response = await fetch('/api/clients', { credentials: 'include' });
       if (!response.ok) {
         throw new Error('Failed to load applications');
       }
@@ -190,6 +205,7 @@ export function DeveloperAppsPageComponent({
       const response = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
 
@@ -241,11 +257,15 @@ export function DeveloperAppsPageComponent({
         redirect_uris: redirectUris
       };
 
-      const response = await fetch(`/api/clients/${editingApp.client_id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const response = await fetch(
+        `/api/clients/${encodeURIComponent(editingApp.client_id)}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to update application');
@@ -278,19 +298,21 @@ export function DeveloperAppsPageComponent({
     }
   };
 
-  const handleRotateSecret = async (clientId: string) => {
-    Modal.confirm({
+  const handleRotateSecret = (clientId: string) => {
+    setConfirmOptions({
       title: tt.rotateSecretConfirmTitle || 'Rotate Secret',
       content:
         tt.rotateSecretConfirmContent ||
         'Rotating the secret will immediately invalidate the old one. Continue?',
       okText: tt.rotateSecretButton || 'Rotate Secret',
       cancelText: tt.cancelButton || 'Cancel',
-      onOk: async () => {
+      variant: 'default',
+      onConfirm: async () => {
         try {
-          const response = await fetch(`/api/clients/${clientId}/rotate-secret`, {
-            method: 'POST'
-          });
+          const response = await fetch(
+            `/api/clients/${encodeURIComponent(clientId)}/rotate-secret`,
+            { method: 'POST', credentials: 'include' }
+          );
 
           if (!response.ok) {
             throw new Error('Failed to rotate secret');
@@ -306,25 +328,30 @@ export function DeveloperAppsPageComponent({
         } catch (error) {
           console.error('Rotate secret error:', error);
           message.error(tt.toastError || 'Operation failed, please try again later');
+          throw error;
         }
       }
     });
   };
 
-  const handleDeleteApp = async (clientId: string) => {
-    Modal.confirm({
+  const handleDeleteApp = (clientId: string) => {
+    setConfirmOptions({
       title: tt.deleteConfirmTitle || 'Delete Application',
       content:
         tt.deleteConfirmContent ||
         'Permanently delete this application? This action cannot be undone.',
       okText: tt.deleteButton || 'Delete',
-      okType: 'danger',
       cancelText: tt.cancelButton || 'Cancel',
-      onOk: async () => {
+      variant: 'danger',
+      onConfirm: async () => {
         try {
-          const response = await fetch(`/api/clients/${clientId}`, {
-            method: 'DELETE'
-          });
+          const response = await fetch(
+            `/api/clients/${encodeURIComponent(clientId)}`,
+            {
+              method: 'DELETE',
+              credentials: 'include'
+            }
+          );
 
           if (!response.ok && response.status !== 204) {
             throw new Error('Failed to delete application');
@@ -335,6 +362,7 @@ export function DeveloperAppsPageComponent({
         } catch (error) {
           console.error('Delete app error:', error);
           message.error(tt.toastError || 'Operation failed, please try again later');
+          throw error;
         }
       }
     });
@@ -358,111 +386,146 @@ export function DeveloperAppsPageComponent({
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-primary-text">
-            {tt.title || 'My OAuth Applications'}
-          </h1>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 shadow-sm"
-          >
-            {tt.createButton || 'Create New App'}
-          </Button>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <Spin tip={tt.loading || 'Loading applications…'} />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {apps.length === 0 ? (
-              <div className="text-center py-12 text-secondary-text rounded-xl border border-dashed border-primary-border bg-elevated/50">
-                {tt.emptyState ||
-                  'No applications yet. Click "Create New App" to get started.'}
-              </div>
-            ) : (
-              apps.map((app) => (
-                <div
-                  key={app.client_id}
-                  className="bg-elevated rounded-xl shadow-sm border border-primary-border p-5 transition-colors hover:border-brand/30"
-                >
-                  <div className="flex flex-wrap justify-between items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg font-semibold text-primary-text">
-                          {app.client_name}
-                        </h3>
-                        <span
-                          className={clsx(
-                            'text-xs px-2 py-0.5 rounded-full font-medium',
-                            'bg-green-100 text-green-800',
-                            'dark:bg-green-900/30 dark:text-green-300'
-                          )}
-                        >
-                          {tt.statusEnabled || 'Enabled'}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex items-center gap-2 flex-wrap min-w-0">
-                        <code className="text-sm bg-secondary text-primary-text px-2 py-1 rounded-lg font-mono border border-primary-border/40 break-all">
-                          {tt.clientIdLabel || 'Client ID'}: {app.client_id}
-                        </code>
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<CopyOutlined />}
-                          onClick={() => void handleCopyClientId(app.client_id)}
-                          className="text-brand hover:text-brand-hover"
-                          aria-label={tt.copyClientIdSuccess || 'Copy Client ID'}
-                        />
-                      </div>
-                      <p className="text-sm text-secondary-text mt-2 break-words">
-                        {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
-                        <code className="bg-secondary text-primary-text px-1.5 py-0.5 rounded text-xs font-mono">
-                          {app.redirect_uris.join(', ')}
-                        </code>
-                      </p>
-                      <p className="text-xs text-muted-text mt-2">
-                        {tt.createdAtLabel || 'Created at'}{' '}
-                        {new Date(app.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-1 sm:gap-2 shrink-0">
-                      <Button
-                        type="link"
-                        icon={<EditOutlined />}
-                        onClick={() => openEditModal(app)}
-                        className="text-brand hover:text-brand-hover px-2"
-                      >
-                        {tt.editButton || 'Edit'}
-                      </Button>
-                      <Button
-                        type="link"
-                        icon={<KeyOutlined />}
-                        onClick={() => void handleRotateSecret(app.client_id)}
-                        className="text-amber-600 hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300 px-2"
-                      >
-                        {tt.rotateSecretButton || 'Rotate Secret'}
-                      </Button>
-                      <Button
-                        type="link"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => void handleDeleteApp(app.client_id)}
-                        className="px-2"
-                      >
-                        {tt.deleteButton || 'Delete'}
-                      </Button>
-                    </div>
-                  </div>
+      <div className="flex flex-1 flex-col">
+        <div className="max-w-5xl mx-auto w-full px-4 py-8 sm:py-10">
+          <div className={oauthCardClass} data-testid="DeveloperAppsPage">
+            <div className="p-6 sm:p-8 border-b border-primary-border">
+              <div className="flex flex-wrap justify-between items-start gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wide text-secondary-text mb-1">
+                    {tt.consoleSubtitle || 'Developer Console'}
+                  </p>
+                  <h1 className="text-xl sm:text-2xl font-semibold text-primary-text">
+                    {tt.title || 'My OAuth Applications'}
+                  </h1>
                 </div>
-              ))
-            )}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <Link href={ROUTE_OAUTH_PLAYGROUND} className={oauthSecondaryButtonClass}>
+                    <ExperimentOutlined />
+                    {tt.playgroundLink || 'OAuth playground'}
+                  </Link>
+                  <button
+                    type="button"
+                    className={oauthPrimaryButtonClass}
+                    onClick={openCreateModal}
+                  >
+                    <PlusOutlined />
+                    {tt.createButton || 'Create New App'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 sm:p-6">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-secondary-text">
+                  <LoadingOutlined spin className="text-2xl text-brand" />
+                  <span className="text-sm">
+                    {tt.loading || 'Loading applications…'}
+                  </span>
+                </div>
+              ) : apps.length === 0 ? (
+                <div
+                  className={clsx(
+                    oauthElevatedPanelClass,
+                    'text-center py-12 px-4 border-dashed'
+                  )}
+                >
+                  <p className="text-secondary-text text-sm leading-relaxed">
+                    {tt.emptyState ||
+                      'No applications yet. Click "Create New App" to get started.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {apps.map((app) => (
+                    <article
+                      key={app.client_id}
+                      className={clsx(
+                        oauthElevatedPanelClass,
+                        'p-5 transition-colors hover:border-brand/30'
+                      )}
+                    >
+                      <div className="flex flex-wrap justify-between items-start gap-4">
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-lg font-semibold text-primary-text">
+                              {app.client_name}
+                            </h2>
+                            <span
+                              className={clsx(
+                                'text-xs px-2 py-0.5 rounded-full font-medium',
+                                'bg-green-100 text-green-800',
+                                'dark:bg-green-900/30 dark:text-green-300'
+                              )}
+                            >
+                              {tt.statusEnabled || 'Enabled'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap min-w-0">
+                            <code className="text-sm bg-secondary text-primary-text px-2 py-1 rounded-lg font-mono border border-primary-border/40 break-all">
+                              {tt.clientIdLabel || 'Client ID'}: {app.client_id}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={() => void handleCopyClientId(app.client_id)}
+                              className={oauthGhostActionClass}
+                              aria-label={tt.copyClientIdSuccess || 'Copy Client ID'}
+                            >
+                              <CopyOutlined />
+                            </button>
+                          </div>
+                          <p className="text-sm text-secondary-text break-words">
+                            {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
+                            <code className="bg-secondary text-primary-text px-1.5 py-0.5 rounded text-xs font-mono">
+                              {app.redirect_uris.join(', ')}
+                            </code>
+                          </p>
+                          <p className="text-xs text-secondary-text">
+                            {tt.createdAtLabel || 'Created at'}{' '}
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-1 shrink-0">
+                          <button
+                            type="button"
+                            className={oauthGhostActionClass}
+                            onClick={() => openEditModal(app)}
+                          >
+                            <EditOutlined />
+                            {tt.editButton || 'Edit'}
+                          </button>
+                          <button
+                            type="button"
+                            className={clsx(
+                              oauthGhostActionClass,
+                              'text-amber-700 dark:text-amber-300 hover:bg-amber-500/10'
+                            )}
+                            onClick={() => handleRotateSecret(app.client_id)}
+                          >
+                            <KeyOutlined />
+                            {tt.rotateSecretButton || 'Rotate Secret'}
+                          </button>
+                          <button
+                            type="button"
+                            className={clsx(
+                              oauthGhostActionClass,
+                              'text-red-600 dark:text-red-400 hover:bg-red-500/10'
+                            )}
+                            onClick={() => handleDeleteApp(app.client_id)}
+                          >
+                            <DeleteOutlined />
+                            {tt.deleteButton || 'Delete'}
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       <OAuthClientCredentialsModal
@@ -481,20 +544,41 @@ export function DeveloperAppsPageComponent({
         onClose={closeCredentialsModal}
       />
 
-      <Modal
-        title={
-          <span className="text-primary-text">
-            {tt.createModalTitle || 'Create OAuth Application'}
-          </span>
-        }
+      <DeveloperConfirmDialog
+        open={confirmOptions != null}
+        options={confirmOptions}
+        onClose={() => setConfirmOptions(null)}
+      />
+
+      <DeveloperOverlayModal
         open={createModalVisible}
-        onCancel={() => {
+        title={tt.createModalTitle || 'Create OAuth Application'}
+        onClose={() => {
           setCreateModalVisible(false);
           resetCreateForm();
         }}
-        footer={null}
-        width={600}
-        destroyOnClose
+        maxWidthClass="max-w-xl"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              className={oauthSecondaryButtonClass}
+              onClick={() => {
+                setCreateModalVisible(false);
+                resetCreateForm();
+              }}
+            >
+              {tt.cancelButton || 'Cancel'}
+            </button>
+            <button
+              type="submit"
+              form="create-oauth-client"
+              className={oauthPrimaryButtonClass}
+            >
+              {tt.createSubmitButton || 'Create Application'}
+            </button>
+          </div>
+        }
       >
         <OAuthClientAppForm
           formId="create-oauth-client"
@@ -512,41 +596,71 @@ export function DeveloperAppsPageComponent({
             });
           }}
           onSubmit={handleCreateApp}
-          footer={
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                className={modalCancelButtonClass}
-                onClick={() => {
-                  setCreateModalVisible(false);
-                  resetCreateForm();
-                }}
-              >
-                {tt.cancelButton || 'Cancel'}
-              </button>
-              <button type="submit" className={modalSubmitButtonClass}>
-                {tt.createSubmitButton || 'Create Application'}
-              </button>
-            </div>
-          }
+          footer={null}
         />
-      </Modal>
+      </DeveloperOverlayModal>
 
-      <Modal
-        title={
-          <span className="text-primary-text">
-            {tt.editModalTitle || 'Edit Application'}
-          </span>
-        }
+      <DeveloperOverlayModal
         open={editModalVisible}
-        onCancel={() => {
+        title={tt.editModalTitle || 'Edit Application'}
+        onClose={() => {
           setEditModalVisible(false);
           setEditingApp(null);
           resetEditForm();
         }}
-        footer={null}
-        width={600}
-        destroyOnClose
+        maxWidthClass="max-w-xl"
+        footer={
+          <div className="flex flex-wrap gap-3 justify-between items-center">
+            <div className="flex flex-wrap gap-2">
+              {editingApp && (
+                <>
+                  <button
+                    type="button"
+                    className={oauthWarningButtonClass}
+                    onClick={() => void handleRotateSecret(editingApp.client_id)}
+                  >
+                    <KeyOutlined />
+                    {tt.rotateSecretButton || 'Rotate Secret'}
+                  </button>
+                  <button
+                    type="button"
+                    className={oauthDangerButtonClass}
+                    onClick={() => {
+                      const clientId = editingApp.client_id;
+                      setEditModalVisible(false);
+                      setEditingApp(null);
+                      resetEditForm();
+                      handleDeleteApp(clientId);
+                    }}
+                  >
+                    <DeleteOutlined />
+                    {tt.deleteButton || 'Delete'}
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className={oauthSecondaryButtonClass}
+                onClick={() => {
+                  setEditModalVisible(false);
+                  setEditingApp(null);
+                  resetEditForm();
+                }}
+              >
+                {tt.cancelButton || 'Cancel'}
+              </button>
+              <button
+                type="submit"
+                form="edit-oauth-client"
+                className={oauthPrimaryButtonClass}
+              >
+                {tt.saveSubmitButton || 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        }
       >
         <OAuthClientAppForm
           formId="edit-oauth-client"
@@ -564,56 +678,9 @@ export function DeveloperAppsPageComponent({
             });
           }}
           onSubmit={handleEditApp}
-          footer={
-            <div className="flex flex-wrap gap-3 justify-between items-center mt-6">
-              <div className="flex flex-wrap gap-2">
-                {editingApp && (
-                  <>
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition"
-                      onClick={() => void handleRotateSecret(editingApp.client_id)}
-                    >
-                      <KeyOutlined />
-                      {tt.rotateSecretButton || 'Rotate Secret'}
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition"
-                      onClick={() => {
-                        const clientId = editingApp.client_id;
-                        setEditModalVisible(false);
-                        setEditingApp(null);
-                        resetEditForm();
-                        void handleDeleteApp(clientId);
-                      }}
-                    >
-                      <DeleteOutlined />
-                      {tt.deleteButton || 'Delete'}
-                    </button>
-                  </>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  className={modalCancelButtonClass}
-                  onClick={() => {
-                    setEditModalVisible(false);
-                    setEditingApp(null);
-                    resetEditForm();
-                  }}
-                >
-                  {tt.cancelButton || 'Cancel'}
-                </button>
-                <button type="submit" className={modalSubmitButtonClass}>
-                  {tt.saveSubmitButton || 'Save Changes'}
-                </button>
-              </div>
-            </div>
-          }
+          footer={null}
         />
-      </Modal>
+      </DeveloperOverlayModal>
     </>
   );
 }

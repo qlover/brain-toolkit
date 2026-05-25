@@ -1,0 +1,71 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
+import { GET } from '../../src/app/userinfo/route';
+
+const getUserInfo = vi.fn();
+
+vi.mock('@server/BootstrapServer', () => ({
+  BootstrapServer: class MockBootstrapServer {
+    getIOC() {
+      return () => ({
+        getUserInfo
+      });
+    }
+  }
+}));
+
+describe('GET /userinfo route', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns 200 with userinfo claims', async () => {
+    getUserInfo.mockResolvedValue({
+      sub: '42',
+      email: 'user@example.com',
+      name: 'User'
+    });
+
+    const req = new NextRequest('http://localhost/userinfo', {
+      headers: { authorization: 'Bearer eyJ.test' }
+    });
+
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({
+      sub: '42',
+      email: 'user@example.com',
+      name: 'User'
+    });
+    expect(getUserInfo).toHaveBeenCalledWith('eyJ.test');
+  });
+
+  it('returns invalid_token when Authorization is missing', async () => {
+    const req = new NextRequest('http://localhost/userinfo');
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe('invalid_token');
+    expect(getUserInfo).not.toHaveBeenCalled();
+  });
+
+  it('returns invalid_token when service rejects token', async () => {
+    const { OAuthUserInfoError } = await import(
+      '@server/utils/oauthUserInfoError'
+    );
+    getUserInfo.mockRejectedValue(new OAuthUserInfoError('invalid_token', 401));
+
+    const req = new NextRequest('http://localhost/userinfo', {
+      headers: { authorization: 'Bearer bad' }
+    });
+
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe('invalid_token');
+  });
+});

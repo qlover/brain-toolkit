@@ -41,6 +41,11 @@ export class BootstrapServer
 
   public readonly logger: LoggerInterface;
 
+  /** Correlation id for this server invocation (also stored in `request_logs.request_id`). */
+  public get requestId(): string {
+    return this.root.uuid;
+  }
+
   constructor(name?: string) {
     const serverConfig = new ServerConfig();
     const serverName = name ?? serverConfig.name;

@@ -1,7 +1,8 @@
 'use client';
 
-import { Modal, Button } from 'antd';
 import { CopyableCredential } from './CopyableCredential';
+import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
+import { oauthLabelClass, oauthPrimaryButtonClass } from '@/uikit/styles/oauthUiStyles';
 
 export interface OAuthCredentials {
   clientId: string;
@@ -34,46 +35,41 @@ export function OAuthClientCredentialsModal(props: {
   } = props;
 
   return (
-    <Modal
-      title={title}
+    <DeveloperOverlayModal
       open={open}
-      onCancel={onClose}
+      title={title}
+      onClose={onClose}
+      maxWidthClass="max-w-lg"
+      closeOnBackdrop={false}
       footer={
         <div className="flex justify-end">
-          <Button type="primary" onClick={onClose}>
+          <button type="button" className={oauthPrimaryButtonClass} onClick={onClose}>
             {confirmLabel}
-          </Button>
+          </button>
         </div>
       }
-      width={520}
-      destroyOnClose
-      maskClosable={false}
     >
       {credentials && (
         <div className="space-y-4">
           <div>
-            <label className="text-primary-text mb-1.5 block text-sm font-medium">
-              {clientIdLabel}
-            </label>
+            <label className={oauthLabelClass}>{clientIdLabel}</label>
             <CopyableCredential
               value={credentials.clientId}
               onCopy={onCopyClientId}
             />
           </div>
           <div>
-            <label className="text-primary-text mb-1.5 block text-sm font-medium">
-              {clientSecretLabel}
-            </label>
+            <label className={oauthLabelClass}>{clientSecretLabel}</label>
             <CopyableCredential
               value={credentials.clientSecret}
               onCopy={onCopySecret}
             />
-            <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+            <p className="text-xs text-red-600 dark:text-red-400 mt-2">
               {secretWarning}
             </p>
           </div>
         </div>
       )}
-    </Modal>
+    </DeveloperOverlayModal>
   );
 }
