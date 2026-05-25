@@ -4,9 +4,12 @@ import {
   CopyOutlined,
   EditOutlined,
   DeleteOutlined,
+  ExperimentOutlined,
   KeyOutlined,
   PlusOutlined
 } from '@ant-design/icons';
+import { Link } from '@/i18n/routing';
+import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
@@ -363,14 +366,21 @@ export function DeveloperAppsPageComponent({
           <h1 className="text-2xl font-bold text-primary-text">
             {tt.title || 'My OAuth Applications'}
           </h1>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 shadow-sm"
-          >
-            {tt.createButton || 'Create New App'}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={ROUTE_OAUTH_PLAYGROUND}>
+              <Button icon={<ExperimentOutlined />}>
+                {tt.playgroundLink || 'OAuth playground'}
+              </Button>
+            </Link>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-2 shadow-sm"
+            >
+              {tt.createButton || 'Create New App'}
+            </Button>
+          </div>
         </div>
 
         {loading ? (

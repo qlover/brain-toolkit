@@ -62,5 +62,6 @@ export const developerAppsI18n = Object.freeze({
   credentialsConfirm: developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_CONFIRM,
   copyClientIdSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_CLIENT_ID_SUCCESS,
   copySecretSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_SECRET_SUCCESS,
-  loading: developerAppsKeys.DEVELOPER_APPS_LOADING
+  loading: developerAppsKeys.DEVELOPER_APPS_LOADING,
+  playgroundLink: developerAppsKeys.DEVELOPER_APPS_PLAYGROUND_LINK
 });

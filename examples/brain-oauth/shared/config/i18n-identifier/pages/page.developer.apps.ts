@@ -275,3 +275,10 @@ export const DEVELOPER_APPS_COPY_SECRET_SUCCESS =
  * @localEn Loading applications…
  */
 export const DEVELOPER_APPS_LOADING = 'developer_apps:loading';
+
+/**
+ * @description Link to OAuth flow playground
+ * @localZh OAuth 流程测试
+ * @localEn OAuth playground
+ */
+export const DEVELOPER_APPS_PLAYGROUND_LINK = 'developer_apps:playground__link';

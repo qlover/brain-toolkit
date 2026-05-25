@@ -6,6 +6,7 @@ import {
   ROUTE_DASHBOARD_APPS,
   ROUTE_LOGIN,
   ROUTE_OAUTH_AUTHORIZE,
+  ROUTE_OAUTH_PLAYGROUND,
   ROUTE_REGISTER,
   ROUTE_REQUEST_LOGS
 } from '@config/route';
@@ -45,6 +46,10 @@ export const routing = defineRouting({
     [ROUTE_OAUTH_AUTHORIZE]: {
       en: '/oauth/authorize',
       zh: '/oauth/authorize'
+    },
+    [ROUTE_OAUTH_PLAYGROUND]: {
+      en: '/oauth/playground',
+      zh: '/oauth/playground'
     },
     '/about': {
       en: '/about',
