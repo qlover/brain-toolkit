@@ -5,6 +5,10 @@ import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
 import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { OAuthClientUpdateSchema } from '@schemas/oauth/OAuthAuthorizeSchema';
 
+type ClientIdRouteContext = {
+  params: Promise<{ clientId: string }>;
+};
+
 /**
  * @swagger
  * /api/clients/{clientId}:
@@ -27,15 +31,14 @@ import { OAuthClientUpdateSchema } from '@schemas/oauth/OAuthAuthorizeSchema';
  *       401:
  *         description: Not authenticated
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { clientId: string } }
-) {
+export async function GET(req: NextRequest, context: ClientIdRouteContext) {
+  const { clientId } = await context.params;
+
   return await new NextApiServer('/api/clients/[clientId]', req)
     .use(new ServerAuthPlugin())
     .runWithJson(async ({ parameters: { IOC } }) => {
       const controller = IOC(OAuthClientsController);
-      return controller.get(params.clientId);
+      return controller.get(clientId);
     });
 }
 
@@ -86,17 +89,16 @@ export async function GET(
  *       401:
  *         description: Not authenticated
  */
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { clientId: string } }
-) {
+export async function PUT(req: NextRequest, context: ClientIdRouteContext) {
+  const { clientId } = await context.params;
+
   return await new NextApiServer('/api/clients/[clientId]', req)
     .use(new ServerAuthPlugin())
     .runWithJson(async ({ parameters: { IOC } }) => {
       const body = await req.json();
       const validated = OAuthClientUpdateSchema.parse(body);
       const controller = IOC(OAuthClientsController);
-      return controller.update(params.clientId, validated);
+      return controller.update(clientId, validated);
     });
 }
 
@@ -122,15 +124,18 @@ export async function PUT(
  *       401:
  *         description: Not authenticated
  */
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { clientId: string } }
-) {
-  return await new NextApiServer('/api/clients/[clientId]', req)
+export async function DELETE(req: NextRequest, context: ClientIdRouteContext) {
+  const { clientId } = await context.params;
+
+  const result = await new NextApiServer('/api/clients/[clientId]', req)
     .use(new ServerAuthPlugin())
-    .runWithJson(async ({ parameters: { IOC } }) => {
-      const controller = IOC(OAuthClientsController);
-      await controller.remove(params.clientId);
-      return NextResponse.json(null, { status: 204 });
+    .run(async ({ parameters: { IOC } }) => {
+      await IOC(OAuthClientsController).remove(clientId);
     });
+
+  if (!result.success) {
+    return NextResponse.json(result, { status: 400 });
+  }
+
+  return new NextResponse(null, { status: 204 });
 }

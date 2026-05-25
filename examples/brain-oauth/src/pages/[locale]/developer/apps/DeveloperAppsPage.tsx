@@ -325,8 +325,9 @@ export function DeveloperAppsPageComponent({
       cancelText: tt.cancelButton || 'Cancel',
       onOk: async () => {
         try {
-          const response = await fetch(`/api/clients/${clientId}`, {
-            method: 'DELETE'
+          const response = await fetch(`/api/clients/${encodeURIComponent(clientId)}`, {
+            method: 'DELETE',
+            credentials: 'include'
           });
 
           if (!response.ok && response.status !== 204) {

@@ -26,14 +26,17 @@ import { OAuthClientsController } from '@server/controllers/OAuthClientsControll
  *       401:
  *         description: Not authenticated
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { clientId: string } }
-) {
+type ClientIdRouteContext = {
+  params: Promise<{ clientId: string }>;
+};
+
+export async function POST(req: NextRequest, context: ClientIdRouteContext) {
+  const { clientId } = await context.params;
+
   return await new NextApiServer('/api/clients/[clientId]/rotate-secret', req)
     .use(new ServerAuthPlugin())
     .runWithJson(async ({ parameters: { IOC } }) => {
       const controller = IOC(OAuthClientsController);
-      return controller.rotateSecret(params.clientId);
+      return controller.rotateSecret(clientId);
     });
 }
