@@ -71,14 +71,18 @@ export const OAuthClientCreateResponseSchema = z.object({
   created_at: z.string()
 });
 
-export type OAuthClientCreateResponse = z.infer<typeof OAuthClientCreateResponseSchema>;
+export type OAuthClientCreateResponse = z.infer<
+  typeof OAuthClientCreateResponseSchema
+>;
 
 export const OAuthClientSecretRotateResponseSchema = z.object({
   client_id: z.string(),
   client_secret: z.string()
 });
 
-export type OAuthClientSecretRotateResponse = z.infer<typeof OAuthClientSecretRotateResponseSchema>;
+export type OAuthClientSecretRotateResponse = z.infer<
+  typeof OAuthClientSecretRotateResponseSchema
+>;
 
 export const OAuthAuthorizeQuerySchema = z.object({
   response_type: z.literal('code'),

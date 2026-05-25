@@ -4,11 +4,11 @@ import { API_USER_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
 import { BrainAuthService } from './BrainAuthService';
 import { BrainSessionService } from './BrainSessionService';
 import { ServerAuth } from './ServerAuth';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
+import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
 import { PasswordEncrypt } from '../utils/PasswordEncrypt';
 import type { BrainAuthServiceInterface } from '../interfaces/BrainAuthServiceInterface';
 import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
@@ -79,7 +79,10 @@ export class UserService implements UserServiceInterface {
 
     const session = await this.brainSession.getSession();
     if (!session) {
-      throw new ExecutorError(API_USER_NOT_FOUND, 'Brain session missing after login');
+      throw new ExecutorError(
+        API_USER_NOT_FOUND,
+        'Brain session missing after login'
+      );
     }
 
     return brainSessionToUserSchema(session, this.appConfig.adminUserIds);

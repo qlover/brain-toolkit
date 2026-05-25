@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
 import { OAuthUserInfoService } from '@server/services/OAuthUserInfoService';
 import { OAuthUserInfoError } from '@server/utils/oauthUserInfoError';
-import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
 
 describe('OAuthUserInfoService', () => {
   const brainAdapter = {

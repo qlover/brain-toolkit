@@ -12,7 +12,10 @@ export function CopyableCredential(props: {
   const { value, onCopy, className } = props;
 
   return (
-    <div className={clsx('flex items-center gap-2 min-w-0', className)}>
+    <div
+      data-testid="CopyableCredential"
+      className={clsx('flex items-center gap-2 min-w-0', className)}
+    >
       <code className="flex-1 min-w-0 bg-secondary text-primary-text px-2 py-2 rounded-lg text-sm break-all font-mono border border-primary-border/40">
         {value}
       </code>

@@ -1,12 +1,12 @@
 import { randomBytes } from 'crypto';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
-import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import type { OAuthTokenResponse } from '@schemas/oauth/OAuthClientSchema';
 import {
   OAuthTokenRequestSchema,
   type OAuthTokenRequest
 } from '@schemas/oauth/OAuthTokenSchema';
-import type { OAuthTokenResponse } from '@schemas/oauth/OAuthClientSchema';
+import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { BrainUserAdapter } from '../adapters/BrainUserAdapter';
 import { OAuthAuthorizationCodesRepository } from '../repositorys/OAuthAuthorizationCodesRepository';
 import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
@@ -134,7 +134,11 @@ export class OAuthTokenService {
       stored.client_id !== verifiedClientId ||
       new Date(stored.expires_at) <= new Date()
     ) {
-      throw new OAuthTokenError('invalid_grant', 400, 'Refresh token is invalid');
+      throw new OAuthTokenError(
+        'invalid_grant',
+        400,
+        'Refresh token is invalid'
+      );
     }
 
     const brainTokens = await this.fetchBrainAccessToken(stored.user_id);
@@ -175,7 +179,9 @@ export class OAuthTokenService {
 
       if (access.refresh_token) {
         await this.credentialsRepo.upsertUserCredentials(userId, {
-          brain_refresh_token: this.tokenEncryption.encrypt(access.refresh_token)
+          brain_refresh_token: this.tokenEncryption.encrypt(
+            access.refresh_token
+          )
         });
       }
 

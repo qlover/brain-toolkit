@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
+import { describe, expect, it } from 'vitest';
 import { parseOAuthTokenRequest } from '@server/utils/parseOAuthTokenRequest';
 
 function formRequest(
@@ -45,9 +45,12 @@ describe('parseOAuthTokenRequest', () => {
   it('does not override body client_id with Basic auth', async () => {
     const basic = Buffer.from('other:secret').toString('base64');
     const fields = await parseOAuthTokenRequest(
-      formRequest('grant_type=refresh_token&refresh_token=rt1&client_id=from_body', {
-        authorization: `Basic ${basic}`
-      })
+      formRequest(
+        'grant_type=refresh_token&refresh_token=rt1&client_id=from_body',
+        {
+          authorization: `Basic ${basic}`
+        }
+      )
     );
 
     expect(fields.client_id).toBe('from_body');

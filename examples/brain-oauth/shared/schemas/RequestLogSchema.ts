@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+/** `request_logs.record_type` for rows emitted by the brain-oauth example app. */
+export const REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH = 'brain-oauth';
+
 /** Optional keys written into `payload` by server code (UI may read these). */
 export type RequestLogPayload = {
   http_method?: string | null;
@@ -26,6 +29,7 @@ export const requestLogRowSchema = z.object({
   event_type: z.string(),
   success: z.boolean(),
   request_id: z.uuid().nullable(),
+  record_type: z.string().nullable(),
   payload: z.record(z.string(), z.unknown()).nullable()
 });
 
@@ -40,6 +44,7 @@ export const REQUEST_LOGS_LIST_FIELDS = [
   'event_type',
   'success',
   'request_id',
+  'record_type',
   'payload'
 ] as const;
 

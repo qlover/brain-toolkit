@@ -1,9 +1,9 @@
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import { BrainSessionService } from './BrainSessionService';
 import { BrainUserAdapter } from '../adapters/BrainUserAdapter';
 import { OAuthCredentialsRepository } from '../repositorys/OAuthCredentialsRepository';
-import { BrainSessionService } from './BrainSessionService';
 import { TokenEncryption } from '../utils/TokenEncryption';
 import type {
   BrainAuthServiceInterface,

@@ -89,6 +89,7 @@ export class RequestLogsRepository
           event_type: row.event_type,
           success: row.success ?? true,
           request_id: row.request_id ?? null,
+          record_type: row.record_type ?? null,
           payload: row.payload ?? null
         }
       });

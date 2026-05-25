@@ -7,13 +7,13 @@ import type {
   OAuthClientSecretRotateResponseSchema,
   OAuthClientUpdateSchema
 } from '@schemas/oauth/OAuthAuthorizeSchema';
-import { ServerAuth } from '../services/ServerAuth';
 import { OAuthClientsService } from '../services/OAuthClientsService';
+import { ServerAuth } from '../services/ServerAuth';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 
 /**
  * Developer console OAuth clients API controller.
- * 
+ *
  * Manages OAuth client applications for developers.
  */
 @injectable()

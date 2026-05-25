@@ -1,10 +1,10 @@
 import { BootstrapServer } from '@server/BootstrapServer';
 import { OAuthTokenController } from '@server/controllers/OAuthTokenController';
+import { logRequestEvent } from '@server/utils/logRequestEvent';
 import {
   OAuthTokenError,
   oauthTokenErrorResponse
 } from '@server/utils/oauthTokenError';
-import { logRequestEvent } from '@server/utils/logRequestEvent';
 import { parseOAuthTokenRequest } from '@server/utils/parseOAuthTokenRequest';
 import type { NextRequest } from 'next/server';
 
@@ -49,7 +49,11 @@ export async function POST(req: NextRequest) {
       req,
       started,
       oauthTokenErrorResponse(
-        new OAuthTokenError('invalid_request', 400, 'Unable to parse request body')
+        new OAuthTokenError(
+          'invalid_request',
+          400,
+          'Unable to parse request body'
+        )
       ),
       false
     );

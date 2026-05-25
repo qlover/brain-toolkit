@@ -1,5 +1,4 @@
 import { inject } from '@shared/container';
-import { AppApiRequester } from './AppApiRequester';
 import type {
   OAuthClientListItem,
   OAuthClientDetail,
@@ -9,6 +8,7 @@ import type {
   OAuthClientSecretRotateResponse
 } from '@schemas/oauth/OAuthAuthorizeSchema';
 import type { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
+import { AppApiRequester } from './AppApiRequester';
 
 export class OAuthClientsApi {
   constructor(
@@ -20,7 +20,9 @@ export class OAuthClientsApi {
    */
   public async list(): Promise<OAuthClientListItem[]> {
     const response = await this.appApiRequester.get('/api/clients');
-    const envelope = response.data as AppApiSuccessInterface<OAuthClientListItem[]>;
+    const envelope = response.data as AppApiSuccessInterface<
+      OAuthClientListItem[]
+    >;
     return envelope.data ?? [];
   }
 
@@ -36,9 +38,12 @@ export class OAuthClientsApi {
   /**
    * Create a new OAuth client
    */
-  public async create(input: OAuthClientCreate): Promise<OAuthClientCreateResponse> {
+  public async create(
+    input: OAuthClientCreate
+  ): Promise<OAuthClientCreateResponse> {
     const response = await this.appApiRequester.post('/api/clients', input);
-    const envelope = response.data as AppApiSuccessInterface<OAuthClientCreateResponse>;
+    const envelope =
+      response.data as AppApiSuccessInterface<OAuthClientCreateResponse>;
     return envelope.data!;
   }
 
@@ -49,7 +54,10 @@ export class OAuthClientsApi {
     clientId: string,
     input: OAuthClientUpdate
   ): Promise<OAuthClientDetail> {
-    const response = await this.appApiRequester.put(`/api/clients/${clientId}`, input);
+    const response = await this.appApiRequester.put(
+      `/api/clients/${clientId}`,
+      input
+    );
     const envelope = response.data as AppApiSuccessInterface<OAuthClientDetail>;
     return envelope.data!;
   }
@@ -64,9 +72,14 @@ export class OAuthClientsApi {
   /**
    * Rotate client secret
    */
-  public async rotateSecret(clientId: string): Promise<OAuthClientSecretRotateResponse> {
-    const response = await this.appApiRequester.post(`/api/clients/${clientId}/rotate-secret`);
-    const envelope = response.data as AppApiSuccessInterface<OAuthClientSecretRotateResponse>;
+  public async rotateSecret(
+    clientId: string
+  ): Promise<OAuthClientSecretRotateResponse> {
+    const response = await this.appApiRequester.post(
+      `/api/clients/${clientId}/rotate-secret`
+    );
+    const envelope =
+      response.data as AppApiSuccessInterface<OAuthClientSecretRotateResponse>;
     return envelope.data!;
   }
 }

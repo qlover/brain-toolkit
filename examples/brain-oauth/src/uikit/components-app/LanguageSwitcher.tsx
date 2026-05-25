@@ -1,14 +1,14 @@
 'use client';
 
 import { TranslationOutlined } from '@ant-design/icons';
+import { useMountedClient } from '@brain-toolkit/react-kit';
 import { Dropdown } from 'antd';
 import { useLocale } from 'next-intl';
-import { useMountedClient } from '@brain-toolkit/react-kit';
 import { useCallback, useMemo, useTransition } from 'react';
 import { usePathname, useRouter } from '@/i18n/routing';
-import { headerActionButtonClassName } from './headerStyles';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
+import { headerActionButtonClassName } from './headerStyles';
 import type { ItemType } from 'antd/es/menu/interface';
 
 export function LanguageSwitcher() {

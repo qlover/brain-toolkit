@@ -28,7 +28,9 @@ export async function generateMetadata({
 
 type OAuthPlaygroundPageProps = PageParamsProps;
 
-export default async function OAuthPlaygroundPage(props: OAuthPlaygroundPageProps) {
+export default async function OAuthPlaygroundPage(
+  props: OAuthPlaygroundPageProps
+) {
   const params = await props.params!;
   const pageParams = new AppPageRouteParams(params);
   const tt = await pageParams.getI18nInterface(

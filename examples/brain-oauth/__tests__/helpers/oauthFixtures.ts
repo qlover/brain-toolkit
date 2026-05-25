@@ -1,5 +1,7 @@
-import type { OAuthAuthorizationCodeRow } from '@schemas/oauth/OAuthAuthorizeSchema';
-import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
+import type {
+  OAuthAuthorizationCodeRow,
+  OAuthClientRow
+} from '@schemas/oauth/OAuthAuthorizeSchema';
 import type { OAuthRefreshTokenRow } from '@schemas/oauth/OAuthClientSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 

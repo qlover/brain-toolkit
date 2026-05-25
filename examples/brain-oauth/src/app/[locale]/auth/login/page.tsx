@@ -81,7 +81,9 @@ export default async function LoginPage(props: PageParamsProps) {
           </h2>
           <p className="text-secondary-text mb-8">{tt.subtitle}</p>
 
-          <Suspense fallback={<p className="text-secondary-text">{tt.subtitle}</p>}>
+          <Suspense
+            fallback={<p className="text-secondary-text">{tt.subtitle}</p>}
+          >
             <LoginForm tt={tt} />
           </Suspense>
         </div>

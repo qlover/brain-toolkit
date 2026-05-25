@@ -17,6 +17,9 @@ import type {
 export class OAuthAuthorizeQueryValidator
   implements ValidatorInterface<OAuthAuthorizeQuery>
 {
+  /**
+   * @override
+   */
   public validate(data: unknown): ValidationResult<OAuthAuthorizeQuery> {
     const result = OAuthAuthorizeQuerySchema.safeParse(data);
     if (!result.success) {
@@ -30,6 +33,9 @@ export class OAuthAuthorizeQueryValidator
     return { success: true, data: result.data };
   }
 
+  /**
+   * @override
+   */
   public getThrow(input: unknown): OAuthAuthorizeQuery {
     return OAuthAuthorizeQuerySchema.parse(input);
   }
@@ -39,6 +45,9 @@ export class OAuthAuthorizeQueryValidator
 export class OAuthConsentBodyValidator
   implements ValidatorInterface<OAuthConsentBody>
 {
+  /**
+   * @override
+   */
   public validate(data: unknown): ValidationResult<OAuthConsentBody> {
     const result = OAuthConsentBodySchema.safeParse(data);
     if (!result.success) {
@@ -52,6 +61,9 @@ export class OAuthConsentBodyValidator
     return { success: true, data: result.data };
   }
 
+  /**
+   * @override
+   */
   public getThrow(input: unknown): OAuthConsentBody {
     return OAuthConsentBodySchema.parse(input);
   }

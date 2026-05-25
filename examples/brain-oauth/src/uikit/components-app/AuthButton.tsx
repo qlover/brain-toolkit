@@ -17,6 +17,7 @@ export function AuthButton(props: {
   if (loading) {
     return (
       <div
+        data-testid="AuthButton"
         className="h-8 w-10 sm:h-9 sm:w-16 animate-pulse rounded-lg bg-elevated border border-primary-border/60"
         aria-hidden
       />

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { OAuthClientUpdateSchema } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
-import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
-import { OAuthClientUpdateSchema } from '@schemas/oauth/OAuthAuthorizeSchema';
+import type { NextRequest } from 'next/server';
 
 type ClientIdRouteContext = {
   params: Promise<{ clientId: string }>;

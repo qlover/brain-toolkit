@@ -1,14 +1,12 @@
 import { randomBytes } from 'crypto';
 import { ExecutorError } from '@qlover/fe-corekit';
 import { inject, injectable } from '@shared/container';
+import { OAuthConsentBodyValidator } from '@shared/validators/OAuthAuthorizeValidator';
+import type { OAuthConsentBody } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { BrainSessionService } from './BrainSessionService';
 import { OAuthAuthorizeService } from './OAuthAuthorizeService';
 import { OAuthAuthorizationCodesRepository } from '../repositorys/OAuthAuthorizationCodesRepository';
-import { BrainSessionService } from './BrainSessionService';
-import {
-  OAuthConsentBodyValidator
-} from '@shared/validators/OAuthAuthorizeValidator';
 import { buildOAuthRedirectUrl } from '../utils/oauthRedirectUtils';
-import type { OAuthConsentBody } from '@schemas/oauth/OAuthAuthorizeSchema';
 
 export type OAuthConsentResult = {
   redirectUrl: string;
@@ -69,7 +67,10 @@ export class OAuthConsentService {
     });
 
     if (!pageResult.ok) {
-      throw new ExecutorError(pageResult.error.errorKey, pageResult.error.message);
+      throw new ExecutorError(
+        pageResult.error.errorKey,
+        pageResult.error.message
+      );
     }
 
     const { data } = pageResult;

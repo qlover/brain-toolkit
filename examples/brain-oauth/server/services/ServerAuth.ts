@@ -5,8 +5,8 @@ import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
 import { BrainSessionService } from './BrainSessionService';
+import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 
 @injectable()

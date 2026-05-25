@@ -1,6 +1,6 @@
+import * as commonKeys from '../i18n-identifier/common/common';
 import * as developerAppsKeys from '../i18n-identifier/pages/page.developer.apps';
 import { PAGE_HOME_TITLE } from '../i18n-identifier/pages/page.home';
-import * as commonKeys from '../i18n-identifier/common/common';
 
 export const developerAppsI18n = Object.freeze({
   // basic meta properties
@@ -30,7 +30,8 @@ export const developerAppsI18n = Object.freeze({
   // form fields
   appNameLabel: developerAppsKeys.DEVELOPER_APPS_APP_NAME_LABEL,
   appNameRequired: developerAppsKeys.DEVELOPER_APPS_APP_NAME_REQUIRED,
-  redirectUrisPlaceholder: developerAppsKeys.DEVELOPER_APPS_REDIRECT_URIS_PLACEHOLDER,
+  redirectUrisPlaceholder:
+    developerAppsKeys.DEVELOPER_APPS_REDIRECT_URIS_PLACEHOLDER,
   redirectUrisHint: developerAppsKeys.DEVELOPER_APPS_REDIRECT_URIS_HINT,
   clientUriLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_URI_LABEL,
 
@@ -42,8 +43,10 @@ export const developerAppsI18n = Object.freeze({
   // confirmations
   deleteConfirmTitle: developerAppsKeys.DEVELOPER_APPS_DELETE_CONFIRM_TITLE,
   deleteConfirmContent: developerAppsKeys.DEVELOPER_APPS_DELETE_CONFIRM_CONTENT,
-  rotateSecretConfirmTitle: developerAppsKeys.DEVELOPER_APPS_ROTATE_SECRET_CONFIRM_TITLE,
-  rotateSecretConfirmContent: developerAppsKeys.DEVELOPER_APPS_ROTATE_SECRET_CONFIRM_CONTENT,
+  rotateSecretConfirmTitle:
+    developerAppsKeys.DEVELOPER_APPS_ROTATE_SECRET_CONFIRM_TITLE,
+  rotateSecretConfirmContent:
+    developerAppsKeys.DEVELOPER_APPS_ROTATE_SECRET_CONFIRM_CONTENT,
 
   // toasts
   toastCreateSuccess: developerAppsKeys.DEVELOPER_APPS_TOAST_CREATE_SUCCESS,
@@ -56,7 +59,8 @@ export const developerAppsI18n = Object.freeze({
   emptyState: developerAppsKeys.DEVELOPER_APPS_EMPTY_STATE,
 
   consoleSubtitle: developerAppsKeys.DEVELOPER_APPS_CONSOLE_SUBTITLE,
-  credentialsModalTitle: developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_MODAL_TITLE,
+  credentialsModalTitle:
+    developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_MODAL_TITLE,
   clientSecretLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_SECRET_LABEL,
   secretWarning: developerAppsKeys.DEVELOPER_APPS_SECRET_WARNING,
   credentialsConfirm: developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_CONFIRM,

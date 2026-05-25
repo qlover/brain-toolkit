@@ -1,18 +1,18 @@
 import { CookieStorage } from '@qlover/corekit-bridge';
 import { Base64Serializer, StorageExecutor } from '@qlover/fe-corekit';
-import { I18nService } from '@/impls/I18nService';
-import { RouterService } from '@/impls/RouterService';
 import { BrainAuthGateway } from '@/impls/BrainAuthGateway';
+import { I18nService } from '@/impls/I18nService';
 import { OAuthConsentGateway } from '@/impls/OAuthConsentGateway';
+import { RouterService } from '@/impls/RouterService';
 import { UserService } from '@/impls/UserService';
 import { ZustandCounterService } from '@/impls/ZustandCounterService';
 import { StringEncryptor } from '@shared/StringEncryptor';
 import { cookiesConfig } from '@config/cookies';
 import { IOCIdentifier as I } from '@config/ioc-identifiter';
 import { AppApiRegister } from './appApi/AppApiRegister';
+import { OAuthClientsApi } from './appApi/OAuthClientsApi';
 import { dialogHandler, logger, JSON, appConfig } from './globals';
 import { LocalStorage } from './LocalStorage';
-import { OAuthClientsApi } from './appApi/OAuthClientsApi';
 import type {
   IOCContainerInterface,
   IOCRegisterInterface

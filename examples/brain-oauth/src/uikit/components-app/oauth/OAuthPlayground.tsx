@@ -10,27 +10,33 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link } from '@/i18n/routing';
 import { useLocale } from 'next-intl';
-import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
-import { useUserAuth } from '@/uikit/hook/useUserAuth';
-import { useIOC } from '@/uikit/hook/useIOC';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode
+} from 'react';
+import { Link } from '@/i18n/routing';
 import { OAuthConsentGateway } from '@/impls/OAuthConsentGateway';
-import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
-import type {
-  OAuthClientDetail,
-  OAuthClientListItem
-} from '@schemas/oauth/OAuthAuthorizeSchema';
-import type { OAuthAuthorizePageData } from '@server/services/OAuthAuthorizeService';
-import { ROUTE_LOGIN, ROUTE_OAUTH_TOKEN, ROUTE_USERINFO } from '@config/route';
 import { readAppApiJson } from '@/pages/[locale]/developer/apps/readAppApiJson';
+import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
+import { useIOC } from '@/uikit/hook/useIOC';
+import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import {
   buildAuthorizeUrl,
   parseOAuthCallbackUrl,
   randomStateValue,
   type OAuthCallbackParams
 } from '@/uikit/utils/oauthPlaygroundUtils';
+import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
+import { ROUTE_LOGIN, ROUTE_OAUTH_TOKEN, ROUTE_USERINFO } from '@config/route';
+import type {
+  OAuthClientDetail,
+  OAuthClientListItem
+} from '@schemas/oauth/OAuthAuthorizeSchema';
+import type { OAuthAuthorizePageData } from '@server/services/OAuthAuthorizeService';
 
 const labelClass =
   'text-secondary-text mb-1.5 block text-xs font-medium uppercase tracking-wide';
@@ -63,6 +69,7 @@ function PlaygroundAlert(props: {
 
   return (
     <div
+      data-testid="PlaygroundAlert"
       role="alert"
       className={clsx(
         'border-l-4 p-3 rounded-lg text-sm flex items-start gap-2',
@@ -101,7 +108,10 @@ function PlaygroundSection(props: {
   children: ReactNode;
 }) {
   return (
-    <section className="border-b border-primary-border last:border-b-0">
+    <section
+      data-testid="PlaygroundSection"
+      className="border-b border-primary-border last:border-b-0"
+    >
       <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 bg-elevated/50">
         <div className="flex items-center gap-3 min-w-0">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand text-sm font-semibold">
@@ -120,7 +130,10 @@ function PlaygroundSection(props: {
 
 function JsonBlock({ value }: { value: unknown }) {
   return (
-    <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-secondary border border-primary-border p-3 text-xs font-mono text-primary-text">
+    <pre
+      data-testid="JsonBlock"
+      className="mt-2 max-h-64 overflow-auto rounded-lg bg-secondary border border-primary-border p-3 text-xs font-mono text-primary-text"
+    >
       {JSON.stringify(value, null, 2)}
     </pre>
   );
@@ -257,9 +270,7 @@ export function OAuthPlayground() {
       );
       setValidateResult(result);
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Validation failed'
-      );
+      setErrorMessage(err instanceof Error ? err.message : 'Validation failed');
     } finally {
       setValidating(false);
     }
@@ -391,7 +402,7 @@ export function OAuthPlayground() {
     (tokenResponse as { body: { access_token?: string } }).body?.access_token;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div data-testid="OAuthPlayground" className="flex flex-1 flex-col">
       <div className="flex flex-1 items-start justify-center px-4 py-8 sm:py-12">
         <div
           data-testid="OAuthPlayground"
@@ -415,6 +426,7 @@ export function OAuthPlayground() {
             <div className="mt-6 flex flex-wrap gap-2">
               {stepTitles.map((title, index) => (
                 <span
+                  data-testid="OAuthPlayground"
                   key={title}
                   className={clsx(
                     'text-xs px-3 py-1 rounded-full border font-medium transition-colors',
@@ -443,8 +455,7 @@ export function OAuthPlayground() {
           <PlaygroundSection title={tt.stepSession} step={1}>
             {authLoading ? (
               <p className="text-secondary-text text-sm flex items-center gap-2">
-                <LoadingOutlined spin />
-                …
+                <LoadingOutlined spin />…
               </p>
             ) : success && user ? (
               <p className="text-primary-text text-sm flex items-center gap-2">
@@ -491,11 +502,13 @@ export function OAuthPlayground() {
                 value={clientId ?? ''}
                 onChange={(e) => setClientId(e.target.value)}
               >
-                {clients.length === 0 && (
-                  <option value="">—</option>
-                )}
+                {clients.length === 0 && <option value="">—</option>}
                 {clients.map((c) => (
-                  <option key={c.client_id} value={c.client_id}>
+                  <option
+                    data-testid="OAuthPlayground"
+                    key={c.client_id}
+                    value={c.client_id}
+                  >
                     {c.client_name} ({c.client_id})
                   </option>
                 ))}
@@ -518,7 +531,11 @@ export function OAuthPlayground() {
                     }}
                   >
                     {clientDetail.redirect_uris.map((uri) => (
-                      <option key={uri} value={uri}>
+                      <option
+                        data-testid="OAuthPlayground"
+                        key={uri}
+                        value={uri}
+                      >
                         {uri}
                       </option>
                     ))}
@@ -530,6 +547,7 @@ export function OAuthPlayground() {
                   <div className="space-y-2">
                     {clientDetail.scopes.map((scope) => (
                       <label
+                        data-testid="OAuthPlayground"
                         key={scope}
                         className="flex items-center gap-2 text-sm text-primary-text cursor-pointer"
                       >
@@ -581,7 +599,9 @@ export function OAuthPlayground() {
                 </button>
 
                 {validateResult?.valid && (
-                  <PlaygroundAlert variant="success">{tt.validOk}</PlaygroundAlert>
+                  <PlaygroundAlert variant="success">
+                    {tt.validOk}
+                  </PlaygroundAlert>
                 )}
                 {validateResult && !validateResult.valid && (
                   <PlaygroundAlert variant="error">
@@ -600,7 +620,10 @@ export function OAuthPlayground() {
                         readOnly
                         value={authorizeUrl}
                         rows={3}
-                        className={clsx(inputClass, 'font-mono text-xs resize-y')}
+                        className={clsx(
+                          inputClass,
+                          'font-mono text-xs resize-y'
+                        )}
                       />
                       <button
                         type="button"
@@ -627,9 +650,7 @@ export function OAuthPlayground() {
               <button
                 type="button"
                 className={primaryButtonClass}
-                disabled={
-                  !success || !validateResult?.valid || consentLoading
-                }
+                disabled={!success || !validateResult?.valid || consentLoading}
                 onClick={() => void submitConsent('allow')}
               >
                 {consentLoading && <LoadingOutlined spin />}
@@ -638,9 +659,7 @@ export function OAuthPlayground() {
               <button
                 type="button"
                 className={secondaryButtonClass}
-                disabled={
-                  !success || !validateResult?.valid || consentLoading
-                }
+                disabled={!success || !validateResult?.valid || consentLoading}
                 onClick={() => void submitConsent('deny')}
               >
                 {tt.deny}

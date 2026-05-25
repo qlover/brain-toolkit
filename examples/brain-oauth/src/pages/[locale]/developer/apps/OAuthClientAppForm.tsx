@@ -1,7 +1,7 @@
 'use client';
 
-import type { FormEvent, ReactNode } from 'react';
 import { oauthInputClass, oauthLabelClass } from '@/uikit/styles/oauthUiStyles';
+import type { FormEvent, ReactNode } from 'react';
 
 export type OAuthClientFormValues = {
   client_name: string;
@@ -35,11 +35,24 @@ export function OAuthClientAppForm(props: {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   footer?: ReactNode | null;
 }) {
-  const { formId, values, fieldErrors = {}, labels, onChange, onSubmit, footer } =
-    props;
+  const {
+    formId,
+    values,
+    fieldErrors = {},
+    labels,
+    onChange,
+    onSubmit,
+    footer
+  } = props;
 
   return (
-    <form id={formId} onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form
+      data-testid="OAuthClientAppForm"
+      id={formId}
+      onSubmit={onSubmit}
+      className="space-y-4"
+      noValidate
+    >
       <div>
         <label htmlFor={`${formId}-client_name`} className={oauthLabelClass}>
           {labels.appNameLabel} <span className="text-red-500">*</span>

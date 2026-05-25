@@ -2,14 +2,14 @@
 
 import { TranslationOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
-import { useLocale } from 'next-intl';
 import { useRouter } from 'next/router';
+import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
-import type { ItemType } from 'antd/es/menu/interface';
 import { headerActionButtonClassName } from './headerStyles';
+import type { ItemType } from 'antd/es/menu/interface';
 
 const localePrefixPattern = new RegExp(
   `^/(${i18nConfig.supportedLngs.join('|')})(?=/|$)`

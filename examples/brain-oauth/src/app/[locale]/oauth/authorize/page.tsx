@@ -35,7 +35,9 @@ type OAuthAuthorizePageProps = PageParamsProps & {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function OAuthAuthorizePage(props: OAuthAuthorizePageProps) {
+export default async function OAuthAuthorizePage(
+  props: OAuthAuthorizePageProps
+) {
   const params = await props.params!;
   const pageParams = new AppPageRouteParams(params);
   const tt = await pageParams.getI18nInterface(

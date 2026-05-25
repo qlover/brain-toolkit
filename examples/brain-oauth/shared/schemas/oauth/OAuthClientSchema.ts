@@ -7,7 +7,9 @@ export const OAuthUserCredentialsSchema = z.object({
   updated_at: z.string()
 });
 
-export type OAuthUserCredentialsRow = z.infer<typeof OAuthUserCredentialsSchema>;
+export type OAuthUserCredentialsRow = z.infer<
+  typeof OAuthUserCredentialsSchema
+>;
 
 export const OAuthRefreshTokenSchema = z.object({
   id: z.number(),

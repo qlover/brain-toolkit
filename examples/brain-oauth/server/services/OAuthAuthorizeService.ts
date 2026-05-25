@@ -1,10 +1,8 @@
 import { inject, injectable } from '@shared/container';
-import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
-import {
-  OAuthAuthorizeQueryValidator
-} from '@shared/validators/OAuthAuthorizeValidator';
-import { parseScopeList } from '../utils/oauthRedirectUtils';
+import { OAuthAuthorizeQueryValidator } from '@shared/validators/OAuthAuthorizeValidator';
 import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
+import { parseScopeList } from '../utils/oauthRedirectUtils';
 
 export type OAuthAuthorizePageData = {
   clientId: string;
@@ -43,7 +41,8 @@ export class OAuthAuthorizeService {
   public async resolveAuthorizePage(
     rawQuery: Record<string, string | string[] | undefined>
   ): Promise<
-    { ok: true; data: OAuthAuthorizePageData } | { ok: false; error: OAuthAuthorizeValidationError }
+    | { ok: true; data: OAuthAuthorizePageData }
+    | { ok: false; error: OAuthAuthorizeValidationError }
   > {
     const query = this.normalizeQuery(rawQuery);
 
