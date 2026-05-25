@@ -3,7 +3,7 @@ import { defineRouting } from 'next-intl/routing';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import {
-  ROUTE_DASHBOARD_APPS,
+  ROUTE_DEVELOPER_APPS,
   ROUTE_LOGIN,
   ROUTE_OAUTH_AUTHORIZE,
   ROUTE_OAUTH_PLAYGROUND,
@@ -39,9 +39,9 @@ export const routing = defineRouting({
       en: '/admin/request-logs',
       zh: '/admin/request-logs'
     },
-    [ROUTE_DASHBOARD_APPS]: {
-      en: '/dashboard/apps',
-      zh: '/dashboard/apps'
+    [ROUTE_DEVELOPER_APPS]: {
+      en: '/developer/apps',
+      zh: '/developer/apps'
     },
     [ROUTE_OAUTH_AUTHORIZE]: {
       en: '/oauth/authorize',

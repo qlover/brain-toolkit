@@ -11,7 +11,7 @@ import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
 import { API_REFERENCE } from '@config/apiRoutes';
 import type { HomeI18nInterface } from '@config/i18n-mapping/HomeI18n';
-import { ROUTE_DASHBOARD_APPS, ROUTE_REGISTER } from '@config/route';
+import { ROUTE_DEVELOPER_APPS, ROUTE_REGISTER } from '@config/route';
 
 const primaryButtonClassName =
   'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-md';
@@ -124,7 +124,7 @@ export function HomeCta({ tt }: HomeSectionProps) {
       </h2>
       <p className="text-secondary-text mb-6">{tt.ctaDesc}</p>
       <Link
-        href={ROUTE_DASHBOARD_APPS}
+        href={ROUTE_DEVELOPER_APPS}
         className={clsx(
           primaryButtonClassName,
           'px-5 py-2.5 text-sm font-medium'
