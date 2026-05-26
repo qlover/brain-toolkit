@@ -9,6 +9,7 @@ import {
 import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
 import { parseScopeList } from '../utils/oauthRedirectUtils';
+import { isValidCodeChallenge } from '../utils/pkce';
 
 export type OAuthAuthorizePageData = {
   clientId: string;
@@ -19,6 +20,9 @@ export type OAuthAuthorizePageData = {
   scopes: string[];
   state?: string;
   responseType: 'code';
+  codeChallenge?: string;
+  codeChallengeMethod?: 'S256';
+  confidential: boolean;
 };
 
 export type OAuthAuthorizeValidationError = {
@@ -110,6 +114,11 @@ export class OAuthAuthorizeService {
       };
     }
 
+    const pkceError = this.validatePkceParams(parsed, client.confidential);
+    if (pkceError) {
+      return { ok: false, error: pkceError };
+    }
+
     return {
       ok: true,
       data: {
@@ -120,9 +129,65 @@ export class OAuthAuthorizeService {
         redirectUri: parsed.redirect_uri,
         scopes: requestedScopes,
         state: parsed.state,
-        responseType: 'code'
+        responseType: 'code',
+        codeChallenge: parsed.code_challenge,
+        codeChallengeMethod: parsed.code_challenge_method,
+        confidential: client.confidential
       }
     };
+  }
+
+  protected validatePkceParams(
+    parsed: {
+      code_challenge?: string;
+      code_challenge_method?: 'S256';
+    },
+    confidential: boolean
+  ): OAuthAuthorizeValidationError | null {
+    const hasChallenge = Boolean(parsed.code_challenge?.trim());
+    const hasMethod = Boolean(parsed.code_challenge_method);
+
+    if (!confidential) {
+      if (!hasChallenge || parsed.code_challenge_method !== 'S256') {
+        return {
+          errorKey: API_OAUTH_INVALID_REQUEST,
+          message:
+            'Public clients must send code_challenge and code_challenge_method=S256.'
+        };
+      }
+      if (!isValidCodeChallenge(parsed.code_challenge!)) {
+        return {
+          errorKey: API_OAUTH_INVALID_REQUEST,
+          message: 'Invalid code_challenge.'
+        };
+      }
+      return null;
+    }
+
+    if (hasChallenge !== hasMethod) {
+      return {
+        errorKey: API_OAUTH_INVALID_REQUEST,
+        message:
+          'code_challenge and code_challenge_method must be sent together.'
+      };
+    }
+
+    if (hasChallenge) {
+      if (parsed.code_challenge_method !== 'S256') {
+        return {
+          errorKey: API_OAUTH_INVALID_REQUEST,
+          message: 'Only code_challenge_method=S256 is supported.'
+        };
+      }
+      if (!isValidCodeChallenge(parsed.code_challenge!)) {
+        return {
+          errorKey: API_OAUTH_INVALID_REQUEST,
+          message: 'Invalid code_challenge.'
+        };
+      }
+    }
+
+    return null;
   }
 
   protected normalizeQuery(

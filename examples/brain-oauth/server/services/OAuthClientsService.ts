@@ -61,6 +61,7 @@ export class OAuthClientsService {
     return {
       client_id: result.client.client_id,
       client_secret: result.clientSecret,
+      confidential: result.client.confidential,
       client_name: result.client.client_name,
       client_uri: result.client.client_uri,
       redirect_uris: result.client.redirect_uris,
@@ -102,6 +103,9 @@ export class OAuthClientsService {
     }
     if (existing.owner_user_id !== ownerUserId) {
       throw new Error('Access denied');
+    }
+    if (!existing.confidential) {
+      throw new Error('Public clients do not have a client_secret');
     }
 
     const result = await this.clientsRepo.rotateSecret(ownerUserId, clientId);

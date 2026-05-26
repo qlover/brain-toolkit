@@ -68,7 +68,9 @@ export class OAuthConsentService {
       client_id: body.client_id,
       redirect_uri: body.redirect_uri,
       scope: body.scope,
-      state: body.state
+      state: body.state,
+      code_challenge: body.code_challenge,
+      code_challenge_method: body.code_challenge_method
     });
 
     if (!pageResult.ok) {
@@ -101,6 +103,8 @@ export class OAuthConsentService {
       user_id: session.userId,
       redirect_uri: data.redirectUri,
       scope: data.scopes.join(' ') || null,
+      code_challenge: data.codeChallenge ?? null,
+      code_challenge_method: data.codeChallengeMethod ?? null,
       expires_at: expiresAt
     });
 

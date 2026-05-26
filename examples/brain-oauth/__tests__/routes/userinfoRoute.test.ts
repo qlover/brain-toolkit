@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
 import { GET } from '@/app/userinfo/route';
+import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
 
 const getUserInfo = vi.fn();
 

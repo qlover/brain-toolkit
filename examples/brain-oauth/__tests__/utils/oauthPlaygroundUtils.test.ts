@@ -20,6 +20,19 @@ describe('oauthPlaygroundUtils', () => {
     expect(params.get('state')).toBe('s1');
   });
 
+  it('buildAuthorizeSearchParams includes PKCE when provided', () => {
+    const params = buildAuthorizeSearchParams({
+      clientId: 'client_abc',
+      redirectUri: 'https://app.example/cb',
+      scopes: ['openid'],
+      codeChallenge: 'challenge-value',
+      codeChallengeMethod: 'S256'
+    });
+
+    expect(params.get('code_challenge')).toBe('challenge-value');
+    expect(params.get('code_challenge_method')).toBe('S256');
+  });
+
   it('parseOAuthCallbackUrl extracts code and state', () => {
     const parsed = parseOAuthCallbackUrl(
       'https://app.example/cb?code=auth_code_xyz&state=s1'

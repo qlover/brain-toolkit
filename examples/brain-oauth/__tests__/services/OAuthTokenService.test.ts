@@ -11,9 +11,12 @@ import { hashOpaqueToken } from '@server/repositorys/OAuthCredentialsRepository'
 import type { OAuthCredentialsRepository } from '@server/repositorys/OAuthCredentialsRepository';
 import type { OAuthRefreshTokensRepository } from '@server/repositorys/OAuthRefreshTokensRepository';
 import { OAuthTokenService } from '@server/services/OAuthTokenService';
+import { computeS256CodeChallenge } from '@server/utils/pkce';
 import {
   testAuthCode,
+  testAuthCodeWithPkce,
   testOAuthClient,
+  testPublicOAuthClient,
   testRefreshTokenRow,
   testServerConfig
 } from '../helpers/oauthFixtures';
@@ -199,6 +202,61 @@ describe('OAuthTokenService', () => {
         refresh_token: 'expired',
         client_id: 'client_test',
         client_secret: 'secret'
+      })
+    ).rejects.toMatchObject({
+      errorId: API_OAUTH_INVALID_GRANT,
+      error: 'invalid_grant'
+    } satisfies Partial<OAuthTokenErrorExpect>);
+  });
+
+  it('exchanges authorization_code with PKCE code_verifier', async () => {
+    const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
+    const challenge = computeS256CodeChallenge(verifier);
+
+    vi.mocked(clientsRepo.verifyClientCredentials).mockResolvedValue(
+      testPublicOAuthClient
+    );
+    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(
+      testAuthCodeWithPkce(challenge, { client_id: 'client_public' })
+    );
+    vi.mocked(credentialsRepo.getUserCredentials).mockResolvedValue({
+      user_id: 42,
+      brain_session_token: 'brain_session',
+      updated_at: '2026-01-01T00:00:00.000Z'
+    });
+    vi.mocked(brainAdapter.exchangeAccessToken).mockResolvedValue({
+      access_token: 'brain_access',
+      expires_in: 3600,
+      refresh_token: 'brain_refresh'
+    });
+    vi.mocked(refreshTokensRepo.create).mockResolvedValue(undefined);
+
+    const result = await service.exchangeToken({
+      grant_type: 'authorization_code',
+      code: 'auth_code_1',
+      redirect_uri: 'https://app.example/callback',
+      client_id: 'client_public',
+      code_verifier: verifier
+    });
+
+    expect(result.access_token).toBe('brain_access');
+  });
+
+  it('throws invalid_grant when PKCE verifier mismatches', async () => {
+    const challenge = computeS256CodeChallenge(
+      'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'
+    );
+    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(
+      testAuthCodeWithPkce(challenge)
+    );
+
+    await expect(
+      service.exchangeToken({
+        grant_type: 'authorization_code',
+        code: 'auth_code_1',
+        redirect_uri: 'https://app.example/callback',
+        client_id: 'client_test',
+        code_verifier: 'wrong-verifier-that-is-long-enough-for-pkce-check-ok'
       })
     ).rejects.toMatchObject({
       errorId: API_OAUTH_INVALID_GRANT,

@@ -14,6 +14,8 @@ export type OAuthConsentPayload = {
   scope?: string;
   state?: string;
   trust?: boolean;
+  code_challenge?: string;
+  code_challenge_method?: 'S256';
 };
 
 export type OAuthConsentResponse = {

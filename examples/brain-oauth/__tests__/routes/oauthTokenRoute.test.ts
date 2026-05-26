@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { POST } from '@/app/oauth/token/route';
 import {
   API_OAUTH_INVALID_CLIENT,
   API_OAUTH_INVALID_REQUEST
 } from '@config/i18n-identifier/api';
-import { POST } from '@/app/oauth/token/route';
 
 const exchangeToken = vi.fn();
 

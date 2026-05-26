@@ -56,7 +56,9 @@ export function OAuthAuthorizeCard({
           redirect_uri: authorizeData.redirectUri,
           scope: scopeParam || undefined,
           state: authorizeData.state,
-          trust: action === 'allow' ? trust : undefined
+          trust: action === 'allow' ? trust : undefined,
+          code_challenge: authorizeData.codeChallenge,
+          code_challenge_method: authorizeData.codeChallengeMethod
         });
 
         window.location.assign(redirectUrl);
