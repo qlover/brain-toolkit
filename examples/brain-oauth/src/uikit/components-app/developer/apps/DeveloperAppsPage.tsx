@@ -109,7 +109,8 @@ export function DeveloperAppsPageComponent({
       redirectUrisHint:
         tt.redirectUrisHint ||
         'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).',
-      clientUriLabel: tt.clientUriLabel || 'Application Homepage URL (Optional)',
+      clientUriLabel:
+        tt.clientUriLabel || 'Application Homepage URL (Optional)',
       clientTypeLabel: tt.clientTypeLabel || 'Client type',
       clientTypeConfidential:
         tt.clientTypeConfidential || 'Confidential (client_secret)',

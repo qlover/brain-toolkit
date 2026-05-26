@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { OAuthAuthorizeQueryValidator } from '@shared/validators/OAuthAuthorizeValidator';
 import { API_OAUTH_INVALID_REQUEST } from '@config/i18n-identifier/api';
 import type { OAuthClientsRepository } from '@server/repositorys/OAuthClientsRepository';
 import { OAuthAuthorizeService } from '@server/services/OAuthAuthorizeService';
 import { computeS256CodeChallenge } from '@server/utils/pkce';
-import type { OAuthAuthorizeQueryValidator } from '@shared/validators/OAuthAuthorizeValidator';
 import {
   testOAuthClient,
   testPublicOAuthClient
@@ -43,8 +43,7 @@ describe('OAuthAuthorizeService PKCE', () => {
   });
 
   it('accepts valid PKCE for public clients', async () => {
-    const verifier =
-      'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
+    const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
     const challenge = computeS256CodeChallenge(verifier);
 
     vi.mocked(clientsRepo.findByClientId).mockResolvedValue(

@@ -77,7 +77,9 @@ export function OAuthClientAppForm(props: {
               className="mt-1"
             />
             <span>
-              <span className="font-medium">{labels.clientTypeConfidential}</span>
+              <span className="font-medium">
+                {labels.clientTypeConfidential}
+              </span>
             </span>
           </label>
           <label className="flex items-start gap-2 text-sm text-primary-text cursor-pointer">

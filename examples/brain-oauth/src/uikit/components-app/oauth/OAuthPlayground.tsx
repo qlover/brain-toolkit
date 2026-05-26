@@ -362,7 +362,15 @@ export function OAuthPlayground() {
         setConsentLoading(false);
       }
     },
-    [clientId, redirectUri, scopeParam, state, consentGateway, pkceActive, pkceChallenge]
+    [
+      clientId,
+      redirectUri,
+      scopeParam,
+      state,
+      consentGateway,
+      pkceActive,
+      pkceChallenge
+    ]
   );
 
   const exchangeToken = useCallback(async () => {
@@ -636,7 +644,9 @@ export function OAuthPlayground() {
                   </div>
                   {pkceActive ? (
                     <>
-                      <p className="text-xs text-secondary-text">{tt.pkceHint}</p>
+                      <p className="text-xs text-secondary-text">
+                        {tt.pkceHint}
+                      </p>
                       <div>
                         <p className={labelClass}>{tt.pkceVerifier}</p>
                         <textarea
@@ -748,9 +758,7 @@ export function OAuthPlayground() {
                   type="button"
                   className={secondaryButtonClass}
                   disabled={
-                    !success ||
-                    validating ||
-                    (pkceActive && !pkceChallenge)
+                    !success || validating || (pkceActive && !pkceChallenge)
                   }
                   onClick={() => void validateParams()}
                 >
@@ -850,7 +858,9 @@ export function OAuthPlayground() {
                   rows={2}
                   className={clsx(inputClass, 'font-mono text-xs')}
                 />
-                <p className="text-xs text-secondary-text mt-2">{tt.pkceHint}</p>
+                <p className="text-xs text-secondary-text mt-2">
+                  {tt.pkceHint}
+                </p>
               </div>
             ) : (
               <div>

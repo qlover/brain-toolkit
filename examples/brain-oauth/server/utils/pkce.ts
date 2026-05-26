@@ -4,8 +4,7 @@ import { createHash, timingSafeEqual } from 'crypto';
 const PKCE_VERIFIER_MIN = 43;
 const PKCE_VERIFIER_MAX = 128;
 
-const UNRESERVED =
-  /^[A-Za-z0-9\-._~]+$/;
+const UNRESERVED = /^[A-Za-z0-9\-._~]+$/;
 
 /**
  * PKCE helpers for RFC 7636 (S256 only).
@@ -22,7 +21,10 @@ export function isValidCodeVerifier(verifier: string): boolean {
 }
 
 export function isValidCodeChallenge(challenge: string): boolean {
-  if (challenge.length < PKCE_VERIFIER_MIN || challenge.length > PKCE_VERIFIER_MAX) {
+  if (
+    challenge.length < PKCE_VERIFIER_MIN ||
+    challenge.length > PKCE_VERIFIER_MAX
+  ) {
     return false;
   }
   return UNRESERVED.test(challenge);

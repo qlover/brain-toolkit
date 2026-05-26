@@ -210,8 +210,7 @@ describe('OAuthTokenService', () => {
   });
 
   it('exchanges authorization_code with PKCE code_verifier', async () => {
-    const verifier =
-      'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
+    const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
     const challenge = computeS256CodeChallenge(verifier);
 
     vi.mocked(clientsRepo.verifyClientCredentials).mockResolvedValue(

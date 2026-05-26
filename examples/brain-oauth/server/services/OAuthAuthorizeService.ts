@@ -8,8 +8,8 @@ import {
 } from '@config/i18n-identifier/api';
 import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
-import { isValidCodeChallenge } from '../utils/pkce';
 import { parseScopeList } from '../utils/oauthRedirectUtils';
+import { isValidCodeChallenge } from '../utils/pkce';
 
 export type OAuthAuthorizePageData = {
   clientId: string;

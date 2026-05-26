@@ -7,8 +7,7 @@ import {
 } from '@server/utils/pkce';
 
 describe('pkce', () => {
-  const verifier =
-    'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
+  const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
 
   it('validates verifier and challenge charset/length', () => {
     expect(isValidCodeVerifier(verifier)).toBe(true);
@@ -20,8 +19,11 @@ describe('pkce', () => {
     const challenge = computeS256CodeChallenge(verifier);
     expect(challenge).toBe('E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
     expect(verifyPkceS256(verifier, challenge)).toBe(true);
-    expect(verifyPkceS256(verifier, 'wrong-challenge-value-that-is-still-valid-charset-ok')).toBe(
-      false
-    );
+    expect(
+      verifyPkceS256(
+        verifier,
+        'wrong-challenge-value-that-is-still-valid-charset-ok'
+      )
+    ).toBe(false);
   });
 });
