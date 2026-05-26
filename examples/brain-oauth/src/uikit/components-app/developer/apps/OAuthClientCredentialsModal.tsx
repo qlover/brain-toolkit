@@ -9,7 +9,8 @@ import { CopyableCredential } from './CopyableCredential';
 
 export interface OAuthCredentials {
   clientId: string;
-  clientSecret: string;
+  clientSecret?: string;
+  confidential: boolean;
 }
 
 export function OAuthClientCredentialsModal(props: {
@@ -19,6 +20,7 @@ export function OAuthClientCredentialsModal(props: {
   clientIdLabel: string;
   clientSecretLabel: string;
   secretWarning: string;
+  publicClientNote?: string;
   confirmLabel: string;
   onCopyClientId: () => void;
   onCopySecret: () => void;
@@ -31,6 +33,7 @@ export function OAuthClientCredentialsModal(props: {
     clientIdLabel,
     clientSecretLabel,
     secretWarning,
+    publicClientNote,
     confirmLabel,
     onCopyClientId,
     onCopySecret,
@@ -65,16 +68,23 @@ export function OAuthClientCredentialsModal(props: {
               onCopy={onCopyClientId}
             />
           </div>
-          <div>
-            <label className={oauthLabelClass}>{clientSecretLabel}</label>
-            <CopyableCredential
-              value={credentials.clientSecret}
-              onCopy={onCopySecret}
-            />
-            <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-              {secretWarning}
+          {credentials.confidential && credentials.clientSecret ? (
+            <div>
+              <label className={oauthLabelClass}>{clientSecretLabel}</label>
+              <CopyableCredential
+                value={credentials.clientSecret}
+                onCopy={onCopySecret}
+              />
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                {secretWarning}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-secondary-text rounded-lg bg-elevated border border-primary-border p-3">
+              {publicClientNote ??
+                'Public client: no client_secret. Use PKCE in your SPA or mobile app.'}
             </p>
-          </div>
+          )}
         </div>
       )}
     </DeveloperOverlayModal>

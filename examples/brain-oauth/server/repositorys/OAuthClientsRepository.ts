@@ -41,7 +41,7 @@ export class OAuthClientsRepository {
     const { data, error } = await supabase
       .from('brain_oauth_clients')
       .select(
-        'client_id, client_name, client_uri, logo_uri, redirect_uris, created_at, updated_at'
+        'client_id, client_name, client_uri, logo_uri, redirect_uris, confidential, created_at, updated_at'
       )
       .eq('owner_user_id', ownerUserId)
       .order('created_at', { ascending: false });
@@ -56,15 +56,21 @@ export class OAuthClientsRepository {
   public async create(
     ownerUserId: number,
     input: OAuthClientCreate
-  ): Promise<{ client: OAuthClientRow; clientSecret: string }> {
+  ): Promise<{ client: OAuthClientRow; clientSecret?: string }> {
     const supabase = createAdminClient();
 
-    // Generate client_id and client_secret
+    const confidential = input.confidential ?? true;
     const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
-    const clientSecret =
-      Math.random().toString(36).substring(2, 20) +
-      Math.random().toString(36).substring(2, 20);
-    const clientSecretHash = await hashClientSecret(clientSecret);
+
+    let clientSecret: string | undefined;
+    let clientSecretHash: string | null = null;
+
+    if (confidential) {
+      clientSecret =
+        Math.random().toString(36).substring(2, 20) +
+        Math.random().toString(36).substring(2, 20);
+      clientSecretHash = await hashClientSecret(clientSecret);
+    }
 
     const { data, error } = await supabase
       .from('brain_oauth_clients')
@@ -76,7 +82,7 @@ export class OAuthClientsRepository {
         redirect_uris: input.redirect_uris,
         grant_types: ['authorization_code', 'refresh_token'],
         scopes: ['openid', 'profile', 'email'],
-        confidential: true,
+        confidential,
         owner_user_id: ownerUserId
       })
       .select('*')
@@ -127,6 +133,11 @@ export class OAuthClientsRepository {
     ownerUserId: number,
     clientId: string
   ): Promise<{ clientSecret: string }> {
+    const existing = await this.findByClientId(clientId);
+    if (!existing?.confidential) {
+      throw new Error('public_client_no_secret');
+    }
+
     const supabase = createAdminClient();
 
     // Generate new secret
@@ -176,6 +187,9 @@ export class OAuthClientsRepository {
 
     if (client.confidential) {
       if (!clientSecret?.trim()) {
+        throw new Error('invalid_client');
+      }
+      if (!client.client_secret_hash) {
         throw new Error('invalid_client');
       }
       const valid = await verifyClientSecret(

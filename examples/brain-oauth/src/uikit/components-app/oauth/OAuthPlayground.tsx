@@ -30,6 +30,10 @@ import {
   randomStateValue,
   type OAuthCallbackParams
 } from '@/uikit/utils/oauthPlaygroundUtils';
+import {
+  computePkceS256Challenge,
+  generatePkceVerifier
+} from '@shared/utils/pkceClient';
 import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
 import { ROUTE_LOGIN, ROUTE_OAUTH_TOKEN, ROUTE_USERINFO } from '@config/route';
 import type {
@@ -155,6 +159,10 @@ export function OAuthPlayground() {
   const [selectedScopes, setSelectedScopes] = useState<string[]>([]);
   const [state, setState] = useState('');
   const [clientSecret, setClientSecret] = useState('');
+  const [pkceOptionalEnabled, setPkceOptionalEnabled] = useState(false);
+  const [pkceVerifier, setPkceVerifier] = useState('');
+  const [pkceChallenge, setPkceChallenge] = useState('');
+  const [pkceLoading, setPkceLoading] = useState(false);
 
   const [validateResult, setValidateResult] = useState<ValidateResult | null>(
     null
@@ -174,6 +182,22 @@ export function OAuthPlayground() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+  const pkceRequired = clientDetail != null && !clientDetail.confidential;
+  const pkceActive = pkceRequired || pkceOptionalEnabled;
+
+  const regeneratePkce = useCallback(async () => {
+    setPkceLoading(true);
+    try {
+      const verifier = generatePkceVerifier(64);
+      const challenge = await computePkceS256Challenge(verifier);
+      setPkceVerifier(verifier);
+      setPkceChallenge(challenge);
+      setValidateResult(null);
+    } finally {
+      setPkceLoading(false);
+    }
+  }, []);
 
   const loadClients = useCallback(async () => {
     setClientsLoading(true);
@@ -222,6 +246,13 @@ export function OAuthPlayground() {
         setCallback(null);
         setTokenResponse(null);
         setUserinfoResponse(null);
+        setPkceOptionalEnabled(false);
+        if (!detail.confidential) {
+          void regeneratePkce();
+        } else {
+          setPkceVerifier('');
+          setPkceChallenge('');
+        }
       } catch (err) {
         if (!cancelled) {
           setErrorMessage(
@@ -234,7 +265,13 @@ export function OAuthPlayground() {
     return () => {
       cancelled = true;
     };
-  }, [clientId, success]);
+  }, [clientId, success, regeneratePkce]);
+
+  useEffect(() => {
+    if (pkceRequired && !pkceVerifier) {
+      void regeneratePkce();
+    }
+  }, [pkceRequired, pkceVerifier, regeneratePkce]);
 
   const authorizeUrl = useMemo(() => {
     if (!clientId || !redirectUri) return '';
@@ -242,9 +279,20 @@ export function OAuthPlayground() {
       clientId,
       redirectUri,
       scopes: selectedScopes,
-      state: state || undefined
+      state: state || undefined,
+      codeChallenge: pkceActive ? pkceChallenge : undefined,
+      codeChallengeMethod: pkceActive ? 'S256' : undefined
     });
-  }, [clientId, redirectUri, selectedScopes, state, origin, locale]);
+  }, [
+    clientId,
+    redirectUri,
+    selectedScopes,
+    state,
+    origin,
+    locale,
+    pkceActive,
+    pkceChallenge
+  ]);
 
   const scopeParam = selectedScopes.join(' ');
 
@@ -261,6 +309,10 @@ export function OAuthPlayground() {
     });
     if (scopeParam) params.set('scope', scopeParam);
     if (state.trim()) params.set('state', state.trim());
+    if (pkceActive && pkceChallenge) {
+      params.set('code_challenge', pkceChallenge);
+      params.set('code_challenge_method', 'S256');
+    }
 
     try {
       const result = await readAppApiJson<ValidateResult>(
@@ -274,7 +326,7 @@ export function OAuthPlayground() {
     } finally {
       setValidating(false);
     }
-  }, [clientId, redirectUri, scopeParam, state]);
+  }, [clientId, redirectUri, scopeParam, state, pkceActive, pkceChallenge]);
 
   const submitConsent = useCallback(
     async (action: 'allow' | 'deny') => {
@@ -292,7 +344,13 @@ export function OAuthPlayground() {
           client_id: clientId,
           redirect_uri: redirectUri,
           scope: scopeParam || undefined,
-          state: state.trim() || undefined
+          state: state.trim() || undefined,
+          ...(pkceActive && pkceChallenge
+            ? {
+                code_challenge: pkceChallenge,
+                code_challenge_method: 'S256' as const
+              }
+            : {})
         });
         setRedirectPreview(redirectUrl);
         setCallback(parseOAuthCallbackUrl(redirectUrl));
@@ -304,12 +362,21 @@ export function OAuthPlayground() {
         setConsentLoading(false);
       }
     },
-    [clientId, redirectUri, scopeParam, state, consentGateway]
+    [clientId, redirectUri, scopeParam, state, consentGateway, pkceActive, pkceChallenge]
   );
 
   const exchangeToken = useCallback(async () => {
-    if (!callback?.code || !clientId || !redirectUri || !clientSecret.trim()) {
-      setErrorMessage('Authorization code and client_secret are required');
+    if (!callback?.code || !clientId || !redirectUri) {
+      setErrorMessage('Authorization code is required');
+      return;
+    }
+    if (pkceActive) {
+      if (!pkceVerifier.trim()) {
+        setErrorMessage('code_verifier is required for PKCE');
+        return;
+      }
+    } else if (!clientSecret.trim()) {
+      setErrorMessage('client_secret is required');
       return;
     }
     setTokenLoading(true);
@@ -319,9 +386,13 @@ export function OAuthPlayground() {
         grant_type: 'authorization_code',
         code: callback.code,
         redirect_uri: redirectUri,
-        client_id: clientId,
-        client_secret: clientSecret.trim()
+        client_id: clientId
       });
+      if (pkceActive) {
+        body.set('code_verifier', pkceVerifier.trim());
+      } else {
+        body.set('client_secret', clientSecret.trim());
+      }
       const res = await fetch(ROUTE_OAUTH_TOKEN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -336,7 +407,7 @@ export function OAuthPlayground() {
     } finally {
       setTokenLoading(false);
     }
-  }, [callback, clientId, redirectUri, clientSecret]);
+  }, [callback, clientId, redirectUri, clientSecret, pkceActive, pkceVerifier]);
 
   const fetchUserinfo = useCallback(async () => {
     const accessToken =
@@ -517,6 +588,91 @@ export function OAuthPlayground() {
 
             {clientDetail && (
               <div className="space-y-4 rounded-xl bg-elevated border border-primary-border p-4">
+                <p className="text-sm text-primary-text">
+                  <span className={labelClass}>{tt.clientType}</span>{' '}
+                  <span
+                    className={clsx(
+                      'inline-block text-xs px-2 py-0.5 rounded-full font-medium ml-1',
+                      clientDetail.confidential
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                        : 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
+                    )}
+                  >
+                    {clientDetail.confidential ? 'Confidential' : 'Public'}
+                  </span>
+                  {pkceActive && (
+                    <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium ml-2 bg-brand/10 text-brand border border-brand/30">
+                      {tt.pkceEnabled}
+                    </span>
+                  )}
+                </p>
+
+                <div className="rounded-lg border border-primary-border p-4 space-y-3 bg-primary/50">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-primary-text">
+                      {tt.pkceTitle}
+                    </p>
+                    {clientDetail.confidential && (
+                      <label className="flex items-center gap-2 text-sm text-primary-text cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={pkceOptionalEnabled}
+                          onChange={(e) => {
+                            const enabled = e.target.checked;
+                            setPkceOptionalEnabled(enabled);
+                            setValidateResult(null);
+                            if (enabled) {
+                              void regeneratePkce();
+                            } else {
+                              setPkceVerifier('');
+                              setPkceChallenge('');
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-primary-border text-brand focus:ring-brand"
+                        />
+                        {tt.pkceOptional}
+                      </label>
+                    )}
+                  </div>
+                  {pkceActive ? (
+                    <>
+                      <p className="text-xs text-secondary-text">{tt.pkceHint}</p>
+                      <div>
+                        <p className={labelClass}>{tt.pkceVerifier}</p>
+                        <textarea
+                          readOnly
+                          value={pkceVerifier}
+                          rows={2}
+                          className={clsx(inputClass, 'font-mono text-xs')}
+                        />
+                      </div>
+                      <div>
+                        <p className={labelClass}>{tt.pkceChallenge}</p>
+                        <textarea
+                          readOnly
+                          value={pkceChallenge}
+                          rows={2}
+                          className={clsx(inputClass, 'font-mono text-xs')}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className={secondaryButtonClass}
+                        disabled={pkceLoading}
+                        onClick={() => void regeneratePkce()}
+                      >
+                        {pkceLoading && <LoadingOutlined spin />}
+                        {tt.pkceRegenerate}
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-xs text-secondary-text">
+                      Enable optional PKCE to test S256 with a confidential
+                      client, or select a public client.
+                    </p>
+                  )}
+                </div>
+
                 <div>
                   <label htmlFor="playground-redirect" className={labelClass}>
                     {tt.redirectLabel}
@@ -591,7 +747,11 @@ export function OAuthPlayground() {
                 <button
                   type="button"
                   className={secondaryButtonClass}
-                  disabled={!success || validating}
+                  disabled={
+                    !success ||
+                    validating ||
+                    (pkceActive && !pkceChallenge)
+                  }
                   onClick={() => void validateParams()}
                 >
                   {validating && <LoadingOutlined spin />}
@@ -681,24 +841,41 @@ export function OAuthPlayground() {
           </PlaygroundSection>
 
           <PlaygroundSection title={tt.stepToken} step={4}>
-            <div>
-              <label htmlFor="playground-secret" className={labelClass}>
-                {tt.secretLabel}
-              </label>
-              <input
-                id="playground-secret"
-                type="password"
-                autoComplete="off"
-                className={inputClass}
-                value={clientSecret}
-                onChange={(e) => setClientSecret(e.target.value)}
-                placeholder="client_secret"
-              />
-            </div>
+            {pkceActive ? (
+              <div>
+                <p className={labelClass}>{tt.pkceVerifier}</p>
+                <textarea
+                  readOnly
+                  value={pkceVerifier}
+                  rows={2}
+                  className={clsx(inputClass, 'font-mono text-xs')}
+                />
+                <p className="text-xs text-secondary-text mt-2">{tt.pkceHint}</p>
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="playground-secret" className={labelClass}>
+                  {tt.secretLabel}
+                </label>
+                <input
+                  id="playground-secret"
+                  type="password"
+                  autoComplete="off"
+                  className={inputClass}
+                  value={clientSecret}
+                  onChange={(e) => setClientSecret(e.target.value)}
+                  placeholder="client_secret"
+                />
+              </div>
+            )}
             <button
               type="button"
               className={primaryButtonClass}
-              disabled={!callback?.code || !clientSecret.trim() || tokenLoading}
+              disabled={
+                !callback?.code ||
+                tokenLoading ||
+                (pkceActive ? !pkceVerifier.trim() : !clientSecret.trim())
+              }
               onClick={() => void exchangeToken()}
             >
               {tokenLoading && <LoadingOutlined spin />}

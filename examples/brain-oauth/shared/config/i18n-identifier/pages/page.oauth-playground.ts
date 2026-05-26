@@ -231,3 +231,67 @@ export const PAGE_OAUTH_PLAYGROUND_NAV_LINK = 'page_oauth_playground:nav__link';
  */
 export const PAGE_OAUTH_PLAYGROUND_SIMULATED_NOTE =
   'page_oauth_playground:simulated__note';
+
+/**
+ * @description PKCE section title
+ * @localZh PKCE（公共客户端）
+ * @localEn PKCE (public client)
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_TITLE =
+  'page_oauth_playground:pkce__title';
+
+/**
+ * @description PKCE mode badge when active
+ * @localZh 已启用 PKCE 测试
+ * @localEn PKCE test enabled
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_ENABLED =
+  'page_oauth_playground:pkce__enabled';
+
+/**
+ * @description code_verifier label
+ * @localZh code_verifier
+ * @localEn code_verifier
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_VERIFIER =
+  'page_oauth_playground:pkce__verifier';
+
+/**
+ * @description code_challenge label
+ * @localZh code_challenge (S256)
+ * @localEn code_challenge (S256)
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_CHALLENGE =
+  'page_oauth_playground:pkce__challenge';
+
+/**
+ * @description Regenerate PKCE pair button
+ * @localZh 重新生成 PKCE
+ * @localEn Regenerate PKCE
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_REGENERATE =
+  'page_oauth_playground:pkce__regenerate';
+
+/**
+ * @description PKCE hint for public clients
+ * @localZh 公共客户端自动使用 PKCE；换票时提交 code_verifier，无需 client_secret。
+ * @localEn Public clients use PKCE automatically; exchange tokens with code_verifier (no client_secret).
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_HINT =
+  'page_oauth_playground:pkce__hint';
+
+/**
+ * @description Optional PKCE toggle for confidential clients
+ * @localZh 可选：测试 PKCE（机密客户端）
+ * @localEn Optional: test PKCE (confidential client)
+ */
+export const PAGE_OAUTH_PLAYGROUND_PKCE_OPTIONAL =
+  'page_oauth_playground:pkce__optional';
+
+/**
+ * @description Client type label in playground
+ * @localZh 客户端类型
+ * @localEn Client type
+ */
+export const PAGE_OAUTH_PLAYGROUND_CLIENT_TYPE =
+  'page_oauth_playground:client__type';

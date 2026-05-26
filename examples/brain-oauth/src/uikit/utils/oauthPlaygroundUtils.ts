@@ -15,6 +15,8 @@ export function buildAuthorizeSearchParams(input: {
   redirectUri: string;
   scopes: string[];
   state?: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: 'S256';
 }): URLSearchParams {
   const params = new URLSearchParams({
     response_type: 'code',
@@ -27,6 +29,10 @@ export function buildAuthorizeSearchParams(input: {
   if (input.state?.trim()) {
     params.set('state', input.state.trim());
   }
+  if (input.codeChallenge?.trim()) {
+    params.set('code_challenge', input.codeChallenge.trim());
+    params.set('code_challenge_method', input.codeChallengeMethod ?? 'S256');
+  }
   return params;
 }
 
@@ -38,6 +44,8 @@ export function buildAuthorizeUrl(
     redirectUri: string;
     scopes: string[];
     state?: string;
+    codeChallenge?: string;
+    codeChallengeMethod?: 'S256';
   }
 ): string {
   const prefix = locale ? `/${locale}` : '';

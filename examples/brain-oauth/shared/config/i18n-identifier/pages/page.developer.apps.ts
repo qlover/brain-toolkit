@@ -302,3 +302,66 @@ export const DEVELOPER_APPS_LOADING = 'developer_apps:loading';
  * @localEn OAuth playground
  */
 export const DEVELOPER_APPS_PLAYGROUND_LINK = 'developer_apps:playground__link';
+
+/**
+ * @description Client type field label
+ * @localZh 客户端类型
+ * @localEn Client type
+ */
+export const DEVELOPER_APPS_CLIENT_TYPE_LABEL =
+  'developer_apps:client__type__label';
+
+/**
+ * @description Confidential client option
+ * @localZh 机密客户端（含 client_secret）
+ * @localEn Confidential client (with client_secret)
+ */
+export const DEVELOPER_APPS_CLIENT_TYPE_CONFIDENTIAL =
+  'developer_apps:client__type__confidential';
+
+/**
+ * @description Public client option
+ * @localZh 公共客户端（PKCE，无 secret）
+ * @localEn Public client (PKCE, no secret)
+ */
+export const DEVELOPER_APPS_CLIENT_TYPE_PUBLIC =
+  'developer_apps:client__type__public';
+
+/**
+ * @description Client type hint on create
+ * @localZh 公共客户端用于 SPA / 移动端，必须使用 PKCE；类型创建后不可更改。
+ * @localEn Public clients are for SPAs and mobile apps and require PKCE. Type cannot be changed after creation.
+ */
+export const DEVELOPER_APPS_CLIENT_TYPE_HINT =
+  'developer_apps:client__type__hint';
+
+/**
+ * @description Client type locked hint on edit
+ * @localZh 客户端类型在创建时已固定，无法修改。
+ * @localEn Client type is fixed at creation and cannot be changed.
+ */
+export const DEVELOPER_APPS_CLIENT_TYPE_LOCKED_HINT =
+  'developer_apps:client__type__locked__hint';
+
+/**
+ * @description Public client badge
+ * @localZh 公共客户端
+ * @localEn Public
+ */
+export const DEVELOPER_APPS_STATUS_PUBLIC = 'developer_apps:status__public';
+
+/**
+ * @description Confidential client badge
+ * @localZh 机密客户端
+ * @localEn Confidential
+ */
+export const DEVELOPER_APPS_STATUS_CONFIDENTIAL =
+  'developer_apps:status__confidential';
+
+/**
+ * @description Public client credentials note
+ * @localZh 公共客户端不生成 client_secret，请在前端使用 PKCE 完成授权。
+ * @localEn No client_secret for public clients. Use PKCE in your frontend app.
+ */
+export const DEVELOPER_APPS_PUBLIC_CLIENT_NOTE =
+  'developer_apps:public__client__note';

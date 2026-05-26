@@ -109,7 +109,16 @@ export function DeveloperAppsPageComponent({
       redirectUrisHint:
         tt.redirectUrisHint ||
         'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).',
-      clientUriLabel: tt.clientUriLabel || 'Application Homepage URL (Optional)'
+      clientUriLabel: tt.clientUriLabel || 'Application Homepage URL (Optional)',
+      clientTypeLabel: tt.clientTypeLabel || 'Client type',
+      clientTypeConfidential:
+        tt.clientTypeConfidential || 'Confidential (client_secret)',
+      clientTypePublic: tt.clientTypePublic || 'Public (PKCE, no secret)',
+      clientTypeHint:
+        tt.clientTypeHint ||
+        'Public clients require PKCE. Type cannot be changed after creation.',
+      clientTypeLockedHint:
+        tt.clientTypeLockedHint || 'Client type is fixed after creation.'
     }),
     [tt]
   );
@@ -182,7 +191,7 @@ export function DeveloperAppsPageComponent({
       if (field === 'id') {
         await copyText(credentials.clientId);
         message.success(tt.copyClientIdSuccess || 'Client ID copied');
-      } else {
+      } else if (credentials.clientSecret) {
         await copyText(credentials.clientSecret);
         message.success(tt.copySecretSuccess || 'Client Secret copied');
       }
@@ -212,7 +221,8 @@ export function DeveloperAppsPageComponent({
       const payload: OAuthClientCreate = {
         client_name: createValues.client_name.trim(),
         client_uri: createValues.client_uri.trim() || undefined,
-        redirect_uris: redirectUris
+        redirect_uris: redirectUris,
+        confidential: createValues.confidential
       };
 
       const response = await fetch('/api/clients', {
@@ -233,6 +243,7 @@ export function DeveloperAppsPageComponent({
         client_name: data.client_name,
         client_uri: data.client_uri,
         redirect_uris: data.redirect_uris,
+        confidential: data.confidential,
         created_at: data.created_at,
         updated_at: data.created_at
       };
@@ -243,7 +254,8 @@ export function DeveloperAppsPageComponent({
 
       showCredentialsModal({
         clientId: data.client_id,
-        clientSecret: data.client_secret
+        clientSecret: data.client_secret,
+        confidential: data.confidential
       });
     } catch (error) {
       console.error('Create app error:', error);
@@ -317,7 +329,14 @@ export function DeveloperAppsPageComponent({
     }
   };
 
-  const handleRotateSecret = (clientId: string) => {
+  const handleRotateSecret = (clientId: string, confidential = true) => {
+    if (!confidential) {
+      message.warning(
+        tt.publicClientNote ||
+          'Public clients do not have a client_secret to rotate.'
+      );
+      return;
+    }
     setConfirmOptions({
       title: tt.rotateSecretConfirmTitle || 'Rotate Secret',
       content:
@@ -341,7 +360,8 @@ export function DeveloperAppsPageComponent({
             await readAppApiJson<OAuthClientSecretRotateResponse>(response);
           showCredentialsModal({
             clientId,
-            clientSecret: data.client_secret
+            clientSecret: data.client_secret,
+            confidential: true
           });
         } catch (error) {
           console.error('Rotate secret error:', error);
@@ -392,11 +412,28 @@ export function DeveloperAppsPageComponent({
 
   const openEditModal = (app: OAuthClientListItem) => {
     setEditingApp(app);
-    setEditValues({
-      client_name: app.client_name,
-      client_uri: app.client_uri || '',
-      redirect_uris: app.redirect_uris.join('\n')
-    });
+    void (async () => {
+      try {
+        const detail = await readAppApiJson<OAuthClientDetail>(
+          await fetch(`/api/clients/${encodeURIComponent(app.client_id)}`, {
+            credentials: 'include'
+          })
+        );
+        setEditValues({
+          client_name: detail.client_name,
+          client_uri: detail.client_uri || '',
+          redirect_uris: detail.redirect_uris.join('\n'),
+          confidential: detail.confidential
+        });
+      } catch {
+        setEditValues({
+          client_name: app.client_name,
+          client_uri: app.client_uri || '',
+          redirect_uris: app.redirect_uris.join('\n'),
+          confidential: app.confidential ?? true
+        });
+      }
+    })();
     setEditFieldErrors({});
     setEditModalVisible(true);
   };
@@ -481,11 +518,14 @@ export function DeveloperAppsPageComponent({
                             <span
                               className={clsx(
                                 'text-xs px-2 py-0.5 rounded-full font-medium',
-                                'bg-green-100 text-green-800',
-                                'dark:bg-green-900/30 dark:text-green-300'
+                                app.confidential
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                  : 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
                               )}
                             >
-                              {tt.statusEnabled || 'Enabled'}
+                              {app.confidential
+                                ? tt.statusConfidential || 'Confidential'
+                                : tt.statusPublic || 'Public'}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -531,7 +571,18 @@ export function DeveloperAppsPageComponent({
                               oauthGhostActionClass,
                               'text-amber-700 dark:text-amber-300 hover:bg-amber-500/10'
                             )}
-                            onClick={() => handleRotateSecret(app.client_id)}
+                            onClick={() =>
+                              handleRotateSecret(
+                                app.client_id,
+                                app.confidential
+                              )
+                            }
+                            disabled={!app.confidential}
+                            title={
+                              !app.confidential
+                                ? tt.publicClientNote
+                                : undefined
+                            }
                           >
                             <KeyOutlined />
                             {tt.rotateSecretButton || 'Rotate Secret'}
@@ -568,6 +619,7 @@ export function DeveloperAppsPageComponent({
           tt.secretWarning ||
           'This secret is shown only once. Save it securely now.'
         }
+        publicClientNote={tt.publicClientNote}
         confirmLabel={tt.credentialsConfirm || 'I have saved it, close'}
         onCopyClientId={() => void handleCopyFromCredentialsModal('id')}
         onCopySecret={() => void handleCopyFromCredentialsModal('secret')}
@@ -650,8 +702,12 @@ export function DeveloperAppsPageComponent({
                     type="button"
                     className={oauthWarningButtonClass}
                     onClick={() =>
-                      void handleRotateSecret(editingApp.client_id)
+                      void handleRotateSecret(
+                        editingApp.client_id,
+                        editValues.confidential
+                      )
                     }
+                    disabled={!editValues.confidential}
                   >
                     <KeyOutlined />
                     {tt.rotateSecretButton || 'Rotate Secret'}
@@ -701,6 +757,7 @@ export function DeveloperAppsPageComponent({
           values={editValues}
           fieldErrors={editFieldErrors}
           labels={formLabels}
+          lockClientType
           onChange={(patch) => {
             setEditValues((prev) => ({ ...prev, ...patch }));
             setEditFieldErrors((prev) => {

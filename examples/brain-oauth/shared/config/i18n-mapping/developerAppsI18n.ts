@@ -67,5 +67,15 @@ export const developerAppsI18n = Object.freeze({
   copyClientIdSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_CLIENT_ID_SUCCESS,
   copySecretSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_SECRET_SUCCESS,
   loading: developerAppsKeys.DEVELOPER_APPS_LOADING,
-  playgroundLink: developerAppsKeys.DEVELOPER_APPS_PLAYGROUND_LINK
+  playgroundLink: developerAppsKeys.DEVELOPER_APPS_PLAYGROUND_LINK,
+  clientTypeLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_LABEL,
+  clientTypeConfidential:
+    developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_CONFIDENTIAL,
+  clientTypePublic: developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_PUBLIC,
+  clientTypeHint: developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_HINT,
+  clientTypeLockedHint:
+    developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_LOCKED_HINT,
+  statusPublic: developerAppsKeys.DEVELOPER_APPS_STATUS_PUBLIC,
+  statusConfidential: developerAppsKeys.DEVELOPER_APPS_STATUS_CONFIDENTIAL,
+  publicClientNote: developerAppsKeys.DEVELOPER_APPS_PUBLIC_CLIENT_NOTE
 });

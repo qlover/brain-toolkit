@@ -22,6 +22,7 @@ import {
 } from '../repositorys/OAuthCredentialsRepository';
 import { OAuthRefreshTokensRepository } from '../repositorys/OAuthRefreshTokensRepository';
 import { OAuthTokenError } from '../utils/oauthTokenError';
+import { verifyPkceS256 } from '../utils/pkce';
 import { TokenEncryption } from '../utils/TokenEncryption';
 
 /**
@@ -120,6 +121,8 @@ export class OAuthTokenService {
       );
     }
 
+    this.assertPkceForAuthorizationCode(request, authCode);
+
     const brainTokens = await this.fetchBrainAccessToken(authCode.user_id);
     const middlewareRefresh = await this.issueMiddlewareRefreshToken(
       authCode.client_id,
@@ -133,6 +136,50 @@ export class OAuthTokenService {
       refresh_token: middlewareRefresh,
       scope: authCode.scope ?? undefined
     };
+  }
+
+  protected assertPkceForAuthorizationCode(
+    request: Extract<OAuthTokenRequest, { grant_type: 'authorization_code' }>,
+    authCode: {
+      code_challenge?: string | null;
+      code_challenge_method?: string | null;
+    }
+  ): void {
+    const storedChallenge = authCode.code_challenge?.trim();
+
+    if (storedChallenge) {
+      const verifier = request.code_verifier?.trim();
+      if (!verifier) {
+        throw new OAuthTokenError(
+          API_OAUTH_INVALID_GRANT,
+          400,
+          'code_verifier is required'
+        );
+      }
+      if (authCode.code_challenge_method !== 'S256') {
+        throw new OAuthTokenError(
+          API_OAUTH_INVALID_GRANT,
+          400,
+          'Unsupported PKCE method'
+        );
+      }
+      if (!verifyPkceS256(verifier, storedChallenge)) {
+        throw new OAuthTokenError(
+          API_OAUTH_INVALID_GRANT,
+          400,
+          'code_verifier mismatch'
+        );
+      }
+      return;
+    }
+
+    if (!request.client_secret?.trim()) {
+      throw new OAuthTokenError(
+        API_OAUTH_INVALID_CLIENT,
+        401,
+        'client_secret is required when PKCE is not used'
+      );
+    }
   }
 
   protected async exchangeRefreshToken(

@@ -28,10 +28,29 @@ export const testAuthCode: OAuthAuthorizationCodeRow = {
   user_id: 42,
   redirect_uri: 'https://app.example/callback',
   scope: 'openid profile',
+  code_challenge: null,
+  code_challenge_method: null,
   expires_at: '2099-01-01T00:00:00.000Z',
   used: false,
   created_at: '2026-01-01T00:00:00.000Z'
 };
+
+export const testPublicOAuthClient: OAuthClientRow = {
+  ...testOAuthClient,
+  client_id: 'client_public',
+  client_secret_hash: null,
+  confidential: false
+};
+
+export const testAuthCodeWithPkce = (
+  challenge: string,
+  overrides?: Partial<OAuthAuthorizationCodeRow>
+): OAuthAuthorizationCodeRow => ({
+  ...testAuthCode,
+  code_challenge: challenge,
+  code_challenge_method: 'S256',
+  ...overrides
+});
 
 export const testRefreshTokenRow = (
   overrides?: Partial<OAuthRefreshTokenRow>

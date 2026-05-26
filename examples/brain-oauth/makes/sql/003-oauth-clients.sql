@@ -23,7 +23,7 @@ drop table if exists public.oauth_clients cascade;
 create table public.brain_oauth_clients (
   id serial primary key,
   client_id text unique not null,
-  client_secret_hash text not null,
+  client_secret_hash text,
   client_name text not null,
   client_uri text,
   logo_uri text,
@@ -52,10 +52,16 @@ create table public.brain_oauth_authorization_codes (
   user_id integer not null,
   redirect_uri text not null,
   scope text,
+  code_challenge text,
+  code_challenge_method text,
   expires_at timestamptz not null,
   used boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+comment on column public.brain_oauth_authorization_codes.code_challenge is 'PKCE code_challenge (RFC 7636), stored at authorization time.';
+comment on column public.brain_oauth_authorization_codes.code_challenge_method is 'PKCE method; only S256 is supported.';
+comment on column public.brain_oauth_clients.client_secret_hash is 'Null for public clients (PKCE-only, no client_secret).';
 
 create index idx_brain_oauth_auth_codes_client on public.brain_oauth_authorization_codes (client_id);
 create index idx_brain_oauth_auth_codes_expires on public.brain_oauth_authorization_codes (expires_at);

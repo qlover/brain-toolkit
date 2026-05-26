@@ -7,12 +7,15 @@ export type OAuthClientFormValues = {
   client_name: string;
   redirect_uris: string;
   client_uri: string;
+  /** `true` = confidential; `false` = public (PKCE, no secret). Immutable after create. */
+  confidential: boolean;
 };
 
 export const emptyOAuthClientFormValues: OAuthClientFormValues = {
   client_name: '',
   redirect_uris: '',
-  client_uri: ''
+  client_uri: '',
+  confidential: true
 };
 
 const textareaClass = `${oauthInputClass} resize-y min-h-[5.5rem]`;
@@ -24,6 +27,11 @@ export interface OAuthClientAppFormLabels {
   redirectUrisPlaceholder: string;
   redirectUrisHint: string;
   clientUriLabel: string;
+  clientTypeLabel: string;
+  clientTypeConfidential: string;
+  clientTypePublic: string;
+  clientTypeHint: string;
+  clientTypeLockedHint?: string;
 }
 
 export function OAuthClientAppForm(props: {
@@ -34,6 +42,8 @@ export function OAuthClientAppForm(props: {
   onChange: (patch: Partial<OAuthClientFormValues>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   footer?: ReactNode | null;
+  /** When true, client type cannot be changed (edit mode). */
+  lockClientType?: boolean;
 }) {
   const {
     formId,
@@ -42,7 +52,8 @@ export function OAuthClientAppForm(props: {
     labels,
     onChange,
     onSubmit,
-    footer
+    footer,
+    lockClientType = false
   } = props;
 
   return (
@@ -53,6 +64,43 @@ export function OAuthClientAppForm(props: {
       className="space-y-4"
       noValidate
     >
+      <div>
+        <p className={oauthLabelClass}>{labels.clientTypeLabel}</p>
+        <div className="flex flex-col sm:flex-row gap-3 mt-1">
+          <label className="flex items-start gap-2 text-sm text-primary-text cursor-pointer">
+            <input
+              type="radio"
+              name={`${formId}-confidential`}
+              checked={values.confidential}
+              disabled={lockClientType}
+              onChange={() => onChange({ confidential: true })}
+              className="mt-1"
+            />
+            <span>
+              <span className="font-medium">{labels.clientTypeConfidential}</span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-primary-text cursor-pointer">
+            <input
+              type="radio"
+              name={`${formId}-confidential`}
+              checked={!values.confidential}
+              disabled={lockClientType}
+              onChange={() => onChange({ confidential: false })}
+              className="mt-1"
+            />
+            <span>
+              <span className="font-medium">{labels.clientTypePublic}</span>
+            </span>
+          </label>
+        </div>
+        <p className="text-xs text-secondary-text mt-1">
+          {lockClientType
+            ? (labels.clientTypeLockedHint ?? labels.clientTypeHint)
+            : labels.clientTypeHint}
+        </p>
+      </div>
+
       <div>
         <label htmlFor={`${formId}-client_name`} className={oauthLabelClass}>
           {labels.appNameLabel} <span className="text-red-500">*</span>

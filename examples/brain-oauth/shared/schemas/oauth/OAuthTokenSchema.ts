@@ -3,9 +3,10 @@ import { z } from 'zod';
 export const OAuthTokenAuthorizationCodeSchema = z.object({
   grant_type: z.literal('authorization_code'),
   code: z.string().min(1),
-  redirect_uri: z.string().url(),
+  redirect_uri: z.string().min(1),
   client_id: z.string().min(1),
-  client_secret: z.string().min(1).optional()
+  client_secret: z.string().min(1).optional(),
+  code_verifier: z.string().min(43).max(128).optional()
 });
 
 export type OAuthTokenAuthorizationCodeRequest = z.infer<

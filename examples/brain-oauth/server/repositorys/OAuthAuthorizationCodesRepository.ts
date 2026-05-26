@@ -8,6 +8,8 @@ export type CreateAuthorizationCodeInput = {
   user_id: number;
   redirect_uri: string;
   scope: string | null;
+  code_challenge: string | null;
+  code_challenge_method: string | null;
   expires_at: string;
 };
 
@@ -26,6 +28,8 @@ export class OAuthAuthorizationCodesRepository {
         user_id: input.user_id,
         redirect_uri: input.redirect_uri,
         scope: input.scope,
+        code_challenge: input.code_challenge,
+        code_challenge_method: input.code_challenge_method,
         expires_at: input.expires_at,
         used: false
       });
