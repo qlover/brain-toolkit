@@ -4,8 +4,8 @@ import { CloseOutlined, MenuOutlined } from '@ant-design/icons';
 import { clsx } from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, usePathname } from '@/i18n/routing';
-import { API_REFERENCE } from '@config/apiRoutes';
 import type { HomeI18nInterface } from '@config/i18n-mapping/HomeI18n';
+import { ROUTE_DOCS_OAUTH } from '@config/route';
 import { headerActionButtonClassName } from '../headerStyles';
 
 const navLinkClassName =
@@ -34,14 +34,12 @@ export function HomeHeaderNav({ tt }: HomeHeaderNavProps) {
         className="hidden md:flex items-center gap-6 ml-6 lg:ml-8"
         aria-label="Home"
       >
-        <a
-          href={API_REFERENCE}
+        <Link
+          href={ROUTE_DOCS_OAUTH}
           className="text-secondary-text hover:text-primary-text transition text-sm font-medium"
-          target="_blank"
-          rel="noopener noreferrer"
         >
           {tt.navDocs}
-        </a>
+        </Link>
         <Link
           href="/about"
           className="text-secondary-text hover:text-primary-text transition text-sm font-medium"
@@ -84,14 +82,9 @@ export function HomeHeaderNav({ tt }: HomeHeaderNavProps) {
           aria-label="Home mobile"
           onClick={closeMenu}
         >
-          <a
-            href={API_REFERENCE}
-            className={navLinkClassName}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <Link href={ROUTE_DOCS_OAUTH} className={navLinkClassName}>
             {tt.navDocs}
-          </a>
+          </Link>
           <Link href="/about" className={navLinkClassName}>
             {tt.navAbout}
           </Link>
