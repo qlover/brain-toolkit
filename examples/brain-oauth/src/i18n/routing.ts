@@ -6,6 +6,7 @@ import {
   ROUTE_DEVELOPER_APPS,
   ROUTE_LOGIN,
   ROUTE_OAUTH_AUTHORIZE,
+  ROUTE_DOCS_OAUTH,
   ROUTE_OAUTH_PLAYGROUND,
   ROUTE_REGISTER,
   ROUTE_REQUEST_LOGS
@@ -50,6 +51,10 @@ export const routing = defineRouting({
     [ROUTE_OAUTH_PLAYGROUND]: {
       en: '/oauth/playground',
       zh: '/oauth/playground'
+    },
+    [ROUTE_DOCS_OAUTH]: {
+      en: '/docs/oauth',
+      zh: '/docs/oauth'
     },
     '/about': {
       en: '/about',

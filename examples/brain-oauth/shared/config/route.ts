@@ -26,6 +26,9 @@ export const ROUTE_OAUTH_AUTHORIZE = '/oauth/authorize' as const;
 /** In-app OAuth flow playground (developer testing). */
 export const ROUTE_OAUTH_PLAYGROUND = '/oauth/playground' as const;
 
+/** OAuth integration guide (public documentation). */
+export const ROUTE_DOCS_OAUTH = '/docs/oauth' as const;
+
 /** OAuth 2.0 token endpoint (machine-to-machine, no locale prefix). */
 export const ROUTE_OAUTH_TOKEN = '/oauth/token' as const;
 
@@ -39,7 +42,12 @@ export const OAUTH_MACHINE_ROUTES = [
 ] as const;
 
 /** Routes that are allowed without authentication (public routes). */
-export const AUTH_ROUTES = [ROUTE_HOME, ROUTE_LOGIN, ROUTE_REGISTER] as const;
+export const AUTH_ROUTES = [
+  ROUTE_HOME,
+  ROUTE_LOGIN,
+  ROUTE_REGISTER,
+  ROUTE_DOCS_OAUTH
+] as const;
 
 /**
  * Returns true if pathname is an OAuth machine endpoint (token, userinfo, etc.).
