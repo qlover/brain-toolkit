@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -21,12 +25,24 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@schemas/*": ["./shared/schemas/*"],
-      "@config/*": ["./shared/config/*"],
-      "@interfaces/*": ["./shared/interfaces/*"],
-      "@shared/*": ["./shared/*"],
-      "@server/*": ["./server/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@schemas/*": [
+        "./shared/schemas/*"
+      ],
+      "@config/*": [
+        "./shared/config/*"
+      ],
+      "@interfaces/*": [
+        "./shared/interfaces/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
+      ],
+      "@server/*": [
+        "./server/*"
+      ]
     }
   },
   "include": [
@@ -37,7 +53,11 @@
     "shared/**/*.ts",
     "tools/**/*.ts",
     "__tests__/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next/types"]
+  "exclude": [
+    "node_modules",
+    ".next/types"
+  ]
 }
