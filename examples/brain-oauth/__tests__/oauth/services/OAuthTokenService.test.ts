@@ -4,14 +4,14 @@ import {
   API_OAUTH_INVALID_GRANT,
   API_OAUTH_UNSUPPORTED_GRANT_TYPE
 } from '@config/i18n-identifier/api';
-import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
-import type { OAuthAuthorizationCodesRepository } from '@server/repositorys/OAuthAuthorizationCodesRepository';
-import type { OAuthClientsRepository } from '@server/repositorys/OAuthClientsRepository';
-import { hashOpaqueToken } from '@server/repositorys/OAuthCredentialsRepository';
-import type { OAuthCredentialsRepository } from '@server/repositorys/OAuthCredentialsRepository';
-import type { OAuthRefreshTokensRepository } from '@server/repositorys/OAuthRefreshTokensRepository';
-import { OAuthTokenService } from '@server/services/OAuthTokenService';
-import { computeS256CodeChallenge } from '@server/utils/pkce';
+import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
+import type { OAuthAuthorizationCodesRepository } from '@server/oauth/repositorys/OAuthAuthorizationCodesRepository';
+import type { OAuthClientsRepository } from '@server/oauth/repositorys/OAuthClientsRepository';
+import { hashOpaqueToken } from '@server/oauth/repositorys/OAuthCredentialsRepository';
+import type { OAuthCredentialsRepository } from '@server/oauth/repositorys/OAuthCredentialsRepository';
+import type { OAuthRefreshTokensRepository } from '@server/oauth/repositorys/OAuthRefreshTokensRepository';
+import { OAuthTokenService } from '@server/oauth/services/OAuthTokenService';
+import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
 import {
   testAuthCode,
   testAuthCodeWithPkce,
@@ -48,9 +48,9 @@ describe('OAuthTokenService', () => {
     upsertUserCredentials: vi.fn()
   } as unknown as OAuthCredentialsRepository;
 
-  const brainAdapter = {
+  const userAdapter = {
     exchangeAccessToken: vi.fn()
-  } as unknown as BrainUserAdapter;
+  } as unknown as OAuthUserAdapterInterface;
 
   let service: OAuthTokenService;
 
@@ -64,7 +64,7 @@ describe('OAuthTokenService', () => {
       authCodesRepo,
       refreshTokensRepo,
       credentialsRepo,
-      brainAdapter,
+      userAdapter,
       testServerConfig
     );
   });
@@ -76,7 +76,7 @@ describe('OAuthTokenService', () => {
       brain_session_token: 'brain_session',
       updated_at: '2026-01-01T00:00:00.000Z'
     });
-    vi.mocked(brainAdapter.exchangeAccessToken).mockResolvedValue({
+    vi.mocked(userAdapter.exchangeAccessToken).mockResolvedValue({
       access_token: 'brain_access',
       expires_in: 3600,
       refresh_token: 'brain_refresh'
@@ -166,7 +166,7 @@ describe('OAuthTokenService', () => {
       brain_session_token: 'brain_session',
       updated_at: '2026-01-01T00:00:00.000Z'
     });
-    vi.mocked(brainAdapter.exchangeAccessToken).mockResolvedValue({
+    vi.mocked(userAdapter.exchangeAccessToken).mockResolvedValue({
       access_token: 'new_access',
       expires_in: 7200,
       refresh_token: 'new_brain_refresh'
@@ -224,7 +224,7 @@ describe('OAuthTokenService', () => {
       brain_session_token: 'brain_session',
       updated_at: '2026-01-01T00:00:00.000Z'
     });
-    vi.mocked(brainAdapter.exchangeAccessToken).mockResolvedValue({
+    vi.mocked(userAdapter.exchangeAccessToken).mockResolvedValue({
       access_token: 'brain_access',
       expires_in: 3600,
       refresh_token: 'brain_refresh'

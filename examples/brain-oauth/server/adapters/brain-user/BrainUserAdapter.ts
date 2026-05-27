@@ -7,16 +7,17 @@ import {
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { ProxyFetchAdapter } from './ProxyFetchAdapter';
+import { ProxyFetchAdapter } from '@server/adapters/ProxyFetchAdapter';
 import {
   extractBrainSessionToken,
   formatBrainLoginError
-} from '../utils/brainLoginResponse';
+} from './brainLoginResponse';
 import type {
-  BrainAccessToken,
-  BrainCredentials,
-  BrainUser
-} from '@brain-toolkit/brain-user';
+  OAuthProviderAccessToken,
+  OAuthUserAdapterInterface,
+  OAuthUserCredentials,
+  OAuthUserProfile
+} from '../../oauth-wrapper/interfaces/OAuthUserAdapterInterface';
 
 /**
  * Server-side Brain API adapter for OAuth token and userinfo flows.
@@ -31,7 +32,7 @@ import type {
  * const profile = await adapter.getUserInfo({ token: accessToken });
  */
 @injectable()
-export class BrainUserAdapter {
+export class BrainUserAdapter implements OAuthUserAdapterInterface {
   protected gateway: BrainUserGateway;
 
   constructor(@inject(I.AppConfig) config: SeedServerConfigInterface) {
@@ -43,7 +44,7 @@ export class BrainUserAdapter {
         ...brainFetchDefaults,
         baseURL: config.brainApiBase,
         timeout: config.brainApiTimeout,
-        // BRAIN_API_BASE already ends with .../method/api — use paths relative to that root.
+        // BRAIN_API_BASE already ends with .../method/api - use paths relative to that root.
         endpoints: {
           login: 'POST /auth/token.json',
           register: 'POST /users/signup.json',
@@ -57,10 +58,13 @@ export class BrainUserAdapter {
     this.gateway = new BrainUserGateway(adapter);
   }
 
+  /**
+   * @override
+   */
   public async login(
     email: string,
     password: string
-  ): Promise<BrainCredentials> {
+  ): Promise<OAuthUserCredentials> {
     const result = await this.gateway.login({ email, password });
     const token = extractBrainSessionToken(result);
     if (!token) {
@@ -69,29 +73,40 @@ export class BrainUserAdapter {
     return { ...result, token };
   }
 
-  public exchangeAccessToken(params: {
+  /**
+   * @override
+   */
+  public async exchangeAccessToken(params: {
     token: string;
     lang?: string;
-  }): Promise<BrainAccessToken> {
-    return this.gateway.getAccessToken({
+  }): Promise<OAuthProviderAccessToken> {
+    const access = await this.gateway.getAccessToken({
       token: params.token,
       lang: params.lang ?? 'en'
     });
+    return { ...access };
   }
 
-  public getUserInfo(token: string): Promise<BrainCredentials & BrainUser> {
-    return this.gateway.getUserInfo({ token });
+  /**
+   * @override
+   */
+  public async getUserInfo(token: string): Promise<OAuthUserProfile> {
+    const profile = await this.gateway.getUserInfo({ token });
+    return { ...profile };
   }
 
   /**
    * Fetches user profile using an OAuth access_token (userly JWT, Bearer scheme).
+   *
+   * @override
    */
-  public getUserInfoByAccessToken(
+  public async getUserInfoByAccessToken(
     accessToken: string
-  ): Promise<BrainCredentials & BrainUser> {
-    return this.gateway.getUserInfo(
+  ): Promise<OAuthUserProfile> {
+    const profile = await this.gateway.getUserInfo(
       { token: accessToken },
       { tokenPrefix: 'Bearer' }
     );
+    return { ...profile };
   }
 }

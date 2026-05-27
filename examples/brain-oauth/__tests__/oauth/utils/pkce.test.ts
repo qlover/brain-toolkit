@@ -4,7 +4,7 @@ import {
   isValidCodeChallenge,
   isValidCodeVerifier,
   verifyPkceS256
-} from '@server/utils/pkce';
+} from '@server/oauth/utils/pkce';
 
 describe('pkce', () => {
   const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';

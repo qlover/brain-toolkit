@@ -1,5 +1,5 @@
 import { NextApiServer } from '@server/NextApiServer';
-import { OAuthAuthorizeService } from '@server/services/OAuthAuthorizeService';
+import { OAuthAuthorizeService } from '@server/oauth/services/OAuthAuthorizeService';
 import type { NextRequest } from 'next/server';
 
 /**

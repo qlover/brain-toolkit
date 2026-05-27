@@ -1,10 +1,10 @@
 import { BootstrapServer } from '@server/BootstrapServer';
-import { OAuthUserInfoController } from '@server/controllers/OAuthUserInfoController';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import {
   OAuthUserInfoError,
   oauthUserInfoErrorResponse
-} from '@server/utils/oauthUserInfoError';
-import { parseBearerAuthorization } from '@server/utils/parseBearerAuthorization';
+} from '@server/oauth-wrapper/utils/oauthUserInfoError';
+import { parseBearerAuthorization } from '@server/oauth-wrapper/utils/parseBearerAuthorization';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const IOC = new BootstrapServer('/userinfo').getIOC();
 
   try {
-    const profile = await IOC(OAuthUserInfoController).getUserInfo(accessToken);
+    const profile = await IOC(OAuthWrapperController).getUserInfo(accessToken);
 
     return Response.json(profile, {
       status: 200,

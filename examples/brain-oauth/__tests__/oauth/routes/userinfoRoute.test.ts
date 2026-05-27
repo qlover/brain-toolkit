@@ -56,7 +56,7 @@ describe('GET /userinfo route', () => {
 
   it('returns invalid_token when service rejects token', async () => {
     const { OAuthUserInfoError } = await import(
-      '@server/utils/oauthUserInfoError'
+      '@server/oauth/utils/oauthUserInfoError'
     );
     getUserInfo.mockRejectedValue(new OAuthUserInfoError());
 

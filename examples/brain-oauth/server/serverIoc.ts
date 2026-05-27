@@ -6,6 +6,7 @@ import {
 } from '@qlover/corekit-bridge/ioc';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import { BrainUserAdapter } from './oauth/adapters/brain-user';
 import { SupabaseBridge } from './repositorys/SupabaseBridge';
 import type { LoggerInterface } from '@qlover/logger';
 
@@ -46,5 +47,6 @@ const ServerIocRegister: IOCRegisterInterface<
     ioc.bind(I.AppConfig, serverConfig);
 
     ioc.bind(I.DBBridgeInterface, ioc.get(SupabaseBridge));
+    ioc.bind(I.OAuthUserAdapterInterface, ioc.get(BrainUserAdapter));
   }
 };

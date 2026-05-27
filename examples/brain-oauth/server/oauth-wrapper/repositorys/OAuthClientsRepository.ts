@@ -10,7 +10,7 @@ import type {
 import {
   verifyClientSecret,
   hashClientSecret
-} from '@server/utils/clientSecretHash';
+} from '@server/oauth-wrapper/utils/clientSecretHash';
 
 /**
  * Reads and manages registered OAuth clients from Supabase (service role).

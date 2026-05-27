@@ -8,13 +8,14 @@ import type {
   OAuthClientCreateResponse,
   OAuthClientSecretRotateResponse
 } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { OAuthClientsInterface } from '../interfaces/OAuthClientsInterface';
 import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
 
 /**
  * Business logic for OAuth client management in developer console.
  */
 @injectable()
-export class OAuthClientsService {
+export class OAuthClientsService implements OAuthClientsInterface {
   constructor(
     @inject(OAuthClientsRepository)
     protected clientsRepo: OAuthClientsRepository
@@ -22,6 +23,7 @@ export class OAuthClientsService {
 
   /**
    * List all OAuth clients owned by a user
+   * @override
    */
   public async listForOwner(
     ownerUserId: number
@@ -31,6 +33,7 @@ export class OAuthClientsService {
 
   /**
    * Get detailed information about a specific OAuth client
+   * @override
    */
   public async getByClientId(
     ownerUserId: number,
@@ -51,6 +54,7 @@ export class OAuthClientsService {
 
   /**
    * Create a new OAuth client
+   * @override
    */
   public async create(
     ownerUserId: number,
@@ -71,6 +75,7 @@ export class OAuthClientsService {
 
   /**
    * Update an existing OAuth client
+   * @override
    */
   public async update(
     ownerUserId: number,
@@ -91,6 +96,7 @@ export class OAuthClientsService {
 
   /**
    * Rotate the client secret
+   * @override
    */
   public async rotateSecret(
     ownerUserId: number,
@@ -118,6 +124,7 @@ export class OAuthClientsService {
 
   /**
    * Delete an OAuth client
+   * @override
    */
   public async delete(ownerUserId: number, clientId: string): Promise<void> {
     // Verify ownership first

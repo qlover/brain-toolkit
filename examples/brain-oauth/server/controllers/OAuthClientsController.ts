@@ -7,9 +7,9 @@ import type {
   OAuthClientSecretRotateResponse,
   OAuthClientUpdate
 } from '@schemas/oauth/OAuthAuthorizeSchema';
-import { OAuthClientsService } from '../services/OAuthClientsService';
-import { ServerAuth } from '../services/ServerAuth';
-import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
+import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
+import { ServerAuth } from '@server/services/ServerAuth';
+import { OAuthClientsService } from '../oauth-wrapper/services/OAuthClientsService';
 
 /**
  * Developer console OAuth clients API controller.

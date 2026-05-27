@@ -11,11 +11,11 @@ import {
 } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import { BootstrapServer } from '@server/BootstrapServer';
+import { OAuthAuthorizeService } from '@server/oauth/services/OAuthAuthorizeService';
 import {
   AppPageRouteParams,
   type PageParamsType
 } from '@server/render/AppPageRouteParams';
-import { OAuthAuthorizeService } from '@server/services/OAuthAuthorizeService';
 import type { Metadata } from 'next';
 
 export async function generateStaticParams() {

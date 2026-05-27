@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
-import type { BrainUserAdapter } from '@server/adapters/BrainUserAdapter';
-import { OAuthUserInfoService } from '@server/services/OAuthUserInfoService';
-import { OAuthUserInfoError } from '@server/utils/oauthUserInfoError';
+import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
+import { OAuthUserInfoService } from '@server/oauth/services/OAuthUserInfoService';
+import { OAuthUserInfoError } from '@server/oauth/utils/oauthUserInfoError';
 
 type OAuthUserInfoErrorExpect = {
   errorId: string;
@@ -11,19 +11,19 @@ type OAuthUserInfoErrorExpect = {
 };
 
 describe('OAuthUserInfoService', () => {
-  const brainAdapter = {
+  const userAdapter = {
     getUserInfoByAccessToken: vi.fn()
-  } as unknown as BrainUserAdapter;
+  } as unknown as OAuthUserAdapterInterface;
 
   let service: OAuthUserInfoService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new OAuthUserInfoService(brainAdapter);
+    service = new OAuthUserInfoService(userAdapter);
   });
 
   it('maps Brain profile to OIDC userinfo claims', async () => {
-    vi.mocked(brainAdapter.getUserInfoByAccessToken).mockResolvedValue({
+    vi.mocked(userAdapter.getUserInfoByAccessToken).mockResolvedValue({
       id: 99,
       email: 'user@example.com',
       name: 'Full Name',
@@ -41,13 +41,13 @@ describe('OAuthUserInfoService', () => {
       name: 'Full Name',
       roles: ['user', 'premium']
     });
-    expect(brainAdapter.getUserInfoByAccessToken).toHaveBeenCalledWith(
+    expect(userAdapter.getUserInfoByAccessToken).toHaveBeenCalledWith(
       'access_jwt'
     );
   });
 
   it('falls back name from first/last when name is empty', async () => {
-    vi.mocked(brainAdapter.getUserInfoByAccessToken).mockResolvedValue({
+    vi.mocked(userAdapter.getUserInfoByAccessToken).mockResolvedValue({
       id: 1,
       email: 'a@b.co',
       name: '',
@@ -62,7 +62,7 @@ describe('OAuthUserInfoService', () => {
   });
 
   it('throws invalid_token when Brain adapter fails', async () => {
-    vi.mocked(brainAdapter.getUserInfoByAccessToken).mockRejectedValue(
+    vi.mocked(userAdapter.getUserInfoByAccessToken).mockRejectedValue(
       new Error('401')
     );
 
@@ -77,7 +77,7 @@ describe('OAuthUserInfoService', () => {
   });
 
   it('throws invalid_token when email is missing', async () => {
-    vi.mocked(brainAdapter.getUserInfoByAccessToken).mockResolvedValue({
+    vi.mocked(userAdapter.getUserInfoByAccessToken).mockResolvedValue({
       id: 1,
       email: '   ',
       name: 'X',

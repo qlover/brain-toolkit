@@ -1,8 +1,18 @@
 type BrainLoginLike = Record<string, unknown>;
 
 /**
- * Extract brain-user session token from login API payloads.
- * Supports `token`, `session_token`, and `auth_token.key`.
+ * Extracts a brain-user session token from login API payloads.
+ *
+ * Significance: Isolates Brain login response compatibility quirks.
+ * Core idea: Support all known token field variants in one provider helper.
+ * Main function: Read `token`, `session_token`, or `auth_token.key`.
+ * Main purpose: Keep Brain API response parsing inside the Brain User adapter module.
+ *
+ * @param data - Unknown Brain login response payload.
+ * @returns Trimmed session token, or null when no supported token is present.
+ *
+ * @example
+ * const token = extractBrainSessionToken(loginPayload);
  */
 export function extractBrainSessionToken(data: unknown): string | null {
   if (!data || typeof data !== 'object') {
@@ -31,7 +41,18 @@ export function extractBrainSessionToken(data: unknown): string | null {
 }
 
 /**
- * Format Brain `/auth/token.json` error payloads for API responses.
+ * Formats Brain login error payloads for API responses.
+ *
+ * Significance: Keeps Brain-specific error payload handling out of OAuth services.
+ * Core idea: Convert known Brain and Django-style error shapes to a message.
+ * Main function: Read non-field errors, field array errors, or string fields.
+ * Main purpose: Return actionable login failures without leaking parsing logic.
+ *
+ * @param data - Unknown Brain login response payload.
+ * @returns Human-readable login failure message.
+ *
+ * @example
+ * throw new Error(formatBrainLoginError(loginPayload));
  */
 export function formatBrainLoginError(data: unknown): string {
   if (!data || typeof data !== 'object') {

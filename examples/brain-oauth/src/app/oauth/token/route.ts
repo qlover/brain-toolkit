@@ -3,13 +3,13 @@ import {
   API_OAUTH_SERVER_ERROR
 } from '@config/i18n-identifier/api';
 import { BootstrapServer } from '@server/BootstrapServer';
-import { OAuthTokenController } from '@server/controllers/OAuthTokenController';
-import { logRequestEvent } from '@server/utils/logRequestEvent';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import {
   OAuthTokenError,
   oauthTokenErrorResponse
-} from '@server/utils/oauthTokenError';
-import { parseOAuthTokenRequest } from '@server/utils/parseOAuthTokenRequest';
+} from '@server/oauth-wrapper/utils/oauthTokenError';
+import { parseOAuthTokenRequest } from '@server/oauth-wrapper/utils/parseOAuthTokenRequest';
+import { logRequestEvent } from '@server/utils/logRequestEvent';
 import type { NextRequest } from 'next/server';
 
 function logOAuthTokenRequest(
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const tokens = await server
-      .getIOC()(OAuthTokenController)
+      .getIOC()(OAuthWrapperController)
       .exchangeToken(fields);
 
     return logOAuthTokenRequest(

@@ -1,9 +1,9 @@
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
+import { OAuthCredentialsRepository } from '@server/oauth/repositorys/OAuthCredentialsRepository';
 import { BrainSessionService } from './BrainSessionService';
-import { BrainUserAdapter } from '../adapters/BrainUserAdapter';
-import { OAuthCredentialsRepository } from '../repositorys/OAuthCredentialsRepository';
 import { TokenEncryption } from '../utils/TokenEncryption';
 import type {
   BrainAuthServiceInterface,
@@ -29,7 +29,8 @@ export class BrainAuthService implements BrainAuthServiceInterface {
 
   constructor(
     @inject(BrainSessionService) protected brainSession: BrainSessionService,
-    @inject(BrainUserAdapter) protected brainAdapter: BrainUserAdapter,
+    @inject(I.OAuthUserAdapterInterface)
+    protected userAdapter: OAuthUserAdapterInterface,
     @inject(OAuthCredentialsRepository)
     protected credentialsRepo: OAuthCredentialsRepository,
     @inject(I.AppConfig) config: SeedServerConfigInterface
@@ -43,27 +44,27 @@ export class BrainAuthService implements BrainAuthServiceInterface {
   public async verifyLogin(
     params: BrainVerifyLoginParams
   ): Promise<BrainVerifyLoginResult> {
-    const credentials = await this.brainAdapter.login(
+    const credentials = await this.userAdapter.login(
       params.email,
       params.password
     );
 
-    this.logger.debug('Brain login successful', credentials);
+    this.logger.debug('User provider login successful', credentials);
 
     const sessionToken = credentials.token;
     if (!sessionToken) {
-      throw new Error('Brain login did not return a session token');
+      throw new Error('User provider login did not return a session token');
     }
 
-    const access = await this.brainAdapter.exchangeAccessToken({
+    const access = await this.userAdapter.exchangeAccessToken({
       token: sessionToken
     });
 
-    // brain user info with session token
-    const userInfo = await this.brainAdapter.getUserInfo(sessionToken);
+    // Provider user info with session token.
+    const userInfo = await this.userAdapter.getUserInfo(sessionToken);
     const userId = Number(userInfo.id);
     if (!Number.isFinite(userId)) {
-      throw new Error('Brain user id is missing from profile');
+      throw new Error('User provider id is missing from profile');
     }
 
     const profileEmail = userInfo.email ?? params.email;

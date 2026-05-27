@@ -4,6 +4,7 @@ import type { RouterService } from '@/impls/RouterService';
 import type { UserService } from '@/impls/UserService';
 import type { ZustandCounterService } from '@/impls/ZustandCounterService';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
 import type { SupabaseBridge } from '@server/repositorys/SupabaseBridge';
 import type * as CorekitBridge from '@qlover/corekit-bridge';
 import type * as FeCorekit from '@qlover/fe-corekit';
@@ -25,10 +26,8 @@ export const IOCIdentifier = Object.freeze({
   I18nServiceInterface: 'I18nServiceInterface',
   ZustandCounterServiceInterface: 'ZustandCounterServiceInterface',
   /**
-   * 数据库桥接接口
-   *
-   * 你可以实现不同的例如：
-   *
+   * 数据库桥接接
+   * 你可以实现不同的例如
    * - Vercel Postgres
    * - supabase
    * - mysql
@@ -37,7 +36,8 @@ export const IOCIdentifier = Object.freeze({
    * - redis
    * - sqllite
    */
-  DBBridgeInterface: 'DBBridgeInterface'
+  DBBridgeInterface: 'DBBridgeInterface',
+  OAuthUserAdapterInterface: 'OAuthUserAdapterInterface'
 });
 
 export const I = IOCIdentifier;
@@ -76,4 +76,5 @@ export interface IOCIdentifierMapServer {
   [IOCIdentifier.Logger]: LoggerInterface;
   [IOCIdentifier.AppConfig]: SeedServerConfigInterface;
   [IOCIdentifier.DBBridgeInterface]: SupabaseBridge;
+  [IOCIdentifier.OAuthUserAdapterInterface]: OAuthUserAdapterInterface;
 }

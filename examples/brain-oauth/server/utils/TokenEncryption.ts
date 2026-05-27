@@ -1,9 +1,10 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import type { EncryptorInterface } from '@qlover/fe-corekit';
 
 /**
  * AES-256-GCM encryption for sensitive OAuth token fields at rest.
  */
-export class TokenEncryption {
+export class TokenEncryption implements EncryptorInterface<string, string> {
   private readonly key: Buffer;
 
   constructor(keyMaterial: string) {
@@ -16,6 +17,9 @@ export class TokenEncryption {
     }
   }
 
+  /**
+   * @override
+   */
   public encrypt(plaintext: string): string {
     const iv = randomBytes(12);
     const cipher = createCipheriv('aes-256-gcm', this.key, iv);
@@ -27,6 +31,9 @@ export class TokenEncryption {
     return `${iv.toString('base64')}:${encrypted.toString('base64')}:${tag.toString('base64')}`;
   }
 
+  /**
+   * @override
+   */
   public decrypt(ciphertext: string): string {
     const [ivB64, dataB64, tagB64] = ciphertext.split(':');
     if (!ivB64 || !dataB64 || !tagB64) {

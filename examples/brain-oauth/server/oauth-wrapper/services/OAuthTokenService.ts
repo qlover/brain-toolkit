@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { inject, injectable } from '@shared/container';
 import {
   API_OAUTH_INVALID_CLIENT,
@@ -13,23 +13,23 @@ import {
   type OAuthTokenRequest
 } from '@schemas/oauth/OAuthTokenSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { BrainUserAdapter } from '../adapters/BrainUserAdapter';
-import { OAuthAuthorizationCodesRepository } from '../repositorys/OAuthAuthorizationCodesRepository';
+import { TokenEncryption } from '@server/utils/TokenEncryption';
 import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
-import {
-  OAuthCredentialsRepository,
-  hashOpaqueToken
-} from '../repositorys/OAuthCredentialsRepository';
-import { OAuthRefreshTokensRepository } from '../repositorys/OAuthRefreshTokensRepository';
+import { OAuthWrapperRepository } from '../repositorys/OAuthWrapperRepository';
 import { OAuthTokenError } from '../utils/oauthTokenError';
 import { verifyPkceS256 } from '../utils/pkce';
-import { TokenEncryption } from '../utils/TokenEncryption';
+import type { OAuthUserAdapterInterface } from '../interfaces/OAuthUserAdapterInterface';
+import type { OAuthWrapperRepositoryInterface } from '../interfaces/OAuthWrapperRepositoryInterface';
+
+function hashOpaqueToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
 
 /**
  * OAuth 2.0 token endpoint (`POST /oauth/token`).
  *
- * Significance: Exchanges authorization codes and refresh tokens for Brain access tokens.
- * Core idea: Validate client + grant, consume codes, proxy Brain token APIs.
+ * Significance: Exchanges authorization codes and refresh tokens for provider access tokens.
+ * Core idea: Validate client + grant, consume codes, proxy user adapter token APIs.
  * Main purpose: Standard token endpoint for third-party OAuth clients.
  *
  * @example
@@ -44,14 +44,10 @@ export class OAuthTokenService {
   constructor(
     @inject(OAuthClientsRepository)
     protected clientsRepo: OAuthClientsRepository,
-    @inject(OAuthAuthorizationCodesRepository)
-    protected authCodesRepo: OAuthAuthorizationCodesRepository,
-    @inject(OAuthRefreshTokensRepository)
-    protected refreshTokensRepo: OAuthRefreshTokensRepository,
-    @inject(OAuthCredentialsRepository)
-    protected credentialsRepo: OAuthCredentialsRepository,
-    @inject(BrainUserAdapter)
-    protected brainAdapter: BrainUserAdapter,
+    @inject(OAuthWrapperRepository)
+    protected oauthRepo: OAuthWrapperRepositoryInterface,
+    @inject(I.OAuthUserAdapterInterface)
+    protected userAdapter: OAuthUserAdapterInterface,
     @inject(I.AppConfig) config: SeedServerConfigInterface
   ) {
     this.tokenEncryption = new TokenEncryption(config.encryptionKey);
@@ -96,7 +92,7 @@ export class OAuthTokenService {
     request: Extract<OAuthTokenRequest, { grant_type: 'authorization_code' }>,
     verifiedClientId: string
   ): Promise<OAuthTokenResponse> {
-    const authCode = await this.authCodesRepo.consumeCode(request.code);
+    const authCode = await this.oauthRepo.consumeCode(request.code);
     if (!authCode) {
       throw new OAuthTokenError(
         API_OAUTH_INVALID_GRANT,
@@ -123,16 +119,18 @@ export class OAuthTokenService {
 
     this.assertPkceForAuthorizationCode(request, authCode);
 
-    const brainTokens = await this.fetchBrainAccessToken(authCode.user_id);
+    const providerTokens = await this.fetchProviderAccessToken(
+      authCode.user_id
+    );
     const middlewareRefresh = await this.issueMiddlewareRefreshToken(
       authCode.client_id,
       authCode.user_id
     );
 
     return {
-      access_token: brainTokens.access_token,
+      access_token: providerTokens.access_token,
       token_type: 'Bearer',
-      expires_in: brainTokens.expires_in,
+      expires_in: providerTokens.expires_in,
       refresh_token: middlewareRefresh,
       scope: authCode.scope ?? undefined
     };
@@ -187,7 +185,7 @@ export class OAuthTokenService {
     verifiedClientId: string
   ): Promise<OAuthTokenResponse> {
     const tokenHash = hashOpaqueToken(request.refresh_token);
-    const stored = await this.refreshTokensRepo.findByTokenHash(tokenHash);
+    const stored = await this.oauthRepo.findByTokenHash(tokenHash);
 
     if (
       !stored ||
@@ -202,27 +200,27 @@ export class OAuthTokenService {
       );
     }
 
-    const brainTokens = await this.fetchBrainAccessToken(stored.user_id);
+    const providerTokens = await this.fetchProviderAccessToken(stored.user_id);
 
-    await this.refreshTokensRepo.revokeByTokenHash(tokenHash);
+    await this.oauthRepo.revokeByTokenHash(tokenHash);
     const middlewareRefresh = await this.issueMiddlewareRefreshToken(
       stored.client_id,
       stored.user_id
     );
 
     return {
-      access_token: brainTokens.access_token,
+      access_token: providerTokens.access_token,
       token_type: 'Bearer',
-      expires_in: brainTokens.expires_in,
+      expires_in: providerTokens.expires_in,
       refresh_token: middlewareRefresh
     };
   }
 
-  protected async fetchBrainAccessToken(userId: number): Promise<{
+  protected async fetchProviderAccessToken(userId: number): Promise<{
     access_token: string;
     expires_in: number;
   }> {
-    const credentials = await this.credentialsRepo.getUserCredentials(userId);
+    const credentials = await this.oauthRepo.getUserCredentials(userId);
     const sessionToken = credentials?.brain_session_token?.trim();
 
     if (!sessionToken) {
@@ -234,12 +232,12 @@ export class OAuthTokenService {
     }
 
     try {
-      const access = await this.brainAdapter.exchangeAccessToken({
+      const access = await this.userAdapter.exchangeAccessToken({
         token: sessionToken
       });
 
       if (access.refresh_token) {
-        await this.credentialsRepo.upsertUserCredentials(userId, {
+        await this.oauthRepo.upsertUserCredentials(userId, {
           brain_refresh_token: this.tokenEncryption.encrypt(
             access.refresh_token
           )
@@ -254,7 +252,7 @@ export class OAuthTokenService {
       throw new OAuthTokenError(
         API_OAUTH_INVALID_GRANT,
         400,
-        'Failed to obtain access token from Brain'
+        'Failed to obtain access token from user provider'
       );
     }
   }
@@ -268,7 +266,7 @@ export class OAuthTokenService {
       Date.now() + OAuthTokenService.REFRESH_TOKEN_TTL_MS
     ).toISOString();
 
-    await this.refreshTokensRepo.create({
+    await this.oauthRepo.createRefreshToken({
       refresh_token: hashOpaqueToken(plain),
       client_id: clientId,
       user_id: userId,

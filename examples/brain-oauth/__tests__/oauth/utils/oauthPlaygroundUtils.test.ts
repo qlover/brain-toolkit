@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAuthorizeSearchParams,
   parseOAuthCallbackUrl
-} from '../../src/uikit/utils/oauthPlaygroundUtils';
+} from '../../../src/uikit/utils/oauthPlaygroundUtils';
 
 describe('oauthPlaygroundUtils', () => {
   it('buildAuthorizeSearchParams includes real OAuth fields', () => {
