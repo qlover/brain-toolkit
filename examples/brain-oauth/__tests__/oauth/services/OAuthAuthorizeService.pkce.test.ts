@@ -1,32 +1,39 @@
-import { OAuthAuthorizeService } from '@server/oauth/services/OAuthAuthorizeService';
-import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
+import { OAuthWrapperService } from '@shared/oauth-wrapper/services/OAuthWrapperService';
+import { computeS256CodeChallenge } from '@shared/oauth-wrapper/utils/pkce';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { OAuthAuthorizeQueryValidator } from '@shared/validators/OAuthAuthorizeValidator';
 import { API_OAUTH_INVALID_REQUEST } from '@config/i18n-identifier/api';
-import type { OAuthClientsRepository } from '@server/oauth/repositorys/OAuthClientsRepository';
+import type { OAuthTokenServiceInterface } from '@shared/oauth-wrapper/interfaces/OAuthServiceInterface';
+import type { OAuthSessionInterface } from '@shared/oauth-wrapper/interfaces/OAuthSessionInterface';
+import type { OAuthUserAdapterInterface } from '@shared/oauth-wrapper/interfaces/OAuthUserAdapterInterface';
+import type { OAuthWrapperRepositoryInterface } from '@shared/oauth-wrapper/interfaces/OAuthWrapperRepositoryInterface';
 import {
   testOAuthClient,
   testPublicOAuthClient
 } from '../helpers/oauthFixtures';
 
-describe('OAuthAuthorizeService PKCE', () => {
-  const clientsRepo = {
-    findByClientId: vi.fn()
-  } as unknown as OAuthClientsRepository;
+describe('OAuthWrapperService PKCE', () => {
+  const oauthRepo = {
+    findClientById: vi.fn()
+  } as unknown as OAuthWrapperRepositoryInterface;
 
-  const queryValidator = {
-    getThrow: vi.fn(async (q: unknown) => q)
-  } as unknown as OAuthAuthorizeQueryValidator;
+  const oauthSession = {} as OAuthSessionInterface;
+  const userAdapter = {} as OAuthUserAdapterInterface;
+  const tokenService = {} as OAuthTokenServiceInterface;
 
-  let service: OAuthAuthorizeService;
+  let service: OAuthWrapperService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new OAuthAuthorizeService(clientsRepo, queryValidator);
+    service = new OAuthWrapperService(
+      oauthSession,
+      userAdapter,
+      tokenService,
+      oauthRepo
+    );
   });
 
   it('requires PKCE for public clients', async () => {
-    vi.mocked(clientsRepo.findByClientId).mockResolvedValue(
+    vi.mocked(oauthRepo.findClientById).mockResolvedValue(
       testPublicOAuthClient
     );
 
@@ -46,7 +53,7 @@ describe('OAuthAuthorizeService PKCE', () => {
     const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
     const challenge = computeS256CodeChallenge(verifier);
 
-    vi.mocked(clientsRepo.findByClientId).mockResolvedValue(
+    vi.mocked(oauthRepo.findClientById).mockResolvedValue(
       testPublicOAuthClient
     );
 
@@ -66,7 +73,7 @@ describe('OAuthAuthorizeService PKCE', () => {
   });
 
   it('allows confidential clients without PKCE', async () => {
-    vi.mocked(clientsRepo.findByClientId).mockResolvedValue(testOAuthClient);
+    vi.mocked(oauthRepo.findClientById).mockResolvedValue(testOAuthClient);
 
     const result = await service.resolveAuthorizePage({
       response_type: 'code',

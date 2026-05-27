@@ -3,7 +3,7 @@ import {
   isValidCodeChallenge,
   isValidCodeVerifier,
   verifyPkceS256
-} from '@server/oauth/utils/pkce';
+} from '@shared/oauth-wrapper/utils/pkce';
 import { describe, expect, it } from 'vitest';
 
 describe('pkce', () => {

@@ -1,4 +1,4 @@
-import { parseBearerAuthorization } from '@server/oauth/utils/parseBearerAuthorization';
+import { parseBearerAuthorization } from '@/app/userinfo/route';
 import { describe, expect, it } from 'vitest';
 
 describe('parseBearerAuthorization', () => {

@@ -1,24 +1,21 @@
-import { hashOpaqueToken } from '@server/oauth/repositorys/OAuthCredentialsRepository';
-import { OAuthTokenService } from '@server/oauth/services/OAuthTokenService';
-import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
+import { createHash } from 'crypto';
+import { OAuthTokenService } from '@shared/oauth-wrapper/services/OAuthTokenService';
+import { computeS256CodeChallenge } from '@shared/oauth-wrapper/utils/pkce';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   API_OAUTH_INVALID_CLIENT,
   API_OAUTH_INVALID_GRANT,
   API_OAUTH_UNSUPPORTED_GRANT_TYPE
 } from '@config/i18n-identifier/api';
-import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
-import type { OAuthAuthorizationCodesRepository } from '@server/oauth/repositorys/OAuthAuthorizationCodesRepository';
-import type { OAuthClientsRepository } from '@server/oauth/repositorys/OAuthClientsRepository';
-import type { OAuthCredentialsRepository } from '@server/oauth/repositorys/OAuthCredentialsRepository';
-import type { OAuthRefreshTokensRepository } from '@server/oauth/repositorys/OAuthRefreshTokensRepository';
+import type { OAuthUserAdapterInterface } from '@shared/oauth-wrapper/interfaces/OAuthUserAdapterInterface';
+import type { OAuthWrapperRepositoryInterface } from '@shared/oauth-wrapper/interfaces/OAuthWrapperRepositoryInterface';
 import {
   testAuthCode,
   testAuthCodeWithPkce,
+  testEncryptionKey,
   testOAuthClient,
   testPublicOAuthClient,
-  testRefreshTokenRow,
-  testServerConfig
+  testRefreshTokenRow
 } from '../helpers/oauthFixtures';
 
 /** Shape asserted on {@link OAuthTokenError} rejects (RFC `error` + i18n `errorId`). */
@@ -28,25 +25,20 @@ type OAuthTokenErrorExpect = {
   status: number;
 };
 
+function hashOpaqueToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
 describe('OAuthTokenService', () => {
-  const clientsRepo = {
-    verifyClientCredentials: vi.fn()
-  } as unknown as OAuthClientsRepository;
-
-  const authCodesRepo = {
-    consumeCode: vi.fn()
-  } as unknown as OAuthAuthorizationCodesRepository;
-
-  const refreshTokensRepo = {
+  const oauthRepo = {
+    verifyClientCredentials: vi.fn(),
+    consumeCode: vi.fn(),
     findByTokenHash: vi.fn(),
     revokeByTokenHash: vi.fn(),
-    create: vi.fn()
-  } as unknown as OAuthRefreshTokensRepository;
-
-  const credentialsRepo = {
+    createRefreshToken: vi.fn(),
     getUserCredentials: vi.fn(),
     upsertUserCredentials: vi.fn()
-  } as unknown as OAuthCredentialsRepository;
+  } as unknown as OAuthWrapperRepositoryInterface;
 
   const userAdapter = {
     exchangeAccessToken: vi.fn()
@@ -56,22 +48,15 @@ describe('OAuthTokenService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(clientsRepo.verifyClientCredentials).mockResolvedValue(
+    vi.mocked(oauthRepo.verifyClientCredentials).mockResolvedValue(
       testOAuthClient
     );
-    service = new OAuthTokenService(
-      clientsRepo,
-      authCodesRepo,
-      refreshTokensRepo,
-      credentialsRepo,
-      userAdapter,
-      testServerConfig
-    );
+    service = new OAuthTokenService(testEncryptionKey, userAdapter, oauthRepo);
   });
 
   it('exchanges authorization_code for tokens', async () => {
-    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(testAuthCode);
-    vi.mocked(credentialsRepo.getUserCredentials).mockResolvedValue({
+    vi.mocked(oauthRepo.consumeCode).mockResolvedValue(testAuthCode);
+    vi.mocked(oauthRepo.getUserCredentials).mockResolvedValue({
       user_id: 42,
       brain_session_token: 'brain_session',
       updated_at: '2026-01-01T00:00:00.000Z'
@@ -81,7 +66,7 @@ describe('OAuthTokenService', () => {
       expires_in: 3600,
       refresh_token: 'brain_refresh'
     });
-    vi.mocked(refreshTokensRepo.create).mockResolvedValue(undefined);
+    vi.mocked(oauthRepo.createRefreshToken).mockResolvedValue(undefined);
 
     const result = await service.exchangeToken({
       grant_type: 'authorization_code',
@@ -98,11 +83,11 @@ describe('OAuthTokenService', () => {
       scope: 'openid profile'
     });
     expect(result.refresh_token).toBeTruthy();
-    expect(refreshTokensRepo.create).toHaveBeenCalledOnce();
+    expect(oauthRepo.createRefreshToken).toHaveBeenCalledOnce();
   });
 
   it('throws invalid_grant when authorization code is missing', async () => {
-    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(null);
+    vi.mocked(oauthRepo.consumeCode).mockResolvedValue(null);
 
     await expect(
       service.exchangeToken({
@@ -120,7 +105,7 @@ describe('OAuthTokenService', () => {
   });
 
   it('throws invalid_grant on redirect_uri mismatch', async () => {
-    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(testAuthCode);
+    vi.mocked(oauthRepo.consumeCode).mockResolvedValue(testAuthCode);
 
     await expect(
       service.exchangeToken({
@@ -137,7 +122,7 @@ describe('OAuthTokenService', () => {
   });
 
   it('throws unsupported_grant_type when client disallows grant', async () => {
-    vi.mocked(clientsRepo.verifyClientCredentials).mockResolvedValue({
+    vi.mocked(oauthRepo.verifyClientCredentials).mockResolvedValue({
       ...testOAuthClient,
       grant_types: ['refresh_token']
     });
@@ -158,10 +143,10 @@ describe('OAuthTokenService', () => {
 
   it('exchanges refresh_token and rotates middleware refresh token', async () => {
     const plainRefresh = 'middleware_refresh_plain';
-    vi.mocked(refreshTokensRepo.findByTokenHash).mockResolvedValue(
+    vi.mocked(oauthRepo.findByTokenHash).mockResolvedValue(
       testRefreshTokenRow({ refresh_token: hashOpaqueToken(plainRefresh) })
     );
-    vi.mocked(credentialsRepo.getUserCredentials).mockResolvedValue({
+    vi.mocked(oauthRepo.getUserCredentials).mockResolvedValue({
       user_id: 42,
       brain_session_token: 'brain_session',
       updated_at: '2026-01-01T00:00:00.000Z'
@@ -171,8 +156,8 @@ describe('OAuthTokenService', () => {
       expires_in: 7200,
       refresh_token: 'new_brain_refresh'
     });
-    vi.mocked(refreshTokensRepo.revokeByTokenHash).mockResolvedValue(undefined);
-    vi.mocked(refreshTokensRepo.create).mockResolvedValue(undefined);
+    vi.mocked(oauthRepo.revokeByTokenHash).mockResolvedValue(undefined);
+    vi.mocked(oauthRepo.createRefreshToken).mockResolvedValue(undefined);
 
     const result = await service.exchangeToken({
       grant_type: 'refresh_token',
@@ -182,14 +167,14 @@ describe('OAuthTokenService', () => {
     });
 
     expect(result.access_token).toBe('new_access');
-    expect(refreshTokensRepo.revokeByTokenHash).toHaveBeenCalledWith(
+    expect(oauthRepo.revokeByTokenHash).toHaveBeenCalledWith(
       hashOpaqueToken(plainRefresh)
     );
     expect(result.refresh_token).not.toBe(plainRefresh);
   });
 
   it('throws invalid_grant when refresh token is expired', async () => {
-    vi.mocked(refreshTokensRepo.findByTokenHash).mockResolvedValue(
+    vi.mocked(oauthRepo.findByTokenHash).mockResolvedValue(
       testRefreshTokenRow({
         refresh_token: hashOpaqueToken('expired'),
         expires_at: '2000-01-01T00:00:00.000Z'
@@ -213,13 +198,13 @@ describe('OAuthTokenService', () => {
     const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
     const challenge = computeS256CodeChallenge(verifier);
 
-    vi.mocked(clientsRepo.verifyClientCredentials).mockResolvedValue(
+    vi.mocked(oauthRepo.verifyClientCredentials).mockResolvedValue(
       testPublicOAuthClient
     );
-    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(
+    vi.mocked(oauthRepo.consumeCode).mockResolvedValue(
       testAuthCodeWithPkce(challenge, { client_id: 'client_public' })
     );
-    vi.mocked(credentialsRepo.getUserCredentials).mockResolvedValue({
+    vi.mocked(oauthRepo.getUserCredentials).mockResolvedValue({
       user_id: 42,
       brain_session_token: 'brain_session',
       updated_at: '2026-01-01T00:00:00.000Z'
@@ -229,7 +214,7 @@ describe('OAuthTokenService', () => {
       expires_in: 3600,
       refresh_token: 'brain_refresh'
     });
-    vi.mocked(refreshTokensRepo.create).mockResolvedValue(undefined);
+    vi.mocked(oauthRepo.createRefreshToken).mockResolvedValue(undefined);
 
     const result = await service.exchangeToken({
       grant_type: 'authorization_code',
@@ -246,7 +231,7 @@ describe('OAuthTokenService', () => {
     const challenge = computeS256CodeChallenge(
       'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'
     );
-    vi.mocked(authCodesRepo.consumeCode).mockResolvedValue(
+    vi.mocked(oauthRepo.consumeCode).mockResolvedValue(
       testAuthCodeWithPkce(challenge)
     );
 
@@ -265,7 +250,7 @@ describe('OAuthTokenService', () => {
   });
 
   it('throws invalid_client when client verification fails', async () => {
-    vi.mocked(clientsRepo.verifyClientCredentials).mockRejectedValue(
+    vi.mocked(oauthRepo.verifyClientCredentials).mockRejectedValue(
       new Error('invalid_client')
     );
 

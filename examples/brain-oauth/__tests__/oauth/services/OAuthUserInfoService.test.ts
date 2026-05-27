@@ -1,8 +1,11 @@
-import { OAuthUserInfoService } from '@server/oauth/services/OAuthUserInfoService';
-import { OAuthUserInfoError } from '@server/oauth/utils/oauthUserInfoError';
+import { OAuthWrapperService } from '@shared/oauth-wrapper/services/OAuthWrapperService';
+import { OAuthUserInfoError } from '@shared/oauth-wrapper/utils/oauthUserInfoError';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
-import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
+import type { OAuthTokenServiceInterface } from '@shared/oauth-wrapper/interfaces/OAuthServiceInterface';
+import type { OAuthSessionInterface } from '@shared/oauth-wrapper/interfaces/OAuthSessionInterface';
+import type { OAuthUserAdapterInterface } from '@shared/oauth-wrapper/interfaces/OAuthUserAdapterInterface';
+import type { OAuthWrapperRepositoryInterface } from '@shared/oauth-wrapper/interfaces/OAuthWrapperRepositoryInterface';
 
 type OAuthUserInfoErrorExpect = {
   errorId: string;
@@ -10,16 +13,25 @@ type OAuthUserInfoErrorExpect = {
   status?: number;
 };
 
-describe('OAuthUserInfoService', () => {
+describe('OAuthWrapperService.getUserInfo', () => {
   const userAdapter = {
     getUserInfoByAccessToken: vi.fn()
   } as unknown as OAuthUserAdapterInterface;
 
-  let service: OAuthUserInfoService;
+  const oauthSession = {} as OAuthSessionInterface;
+  const tokenService = {} as OAuthTokenServiceInterface;
+  const oauthRepo = {} as OAuthWrapperRepositoryInterface;
+
+  let service: OAuthWrapperService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new OAuthUserInfoService(userAdapter);
+    service = new OAuthWrapperService(
+      oauthSession,
+      userAdapter,
+      tokenService,
+      oauthRepo
+    );
   });
 
   it('maps Brain profile to OIDC userinfo claims', async () => {

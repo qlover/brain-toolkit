@@ -65,7 +65,7 @@ describe('POST /oauth/token route', () => {
 
   it('returns OAuth token error from service', async () => {
     const { OAuthTokenError } = await import(
-      '@server/oauth/utils/oauthTokenError'
+      '@shared/oauth-wrapper/utils/oauthTokenError'
     );
     exchangeToken.mockRejectedValue(
       new OAuthTokenError(API_OAUTH_INVALID_CLIENT, 401)

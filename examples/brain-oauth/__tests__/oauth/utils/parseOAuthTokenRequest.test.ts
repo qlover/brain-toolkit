@@ -1,4 +1,4 @@
-import { parseOAuthTokenRequest } from '@server/oauth/utils/parseOAuthTokenRequest';
+import { parseOAuthTokenRequest } from '@/app/oauth/token/route';
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
 

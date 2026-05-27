@@ -6,7 +6,9 @@ import { BootstrapServer } from '@server/BootstrapServer';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import type { NextRequest } from 'next/server';
 
-function parseBearerAuthorization(header: string | null): string | undefined {
+export function parseBearerAuthorization(
+  header: string | null
+): string | undefined {
   if (!header) {
     return undefined;
   }
