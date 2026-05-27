@@ -1,6 +1,7 @@
 import { ExecutorError } from '@qlover/fe-corekit';
 import { first } from 'lodash';
 import { ZodError } from 'zod';
+import { OAuthWrapperError } from '@shared/oauth-wrapper';
 import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
 import { V_ZOD_FAILED } from '@config/i18n-identifier/common/validators';
 import {
@@ -11,6 +12,7 @@ import {
   type AppApiSuccessInterface
 } from '@interfaces/AppApiInterface';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import { toI18nOAuthError } from './toI18nOAuthError';
 import type { LoggerInterface } from '@qlover/logger';
 
 export type CreateOptions<T> = {
@@ -18,6 +20,7 @@ export type CreateOptions<T> = {
   data?: T;
   logger: LoggerInterface;
   config: SeedServerConfigInterface;
+  httpStatus?: number;
 };
 
 /**
@@ -51,7 +54,8 @@ export class ApiResultFactory {
       id,
       requestId: options.requestId,
       message,
-      data: options.data
+      data: options.data,
+      httpStatus: options.httpStatus
     };
   }
 
@@ -59,6 +63,12 @@ export class ApiResultFactory {
     error: Error,
     options: CreateOptions<T>
   ): AppApiErrorInterface {
+    // 如果是 OAuthWrapperError 的错误，将错误转成 i18n 错误
+    if (error instanceof OAuthWrapperError) {
+      options.httpStatus = error.status;
+      error = toI18nOAuthError(error);
+    }
+
     if (error instanceof ZodError) {
       return ApiResultFactory.createWithZodError(error, options);
     }

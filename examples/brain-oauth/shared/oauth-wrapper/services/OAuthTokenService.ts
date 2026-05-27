@@ -1,21 +1,16 @@
 import { createHash, randomBytes } from 'crypto';
-import {
-  API_OAUTH_INVALID_CLIENT,
-  API_OAUTH_INVALID_GRANT,
-  API_OAUTH_INVALID_REQUEST,
-  API_OAUTH_UNSUPPORTED_GRANT_TYPE
-} from '@config/i18n-identifier/api';
-import { TokenEncryption } from '@server/utils/TokenEncryption';
+import { OAuthRfcCodes } from '../config';
 import {
   OAuthTokenRequestSchema,
   type OAuthTokenRequest
 } from '../schema/OAuthTokenSchema';
-import { OAuthTokenError } from '../utils/oauthTokenError';
+import { OAuthWrapperError } from '../utils/OAuthWrapperError';
 import { verifyPkceS256 } from '../utils/pkce';
 import type { OAuthTokenServiceInterface } from '../interfaces/OAuthServiceInterface';
 import type { OAuthUserAdapterInterface } from '../interfaces/OAuthUserAdapterInterface';
 import type { OAuthWrapperRepositoryInterface } from '../interfaces/OAuthWrapperRepositoryInterface';
 import type { OAuthTokenResponse } from '../schema/OAuthClientSchema';
+import type { EncryptorInterface } from '@qlover/fe-corekit';
 
 function hashOpaqueToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -34,15 +29,11 @@ function hashOpaqueToken(token: string): string {
 export class OAuthTokenService implements OAuthTokenServiceInterface {
   protected static REFRESH_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
-  protected tokenEncryption: TokenEncryption;
-
   constructor(
-    encryptionKey: string,
+    protected tokenEncryption: EncryptorInterface<string, string>,
     protected userAdapter: OAuthUserAdapterInterface,
     protected oauthRepo: OAuthWrapperRepositoryInterface
-  ) {
-    this.tokenEncryption = new TokenEncryption(encryptionKey);
-  }
+  ) {}
 
   /**
    * @override
@@ -54,8 +45,8 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
     try {
       request = OAuthTokenRequestSchema.parse(rawFields);
     } catch {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_REQUEST,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_REQUEST,
         400,
         'Malformed token request'
       );
@@ -68,11 +59,11 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
         request.client_secret
       );
     } catch {
-      throw new OAuthTokenError(API_OAUTH_INVALID_CLIENT, 401);
+      throw new OAuthWrapperError(OAuthRfcCodes.INVALID_CLIENT, 401);
     }
 
     if (!client.grant_types.includes(request.grant_type)) {
-      throw new OAuthTokenError(API_OAUTH_UNSUPPORTED_GRANT_TYPE, 400);
+      throw new OAuthWrapperError(OAuthRfcCodes.UNSUPPORTED_GRANT_TYPE, 400);
     }
 
     if (request.grant_type === 'authorization_code') {
@@ -88,24 +79,24 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
   ): Promise<OAuthTokenResponse> {
     const authCode = await this.oauthRepo.consumeCode(request.code);
     if (!authCode) {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_GRANT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_GRANT,
         400,
         'Authorization code is invalid, expired, or already used'
       );
     }
 
     if (authCode.client_id !== verifiedClientId) {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_GRANT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_GRANT,
         400,
         'client_id mismatch'
       );
     }
 
     if (authCode.redirect_uri !== request.redirect_uri) {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_GRANT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_GRANT,
         400,
         'redirect_uri mismatch'
       );
@@ -142,22 +133,22 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
     if (storedChallenge) {
       const verifier = request.code_verifier?.trim();
       if (!verifier) {
-        throw new OAuthTokenError(
-          API_OAUTH_INVALID_GRANT,
+        throw new OAuthWrapperError(
+          OAuthRfcCodes.INVALID_GRANT,
           400,
           'code_verifier is required'
         );
       }
       if (authCode.code_challenge_method !== 'S256') {
-        throw new OAuthTokenError(
-          API_OAUTH_INVALID_GRANT,
+        throw new OAuthWrapperError(
+          OAuthRfcCodes.INVALID_GRANT,
           400,
           'Unsupported PKCE method'
         );
       }
       if (!verifyPkceS256(verifier, storedChallenge)) {
-        throw new OAuthTokenError(
-          API_OAUTH_INVALID_GRANT,
+        throw new OAuthWrapperError(
+          OAuthRfcCodes.INVALID_GRANT,
           400,
           'code_verifier mismatch'
         );
@@ -166,8 +157,8 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
     }
 
     if (!request.client_secret?.trim()) {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_CLIENT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_CLIENT,
         401,
         'client_secret is required when PKCE is not used'
       );
@@ -187,8 +178,8 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
       stored.client_id !== verifiedClientId ||
       new Date(stored.expires_at) <= new Date()
     ) {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_GRANT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_GRANT,
         400,
         'Refresh token is invalid'
       );
@@ -218,8 +209,8 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
     const sessionToken = credentials?.brain_session_token?.trim();
 
     if (!sessionToken) {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_GRANT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_GRANT,
         400,
         'User credentials expired. Re-authorization required.'
       );
@@ -243,8 +234,8 @@ export class OAuthTokenService implements OAuthTokenServiceInterface {
         expires_in: access.expires_in
       };
     } catch {
-      throw new OAuthTokenError(
-        API_OAUTH_INVALID_GRANT,
+      throw new OAuthWrapperError(
+        OAuthRfcCodes.INVALID_GRANT,
         400,
         'Failed to obtain access token from user provider'
       );

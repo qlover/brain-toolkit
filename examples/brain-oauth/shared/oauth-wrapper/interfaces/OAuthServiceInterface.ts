@@ -1,3 +1,4 @@
+import type { OAuthTokenRequest } from '../schema';
 import type { OAuthTokenResponse } from '../schema/OAuthClientSchema';
 import type { OAuthUserInfoResponse } from '../schema/OAuthUserInfoSchema';
 
@@ -36,7 +37,9 @@ export type OAuthConsentResult = {
 };
 
 export interface OAuthTokenServiceInterface {
-  exchangeToken(rawFields: Record<string, string>): Promise<OAuthTokenResponse>;
+  exchangeToken(
+    rawFields: Record<string, string> | OAuthTokenRequest
+  ): Promise<OAuthTokenResponse>;
 }
 
 export interface OAuthServiceInterface extends OAuthTokenServiceInterface {

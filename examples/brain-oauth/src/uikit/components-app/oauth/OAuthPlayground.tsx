@@ -32,15 +32,15 @@ import {
 } from '@/uikit/utils/oauthPlaygroundUtils';
 import type {
   OAuthClientDetail,
-  OAuthClientListItem
-} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
+  OAuthClientListItem,
+  OAuthAuthorizePageData
+} from '@shared/oauth-wrapper';
 import {
   computePkceS256Challenge,
   generatePkceVerifier
-} from '@shared/utils/pkceClient';
+} from '@shared/oauth-wrapper/utils/pkce';
 import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
 import { ROUTE_LOGIN, ROUTE_OAUTH_TOKEN, ROUTE_USERINFO } from '@config/route';
-import type { OAuthAuthorizePageData } from '@interfaces/oauth/OAuthAuthorizePageData';
 
 const labelClass =
   'text-secondary-text mb-1.5 block text-xs font-medium uppercase tracking-wide';
@@ -406,8 +406,8 @@ export function OAuthPlayground() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
       });
-      const json = await res.json();
-      setTokenResponse({ status: res.status, body: json });
+      const result = await readAppApiJson(res);
+      setTokenResponse({ status: res.status, body: result });
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : 'Token exchange failed'
@@ -437,8 +437,8 @@ export function OAuthPlayground() {
       const res = await fetch(ROUTE_USERINFO, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      const json = await res.json();
-      setUserinfoResponse({ status: res.status, body: json });
+      const result = await readAppApiJson(res);
+      setUserinfoResponse({ status: res.status, body: result });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Userinfo failed');
     } finally {

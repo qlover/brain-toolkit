@@ -1,13 +1,6 @@
 import { randomBytes } from 'crypto';
 import { ExecutorError } from '@qlover/fe-corekit';
-import {
-  API_OAUTH_ACCESS_DENIED,
-  API_OAUTH_INVALID_REQUEST,
-  API_OAUTH_INVALID_SCOPE,
-  API_OAUTH_UNAUTHORIZED_CLIENT,
-  API_OAUTH_UNSUPPORTED_RESPONSE_TYPE
-} from '@config/i18n-identifier/api';
-import { oauthI18nIdToRedirectError } from '@config/oauthErrors';
+import { OAuthRfcCodes } from '../config';
 import {
   OAuthAuthorizeQuerySchema,
   OAuthConsentBodySchema
@@ -21,7 +14,7 @@ import {
   buildOAuthRedirectUrl,
   parseScopeList
 } from '../utils/oauthRedirectUtils';
-import { OAuthUserInfoError } from '../utils/oauthUserInfoError';
+import { OAuthWrapperError } from '../utils/OAuthWrapperError';
 import type {
   OAuthAuthorizePageData,
   OAuthAuthorizeValidationError,
@@ -81,7 +74,7 @@ export class OAuthWrapperService<
       return {
         ok: false,
         error: {
-          errorKey: API_OAUTH_INVALID_REQUEST,
+          errorKey: OAuthRfcCodes.INVALID_REQUEST,
           message: 'Missing or invalid authorization request parameters.'
         }
       };
@@ -91,7 +84,7 @@ export class OAuthWrapperService<
       return {
         ok: false,
         error: {
-          errorKey: API_OAUTH_UNSUPPORTED_RESPONSE_TYPE,
+          errorKey: OAuthRfcCodes.UNSUPPORTED_RESPONSE_TYPE,
           message: 'Only response_type=code is supported.'
         }
       };
@@ -102,7 +95,7 @@ export class OAuthWrapperService<
       return {
         ok: false,
         error: {
-          errorKey: API_OAUTH_UNAUTHORIZED_CLIENT,
+          errorKey: OAuthRfcCodes.UNAUTHORIZED_CLIENT,
           message: 'Unknown client_id.'
         }
       };
@@ -112,7 +105,7 @@ export class OAuthWrapperService<
       return {
         ok: false,
         error: {
-          errorKey: API_OAUTH_UNAUTHORIZED_CLIENT,
+          errorKey: OAuthRfcCodes.UNAUTHORIZED_CLIENT,
           message: 'redirect_uri is not registered for this client.'
         }
       };
@@ -126,7 +119,7 @@ export class OAuthWrapperService<
       return {
         ok: false,
         error: {
-          errorKey: API_OAUTH_INVALID_SCOPE,
+          errorKey: OAuthRfcCodes.INVALID_SCOPE,
           message: `Scope "${invalidScope}" is not allowed for this client.`
         }
       };
@@ -162,7 +155,7 @@ export class OAuthWrapperService<
   ): Promise<OAuthConsentResult> {
     if (!this.isValidateConsent(requestBody)) {
       throw new ExecutorError(
-        API_OAUTH_INVALID_REQUEST,
+        OAuthRfcCodes.INVALID_REQUEST,
         'Invalid consent request body'
       );
     }
@@ -170,7 +163,7 @@ export class OAuthWrapperService<
     const session = await this.oauthSession.getSession();
     if (!session) {
       throw new ExecutorError(
-        API_OAUTH_ACCESS_DENIED,
+        OAuthRfcCodes.ACCESS_DENIED,
         'User session expired. Please sign in again.'
       );
     }
@@ -197,7 +190,7 @@ export class OAuthWrapperService<
     if (requestBody.action === 'deny') {
       return {
         redirectUrl: buildOAuthRedirectUrl(data.redirectUri, {
-          error: oauthI18nIdToRedirectError(API_OAUTH_ACCESS_DENIED),
+          error: OAuthRfcCodes.ACCESS_DENIED,
           error_description: 'The resource owner denied the request',
           state: data.state
         })
@@ -248,7 +241,7 @@ export class OAuthWrapperService<
         await this.userAdapter.getUserInfoByAccessToken(accessToken);
       return this.toUserInfoResponse(profile);
     } catch {
-      throw new OAuthUserInfoError();
+      throw new OAuthWrapperError(OAuthRfcCodes.INVALID_TOKEN, 401);
     }
   }
 
@@ -257,12 +250,12 @@ export class OAuthWrapperService<
   ): OAuthUserInfoResponse {
     const sub = String(profile.id);
     if (!sub || sub === 'NaN') {
-      throw new OAuthUserInfoError();
+      throw new OAuthWrapperError(OAuthRfcCodes.INVALID_TOKEN, 401);
     }
 
     const email = profile.email?.trim();
     if (!email) {
-      throw new OAuthUserInfoError();
+      throw new OAuthWrapperError(OAuthRfcCodes.INVALID_TOKEN, 401);
     }
 
     const nameFromParts = [profile.first_name, profile.last_name]
