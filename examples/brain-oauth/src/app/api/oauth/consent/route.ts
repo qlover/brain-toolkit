@@ -3,7 +3,7 @@ import {
   API_OAUTH_ACCESS_DENIED,
   API_OAUTH_INVALID_REQUEST
 } from '@config/i18n-identifier/api';
-import { OAuthConsentController } from '@server/controllers/OAuthConsentController';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
 
 /**
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const server = new NextApiServer('/api/oauth/consent', req);
   const result = await server.run(async ({ parameters: { IOC } }) =>
-    IOC(OAuthConsentController).submitConsent(requestBody)
+    IOC(OAuthWrapperController).submitConsent(requestBody)
   );
 
   if (!result.success) {

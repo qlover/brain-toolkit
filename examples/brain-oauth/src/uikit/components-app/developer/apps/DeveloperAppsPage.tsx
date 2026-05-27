@@ -34,8 +34,6 @@ import {
   oauthSecondaryButtonClass,
   oauthWarningButtonClass
 } from '@/uikit/styles/oauthUiStyles';
-import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
-import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import type {
   OAuthClientListItem,
   OAuthClientCreate,
@@ -43,7 +41,9 @@ import type {
   OAuthClientDetail,
   OAuthClientSecretRotateResponse,
   OAuthClientUpdate
-} from '@schemas/oauth/OAuthAuthorizeSchema';
+} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
+import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
+import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import {
   OAuthClientAppForm,
   emptyOAuthClientFormValues,

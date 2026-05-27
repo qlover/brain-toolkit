@@ -11,11 +11,11 @@ import {
 } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import { BootstrapServer } from '@server/BootstrapServer';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import {
   AppPageRouteParams,
   type PageParamsType
 } from '@server/render/AppPageRouteParams';
-import { OAuthAuthorizeService } from '@server/services/OAuthAuthorizeService';
 import type { Metadata } from 'next';
 
 export async function generateStaticParams() {
@@ -47,9 +47,9 @@ export default async function OAuthAuthorizePage(
 
   const rawSearchParams = (await props.searchParams) ?? {};
   const IOC = new BootstrapServer('OAuthAuthorizePage').getIOC();
-  const authorizeResult = await IOC(OAuthAuthorizeService).resolveAuthorizePage(
-    rawSearchParams
-  );
+  const authorizeResult = await IOC(
+    OAuthWrapperController
+  ).resolveAuthorizePage(rawSearchParams);
 
   return (
     <PageI18nProvider value={tt}>

@@ -1,4 +1,4 @@
-import { OAuthClientCreateSchema } from '@schemas/oauth/OAuthAuthorizeSchema';
+import { OAuthClientCreateSchema } from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
 import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';

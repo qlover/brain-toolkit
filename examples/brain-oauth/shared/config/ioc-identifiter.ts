@@ -25,10 +25,8 @@ export const IOCIdentifier = Object.freeze({
   I18nServiceInterface: 'I18nServiceInterface',
   ZustandCounterServiceInterface: 'ZustandCounterServiceInterface',
   /**
-   * 数据库桥接接口
-   *
-   * 你可以实现不同的例如：
-   *
+   * 数据库桥接接
+   * 你可以实现不同的例如
    * - Vercel Postgres
    * - supabase
    * - mysql
@@ -37,7 +35,8 @@ export const IOCIdentifier = Object.freeze({
    * - redis
    * - sqllite
    */
-  DBBridgeInterface: 'DBBridgeInterface'
+  DBBridgeInterface: 'DBBridgeInterface',
+  OAuthUserAdapterInterface: 'OAuthUserAdapterInterface'
 });
 
 export const I = IOCIdentifier;

@@ -1,11 +1,22 @@
-import { BootstrapServer } from '@server/BootstrapServer';
-import { OAuthUserInfoController } from '@server/controllers/OAuthUserInfoController';
 import {
   OAuthUserInfoError,
   oauthUserInfoErrorResponse
-} from '@server/utils/oauthUserInfoError';
-import { parseBearerAuthorization } from '@server/utils/parseBearerAuthorization';
+} from '@shared/oauth-wrapper/utils/oauthUserInfoError';
+import { BootstrapServer } from '@server/BootstrapServer';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import type { NextRequest } from 'next/server';
+
+export function parseBearerAuthorization(
+  header: string | null
+): string | undefined {
+  if (!header) {
+    return undefined;
+  }
+
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  const token = match?.[1]?.trim();
+  return token || undefined;
+}
 
 /**
  * OAuth 2.0 / OIDC userinfo endpoint.
@@ -24,7 +35,7 @@ export async function GET(req: NextRequest) {
   const IOC = new BootstrapServer('/userinfo').getIOC();
 
   try {
-    const profile = await IOC(OAuthUserInfoController).getUserInfo(accessToken);
+    const profile = await IOC(OAuthWrapperController).getUserInfo(accessToken);
 
     return Response.json(profile, {
       status: 200,

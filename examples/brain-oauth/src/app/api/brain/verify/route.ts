@@ -4,7 +4,7 @@ import {
   API_OAUTH_BRAIN_AUTH_FAILED,
   API_OAUTH_INVALID_REQUEST
 } from '@config/i18n-identifier/api';
-import { BrainAuthController } from '@server/controllers/BrainAuthController';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
 
 /**
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const server = new NextApiServer(API_BRAIN_VERIFY, req);
   const result = await server.run(async ({ parameters: { IOC } }) =>
-    IOC(BrainAuthController).verifyBrainLogin(requestBody)
+    IOC(OAuthWrapperController).verifyBrainLogin(requestBody)
   );
 
   if (!result.success) {

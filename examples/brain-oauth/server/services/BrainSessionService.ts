@@ -7,7 +7,7 @@ import {
   BRAIN_SESSION_COOKIE,
   parseBrainSessionCookie,
   type BrainSessionPayload
-} from '../utils/brainSessionUtils';
+} from '../brain-oauth/brainProxySession';
 
 export type { BrainSessionPayload };
 

@@ -16,7 +16,7 @@ import { OAuthConsentGateway } from '@/impls/OAuthConsentGateway';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { OAuthAuthorizeI18nInterface } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import { resolveScopeLabel } from '@config/i18n-mapping/OAuthAuthorizeI18n';
-import type { OAuthAuthorizePageData } from '@server/services/OAuthAuthorizeService';
+import type { OAuthAuthorizePageData } from '@interfaces/oauth/OAuthAuthorizePageData';
 
 export interface OAuthAuthorizeCardProps {
   tt: OAuthAuthorizeI18nInterface;

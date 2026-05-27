@@ -1,15 +1,17 @@
 import { inject, injectable } from '@shared/container';
+import { OAuthClientsService } from '@shared/oauth-wrapper';
 import type {
   OAuthClientCreate,
   OAuthClientCreateResponse,
   OAuthClientDetail,
   OAuthClientListItem,
   OAuthClientSecretRotateResponse,
-  OAuthClientUpdate
-} from '@schemas/oauth/OAuthAuthorizeSchema';
-import { OAuthClientsService } from '../services/OAuthClientsService';
-import { ServerAuth } from '../services/ServerAuth';
-import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
+  OAuthClientUpdate,
+  OAuthClientsRepositoryInterface
+} from '@shared/oauth-wrapper';
+import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
+import { BrainOAuthRepository } from '@server/repositorys/BrainOAuthRepository';
+import { ServerAuth } from '@server/services/ServerAuth';
 
 /**
  * Developer console OAuth clients API controller.
@@ -18,10 +20,15 @@ import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
  */
 @injectable()
 export class OAuthClientsController {
+  protected clientsService: OAuthClientsService;
+
   constructor(
     @inject(ServerAuth) protected serverAuth: ServerAuthInterface,
-    @inject(OAuthClientsService) protected clientsService: OAuthClientsService
-  ) {}
+    @inject(BrainOAuthRepository)
+    protected oauthRepo: OAuthClientsRepositoryInterface
+  ) {
+    this.clientsService = new OAuthClientsService(oauthRepo);
+  }
 
   /**
    * List all OAuth clients owned by the current user

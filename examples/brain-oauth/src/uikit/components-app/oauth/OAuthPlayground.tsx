@@ -30,17 +30,17 @@ import {
   randomStateValue,
   type OAuthCallbackParams
 } from '@/uikit/utils/oauthPlaygroundUtils';
+import type {
+  OAuthClientDetail,
+  OAuthClientListItem
+} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
 import {
   computePkceS256Challenge,
   generatePkceVerifier
 } from '@shared/utils/pkceClient';
 import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
 import { ROUTE_LOGIN, ROUTE_OAUTH_TOKEN, ROUTE_USERINFO } from '@config/route';
-import type {
-  OAuthClientDetail,
-  OAuthClientListItem
-} from '@schemas/oauth/OAuthAuthorizeSchema';
-import type { OAuthAuthorizePageData } from '@server/services/OAuthAuthorizeService';
+import type { OAuthAuthorizePageData } from '@interfaces/oauth/OAuthAuthorizePageData';
 
 const labelClass =
   'text-secondary-text mb-1.5 block text-xs font-medium uppercase tracking-wide';
@@ -98,7 +98,7 @@ function PlaygroundAlert(props: {
           className="text-secondary-text hover:text-primary-text shrink-0"
           aria-label="Close"
         >
-          ×
+          �
         </button>
       )}
     </div>
@@ -534,7 +534,7 @@ export function OAuthPlayground() {
           <PlaygroundSection title={tt.stepSession} step={1}>
             {authLoading ? (
               <p className="text-secondary-text text-sm flex items-center gap-2">
-                <LoadingOutlined spin />…
+                <LoadingOutlined spin /> Loading...
               </p>
             ) : success && user ? (
               <p className="text-primary-text text-sm flex items-center gap-2">
@@ -581,7 +581,7 @@ export function OAuthPlayground() {
                 value={clientId ?? ''}
                 onChange={(e) => setClientId(e.target.value)}
               >
-                {clients.length === 0 && <option value="">—</option>}
+                {clients.length === 0 && <option value="">No clients</option>}
                 {clients.map((c) => (
                   <option
                     data-testid="OAuthPlayground"
@@ -927,7 +927,7 @@ export function OAuthPlayground() {
       </div>
 
       <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border bg-primary">
-        <p>© 2026 {tt.title}</p>
+        <p>� 2026 {tt.title}</p>
       </footer>
     </div>
   );
