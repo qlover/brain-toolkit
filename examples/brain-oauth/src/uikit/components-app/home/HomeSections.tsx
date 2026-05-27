@@ -10,11 +10,7 @@ import {
 import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
 import type { HomeI18nInterface } from '@config/i18n-mapping/HomeI18n';
-import {
-  ROUTE_DEVELOPER_APPS,
-  ROUTE_DOCS_OAUTH,
-  ROUTE_REGISTER
-} from '@config/route';
+import { ROUTE_DEVELOPER_APPS, ROUTE_DOCS_OAUTH } from '@config/route';
 
 const primaryButtonClassName =
   'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-md';
@@ -28,8 +24,6 @@ const featureIconWrapClassName =
 interface HomeSectionProps {
   tt: HomeI18nInterface;
 }
-
-export { HomeHeaderNav } from './HomeHeaderNav';
 
 export function HomeHero({ tt }: HomeSectionProps) {
   return (
@@ -51,7 +45,7 @@ export function HomeHero({ tt }: HomeSectionProps) {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full max-w-md sm:max-w-none mx-auto">
           <Link
-            href={ROUTE_REGISTER}
+            href={ROUTE_DEVELOPER_APPS}
             className={clsx(primaryButtonClassName, 'w-full sm:w-auto')}
           >
             <GithubOutlined />

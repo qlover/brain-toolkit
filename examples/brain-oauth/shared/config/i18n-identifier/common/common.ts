@@ -154,3 +154,24 @@ export const COMMON_AUTH_NAV_SIGN_UP = 'common:authNav_signUp';
  * @localEn Activity logs
  */
 export const COMMON_AUTH_NAV_REQUEST_LOGS = 'common:authNav_requestLogs';
+
+/**
+ * @description App header nav - Docs
+ * @localZh 文档
+ * @localEn Docs
+ */
+export const COMMON_HEADER_NAV_DOCS = 'common:header_nav__docs';
+
+/**
+ * @description App header nav - About
+ * @localZh 关于
+ * @localEn About
+ */
+export const COMMON_HEADER_NAV_ABOUT = 'common:header_nav__about';
+
+/**
+ * @description App header nav - Developer console
+ * @localZh 开发者
+ * @localEn Developer
+ */
+export const COMMON_HEADER_NAV_DEVELOPER = 'common:header_nav__developer';
