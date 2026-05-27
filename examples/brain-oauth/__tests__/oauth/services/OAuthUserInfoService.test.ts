@@ -1,8 +1,8 @@
+import { OAuthUserInfoService } from '@server/oauth/services/OAuthUserInfoService';
+import { OAuthUserInfoError } from '@server/oauth/utils/oauthUserInfoError';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_OAUTH_INVALID_TOKEN } from '@config/i18n-identifier/api';
 import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
-import { OAuthUserInfoService } from '@server/oauth/services/OAuthUserInfoService';
-import { OAuthUserInfoError } from '@server/oauth/utils/oauthUserInfoError';
 
 type OAuthUserInfoErrorExpect = {
   errorId: string;

@@ -1,8 +1,8 @@
 // Import your routing configuration which contains all locales, defaultLocale, and pathnames
 import { NextResponse, type NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
-import { updateSession } from '@shared/supabase/proxy';
 import { isOAuthMachinePath } from '@config/route';
+import { updateBrainSession } from '@server/brain-oauth/proxy';
 import { routing } from './i18n/routing';
 
 export default async function proxy(request: NextRequest) {
@@ -12,7 +12,8 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const sessionResponse = await updateSession(request);
+  // Supabase auth: await updateSession(request);
+  const sessionResponse = await updateBrainSession(request);
   if (sessionResponse.headers.get('Location')) {
     return sessionResponse;
   }

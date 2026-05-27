@@ -1,7 +1,7 @@
 import { API_OAUTH_INVALID_REQUEST } from '@config/i18n-identifier/api';
-import type { OAuthClientRow } from '@schemas/oauth/OAuthAuthorizeSchema';
 import { isValidCodeChallenge } from './pkce';
 import type { OAuthAuthorizeValidationError } from '../interfaces/OAuthServiceInterface';
+import type { OAuthClientRow } from '../schema/OAuthAuthorizeSchema';
 
 export function validatePkceParams(
   parsed: {

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { parseBearerAuthorization } from '@server/oauth/utils/parseBearerAuthorization';
+import { describe, expect, it } from 'vitest';
 
 describe('parseBearerAuthorization', () => {
   it('returns token for valid Bearer header', () => {

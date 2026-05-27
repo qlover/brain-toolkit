@@ -1,8 +1,8 @@
 import type {
   OAuthAuthorizationCodeRow,
   OAuthClientRow
-} from '@schemas/oauth/OAuthAuthorizeSchema';
-import type { OAuthRefreshTokenRow } from '@schemas/oauth/OAuthClientSchema';
+} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
+import type { OAuthRefreshTokenRow } from '@shared/oauth-wrapper/schema/OAuthClientSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 
 /** Base64-encoded 32-byte key for {@link TokenEncryption} in tests. */

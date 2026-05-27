@@ -4,7 +4,7 @@ import {
   OAuthConsentBodySchema,
   type OAuthAuthorizeQuery,
   type OAuthConsentBody
-} from '@schemas/oauth/OAuthAuthorizeSchema';
+} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
 import type {
   ValidationResult,
   ValidatorInterface

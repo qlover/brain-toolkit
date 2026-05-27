@@ -5,7 +5,7 @@ import type {
   OAuthClientListItem,
   OAuthClientSecretRotateResponse,
   OAuthClientUpdate
-} from '@schemas/oauth/OAuthAuthorizeSchema';
+} from '../schema/OAuthAuthorizeSchema';
 
 export interface OAuthClientsInterface {
   listForOwner(ownerUserId: number): Promise<OAuthClientListItem[]>;

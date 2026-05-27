@@ -1,4 +1,5 @@
-import { inject, injectable } from '@shared/container';
+import type { OAuthClientsInterface } from '../interfaces/OAuthClientsInterface';
+import type { OAuthClientsRepositoryInterface } from '../interfaces/OAuthClientsRepositoryInterface';
 import type {
   OAuthClientListItem,
   OAuthClientDetail,
@@ -7,19 +8,13 @@ import type {
   OAuthClientUpdate,
   OAuthClientCreateResponse,
   OAuthClientSecretRotateResponse
-} from '@schemas/oauth/OAuthAuthorizeSchema';
-import { OAuthClientsInterface } from '../interfaces/OAuthClientsInterface';
-import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
+} from '../schema/OAuthAuthorizeSchema';
 
 /**
  * Business logic for OAuth client management in developer console.
  */
-@injectable()
 export class OAuthClientsService implements OAuthClientsInterface {
-  constructor(
-    @inject(OAuthClientsRepository)
-    protected clientsRepo: OAuthClientsRepository
-  ) {}
+  constructor(protected clientsRepo: OAuthClientsRepositoryInterface) {}
 
   /**
    * List all OAuth clients owned by a user
@@ -28,7 +23,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
   public async listForOwner(
     ownerUserId: number
   ): Promise<OAuthClientListItem[]> {
-    return this.clientsRepo.listByOwner(ownerUserId);
+    return this.clientsRepo.listClientByOwner(ownerUserId);
   }
 
   /**
@@ -39,7 +34,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
     ownerUserId: number,
     clientId: string
   ): Promise<OAuthClientDetail> {
-    const client = await this.clientsRepo.findByClientId(clientId);
+    const client = await this.clientsRepo.findClientById(clientId);
 
     if (!client) {
       throw new Error('Client not found');
@@ -60,7 +55,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
     ownerUserId: number,
     input: OAuthClientCreate
   ): Promise<OAuthClientCreateResponse> {
-    const result = await this.clientsRepo.create(ownerUserId, input);
+    const result = await this.clientsRepo.createClient(ownerUserId, input);
 
     return {
       client_id: result.client.client_id,
@@ -83,7 +78,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
     input: OAuthClientUpdate
   ): Promise<OAuthClientDetail> {
     // Verify ownership first
-    const existing = await this.clientsRepo.findByClientId(clientId);
+    const existing = await this.clientsRepo.findClientById(clientId);
     if (!existing) {
       throw new Error('Client not found');
     }
@@ -91,7 +86,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
       throw new Error('Access denied');
     }
 
-    return this.clientsRepo.update(ownerUserId, clientId, input);
+    return this.clientsRepo.updateClient(ownerUserId, clientId, input);
   }
 
   /**
@@ -103,7 +98,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
     clientId: string
   ): Promise<OAuthClientSecretRotateResponse> {
     // Verify ownership first
-    const existing = await this.clientsRepo.findByClientId(clientId);
+    const existing = await this.clientsRepo.findClientById(clientId);
     if (!existing) {
       throw new Error('Client not found');
     }
@@ -114,7 +109,10 @@ export class OAuthClientsService implements OAuthClientsInterface {
       throw new Error('Public clients do not have a client_secret');
     }
 
-    const result = await this.clientsRepo.rotateSecret(ownerUserId, clientId);
+    const result = await this.clientsRepo.rotateClientSecret(
+      ownerUserId,
+      clientId
+    );
 
     return {
       client_id: clientId,
@@ -128,7 +126,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
    */
   public async delete(ownerUserId: number, clientId: string): Promise<void> {
     // Verify ownership first
-    const existing = await this.clientsRepo.findByClientId(clientId);
+    const existing = await this.clientsRepo.findClientById(clientId);
     if (!existing) {
       throw new Error('Client not found');
     }
@@ -136,7 +134,7 @@ export class OAuthClientsService implements OAuthClientsInterface {
       throw new Error('Access denied');
     }
 
-    await this.clientsRepo.delete(ownerUserId, clientId);
+    await this.clientsRepo.deleteClient(ownerUserId, clientId);
   }
 
   private mapToDetail(row: OAuthClientRow): OAuthClientDetail {

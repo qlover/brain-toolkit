@@ -6,7 +6,7 @@ import { I } from '@config/ioc-identifiter';
 import { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { BrainSessionService } from './BrainSessionService';
-import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
+import { brainSessionToUserSchema } from '../brain-oauth/brainProxySession';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 
 @injectable()

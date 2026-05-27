@@ -1,5 +1,5 @@
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
-import { OAuthAuthorizeService } from '@server/oauth/services/OAuthAuthorizeService';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     '/api/oauth/playground/validate',
     req
   ).runWithJson(async ({ parameters: { IOC } }) => {
-    const resolved = await IOC(OAuthAuthorizeService).resolveAuthorizePage(
+    const resolved = await IOC(OAuthWrapperController).resolveAuthorizePage(
       rawQuery
     );
     if (!resolved.ok) {

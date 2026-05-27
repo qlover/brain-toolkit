@@ -1,9 +1,9 @@
+import { OAuthAuthorizeService } from '@server/oauth/services/OAuthAuthorizeService';
+import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OAuthAuthorizeQueryValidator } from '@shared/validators/OAuthAuthorizeValidator';
 import { API_OAUTH_INVALID_REQUEST } from '@config/i18n-identifier/api';
 import type { OAuthClientsRepository } from '@server/oauth/repositorys/OAuthClientsRepository';
-import { OAuthAuthorizeService } from '@server/oauth/services/OAuthAuthorizeService';
-import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
 import {
   testOAuthClient,
   testPublicOAuthClient

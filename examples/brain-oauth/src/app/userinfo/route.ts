@@ -1,11 +1,20 @@
-import { BootstrapServer } from '@server/BootstrapServer';
-import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import {
   OAuthUserInfoError,
   oauthUserInfoErrorResponse
-} from '@server/oauth-wrapper/utils/oauthUserInfoError';
-import { parseBearerAuthorization } from '@server/oauth-wrapper/utils/parseBearerAuthorization';
+} from '@shared/oauth-wrapper/utils/oauthUserInfoError';
+import { BootstrapServer } from '@server/BootstrapServer';
+import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import type { NextRequest } from 'next/server';
+
+function parseBearerAuthorization(header: string | null): string | undefined {
+  if (!header) {
+    return undefined;
+  }
+
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  const token = match?.[1]?.trim();
+  return token || undefined;
+}
 
 /**
  * OAuth 2.0 / OIDC userinfo endpoint.

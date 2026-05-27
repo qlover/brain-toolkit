@@ -1,8 +1,11 @@
 import { inject, injectable } from '@shared/container';
+import type {
+  OAuthUserAdapterInterface,
+  OAuthWrapperRepositoryInterface
+} from '@shared/oauth-wrapper';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
-import { OAuthCredentialsRepository } from '@server/oauth/repositorys/OAuthCredentialsRepository';
+import { BrainOAuthRepository } from '@server/repositorys/BrainOAuthRepository';
 import { BrainSessionService } from './BrainSessionService';
 import { TokenEncryption } from '../utils/TokenEncryption';
 import type {
@@ -31,8 +34,8 @@ export class BrainAuthService implements BrainAuthServiceInterface {
     @inject(BrainSessionService) protected brainSession: BrainSessionService,
     @inject(I.OAuthUserAdapterInterface)
     protected userAdapter: OAuthUserAdapterInterface,
-    @inject(OAuthCredentialsRepository)
-    protected credentialsRepo: OAuthCredentialsRepository,
+    @inject(BrainOAuthRepository)
+    protected credentialsRepo: OAuthWrapperRepositoryInterface,
     @inject(I.AppConfig) config: SeedServerConfigInterface
   ) {
     this.tokenEncryption = new TokenEncryption(config.encryptionKey);

@@ -1,6 +1,6 @@
+import { parseOAuthTokenRequest } from '@server/oauth/utils/parseOAuthTokenRequest';
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
-import { parseOAuthTokenRequest } from '@server/oauth/utils/parseOAuthTokenRequest';
 
 function formRequest(
   body: string,

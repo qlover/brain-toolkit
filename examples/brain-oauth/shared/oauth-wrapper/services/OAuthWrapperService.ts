@@ -1,10 +1,5 @@
 import { randomBytes } from 'crypto';
 import { ExecutorError } from '@qlover/fe-corekit';
-import { inject } from '@shared/container';
-import {
-  OAuthAuthorizeQueryValidator,
-  OAuthConsentBodyValidator
-} from '@shared/validators/OAuthAuthorizeValidator';
 import {
   API_OAUTH_ACCESS_DENIED,
   API_OAUTH_INVALID_REQUEST,
@@ -12,21 +7,11 @@ import {
   API_OAUTH_UNAUTHORIZED_CLIENT,
   API_OAUTH_UNSUPPORTED_RESPONSE_TYPE
 } from '@config/i18n-identifier/api';
-import { I } from '@config/ioc-identifiter';
 import { oauthI18nIdToRedirectError } from '@config/oauthErrors';
-import { OAuthConsentBody } from '@schemas/oauth/OAuthAuthorizeSchema';
-import type { OAuthTokenResponse } from '@schemas/oauth/OAuthClientSchema';
-
-import type { OAuthUserInfoResponse } from '@schemas/oauth/OAuthUserInfoSchema';
-import type { OAuthAuthorizePageData } from '@interfaces/oauth/OAuthAuthorizePageData';
-import { BrainSessionService } from '@server/services/BrainSessionService';
-import { OAuthTokenService } from './OAuthTokenService';
 import {
-  type OAuthUserAdapterInterface,
-  OAuthUserProfile
-} from '../interfaces/OAuthUserAdapterInterface';
-import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
-import { OAuthWrapperRepository } from '../repositorys/OAuthWrapperRepository';
+  OAuthAuthorizeQuerySchema,
+  OAuthConsentBodySchema
+} from '../schema/OAuthAuthorizeSchema';
 import {
   isRedirectUriAllowed,
   normalizeQuery,
@@ -38,31 +23,48 @@ import {
 } from '../utils/oauthRedirectUtils';
 import { OAuthUserInfoError } from '../utils/oauthUserInfoError';
 import type {
+  OAuthAuthorizePageData,
   OAuthAuthorizeValidationError,
   OAuthConsentResult,
-  OAuthServiceInterface
+  OAuthServiceInterface,
+  OAuthTokenServiceInterface
 } from '../interfaces/OAuthServiceInterface';
+import type {
+  OAuthSessionPayload,
+  OAuthSessionInterface
+} from '../interfaces/OAuthSessionInterface';
+import type {
+  OAuthUserProfile,
+  OAuthUserAdapterInterface
+} from '../interfaces/OAuthUserAdapterInterface';
 import type { OAuthWrapperRepositoryInterface } from '../interfaces/OAuthWrapperRepositoryInterface';
+import type {
+  OAuthAuthorizeQuery,
+  OAuthConsentBody
+} from '../schema/OAuthAuthorizeSchema';
+import type { OAuthTokenResponse } from '../schema/OAuthClientSchema';
+import type { OAuthUserInfoResponse } from '../schema/OAuthUserInfoSchema';
 
 const AUTH_CODE_TTL_MS = 5 * 60 * 1000;
 
-export class OAuthWrapperService implements OAuthServiceInterface {
+export class OAuthWrapperService<
+  SessionPayload extends OAuthSessionPayload = OAuthSessionPayload
+> implements OAuthServiceInterface
+{
   constructor(
-    @inject(I.OAuthUserAdapterInterface)
+    protected oauthSession: OAuthSessionInterface<SessionPayload>,
     protected userAdapter: OAuthUserAdapterInterface,
-    @inject(OAuthClientsRepository)
-    protected clientsRepo: OAuthClientsRepository,
-    @inject(OAuthAuthorizeQueryValidator)
-    protected queryValidator: OAuthAuthorizeQueryValidator,
-    @inject(OAuthConsentBodyValidator)
-    protected consentValidator: OAuthConsentBodyValidator,
-    @inject(OAuthWrapperRepository)
-    protected oauthRepo: OAuthWrapperRepositoryInterface,
-    @inject(BrainSessionService)
-    protected brainSession: BrainSessionService,
-    @inject(OAuthTokenService)
-    protected tokenService: OAuthTokenService
+    protected tokenService: OAuthTokenServiceInterface,
+    protected oauthRepo: OAuthWrapperRepositoryInterface
   ) {}
+
+  protected isQuery(query: unknown): query is OAuthAuthorizeQuery {
+    return OAuthAuthorizeQuerySchema.safeParse(query).success;
+  }
+
+  protected isValidateConsent(value: unknown): value is OAuthConsentBody {
+    return OAuthConsentBodySchema.safeParse(value).success;
+  }
 
   /**
    * @override
@@ -75,10 +77,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
   > {
     const query = normalizeQuery(rawQuery);
 
-    let parsed;
-    try {
-      parsed = await this.queryValidator.getThrow(query);
-    } catch {
+    if (!this.isQuery(query)) {
       return {
         ok: false,
         error: {
@@ -88,7 +87,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
       };
     }
 
-    if (parsed.response_type !== 'code') {
+    if (query.response_type !== 'code') {
       return {
         ok: false,
         error: {
@@ -98,7 +97,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
       };
     }
 
-    const client = await this.clientsRepo.findByClientId(parsed.client_id);
+    const client = await this.oauthRepo.findClientById(query.client_id);
     if (!client) {
       return {
         ok: false,
@@ -109,7 +108,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
       };
     }
 
-    if (!isRedirectUriAllowed(parsed.redirect_uri, client)) {
+    if (!isRedirectUriAllowed(query.redirect_uri, client)) {
       return {
         ok: false,
         error: {
@@ -119,7 +118,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
       };
     }
 
-    const requestedScopes = parseScopeList(parsed.scope);
+    const requestedScopes = parseScopeList(query.scope);
     const invalidScope = requestedScopes.find(
       (scope) => !client.scopes.includes(scope)
     );
@@ -133,7 +132,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
       };
     }
 
-    const pkceError = validatePkceParams(parsed, client.confidential);
+    const pkceError = validatePkceParams(query, client.confidential);
     if (pkceError) {
       return { ok: false, error: pkceError };
     }
@@ -145,12 +144,12 @@ export class OAuthWrapperService implements OAuthServiceInterface {
         clientName: client.client_name,
         clientUri: client.client_uri ?? null,
         logoUri: client.logo_uri ?? null,
-        redirectUri: parsed.redirect_uri,
+        redirectUri: query.redirect_uri,
         scopes: requestedScopes,
-        state: parsed.state,
+        state: query.state,
         responseType: 'code',
-        codeChallenge: parsed.code_challenge,
-        codeChallengeMethod: parsed.code_challenge_method,
+        codeChallenge: query.code_challenge,
+        codeChallengeMethod: query.code_challenge_method,
         confidential: client.confidential
       }
     };
@@ -161,17 +160,14 @@ export class OAuthWrapperService implements OAuthServiceInterface {
   public async processConsent(
     requestBody: unknown
   ): Promise<OAuthConsentResult> {
-    let body: OAuthConsentBody;
-    try {
-      body = await this.consentValidator.getThrow(requestBody);
-    } catch {
+    if (!this.isValidateConsent(requestBody)) {
       throw new ExecutorError(
         API_OAUTH_INVALID_REQUEST,
         'Invalid consent request body'
       );
     }
 
-    const session = await this.brainSession.getSession();
+    const session = await this.oauthSession.getSession();
     if (!session) {
       throw new ExecutorError(
         API_OAUTH_ACCESS_DENIED,
@@ -181,12 +177,12 @@ export class OAuthWrapperService implements OAuthServiceInterface {
 
     const pageResult = await this.resolveAuthorizePage({
       response_type: 'code',
-      client_id: body.client_id,
-      redirect_uri: body.redirect_uri,
-      scope: body.scope,
-      state: body.state,
-      code_challenge: body.code_challenge,
-      code_challenge_method: body.code_challenge_method
+      client_id: requestBody.client_id,
+      redirect_uri: requestBody.redirect_uri,
+      scope: requestBody.scope,
+      state: requestBody.state,
+      code_challenge: requestBody.code_challenge,
+      code_challenge_method: requestBody.code_challenge_method
     });
 
     if (!pageResult.ok) {
@@ -198,7 +194,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
 
     const { data } = pageResult;
 
-    if (body.action === 'deny') {
+    if (requestBody.action === 'deny') {
       return {
         redirectUrl: buildOAuthRedirectUrl(data.redirectUri, {
           error: oauthI18nIdToRedirectError(API_OAUTH_ACCESS_DENIED),
@@ -223,7 +219,7 @@ export class OAuthWrapperService implements OAuthServiceInterface {
     });
 
     // trust flag reserved for future auto-consent storage
-    void body.trust;
+    void requestBody.trust;
 
     return {
       redirectUrl: buildOAuthRedirectUrl(data.redirectUri, {

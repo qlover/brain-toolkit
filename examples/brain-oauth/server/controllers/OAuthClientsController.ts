@@ -1,15 +1,17 @@
 import { inject, injectable } from '@shared/container';
+import { OAuthClientsService } from '@shared/oauth-wrapper';
 import type {
   OAuthClientCreate,
   OAuthClientCreateResponse,
   OAuthClientDetail,
   OAuthClientListItem,
   OAuthClientSecretRotateResponse,
-  OAuthClientUpdate
-} from '@schemas/oauth/OAuthAuthorizeSchema';
+  OAuthClientUpdate,
+  OAuthClientsRepositoryInterface
+} from '@shared/oauth-wrapper';
 import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
+import { BrainOAuthRepository } from '@server/repositorys/BrainOAuthRepository';
 import { ServerAuth } from '@server/services/ServerAuth';
-import { OAuthClientsService } from '../oauth-wrapper/services/OAuthClientsService';
 
 /**
  * Developer console OAuth clients API controller.
@@ -18,10 +20,15 @@ import { OAuthClientsService } from '../oauth-wrapper/services/OAuthClientsServi
  */
 @injectable()
 export class OAuthClientsController {
+  protected clientsService: OAuthClientsService;
+
   constructor(
     @inject(ServerAuth) protected serverAuth: ServerAuthInterface,
-    @inject(OAuthClientsService) protected clientsService: OAuthClientsService
-  ) {}
+    @inject(BrainOAuthRepository)
+    protected oauthRepo: OAuthClientsRepositoryInterface
+  ) {
+    this.clientsService = new OAuthClientsService(oauthRepo);
+  }
 
   /**
    * List all OAuth clients owned by the current user

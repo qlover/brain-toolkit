@@ -5,6 +5,12 @@ import {
   GATEWAY_BRAIN_USERLY_ENDPOINTS
 } from '@brain-toolkit/brain-user';
 import { inject, injectable } from '@shared/container';
+import type {
+  OAuthProviderAccessToken,
+  OAuthUserAdapterInterface,
+  OAuthUserCredentials,
+  OAuthUserProfile
+} from '@shared/oauth-wrapper';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { ProxyFetchAdapter } from '@server/adapters/ProxyFetchAdapter';
@@ -12,12 +18,6 @@ import {
   extractBrainSessionToken,
   formatBrainLoginError
 } from './brainLoginResponse';
-import type {
-  OAuthProviderAccessToken,
-  OAuthUserAdapterInterface,
-  OAuthUserCredentials,
-  OAuthUserProfile
-} from '../../oauth-wrapper/interfaces/OAuthUserAdapterInterface';
 
 /**
  * Server-side Brain API adapter for OAuth token and userinfo flows.

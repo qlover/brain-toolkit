@@ -1,25 +1,21 @@
 import { createHash, randomBytes } from 'crypto';
-import { inject, injectable } from '@shared/container';
 import {
   API_OAUTH_INVALID_CLIENT,
   API_OAUTH_INVALID_GRANT,
   API_OAUTH_INVALID_REQUEST,
   API_OAUTH_UNSUPPORTED_GRANT_TYPE
 } from '@config/i18n-identifier/api';
-import { I } from '@config/ioc-identifiter';
-import type { OAuthTokenResponse } from '@schemas/oauth/OAuthClientSchema';
+import { TokenEncryption } from '@server/utils/TokenEncryption';
 import {
   OAuthTokenRequestSchema,
   type OAuthTokenRequest
-} from '@schemas/oauth/OAuthTokenSchema';
-import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { TokenEncryption } from '@server/utils/TokenEncryption';
-import { OAuthClientsRepository } from '../repositorys/OAuthClientsRepository';
-import { OAuthWrapperRepository } from '../repositorys/OAuthWrapperRepository';
+} from '../schema/OAuthTokenSchema';
 import { OAuthTokenError } from '../utils/oauthTokenError';
 import { verifyPkceS256 } from '../utils/pkce';
+import type { OAuthTokenServiceInterface } from '../interfaces/OAuthServiceInterface';
 import type { OAuthUserAdapterInterface } from '../interfaces/OAuthUserAdapterInterface';
 import type { OAuthWrapperRepositoryInterface } from '../interfaces/OAuthWrapperRepositoryInterface';
+import type { OAuthTokenResponse } from '../schema/OAuthClientSchema';
 
 function hashOpaqueToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -35,24 +31,22 @@ function hashOpaqueToken(token: string): string {
  * @example
  * const tokens = await service.exchangeToken(formFields);
  */
-@injectable()
-export class OAuthTokenService {
+export class OAuthTokenService implements OAuthTokenServiceInterface {
   protected static REFRESH_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
   protected tokenEncryption: TokenEncryption;
 
   constructor(
-    @inject(OAuthClientsRepository)
-    protected clientsRepo: OAuthClientsRepository,
-    @inject(OAuthWrapperRepository)
-    protected oauthRepo: OAuthWrapperRepositoryInterface,
-    @inject(I.OAuthUserAdapterInterface)
+    encryptionKey: string,
     protected userAdapter: OAuthUserAdapterInterface,
-    @inject(I.AppConfig) config: SeedServerConfigInterface
+    protected oauthRepo: OAuthWrapperRepositoryInterface
   ) {
-    this.tokenEncryption = new TokenEncryption(config.encryptionKey);
+    this.tokenEncryption = new TokenEncryption(encryptionKey);
   }
 
+  /**
+   * @override
+   */
   public async exchangeToken(
     rawFields: Record<string, string>
   ): Promise<OAuthTokenResponse> {
@@ -69,7 +63,7 @@ export class OAuthTokenService {
 
     let client;
     try {
-      client = await this.clientsRepo.verifyClientCredentials(
+      client = await this.oauthRepo.verifyClientCredentials(
         request.client_id,
         request.client_secret
       );

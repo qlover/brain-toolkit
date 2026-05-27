@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
 import {
   computeS256CodeChallenge,
   isValidCodeChallenge,
   isValidCodeVerifier,
   verifyPkceS256
 } from '@server/oauth/utils/pkce';
+import { describe, expect, it } from 'vitest';
 
 describe('pkce', () => {
   const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';

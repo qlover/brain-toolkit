@@ -1,3 +1,6 @@
+import { hashOpaqueToken } from '@server/oauth/repositorys/OAuthCredentialsRepository';
+import { OAuthTokenService } from '@server/oauth/services/OAuthTokenService';
+import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   API_OAUTH_INVALID_CLIENT,
@@ -7,11 +10,8 @@ import {
 import type { OAuthUserAdapterInterface } from '@server/oauth/interfaces/OAuthUserAdapterInterface';
 import type { OAuthAuthorizationCodesRepository } from '@server/oauth/repositorys/OAuthAuthorizationCodesRepository';
 import type { OAuthClientsRepository } from '@server/oauth/repositorys/OAuthClientsRepository';
-import { hashOpaqueToken } from '@server/oauth/repositorys/OAuthCredentialsRepository';
 import type { OAuthCredentialsRepository } from '@server/oauth/repositorys/OAuthCredentialsRepository';
 import type { OAuthRefreshTokensRepository } from '@server/oauth/repositorys/OAuthRefreshTokensRepository';
-import { OAuthTokenService } from '@server/oauth/services/OAuthTokenService';
-import { computeS256CodeChallenge } from '@server/oauth/utils/pkce';
 import {
   testAuthCode,
   testAuthCodeWithPkce,

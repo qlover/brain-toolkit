@@ -7,8 +7,8 @@ import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface'
 import { BrainAuthService } from './BrainAuthService';
 import { BrainSessionService } from './BrainSessionService';
 import { ServerAuth } from './ServerAuth';
+import { brainSessionToUserSchema } from '../brain-oauth/brainProxySession';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import { brainSessionToUserSchema } from '../utils/brainSessionUtils';
 import { PasswordEncrypt } from '../utils/PasswordEncrypt';
 import type { BrainAuthServiceInterface } from '../interfaces/BrainAuthServiceInterface';
 import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';

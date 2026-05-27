@@ -30,16 +30,16 @@ import {
   randomStateValue,
   type OAuthCallbackParams
 } from '@/uikit/utils/oauthPlaygroundUtils';
+import type {
+  OAuthClientDetail,
+  OAuthClientListItem
+} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
 import {
   computePkceS256Challenge,
   generatePkceVerifier
 } from '@shared/utils/pkceClient';
 import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
 import { ROUTE_LOGIN, ROUTE_OAUTH_TOKEN, ROUTE_USERINFO } from '@config/route';
-import type {
-  OAuthClientDetail,
-  OAuthClientListItem
-} from '@schemas/oauth/OAuthAuthorizeSchema';
 import type { OAuthAuthorizePageData } from '@interfaces/oauth/OAuthAuthorizePageData';
 
 const labelClass =
@@ -98,7 +98,7 @@ function PlaygroundAlert(props: {
           className="text-secondary-text hover:text-primary-text shrink-0"
           aria-label="Close"
         >
-          ù
+          ÔøΩ
         </button>
       )}
     </div>
@@ -927,7 +927,7 @@ export function OAuthPlayground() {
       </div>
 
       <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border bg-primary">
-        <p>ù 2026 {tt.title}</p>
+        <p>ÔøΩ 2026 {tt.title}</p>
       </footer>
     </div>
   );

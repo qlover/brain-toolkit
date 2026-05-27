@@ -1,12 +1,30 @@
-import type { OAuthAuthorizationCodeRow } from '@schemas/oauth/OAuthAuthorizeSchema';
+import type { OAuthClientsRepositoryInterface } from './OAuthClientsRepositoryInterface';
+import type { OAuthAuthorizationCodeRow } from '../schema/OAuthAuthorizeSchema';
 import type {
   OAuthUserCredentialsRow,
   OAuthRefreshTokenRow
-} from '@schemas/oauth/OAuthClientSchema';
-import type { CreateAuthorizationCodeInput } from '../repositorys/OAuthAuthorizationCodesRepository';
-import type { CreateOAuthRefreshTokenInput } from '../repositorys/OAuthRefreshTokensRepository';
+} from '../schema/OAuthClientSchema';
 
-export interface OAuthWrapperRepositoryInterface {
+export type CreateAuthorizationCodeInput = {
+  code: string;
+  client_id: string;
+  user_id: number;
+  redirect_uri: string;
+  scope: string | null;
+  code_challenge: string | null;
+  code_challenge_method: string | null;
+  expires_at: string;
+};
+
+export type CreateOAuthRefreshTokenInput = {
+  refresh_token: string;
+  client_id: string;
+  user_id: number;
+  expires_at: string;
+};
+
+export interface OAuthWrapperRepositoryInterface
+  extends OAuthClientsRepositoryInterface {
   create(input: CreateAuthorizationCodeInput): Promise<void>;
   consumeCode(code: string): Promise<OAuthAuthorizationCodeRow | null>;
 
