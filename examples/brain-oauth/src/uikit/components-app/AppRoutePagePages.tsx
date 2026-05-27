@@ -3,6 +3,7 @@
 import { useLocale } from 'next-intl';
 import { Suspense } from 'react';
 import { AdminButton } from './AdminButton';
+import { AppHeaderNavPages } from './AppHeaderNavPages';
 import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcherPages } from './LanguageSwitcherPages';
 import { LogoutButton } from './LogoutButton';
@@ -19,19 +20,22 @@ export function AppRoutePagePages({
   showHeaderLogo = true,
   showAuthButton,
   authButtonShowLogoutLabel,
+  showHeaderNav = true,
   headerNav,
   tt,
   ...layoutProps
 }: AppRoutePageProps) {
   const locale = useLocale();
   const developerTitle = tt.developerTitle || '';
+  const resolvedHeaderNav =
+    headerNav ?? (showHeaderNav ? <AppHeaderNavPages /> : undefined);
 
   return (
     <RoutePageLayout
       {...layoutProps}
       tt={tt}
       showHeaderLogo={showHeaderLogo}
-      headerNav={headerNav}
+      headerNav={resolvedHeaderNav}
       authSlot={
         showAuthButton ? (
           <LogoutButton

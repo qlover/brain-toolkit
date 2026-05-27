@@ -21,8 +21,12 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   authButtonLoginOnly?: boolean;
   /** Show text label on logout control (home header). */
   authButtonShowLogoutLabel?: boolean;
+  /** Show docs/about/developer links in header (default true). Auth pages should set false. */
+  showHeaderNav?: boolean;
   headerClassName?: string;
   headerHref?: string;
   headerNav?: ReactNode;
+  /** Optional class for the header title text (e.g. brand color on console pages). */
+  headerTitleClassName?: string;
   tt: AppRoutePageTT;
 }

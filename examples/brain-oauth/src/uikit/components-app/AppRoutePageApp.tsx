@@ -4,6 +4,7 @@ import { useLocale } from 'next-intl';
 import { Suspense } from 'react';
 import { AdminButton } from './AdminButton';
 import { AppBridge } from './AppBridge';
+import { AppHeaderNav } from './AppHeaderNav';
 import { AuthButton } from './AuthButton';
 import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -21,19 +22,22 @@ export function AppRoutePageApp({
   showAuthButton,
   authButtonLoginOnly,
   authButtonShowLogoutLabel,
+  showHeaderNav = true,
   headerNav,
   tt,
   ...layoutProps
 }: AppRoutePageProps) {
   const locale = useLocale();
   const developerTitle = tt.developerTitle || '';
+  const resolvedHeaderNav =
+    headerNav ?? (showHeaderNav ? <AppHeaderNav /> : undefined);
 
   return (
     <RoutePageLayout
       {...layoutProps}
       tt={tt}
       showHeaderLogo={showHeaderLogo}
-      headerNav={headerNav}
+      headerNav={resolvedHeaderNav}
       topSlot={<AppBridge />}
       authSlot={
         showAuthButton ? (

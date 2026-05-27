@@ -4,7 +4,6 @@ import {
   HomeCta,
   HomeFeatures,
   HomeFooter,
-  HomeHeaderNav,
   HomeHero
 } from '@/uikit/components-app/home/HomeSections';
 import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
@@ -44,7 +43,6 @@ export default async function Home({ params }: PageParamsProps) {
         showAuthButton
         authButtonLoginOnly
         authButtonShowLogoutLabel
-        headerNav={<HomeHeaderNav tt={tt} />}
       >
         <HomeHero tt={tt} />
         <HomeFeatures tt={tt} />

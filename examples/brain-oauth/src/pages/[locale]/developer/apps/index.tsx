@@ -42,10 +42,10 @@ export default function DeveloperApps({ initialApps }: DeveloperAppsProps) {
     <WithUserAuth failedElement={<UserAuthFailed />}>
       <AppRoutePagePages
         tt={{
-          title: seoMetadata.appBrandTitle ?? seoMetadata.title,
-          headerSubtitle: seoMetadata.consoleSubtitle,
+          title: seoMetadata.consoleSubtitle,
           adminTitle: seoMetadata.adminTitle
         }}
+        headerTitleClassName="text-brand"
         showAdminButton={false}
         showAuthButton
         authButtonShowLogoutLabel

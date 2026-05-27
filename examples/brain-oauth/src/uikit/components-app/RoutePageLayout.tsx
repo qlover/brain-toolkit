@@ -13,6 +13,7 @@ export interface RoutePageLayoutProps extends HTMLAttributes<HTMLDivElement> {
   headerClassName?: string;
   headerNav?: ReactNode;
   showHeaderLogo?: boolean;
+  headerTitleClassName?: string;
   mainProps?: HTMLAttributes<HTMLElement>;
   /** Rendered before header (e.g. AppBridge). Omit on Pages Router. */
   topSlot?: ReactNode;
@@ -31,6 +32,7 @@ export function RoutePageLayout({
   headerClassName,
   headerNav,
   showHeaderLogo = true,
+  headerTitleClassName,
   mainProps,
   topSlot,
   authSlot,
@@ -52,7 +54,7 @@ export function RoutePageLayout({
       {topSlot}
       <header
         data-testid="BaseHeader"
-        className="relative h-16 bg-primary/80 backdrop-blur-md border-b border-primary-border sticky top-0 z-50"
+        className="h-16 bg-primary/80 backdrop-blur-md border-b border-primary-border sticky top-0 z-50"
       >
         <div
           className={clsx(
@@ -73,7 +75,10 @@ export function RoutePageLayout({
                 >
                   <span
                     data-testid="base-header-app-name"
-                    className="text-base sm:text-lg font-semibold text-primary-text truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none"
+                    className={clsx(
+                      'text-base sm:text-lg font-semibold truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none',
+                      headerTitleClassName ?? 'text-primary-text'
+                    )}
                   >
                     {tt.title}
                   </span>
