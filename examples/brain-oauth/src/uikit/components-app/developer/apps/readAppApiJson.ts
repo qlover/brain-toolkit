@@ -4,9 +4,6 @@ import {
   type AppApiResult
 } from '@interfaces/AppApiInterface';
 
-/**
- * Unwraps {@link NextApiServer.runWithJson} envelope from a fetch Response.
- */
 export async function readAppApiJson<T>(response: Response): Promise<T> {
   const body = (await response.json()) as AppApiResult<T>;
 

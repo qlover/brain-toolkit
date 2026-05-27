@@ -1,9 +1,8 @@
-import {
-  OAuthUserInfoError,
-  oauthUserInfoErrorResponse
-} from '@shared/oauth-wrapper/utils/oauthUserInfoError';
-import { BootstrapServer } from '@server/BootstrapServer';
+import { isEmpty } from 'lodash';
+import { OAuthWrapperError } from '@shared/oauth-wrapper';
+import { ROUTE_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
+import { NextApiServer } from '@server/NextApiServer';
 import type { NextRequest } from 'next/server';
 
 export function parseBearerAuthorization(
@@ -24,28 +23,28 @@ export function parseBearerAuthorization(
  * Requires `Authorization: Bearer <access_token>` from `POST /oauth/token`.
  */
 export async function GET(req: NextRequest) {
-  const accessToken = parseBearerAuthorization(
-    req.headers.get('authorization')
-  );
+  return await new NextApiServer({
+    name: ROUTE_USERINFO,
+    nextRequest: req,
+    event_category: 'oauth'
+  }).runWithJson(
+    async ({ parameters: { IOC } }) => {
+      const accessToken = parseBearerAuthorization(
+        req.headers.get('authorization')
+      );
 
-  if (!accessToken) {
-    return oauthUserInfoErrorResponse(new OAuthUserInfoError());
-  }
+      if (isEmpty(accessToken)) {
+        throw new OAuthWrapperError(
+          'invalid_token',
+          401,
+          'Invalid authorization header'
+        );
+      }
 
-  const IOC = new BootstrapServer('/userinfo').getIOC();
-
-  try {
-    const profile = await IOC(OAuthWrapperController).getUserInfo(accessToken);
-
-    return Response.json(profile, {
-      status: 200,
-      headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' }
-    });
-  } catch (err) {
-    if (err instanceof OAuthUserInfoError) {
-      return oauthUserInfoErrorResponse(err);
+      return await IOC(OAuthWrapperController).getUserInfo(accessToken!);
+    },
+    {
+      successHeaders: { 'Cache-Control': 'no-store', Pragma: 'no-cache' }
     }
-
-    return oauthUserInfoErrorResponse(new OAuthUserInfoError());
-  }
+  );
 }

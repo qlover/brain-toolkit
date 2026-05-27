@@ -1,5 +1,5 @@
-import { API_OAUTH_INVALID_REQUEST } from '@config/i18n-identifier/api';
 import { isValidCodeChallenge } from './pkce';
+import { OAuthRfcCodes } from '../config';
 import type { OAuthAuthorizeValidationError } from '../interfaces/OAuthServiceInterface';
 import type { OAuthClientRow } from '../schema/OAuthAuthorizeSchema';
 
@@ -16,14 +16,14 @@ export function validatePkceParams(
   if (!confidential) {
     if (!hasChallenge || parsed.code_challenge_method !== 'S256') {
       return {
-        errorKey: API_OAUTH_INVALID_REQUEST,
+        errorKey: OAuthRfcCodes.INVALID_REQUEST,
         message:
           'Public clients must send code_challenge and code_challenge_method=S256.'
       };
     }
     if (!isValidCodeChallenge(parsed.code_challenge!)) {
       return {
-        errorKey: API_OAUTH_INVALID_REQUEST,
+        errorKey: OAuthRfcCodes.INVALID_REQUEST,
         message: 'Invalid code_challenge.'
       };
     }
@@ -32,7 +32,7 @@ export function validatePkceParams(
 
   if (hasChallenge !== hasMethod) {
     return {
-      errorKey: API_OAUTH_INVALID_REQUEST,
+      errorKey: OAuthRfcCodes.INVALID_REQUEST,
       message: 'code_challenge and code_challenge_method must be sent together.'
     };
   }
@@ -40,13 +40,13 @@ export function validatePkceParams(
   if (hasChallenge) {
     if (parsed.code_challenge_method !== 'S256') {
       return {
-        errorKey: API_OAUTH_INVALID_REQUEST,
+        errorKey: OAuthRfcCodes.INVALID_REQUEST,
         message: 'Only code_challenge_method=S256 is supported.'
       };
     }
     if (!isValidCodeChallenge(parsed.code_challenge!)) {
       return {
-        errorKey: API_OAUTH_INVALID_REQUEST,
+        errorKey: OAuthRfcCodes.INVALID_REQUEST,
         message: 'Invalid code_challenge.'
       };
     }

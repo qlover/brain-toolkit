@@ -1,4 +1,13 @@
-export interface AppApiErrorInterface {
+export interface AppApiMetaData {
+  /**
+   * 允许从内部决定状态码，而不是默认400
+   *
+   * 仅用于内存环境, 真实的返回会将属性去掉
+   */
+  httpStatus?: number;
+}
+
+export interface AppApiErrorInterface extends AppApiMetaData {
   success: false;
   id: string;
   requestId: string;

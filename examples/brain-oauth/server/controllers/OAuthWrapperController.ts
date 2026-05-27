@@ -6,6 +6,7 @@ import type {
   OAuthConsentResult,
   OAuthServiceInterface,
   OAuthSessionInterface,
+  OAuthTokenRequest,
   OAuthUserAdapterInterface,
   OAuthWrapperRepositoryInterface
 } from '@shared/oauth-wrapper';
@@ -31,6 +32,7 @@ import {
   BrainSessionPayload,
   BrainSessionService
 } from '@server/services/BrainSessionService';
+import { TokenEncryption } from '@server/utils/TokenEncryption';
 
 @injectable()
 export class OAuthWrapperController {
@@ -51,7 +53,11 @@ export class OAuthWrapperController {
     this.oauthService = new OAuthWrapperService(
       brainSession,
       userAdapter,
-      new OAuthTokenService(config.encryptionKey, userAdapter, oauthRepo),
+      new OAuthTokenService(
+        new TokenEncryption(config.encryptionKey),
+        userAdapter,
+        oauthRepo
+      ),
       oauthRepo
     );
   }
@@ -97,7 +103,7 @@ export class OAuthWrapperController {
   }
 
   public async exchangeToken(
-    fields: Record<string, string>
+    fields: Record<string, string> | OAuthTokenRequest
   ): Promise<OAuthTokenResponse> {
     return await this.oauthService.exchangeToken(fields);
   }

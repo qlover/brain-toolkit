@@ -1,5 +1,10 @@
+import { isPlainObject, pick } from 'lodash';
 import { NextResponse, type NextRequest } from 'next/server';
-import type { AppApiResult } from '@interfaces/AppApiInterface';
+import type {
+  AppApiMetaData,
+  AppApiResult,
+  AppApiSuccessInterface
+} from '@interfaces/AppApiInterface';
 import { BootstrapServer } from '@server/BootstrapServer';
 import { RequestLogsRepository } from '@server/repositorys/RequestLogsRepository';
 import { resolveBrainOauthRequestLogRecordType } from '@server/utils/requestLogRecordType';
@@ -13,16 +18,52 @@ import type { UserLoginContext } from './interfaces/UserServiceInterface';
 import type { SeedConfigInterface } from '@qlover/corekit-bridge/bootstrap';
 import type { ExecutorAsyncTask } from '@qlover/fe-corekit';
 
-export class NextApiServer extends BootstrapServer {
-  private readonly nextRequest?: NextRequest;
-
+export type NextApiServerContext = {
+  name?: string;
+  nextRequest?: NextRequest;
   /**
-   * @param name Optional server name (logging / IOC scope).
-   * @param nextRequest When set, {@link run} / {@link runWithJson} record one `request_logs` row per invocation.
+   * @default 'api'
    */
-  constructor(name?: string, nextRequest?: NextRequest) {
-    super(name);
-    this.nextRequest = nextRequest;
+  event_category: string;
+  /**
+   * @default 'http.request'
+   */
+  event_type: string;
+};
+
+function isNextApiServerContext(
+  value: unknown
+): value is Partial<NextApiServerContext> {
+  return isPlainObject(value);
+}
+export class NextApiServer extends BootstrapServer {
+  protected context: NextApiServerContext;
+
+  constructor(name?: string, nextRequest?: NextRequest);
+  constructor(context?: Partial<NextApiServerContext>);
+
+  constructor(
+    nameOrContext?: string | Partial<NextApiServerContext>,
+    nextRequest?: NextRequest
+  ) {
+    if (isNextApiServerContext(nameOrContext)) {
+      const { name } = nameOrContext ?? {};
+
+      super(name);
+      this.context = {
+        ...nameOrContext,
+        event_category: 'api',
+        event_type: 'http.request'
+      };
+    } else {
+      super(nameOrContext);
+      this.context = {
+        name: nameOrContext,
+        nextRequest,
+        event_category: 'api',
+        event_type: 'http.request'
+      };
+    }
   }
 
   protected getLoginContext(req: NextRequest): UserLoginContext {
@@ -40,10 +81,10 @@ export class NextApiServer extends BootstrapServer {
    */
   protected override getContext(): BootstrapServerContextOptions {
     const base = super.getContext();
-    if (this.nextRequest === undefined) {
+    if (this.context.nextRequest === undefined) {
       return base;
     }
-    return { ...base, ctx: this.getLoginContext(this.nextRequest) };
+    return { ...base, ctx: this.getLoginContext(this.context.nextRequest) };
   }
 
   protected tryLogHttpApiRequest(
@@ -59,8 +100,8 @@ export class NextApiServer extends BootstrapServer {
     const correlationId = result.requestId;
 
     void this.IOC(RequestLogsRepository).insertEvent({
-      event_category: 'api',
-      event_type: 'http.request',
+      event_category: this.context.event_category,
+      event_type: this.context.event_type,
       success,
       request_id: correlationId?.trim() ? correlationId : null,
       record_type: resolveBrainOauthRequestLogRecordType(req.nextUrl.pathname),
@@ -102,9 +143,9 @@ export class NextApiServer extends BootstrapServer {
       envelope = ApiResultFactory.createApiSuccess(result, options);
     }
 
-    if (this.nextRequest) {
+    if (this.context.nextRequest) {
       const durationMs = Math.round(performance.now() - started);
-      this.tryLogHttpApiRequest(this.nextRequest, envelope, durationMs);
+      this.tryLogHttpApiRequest(this.context.nextRequest, envelope, durationMs);
     }
 
     return envelope;
@@ -114,15 +155,36 @@ export class NextApiServer extends BootstrapServer {
     task?: ExecutorAsyncTask<
       Result | AppApiResult<Result>,
       BootstrapServerContextOptions
-    >
+    >,
+    init?: {
+      successHeaders?: HeadersInit;
+      errorHeaders?: HeadersInit;
+    }
   ): Promise<NextResponse> {
     const result = await this.run(task);
 
     if (!result.success) {
-      return NextResponse.json(result, { status: 400 });
+      return NextResponse.json(this.getSafeAppApiResult(result), {
+        status: result.httpStatus ?? 400,
+        headers: init?.errorHeaders
+      });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(this.getSafeAppApiResult(result), {
+      headers: init?.successHeaders
+    });
+  }
+
+  protected getSafeAppApiResult<T>(
+    result: AppApiResult<T>
+  ): Omit<AppApiResult<T>, keyof AppApiMetaData> {
+    return pick(result, [
+      'success',
+      'id',
+      'requestId',
+      'message',
+      'data'
+    ]) as AppApiSuccessInterface<T>;
   }
 
   public override getPlugins(
