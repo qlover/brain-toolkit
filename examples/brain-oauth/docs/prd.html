@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain OAuth 2.0 中间层 | 最终产品需求与技术设计</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b1120;
+      font-family: 'Inter', 'SF Mono', monospace, system-ui;
+      line-height: 1.5;
+      color: #e2e8f0;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      background: #0f172a;
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 50px -12px black;
+      overflow: hidden;
+      border: 1px solid #1e293b;
+    }
+
+    .header {
+      background: #020617;
+      padding: 2rem 2.5rem;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .header .sub {
+      color: #94a3b8;
+      margin-top: 0.5rem;
+      font-family: monospace;
+    }
+
+    .content {
+      padding: 2rem 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 1.8rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #1e293b;
+      color: #cbd5e1;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+      color: #b9c3d4;
+    }
+
+    p,
+    li {
+      color: #cbd5e6;
+      margin-bottom: 0.75rem;
+    }
+
+    code {
+      background: #1e293b;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.375rem;
+      font-size: 0.85rem;
+      font-family: 'Fira Code', monospace;
+      color: #fbbf24;
+    }
+
+    pre {
+      background: #0f0f1a;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid #1e293b;
+    }
+
+    pre code {
+      background: none;
+      color: #e2e8f0;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+    }
+
+    th,
+    td {
+      border: 1px solid #1e293b;
+      padding: 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #111827;
+      color: #f1f5f9;
+    }
+
+    .note {
+      background: #1e1b2f;
+      border-left: 4px solid #8b5cf6;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .warning {
+      background: #2d1a1a;
+      border-left: 4px solid #ef4444;
+      padding: 0.75rem 1rem;
+    }
+
+    hr {
+      border-color: #1e293b;
+      margin: 1.5rem 0;
+    }
+
+    footer {
+      background: #020617;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #475569;
+      border-top: 1px solid #1e293b;
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 1.25rem;
+      }
+
+      .header {
+        padding: 1.25rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🧠 Brain OAuth 2.0 中间层</h1>
+      <div class="sub">最终产品需求与技术设计 · 标准 OAuth 2.0 授权服务器 · 开发者控制台 · 无服务器就绪</div>
+    </div>
+    <div class="content">
+      <p><strong>版本</strong> 5.0 (最终版) | <strong>最后更新</strong> 2026-05-22 | <strong>状态</strong> 可直接开发</p>
+      <p>本文档是 Brain OAuth 2.0 授权服务器的完整蓝图。它将 Brain 现有非标准令牌接口包装成符合 <a href="https://datatracker.ietf.org/doc/html/rfc6749"
+          style="color:#93c5fd;">RFC 6749</a> 的授权服务器，并提供开发者控制台，支持第三方应用安全接入 Brain 用户体系。</p>
+
+      <h2>1. 项目概述</h2>
+      <p><strong>核心目标</strong>：构建一个轻量级 OAuth 2.0 中间层，对外暴露标准授权端点、令牌端点和用户信息端点，对内调用 Brain 原生 API（密码换 token，token 换
+        access_token）。中间层自身不签发 token，完全复用 Brain 下发的 access_token 和 refresh_token，并允许开发者自助注册应用（获得 client_id/secret）。</p>
+      <p><strong>技术栈</strong>：Next.js 14 (App Router) + TypeScript，Supabase (PostgreSQL) 作为数据库，iron-session
+        管理用户会话，bcryptjs 哈希 client_secret，jose 用于 JWT（可选，仅用于内部），部署于 Vercel 等无服务器环境。</p>
+
+      <h2>2. 路由与渲染策略</h2>
+      <p>所有路由严格区分 <strong>页面组件</strong>（.tsx）和 <strong>API 路由</strong>（route.ts）。</p>
+
+      <h3>2.1 页面路由（用户界面）</h3>
+      <ul>
+        <li><code>/</code> → 首页（品牌介绍 + 动态按钮），SSR 或静态生成（读取 session 判断登录状态）</li>
+        <li><code>/login</code> → 登录页，SSR（无数据依赖，可静态但无妨）</li>
+        <li><code>/oauth/authorize</code> → 授权确认页，SSR（需要校验 client 信息）</li>
+        <li><code>/developer/apps</code> → 我的应用列表，SSR（依赖登录用户，查询数据库）</li>
+        <li><code>/developer/apps/new</code> → 创建应用表单，SSR（仅表单，可静态）</li>
+        <li><code>/developer/apps/[clientId]/edit</code> → 编辑应用，SSR（需加载当前应用数据）</li>
+      </ul>
+
+      <h3>2.2 API 路由</h3>
+      <ul>
+        <li><strong>标准 OAuth 端点（对外）</strong>：
+          <ul>
+            <li><code>POST /oauth/token</code> → 令牌交换</li>
+            <li><code>GET /userinfo</code> → 用户信息</li>
+          </ul>
+        </li>
+        <li><strong>内部 API（供前端页面调用）</strong>：
+          <ul>
+            <li><code>POST /api/brain/verify</code> → 验证 Brain 凭证，建立会话</li>
+            <li><code>POST /api/oauth/consent</code> → 用户同意后生成授权码</li>
+            <li><code>GET /api/clients</code> → 获取当前用户的应用列表</li>
+            <li><code>POST /api/clients</code> → 创建新应用</li>
+            <li><code>GET /api/clients/:clientId</code> → 获取应用详情</li>
+            <li><code>PUT /api/clients/:clientId</code> → 更新应用信息</li>
+            <li><code>DELETE /api/clients/:clientId</code> → 删除应用</li>
+            <li><code>POST /api/clients/:clientId/rotate-secret</code> → 重置密钥</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>2.3 登录跳转逻辑</h3>
+      <ul>
+        <li><code>/login</code> 页面从 URL query 中读取 <code>redirect</code> 参数。</li>
+        <li>登录成功后：
+          <ul>
+            <li>如果 <code>redirect</code> 存在且为本站内部路径（以 <code>/</code> 开头），则跳转至该路径。</li>
+            <li>否则默认跳转至 <code>/developer/apps</code>。</li>
+          </ul>
+        </li>
+        <li>未登录用户访问受保护页面（<code>/oauth/authorize</code>、<code>/developer/*</code>）时，中间件自动重定向到
+          <code>/login?redirect=原始路径</code>。</li>
+      </ul>
+
+      <h2>3. 开发者控制台（核心功能）</h2>
+      <p>第三方开发者使用 Brain 账号登录后，可自助创建 OAuth 应用，获得 client_id 和 client_secret。</p>
+      <h3>3.1 应用列表页 (<code>/developer/apps</code>)</h3>
+      <ul>
+        <li>展示当前用户所有应用的 client_id、名称、回调地址（简略）、创建时间。</li>
+        <li>操作按钮：编辑、重置密钥、删除。</li>
+      </ul>
+      <h3>3.2 创建应用页 (<code>/developer/apps/new</code>)</h3>
+      <ul>
+        <li>表单字段：应用名称（必填）、重定向 URI（必填，支持多行输入）、主页 URL（可选）、Logo 地址（可选）。</li>
+        <li>提交后生成 client_id（UUID v4）和 client_secret（32 字节随机，bcrypt 哈希存储）。</li>
+        <li>显示成功提示并展示 client_id 和 client_secret（明文仅显示一次，提供复制按钮）。</li>
+      </ul>
+      <h3>3.3 编辑应用页 (<code>/developer/apps/[clientId]/edit</code>)</h3>
+      <ul>
+        <li>可修改应用名称、回调地址、主页 URL 等。</li>
+        <li>提供“重置密钥”按钮：生成新 client_secret，展示新明文一次，旧 secret 立即失效。</li>
+        <li>提供“删除应用”按钮：二次确认后删除，同时清理关联的授权码和 refresh_token 映射。</li>
+      </ul>
+
+      <h2>4. 数据库设计（Supabase）</h2>
+      <p>所有表均需启用行级安全（RLS），服务角色拥有全部权限，普通用户仅能读取/操作自己拥有的记录（client 表通过 owner_user_id 限制）。</p>
+      <h3>4.1 <code>oauth_clients</code></h3>
+      <pre><code>CREATE TABLE oauth_clients (
+    id                SERIAL PRIMARY KEY,
+    client_id         TEXT UNIQUE NOT NULL,
+    client_secret_hash TEXT NOT NULL,
+    client_name       TEXT NOT NULL,
+    client_uri        TEXT,
+    logo_uri          TEXT,
+    redirect_uris     TEXT[] NOT NULL,
+    grant_types       TEXT[] DEFAULT '{authorization_code,refresh_token}',
+    scopes            TEXT[] DEFAULT '{openid,profile,email}',
+    confidential      BOOLEAN DEFAULT true,
+    owner_user_id     INTEGER NOT NULL,
+    created_at        TIMESTAMPTZ DEFAULT now(),
+    updated_at        TIMESTAMPTZ DEFAULT now()
+);</code></pre>
+      <h3>4.2 <code>oauth_authorization_codes</code></h3>
+      <pre><code>CREATE TABLE oauth_authorization_codes (
+    code          TEXT PRIMARY KEY,
+    client_id     TEXT NOT NULL REFERENCES oauth_clients(client_id) ON DELETE CASCADE,
+    user_id       INTEGER NOT NULL,
+    redirect_uri  TEXT NOT NULL,
+    scope         TEXT,
+    expires_at    TIMESTAMPTZ NOT NULL,
+    used          BOOLEAN DEFAULT false,
+    created_at    TIMESTAMPTZ DEFAULT now()
+);</code></pre>
+      <h3>4.3 <code>oauth_refresh_tokens</code>（Brain 原生 refresh_token 映射）</h3>
+      <pre><code>CREATE TABLE oauth_refresh_tokens (
+    id            SERIAL PRIMARY KEY,
+    refresh_token TEXT NOT NULL UNIQUE,
+    client_id     TEXT NOT NULL REFERENCES oauth_clients(client_id),
+    user_id       INTEGER NOT NULL,
+    expires_at    TIMESTAMPTZ NOT NULL,
+    revoked       BOOLEAN DEFAULT false,
+    created_at    TIMESTAMPTZ DEFAULT now()
+);</code></pre>
+      <h3>4.4 <code>oauth_user_credentials</code>（用户长期凭证）</h3>
+      <pre><code>CREATE TABLE oauth_user_credentials (
+    user_id             INTEGER PRIMARY KEY,
+    brain_refresh_token TEXT,   -- 加密存储
+    brain_session_token TEXT,   -- 备选
+    updated_at          TIMESTAMPTZ DEFAULT now()
+);</code></pre>
+      <div class="note">🔐 <code>refresh_token</code> 和 <code>brain_refresh_token</code> 必须使用 AES-256-GCM 加密，密钥来自环境变量
+        <code>ENCRYPTION_KEY</code>。</div>
+
+      <h2>5. Brain 用户系统集成</h2>
+      <h3>5.1 登录流程</h3>
+      <ol>
+        <li>前端提交 email/password 到 <code>/api/brain/verify</code>。</li>
+        <li>调用 Brain <code>/auth/token.json</code> 获取 session token。</li>
+        <li>用 session token 调用 Brain <code>/auth/access_token</code> 获取 access_token + refresh_token（24h）。</li>
+        <li>调用 Brain <code>/users/me.json</code> 获取用户信息（user_id, email, name）。</li>
+        <li>将 refresh_token 加密存入 <code>oauth_user_credentials</code>（user_id 为主键）。</li>
+        <li>建立中间层 session（存储 user_id, email, name）。</li>
+      </ol>
+      <h3>5.2 令牌端点中换取 access_token</h3>
+      <p>当第三方应用使用授权码换 token 时，中间层从 <code>oauth_user_credentials</code> 获取该用户的加密 refresh_token，解密后调用 Brain
+        <code>/auth/access_token</code>（需确认 Brain 是否支持用 refresh_token 换取新 token；若不支持，则使用存储的 session_token 重新调用）。</p>
+      <div class="warning">
+        ⚠️ 需要根据 Brain 实际接口行为调整：若 <code>/auth/access_token</code> 仅接受 session token，则应在用户登录时存储
+        session_token，并在每次令牌请求时使用它获取新 access_token（session_token 需长期有效）。
+      </div>
+
+      <h2>6. 标准 OAuth 2.0 端点实现</h2>
+      <h3>6.1 <code>GET /oauth/authorize</code>（页面）</h3>
+      <ul>
+        <li>服务端组件读取 query 参数，校验 <code>client_id</code>、<code>redirect_uri</code> 白名单。</li>
+        <li>检查用户登录状态（session），未登录则重定向到 <code>/login?redirect=当前URL</code>。</li>
+        <li>已登录则渲染确认页面，显示应用名称和请求的 scope。</li>
+        <li>用户提交同意后，调用 <code>POST /api/oauth/consent</code> 生成授权码并重定向到客户端。</li>
+      </ul>
+      <h3>6.2 <code>POST /oauth/token</code>（API）</h3>
+      <ul>
+        <li>支持 <code>grant_type=authorization_code</code> 和 <code>refresh_token</code>。</li>
+        <li>验证 client 凭证（Basic Auth 或 body 参数）。</li>
+        <li>对于 <code>authorization_code</code>：验证授权码（存在、未过期、未使用、redirect_uri 匹配），标记已使用，然后用用户的长期凭证从 Brain 获取新
+          token，返回给客户端。</li>
+        <li>对于 <code>refresh_token</code>：验证数据库中的 refresh_token 有效，调用 Brain 刷新，返回新 token 并更新存储。</li>
+      </ul>
+      <h3>6.3 <code>GET /userinfo</code>（API）</h3>
+      <ul>
+        <li>提取 <code>Authorization: Bearer &lt;access_token&gt;</code>，转发到 Brain <code>/users/me.json</code>。</li>
+        <li>若 Brain 返回 401，则响应 <code>{ "error": "invalid_token" }</code>，HTTP 401。</li>
+        <li>成功则返回用户信息（sub, email, name, roles 等）。</li>
+      </ul>
+
+      <h2>7. 错误码规范（符合 OAuth 2.0）</h2>
+      <h3>7.1 授权端点错误（重定向）</h3>
+      <ul>
+        <li><code>invalid_request</code>：缺少 response_type 或参数不合法。</li>
+        <li><code>unauthorized_client</code>：redirect_uri 不匹配客户端注册值。</li>
+        <li><code>access_denied</code>：用户拒绝授权。</li>
+        <li><code>unsupported_response_type</code>：仅支持 code。</li>
+        <li><code>invalid_scope</code>：scope 超出客户端允许范围。</li>
+        <li><code>server_error</code>：中间层内部错误。</li>
+      </ul>
+      <h3>7.2 令牌端点错误（JSON）</h3>
+      <ul>
+        <li><code>invalid_client</code> (401)：client 认证失败。</li>
+        <li><code>invalid_grant</code> (400)：授权码无效/过期/已使用，或 refresh_token 无效。</li>
+        <li><code>unsupported_grant_type</code> (400)：grant_type 不支持。</li>
+        <li><code>invalid_request</code> (400)：请求格式错误。</li>
+      </ul>
+      <h3>7.3 内部错误码（仅日志）</h3>
+      <ul>
+        <li><code>BRAIN_API_FAILED</code>、<code>REFRESH_TOKEN_NOT_FOUND</code>、<code>USER_SESSION_EXPIRED</code> 等。</li>
+      </ul>
+
+      <h2>8. 安全与无服务器适配</h2>
+      <ul>
+        <li>所有 Cookie：<code>HttpOnly; Secure; SameSite=Lax</code>。</li>
+        <li>授权码一次性，5 分钟过期。</li>
+        <li>client_secret 使用 bcrypt（强度 12）哈希存储。</li>
+        <li>数据库敏感字段 AES-256-GCM 加密。</li>
+        <li>Supabase 连接池：<code>postgres://...?pgbouncer=true</code>。</li>
+        <li>使用 <code>@supabase/supabase-js</code> 或 <code>drizzle-orm</code> 以降低冷启动。</li>
+      </ul>
+
+      <h2>9. 开发顺序建议</h2>
+      <ol>
+        <li>初始化 Next.js + TypeScript + Tailwind 项目，配置 Supabase。</li>
+        <li>实现 Supabase 表及 RLS 策略。</li>
+        <li>实现登录功能：<code>/api/brain/verify</code> + <code>/login</code> 页面，测试 Brain 认证。</li>
+        <li>实现开发者控制台：<code>/api/clients/*</code> + <code>/developer/apps</code> 相关页面。</li>
+        <li>实现授权流程：<code>/oauth/authorize</code> 页面 + <code>/api/oauth/consent</code> + 授权码存储。</li>
+        <li>实现令牌端点 <code>/oauth/token</code> 和用户信息端点 <code>/userinfo</code>。</li>
+        <li>集成测试：模拟第三方客户端完成完整授权码流程。</li>
+        <li>部署到 Vercel，配置环境变量。</li>
+      </ol>
+
+      <div class="note">
+        ✅ 本文档已涵盖所有功能需求、技术细节和实现顺序，可直接作为开发依据。如有调整，请更新本文档版本。
+      </div>
+      <hr />
+      <p><strong>文档结束</strong> — Brain OAuth 中间层 v5.0</p>
+    </div>
+    <footer>
+      Brain OAuth 2.0 授权服务器 · 最终设计 · 可实施交付
+    </footer>
+  </div>
+</body>
+
+</html>

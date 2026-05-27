@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>授权确认 - Brain OAuth</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .dark {
+      background-color: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .light {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .toggle-checkbox:checked {
+      right: 0;
+      border-color: #4f46e5;
+    }
+
+    .toggle-checkbox:checked+.toggle-label {
+      background-color: #4f46e5;
+    }
+  </style>
+</head>
+
+<body class="light">
+  <div class="min-h-screen flex flex-col">
+    <!-- 导航栏（同前，略） -->
+    <nav
+      class="sticky top-0 z-50 backdrop-blur-md bg-opacity-80 light:bg-white/80 dark:bg-gray-900/80 border-b light:border-gray-200 dark:border-gray-800">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-brain text-2xl text-indigo-600"></i>
+            <span class="font-bold text-xl">Brain OAuth</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button id="themeToggle" class="p-2 rounded-full light:bg-gray-100 dark:bg-gray-800"><i id="themeIcon"
+                class="fas fa-moon"></i></button>
+            <div class="relative">
+              <button id="langToggle"
+                class="flex items-center space-x-1 px-3 py-1.5 rounded-lg light:bg-gray-100 text-sm"><i
+                  class="fas fa-globe"></i><span id="currentLangLabel">中文</span></button>
+              <div id="langMenu"
+                class="hidden absolute right-0 mt-2 w-24 rounded-lg shadow-lg light:bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                <button data-lang="zh"
+                  class="lang-option block w-full text-left px-4 py-2 text-sm hover:bg-indigo-50">中文</button>
+                <button data-lang="en"
+                  class="lang-option block w-full text-left px-4 py-2 text-sm hover:bg-indigo-50">English</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="flex-1 flex items-center justify-center px-4 py-12">
+      <div
+        class="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl border light:border-gray-200 dark:border-gray-700 overflow-hidden">
+        <!-- 错误提示区域 -->
+        <div id="errorAlert"
+          class="hidden mx-6 mt-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded text-sm text-red-700 dark:text-red-300">
+          <i class="fas fa-exclamation-triangle mr-2"></i><span id="errorMsg"></span>
+        </div>
+
+        <div class="p-6 border-b light:border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-3">
+            <div id="appLogo"
+              class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 text-xl">
+              <i class="fas fa-apple-alt"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-semibold" data-i18n="title">授权请求</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="subtitle">正在请求访问您的账户</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <!-- 应用信息块 -->
+          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide" data-i18n="app_name_label">
+                  应用名称</p>
+                <p id="appName" class="font-semibold text-lg">Demo App</p>
+                <p id="appDesc" class="text-sm text-gray-500 dark:text-gray-400">示例应用描述</p>
+              </div>
+              <span
+                class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-1 rounded-full">OAuth
+                2.0</span>
+            </div>
+          </div>
+
+          <!-- 权限区域 + 可折叠详情 -->
+          <div>
+            <div class="flex justify-between items-center cursor-pointer" id="togglePerms">
+              <p class="text-sm font-medium flex items-center gap-1"><i class="fas fa-lock"></i> <span
+                  data-i18n="permissions_label">请求的权限</span></p>
+              <i id="chevron" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+            </div>
+            <div id="permList" class="mt-2 space-y-2 pl-1">
+              <div class="flex items-start gap-2"><i class="fas fa-check-circle text-green-500 text-sm mt-0.5"></i>
+                <span data-i18n="perm_openid">使用您的身份信息登录</span></div>
+              <div class="flex items-start gap-2"><i class="fas fa-check-circle text-green-500 text-sm mt-0.5"></i>
+                <span data-i18n="perm_email">查看您的电子邮件地址</span></div>
+              <div class="flex items-start gap-2"><i class="fas fa-check-circle text-green-500 text-sm mt-0.5"></i>
+                <span data-i18n="perm_profile">查看您的公开个人资料（姓名、头像）</span></div>
+            </div>
+            <!-- 可折叠的额外说明 -->
+            <div id="extraPerms"
+              class="hidden mt-2 pl-5 text-xs text-gray-500 dark:text-gray-400 border-l-2 border-indigo-300">
+              <p data-i18n="extra_perm_note">该应用不会获取您的密码，仅访问您已同意的信息。</p>
+            </div>
+          </div>
+
+          <!-- 高级选项：信任此应用 -->
+          <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center">
+              <input type="checkbox" id="trustCheckbox" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+              <label for="trustCheckbox" class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                data-i18n="trust_option">信任此应用，以后不再询问</label>
+            </div>
+            <i class="fas fa-question-circle text-gray-400 text-xs cursor-pointer"
+              title="您将直接授权该应用，无需再次确认。可在开发者控制台撤销。"></i>
+          </div>
+
+          <!-- 安全提示 -->
+          <div class="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 p-3 rounded text-sm">
+            <i class="fas fa-info-circle text-amber-600 mr-2"></i>
+            <span data-i18n="safety_note">仅授权您信任的应用。您可以随时在账号设置中撤销授权。</span>
+          </div>
+        </div>
+
+        <div class="p-6 border-t bg-gray-50 dark:bg-gray-900/30 flex flex-col sm:flex-row gap-3">
+          <button id="denyBtn"
+            class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition font-medium">
+            <span data-i18n="deny">拒绝</span>
+          </button>
+          <button id="allowBtn"
+            class="flex-1 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium shadow-sm flex items-center justify-center gap-2">
+            <span data-i18n="allow">同意授权</span>
+            <i id="allowSpinner" class="fas fa-spinner fa-spin hidden"></i>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="text-center text-sm text-gray-500 py-6 border-t light:border-gray-200 dark:border-gray-800">
+      <p>© 2026 Brain OAuth · 安全身份验证服务</p>
+    </footer>
+  </div>
+
+  <script>
+    // 模拟从 URL 获取数据 (实际服务端渲染注入)
+    const app = { name: "示例应用", description: "用于测试 OAuth 流程的演示应用", logo: null };
+    document.getElementById('appName').innerText = app.name;
+    document.getElementById('appDesc').innerText = app.description;
+
+    // 国际化
+    const translations = {
+      zh: { title: "授权请求", subtitle: "正在请求访问您的账户", app_name_label: "应用名称", permissions_label: "请求的权限", perm_openid: "使用您的身份信息登录", perm_email: "查看您的电子邮件地址", perm_profile: "查看您的公开个人资料（姓名、头像）", extra_perm_note: "该应用不会获取您的密码，仅访问您已同意的信息。", trust_option: "信任此应用，以后不再询问", safety_note: "仅授权您信任的应用。您可以随时在账号设置中撤销授权。", deny: "拒绝", allow: "同意授权" },
+      en: { title: "Authorization Request", subtitle: "is requesting access to your account", app_name_label: "Application", permissions_label: "Requested permissions", perm_openid: "Authenticate using your identity", perm_email: "View your email address", perm_profile: "View your public profile (name, avatar)", extra_perm_note: "This app will never see your password.", trust_option: "Trust this app and do not ask again", safety_note: "Only authorize apps you trust. You can revoke access anytime.", deny: "Deny", allow: "Allow" }
+    };
+    let currentLang = localStorage.getItem('lang') || 'zh';
+    let currentTheme = localStorage.getItem('theme') || 'light';
+
+    function applyLang(lang) {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) el.innerText = translations[lang][key];
+      });
+      document.getElementById('currentLangLabel').innerText = lang === 'zh' ? '中文' : 'English';
+      localStorage.setItem('lang', lang);
+    }
+    function applyTheme(theme) {
+      document.body.classList.remove('light', 'dark');
+      document.body.classList.add(theme);
+      const icon = document.getElementById('themeIcon');
+      icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+      localStorage.setItem('theme', theme);
+    }
+    // 初始化
+    applyTheme(currentTheme);
+    applyLang(currentLang);
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+    });
+    const langBtn = document.getElementById('langToggle'), langMenu = document.getElementById('langMenu');
+    langBtn.addEventListener('click', (e) => { e.stopPropagation(); langMenu.classList.toggle('hidden'); });
+    document.querySelectorAll('.lang-option').forEach(btn => {
+      btn.addEventListener('click', () => { applyLang(btn.getAttribute('data-lang')); langMenu.classList.add('hidden'); });
+    });
+    document.addEventListener('click', () => langMenu.classList.add('hidden'));
+
+    // 可折叠权限详情
+    const togglePerms = document.getElementById('togglePerms');
+    const extraPerms = document.getElementById('extraPerms');
+    const chevron = document.getElementById('chevron');
+    togglePerms.addEventListener('click', () => {
+      extraPerms.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    });
+
+    // 模拟同意/拒绝 (带加载状态)
+    const allowBtn = document.getElementById('allowBtn');
+    const denyBtn = document.getElementById('denyBtn');
+    const spinner = document.getElementById('allowSpinner');
+    const errorDiv = document.getElementById('errorAlert');
+    const errorMsg = document.getElementById('errorMsg');
+
+    async function handleAllow() {
+      allowBtn.disabled = true;
+      spinner.classList.remove('hidden');
+      errorDiv.classList.add('hidden');
+      // 模拟异步请求 (调用 /api/oauth/consent)
+      setTimeout(() => {
+        const trust = document.getElementById('trustCheckbox').checked;
+        console.log(trust ? "后续自动授权" : "单次授权");
+        // 实际开发中应发送 POST
+        alert("演示模式：将生成授权码并重定向到 redirect_uri");
+        allowBtn.disabled = false;
+        spinner.classList.add('hidden');
+      }, 800);
+    }
+    function handleDeny() {
+      if (confirm("拒绝授权将导致第三方应用无法访问您的信息。确定拒绝？")) {
+        alert("已拒绝授权，将返回错误给第三方应用");
+        // 实际应重定向并带 error=access_denied
+      }
+    }
+    allowBtn.addEventListener('click', handleAllow);
+    denyBtn.addEventListener('click', handleDeny);
+  </script>
+</body>
+
+</html>

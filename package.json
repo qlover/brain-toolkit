@@ -26,7 +26,8 @@
     "check-packages": "fe-check-packages",
     "prepare": "husky",
     "type-check": "tsc --build --force",
-    "dev:brain-user": "pnpm --filter examples/brain-user dev"
+    "dev:brain-user": "pnpm --filter examples/brain-user dev",
+    "dev:brain-oauth": "pnpm --filter examples/brain-oauth dev"
   },
   "keywords": [
     "brain-toolkit",
