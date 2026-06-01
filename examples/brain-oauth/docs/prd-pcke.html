@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain OAuth PKCE 接入指南 | 纯前端应用安全登录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f8fafc;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #0f172a;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      padding: 2rem 2rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: #cbd5e1;
+      max-width: 800px;
+    }
+
+    .content {
+      padding: 2rem 2rem;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 1.8rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.375rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: #0f172a;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    .note {
+      background: #fef9c3;
+      border-left: 4px solid #eab308;
+      padding: 0.8rem 1rem;
+      border-radius: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .warning {
+      background: #fee2e2;
+      border-left: 4px solid #ef4444;
+      padding: 0.8rem 1rem;
+      border-radius: 0.75rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      margin-right: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #e2e8f0;
+      padding: 0.6rem;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+    }
+
+    footer {
+      background: #f1f5f9;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #475569;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    @media (max-width: 768px) {
+
+      .content,
+      .header {
+        padding: 1.25rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Brain OAuth · PKCE 接入文档</h1>
+      <p>为纯前端应用（SPA、移动端、桌面应用）提供安全的 OAuth 2.0 授权码流程，无需 client_secret，支持 PKCE 防拦截攻击。</p>
+    </div>
+    <div class="content">
+      <h2>📖 概述</h2>
+      <p>Brain OAuth 现在支持 <strong>PKCE (Proof Key for Code Exchange)</strong> 扩展（RFC 7636），允许公共客户端（如浏览器
+        SPA、Electron、React Native）在不暴露 <code>client_secret</code>
+        的情况下完成安全的授权码流程。你只需注册一个<strong>公共客户端</strong>，即可在前端直接集成。</p>
+      <div class="note">
+        ✅ PKCE 流程完全由前端 JavaScript 完成，无需后端服务器。Brain OAuth 服务端会验证 <code>code_challenge</code> 和
+        <code>code_verifier</code>，防止授权码被拦截后恶意使用。
+      </div>
+
+      <h2>🔑 前置条件</h2>
+      <ol>
+        <li>访问 <a href="https://your-brain-oauth.com/developer/apps" target="_blank">Brain OAuth 开发者控制台</a>，使用 Brain
+          账号登录。</li>
+        <li>点击「创建新应用」，填写应用名称、重定向 URI（例如 <code>https://yourapp.com/callback</code> 或
+          <code>http://localhost:3000/callback</code>）。
+        </li>
+        <li><strong>在创建或编辑应用时，将「客户端类型」选择为「公共客户端」</strong>（不生成 client_secret）。系统会分配一个 <code>client_id</code>，无需保管 secret。
+        </li>
+        <li>记录下你的 <code>client_id</code> 和注册的 <code>redirect_uri</code>。</li>
+      </ol>
+      <div class="warning">
+        ⚠️ 如果应用类型误选为「机密客户端」，PKCE 流程仍可工作，但你需要提供 client_secret（不安全）。请务必选择「公共客户端」。
+      </div>
+
+      <h2>🧩 PKCE 流程原理</h2>
+      <p>PKCE 在标准授权码流程上增加了动态密钥验证：</p>
+      <ul>
+        <li><strong>code_verifier</strong>：前端生成的高熵随机字符串（43~128 字符）。</li>
+        <li><strong>code_challenge</strong>：对 verifier 进行 SHA256 哈希并 base64url 编码后的值。</li>
+        <li>授权请求携带 <code>code_challenge</code> 和 <code>code_challenge_method=S256</code>。</li>
+        <li>授权码返回后，前端用 <code>code_verifier</code> 换取 token，服务端验证哈希匹配后颁发 token。</li>
+      </ul>
+      <p>即使授权码被窃取，攻击者没有 <code>code_verifier</code> 也无法换取令牌。</p>
+
+      <h2>📦 快速接入代码（原生 JavaScript）</h2>
+      <p>以下是一个完整的 HTML 示例，演示 PKCE 完整流程：生成挑战码 → 跳转授权 → 回调处理 → 换取 token → 调用 <code>/userinfo</code>。你只需修改
+        <code>CLIENT_ID</code> 和 <code>REDIRECT_URI</code>。
+      </p>
+      <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Brain OAuth PKCE 演示&lt;/title&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Brain OAuth 登录 (PKCE)&lt;/h1&gt;
+    &lt;button id="loginBtn"&gt;使用 Brain 账号登录&lt;/button&gt;
+    &lt;pre id="result"&gt;&lt;/pre&gt;
+
+    &lt;script&gt;
+        // ========= 配置 =========
+        const CLIENT_ID = '你的公共客户端client_id';
+        const REDIRECT_URI = 'http://localhost:3000/callback'; // 必须与注册时一致
+        const AUTHORIZE_URL = 'https://your-brain-oauth.com/oauth/authorize';
+        const TOKEN_URL = 'https://your-brain-oauth.com/oauth/token';
+        const USERINFO_URL = 'https://your-brain-oauth.com/userinfo';
+
+        // ========= PKCE 工具函数 =========
+        function generateRandomString(length) {
+            const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            let text = '';
+            for (let i = 0; i &lt; length; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            }
+            return text;
+        }
+
+        async function sha256(plain) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plain);
+            const digest = await crypto.subtle.digest('SHA-256', data);
+            return base64UrlEncode(digest);
+        }
+
+        function base64UrlEncode(buffer) {
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        // 存储临时值
+        let pkceVerifier = null;
+        let pkceState = null;
+
+        // 发起授权请求
+        async function startAuth() {
+            pkceVerifier = generateRandomString(64);
+            const codeChallenge = await sha256(pkceVerifier);
+            pkceState = generateRandomString(16);
+
+            // 保存到 sessionStorage 用于回调恢复
+            sessionStorage.setItem('pkce_verifier', pkceVerifier);
+            sessionStorage.setItem('oauth_state', pkceState);
+
+            const authUrl = `${AUTHORIZE_URL}?` +
+                `response_type=code&` +
+                `client_id=${encodeURIComponent(CLIENT_ID)}&` +
+                `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                `state=${pkceState}&` +
+                `code_challenge=${codeChallenge}&` +
+                `code_challenge_method=S256&` +
+                `scope=openid profile email`;
+            window.location.href = authUrl;
+        }
+
+        // 处理回调 (在页面加载时检查 URL 参数)
+        async function handleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+
+            if (error) {
+                document.getElementById('result').innerText = `授权失败: ${error}`;
+                return;
+            }
+
+            if (!code) return;
+
+            const savedVerifier = sessionStorage.getItem('pkce_verifier');
+            const savedState = sessionStorage.getItem('oauth_state');
+
+            if (state !== savedState) {
+                document.getElementById('result').innerText = '状态参数不匹配，可能遭受 CSRF 攻击';
+                return;
+            }
+
+            if (!savedVerifier) {
+                document.getElementById('result').innerText = '缺少 PKCE verifier';
+                return;
+            }
+
+            // 换取 token
+            try {
+                const tokenResponse = await fetch(TOKEN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        client_id: CLIENT_ID,
+                        code: code,
+                        redirect_uri: REDIRECT_URI,
+                        code_verifier: savedVerifier,
+                    }),
+                });
+                const tokenData = await tokenResponse.json();
+                if (!tokenResponse.ok) {
+                    throw new Error(tokenData.error_description || 'Token exchange failed');
+                }
+                document.getElementById('result').innerText = JSON.stringify(tokenData, null, 2);
+                // 获取用户信息
+                const userInfoRes = await fetch(USERINFO_URL, {
+                    headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
+                });
+                const userInfo = await userInfoRes.json();
+                document.getElementById('result').innerText += '\n\n用户信息:\n' + JSON.stringify(userInfo, null, 2);
+                // 清除存储
+                sessionStorage.removeItem('pkce_verifier');
+                sessionStorage.removeItem('oauth_state');
+                // 可选：去掉 URL 中的 code
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (err) {
+                document.getElementById('result').innerText = `错误: ${err.message}`;
+            }
+        }
+
+        // 绑定按钮事件
+        document.getElementById('loginBtn').addEventListener('click', startAuth);
+        // 自动处理回调
+        handleCallback();
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <p>将上述代码保存为 <code>.html</code> 文件，替换 <code>CLIENT_ID</code> 和 <code>REDIRECT_URI</code>，用本地 HTTP 服务器打开（不能直接用
+        file:// 协议，否则 crypto 可能受限），即可测试完整登录流程。</p>
+
+      <h2>📱 在 React / Vue / Svelte 中使用</h2>
+      <p>你可以将上述逻辑封装成一个自定义 Hook 或服务。推荐使用 <code>@brainoauth/pkce-client</code>（即将发布）或参考以下核心步骤：</p>
+      <ul>
+        <li>在登录按钮点击时调用 <code>startAuth()</code> 生成 verifier 和 challenge 并重定向。</li>
+        <li>在回调路由组件中，调用 <code>handleCallback()</code> 换取 token 并保存到状态管理或 localStorage（注意安全）。</li>
+        <li>所有 API 请求时在 <code>Authorization: Bearer &lt;access_token&gt;</code> 头中携带 token。</li>
+      </ul>
+      <div class="note">
+        📦 我们即将提供官方 NPM 包 <code>@brain-oauth/pkce-client</code>，包含 TypeScript 类型、自动 token 刷新、React/Vue 组合式 API
+        等高级功能。敬请期待！
+      </div>
+
+      <h2>🌐 移动端 / 桌面端集成</h2>
+      <p>对于 React Native 或 Electron，推荐使用 <strong>AppAuth</strong> 库（支持 PKCE）。以下为 React Native 示例（使用
+        <code>react-native-app-auth</code>）：
+      </p>
+      <pre><code>import { authorize } from 'react-native-app-auth';
+
+const config = {
+  issuer: 'https://your-brain-oauth.com',
+  clientId: '你的公共客户端client_id',
+  redirectUrl: 'com.yourapp:/callback',
+  scopes: ['openid', 'profile', 'email'],
+  usePKCE: true,  // 启用 PKCE
+};
+
+const result = await authorize(config);
+console.log(result.accessToken);</code></pre>
+      <p>Android / iOS 原生开发可使用 <strong>AppAuth SDK</strong>，配置方式类似。</p>
+
+      <h2>🛡️ 安全注意事项</h2>
+      <ul>
+        <li><strong>始终使用 HTTPS</strong>（生产环境），防止中间人攻击。localhost 开发时可使用 HTTP。</li>
+        <li><strong>验证 state 参数</strong>：防止 CSRF，上述示例已包含。</li>
+        <li><strong>token 存储</strong>：access_token 不应存储在 localStorage（XSS 风险），建议保存在内存中（如 React 状态）或带 HttpOnly 的
+          cookie（需要后端）。对于纯前端应用，可接受短期内存存储。</li>
+        <li><strong>刷新 token</strong>：Brain OAuth 返回 <code>refresh_token</code> 时，建议在后端代理刷新，或使用 PKCE 的刷新流程（需服务端支持）。</li>
+      </ul>
+
+      <h2>❓ 常见问题</h2>
+      <h3>Q: 我必须使用 PKCE 吗？</h3>
+      <p>A: 如果你开发的是纯前端应用（无后端服务器），则必须使用 PKCE，否则无法安全保管 client_secret。Brain OAuth 要求公共客户端强制使用 PKCE。</p>
+      <h3>Q: 回调地址支持哪些格式？</h3>
+      <p>A: 支持 HTTPS、HTTP localhost 以及自定义 URL Scheme（用于移动端，如 <code>myapp://callback</code>）。</p>
+      <h3>Q: 如何获取用户信息？</h3>
+      <p>A: 拿到 access_token 后，调用 <code>/userinfo</code> 端点，使用 Bearer Token 认证，返回标准 OIDC 用户声明。</p>
+      <h3>Q: 我的应用是服务端渲染（Next.js 服务端），应该用哪种方式？</h3>
+      <p>A: 服务端应用请使用标准授权码流程（机密客户端），由后端保管 client_secret，更安全。本 PKCE 文档专为纯前端设计。</p>
+
+      <h2>🚀 未来计划：官方 SDK</h2>
+      <p>我们正在开发 <strong>Brain OAuth JavaScript SDK</strong>，提供开箱即用的 PKCE 管理、token 自动续期、多环境配置、React / Vue 集成。届时你只需：</p>
+      <pre><code>import { BrainOAuth } from '@brain-oauth/sdk';
+const oauth = new BrainOAuth({ clientId: 'xxx', redirectUri: '...' });
+await oauth.login();  // 弹出或重定向
+const user = await oauth.getUser();</code></pre>
+      <p>SDK 将同时支持 Web、React Native、Node.js。敬请关注官方发布。</p>
+      <div class="note">
+        💡 有任何问题或建议，欢迎通过开发者控制台提交工单或查阅完整 API 文档。
+      </div>
+      <hr>
+      <p><strong>立即集成 Brain OAuth PKCE，让你的纯前端应用拥有安全、便捷的身份认证能力！</strong></p>
+    </div>
+    <footer>
+      © 2026 Brain OAuth · 遵循 RFC 7639 (PKCE) 规范 · 文档版本 1.0
+    </footer>
+  </div>
+</body>
+
+</html>
