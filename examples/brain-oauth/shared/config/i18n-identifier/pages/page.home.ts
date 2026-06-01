@@ -1,5 +1,10 @@
 /**
- * @description Home page title
+ * Brain OAuth — marketing home page identifiers (`page_home` namespace).
+ * Public landing page for the Brain user OAuth 2.0 authorization service.
+ */
+
+/**
+ * @description Brain OAuth home page — document title
  * @localZh Brain OAuth
  * @localEn Brain OAuth
  */

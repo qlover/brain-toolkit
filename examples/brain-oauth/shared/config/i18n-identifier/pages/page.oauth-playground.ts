@@ -1,12 +1,17 @@
 /**
- * @description OAuth playground page title
+ * Brain OAuth — in-app OAuth flow playground identifiers (`page_oauth_playground` namespace).
+ * Brain users simulate authorization code flow without leaving the portal.
+ */
+
+/**
+ * @description Brain OAuth playground — page title
  * @localZh OAuth 流程测试
  * @localEn OAuth Flow Playground
  */
 export const PAGE_OAUTH_PLAYGROUND_TITLE = 'page_oauth_playground:title';
 
 /**
- * @description OAuth playground meta description
+ * @description Brain OAuth playground meta description
  * @localZh 在站内模拟授权码登录与 token / userinfo 调用
  * @localEn Simulate authorization code flow and token / userinfo calls in-app
  */
@@ -14,14 +19,14 @@ export const PAGE_OAUTH_PLAYGROUND_DESCRIPTION =
   'page_oauth_playground:description';
 
 /**
- * @description OAuth playground content
+ * @description Brain OAuth playground content
  * @localZh OAuth 测试台
  * @localEn OAuth playground
  */
 export const PAGE_OAUTH_PLAYGROUND_CONTENT = 'page_oauth_playground:content';
 
 /**
- * @description OAuth playground keywords
+ * @description Brain OAuth playground keywords
  * @localZh OAuth, 测试, 授权
  * @localEn OAuth, test, authorization
  */
@@ -83,7 +88,7 @@ export const PAGE_OAUTH_PLAYGROUND_SIGNED_IN_AS =
   'page_oauth_playground:signed__in__as';
 
 /**
- * @description Login required
+ * @description Brain OAuth playground — Brain user must sign in before simulating OAuth
  * @localZh 请先登录 Brain 账户后再模拟授权。
  * @localEn Sign in to Brain before simulating authorization.
  */

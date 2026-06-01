@@ -1,12 +1,17 @@
 /**
- * @description OAuth authorize page title (header brand + meta)
+ * Brain OAuth — consent page identifiers (`page_oauth_authorize` namespace).
+ * Brain users review and approve third-party OAuth authorization requests here.
+ */
+
+/**
+ * @description Brain OAuth consent page — document title (header brand + meta)
  * @localZh Brain OAuth
  * @localEn Brain OAuth
  */
 export const PAGE_OAUTH_AUTHORIZE_TITLE = 'page_oauth_authorize:title';
 
 /**
- * @description OAuth authorize page meta description
+ * @description Brain OAuth consent page meta description
  * @localZh OAuth 授权确认页面
  * @localEn OAuth authorization consent page
  */
@@ -14,14 +19,14 @@ export const PAGE_OAUTH_AUTHORIZE_DESCRIPTION =
   'page_oauth_authorize:description';
 
 /**
- * @description OAuth authorize page content
+ * @description Brain OAuth consent page content
  * @localZh OAuth 授权确认
  * @localEn OAuth authorization consent
  */
 export const PAGE_OAUTH_AUTHORIZE_CONTENT = 'page_oauth_authorize:content';
 
 /**
- * @description OAuth authorize page keywords
+ * @description Brain OAuth consent page keywords
  * @localZh OAuth, 授权, Brain OAuth
  * @localEn OAuth, authorization, Brain OAuth
  */
@@ -35,7 +40,7 @@ export const PAGE_OAUTH_AUTHORIZE_KEYWORDS = 'page_oauth_authorize:keywords';
 export const PAGE_OAUTH_AUTHORIZE_HEADING = 'page_oauth_authorize:heading';
 
 /**
- * @description Card subtitle
+ * @description Brain OAuth consent page — card subtitle (third-party app requests Brain account access)
  * @localZh 正在请求访问您的账户
  * @localEn is requesting access to your account
  */
@@ -81,7 +86,7 @@ export const PAGE_OAUTH_AUTHORIZE_PERM_PROFILE =
   'page_oauth_authorize:perm__profile';
 
 /**
- * @description Extra permissions note
+ * @description Brain OAuth consent page — note that Brain password is never shared with OAuth clients
  * @localZh 该应用不会获取您的密码，仅访问您已同意的信息。
  * @localEn This app will never see your password.
  */
@@ -143,7 +148,7 @@ export const PAGE_OAUTH_AUTHORIZE_DENY_CONFIRM =
   'page_oauth_authorize:deny__confirm';
 
 /**
- * @description Footer tagline
+ * @description Brain OAuth consent page — footer tagline
  * @localZh 安全身份验证服务
  * @localEn Secure identity service
  */

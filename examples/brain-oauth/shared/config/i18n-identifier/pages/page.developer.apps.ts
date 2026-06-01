@@ -1,19 +1,24 @@
 /**
- * @description Developer apps page title
+ * Brain OAuth — developer console page identifiers (`developer_apps` namespace).
+ * Brain users register OAuth 2.0 clients for third-party app integration.
+ */
+
+/**
+ * @description Brain OAuth developer console — my applications page title
  * @localZh 我的 OAuth 应用
  * @localEn My OAuth Applications
  */
 export const DEVELOPER_APPS_TITLE = 'developer_apps:title';
 
 /**
- * @description Developer apps page description
+ * @description Brain OAuth developer console description
  * @localZh 管理您的 OAuth 2.0 应用，创建和管理客户端凭证
  * @localEn Manage your OAuth 2.0 applications, create and manage client credentials
  */
 export const DEVELOPER_APPS_DESCRIPTION = 'developer_apps:description';
 
 /**
- * @description Developer apps page keywords
+ * @description Brain OAuth developer console keywords
  * @localZh OAuth, 开发者, 应用管理, 客户端
  * @localEn OAuth, developer, application management, client
  */
@@ -235,7 +240,7 @@ export const DEVELOPER_APPS_TOAST_ERROR = 'developer_apps:toast_error';
 export const DEVELOPER_APPS_EMPTY_STATE = 'developer_apps:empty_state';
 
 /**
- * @description Developer console subtitle in page header
+ * @description Brain OAuth developer console — subtitle in page header
  * @localZh 开发者控制台
  * @localEn Developer Console
  */

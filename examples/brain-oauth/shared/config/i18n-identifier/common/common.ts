@@ -1,26 +1,31 @@
 /**
- * @description Save
+ * Brain OAuth — shared UI identifiers (`common` namespace).
+ * Portal chrome, Brain user auth prompts, and OAuth admin navigation.
+ */
+
+/**
+ * @description Brain OAuth portal — generic save action label
  * @localZh 保存
  * @localEn Save
  */
 export const COMMON_SAVE = 'common:save';
 
 /**
- * @description Cancel
+ * @description Brain OAuth portal — cancel action label
  * @localZh 取消
  * @localEn Cancel
  */
 export const COMMON_CANCEL = 'common:cancel';
 
 /**
- * @description Create
+ * @description Brain OAuth portal — create action label
  * @localZh 创建
  * @localEn Create
  */
 export const COMMON_CREATE = 'common:create';
 
 /**
- * @description Detail
+ * @description Brain OAuth portal — detail action label
  * @localZh 详情
  * @localEn Detail
  */
@@ -55,21 +60,21 @@ export const COMMON_THEME_DARK = 'common:theme__dark';
 export const COMMON_THEME_PINK = 'common:theme__pink';
 
 /**
- * @description Admin page title
+ * @description Brain OAuth admin backend — page title
  * @localZh 管理后台
  * @localEn Admin Backend
  */
 export const COMMON_ADMIN_TITLE = 'common:admin__title';
 
 /**
- * @description Admin sidebar nav - Dashboard
+ * @description Brain OAuth admin sidebar — dashboard nav item
  * @localZh 仪表盘
  * @localEn Dashboard
  */
 export const COMMON_ADMIN_NAV_DASHBOARD = 'common:admin_nav__dashboard';
 
 /**
- * @description Admin sidebar nav - User Management
+ * @description Brain OAuth admin sidebar — Brain user management nav item
  * @localZh 用户管理
  * @localEn User Management
  */
@@ -77,28 +82,28 @@ export const COMMON_ADMIN_NAV_USER_MANAGEMENT =
   'common:admin_nav__user_management';
 
 /**
- * @description Admin sidebar nav - Locales
+ * @description Brain OAuth admin sidebar — i18n locale management nav item
  * @localZh 国际化
  * @localEn Locales
  */
 export const COMMON_ADMIN_NAV_LOCALES = 'common:admin_nav__locales';
 
 /**
- * @description Admin sidebar nav - request & activity logs
+ * @description Brain OAuth admin sidebar — OAuth/API request audit logs nav item
  * @localZh 请求日志
  * @localEn Request logs
  */
 export const COMMON_ADMIN_NAV_REQUEST_LOGS = 'common:admin_nav__request_logs';
 
 /**
- * @description logout dialog title
+ * @description Brain OAuth portal — Brain user sign-out confirmation dialog title
  * @localZh 登出
  * @localEn Logout
  */
 export const COMMON_LOGOUT_DIALOG_TITLE = 'common:logout__dialog__title';
 
 /**
- * @description logout dialog content
+ * @description Brain OAuth portal — Brain user sign-out confirmation dialog body
  * @localZh 确定要登出吗？
  * @localEn Are you sure you want to logout?
  */
@@ -112,21 +117,21 @@ export const COMMON_LOGOUT_DIALOG_CONTENT = 'common:logout__dialog__content';
 export const COMMON_I18N_KEY_INVALID = 'common:i18n_key_invalid';
 
 /**
- * @description manifest name
+ * @description Brain OAuth portal — PWA / site manifest application name
  * @localZh 应用名称
  * @localEn Application Name
  */
 export const COMMON_MANIFEST_NAME = 'common:manifest__name';
 
 /**
- * @description User auth failed view title (sign in required)
+ * @description Brain OAuth portal — unauthenticated view title (sign in required)
  * @localZh 需要登录
  * @localEn Authentication required
  */
 export const COMMON_USER_AUTH_FAILED_TITLE = 'common:userAuthFailed_title';
 
 /**
- * @description User auth failed view description
+ * @description Brain OAuth portal — unauthenticated view description (Brain account required)
  * @localZh 请登录后继续访问。
  * @localEn Please sign in to continue.
  */
@@ -134,7 +139,7 @@ export const COMMON_USER_AUTH_FAILED_DESCRIPTION =
   'common:userAuthFailed_description';
 
 /**
- * @description User auth failed - go to login button/link label
+ * @description Brain OAuth portal — link to Brain user sign-in page
  * @localZh 去登录
  * @localEn Sign in
  */
@@ -142,35 +147,35 @@ export const COMMON_USER_AUTH_FAILED_GO_TO_LOGIN =
   'common:userAuthFailed_goToLogin';
 
 /**
- * @description Auth nav - Sign up (register) link label
+ * @description Brain OAuth portal — nav link to Brain user registration
  * @localZh 注册
  * @localEn Sign up
  */
 export const COMMON_AUTH_NAV_SIGN_UP = 'common:authNav_signUp';
 
 /**
- * @description Auth nav - request / activity logs (signed-in users)
+ * @description Brain OAuth portal — signed-in Brain user activity / request logs nav
  * @localZh 请求日志
  * @localEn Activity logs
  */
 export const COMMON_AUTH_NAV_REQUEST_LOGS = 'common:authNav_requestLogs';
 
 /**
- * @description App header nav - Docs
+ * @description Brain OAuth portal — header nav to OAuth integration docs
  * @localZh 文档
  * @localEn Docs
  */
 export const COMMON_HEADER_NAV_DOCS = 'common:header_nav__docs';
 
 /**
- * @description App header nav - About
+ * @description Brain OAuth portal — header nav to about page
  * @localZh 关于
  * @localEn About
  */
 export const COMMON_HEADER_NAV_ABOUT = 'common:header_nav__about';
 
 /**
- * @description App header nav - Developer console
+ * @description Brain OAuth portal — header nav to OAuth developer console
  * @localZh 开发者
  * @localEn Developer
  */

@@ -1,159 +1,164 @@
 /**
- * @description Login page title
- * @localZh 登录
- * @localEn Login
+ * Brain OAuth — sign-in page identifiers (`page_login` namespace).
+ * Brain users authenticate here before OAuth authorization or portal access.
+ */
+
+/**
+ * @description Brain OAuth sign-in page — document title
+ * @localZh Brain OAuth 用户登录
+ * @localEn Brain OAuth User Sign In
  */
 export const PAGE_LOGIN_TITLE = 'page_login:title';
 /**
- * @description Login page description
- * @localZh 登录页面描述
- * @localEn Login Page Description
+ * @description Brain OAuth sign-in page — meta description
+ * @localZh 使用 Brain 账号登录 Brain OAuth，完成身份认证与第三方应用授权
+ * @localEn Sign in with your Brain account on Brain OAuth for identity verification and third-party authorization
  */
 export const PAGE_LOGIN_DESCRIPTION = 'page_login:description';
 /**
- * @description Login page content
- * @localZh 登录页面内容
- * @localEn Login Page Content
+ * @description Brain OAuth sign-in page — meta content label
+ * @localZh Brain OAuth 用户登录
+ * @localEn Brain OAuth user sign-in
  */
 export const PAGE_LOGIN_CONTENT = 'page_login:content';
 /**
- * @description Login page keywords
- * @localZh 登录页面关键词
- * @localEn Login Page Keywords
+ * @description Brain OAuth sign-in page — SEO keywords
+ * @localZh Brain OAuth, 用户登录, OAuth 2.0, 身份认证
+ * @localEn Brain OAuth, user sign in, OAuth 2.0, identity
  */
 export const PAGE_LOGIN_KEYWORDS = 'page_login:keywords';
 
 /**
- * @description Email field label
+ * @description Brain OAuth sign-in form — email field label
  * @localZh 邮箱
  * @localEn Email
  */
 export const PAGE_LOGIN_EMAIL = 'page_login:email';
 /**
- * @description Username field label
+ * @description Brain OAuth sign-in form — username field label
  * @localZh 用户名
  * @localEn Username
  */
 export const PAGE_LOGIN_USERNAME = 'page_login:username';
 /**
- * @description Password field label
+ * @description Brain OAuth sign-in form — password field label
  * @localZh 密码
  * @localEn Password
  */
 export const PAGE_LOGIN_PASSWORD = 'page_login:password';
 /**
- * @description Login button text
+ * @description Brain OAuth sign-in form — submit button label
  * @localZh 登录
- * @localEn Login
+ * @localEn Sign in
  */
 export const PAGE_LOGIN_BUTTON = 'page_login:login';
 /**
- * @description Login page description
- * @localZh 欢迎来到未来学习
- * @localEn Welcome to the future of learning
+ * @description Brain OAuth sign-in page — hero welcome heading
+ * @localZh 登录 Brain OAuth
+ * @localEn Sign in to Brain OAuth
  */
 export const PAGE_LOGIN_WELCOME = 'page_login:welcome';
 /**
- * @description Login page description
- * @localZh 解锁个性化 AI 驱动的学习体验，加速您的知识旅程。
- * @localEn Unlock personalized AI-powered learning experiences designed to accelerate your knowledge journey__
+ * @description Brain OAuth sign-in page — hero subtitle (OAuth identity portal)
+ * @localZh 使用 Brain 账号登录，以完成 OAuth 授权或访问开发者控制台。
+ * @localEn Sign in with your Brain account to authorize third-party apps or access the developer console.
  */
 export const PAGE_LOGIN_SUBTITLE = 'page_login:subtitle';
 /**
- * @description Login page forgot password text
+ * @description Brain OAuth sign-in page forgot password text
  * @localZh 忘记密码？
  * @localEn Forgot your password?
  */
 export const PAGE_LOGIN_FORGOT_PASSWORD = 'page_login:forgot_password';
 /**
- * @description Login page continue with text
+ * @description Brain OAuth sign-in page continue with text
  * @localZh 或继续使用
  * @localEn or continue with
  */
 export const PAGE_LOGIN_CONTINUE_WITH = 'page_login:continue_with';
 /**
- * @description Login with Google button text
+ * @description Brain OAuth sign-in — Google OAuth button text
  * @localZh 使用 Google 登录
  * @localEn Sign in with Google
  */
 export const PAGE_LOGIN_WITH_GOOGLE = 'page_login:with_google';
 /**
- * @description Login page no account text
- * @localZh 还没有账号？
- * @localEn Don't have an account?
+ * @description Brain OAuth sign-in page no account text
+ * @localZh 还没有 Brain 账号？
+ * @localEn Don't have a Brain account?
  */
 export const PAGE_LOGIN_NO_ACCOUNT = 'page_login:no_account';
 /**
- * @description Login page create account link text
- * @localZh 在此创建
- * @localEn Create one here
+ * @description Brain OAuth sign-in page create account link text
+ * @localZh 立即注册
+ * @localEn Register now
  */
 export const PAGE_LOGIN_CREATE_ACCOUNT = 'page_login:create_account';
 /**
- * @description Login page email validation message
+ * @description Brain OAuth sign-in page email validation message
  * @localZh 请输入正确的邮箱！
  * @localEn Please input a valid email!
  */
 export const PAGE_LOGIN_EMAIL_REQUIRED = 'page_login:email_required';
 /**
- * @description Login page password validation message
+ * @description Brain OAuth sign-in page password validation message
  * @localZh 请输入您的密码！
  * @localEn Please input your password!
  */
 export const PAGE_LOGIN_PASSWORD_REQUIRED = 'page_login:password_required';
 /**
- * @description Login page feature item - AI learning paths
- * @localZh AI驱动的个性化学习路径
- * @localEn AI-powered personalized learning paths
+ * @description Brain OAuth sign-in page — feature highlight (OAuth value prop)
+ * @localZh 标准 OAuth 2.0 授权
+ * @localEn Standard OAuth 2.0 authorization
  */
 export const PAGE_LOGIN_FEATURE_AI_PATHS = 'page_login:feature__ai_paths';
 /**
- * @description Login page feature item - Smart recommendations
- * @localZh 智能内容推荐
- * @localEn Smart content recommendations
+ * @description Brain OAuth sign-in page — feature highlight (OAuth value prop)
+ * @localZh 第三方应用安全接入 Brain 用户体系
+ * @localEn Secure third-party access to Brain identity
  */
 export const PAGE_LOGIN_FEATURE_SMART = 'page_login:feature__smart';
 /**
- * @description Login page feature item - Progress tracking
- * @localZh 实时进度追踪
- * @localEn Real-time progress tracking
+ * @description Brain OAuth sign-in page — feature highlight (OAuth value prop)
+ * @localZh 授权应用无需接触您的密码
+ * @localEn Authorized apps never see your password
  */
 export const PAGE_LOGIN_TRACKING = 'page_login:tracking';
 /**
- * @description Login page email input title
+ * @description Brain OAuth sign-in page email input title
  * @localZh 输入邮箱
  * @localEn Enter email
  */
 export const PAGE_LOGIN_EMAIL2 = 'page_login:email2';
 
 /**
- * @description Login page password input title
+ * @description Brain OAuth sign-in page password input title
  * @localZh 输入密码
  * @localEn Enter password
  */
 export const PAGE_LOGIN_PASSWORD2 = 'page_login:password2';
 
 /**
- * @description Login page forgot password link title
+ * @description Brain OAuth sign-in page forgot password link title
  * @localZh 重置密码
  * @localEn Reset password
  */
 export const PAGE_LOGIN_FORGOT_PASSWORD2 = 'page_login:forgot_password2';
 /**
- * @description Login page submit button title
- * @localZh 登录账号
- * @localEn Sign in to account
+ * @description Brain OAuth sign-in form — primary submit button (sign in to Brain account)
+ * @localZh 登录 Brain 账号
+ * @localEn Sign in to Brain account
  */
 export const PAGE_LOGIN_BUTTON2 = 'page_login:button2';
 /**
- * @description Login page Google sign in button title
- * @localZh 使用Google账号登录
+ * @description Brain OAuth sign-in page Google sign in button title
+ * @localZh 使用 Google 账号登录
  * @localEn Sign in with Google account
  */
 export const PAGE_LOGIN_WITH_GOOGLE2 = 'page_login:with_google2';
 /**
- * @description Login page create account link title
- * @localZh 创建新账号
- * @localEn Create new account
+ * @description Brain OAuth sign-in page create account link title
+ * @localZh 注册 Brain 账号
+ * @localEn Register Brain account
  */
 export const PAGE_LOGIN_CREATE_ACCOUNT2 = 'page_login:create_account2';

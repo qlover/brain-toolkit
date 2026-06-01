@@ -1,26 +1,31 @@
 /**
- * @description OAuth integration docs page title
+ * Brain OAuth — integration docs page identifiers (`page_docs_oauth` namespace).
+ * Developer guide for third-party apps using Brain user OAuth 2.0.
+ */
+
+/**
+ * @description Brain OAuth docs — integration guide page title
  * @localZh OAuth 集成文档
  * @localEn OAuth Integration Guide
  */
 export const PAGE_DOCS_OAUTH_TITLE = 'page_docs_oauth:title';
 
 /**
- * @description OAuth docs meta description
+ * @description Brain OAuth docs meta description
  * @localZh Brain OAuth 授权码流程、端点参数与 PKCE 说明
  * @localEn Authorization code flow, endpoint parameters, and PKCE for Brain OAuth
  */
 export const PAGE_DOCS_OAUTH_DESCRIPTION = 'page_docs_oauth:description';
 
 /**
- * @description OAuth docs content label
+ * @description Brain OAuth docs content label
  * @localZh OAuth 文档
  * @localEn OAuth docs
  */
 export const PAGE_DOCS_OAUTH_CONTENT = 'page_docs_oauth:content';
 
 /**
- * @description OAuth docs keywords
+ * @description Brain OAuth docs keywords
  * @localZh OAuth 2.0, 授权码, PKCE, token, userinfo
  * @localEn OAuth 2.0, authorization code, PKCE, token, userinfo
  */
