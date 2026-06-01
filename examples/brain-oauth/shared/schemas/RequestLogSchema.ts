@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /** `request_logs.record_type` for rows emitted by the brain-oauth example app. */
-export const REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH = 'brain-oauth';
+export const REQUEST_LOG_RECORD_TYPE_DEMO_OAUTH = 'brain-oauth';
 
 /** Optional keys written into `payload` by server code (UI may read these). */
 export type RequestLogPayload = {

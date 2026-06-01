@@ -19,14 +19,16 @@ export interface SeedServerConfigInterface extends SeedConfigInterface {
   readonly openaiBaseUrl: string;
   readonly openaiApiKey: string;
 
-  /** Brain user-system API base URL (server-only). */
-  readonly brainApiBase: string;
-  readonly brainApiTimeout: number;
   /** HttpOnly OAuth session cookie signing secret. */
   readonly sessionSecret: string;
-  /** AES-256-GCM key for encrypted Brain tokens in DB. */
+  /** AES-256-GCM key for encrypted provider tokens in DB. */
   readonly encryptionKey: string;
-  readonly adminUserIds: number[];
+
+  /** Allowed CORS origins from `API_CORS_ALLOWED_ORIGINS`; empty disables CORS. */
+  readonly apiCorsAllowedOrigins: readonly string[];
+
+  /** Allowed CORS methods from `API_CORS_ALLOWED_METHODS`. */
+  readonly apiCorsAllowedMethods: readonly string[];
 }
 export interface SeedSrcConfigInterface extends SeedConfigInterface {
   readonly stringEncryptorKey: string;

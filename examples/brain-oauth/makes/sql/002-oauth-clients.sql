@@ -94,8 +94,8 @@ alter table public.brain_oauth_refresh_tokens enable row level security;
 
 create table public.brain_oauth_user_credentials (
   user_id integer primary key,
-  brain_refresh_token text,
-  brain_session_token text,
+  provider_refresh_token text,
+  provider_session_token text,
   updated_at timestamptz not null default now()
 );
 

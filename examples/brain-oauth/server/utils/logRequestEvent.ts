@@ -1,4 +1,4 @@
-import { REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH } from '@schemas/RequestLogSchema';
+import { REQUEST_LOG_RECORD_TYPE_DEMO_OAUTH } from '@schemas/RequestLogSchema';
 import type { BootstrapServer } from '@server/BootstrapServer';
 import { RequestLogsRepository } from '@server/repositorys/RequestLogsRepository';
 import type { NextRequest } from 'next/server';
@@ -23,7 +23,7 @@ function clientIp(req: NextRequest): string | null {
 }
 
 /**
- * Best-effort OAuth / protocol endpoint log with {@link REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH}.
+ * Best-effort OAuth / protocol endpoint log with {@link REQUEST_LOG_RECORD_TYPE_DEMO_OAUTH}.
  */
 export function logRequestEvent(
   server: BootstrapServer,
@@ -40,7 +40,7 @@ export function logRequestEvent(
       event_type: input.event_type,
       success: input.success,
       request_id: requestId,
-      record_type: REQUEST_LOG_RECORD_TYPE_BRAIN_OAUTH,
+      record_type: REQUEST_LOG_RECORD_TYPE_DEMO_OAUTH,
       payload: {
         http_method: input.http_method ?? req.method,
         http_path: httpPath,

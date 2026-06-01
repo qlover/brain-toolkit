@@ -1,4 +1,8 @@
-import { injectable } from '@shared/container';
+import { verifyClientSecret, hashClientSecret } from '@qlover/oauth-wrapper';
+import { inject, injectable } from '@shared/container';
+import { BaseRepo } from './BaseRepo';
+import { SupabaseBridge } from './SupabaseBridge';
+import { SupabaseServiceRoleBridge } from './SupabaseServiceRoleBridge';
 import type {
   OAuthClientRow,
   OAuthClientListItem,
@@ -11,20 +15,24 @@ import type {
   OAuthWrapperRepositoryInterface,
   OAuthRefreshTokenRow,
   OAuthUserCredentialsRow
-} from '@shared/oauth-wrapper';
-import {
-  verifyClientSecret,
-  hashClientSecret
-} from '@shared/oauth-wrapper/utils/clientSecretHash';
-import { createAdminClient } from '@shared/supabase/admin';
+} from '@qlover/oauth-wrapper';
 
 @injectable()
-export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
+export class OAuthWrapperRepository
+  extends BaseRepo
+  implements OAuthWrapperRepositoryInterface
+{
+  constructor(
+    @inject(SupabaseServiceRoleBridge)
+    protected supabaseBridge: SupabaseBridge
+  ) {
+    super(supabaseBridge, '');
+  }
   /**
    * @override
    */
   public async create(input: CreateAuthorizationCodeInput): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { error } = await supabase
       .from('brain_oauth_authorization_codes')
       .insert({
@@ -52,7 +60,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async consumeCode(
     code: string
   ): Promise<OAuthAuthorizationCodeRow | null> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brain_oauth_authorization_codes')
       .update({ used: true })
@@ -75,7 +83,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async getUserCredentials(
     userId: number
   ): Promise<OAuthUserCredentialsRow | null> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brain_oauth_user_credentials')
       .select('*')
@@ -94,11 +102,11 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async upsertUserCredentials(
     userId: number,
     fields: {
-      brain_refresh_token?: string | null;
-      brain_session_token?: string | null;
+      provider_refresh_token?: string | null;
+      provider_session_token?: string | null;
     }
   ): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { error } = await supabase
       .from('brain_oauth_user_credentials')
       .upsert(
@@ -121,7 +129,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async findRefreshToken(
     tokenHash: string
   ): Promise<OAuthRefreshTokenRow | null> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brain_oauth_refresh_tokens')
       .select('*')
@@ -143,7 +151,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
     user_id: number;
     expires_at: string;
   }): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { error } = await supabase.from('brain_oauth_refresh_tokens').upsert(
       {
         ...input,
@@ -161,7 +169,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
    * @override
    */
   public async revokeRefreshToken(tokenHash: string): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { error } = await supabase
       .from('brain_oauth_refresh_tokens')
       .update({ revoked: true })
@@ -178,7 +186,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async findByTokenHash(
     tokenHash: string
   ): Promise<OAuthRefreshTokenRow | null> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brain_oauth_refresh_tokens')
       .select('*')
@@ -198,7 +206,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async createRefreshToken(
     input: CreateOAuthRefreshTokenInput
   ): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { error } = await supabase.from('brain_oauth_refresh_tokens').insert({
       refresh_token: input.refresh_token,
       client_id: input.client_id,
@@ -216,7 +224,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
    * @override
    */
   public async revokeByTokenHash(tokenHash: string): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { error } = await supabase
       .from('brain_oauth_refresh_tokens')
       .update({ revoked: true })
@@ -230,10 +238,26 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   /**
    * @override
    */
+  public async revokeRefreshTokensByUserId(userId: number): Promise<void> {
+    const supabase = await this.getSupabase();
+    const { error } = await supabase
+      .from('brain_oauth_refresh_tokens')
+      .update({ revoked: true })
+      .eq('user_id', userId)
+      .eq('revoked', false);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  /**
+   * @override
+   */
   public async findClientById(
     clientId: string
   ): Promise<OAuthClientRow | null> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brain_oauth_clients')
       .select('*')
@@ -253,7 +277,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
   public async listClientByOwner(
     ownerUserId: number
   ): Promise<OAuthClientListItem[]> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brain_oauth_clients')
       .select(
@@ -276,7 +300,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
     ownerUserId: number,
     input: OAuthClientCreate
   ): Promise<{ client: OAuthClientRow; clientSecret?: string }> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
 
     const confidential = input.confidential ?? true;
     const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
@@ -325,7 +349,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
     clientId: string,
     input: OAuthClientUpdate
   ): Promise<OAuthClientDetail> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
 
     const { data, error } = await supabase
       .from('brain_oauth_clients')
@@ -363,7 +387,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
       throw new Error('public_client_no_secret');
     }
 
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
 
     // Generate new secret
     const clientSecret =
@@ -394,7 +418,7 @@ export class BrainOAuthRepository implements OAuthWrapperRepositoryInterface {
     ownerUserId: number,
     clientId: string
   ): Promise<void> {
-    const supabase = createAdminClient();
+    const supabase = await this.getSupabase();
 
     const { error } = await supabase
       .from('brain_oauth_clients')

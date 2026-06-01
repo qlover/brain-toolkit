@@ -4,31 +4,33 @@ import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import {
-  BRAIN_SESSION_COOKIE,
-  parseBrainSessionCookie,
-  type BrainSessionPayload
-} from '../brain-oauth/brainProxySession';
-
-export type { BrainSessionPayload };
+  OAUTH_APP_SESSION_COOKIE,
+  parseOAuthAppSessionCookie
+} from '@server/utils/OAuthWrapperProxy';
+import type {
+  OAuthSessionInterface,
+  OAuthSessionPayload
+} from '@qlover/oauth-wrapper';
 
 /**
- * HttpOnly session cookie for Brain-authenticated users during OAuth authorize.
- *
- * @example
- * await session.setSession({ userId: 3495, brainToken: '...' });
- * const payload = await session.getSession();
+ * HttpOnly session cookie for authenticated users during OAuth authorize.
  */
 @injectable()
-export class BrainSessionService {
+export class OAuthSessionService
+  implements OAuthSessionInterface<OAuthSessionPayload>
+{
   constructor(
     @inject(I.AppConfig) protected config: SeedServerConfigInterface
   ) {}
 
-  public async setSession(payload: BrainSessionPayload): Promise<void> {
+  /**
+   * @override
+   */
+  public async setSession(payload: OAuthSessionPayload): Promise<void> {
     const secret = this.requireSecret();
     const token = jwt.sign(payload, secret, { expiresIn: '7d' });
     const cookieStore = await cookies();
-    cookieStore.set(BRAIN_SESSION_COOKIE, token, {
+    cookieStore.set(OAUTH_APP_SESSION_COOKIE, token, {
       httpOnly: true,
       secure: this.config.isProduction,
       sameSite: 'lax',
@@ -37,24 +39,35 @@ export class BrainSessionService {
     });
   }
 
+  /**
+   * @override
+   */
   public async hasSession(): Promise<boolean> {
     return (await this.getSession()) != null;
   }
 
-  public async getSession(): Promise<BrainSessionPayload | null> {
+  /**
+   * @override
+   */
+  public async getSession(): Promise<OAuthSessionPayload | null> {
     const cookieStore = await cookies();
-    const raw = cookieStore.get(BRAIN_SESSION_COOKIE)?.value;
-    return parseBrainSessionCookie(raw, this.requireSecret());
+    const raw = cookieStore.get(OAUTH_APP_SESSION_COOKIE)?.value;
+    return parseOAuthAppSessionCookie(raw, this.requireSecret());
   }
 
+  /**
+   * @override
+   */
   public async clearSession(): Promise<void> {
     const cookieStore = await cookies();
-    cookieStore.delete(BRAIN_SESSION_COOKIE);
+    cookieStore.delete(OAUTH_APP_SESSION_COOKIE);
   }
 
   protected requireSecret(): string {
     if (!this.config.sessionSecret) {
-      throw new Error('SESSION_SECRET is required for Brain OAuth session');
+      throw new Error(
+        'SESSION_SECRET is required for Next OAuth Wrapper session'
+      );
     }
     return this.config.sessionSecret;
   }

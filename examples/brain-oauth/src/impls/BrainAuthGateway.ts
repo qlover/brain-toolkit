@@ -1,6 +1,6 @@
 import { HttpMethods } from '@qlover/fe-corekit';
 import { inject, injectable } from '@shared/container';
-import { API_BRAIN_VERIFY } from '@config/apiRoutes';
+import { API_OAUTH_VERIFY } from '@config/apiRoutes';
 import {
   AppApiRequester,
   type AppApiConfig,
@@ -39,7 +39,7 @@ export class BrainAuthGateway {
       BrainVerifyResponse,
       { email: string; password: string }
     >({
-      url: API_BRAIN_VERIFY,
+      url: API_OAUTH_VERIFY,
       method: HttpMethods.POST,
       data: params
     });

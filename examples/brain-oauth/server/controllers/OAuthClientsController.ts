@@ -1,17 +1,17 @@
+import { OAuthClientsService } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
-import { OAuthClientsService } from '@shared/oauth-wrapper';
+import { I } from '@config/ioc-identifiter';
+import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
+import { ServerAuth } from '@server/services/ServerAuth';
 import type {
   OAuthClientCreate,
   OAuthClientCreateResponse,
   OAuthClientDetail,
   OAuthClientListItem,
   OAuthClientSecretRotateResponse,
-  OAuthClientUpdate,
-  OAuthClientsRepositoryInterface
-} from '@shared/oauth-wrapper';
-import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
-import { BrainOAuthRepository } from '@server/repositorys/BrainOAuthRepository';
-import { ServerAuth } from '@server/services/ServerAuth';
+  OAuthClientUpdate
+} from '@qlover/oauth-wrapper';
 
 /**
  * Developer console OAuth clients API controller.
@@ -24,10 +24,10 @@ export class OAuthClientsController {
 
   constructor(
     @inject(ServerAuth) protected serverAuth: ServerAuthInterface,
-    @inject(BrainOAuthRepository)
-    protected oauthRepo: OAuthClientsRepositoryInterface
+    @inject(I.OAuthWrapperProviderInterface)
+    oauthProvider: OAuthWrapperProviderInterface
   ) {
-    this.clientsService = new OAuthClientsService(oauthRepo);
+    this.clientsService = new OAuthClientsService(oauthProvider.getOAuthRepo());
   }
 
   /**
@@ -86,7 +86,7 @@ export class OAuthClientsController {
   }
 
   /**
-   * Resolves Brain owner id from the authenticated session user.
+   * Resolves owner id from the authenticated session user.
    */
   protected async requireOwnerUserId(): Promise<number> {
     await this.serverAuth.throwIfNotAuth();

@@ -1,88 +1,52 @@
 import { ExecutorError } from '@qlover/fe-corekit';
+import {
+  OAuthTokenResponse,
+  OAuthUserInfoResponse
+} from '@qlover/oauth-wrapper';
 import { injectable, inject } from '@shared/container';
+import { LoginValidator } from '@shared/validators/LoginValidator';
+import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
+import { API_OAUTH_WRAPPER_AUTH_FAILED } from '@config/i18n-identifier/api';
+import { I } from '@config/ioc-identifiter';
+import { LoginSchema } from '@schemas/LoginSchema';
+import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import {
+  OAuthControllerService,
+  VerifyLoginResult
+} from '@server/services/OAuthControllerService';
 import type {
   OAuthAuthorizePageData,
   OAuthAuthorizeValidationError,
   OAuthConsentResult,
-  OAuthServiceInterface,
-  OAuthSessionInterface,
-  OAuthTokenRequest,
-  OAuthUserAdapterInterface,
-  OAuthWrapperRepositoryInterface
-} from '@shared/oauth-wrapper';
-import {
-  OAuthWrapperService,
-  OAuthTokenService,
-  OAuthTokenResponse,
-  OAuthUserInfoResponse
-} from '@shared/oauth-wrapper';
-import { LoginValidator } from '@shared/validators/LoginValidator';
-import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
-import { API_OAUTH_BRAIN_AUTH_FAILED } from '@config/i18n-identifier/api';
-import { I } from '@config/ioc-identifiter';
-import { LoginSchema } from '@schemas/LoginSchema';
-import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import type {
-  BrainAuthServiceInterface,
-  BrainVerifyLoginResult
-} from '@server/interfaces/BrainAuthServiceInterface';
-import { BrainOAuthRepository } from '@server/repositorys/BrainOAuthRepository';
-import { BrainAuthService } from '@server/services/BrainAuthService';
-import {
-  BrainSessionPayload,
-  BrainSessionService
-} from '@server/services/BrainSessionService';
-import { TokenEncryption } from '@server/utils/TokenEncryption';
+  OAuthTokenRequest
+} from '@qlover/oauth-wrapper';
 
 @injectable()
 export class OAuthWrapperController {
-  protected oauthService: OAuthServiceInterface;
   constructor(
-    @inject(I.AppConfig) config: SeedServerConfigInterface,
-    @inject(I.OAuthUserAdapterInterface)
-    userAdapter: OAuthUserAdapterInterface,
-    @inject(BrainSessionService)
-    brainSession: OAuthSessionInterface<BrainSessionPayload>,
-    @inject(BrainOAuthRepository)
-    oauthRepo: OAuthWrapperRepositoryInterface,
     @inject(LoginValidator)
     protected loginValidator: ValidatorInterface<LoginSchema>,
-    @inject(BrainAuthService)
-    protected brainAuthService: BrainAuthServiceInterface
-  ) {
-    this.oauthService = new OAuthWrapperService(
-      brainSession,
-      userAdapter,
-      new OAuthTokenService(
-        new TokenEncryption(config.encryptionKey),
-        userAdapter,
-        oauthRepo
-      ),
-      oauthRepo
-    );
-  }
-
-  public getService(): OAuthServiceInterface {
-    return this.oauthService;
-  }
+    @inject(I.OAuthWrapperProviderInterface)
+    protected oauthProvider: OAuthWrapperProviderInterface,
+    @inject(OAuthControllerService)
+    protected demoAuthService: OAuthControllerService
+  ) {}
 
   /**
-   * Validates credentials and performs Brain login via service layer.
+   * Validates credentials and performs demo provider login via service layer.
    */
-  public async verifyBrainLogin(
-    requestBody: unknown
-  ): Promise<BrainVerifyLoginResult> {
+  public async verifyLogin(requestBody: unknown): Promise<VerifyLoginResult> {
     const body = await this.loginValidator.getThrow(requestBody);
 
     try {
-      return await this.brainAuthService.verifyLogin({
+      return await this.demoAuthService.verifyLogin({
         email: body.email,
         password: body.password
       });
     } catch (err) {
       throw new ExecutorError(
-        API_OAUTH_BRAIN_AUTH_FAILED,
-        err instanceof Error ? err.message : 'Brain login failed'
+        API_OAUTH_WRAPPER_AUTH_FAILED,
+        err instanceof Error ? err.message : 'Login failed'
       );
     }
   }
@@ -93,24 +57,28 @@ export class OAuthWrapperController {
     | { ok: true; data: OAuthAuthorizePageData }
     | { ok: false; error: OAuthAuthorizeValidationError }
   > {
-    return this.oauthService.resolveAuthorizePage(rawQuery);
+    return this.oauthProvider.resolveAuthorizePage(rawQuery);
   }
 
   public async submitConsent(
     requestBody: unknown
   ): Promise<OAuthConsentResult> {
-    return await this.oauthService.processConsent(requestBody);
+    return await this.oauthProvider.processConsent(requestBody);
   }
 
   public async exchangeToken(
     fields: Record<string, string> | OAuthTokenRequest
   ): Promise<OAuthTokenResponse> {
-    return await this.oauthService.exchangeToken(fields);
+    return await this.oauthProvider.exchangeToken(fields);
+  }
+
+  public async revokeToken(fields: Record<string, string>): Promise<void> {
+    return await this.oauthProvider.revokeToken(fields);
   }
 
   public async getUserInfo(
     accessToken: string
   ): Promise<OAuthUserInfoResponse> {
-    return await this.oauthService.getUserInfo(accessToken);
+    return await this.oauthProvider.getUserInfo(accessToken);
   }
 }

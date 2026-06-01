@@ -34,14 +34,6 @@ import {
   oauthSecondaryButtonClass,
   oauthWarningButtonClass
 } from '@/uikit/styles/oauthUiStyles';
-import type {
-  OAuthClientListItem,
-  OAuthClientCreate,
-  OAuthClientCreateResponse,
-  OAuthClientDetail,
-  OAuthClientSecretRotateResponse,
-  OAuthClientUpdate
-} from '@shared/oauth-wrapper/schema/OAuthAuthorizeSchema';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
 import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import {
@@ -54,6 +46,14 @@ import {
   type OAuthCredentials
 } from './OAuthClientCredentialsModal';
 import { readAppApiJson } from './readAppApiJson';
+import type {
+  OAuthClientListItem,
+  OAuthClientCreate,
+  OAuthClientCreateResponse,
+  OAuthClientDetail,
+  OAuthClientSecretRotateResponse,
+  OAuthClientUpdate
+} from '@qlover/oauth-wrapper';
 
 function parseRedirectUris(raw: string): string[] {
   return raw

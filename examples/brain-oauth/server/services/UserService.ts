@@ -3,14 +3,11 @@ import { inject, injectable } from '@shared/container';
 import { API_USER_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type { UserSchema } from '@schemas/UserSchema';
-import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { BrainAuthService } from './BrainAuthService';
-import { BrainSessionService } from './BrainSessionService';
+import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import { OAuthControllerService } from './OAuthControllerService';
 import { ServerAuth } from './ServerAuth';
-import { brainSessionToUserSchema } from '../brain-oauth/brainProxySession';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
 import { PasswordEncrypt } from '../utils/PasswordEncrypt';
-import type { BrainAuthServiceInterface } from '../interfaces/BrainAuthServiceInterface';
 import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 import type {
@@ -26,16 +23,13 @@ export class UserService implements UserServiceInterface {
   @inject(I.Logger)
   protected logger!: LoggerInterface;
 
-  @inject(I.AppConfig)
-  protected appConfig!: SeedServerConfigInterface;
-
   constructor(
     @inject(ServerAuth)
     protected userAuth: ServerAuthInterface,
-    @inject(BrainAuthService)
-    protected brainAuthService: BrainAuthServiceInterface,
-    @inject(BrainSessionService)
-    protected brainSession: BrainSessionService,
+    @inject(OAuthControllerService)
+    protected demoAuthService: OAuthControllerService,
+    @inject(I.OAuthWrapperProviderInterface)
+    protected oauthProvider: OAuthWrapperProviderInterface,
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
     @inject(RequestLogsRepository)
@@ -50,7 +44,7 @@ export class UserService implements UserServiceInterface {
   ): Promise<UserSchema> {
     throw new ExecutorError(
       'registration_not_supported',
-      'Registration is handled by the Brain platform'
+      'Registration is handled by the upstream user provider'
     );
   }
 
@@ -58,50 +52,58 @@ export class UserService implements UserServiceInterface {
    * @override
    */
   public async login(params: UserLoginParams): Promise<UserSchema> {
-    await this.brainAuthService.verifyLogin({
+    await this.demoAuthService.verifyLogin({
       email: params.email,
       password: params.password
     });
 
-    this.logger.info('Brain login success', { email: params.email });
+    this.logger.info('OAuth wrapper login success', { email: params.email });
 
     await this.requestLogsRepository.insertEvent({
       event_category: 'auth',
       event_type: 'login',
       success: true,
       payload: {
-        auth_provider: 'brain',
+        auth_provider: 'oauth-wrapper',
         user_agent: params.loginContext?.userAgent ?? null,
         ip_address: params.loginContext?.ipAddress ?? null,
         login_method: 'password'
       }
     });
 
-    const session = await this.brainSession.getSession();
+    const session = await this.oauthProvider.getOAuthSession().getSession();
     if (!session) {
       throw new ExecutorError(
         API_USER_NOT_FOUND,
-        'Brain session missing after login'
+        'OAuth app session missing after login'
       );
     }
 
-    return brainSessionToUserSchema(session, this.appConfig.adminUserIds);
+    return this.oauthProvider.getUserSchema(session);
   }
 
   /**
    * @override
    */
   public async logout(context?: UserLoginContext): Promise<void> {
+    const session = await this.oauthProvider.getOAuthSession().getSession();
+
     await this.requestLogsRepository.insertEvent({
       event_category: 'auth',
       event_type: 'logout',
       success: true,
       payload: {
-        auth_provider: 'brain',
+        auth_provider: 'oauth-wrapper',
         user_agent: context?.userAgent ?? null,
-        ip_address: context?.ipAddress ?? null
+        ip_address: context?.ipAddress ?? null,
+        user_id: session?.userId ?? null
       }
     });
+
+    if (session?.userId != null) {
+      await this.oauthProvider.logoutUser(session.userId);
+      return;
+    }
 
     await this.userAuth.clear();
   }

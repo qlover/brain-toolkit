@@ -103,7 +103,7 @@ export class UserController {
   }
 
   /**
-   * Paged `request_logs` for the current Brain session user.
+   * Paged `request_logs` for the current  session user.
    * Response shape matches {@link ResourceSearchResult}.
    */
   public async searchRequestLogsForCurrentUser(

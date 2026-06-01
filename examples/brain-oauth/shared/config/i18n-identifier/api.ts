@@ -133,4 +133,4 @@ export const API_OAUTH_SERVER_ERROR = 'api:oauth_server_error';
  * @localZh Brain 账号或密码错误
  * @localEn Brain sign-in failed
  */
-export const API_OAUTH_BRAIN_AUTH_FAILED = 'api:oauth_brain_auth_failed';
+export const API_OAUTH_WRAPPER_AUTH_FAILED = 'api:oauth_brain_auth_failed';

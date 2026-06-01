@@ -5,20 +5,20 @@ import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { BrainSessionService } from './BrainSessionService';
-import { brainSessionToUserSchema } from '../brain-oauth/brainProxySession';
+import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 
 @injectable()
 export class ServerAuth implements ServerAuthInterface {
   constructor(
-    @inject(BrainSessionService) protected brainSession: BrainSessionService,
+    @inject(I.OAuthWrapperProviderInterface)
+    protected oauthProvider: OAuthWrapperProviderInterface,
     @inject(I.AppConfig) protected config: SeedServerConfigInterface
   ) {}
 
   /**
    * @override
-   * Session is established by {@link BrainSessionService.setSession} during Brain login.
+   * Session is established by {@link OAuthAppSessionService.setSession} during provider login.
    */
   public async setAuth(_credential_token: string): Promise<void> {
     // no-op: brain_oauth_session is the single source of truth
@@ -28,22 +28,22 @@ export class ServerAuth implements ServerAuthInterface {
    * @override
    */
   public async hasAuth(): Promise<boolean> {
-    return this.brainSession.hasSession();
+    return this.oauthProvider.getOAuthSession().hasSession();
   }
 
   /**
    * @override
    */
   public async getAuth(): Promise<string> {
-    const session = await this.brainSession.getSession();
-    return session?.brainToken ?? '';
+    const session = await this.oauthProvider.getOAuthSession().getSession();
+    return session?.providerSessionToken ?? '';
   }
 
   /**
    * @override
    */
   public async clear(): Promise<void> {
-    await this.brainSession.clearSession();
+    await this.oauthProvider.getOAuthSession().clearSession();
 
     const legacyKey = this.config.userTokenKey;
     if (legacyKey) {
@@ -65,11 +65,11 @@ export class ServerAuth implements ServerAuthInterface {
    * @override
    */
   public async getUser(): Promise<UserSchema | null> {
-    const session = await this.brainSession.getSession();
+    const session = await this.oauthProvider.getOAuthSession().getSession();
     if (!session) {
       return null;
     }
 
-    return brainSessionToUserSchema(session, this.config.adminUserIds);
+    return this.oauthProvider.getUserSchema(session);
   }
 }
