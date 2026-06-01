@@ -20,7 +20,8 @@ export default tseslint.config([
       '**/.cache/**',
       '**/coverage/**',
       '**/*.d.ts',
-      'vitest.setup.js'
+      'vitest.setup.js',
+      'examples'
     ]
   },
 
@@ -138,6 +139,12 @@ export default tseslint.config([
     rules: {
       // Only enable ts-class-override rule with full type information
       '@qlover-eslint/ts-class-override': 'error',
+      '@qlover-eslint/require-root-testid': [
+        'error',
+        {
+          exclude: ['/^[A-Z]/']
+        }
+      ],
       // Disable other type-checked rules to avoid performance impact
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
