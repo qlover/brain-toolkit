@@ -3,6 +3,7 @@
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { BrainLogo } from '../components/BrainLogo';
 import { LocaleLink } from '../components/LocaleLink';
 import type { AppRoutePageTT } from './AppRoutePage.types';
 import type { HTMLAttributes, ReactNode } from 'react';
@@ -71,14 +72,18 @@ export function RoutePageLayout({
                   title={tt.title}
                   href={headerHref}
                   locale={locale}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 shrink"
+                  className={clsx(
+                    'flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 shrink',
+                    headerTitleClassName ?? 'text-primary-text'
+                  )}
                 >
+                  <BrainLogo
+                    data-testid="base-header-logo-image"
+                    className="h-6 w-auto"
+                  />
                   <span
                     data-testid="base-header-app-name"
-                    className={clsx(
-                      'text-base sm:text-lg font-semibold truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none',
-                      headerTitleClassName ?? 'text-primary-text'
-                    )}
+                    className="hidden sm:inline text-base sm:text-lg font-semibold truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none"
                   >
                     {tt.title}
                   </span>
