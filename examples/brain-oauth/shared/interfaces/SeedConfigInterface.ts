@@ -1,3 +1,4 @@
+import type { EndpointsType } from '@brain-toolkit/brain-user';
 import type { SeedConfigInterface } from '@qlover/corekit-bridge/bootstrap';
 import type { StringValue } from 'ms';
 
@@ -29,6 +30,9 @@ export interface SeedServerConfigInterface extends SeedConfigInterface {
 
   /** Allowed CORS methods from `API_CORS_ALLOWED_METHODS`. */
   readonly apiCorsAllowedMethods: readonly string[];
+
+  readonly brainUserProxyBaseURL: string;
+  readonly brainUserProxyEndpoints: Record<string, EndpointsType>;
 }
 export interface SeedSrcConfigInterface extends SeedConfigInterface {
   readonly stringEncryptorKey: string;

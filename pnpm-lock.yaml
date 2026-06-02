@@ -373,46 +373,6 @@ importers:
         specifier: ^8.15.0
         version: 8.46.3(eslint@9.39.1(jiti@1.21.7))(typescript@5.4.5)
 
-  examples/brain-user:
-    dependencies:
-      '@brain-toolkit/brain-user':
-        specifier: latest
-        version: 0.2.4(@types/node@22.19.0)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)))
-      '@qlover/corekit-bridge':
-        specifier: ^3.2.0
-        version: 3.2.0(@types/node@22.19.0)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)))
-      '@qlover/fe-corekit':
-        specifier: ^3.3.0
-        version: 3.3.0
-      '@qlover/slice-store-react':
-        specifier: ^1.4.2
-        version: 1.4.2(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-oauth/google':
-        specifier: ^0.13.4
-        version: 0.13.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-    devDependencies:
-      '@types/react':
-        specifier: ^18.3.12
-        version: 18.3.27
-      '@types/react-dom':
-        specifier: ^18.3.1
-        version: 18.3.7(@types/react@18.3.27)
-      '@vitejs/plugin-react':
-        specifier: ^4.7.0
-        version: 4.7.0(vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
-      typescript:
-        specifier: ~5.4.5
-        version: 5.4.5
-      vite:
-        specifier: ^6.1.0
-        version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
-
   packages/antd-blocks:
     dependencies:
       '@ant-design/icons':
@@ -1194,9 +1154,6 @@ packages:
 
   '@brain-toolkit/antd-theme-override@0.0.3':
     resolution: {integrity: sha512-aedDNwcB5UDG+WYj1wNNQHtfMH6zIsJoZoCk1kr0V+nJMWFmQcZlcGmOj3E2/VeO0Q8XL/4zZHfQXVXum4LHgg==}
-
-  '@brain-toolkit/brain-user@0.2.4':
-    resolution: {integrity: sha512-FeH+naiHnYcfFFurAbBY42/GBsn16A2RZVeN+Vy1xB9f2SGkEFkbTJdyNuXEU6QG+XBKA6VZZGjpu8IXE3Sp4Q==}
 
   '@brain-toolkit/react-kit@0.2.3':
     resolution: {integrity: sha512-56BSmbyuHKS3K8+CUKGgBfmm4mRxRHkh2gxClT/V+w1Sw8MPGWQ9+CfN/8U8sIfAQTo+/JVM7N+SbbrxFIQq3w==}
@@ -2662,12 +2619,6 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@react-oauth/google@0.13.4':
-    resolution: {integrity: sha512-hGKyNEH+/PK8M0sFEuo3MAEk0txtHpgs94tDQit+s2LXg7b6z53NtzHfqDvoB2X8O6lGB+FRg80hY//X6hfD+w==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
 
@@ -3612,9 +3563,6 @@ packages:
   '@types/prismjs@1.26.6':
     resolution: {integrity: sha512-vqlvI7qlMvcCBbVe0AKAb4f97//Hy0EBTaiW8AalRnG/xAN5zOiWWyrNqNXeq8+KAuvRewjCVY1+IPxk4RdNYw==}
 
-  '@types/prop-types@15.7.15':
-    resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
-
   '@types/ramda@0.30.2':
     resolution: {integrity: sha512-PyzHvjCalm2BRYjAU6nIB3TprYwMNOUY/7P/N8bSzp9W/yM2YrtGtAnnVtaCNSeOZ8DzKyFDvaqQs7LnWwwmBA==}
 
@@ -3622,9 +3570,6 @@ packages:
     resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
     peerDependencies:
       '@types/react': ^18.0.0
-
-  '@types/react@18.3.27':
-    resolution: {integrity: sha512-cisd7gxkzjBKU2GgdYrTdtQx1SORymWyaAFhaxQPK9bYO9ot3Y5OikQRvY0VYQtvwjeQnizCINJAenh/V7MK2w==}
 
   '@types/react@19.2.2':
     resolution: {integrity: sha512-6mDvHUFSjyT2B2yeNx2nUgMxh9LtOWvkhIU3uePn2I2oyNymUAX1NIsdgviM4CH+JSrp2D2hsMvJOkxY+0wNRA==}
@@ -9089,27 +9034,6 @@ snapshots:
 
   '@brain-toolkit/antd-theme-override@0.0.3': {}
 
-  '@brain-toolkit/brain-user@0.2.4(@types/node@22.19.0)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)))':
-    dependencies:
-      '@qlover/corekit-bridge': 3.2.0(@types/node@22.19.0)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)))
-      '@qlover/fe-corekit': 3.3.0
-      '@qlover/logger': 1.2.0
-      lodash-es: 4.17.23
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - less
-      - lightningcss
-      - reflect-metadata
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
-      - zustand
-
   '@brain-toolkit/react-kit@0.2.3(@types/node@20.19.41)(@types/react@19.2.2)(lightningcss@1.32.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(terser@5.44.0)(yaml@2.8.1)':
     dependencies:
       '@qlover/corekit-bridge': 2.1.1(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
@@ -10412,31 +10336,6 @@ snapshots:
       - tsx
       - yaml
 
-  '@qlover/corekit-bridge@3.2.0(@types/node@22.19.0)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)))':
-    dependencies:
-      '@qlover/fe-corekit': 3.3.0
-      '@qlover/logger': 1.2.0
-      '@qlover/slice-store': 1.4.1
-      '@qlover/tailwind-theme': 0.1.0
-      js-cookie: 3.0.5
-      tailwindcss: 3.4.19(yaml@2.8.1)
-      vite: 5.4.21(@types/node@22.19.0)(lightningcss@1.32.0)(terser@5.44.0)
-    optionalDependencies:
-      reflect-metadata: 0.2.2
-      zustand: 5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
-
   '@qlover/corekit-bridge@3.2.0(@types/node@22.19.0)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
     dependencies:
       '@qlover/fe-corekit': 3.3.0
@@ -10598,14 +10497,6 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - typescript
-
-  '@qlover/slice-store-react@1.4.2(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@qlover/slice-store': 1.4.1
-      react-dom: 18.3.1(react@18.3.1)
-    optionalDependencies:
-      '@types/react': 18.3.27
-      react: 18.3.1
 
   '@qlover/slice-store-react@1.4.2(@types/react@19.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -10834,11 +10725,6 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-is: 18.3.1
-
-  '@react-oauth/google@0.13.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
@@ -11935,24 +11821,13 @@ snapshots:
 
   '@types/prismjs@1.26.6': {}
 
-  '@types/prop-types@15.7.15': {}
-
   '@types/ramda@0.30.2':
     dependencies:
       types-ramda: 0.30.1
 
-  '@types/react-dom@18.3.7(@types/react@18.3.27)':
-    dependencies:
-      '@types/react': 18.3.27
-
   '@types/react-dom@18.3.7(@types/react@19.2.2)':
     dependencies:
       '@types/react': 19.2.2
-
-  '@types/react@18.3.27':
-    dependencies:
-      '@types/prop-types': 15.7.15
-      csstype: 3.2.3
 
   '@types/react@19.2.2':
     dependencies:
@@ -17629,11 +17504,6 @@ snapshots:
       intl-messageformat: 11.2.6
       react: 19.2.4
 
-  use-sync-external-store@1.6.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-    optional: true
-
   use-sync-external-store@1.6.0(react@19.2.4):
     dependencies:
       react: 19.2.4
@@ -17975,13 +17845,6 @@ snapshots:
   zenscroll@4.0.2: {}
 
   zod@4.4.3: {}
-
-  zustand@5.0.13(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)):
-    optionalDependencies:
-      '@types/react': 18.3.27
-      react: 18.3.1
-      use-sync-external-store: 1.6.0(react@18.3.1)
-    optional: true
 
   zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)):
     optionalDependencies:

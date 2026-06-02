@@ -2,7 +2,9 @@ import {
   BrainUserGateway,
   createBrainUserOptions
 } from '@brain-toolkit/brain-user';
-import { injectable } from '@shared/container';
+import { injectable, inject } from '@shared/container';
+import { I } from '@config/ioc-identifiter';
+import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type {
   OAuthUserAccessToken,
   OAuthUserAdapterInterface,
@@ -68,9 +70,12 @@ export function formatBrainLoginError(data: unknown): string {
 export class BrainUserAdapter implements OAuthUserAdapterInterface {
   protected gateway: BrainUserGateway;
 
-  constructor() {
+  constructor(@inject(I.AppConfig) config: SeedServerConfigInterface) {
     this.gateway = new BrainUserGateway(
-      createBrainUserOptions().requestAdapter
+      createBrainUserOptions({
+        baseURL: config.brainUserProxyBaseURL,
+        endpoints: config.brainUserProxyEndpoints
+      }).requestAdapter
     );
   }
 
