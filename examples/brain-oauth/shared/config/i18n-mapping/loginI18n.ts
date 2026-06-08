@@ -46,5 +46,25 @@ export const loginI18n = Object.freeze({
   withGoogle: i18nKeys.PAGE_LOGIN_WITH_GOOGLE,
   noAccount: i18nKeys.PAGE_LOGIN_NO_ACCOUNT,
   createAccountTitle: i18nKeys.PAGE_LOGIN_CREATE_ACCOUNT2,
-  createAccount: i18nKeys.PAGE_LOGIN_CREATE_ACCOUNT
+  createAccount: i18nKeys.PAGE_LOGIN_CREATE_ACCOUNT,
+
+  // tab switch
+  tabEmail: i18nKeys.PAGE_LOGIN_TAB_EMAIL,
+  tabPhone: i18nKeys.PAGE_LOGIN_TAB_PHONE,
+
+  // phone login form
+  phoneTitle: i18nKeys.PAGE_LOGIN_PHONE_TITLE,
+  phoneSubtitle: i18nKeys.PAGE_LOGIN_PHONE_SUBTITLE,
+  phoneLabel: i18nKeys.PAGE_LOGIN_PHONE_LABEL,
+  phonePlaceholder: i18nKeys.PAGE_LOGIN_PHONE_PLACEHOLDER,
+  phoneSend: i18nKeys.PAGE_LOGIN_PHONE_SEND,
+  phoneOtpLabel: i18nKeys.PAGE_LOGIN_PHONE_OTP_LABEL,
+  phoneOtpPlaceholder: i18nKeys.PAGE_LOGIN_PHONE_OTP_PLACEHOLDER,
+  phoneVerify: i18nKeys.PAGE_LOGIN_PHONE_VERIFY,
+  phoneResend: i18nKeys.PAGE_LOGIN_PHONE_RESEND,
+  phoneSent: i18nKeys.PAGE_LOGIN_PHONE_SENT,
+  phoneSuccess: i18nKeys.PAGE_LOGIN_PHONE_SUCCESS,
+  phoneCountdownSuffix: i18nKeys.PAGE_LOGIN_PHONE_COUNTDOWN_SUFFIX,
+  phoneInvalid: i18nKeys.PAGE_LOGIN_PHONE_INVALID,
+  phoneOtpInvalid: i18nKeys.PAGE_LOGIN_PHONE_OTP_INVALID
 });

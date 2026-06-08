@@ -1,9 +1,13 @@
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import type {
+  LoginWithPhoneOTPResult,
+  OAuthWrapperProviderInterface
+} from '@server/interfaces/OAuthWrapperProviderInterface';
 import { TokenEncryption } from '@server/utils/TokenEncryption';
 import type { LoggerInterface } from '@qlover/logger';
+import { LoginPhoneOtpSchema } from '@schemas/LoginSchema';
 
 export type VerifyLoginParams = {
   email: string;
@@ -58,6 +62,56 @@ export class OAuthControllerService {
     }
 
     const profileEmail = userInfo.email ?? params.email;
+    const nameFromParts = [userInfo.first_name, userInfo.last_name]
+      .filter(Boolean)
+      .join(' ');
+    const profileName = userInfo.name ?? (nameFromParts || profileEmail);
+
+    await this.oauthProvider.getOAuthSession().setSession({
+      userId,
+      email: profileEmail,
+      name: profileName,
+      providerSessionToken: sessionToken
+    });
+
+    await this.oauthProvider.getOAuthRepo().upsertUserCredentials(userId, {
+      provider_session_token: sessionToken,
+      provider_refresh_token: access.refresh_token
+        ? this.tokenEncryption.encrypt(access.refresh_token)
+        : null
+    });
+
+    return { userId, email: profileEmail, name: profileName };
+  }
+
+  public async verifyLoginWithOTP(
+    params: LoginPhoneOtpSchema
+  ): Promise<LoginWithPhoneOTPResult | VerifyLoginResult> {
+    const adapter = this.oauthProvider.getOAuthAdapter();
+    const credentials = await this.oauthProvider.loginWithPhoneOTP(params);
+
+    if (!credentials.token) {
+      return credentials;
+    }
+
+    this.logger.debug('User provider login successful', credentials);
+
+    const sessionToken = credentials.token;
+    if (!sessionToken) {
+      throw new Error('User provider login did not return a session token');
+    }
+
+    const access = await adapter.exchangeAccessToken({
+      token: sessionToken
+    });
+
+    const userInfo = await adapter.getUserInfo(sessionToken);
+    const userId = Number(userInfo.id);
+    if (!Number.isFinite(userId)) {
+      throw new Error('User provider id is missing from profile');
+    }
+
+    const profileEmail = userInfo.email!;
     const nameFromParts = [userInfo.first_name, userInfo.last_name]
       .filter(Boolean)
       .join(' ');

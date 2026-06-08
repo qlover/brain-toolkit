@@ -1,4 +1,5 @@
 import {
+  BrainOtpSignResponse,
   BrainUserGateway,
   createBrainUserOptions
 } from '@brain-toolkit/brain-user';
@@ -11,6 +12,7 @@ import type {
   OAuthUserCredentials,
   OAuthUserProfile
 } from '@qlover/oauth-wrapper';
+import { LoginPhoneOtpSchema } from '@schemas/LoginSchema';
 
 type BrainLoginLike = Record<string, unknown>;
 
@@ -127,5 +129,11 @@ export class BrainUserAdapter implements OAuthUserAdapterInterface {
       { tokenPrefix: 'Bearer' }
     );
     return { ...profile };
+  }
+
+  public loginWithPhoneOTP(
+    params: LoginPhoneOtpSchema
+  ): Promise<BrainOtpSignResponse> {
+    return this.gateway.verifySignOtp(params);
   }
 }

@@ -2,8 +2,12 @@ import { ExecutorError, type EncryptorInterface } from '@qlover/fe-corekit';
 import { inject, injectable } from '@shared/container';
 import { API_USER_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
+import { LoginPhoneOtpSchema } from '@schemas/LoginSchema';
 import type { UserSchema } from '@schemas/UserSchema';
-import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import type {
+  LoginWithPhoneOTPResult,
+  OAuthWrapperProviderInterface
+} from '@server/interfaces/OAuthWrapperProviderInterface';
 import { OAuthControllerService } from './OAuthControllerService';
 import { ServerAuth } from './ServerAuth';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
@@ -27,7 +31,7 @@ export class UserService implements UserServiceInterface {
     @inject(ServerAuth)
     protected userAuth: ServerAuthInterface,
     @inject(OAuthControllerService)
-    protected demoAuthService: OAuthControllerService,
+    protected oauthService: OAuthControllerService,
     @inject(I.OAuthWrapperProviderInterface)
     protected oauthProvider: OAuthWrapperProviderInterface,
     @inject(PasswordEncrypt)
@@ -52,7 +56,7 @@ export class UserService implements UserServiceInterface {
    * @override
    */
   public async login(params: UserLoginParams): Promise<UserSchema> {
-    await this.demoAuthService.verifyLogin({
+    await this.oauthService.verifyLogin({
       email: params.email,
       password: params.password
     });
@@ -80,6 +84,35 @@ export class UserService implements UserServiceInterface {
     }
 
     return this.oauthProvider.getUserSchema(session);
+  }
+
+  /**
+   * @override
+   */
+  public async loginWithPhoneOtp(
+    params: LoginPhoneOtpSchema,
+    loginContext?: UserLoginContext
+  ): Promise<LoginWithPhoneOTPResult> {
+    const result = await this.oauthService.verifyLoginWithOTP(params);
+
+    this.logger.info('OAuth login with phone success', result);
+
+    if (result.userId) {
+      await this.requestLogsRepository.insertEvent({
+        event_category: 'auth',
+        event_type: 'login',
+        success: true,
+        payload: {
+          auth_provider: 'oauth-wrapper',
+          user_agent: loginContext?.userAgent ?? null,
+          ip_address: loginContext?.ipAddress ?? null,
+          login_method: 'otp'
+        }
+      });
+    }
+
+    // TODO: 类型
+    return result as LoginWithPhoneOTPResult;
   }
 
   /**

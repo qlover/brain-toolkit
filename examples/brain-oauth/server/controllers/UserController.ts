@@ -4,10 +4,15 @@ import { StringEncryptor } from '@shared/StringEncryptor';
 import { LoginValidator } from '@shared/validators/LoginValidator';
 import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator';
 import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
-import type { LoginSchema } from '@schemas/LoginSchema';
+import {
+  LoginPhoneOtpSchema,
+  loginPhoneOtpSchema,
+  type LoginSchema
+} from '@schemas/LoginSchema';
 import type { RequestLogRow } from '@schemas/RequestLogSchema';
 import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import { LoginWithPhoneOTPResult } from '@server/interfaces/OAuthWrapperProviderInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
 import { UserService } from '../services/UserService';
@@ -112,5 +117,17 @@ export class UserController {
     const criteria = await this.searchParamsValidator.getThrow(query);
 
     return await this.requestLogsRepository.searchForCurrentUser(criteria);
+  }
+
+  public async loginWithPhone(
+    body: unknown,
+    context?: UserLoginContext
+  ): Promise<LoginWithPhoneOTPResult> {
+    body = loginPhoneOtpSchema.parse(body);
+
+    return await this.userService.loginWithPhoneOtp(
+      body as LoginPhoneOtpSchema,
+      context
+    );
   }
 }

@@ -1,4 +1,6 @@
+import type { LoginPhoneOtpSchema } from '@schemas/LoginSchema';
 import type { UserSchema } from '@schemas/UserSchema';
+import type { LoginWithPhoneOTPResult } from './OAuthWrapperProviderInterface';
 
 export type UserServiceRegisterParams = {
   username?: string;
@@ -27,4 +29,9 @@ export interface UserServiceInterface {
 
   refresh(): Promise<UserSchema>;
   getUser(): Promise<UserSchema>;
+
+  loginWithPhoneOtp(
+    params: LoginPhoneOtpSchema,
+    loginContext?: UserLoginContext
+  ): Promise<LoginWithPhoneOTPResult>;
 }

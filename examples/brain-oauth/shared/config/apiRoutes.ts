@@ -107,6 +107,15 @@ export const API_USER_LOGIN = '/api/user/login' as const;
 export const API_USER_LOGOUT = '/api/user/logout' as const;
 
 /**
+ * API path: `/api/user/phone-login`
+ *
+ * @see [src/app/api/user/phone-login/route.ts](../../src/app/api/user/phone-login/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/user/phone-login/route.ts`
+ */
+export const API_USER_PHONE_LOGIN = '/api/user/phone-login' as const;
+
+/**
  * API path: `/api/user/register`
  *
  * @see [src/app/api/user/register/route.ts](../../src/app/api/user/register/route.ts)
@@ -145,6 +154,7 @@ export type ApiRoutePath =
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGOUT
+  | typeof API_USER_PHONE_LOGIN
   | typeof API_USER_REGISTER
   | typeof API_USER_REQUEST_LOGS
   | typeof API_USER_SESSION;

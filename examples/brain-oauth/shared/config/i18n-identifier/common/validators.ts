@@ -59,3 +59,10 @@ export const V_ZOD_FAILED = 'common:v:zod_failed';
  */
 export const V_REQUEST_LOGS_QUERY_INVALID =
   'common:v:request_logs_query_invalid';
+
+/**
+ * @description 手机号无效
+ * @localZh 无效的手机号
+ * @localEn Invalid Phone number
+ */
+export const V_PHONE_INVALID = 'common:v:phone_invalid';
