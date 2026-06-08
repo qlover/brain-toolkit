@@ -23,7 +23,6 @@ import type {
 import type { BrainUserGatewayConfig } from '../src/interface/BrainUserGatewayInterface';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
-  GATEWAY_BRAIN_USERLY_ENDPOINTS,
   BRAIN_DOMAINS,
   parseEndpoint
 } from '@brain-toolkit/brain-user';
@@ -683,9 +682,9 @@ describe('BrainUserGateway', () => {
           baseURL: BRAIN_DOMAINS.development,
           token: 'brain-user-token',
           requiredToken: true,
-          requestId: GATEWAY_BRAIN_USERLY_ENDPOINTS.accessToken,
+          requestId: GATEWAY_BRAIN_USER_ENDPOINTS.accessToken,
           method: 'POST',
-          url: parseEndpoint(GATEWAY_BRAIN_USERLY_ENDPOINTS.accessToken).url,
+          url: parseEndpoint(GATEWAY_BRAIN_USER_ENDPOINTS.accessToken).url,
           headers: expect.objectContaining({
             'X-Brain-User-Lang': 'en',
             'X-Brain-User-Location': '35.1814,136.9064',

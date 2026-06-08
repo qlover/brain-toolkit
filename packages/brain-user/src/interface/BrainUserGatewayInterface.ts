@@ -182,6 +182,33 @@ export interface BrainAccessToken {
   refresh_token: string;
 }
 
+export interface BrainOtpSignRequest {
+  /**
+   * 手机号, 支持带区号
+   */
+  phone: string;
+
+  /**
+   * 验证码, 目前6位数字
+   *
+   * - 不带otp则表示发送登陆验证码
+   * - 带上 otp 则表示验证登陆验证码
+   */
+  otp?: string;
+}
+
+export interface BrainOtpSignResponse {
+  // send otp
+  message?: string;
+  OTP_EXP?: number;
+  required?: string;
+
+  // login with otp
+  existing?: boolean;
+  required_fields?: Record<string, unknown>;
+  token?: string;
+}
+
 export interface BrainUserRequestConfig
   extends BrainUserGatewayConfig<unknown> {}
 
@@ -211,4 +238,14 @@ export interface BrainUserGatewayInterface
     params?: BrainAccessTokenRequest,
     config?: BrainUserGatewayConfig<BrainAccessTokenRequest>
   ): Promise<BrainAccessToken>;
+
+  /**
+   * Sign With OTP
+   * @param params
+   * @param config
+   */
+  verifySignOtp(
+    params: BrainOtpSignRequest,
+    config?: BrainUserGatewayConfig<BrainOtpSignRequest>
+  ): Promise<BrainOtpSignResponse>;
 }

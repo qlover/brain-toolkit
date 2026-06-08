@@ -6,7 +6,9 @@ import type {
   BrainUserRegisterRequest,
   BrainLoginRequest,
   BrainAccessTokenRequest,
-  BrainAccessToken
+  BrainAccessToken,
+  BrainOtpSignResponse,
+  BrainOtpSignRequest
 } from './interface/BrainUserGatewayInterface';
 import type { BrainUserGatewayConfig } from './interface/BrainUserGatewayInterface';
 import { createBrainUserOptions } from './utils/createBrainUserOptions';
@@ -615,6 +617,31 @@ export class BrainUserService<Tags extends readonly string[]>
     return super.login(params);
   }
 
+  protected signOtp(
+    params: BrainOtpSignRequest,
+    config?: BrainUserGatewayConfig<BrainOtpSignRequest>
+  ): Promise<BrainOtpSignResponse> {
+    return this.gateway.verifySignOtp(params, config);
+  }
+
+  /**
+   * @override
+   */
+  public verifySignOtp(
+    params: Required<BrainOtpSignRequest>
+  ): Promise<BrainOtpSignResponse> {
+    if (this.executor) {
+      return this.executor.exec(this.createOptions('signOtp', params), (ctx) =>
+        this.signOtp(
+          ctx.parameters.requestParams!,
+          omit(ctx.parameters, pickProps)
+        )
+      );
+    }
+
+    return this.signOtp(params);
+  }
+
   /**
    * Logout the current user
    *
@@ -701,8 +728,7 @@ export class BrainUserService<Tags extends readonly string[]>
   public getAccessToken(
     params?: BrainAccessTokenRequest
   ): Promise<BrainAccessToken> {
-    const token =
-      params?.token ?? this.getCredential()?.token ?? undefined;
+    const token = params?.token ?? this.getCredential()?.token ?? undefined;
     const requestParams: BrainAccessTokenRequest = {
       ...params,
       token

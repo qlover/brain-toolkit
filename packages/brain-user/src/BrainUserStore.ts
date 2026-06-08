@@ -11,7 +11,16 @@ import { UserProfile } from './UserProfile';
 import type { BrainUserStoreInterface } from './interface/BrainUserStoreInterface';
 
 export interface BrainUserStateInterface
-  extends UserStateInterface<BrainUser, BrainCredentials> {}
+  extends UserStateInterface<BrainUser, BrainCredentials> {
+  /**
+   * 是否禁用 OTP 登录
+   *
+   * 当上一次发送消息和下一次间隔不到1分钟, 则禁用 OTP 登录
+   *
+   * @default false
+   */
+  readonly disabledOtpSign: boolean;
+}
 
 export interface BrainUserStoreOptions<Tags extends readonly string[]>
   extends UserStoreOptions<BrainUserStateInterface, string> {

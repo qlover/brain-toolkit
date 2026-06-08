@@ -1,7 +1,6 @@
 import type { EndpointsType } from './config/EndPoints';
 import {
   GATEWAY_BRAIN_USER_ENDPOINTS,
-  GATEWAY_BRAIN_USERLY_ENDPOINTS,
   parseEndpoint
 } from './config/EndPoints';
 import { BRAIN_DOMAINS, defaultEnv } from './config/common';
@@ -14,7 +13,9 @@ import type {
   BrainCredentials,
   BrainUserGatewayConfig,
   BrainAccessTokenRequest,
-  BrainAccessToken
+  BrainAccessToken,
+  BrainOtpSignRequest,
+  BrainOtpSignResponse
 } from './interface/BrainUserGatewayInterface';
 import type { BrainUser } from './types/BrainUserTypes';
 import {
@@ -79,7 +80,6 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
   ): EndpointsType | undefined {
     const merged = {
       ...GATEWAY_BRAIN_USER_ENDPOINTS,
-      ...GATEWAY_BRAIN_USERLY_ENDPOINTS,
       ...endpoints
     };
     return merged[action as keyof typeof merged];
@@ -435,6 +435,23 @@ export class BrainUserGateway implements BrainUserGatewayInterface {
       )
       .then((response) => {
         return this.handleResponse<BrainAccessToken>(response, response.config);
+      });
+  }
+
+  /**
+   * @override
+   */
+  public verifySignOtp(
+    params: BrainOtpSignRequest,
+    config?: BrainUserGatewayConfig<BrainOtpSignRequest>
+  ): Promise<BrainOtpSignResponse> {
+    return this.adapter
+      .request<
+        BrainOtpSignRequest,
+        BrainOtpSignResponse
+      >(this.handleConfig('otpSign', params, config))
+      .then((response) => {
+        return this.handleResponse(response, response.config);
       });
   }
 }

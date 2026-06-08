@@ -19,6 +19,8 @@ export function parseEndpoint(endpoint: EndpointsType): {
 
 /** brain-user-system invoke path (relative to {@link BRAIN_DOMAINS}) */
 export const BRAIN_USER_INVOKE_PATH = '/v1.0/invoke/brain-user-system/method';
+/** userly invoke path (relative to {@link BRAIN_DOMAINS}) */
+export const BRAIN_USERLY_INVOKE_PATH = '/v1.0/invoke/userly/method';
 
 export const GATEWAY_BRAIN_USER_ENDPOINTS = {
   login: `POST ${BRAIN_USER_INVOKE_PATH}/api/auth/token.json`,
@@ -28,17 +30,12 @@ export const GATEWAY_BRAIN_USER_ENDPOINTS = {
   /**
    * This api only support admin?
    */
-  logout: `POST ${BRAIN_USER_INVOKE_PATH}/api/users/signout`
-} as const;
+  logout: `POST ${BRAIN_USER_INVOKE_PATH}/api/users/signout`,
 
-/** userly invoke path (relative to {@link BRAIN_DOMAINS}) */
-export const BRAIN_USERLY_INVOKE_PATH = '/v1.0/invoke/userly/method';
+  accessToken: `POST ${BRAIN_USERLY_INVOKE_PATH}/auth/access_token`,
 
-/**
- * userly gateway endpoints (matrix-runtime / benchmark JWT)
- *
- * Base URL: {@link BRAIN_DOMAINS}
- */
-export const GATEWAY_BRAIN_USERLY_ENDPOINTS = {
-  accessToken: `POST ${BRAIN_USERLY_INVOKE_PATH}/auth/access_token`
+  /**
+   * OTP sign in
+   */
+  otpSign: `POST ${BRAIN_USERLY_INVOKE_PATH}/auth/otp/login`
 } as const;
