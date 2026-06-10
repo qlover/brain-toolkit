@@ -1,7 +1,6 @@
 import { logPrefixTemplate } from '@config/common';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { name, version } from '../package.json';
-import type { EndpointsType } from '@brain-toolkit/brain-user';
 import type { StringValue } from 'ms';
 
 function parseCsvEnv(
@@ -20,15 +19,8 @@ function parseCsvEnv(
   );
 }
 
-function parseJSONString(value: string | undefined, defaultValue: unknown) {
-  try {
-    return value ? JSON.parse(value) : defaultValue;
-  } catch {
-    return defaultValue;
-  }
-}
-
 export class ServerConfig implements SeedServerConfigInterface {
+  public readonly siteUrl: string = process.env.SITE_URL ?? '';
   public readonly env: string = process.env.APP_ENV ?? 'development';
   public readonly name: string = name;
   public readonly version: string = version;
@@ -70,8 +62,6 @@ export class ServerConfig implements SeedServerConfigInterface {
   public readonly logPrefixTemplate: string =
     process.env.LOG_PREFIX_TEMPLATE ?? logPrefixTemplate;
 
-  public readonly brainUserProxyBaseURL: string =
-    process.env.BRAIN_USER_PROXY_BASE_URL ?? '';
-  public readonly brainUserProxyEndpoints: Record<string, EndpointsType> =
-    parseJSONString(process.env.BRAIN_USER_PROXY_ENDPOINTS, {});
+  public readonly oauthSessionKey: string =
+    process.env.OAUTH_SESSION_KEY ?? 'next_oauth_wrapper_session';
 }

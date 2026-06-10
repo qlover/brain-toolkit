@@ -1,18 +1,15 @@
-import type { LoginPhoneOtpSchema } from '@schemas/LoginSchema';
 import type { UserSchema } from '@schemas/UserSchema';
 import type {
-  OAuthServiceInterface,
+  OAuthProviderInterface,
   OAuthSessionPayload,
-  OAuthUserCredentials
+  OAuthOTPProviderInterface
 } from '@qlover/oauth-wrapper';
-
-export type LoginWithPhoneOTPResult = OAuthUserCredentials & {
-  OTP_EXP?: number;
-  existing?: boolean;
-};
+import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 export interface OAuthWrapperProviderInterface
-  extends OAuthServiceInterface<OAuthSessionPayload> {
+  extends
+    OAuthProviderInterface<OAuthSessionPayload>,
+    OAuthOTPProviderInterface {
   /**
    * OAuthWrapper 用户信息交换
    *
@@ -20,9 +17,21 @@ export interface OAuthWrapperProviderInterface
    *
    * @param session
    */
-  getUserSchema(session?: OAuthSessionPayload): Promise<UserSchema>;
+  getUserSchema(session?: OAuthSessionPayload): Promise<UserSchema | null>;
 
-  loginWithPhoneOTP(
-    params: LoginPhoneOtpSchema
-  ): Promise<LoginWithPhoneOTPResult>;
+  /**
+   * /oauth/authorize 页面是否需要登录
+   *
+   * - 如果是包装某个 旧登录接口一版需要返回 true
+   * - 如果使用supabase这样有auth server则返回false
+   */
+  hasNeedLogged(): boolean;
+
+  clearSession(): Promise<void>;
+
+  /**
+   * Establish app session from an external provider session (e.g. Supabase magic link callback).
+   * Providers that do not support this flow should throw.
+   */
+  loginWithSession?(session: SupabaseSession): Promise<void>;
 }

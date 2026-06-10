@@ -1,6 +1,5 @@
-import type { LoginPhoneOtpSchema } from '@schemas/LoginSchema';
 import type { UserSchema } from '@schemas/UserSchema';
-import type { LoginWithPhoneOTPResult } from './OAuthWrapperProviderInterface';
+import type { SignOtpResult, SignWithOtpSchema } from '@qlover/oauth-wrapper';
 
 export type UserServiceRegisterParams = {
   username?: string;
@@ -30,8 +29,5 @@ export interface UserServiceInterface {
   refresh(): Promise<UserSchema>;
   getUser(): Promise<UserSchema>;
 
-  loginWithPhoneOtp(
-    params: LoginPhoneOtpSchema,
-    loginContext?: UserLoginContext
-  ): Promise<LoginWithPhoneOTPResult>;
+  signWithOtp(body: SignWithOtpSchema): Promise<SignOtpResult>;
 }

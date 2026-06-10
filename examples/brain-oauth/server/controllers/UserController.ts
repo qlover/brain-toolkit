@@ -1,21 +1,21 @@
 import { ExecutorError, Base64Serializer } from '@qlover/fe-corekit';
+import {
+  SignOtpResult,
+  signWithPhoneOtpSchema,
+  signWithEmailOtpSchema
+} from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { StringEncryptor } from '@shared/StringEncryptor';
 import { LoginValidator } from '@shared/validators/LoginValidator';
 import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator';
 import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
-import {
-  LoginPhoneOtpSchema,
-  loginPhoneOtpSchema,
-  type LoginSchema
-} from '@schemas/LoginSchema';
+import { type LoginSchema } from '@schemas/LoginSchema';
 import type { RequestLogRow } from '@schemas/RequestLogSchema';
 import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { LoginWithPhoneOTPResult } from '@server/interfaces/OAuthWrapperProviderInterface';
 import { ServerConfig } from '@server/ServerConfig';
+import { OAuthUserService } from '@server/services/OAuthUserService';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import { UserService } from '../services/UserService';
 import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
 import type {
   UserLoginContext,
@@ -34,7 +34,7 @@ export class UserController {
     protected loginValidator: ValidatorInterface<LoginSchema>,
     @inject(SearchParamsValidator)
     protected searchParamsValidator: ValidatorInterface<ResourceSearchParams>,
-    @inject(UserService) protected userService: UserServiceInterface,
+    @inject(OAuthUserService) protected userService: UserServiceInterface,
     @inject(RequestLogsRepository)
     protected requestLogsRepository: RequestLogsRepositoryInterface,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
@@ -119,15 +119,31 @@ export class UserController {
     return await this.requestLogsRepository.searchForCurrentUser(criteria);
   }
 
-  public async loginWithPhone(
-    body: unknown,
-    context?: UserLoginContext
-  ): Promise<LoginWithPhoneOTPResult> {
-    body = loginPhoneOtpSchema.parse(body);
+  public signWithOtp(body: unknown): Promise<SignOtpResult> {
+    const phoneResult = signWithPhoneOtpSchema.safeParse(body);
+    if (phoneResult.success) {
+      return this.userService.signWithOtp(phoneResult.data);
+    }
 
-    return await this.userService.loginWithPhoneOtp(
-      body as LoginPhoneOtpSchema,
-      context
-    );
+    const emailResult = signWithEmailOtpSchema.safeParse(body);
+    if (emailResult.success) {
+      return this.userService.signWithOtp(emailResult.data);
+    }
+
+    throw new Error('OTP sign requires a valid phone or email!');
+  }
+
+  public verifyOtp(body: unknown): Promise<SignOtpResult> {
+    const phoneResult = signWithPhoneOtpSchema.safeParse(body);
+    if (phoneResult.success && phoneResult.data.token) {
+      return this.userService.signWithOtp(phoneResult.data);
+    }
+
+    const emailResult = signWithEmailOtpSchema.safeParse(body);
+    if (emailResult.success && emailResult.data.token) {
+      return this.userService.signWithOtp(emailResult.data);
+    }
+
+    throw new Error('OTP verification requires a valid phone/email and token!');
   }
 }

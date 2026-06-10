@@ -23,7 +23,7 @@ import {
   type ReactNode
 } from 'react';
 import { Link } from '@/i18n/routing';
-import { OAuthConsentGateway } from '@/impls/OAuthConsentGateway';
+import { AppUserGateway } from '@/impls/AppUserGateway';
 import { readAppApiJson } from '@/uikit/components-app/developer/apps/readAppApiJson';
 import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -98,7 +98,7 @@ function PlaygroundAlert(props: {
           className="text-secondary-text hover:text-primary-text shrink-0"
           aria-label="Close"
         >
-          �
+          �?{' '}
         </button>
       )}
     </div>
@@ -147,7 +147,7 @@ export function OAuthPlayground() {
   const tt = usePageI18nMapping<OAuthPlaygroundI18nInterface>();
   const locale = useLocale();
   const { success, loading: authLoading, user } = useUserAuth();
-  const consentGateway = useIOC(OAuthConsentGateway);
+  const userGateway = useIOC(AppUserGateway);
 
   const [clients, setClients] = useState<OAuthClientListItem[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
@@ -339,7 +339,7 @@ export function OAuthPlayground() {
       setUserinfoResponse(null);
 
       try {
-        const redirectUrl = await consentGateway.submit({
+        const redirectUrl = await userGateway.submitOAuthConsent({
           action,
           client_id: clientId,
           redirect_uri: redirectUri,
@@ -367,7 +367,7 @@ export function OAuthPlayground() {
       redirectUri,
       scopeParam,
       state,
-      consentGateway,
+      userGateway,
       pkceActive,
       pkceChallenge
     ]
@@ -500,6 +500,12 @@ export function OAuthPlayground() {
                   {tt.intro}
                 </p>
               </div>
+            </div>
+
+            <div className="mt-4">
+              <PlaygroundAlert variant="info">
+                <span>{tt.demoNote}</span>
+              </PlaygroundAlert>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">
@@ -927,7 +933,7 @@ export function OAuthPlayground() {
       </div>
 
       <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border bg-primary">
-        <p>� 2026 {tt.title}</p>
+        <p>�?2026 {tt.title}</p>
       </footer>
     </div>
   );

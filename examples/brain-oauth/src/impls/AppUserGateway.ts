@@ -1,8 +1,13 @@
 import { HttpMethods, RequestExecutor } from '@qlover/fe-corekit';
+import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import {
+  API_OAUTH_CONSENT,
+  API_OAUTH_VERIFY,
   API_USER_LOGIN,
   API_USER_LOGOUT,
+  API_USER_OTP_LOGIN,
+  API_USER_OTP_VERIFY,
   API_USER_REGISTER,
   API_USER_SESSION
 } from '@config/apiRoutes';
@@ -10,7 +15,8 @@ import { UserCredential, UserSchema } from '@schemas/UserSchema';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
-  UserApiRegisterTransaction
+  UserApiRegisterTransaction,
+  UserSubmitOAuthConsentTransaction
 } from '@interfaces/AppUserApiInterface';
 import { UserServiceGatewayInterface } from '@interfaces/UserServiceInterface';
 import {
@@ -70,13 +76,14 @@ export class AppUserGateway implements UserServiceGatewayInterface {
    * @override
    */
   public async login(
-    params: UserApiLoginTransaction['data'] & LoginParams
+    params: UserApiLoginTransaction['data'] & LoginParams,
+    url?: string
   ): Promise<UserCredential> {
     const response = await this.client.request<
       UserApiLoginTransaction['response'],
       UserApiLoginTransaction['request']
     >({
-      url: API_USER_LOGIN,
+      url: url ?? API_USER_LOGIN,
       method: HttpMethods.POST,
       data: params,
       encryptProps: 'password'
@@ -125,5 +132,77 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     });
 
     return undefined as R;
+  }
+
+  /**
+   * @override
+   */
+  public async verify(
+    params: UserApiLoginTransaction['data'] & LoginParams
+  ): Promise<UserCredential> {
+    return this.login(params, API_OAUTH_VERIFY);
+  }
+
+  /**
+   * @override
+   */
+  public async submitOAuthConsent(
+    payload: UserSubmitOAuthConsentTransaction['request']
+  ): Promise<string> {
+    const response = await this.client.request<
+      UserSubmitOAuthConsentTransaction['response'],
+      UserSubmitOAuthConsentTransaction['request']
+    >({
+      url: API_OAUTH_CONSENT,
+      method: HttpMethods.POST,
+      data: payload
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message ?? 'Consent submission failed');
+    }
+
+    return response.data.data!.redirectUrl;
+  }
+
+  /**
+   * Send OTP (step 1) — supports both phone and email
+   * @override
+   */
+  public async sendOtp(params: SignWithOtpParams): Promise<SignOtpResult> {
+    const response = await this.client.request<
+      SignOtpResult,
+      SignWithOtpParams
+    >({
+      url: API_USER_OTP_LOGIN,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message ?? 'Send OTP failed');
+    }
+
+    return response.data.data;
+  }
+
+  /**
+   * Verify OTP code (step 2) — supports both phone and email
+   * @override
+   */
+  public async verifyOtp(
+    params: { phone: string; token: string } | { email: string; token: string }
+  ): Promise<SignOtpResult> {
+    const response = await this.client.request<SignOtpResult, typeof params>({
+      url: API_USER_OTP_VERIFY,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message ?? 'OTP verification failed');
+    }
+
+    return response.data.data;
   }
 }

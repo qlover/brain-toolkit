@@ -3,10 +3,7 @@ import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import {
-  OAUTH_APP_SESSION_COOKIE,
-  parseOAuthAppSessionCookie
-} from '@server/utils/OAuthWrapperProxy';
+import { parseOAuthAppSessionCookie } from '@server/utils/OAuthWrapperProxy';
 import type {
   OAuthSessionInterface,
   OAuthSessionPayload
@@ -16,9 +13,7 @@ import type {
  * HttpOnly session cookie for authenticated users during OAuth authorize.
  */
 @injectable()
-export class OAuthSessionService
-  implements OAuthSessionInterface<OAuthSessionPayload>
-{
+export class OAuthSessionService implements OAuthSessionInterface<OAuthSessionPayload> {
   constructor(
     @inject(I.AppConfig) protected config: SeedServerConfigInterface
   ) {}
@@ -30,7 +25,7 @@ export class OAuthSessionService
     const secret = this.requireSecret();
     const token = jwt.sign(payload, secret, { expiresIn: '7d' });
     const cookieStore = await cookies();
-    cookieStore.set(OAUTH_APP_SESSION_COOKIE, token, {
+    cookieStore.set(this.config.oauthSessionKey, token, {
       httpOnly: true,
       secure: this.config.isProduction,
       sameSite: 'lax',
@@ -51,7 +46,7 @@ export class OAuthSessionService
    */
   public async getSession(): Promise<OAuthSessionPayload | null> {
     const cookieStore = await cookies();
-    const raw = cookieStore.get(OAUTH_APP_SESSION_COOKIE)?.value;
+    const raw = cookieStore.get(this.config.oauthSessionKey)?.value;
     return parseOAuthAppSessionCookie(raw, this.requireSecret());
   }
 
@@ -60,7 +55,7 @@ export class OAuthSessionService
    */
   public async clearSession(): Promise<void> {
     const cookieStore = await cookies();
-    cookieStore.delete(OAUTH_APP_SESSION_COOKIE);
+    cookieStore.delete(this.config.oauthSessionKey);
   }
 
   protected requireSecret(): string {
