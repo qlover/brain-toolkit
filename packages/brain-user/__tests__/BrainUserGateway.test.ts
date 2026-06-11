@@ -33,7 +33,7 @@ class TestableBrainUserGateway extends BrainUserGateway {
     response: RequestAdapterResponse<unknown, unknown>,
     config?: BrainUserGatewayConfig<unknown>
   ): Promise<R> {
-    return this.handleResponse<R>(response, config);
+    return this.handleGatewayResult<R>(response, config);
   }
 }
 

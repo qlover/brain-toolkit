@@ -1,4 +1,9 @@
-import type { UserServiceGateway } from '@qlover/corekit-bridge/gateway-service';
+import type {
+  LoginInterface,
+  RegisterInterface,
+  UserInfoInterface,
+  GatewayResult
+} from '@qlover/corekit-bridge/gateway-service';
 import type { BrainUser } from '../types/BrainUserTypes';
 import type { BrainResponse } from './BrainResponse';
 import type { EndpointsType } from '../config/EndPoints';
@@ -197,6 +202,15 @@ export interface BrainOtpSignRequest {
   otp?: string;
 }
 
+/**
+ * 发送验证码频繁
+ */
+export type BrainOtpFrequent = {
+  name: 'anti_abuse_check_failed';
+  message: string;
+  data: Record<string, unknown>;
+};
+
 export interface BrainOtpSignResponse {
   // send otp
   message?: string;
@@ -219,15 +233,22 @@ export interface BrainUserRequestConfig
  * - 应该实现一样的请求参数
  */
 export interface BrainUserGatewayInterface
-  extends UserServiceGateway<
-    BrainUser,
-    BrainCredentials,
-    BrainUserGatewayConfig<unknown>
-  > {
+  extends LoginInterface<
+      GatewayResult<BrainCredentials>,
+      BrainUserGatewayConfig<unknown>
+    >,
+    RegisterInterface<
+      GatewayResult<BrainUser>,
+      BrainUserGatewayConfig<unknown>
+    >,
+    UserInfoInterface<
+      GatewayResult<BrainUser>,
+      BrainUserGatewayConfig<unknown>
+    > {
   loginWithGoogle(
     params: BrainUserGoogleRequest,
     config?: BrainUserGatewayConfig<BrainUserGoogleRequest>
-  ): Promise<BrainCredentials>;
+  ): Promise<GatewayResult<BrainCredentials>>;
 
   /**
    * Exchange brain-user `token` for userly `access_token` (HS256 JWT).
@@ -237,7 +258,7 @@ export interface BrainUserGatewayInterface
   getAccessToken(
     params?: BrainAccessTokenRequest,
     config?: BrainUserGatewayConfig<BrainAccessTokenRequest>
-  ): Promise<BrainAccessToken>;
+  ): Promise<GatewayResult<BrainAccessToken>>;
 
   /**
    * Sign With OTP
@@ -247,5 +268,5 @@ export interface BrainUserGatewayInterface
   verifySignOtp(
     params: BrainOtpSignRequest,
     config?: BrainUserGatewayConfig<BrainOtpSignRequest>
-  ): Promise<BrainOtpSignResponse>;
+  ): Promise<GatewayResult<BrainOtpSignResponse>>;
 }

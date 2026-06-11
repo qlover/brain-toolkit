@@ -2,6 +2,7 @@
 export * from './config/EndPoints';
 export * from './config/PreFeatureTags';
 export * from './config/common';
+export * from './config/identifier';
 
 // Core classes
 export * from './BrainUserGateway';

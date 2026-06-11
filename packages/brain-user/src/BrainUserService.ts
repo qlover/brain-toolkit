@@ -29,6 +29,7 @@ import type { BrainUserStore } from './BrainUserStore';
 import { omit } from 'lodash-es';
 import type { LoggerInterface } from '@qlover/logger';
 import { isBrainCredentials, isBrainUser } from './utils/typeGuard';
+import type { GatewayResult } from '@qlover/corekit-bridge';
 
 export interface BrainUserContextOptions<
   Tags extends readonly string[],
@@ -556,7 +557,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public loginWithGoogle(
     params: BrainUserGoogleRequest
-  ): Promise<BrainCredentials> {
+  ): Promise<GatewayResult<BrainCredentials>> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('loginWithGoogle', params),
@@ -580,7 +581,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public register<Params = BrainUserRegisterRequest>(
     params: Params
-  ): Promise<BrainUser> {
+  ): Promise<GatewayResult<BrainUser>> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('register', params), (ctx) =>
         super.register(
@@ -604,7 +605,7 @@ export class BrainUserService<Tags extends readonly string[]>
     params: LoginParams &
       BrainUserGatewayConfig<unknown> &
       Pick<BrainLoginRequest, 'metadata'>
-  ): Promise<BrainCredentials> {
+  ): Promise<GatewayResult<BrainCredentials>> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('login', params), (ctx) =>
         super.login(
@@ -620,7 +621,7 @@ export class BrainUserService<Tags extends readonly string[]>
   protected signOtp(
     params: BrainOtpSignRequest,
     config?: BrainUserGatewayConfig<BrainOtpSignRequest>
-  ): Promise<BrainOtpSignResponse> {
+  ): Promise<GatewayResult<BrainOtpSignResponse>> {
     return this.gateway.verifySignOtp(params, config);
   }
 
@@ -629,7 +630,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public verifySignOtp(
     params: Required<BrainOtpSignRequest>
-  ): Promise<BrainOtpSignResponse> {
+  ): Promise<GatewayResult<BrainOtpSignResponse>> {
     if (this.executor) {
       return this.executor.exec(this.createOptions('signOtp', params), (ctx) =>
         this.signOtp(
@@ -671,7 +672,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public getUserInfo<Params = BrainCredentials>(
     params?: Params
-  ): Promise<BrainUser> {
+  ): Promise<GatewayResult<BrainUser>> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('getUserInfo', params),
@@ -695,7 +696,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public refreshUserInfo<Params = BrainCredentials>(
     params?: Params
-  ): Promise<BrainUser> {
+  ): Promise<GatewayResult<BrainUser>> {
     if (this.executor) {
       return this.executor.exec(
         this.createOptions('refreshUserInfo', params),
@@ -727,7 +728,7 @@ export class BrainUserService<Tags extends readonly string[]>
    */
   public getAccessToken(
     params?: BrainAccessTokenRequest
-  ): Promise<BrainAccessToken> {
+  ): Promise<GatewayResult<BrainAccessToken>> {
     const token = params?.token ?? this.getCredential()?.token ?? undefined;
     const requestParams: BrainAccessTokenRequest = {
       ...params,
