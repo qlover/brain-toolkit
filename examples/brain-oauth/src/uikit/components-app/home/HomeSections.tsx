@@ -78,7 +78,9 @@ export function HomeArchitecture({ tt }: HomeSectionProps) {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="rounded-xl border border-primary-border bg-elevated/50 p-6 sm:p-8">
           <div className="flex items-start gap-3 mb-3">
-            <CodeOutlined className="text-brand text-lg mt-0.5 shrink-0" />
+            <span className="text-brand text-lg mt-0.5 shrink-0">
+              <CodeOutlined />
+            </span>
             <h2 className="text-lg font-semibold text-primary-text">
               {tt.sectionArchTitle}
             </h2>
@@ -89,7 +91,9 @@ export function HomeArchitecture({ tt }: HomeSectionProps) {
         </div>
         <div className="rounded-xl border border-brand/30 bg-brand/5 p-6 sm:p-8">
           <div className="flex items-start gap-3 mb-3">
-            <ApiOutlined className="text-brand text-lg mt-0.5 shrink-0" />
+            <span className="text-brand text-lg mt-0.5 shrink-0">
+              <ApiOutlined />
+            </span>
             <h2 className="text-lg font-semibold text-primary-text">
               {tt.sectionDemoTitle}
             </h2>
