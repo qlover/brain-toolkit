@@ -12,6 +12,7 @@ import {
   API_USER_SESSION
 } from '@config/apiRoutes';
 import { UserCredential, UserSchema } from '@schemas/UserSchema';
+import { AppApiResult } from '@interfaces/AppApiInterface';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
@@ -24,7 +25,7 @@ import {
   AppApiRequester,
   AppApiRequesterContext
 } from './appApi/AppApiRequester';
-import type { LoginParams } from '@qlover/corekit-bridge';
+import type { GatewayResult, LoginParams } from '@qlover/corekit-bridge';
 
 /**
  * UserApi
@@ -46,7 +47,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   public getUserInfo(
     _params?: unknown,
     _config?: unknown
-  ): Promise<UserSchema> {
+  ): Promise<GatewayResult<UserSchema>> {
     throw new Error('Method not implemented.');
   }
   /**
@@ -55,7 +56,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   public async refreshUserInfo(
     _params?: unknown,
     _config?: {} | undefined
-  ): Promise<UserSchema> {
+  ): Promise<GatewayResult<UserSchema>> {
     const response = await this.client.request<
       UserApiLoginTransaction['response'],
       UserApiLoginTransaction['request']
@@ -69,7 +70,10 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(response.data.message);
     }
 
-    return response.data.data as UserSchema;
+    return {
+      data: response.data.data as UserSchema,
+      error: null
+    };
   }
 
   /**
@@ -78,7 +82,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   public async login(
     params: UserApiLoginTransaction['data'] & LoginParams,
     url?: string
-  ): Promise<UserCredential> {
+  ): Promise<GatewayResult<UserCredential>> {
     const response = await this.client.request<
       UserApiLoginTransaction['response'],
       UserApiLoginTransaction['request']
@@ -93,7 +97,10 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(response.data.message);
     }
 
-    return response.data.data as UserCredential;
+    return {
+      data: response.data.data as UserCredential,
+      error: null
+    };
   }
 
   /**
@@ -101,7 +108,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
    */
   public async register(
     params: UserApiRegisterTransaction['data']
-  ): Promise<UserSchema> {
+  ): Promise<GatewayResult<UserSchema>> {
     const response = await this.client.request<
       UserApiRegisterTransaction['response'],
       UserApiRegisterTransaction['request']
@@ -116,7 +123,10 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(response.data.message);
     }
 
-    return response.data.data as UserSchema;
+    return {
+      data: response.data.data as UserSchema,
+      error: null
+    };
   }
 
   /**
@@ -139,7 +149,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
    */
   public async verify(
     params: UserApiLoginTransaction['data'] & LoginParams
-  ): Promise<UserCredential> {
+  ): Promise<GatewayResult<UserCredential>> {
     return this.login(params, API_OAUTH_VERIFY);
   }
 
@@ -171,7 +181,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
    */
   public async sendOtp(params: SignWithOtpParams): Promise<SignOtpResult> {
     const response = await this.client.request<
-      SignOtpResult,
+      AppApiResult<SignOtpResult>,
       SignWithOtpParams
     >({
       url: API_USER_OTP_LOGIN,
@@ -180,7 +190,9 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     });
 
     if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.message ?? 'Send OTP failed');
+      throw new Error(
+        (response.data as { message?: string }).message ?? 'Send OTP failed'
+      );
     }
 
     return response.data.data;
@@ -193,14 +205,20 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   public async verifyOtp(
     params: { phone: string; token: string } | { email: string; token: string }
   ): Promise<SignOtpResult> {
-    const response = await this.client.request<SignOtpResult, typeof params>({
+    const response = await this.client.request<
+      AppApiResult<SignOtpResult>,
+      typeof params
+    >({
       url: API_USER_OTP_VERIFY,
       method: HttpMethods.POST,
       data: params
     });
 
     if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.message ?? 'OTP verification failed');
+      throw new Error(
+        (response.data as { message?: string }).message ??
+          'OTP verification failed'
+      );
     }
 
     return response.data.data;

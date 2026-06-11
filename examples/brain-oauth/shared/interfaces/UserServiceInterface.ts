@@ -1,15 +1,14 @@
 import type { UserCredential, UserSchema } from '@schemas/UserSchema';
 import type {
   UserService as CorekitBridgeUserServiceInterface,
+  GatewayResult,
   LoginParams,
   UserServiceGateway
 } from '@qlover/corekit-bridge';
 import type { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 
-export interface UserServiceInterface extends CorekitBridgeUserServiceInterface<
-  UserSchema,
-  UserCredential
-> {
+export interface UserServiceInterface
+  extends CorekitBridgeUserServiceInterface<UserSchema, UserCredential> {
   // You can add your own methods here
 
   /**
@@ -31,11 +30,8 @@ export type OAuthConsentPayload = {
   code_challenge_method?: 'S256';
 };
 
-export interface UserServiceGatewayInterface extends UserServiceGateway<
-  UserSchema,
-  UserCredential,
-  {}
-> {
+export interface UserServiceGatewayInterface
+  extends UserServiceGateway<UserSchema, UserCredential, {}> {
   /**
    * 主要用于 OAuth 验证登陆
    *
@@ -43,7 +39,7 @@ export interface UserServiceGatewayInterface extends UserServiceGateway<
    *
    * @param params
    */
-  verify(params: LoginParams): Promise<UserCredential>;
+  verify(params: LoginParams): Promise<GatewayResult<UserCredential>>;
 
   /**
    * 主要用提交 OAuth 授权请求
