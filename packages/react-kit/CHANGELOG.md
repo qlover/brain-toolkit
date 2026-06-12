@@ -1,5 +1,13 @@
 # @brain-toolkit/react-kit
 
+## 0.2.4
+
+### Patch Changes
+
+#### ✨ Features
+
+- **brain-user:** refactor BrainUserGateway to use GatewayResult type and add error handling; introduce BrainUserIdentifier for consistent error management ([a93bdba](https://github.com/qlover/brain-toolkit/commit/a93bdba5ff73fbeee241d2f03d5b2f760de27254))
+
 ## 0.2.3
 
 ### Patch Changes
