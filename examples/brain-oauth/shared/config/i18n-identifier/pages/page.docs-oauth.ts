@@ -39,6 +39,36 @@ export const PAGE_DOCS_OAUTH_KEYWORDS = 'page_docs_oauth:keywords';
 export const PAGE_DOCS_OAUTH_INTRO = 'page_docs_oauth:intro';
 
 /**
+ * @description Architecture section title
+ * @localZh 架构：通用内核与示例装配
+ * @localEn Architecture: core vs example wiring
+ */
+export const PAGE_DOCS_OAUTH_SECTION_ARCHITECTURE =
+  'page_docs_oauth:section__architecture';
+
+/**
+ * @description Architecture body
+ * @localZh shared/oauth-wrapper 提供与上游登录 API 无关的 OAuth 2.0 服务（authorize、consent、token、PKCE、userinfo）。oauth-wrapper 负责会话、登录编排与持久化；通过实现 OAuthUserAdapterInterface 接入任意上游。本站点运行的是 demo-oauth 中的一种实现（BrainUserAdapter），并非协议本身的限制。
+ * @localEn shared/oauth-wrapper is provider-agnostic OAuth 2.0 logic. oauth-wrapper handles sessions, login orchestration, and storage; you integrate upstream systems via OAuthUserAdapterInterface. This site runs one reference adapter (BrainUserAdapter)—that is not a protocol limitation.
+ */
+export const PAGE_DOCS_OAUTH_ARCHITECTURE_BODY =
+  'page_docs_oauth:architecture__body';
+
+/**
+ * @description Demo provider section title
+ * @localZh 本示例：demo-oauth + Brain User
+ * @localEn This example: demo-oauth + Brain User
+ */
+export const PAGE_DOCS_OAUTH_SECTION_DEMO = 'page_docs_oauth:section__demo';
+
+/**
+ * @description Demo provider body
+ * @localZh 终端用户通过 POST /api/oauth/verify 使用邮箱密码登录（由 DemoAuthService 调用 BrainUserAdapter）。授权页与换票流程与 Provider 无关。配置 OAUTH_WRAPPER_API_BASE、SESSION_SECRET、ENCRYPTION_KEY 等见 .env.template。替换 Provider 时修改 oauth-wrapper 与 serverIoc 绑定即可。
+ * @localEn End users sign in with email/password via POST /api/oauth/verify (DemoAuthService → BrainUserAdapter). Authorize and token endpoints are provider-agnostic. See .env.template for OAUTH_WRAPPER_API_BASE and secrets. To swap providers, change oauth-wrapper and IOC bindings.
+ */
+export const PAGE_DOCS_OAUTH_DEMO_BODY = 'page_docs_oauth:demo__body';
+
+/**
  * @description Overview section title
  * @localZh 概览
  * @localEn Overview
@@ -252,3 +282,19 @@ export const PAGE_DOCS_OAUTH_LINK_API = 'page_docs_oauth:link__api';
  * @localEn Manage OAuth apps
  */
 export const PAGE_DOCS_OAUTH_LINK_DEVELOPER = 'page_docs_oauth:link__developer';
+
+/**
+ * @description Login verify endpoint row
+ * @localZh 终端用户登录（服务端）
+ * @localEn End-user sign-in (server)
+ */
+export const PAGE_DOCS_OAUTH_ENDPOINT_VERIFY =
+  'page_docs_oauth:endpoint__verify';
+
+/**
+ * @description Login verify endpoint description
+ * @localZh 邮箱/密码登录，建立授权页所需会话；由 demo-oauth 编排，非 OAuth 客户端调用。
+ * @localEn Email/password sign-in for the consent UI session; demo-oauth orchestration—not for OAuth clients.
+ */
+export const PAGE_DOCS_OAUTH_ENDPOINT_VERIFY_DESC =
+  'page_docs_oauth:endpoint__verify__desc';

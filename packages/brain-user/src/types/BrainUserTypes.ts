@@ -4,6 +4,9 @@ export interface BrainUserPermissions {
 }
 
 export interface BrainUserProfileInterface {
+  /**
+   * 可能带区号的手机号
+   */
   phone_number?: string;
   da_email?: string;
   da_email_password?: string;
@@ -40,6 +43,10 @@ export interface BrainUserProfileInterface {
   profile_img_url?: string;
   amplitude_device_id?: unknown;
   email_verified?: boolean;
+  google_user_id?: string;
+  google_email?: string;
+  gender?: string;
+  age?: string;
 }
 
 /**

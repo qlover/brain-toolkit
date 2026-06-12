@@ -1,16 +1,23 @@
 import { HttpMethods, RequestExecutor } from '@qlover/fe-corekit';
+import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import {
+  API_OAUTH_CONSENT,
+  API_OAUTH_VERIFY,
   API_USER_LOGIN,
   API_USER_LOGOUT,
+  API_USER_OTP_LOGIN,
+  API_USER_OTP_VERIFY,
   API_USER_REGISTER,
   API_USER_SESSION
 } from '@config/apiRoutes';
 import { UserCredential, UserSchema } from '@schemas/UserSchema';
+import { AppApiResult } from '@interfaces/AppApiInterface';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
-  UserApiRegisterTransaction
+  UserApiRegisterTransaction,
+  UserSubmitOAuthConsentTransaction
 } from '@interfaces/AppUserApiInterface';
 import { UserServiceGatewayInterface } from '@interfaces/UserServiceInterface';
 import {
@@ -18,7 +25,7 @@ import {
   AppApiRequester,
   AppApiRequesterContext
 } from './appApi/AppApiRequester';
-import type { LoginParams } from '@qlover/corekit-bridge';
+import type { GatewayResult, LoginParams } from '@qlover/corekit-bridge';
 
 /**
  * UserApi
@@ -40,7 +47,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   public getUserInfo(
     _params?: unknown,
     _config?: unknown
-  ): Promise<UserSchema> {
+  ): Promise<GatewayResult<UserSchema>> {
     throw new Error('Method not implemented.');
   }
   /**
@@ -49,7 +56,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   public async refreshUserInfo(
     _params?: unknown,
     _config?: {} | undefined
-  ): Promise<UserSchema> {
+  ): Promise<GatewayResult<UserSchema>> {
     const response = await this.client.request<
       UserApiLoginTransaction['response'],
       UserApiLoginTransaction['request']
@@ -63,20 +70,24 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(response.data.message);
     }
 
-    return response.data.data as UserSchema;
+    return {
+      data: response.data.data as UserSchema,
+      error: null
+    };
   }
 
   /**
    * @override
    */
   public async login(
-    params: UserApiLoginTransaction['data'] & LoginParams
-  ): Promise<UserCredential> {
+    params: UserApiLoginTransaction['data'] & LoginParams,
+    url?: string
+  ): Promise<GatewayResult<UserCredential>> {
     const response = await this.client.request<
       UserApiLoginTransaction['response'],
       UserApiLoginTransaction['request']
     >({
-      url: API_USER_LOGIN,
+      url: url ?? API_USER_LOGIN,
       method: HttpMethods.POST,
       data: params,
       encryptProps: 'password'
@@ -86,7 +97,10 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(response.data.message);
     }
 
-    return response.data.data as UserCredential;
+    return {
+      data: response.data.data as UserCredential,
+      error: null
+    };
   }
 
   /**
@@ -94,7 +108,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
    */
   public async register(
     params: UserApiRegisterTransaction['data']
-  ): Promise<UserSchema> {
+  ): Promise<GatewayResult<UserSchema>> {
     const response = await this.client.request<
       UserApiRegisterTransaction['response'],
       UserApiRegisterTransaction['request']
@@ -109,7 +123,10 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(response.data.message);
     }
 
-    return response.data.data as UserSchema;
+    return {
+      data: response.data.data as UserSchema,
+      error: null
+    };
   }
 
   /**
@@ -125,5 +142,85 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     });
 
     return undefined as R;
+  }
+
+  /**
+   * @override
+   */
+  public async verify(
+    params: UserApiLoginTransaction['data'] & LoginParams
+  ): Promise<GatewayResult<UserCredential>> {
+    return this.login(params, API_OAUTH_VERIFY);
+  }
+
+  /**
+   * @override
+   */
+  public async submitOAuthConsent(
+    payload: UserSubmitOAuthConsentTransaction['request']
+  ): Promise<string> {
+    const response = await this.client.request<
+      UserSubmitOAuthConsentTransaction['response'],
+      UserSubmitOAuthConsentTransaction['request']
+    >({
+      url: API_OAUTH_CONSENT,
+      method: HttpMethods.POST,
+      data: payload
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message ?? 'Consent submission failed');
+    }
+
+    return response.data.data!.redirectUrl;
+  }
+
+  /**
+   * Send OTP (step 1) — supports both phone and email
+   * @override
+   */
+  public async sendOtp(params: SignWithOtpParams): Promise<SignOtpResult> {
+    const response = await this.client.request<
+      AppApiResult<SignOtpResult>,
+      SignWithOtpParams
+    >({
+      url: API_USER_OTP_LOGIN,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        (response.data as { message?: string }).message ?? 'Send OTP failed'
+      );
+    }
+
+    return response.data.data;
+  }
+
+  /**
+   * Verify OTP code (step 2) — supports both phone and email
+   * @override
+   */
+  public async verifyOtp(
+    params: { phone: string; token: string } | { email: string; token: string }
+  ): Promise<SignOtpResult> {
+    const response = await this.client.request<
+      AppApiResult<SignOtpResult>,
+      typeof params
+    >({
+      url: API_USER_OTP_VERIFY,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        (response.data as { message?: string }).message ??
+          'OTP verification failed'
+      );
+    }
+
+    return response.data.data;
   }
 }

@@ -3,9 +3,8 @@
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { BrainLogo } from '../components/BrainLogo';
 import { LocaleLink } from '../components/LocaleLink';
-import type { AppRoutePageTT } from './AppRoutePage.types';
+import type { AppRoutePageTT } from './AppRoutePage';
 import type { HTMLAttributes, ReactNode } from 'react';
 
 export interface RoutePageLayoutProps extends HTMLAttributes<HTMLDivElement> {
@@ -16,7 +15,7 @@ export interface RoutePageLayoutProps extends HTMLAttributes<HTMLDivElement> {
   showHeaderLogo?: boolean;
   headerTitleClassName?: string;
   mainProps?: HTMLAttributes<HTMLElement>;
-  /** Rendered before header (e.g. AppBridge, PagesBridge). */
+  /** Rendered before header (e.g. AppBridge). Omit on Pages Router. */
   topSlot?: ReactNode;
   authSlot?: ReactNode;
   languageSlot: ReactNode;
@@ -72,18 +71,14 @@ export function RoutePageLayout({
                   title={tt.title}
                   href={headerHref}
                   locale={locale}
-                  className={clsx(
-                    'flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 shrink',
-                    headerTitleClassName ?? 'text-primary-text'
-                  )}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 shrink"
                 >
-                  <BrainLogo
-                    data-testid="base-header-logo-image"
-                    className="h-6 w-auto"
-                  />
                   <span
                     data-testid="base-header-app-name"
-                    className="hidden sm:inline text-base sm:text-lg font-semibold truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none"
+                    className={clsx(
+                      'text-base sm:text-lg font-semibold truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none',
+                      headerTitleClassName ?? 'text-primary-text'
+                    )}
                   >
                     {tt.title}
                   </span>

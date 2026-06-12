@@ -5,7 +5,8 @@ import { GATEWAY_BRAIN_USER_ENDPOINTS } from './EndPoints';
 
 export const BRAIN_DOMAINS = Object.freeze({
   development: 'https://api.dev.brain.ai',
-  production: 'https://api.brain.ai'
+  production: 'https://api.cloud.brain.ai',
+  japan: 'https://api.jp.brain.ai'
 });
 
 export const BRAIN_STORAGE_CREDENTIAL_KEY = 'brain_token';

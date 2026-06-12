@@ -1,19 +1,20 @@
-import { ExecutorError } from '@qlover/fe-corekit';
+import { Base64Serializer, ExecutorError } from '@qlover/fe-corekit';
 import {
   OAuthTokenResponse,
   OAuthUserInfoResponse
 } from '@qlover/oauth-wrapper';
 import { injectable, inject } from '@shared/container';
+import { StringEncryptor } from '@shared/StringEncryptor';
 import { LoginValidator } from '@shared/validators/LoginValidator';
 import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
 import { API_OAUTH_WRAPPER_AUTH_FAILED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { LoginSchema } from '@schemas/LoginSchema';
+import { UserSchema } from '@schemas/UserSchema';
+import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import {
-  OAuthControllerService,
-  VerifyLoginResult
-} from '@server/services/OAuthControllerService';
+import { ServerConfig } from '@server/ServerConfig';
+import { OAuthUserService } from '@server/services/OAuthUserService';
 import type {
   OAuthAuthorizePageData,
   OAuthAuthorizeValidationError,
@@ -23,31 +24,53 @@ import type {
 
 @injectable()
 export class OAuthWrapperController {
+  protected stringEncryptor: StringEncryptor;
+
   constructor(
     @inject(LoginValidator)
     protected loginValidator: ValidatorInterface<LoginSchema>,
     @inject(I.OAuthWrapperProviderInterface)
     protected oauthProvider: OAuthWrapperProviderInterface,
-    @inject(OAuthControllerService)
-    protected demoAuthService: OAuthControllerService
-  ) {}
+    @inject(OAuthUserService)
+    protected oauthService: OAuthUserService,
+    @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
+    @inject(Base64Serializer) base64Serializer: Base64Serializer
+  ) {
+    this.stringEncryptor = new StringEncryptor(
+      serverConfig.stringEncryptorKey,
+      base64Serializer
+    );
+  }
 
   /**
    * Validates credentials and performs demo provider login via service layer.
    */
-  public async verifyLogin(requestBody: unknown): Promise<VerifyLoginResult> {
+  public async verifyLogin(requestBody: unknown): Promise<UserSchema> {
+    try {
+      if ((requestBody as LoginSchema).password) {
+        (requestBody as LoginSchema).password = this.stringEncryptor.decrypt(
+          (requestBody as LoginSchema).password
+        );
+      }
+    } catch {
+      throw new ExecutorError(
+        'encrypt_password_failed',
+        'Encrypt password failed'
+      );
+    }
     const body = await this.loginValidator.getThrow(requestBody);
 
     try {
-      return await this.demoAuthService.verifyLogin({
+      return await this.oauthService.login({
         email: body.email,
         password: body.password
       });
     } catch (err) {
-      throw new ExecutorError(
-        API_OAUTH_WRAPPER_AUTH_FAILED,
-        err instanceof Error ? err.message : 'Login failed'
-      );
+      if (err instanceof ExecutorError) {
+        throw err;
+      }
+
+      throw new ExecutorError(API_OAUTH_WRAPPER_AUTH_FAILED, err);
     }
   }
 
@@ -55,7 +78,7 @@ export class OAuthWrapperController {
     rawQuery: Record<string, string | string[] | undefined>
   ): Promise<
     | { ok: true; data: OAuthAuthorizePageData }
-    | { ok: false; error: OAuthAuthorizeValidationError }
+    | { ok: false; error: OAuthAuthorizeValidationError; redirectUrl?: string }
   > {
     return this.oauthProvider.resolveAuthorizePage(rawQuery);
   }
@@ -79,6 +102,10 @@ export class OAuthWrapperController {
   public async getUserInfo(
     accessToken: string
   ): Promise<OAuthUserInfoResponse> {
-    return await this.oauthProvider.getUserInfo(accessToken);
+    return await this.oauthProvider.getUserInfoWithAccessToken(accessToken);
+  }
+
+  public hasNeedLogged(): boolean {
+    return this.oauthProvider.hasNeedLogged();
   }
 }

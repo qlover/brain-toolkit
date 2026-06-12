@@ -7,9 +7,8 @@ import { AppHeaderNavPages } from './AppHeaderNavPages';
 import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcherPages } from './LanguageSwitcherPages';
 import { LogoutButton } from './LogoutButton';
-import { PagesBridge } from './PagesBridge';
 import { RoutePageLayout } from './RoutePageLayout';
-import type { AppRoutePageProps } from './AppRoutePage.types';
+import type { AppRoutePageProps } from './AppRoutePage';
 
 /**
  * Pages Router variant — no imports from `next-intl/navigation` or `@/i18n/routing`.
@@ -37,7 +36,6 @@ export function AppRoutePagePages({
       tt={tt}
       showHeaderLogo={showHeaderLogo}
       headerNav={resolvedHeaderNav}
-      topSlot={<PagesBridge />}
       authSlot={
         showAuthButton ? (
           <LogoutButton

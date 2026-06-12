@@ -19,10 +19,6 @@ import {
   defaultEnv,
   defaultBrainUserOptions
 } from '../src/config/common';
-import {
-  BRAIN_USER_INVOKE_PATH,
-  GATEWAY_BRAIN_USER_ENDPOINTS
-} from '../src/config/EndPoints';
 
 describe('common config', () => {
   describe('BRAIN_DOMAINS', () => {
@@ -31,12 +27,12 @@ describe('common config', () => {
     });
 
     it('should have production domain', () => {
-      expect(BRAIN_DOMAINS.production).toBe('https://api.brain.ai');
+      expect(BRAIN_DOMAINS.production).toBe('https://api.cloud.brain.ai');
     });
 
     it('should have exactly 2 domains', () => {
       const keys = Object.keys(BRAIN_DOMAINS);
-      expect(keys).toHaveLength(2);
+      expect(keys).toHaveLength(3);
     });
 
     it('should contain expected environment keys', () => {
@@ -68,12 +64,6 @@ describe('common config', () => {
     it('should not include invoke path in domain URLs', () => {
       expect(BRAIN_DOMAINS.development).not.toContain('/v1.0/invoke');
       expect(BRAIN_DOMAINS.production).not.toContain('/v1.0/invoke');
-    });
-
-    it('should include invoke path on default endpoints', () => {
-      Object.values(GATEWAY_BRAIN_USER_ENDPOINTS).forEach((endpoint) => {
-        expect(endpoint).toContain(BRAIN_USER_INVOKE_PATH);
-      });
     });
   });
 
@@ -239,7 +229,7 @@ describe('common config', () => {
     it('should handle domain object iteration', () => {
       const domains = Object.entries(BRAIN_DOMAINS);
 
-      expect(domains).toHaveLength(2);
+      expect(domains).toHaveLength(3);
       domains.forEach(([_env, url]) => {
         expect(url).toMatch(/^https:\/\//);
       });

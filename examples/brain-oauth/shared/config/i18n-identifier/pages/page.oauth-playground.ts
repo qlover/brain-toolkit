@@ -300,3 +300,11 @@ export const PAGE_OAUTH_PLAYGROUND_PKCE_OPTIONAL =
  */
 export const PAGE_OAUTH_PLAYGROUND_CLIENT_TYPE =
   'page_oauth_playground:client__type';
+
+/**
+ * @description Demo provider note banner
+ * @localZh 提示：当前站点示例在 oauth-wrapper 中使用 Brain User 作为上游登录 API
+ * @localEn Note: this deployment uses Brain User under oauth-wrapper as the upstream login API.
+ */
+export const PAGE_OAUTH_PLAYGROUND_DEMO_NOTE =
+  'page_oauth_playground:demo__note';

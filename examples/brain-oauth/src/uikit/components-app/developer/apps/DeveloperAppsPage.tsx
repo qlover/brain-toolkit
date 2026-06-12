@@ -33,7 +33,7 @@ import {
   oauthPrimaryButtonClass,
   oauthSecondaryButtonClass,
   oauthWarningButtonClass
-} from '@/uikit/styles/oauthUiStyles';
+} from '@config/component';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
 import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import {
@@ -484,7 +484,7 @@ export function DeveloperAppsPageComponent({
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-secondary-text">
                   <LoadingOutlined spin className="text-2xl text-brand" />
                   <span className="text-sm">
-                    {tt.loading || 'Loading applications…'}
+                    {tt.loading || 'Loading applications'}
                   </span>
                 </div>
               ) : apps.length === 0 ? (
