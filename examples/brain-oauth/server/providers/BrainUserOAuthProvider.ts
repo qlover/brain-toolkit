@@ -132,7 +132,13 @@ export class BrainUserOAuthProvider
       token: params.token,
       lang: params.lang ?? 'en'
     });
-    return { ...access };
+    if (access.error) {
+      throw access.error;
+    }
+
+    return {
+      ...access.data
+    };
   }
 
   /**
@@ -142,7 +148,13 @@ export class BrainUserOAuthProvider
     token: string
   ): Promise<OAuthUserProfile> {
     const profile = await this.gateway.getUserInfo({ token });
-    return { ...profile };
+    if (profile.error) {
+      throw profile.error;
+    }
+
+    return {
+      ...profile.data
+    };
   }
 
   /**
@@ -155,7 +167,14 @@ export class BrainUserOAuthProvider
       { token: accessToken },
       { tokenPrefix: 'Bearer' }
     );
-    return { ...profile };
+
+    if (profile.error) {
+      throw profile.error;
+    }
+
+    return {
+      ...profile.data
+    };
   }
 
   /**
@@ -247,11 +266,16 @@ export class BrainUserOAuthProvider
       throw new Error('User provider login did not return a session token');
     }
 
-    const userInfo = await this.gateway.getUserInfo({
+    const userResult = await this.gateway.getUserInfo({
       token: credentials.token
     });
-    this.logger.debug('BrainUserProvider getUserInfo', userInfo);
+    this.logger.debug('BrainUserProvider getUserInfo', userResult);
 
+    if (userResult.error) {
+      throw userResult.error;
+    }
+
+    const userInfo = userResult.data;
     const userId = String(userInfo.id);
 
     // Brain user 使用手机号登陆可能没有邮箱
@@ -263,7 +287,12 @@ export class BrainUserOAuthProvider
       );
     }
 
-    const access = await this.gateway.getAccessToken({ token: sessionToken });
+    const accessResult = await this.gateway.getAccessToken({
+      token: sessionToken
+    });
+    if (accessResult.error) {
+      throw accessResult.error;
+    }
 
     await this.oauthSession.setSession({
       userId,
@@ -274,8 +303,8 @@ export class BrainUserOAuthProvider
 
     await this.oauthRepo.upsertUserCredentials(userId, {
       provider_session_token: sessionToken,
-      provider_refresh_token: access.refresh_token
-        ? this.tokenEncryption.encrypt(access.refresh_token)
+      provider_refresh_token: accessResult.data.refresh_token
+        ? this.tokenEncryption.encrypt(accessResult.data.refresh_token)
         : null
     });
 
