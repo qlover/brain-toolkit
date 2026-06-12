@@ -1,5 +1,19 @@
 # @brain-toolkit/brain-user
 
+## 0.2.5
+
+### Patch Changes
+
+#### ✨ Features
+
+- **brain-user:** enhance logging in BrainUserGateway and add type guard for frequent login attempts ([5fd5998](https://github.com/qlover/brain-toolkit/commit/5fd5998de84a96e2c8848471884d2e95b24e0a8c))
+
+- **brain-oauth:** refactor BrainUserOAuthProvider and BrainUserGateway to improve logging and error handling ([ac08ac3](https://github.com/qlover/brain-toolkit/commit/ac08ac3f7cd14ec649a6505f223581fd6ff0df70))
+
+- **brain-user:** refactor BrainUserGateway to use GatewayResult type and add error handling; introduce BrainUserIdentifier for consistent error management ([a93bdba](https://github.com/qlover/brain-toolkit/commit/a93bdba5ff73fbeee241d2f03d5b2f760de27254))
+
+- **brain-oauth:** add OTP sign-in functionality and related interfaces ([a196cc7](https://github.com/qlover/brain-toolkit/commit/a196cc7440f7930a1fb30d492aae5aef5e37aaa2))
+
 ## 0.2.4
 
 ### Patch Changes
