@@ -84,13 +84,12 @@ export class BrainUserOAuthProvider
   extends OAuthWrapperService
   implements OAuthWrapperProviderInterface
 {
-  @inject(I.Logger)
-  protected logger!: LoggerInterface;
-
   protected gateway: BrainUserGateway;
   protected tokenEncryption: TokenEncryption;
 
   constructor(
+    @inject(I.Logger)
+    protected logger: LoggerInterface,
     @inject(I.AppConfig) config: SeedServerConfigInterface,
     @inject(OAuthSessionService)
     oauthSession: OAuthSessionInterface<OAuthSessionPayload>,
@@ -98,9 +97,8 @@ export class BrainUserOAuthProvider
   ) {
     const tokenEncryption = new TokenEncryption(config.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
-    this.gateway = new BrainUserGateway(
-      createBrainUserOptions().requestAdapter
-    );
+    const options = createBrainUserOptions({ logger });
+    this.gateway = new BrainUserGateway(options.requestAdapter, logger);
     this.tokenEncryption = tokenEncryption;
   }
 
@@ -114,11 +112,18 @@ export class BrainUserOAuthProvider
       email: params.email!,
       password: params.password!
     });
-    const token = extractBrainSessionToken(result);
-    if (!token) {
-      throw new Error(formatBrainLoginError(result));
+
+    this.logger.debug('BrainUser login', result);
+
+    if (result.error) {
+      throw result.error;
     }
-    return { ...result, token };
+
+    const token = extractBrainSessionToken(result.data);
+    if (!token) {
+      throw new Error(formatBrainLoginError(result.data));
+    }
+    return { ...result.data, token };
   }
 
   /**

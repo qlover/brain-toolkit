@@ -16,6 +16,7 @@ import {
 } from '@qlover/fe-corekit';
 import type { GatewayResult } from '@qlover/corekit-bridge';
 import { BrainUserIdentifier } from './config/identifier';
+import type { LoggerInterface } from '@qlover/logger';
 
 /**
  * Brain User Gateway - Business logic layer for user operations
@@ -49,7 +50,8 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
   constructor(
     protected adapter: RequestAdapterInterface<
       types.BrainUserGatewayConfig<unknown>
-    >
+    >,
+    protected logger?: LoggerInterface
   ) {
     this.requestPlugin = new RequestPlugin();
     this.responsePlugin = new ResponsePlugin();
@@ -134,7 +136,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     );
 
     if (result == null) {
-      console.warn(
+      this.logger?.warn(
         'BrainUserGateway result is null or undefined, You need to check if the responsivePluginhandleResponse method returns correctly'
       );
       return {
@@ -144,6 +146,8 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
         })
       };
     }
+
+    this.logger?.debug('handleGatewayResult result:', result);
 
     const gatewayData = result.data as R;
 
@@ -187,6 +191,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     params: types.BrainUserGoogleRequest,
     config?: types.BrainUserGatewayConfig<types.BrainUserGoogleRequest>
   ): Promise<GatewayResult<types.BrainCredentials>> {
+    this.logger?.debug('loginWithGoogle request', { params, config });
     return this.adapter
       .request(this.handleConfig('loginWithGoogle', params, config))
       .then((response) => {
@@ -227,6 +232,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     params: types.BrainLoginRequest,
     config?: types.BrainUserGatewayConfig<types.BrainLoginRequest>
   ): Promise<GatewayResult<types.BrainCredentials>> {
+    this.logger?.debug('login request', { params, config });
     const response = await this.adapter.request(
       this.handleConfig('login', params, config)
     );
@@ -234,12 +240,13 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
       types.BrainCredentials & { name: string }
     >(response, response.config);
 
-    // FIXME: 如果频繁触发登录服务器会提醒邮箱必填
+    // FIXME: 如果频繁触发登录服务器会提醒邮箱必填？判断方法需要修改
     if (
       result.data &&
       'name' in result.data &&
-      result.data.name === 'email is required'
+      result.data.name === 'email: This field is required.'
     ) {
+      this.logger?.warn('login rate limit triggered', { data: result.data });
       return {
         data: null,
         error: new ExecutorError(BrainUserIdentifier.TOO_FREQUENTLY, {
@@ -275,6 +282,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     params?: Parmas,
     config?: types.BrainUserGatewayConfig<Parmas>
   ): Promise<Result> {
+    this.logger?.debug('logout request', { params, config });
     return this.adapter
       .request(this.handleConfig('logout', params, config))
       .then((response) => {
@@ -320,6 +328,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     params: types.BrainUserRegisterRequest,
     config?: types.BrainUserGatewayConfig<types.BrainUserRegisterRequest>
   ): Promise<GatewayResult<types.BrainCredentials & BrainUser>> {
+    this.logger?.debug('register request', { params, config });
     return this.adapter
       .request(this.handleConfig('register', params, config))
       .then((response) => {
@@ -357,6 +366,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     data?: types.BrainCredentials,
     config?: types.BrainUserGatewayConfig<types.BrainCredentials>
   ): Promise<GatewayResult<types.BrainCredentials & BrainUser>> {
+    this.logger?.debug('getUserInfo request', { data, config });
     const response = await this.adapter.request(
       this.handleConfig('getUserInfo', null, {
         ...config,
@@ -368,6 +378,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     >(response);
 
     if (result.data && result.data.detail === 'Invalid token.') {
+      this.logger?.warn('getUserInfo invalid token', { data: result.data });
       return {
         data: null,
         error: new ExecutorError(
@@ -442,6 +453,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     params?: types.BrainAccessTokenRequest,
     config?: types.BrainUserGatewayConfig<types.BrainAccessTokenRequest>
   ): Promise<GatewayResult<types.BrainAccessToken>> {
+    this.logger?.debug('getAccessToken request', { params, config });
     const mergedConfig = this.adapter.config;
     const env = config?.env ?? mergedConfig.env ?? defaultEnv;
     const domains =
@@ -479,6 +491,7 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
     params: types.BrainOtpSignRequest,
     config?: types.BrainUserGatewayConfig<types.BrainOtpSignRequest>
   ): Promise<GatewayResult<types.BrainOtpSignResponse>> {
+    this.logger?.debug('verifySignOtp request', { params, config });
     return this.adapter
       .request(this.handleConfig('otpSign', params, config))
       .then((response) => {
