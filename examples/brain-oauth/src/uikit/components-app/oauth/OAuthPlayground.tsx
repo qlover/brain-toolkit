@@ -98,7 +98,7 @@ function PlaygroundAlert(props: {
           className="text-secondary-text hover:text-primary-text shrink-0"
           aria-label="Close"
         >
-          �?{' '}
+          X{' '}
         </button>
       )}
     </div>
@@ -933,7 +933,7 @@ export function OAuthPlayground() {
       </div>
 
       <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border bg-primary">
-        <p>�?2026 {tt.title}</p>
+        <p>&2026 {tt.title}</p>
       </footer>
     </div>
   );
