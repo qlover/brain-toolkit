@@ -207,9 +207,9 @@ describe('EndPoints', () => {
       expect(endpoints).toContain('logout');
     });
 
-    it('should have exactly 5 endpoints', () => {
+    it('should have exactly 7 endpoints', () => {
       const endpointCount = Object.keys(GATEWAY_BRAIN_USER_ENDPOINTS).length;
-      expect(endpointCount).toBe(5);
+      expect(endpointCount).toBe(7);
     });
   });
 
