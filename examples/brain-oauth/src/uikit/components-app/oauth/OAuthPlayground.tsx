@@ -10,9 +10,9 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import {
-  computePkceS256Challenge,
-  generatePkceVerifier
-} from '@qlover/oauth-wrapper';
+  generatePkceVerifier,
+  computePkceS256Challenge
+} from '@qlover/oauth-wrapper/core';
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import {
