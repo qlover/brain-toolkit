@@ -10,7 +10,7 @@ import {
   API_USER_OTP_VERIFY,
   API_USER_REGISTER,
   API_USER_SESSION
-} from '@config/apiRoutes';
+} from '@config/route';
 import { UserCredential, UserSchema } from '@schemas/UserSchema';
 import { AppApiResult } from '@interfaces/AppApiInterface';
 import type {
