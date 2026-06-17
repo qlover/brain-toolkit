@@ -7,8 +7,7 @@ import type {
 import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 export interface OAuthWrapperProviderInterface
-  extends
-    OAuthProviderInterface<OAuthSessionPayload>,
+  extends OAuthProviderInterface<OAuthSessionPayload>,
     OAuthOTPProviderInterface {
   /**
    * OAuthWrapper 用户信息交换

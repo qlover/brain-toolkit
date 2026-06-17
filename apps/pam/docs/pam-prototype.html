@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAM · 项目资产中心</title>
+    <!-- Tailwind + FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      /* 使用您提供的 CSS 变量，回退值供原型使用 */
+      :root {
+        --color-primary: #4f46e5;
+        --color-primary-active: #4338ca;
+        --color-primary-hover: #6366f1;
+        --color-primary-bg: #eef2ff;
+        --color-secondary: #64748b;
+        --color-elevated: #ffffff;
+        --color-primary-text: #0f172a;
+        --color-primary-text-hover: #1e293b;
+        --color-secondary-text: #475569;
+        --color-tertiary-text: #94a3b8;
+        --color-primary-border: #e2e8f0;
+        --color-brand: #4f46e5;
+        --color-brand-hover: #6366f1;
+        --color-brand-active: #4338ca;
+        --color-on-brand: #ffffff;
+        --color-bg-container: #ffffff;
+        --font-sans:
+          'Inter', ui-sans-serif, system-ui, 'PingFang SC', 'Microsoft YaHei',
+          sans-serif;
+      }
+      body {
+        font-family: var(--font-sans);
+        background: #f1f5f9;
+      }
+      .card-hover {
+        transition: all 0.2s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.15);
+      }
+      .modal-transition {
+        transition:
+          opacity 0.2s,
+          visibility 0.2s;
+      }
+      .custom-scroll::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      .custom-scroll::-webkit-scrollbar-track {
+        background: #e2e8f0;
+        border-radius: 10px;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 10px;
+      }
+
+      /* 分类标签 */
+      .category-badge {
+        background: var(--color-primary-bg);
+        color: var(--color-primary);
+        padding: 0.1rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 500;
+      }
+      .readonly-badge {
+        background: #f1f5f9;
+        color: var(--color-secondary-text);
+        font-size: 0.65rem;
+        padding: 0.1rem 0.6rem;
+        border-radius: 999px;
+      }
+
+      /* 环境变量输入行 */
+      .env-var-item input {
+        background: var(--color-bg-container);
+      }
+
+      /* 紧凑列表 */
+      .compact-item:hover {
+        background-color: var(--color-primary-bg);
+      }
+
+      /* 响应式调整 */
+      @media (max-width: 640px) {
+        .compact-item {
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <!-- 头部 -->
+      <div
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-xl p-2.5 shadow-md"
+          >
+            <i class="fas fa-layer-group text-white text-xl"></i>
+          </div>
+          <div>
+            <h1
+              class="text-2xl md:text-3xl font-bold text-[var(--color-primary-text)] tracking-tight"
+            >
+              PAM · 资产中心
+            </h1>
+            <p class="text-[var(--color-secondary-text)] text-sm">
+              多环境 · 仓库 · 变量 · 权限隔离
+            </p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div
+            class="flex items-center gap-2 bg-white border border-[var(--color-primary-border)] rounded-xl px-3 py-2 shadow-sm"
+          >
+            <i class="fas fa-user-tag text-[var(--color-primary)]"></i>
+            <span class="text-sm font-medium text-[var(--color-secondary-text)]"
+              >身份</span
+            >
+            <select
+              id="userSelect"
+              class="bg-transparent text-sm font-semibold text-[var(--color-primary-text)] focus:outline-none cursor-pointer"
+            >
+              <option value="alice">👩‍💻 Alice (所有者)</option>
+              <option value="bob">🧑‍💻 Bob (协作者)</option>
+              <option value="guest">👤 访客 (只读)</option>
+            </select>
+          </div>
+          <button
+            id="addProjectBtn"
+            class="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-on-brand)] px-4 py-2 rounded-xl shadow-md transition flex items-center gap-2 text-sm font-medium"
+          >
+            <i class="fas fa-plus"></i> 新增资产
+          </button>
+        </div>
+      </div>
+
+      <!-- 工具栏 -->
+      <div
+        id="toolbar"
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[var(--color-bg-container)] p-4 rounded-2xl shadow-sm border border-[var(--color-primary-border)] mb-6"
+      >
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+          <div class="relative flex-grow max-w-xs">
+            <i
+              class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-tertiary-text)] text-sm"
+            ></i>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="搜索项目..."
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[var(--color-primary-border)] bg-[var(--color-bg-container)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-[var(--color-primary-text)] placeholder-[var(--color-tertiary-text)] text-sm"
+            />
+          </div>
+          <div class="relative">
+            <select
+              id="categoryFilter"
+              class="appearance-none bg-[var(--color-bg-container)] border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-[var(--color-primary-text)]"
+            >
+              <option value="">所有分类</option>
+              <option value="前端">前端</option>
+              <option value="后端">后端</option>
+              <option value="工具">工具</option>
+              <option value="文档">文档</option>
+              <option value="基础设施">基础设施</option>
+              <option value="其他">其他</option>
+            </select>
+            <i
+              class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-tertiary-text)] text-xs pointer-events-none"
+            ></i>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-2 bg-[var(--color-primary-bg)] p-1 rounded-xl"
+        >
+          <button
+            id="cardViewBtn"
+            class="view-toggle px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all bg-[var(--color-elevated)] shadow-sm text-[var(--color-primary)]"
+          >
+            <i class="fas fa-th-large"></i> 卡片
+          </button>
+          <button
+            id="compactViewBtn"
+            class="view-toggle px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all text-[var(--color-secondary-text)] hover:bg-[var(--color-elevated)]/50"
+          >
+            <i class="fas fa-list-ul"></i> 列表
+          </button>
+        </div>
+      </div>
+
+      <!-- 项目列表容器 -->
+      <div id="projectsContainer"></div>
+
+      <!-- 空状态 -->
+      <div
+        id="emptyState"
+        class="hidden text-center py-16 bg-[var(--color-bg-container)] rounded-2xl border border-dashed border-[var(--color-primary-border)] mt-4"
+      >
+        <i
+          class="fas fa-cloud-upload-alt text-5xl text-[var(--color-tertiary-text)] mb-3"
+        ></i>
+        <p class="text-[var(--color-secondary-text)]">
+          暂无项目，点击「新增资产」创建
+        </p>
+      </div>
+    </div>
+
+    <!-- 模态框：新增/编辑项目 -->
+    <div
+      id="modalOverlay"
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4 modal-transition"
+    >
+      <div
+        class="bg-[var(--color-bg-container)] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl custom-scroll"
+      >
+        <div
+          class="sticky top-0 bg-[var(--color-bg-container)] border-b border-[var(--color-primary-border)] px-6 py-4 flex justify-between items-center"
+        >
+          <h3
+            id="modalTitle"
+            class="text-xl font-bold text-[var(--color-primary-text)]"
+          >
+            项目资产配置
+          </h3>
+          <button
+            id="closeModalBtn"
+            class="text-[var(--color-tertiary-text)] hover:text-[var(--color-primary-text)] text-2xl"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="projectForm" class="p-6 space-y-6">
+          <input type="hidden" id="projectId" value="" />
+          <!-- 基础信息 -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="md:col-span-2">
+              <label
+                class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+                >项目名称 *</label
+              >
+              <input
+                type="text"
+                id="projName"
+                required
+                class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+                >Slug</label
+              >
+              <input
+                type="text"
+                id="projSlug"
+                placeholder="auto"
+                class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+              >技术栈</label
+            >
+            <input
+              type="text"
+              id="projStack"
+              placeholder="React, Go, Python"
+              class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+              >项目描述</label
+            >
+            <textarea
+              id="projDesc"
+              rows="2"
+              class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            ></textarea>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label
+                class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+                ><i class="fas fa-code-branch"></i> 仓库地址</label
+              >
+              <input
+                type="url"
+                id="projRepoUrl"
+                placeholder="https://github.com/..."
+                class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+                >分类</label
+              >
+              <select
+                id="projCategory"
+                class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              >
+                <option value="">未分类</option>
+                <option value="前端">前端</option>
+                <option value="后端">后端</option>
+                <option value="工具">工具</option>
+                <option value="文档">文档</option>
+                <option value="基础设施">基础设施</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-semibold text-[var(--color-secondary-text)] mb-1"
+              >权限</label
+            >
+            <select
+              id="projIsPublic"
+              class="w-full border border-[var(--color-primary-border)] rounded-xl px-4 py-2.5 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            >
+              <option value="0">🔒 仅自己可见</option>
+              <option value="1">🌍 所有人可见</option>
+            </select>
+          </div>
+
+          <!-- 多环境配置 -->
+          <div class="border-t border-[var(--color-primary-border)] pt-4">
+            <div class="flex items-center justify-between mb-3">
+              <label
+                class="text-base font-bold text-[var(--color-primary-text)]"
+                ><i
+                  class="fas fa-cloud-upload-alt text-[var(--color-primary)] mr-1"
+                ></i>
+                多环境配置</label
+              >
+              <button
+                type="button"
+                id="addEnvironmentBtn"
+                class="text-[var(--color-primary)] text-sm hover:text-[var(--color-primary-hover)] bg-[var(--color-primary-bg)] px-3 py-1.5 rounded-lg transition"
+              >
+                <i class="fas fa-plus-circle"></i> 添加环境
+              </button>
+            </div>
+            <div id="environmentsContainer" class="space-y-5">
+              <!-- 动态渲染 -->
+            </div>
+            <p class="text-xs text-[var(--color-tertiary-text)] mt-2">
+              每个环境独立访问地址 + 环境变量 (JSON)
+            </p>
+          </div>
+
+          <div
+            class="flex justify-end gap-3 pt-4 border-t border-[var(--color-primary-border)]"
+          >
+            <button
+              type="button"
+              id="cancelModalBtn"
+              class="px-5 py-2.5 border border-[var(--color-primary-border)] rounded-xl text-[var(--color-secondary-text)] hover:bg-[var(--color-primary-bg)] transition"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-on-brand)] rounded-xl shadow-sm font-medium transition"
+            >
+              保存项目
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // ============================================================
+      // PAM 原型 - 完整交互逻辑
+      // ============================================================
+      const STORAGE_KEY = 'pam_prototype_data';
+      let currentUserId = 'alice'; // 'alice' | 'bob' | 'guest'
+      let viewMode = 'card';
+      let searchKeyword = '';
+      let categoryFilter = '';
+      let projects = [];
+      let editingId = null; // 正在编辑的项目ID
+
+      // 初始化数据
+      function loadData() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          projects = JSON.parse(stored);
+        } else {
+          projects = [
+            {
+              id: '1',
+              slug: 'backend-benchmark',
+              name: 'Brain Backend',
+              description: '核心后端API及性能基准',
+              stack: 'Go, Prometheus',
+              repo_url: 'https://github.com/brain/backend',
+              category: '后端',
+              is_public: 1,
+              owner_id: 'alice',
+              created_at: Date.now(),
+              updated_at: Date.now(),
+              environments: [
+                {
+                  id: 'env-1',
+                  name: 'dev',
+                  url: 'https://dev-backend.brain.ai',
+                  variables: { LOG_LEVEL: 'debug', RATE_LIMIT: '1000' }
+                },
+                {
+                  id: 'env-2',
+                  name: 'prod',
+                  url: 'https://backend.brain.ai',
+                  variables: { LOG_LEVEL: 'error', RATE_LIMIT: '5000' }
+                }
+              ]
+            },
+            {
+              id: '2',
+              slug: 'user-sdk',
+              name: 'BrainUserSDK',
+              description: '用户认证与OAuth SDK',
+              stack: 'TypeScript, React',
+              repo_url: 'https://gitlab.com/brain/user-sdk',
+              category: '前端',
+              is_public: 1,
+              owner_id: 'alice',
+              created_at: Date.now(),
+              updated_at: Date.now(),
+              environments: [
+                {
+                  id: 'env-3',
+                  name: 'dev',
+                  url: 'https://dev-sdk.brain.ai',
+                  variables: { API_VERSION: 'v2-dev', DEBUG: 'true' }
+                },
+                {
+                  id: 'env-4',
+                  name: 'prod',
+                  url: 'https://sdk.brain.ai',
+                  variables: { API_VERSION: 'v2', DEBUG: 'false' }
+                }
+              ]
+            },
+            {
+              id: '3',
+              slug: 'admin-dashboard',
+              name: 'Admin Dashboard',
+              description: '内部运营管理面板',
+              stack: 'Vue3, Tailwind, Supabase',
+              repo_url: 'https://gitee.com/brain/admin',
+              category: '前端',
+              is_public: 0,
+              owner_id: 'alice',
+              created_at: Date.now(),
+              updated_at: Date.now(),
+              environments: [
+                {
+                  id: 'env-5',
+                  name: 'dev',
+                  url: 'https://admin-dev.brain.ai',
+                  variables: { SUPABASE_URL: 'dev.supabase' }
+                },
+                {
+                  id: 'env-6',
+                  name: 'prod',
+                  url: 'https://admin.brain.ai',
+                  variables: { SUPABASE_URL: 'prod.supabase' }
+                }
+              ]
+            },
+            {
+              id: '4',
+              slug: 'chat-conductor',
+              name: 'Chat Conductor',
+              description: '实时聊天网关',
+              stack: 'Node.js, Socket.io',
+              repo_url: 'https://github.com/qlover/chat',
+              category: '基础设施',
+              is_public: 1,
+              owner_id: 'bob',
+              created_at: Date.now(),
+              updated_at: Date.now(),
+              environments: [
+                {
+                  id: 'env-7',
+                  name: 'dev',
+                  url: 'https://chat-dev.brain.ai',
+                  variables: { REDIS_HOST: 'redis-dev' }
+                },
+                {
+                  id: 'env-8',
+                  name: 'prod',
+                  url: 'https://chat.brain.ai',
+                  variables: { REDIS_HOST: 'redis-prod' }
+                }
+              ]
+            }
+          ];
+          saveData();
+        }
+        renderProjects();
+      }
+
+      function saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      }
+
+      // 获取当前用户可见的项目
+      function getVisibleProjects() {
+        if (currentUserId === 'guest') {
+          return projects.filter((p) => p.is_public === 1);
+        }
+        return projects.filter(
+          (p) => p.is_public === 1 || p.owner_id === currentUserId
+        );
+      }
+
+      function filterProjects(arr) {
+        let result = arr;
+        if (searchKeyword) {
+          const kw = searchKeyword.toLowerCase();
+          result = result.filter(
+            (p) =>
+              p.name.toLowerCase().includes(kw) ||
+              (p.description && p.description.toLowerCase().includes(kw)) ||
+              (p.stack && p.stack.toLowerCase().includes(kw))
+          );
+        }
+        if (categoryFilter) {
+          result = result.filter((p) => p.category === categoryFilter);
+        }
+        return result;
+      }
+
+      function canEdit(proj) {
+        if (currentUserId === 'guest') return false;
+        return proj.owner_id === currentUserId;
+      }
+
+      // 生成slug（若未填）
+      function generateSlug(name) {
+        return name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+      }
+
+      // ---------- 渲染 ----------
+      function renderProjects() {
+        const visible = getVisibleProjects();
+        const filtered = filterProjects(visible);
+        const container = document.getElementById('projectsContainer');
+        const empty = document.getElementById('emptyState');
+
+        if (filtered.length === 0) {
+          container.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+
+        if (viewMode === 'card') {
+          container.className =
+            'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+          container.innerHTML = filtered
+            .map((proj) => renderCard(proj))
+            .join('');
+        } else {
+          container.className =
+            'bg-[var(--color-bg-container)] rounded-2xl border border-[var(--color-primary-border)] overflow-hidden shadow-sm';
+          container.innerHTML = `<div class="divide-y divide-[var(--color-primary-border)]">${filtered.map((proj) => renderCompactItem(proj)).join('')}</div>`;
+        }
+        attachEventsToItems();
+      }
+
+      // 卡片视图
+      function renderCard(proj) {
+        const isOwner = canEdit(proj);
+        const envs = proj.environments || [];
+        const firstEnv = envs[0];
+        const envVarsPreview = firstEnv
+          ? Object.keys(firstEnv.variables || {})
+              .slice(0, 2)
+              .map(
+                (key) =>
+                  `<span class="inline-block bg-[var(--color-primary-bg)] rounded px-2 py-0.5 text-xs font-mono text-[var(--color-secondary-text)]">${escapeHtml(key)}</span>`
+              )
+              .join(' ')
+          : '<span class="text-xs text-[var(--color-tertiary-text)]">无环境变量</span>';
+
+        const categoryBadge = proj.category
+          ? `<span class="category-badge">${escapeHtml(proj.category)}</span>`
+          : '';
+        return `
+            <div class="bg-[var(--color-bg-container)] rounded-2xl border border-[var(--color-primary-border)] shadow-sm overflow-hidden card-hover flex flex-col h-full">
+                <div class="p-5 flex-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold text-[var(--color-primary-text)] truncate">${escapeHtml(proj.name)}</h3>
+                            <div class="flex flex-wrap gap-2 mt-1 items-center">
+                                ${proj.stack ? `<span class="bg-[var(--color-primary-bg)] text-[var(--color-secondary-text)] text-xs px-2 py-0.5 rounded-full">${escapeHtml(proj.stack)}</span>` : ''}
+                                ${categoryBadge}
+                                <span class="text-xs ${proj.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'}">
+                                    <i class="fas ${proj.is_public === 1 ? 'fa-globe' : 'fa-lock'}"></i> ${proj.is_public === 1 ? '公开' : '私有'}
+                                </span>
+                                ${!isOwner && currentUserId !== 'guest' ? '<span class="readonly-badge"><i class="fas fa-eye"></i> 只读</span>' : ''}
+                                ${currentUserId === 'guest' ? '<span class="readonly-badge"><i class="fas fa-user-friends"></i> 访客</span>' : ''}
+                            </div>
+                        </div>
+                        ${
+                          isOwner
+                            ? `<div class="flex gap-1">
+                            <button class="edit-project-btn text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] p-1.5 rounded-lg transition" data-id="${proj.id}"><i class="fas fa-edit"></i></button>
+                            <button class="delete-project-btn text-red-500 hover:text-red-700 p-1.5 rounded-lg transition" data-id="${proj.id}"><i class="fas fa-trash-alt"></i></button>
+                        </div>`
+                            : ''
+                        }
+                    </div>
+                    <p class="text-[var(--color-secondary-text)] text-sm mt-2 line-clamp-2">${escapeHtml(proj.description || '暂无描述')}</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        ${proj.repo_url ? `<a href="${proj.repo_url}" target="_blank" class="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] text-sm inline-flex items-center gap-1"><i class="${getRepoIcon(proj.repo_url)}"></i> 仓库</a>` : ''}
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-xs font-semibold text-[var(--color-secondary-text)] mb-2"><i class="fas fa-globe-asia mr-1"></i> 环境直达</div>
+                        <div class="flex flex-wrap gap-2">
+                            ${
+                              envs.length
+                                ? envs
+                                    .map(
+                                      (env) => `
+                                <a href="${env.url || '#'}" target="_blank" class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition ${env.name === 'prod' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : env.name === 'dev' ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    <i class="fas fa-link"></i> ${env.name.toUpperCase()}
+                                </a>
+                            `
+                                    )
+                                    .join('')
+                                : '<span class="text-xs text-[var(--color-tertiary-text)]">未配置环境</span>'
+                            }
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-[var(--color-primary-border)]">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium text-[var(--color-secondary-text)]"><i class="fas fa-cog"></i> 环境变量示例</span>
+                            ${isOwner ? `<button class="edit-env-btn text-[var(--color-primary)] text-xs hover:text-[var(--color-primary-hover)]" data-id="${proj.id}"><i class="fas fa-edit"></i> 管理</button>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-1 mt-1.5">${envVarsPreview}</div>
+                    </div>
+                </div>
+                <div class="bg-[var(--color-primary-bg)] px-5 py-2 text-right text-xs text-[var(--color-tertiary-text)] flex justify-between">
+                    <span><i class="far fa-user-circle"></i> ${proj.owner_id === 'alice' ? 'Alice' : proj.owner_id === 'bob' ? 'Bob' : proj.owner_id}</span>
+                    <span>${envs.length} 个环境</span>
+                </div>
+            </div>
+            `;
+      }
+
+      // 紧凑列表项
+      function renderCompactItem(proj) {
+        const isOwner = canEdit(proj);
+        const envs = proj.environments || [];
+        const envButtons = envs
+          .map(
+            (env) => `
+                <a href="${env.url || '#'}" target="_blank" class="text-xs px-2 py-1 rounded-md ${env.name === 'prod' ? 'bg-blue-100 text-blue-700' : env.name === 'dev' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'} hover:opacity-80 transition inline-flex items-center gap-1">
+                    <i class="fas fa-external-link-alt text-[10px]"></i> ${env.name.toUpperCase()}
+                </a>
+            `
+          )
+          .join('');
+        const categoryBadge = proj.category
+          ? `<span class="category-badge">${escapeHtml(proj.category)}</span>`
+          : '';
+        return `
+            <div class="compact-item flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-[var(--color-primary-bg)] transition">
+                <div class="min-w-[150px]">
+                    <div class="font-semibold text-[var(--color-primary-text)]">${escapeHtml(proj.name)}</div>
+                    <div class="flex flex-wrap gap-1 items-center">
+                        ${categoryBadge}
+                        <span class="text-xs text-[var(--color-tertiary-text)]">${escapeHtml(proj.stack || '')}</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1 flex-1">${envButtons || '<span class="text-xs text-[var(--color-tertiary-text)]">无环境</span>'}</div>
+                <div class="flex items-center gap-2 ml-auto">
+                    <span class="text-xs ${proj.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'}"><i class="fas ${proj.is_public === 1 ? 'fa-eye' : 'fa-lock'}"></i></span>
+                    ${
+                      isOwner
+                        ? `
+                        <button class="edit-project-btn text-[var(--color-primary)] hover:bg-[var(--color-primary-bg)] p-1.5 rounded transition" data-id="${proj.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-project-btn text-red-500 hover:bg-red-50 p-1.5 rounded transition" data-id="${proj.id}"><i class="fas fa-trash-alt"></i></button>
+                        <button class="edit-env-btn text-[var(--color-secondary-text)] hover:text-[var(--color-primary)] p-1.5 rounded transition" data-id="${proj.id}" title="管理环境变量"><i class="fas fa-cog"></i></button>
+                    `
+                        : '<span class="text-xs text-[var(--color-tertiary-text)]">只读</span>'
+                    }
+                </div>
+            </div>
+            `;
+      }
+
+      function attachEventsToItems() {
+        document.querySelectorAll('.edit-project-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            openEditModal(id);
+          });
+        });
+        document.querySelectorAll('.delete-project-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            deleteProject(id);
+          });
+        });
+        document.querySelectorAll('.edit-env-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            openEditModal(id);
+          });
+        });
+      }
+
+      // 获取仓库图标类
+      function getRepoIcon(url) {
+        if (!url) return 'fas fa-code-branch';
+        try {
+          const host = new URL(url).hostname.toLowerCase();
+          if (host.includes('github.com')) return 'fab fa-github';
+          if (host.includes('gitlab.com')) return 'fab fa-gitlab';
+          if (host.includes('gitee.com')) return 'fas fa-code';
+          return 'fas fa-code-branch';
+        } catch {
+          return 'fas fa-code-branch';
+        }
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, function (m) {
+          if (m === '&') return '&amp;';
+          if (m === '<') return '&lt;';
+          if (m === '>') return '&gt;';
+          return m;
+        });
+      }
+
+      // ---------- CRUD 操作 ----------
+      function deleteProject(id) {
+        const proj = projects.find((p) => p.id === id);
+        if (!proj || !canEdit(proj)) {
+          alert('无权限删除');
+          return;
+        }
+        if (!confirm(`确定删除项目 "${proj.name}" 及其所有环境？`)) return;
+        projects = projects.filter((p) => p.id !== id);
+        saveData();
+        renderProjects();
+      }
+
+      // ---------- 模态框 ----------
+      function openEditModal(id) {
+        const proj = projects.find((p) => p.id === id);
+        if (!proj || !canEdit(proj)) {
+          alert('无权限编辑');
+          return;
+        }
+        editingId = id;
+        document.getElementById('modalTitle').textContent = '编辑项目';
+        document.getElementById('projectId').value = id;
+        document.getElementById('projName').value = proj.name;
+        document.getElementById('projSlug').value = proj.slug || '';
+        document.getElementById('projDesc').value = proj.description || '';
+        document.getElementById('projStack').value = proj.stack || '';
+        document.getElementById('projRepoUrl').value = proj.repo_url || '';
+        document.getElementById('projCategory').value = proj.category || '';
+        document.getElementById('projIsPublic').value = proj.is_public;
+
+        // 渲染环境
+        const container = document.getElementById('environmentsContainer');
+        container.innerHTML = '';
+        const envs = proj.environments || [];
+        if (envs.length === 0) {
+          addEnvironmentBlock('dev', '', {});
+          addEnvironmentBlock('prod', '', {});
+        } else {
+          envs.forEach((env) => {
+            addEnvironmentBlock(env.name, env.url || '', env.variables || {});
+          });
+        }
+        document.getElementById('modalOverlay').classList.remove('hidden');
+        document.getElementById('modalOverlay').classList.add('flex');
+      }
+
+      function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('flex');
+        document.getElementById('modalOverlay').classList.add('hidden');
+        document.getElementById('projectForm').reset();
+        document.getElementById('projectId').value = '';
+        editingId = null;
+        document.getElementById('environmentsContainer').innerHTML = '';
+      }
+
+      // ---------- 环境块管理 ----------
+      function addEnvironmentBlock(name = '', url = '', variables = {}) {
+        const container = document.getElementById('environmentsContainer');
+        const blockId = 'env-block-' + Date.now() + '-' + Math.random();
+        const div = document.createElement('div');
+        div.className =
+          'border border-[var(--color-primary-border)] rounded-xl p-4 bg-[var(--color-primary-bg)] relative';
+        div.dataset.envBlock = blockId;
+
+        // 变量列表
+        const varEntries = Object.entries(variables);
+        let varsHtml = '';
+        if (varEntries.length === 0) {
+          varsHtml = `<div class="text-xs text-[var(--color-tertiary-text)]">暂无环境变量</div>`;
+        } else {
+          varEntries.forEach(([key, value]) => {
+            varsHtml += `
+                        <div class="flex gap-2 items-center mb-2 env-var-item">
+                            <input type="text" placeholder="KEY" value="${escapeHtml(key)}" class="env-var-key flex-1 border border-[var(--color-primary-border)] rounded-lg px-3 py-1.5 text-sm bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]" />
+                            <input type="text" placeholder="value" value="${escapeHtml(value)}" class="env-var-value flex-1 border border-[var(--color-primary-border)] rounded-lg px-3 py-1.5 text-sm bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]" />
+                            <button type="button" class="remove-var-btn text-red-400 hover:text-red-600"><i class="fas fa-minus-circle"></i></button>
+                        </div>
+                    `;
+          });
+        }
+
+        div.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-server text-[var(--color-primary)]"></i>
+                        <input type="text" placeholder="环境名称 (如 dev, prod)" value="${escapeHtml(name)}" class="env-name-input font-bold border border-[var(--color-primary-border)] rounded-lg px-2 py-1 w-32 text-sm bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]" />
+                    </div>
+                    <button type="button" class="remove-env-block text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i> 删除环境</button>
+                </div>
+                <div class="mb-3">
+                    <label class="text-xs font-semibold text-[var(--color-secondary-text)]">访问地址 (URL)</label>
+                    <input type="url" placeholder="https://..." value="${escapeHtml(url)}" class="env-url w-full border border-[var(--color-primary-border)] rounded-lg px-3 py-1.5 text-sm mt-1 bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]" />
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-[var(--color-secondary-text)]">
+                        环境变量 <button type="button" class="add-var-btn text-[var(--color-primary)] text-xs ml-2 hover:text-[var(--color-primary-hover)]"><i class="fas fa-plus-circle"></i> 添加变量</button>
+                    </label>
+                    <div class="env-vars-list mt-2">${varsHtml}</div>
+                </div>
+            `;
+        container.appendChild(div);
+
+        // 事件绑定
+        div
+          .querySelector('.remove-env-block')
+          .addEventListener('click', () => div.remove());
+        div
+          .querySelector('.add-var-btn')
+          .addEventListener('click', () => addVarToBlock(div));
+        div.querySelectorAll('.remove-var-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            const item = btn.closest('.env-var-item');
+            if (item) item.remove();
+          });
+        });
+      }
+
+      function addVarToBlock(blockDiv) {
+        const list = blockDiv.querySelector('.env-vars-list');
+        const item = document.createElement('div');
+        item.className = 'flex gap-2 items-center mb-2 env-var-item';
+        item.innerHTML = `
+                <input type="text" placeholder="KEY" class="env-var-key flex-1 border border-[var(--color-primary-border)] rounded-lg px-3 py-1.5 text-sm bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]" />
+                <input type="text" placeholder="value" class="env-var-value flex-1 border border-[var(--color-primary-border)] rounded-lg px-3 py-1.5 text-sm bg-[var(--color-bg-container)] text-[var(--color-primary-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]" />
+                <button type="button" class="remove-var-btn text-red-400 hover:text-red-600"><i class="fas fa-minus-circle"></i></button>
+            `;
+        list.appendChild(item);
+        item
+          .querySelector('.remove-var-btn')
+          .addEventListener('click', () => item.remove());
+      }
+
+      // 收集表单数据
+      function collectFormData() {
+        const id = document.getElementById('projectId').value;
+        const name = document.getElementById('projName').value.trim();
+        let slug = document.getElementById('projSlug').value.trim();
+        if (!slug) slug = generateSlug(name);
+        const description = document.getElementById('projDesc').value;
+        const stack = document.getElementById('projStack').value;
+        const repo_url = document.getElementById('projRepoUrl').value;
+        const category = document.getElementById('projCategory').value;
+        const is_public = parseInt(
+          document.getElementById('projIsPublic').value,
+          10
+        );
+
+        // 收集环境
+        const envBlocks = document.querySelectorAll(
+          '#environmentsContainer > div'
+        );
+        const environments = [];
+        envBlocks.forEach((block) => {
+          const nameInput = block.querySelector('.env-name-input');
+          const envName = nameInput ? nameInput.value.trim() : '';
+          if (!envName) return;
+          const urlInput = block.querySelector('.env-url');
+          const url = urlInput ? urlInput.value.trim() : '';
+          const varItems = block.querySelectorAll('.env-var-item');
+          const variables = {};
+          varItems.forEach((item) => {
+            const keyInput = item.querySelector('.env-var-key');
+            const valInput = item.querySelector('.env-var-value');
+            if (keyInput && keyInput.value.trim()) {
+              variables[keyInput.value.trim()] = valInput
+                ? valInput.value.trim()
+                : '';
+            }
+          });
+          environments.push({
+            name: envName,
+            url: url,
+            variables: variables
+          });
+        });
+
+        return {
+          id: id || null,
+          name,
+          slug,
+          description,
+          stack,
+          repo_url,
+          category,
+          is_public,
+          environments
+        };
+      }
+
+      // 保存项目（创建或更新）
+      function saveProject(e) {
+        e.preventDefault();
+        if (currentUserId === 'guest') {
+          alert('访客无权限操作');
+          return;
+        }
+        const formData = collectFormData();
+        if (!formData.name) {
+          alert('项目名称不能为空');
+          return;
+        }
+        if (formData.environments.length === 0) {
+          alert('请至少配置一个环境');
+          return;
+        }
+
+        // 检查slug唯一性
+        const existing = projects.find(
+          (p) => p.slug === formData.slug && p.id !== formData.id
+        );
+        if (existing) {
+          alert(`Slug "${formData.slug}" 已被占用，请修改`);
+          return;
+        }
+
+        if (formData.id) {
+          // 更新
+          const index = projects.findIndex((p) => p.id === formData.id);
+          if (index === -1) {
+            alert('项目不存在');
+            return;
+          }
+          if (projects[index].owner_id !== currentUserId) {
+            alert('无权限修改');
+            return;
+          }
+          // 保留原有环境ID（用于保持唯一性，这里简单重新生成）
+          const updatedEnvs = formData.environments.map((env, idx) => ({
+            id: `env-${Date.now()}-${idx}`,
+            name: env.name,
+            url: env.url,
+            variables: env.variables
+          }));
+          projects[index] = {
+            ...projects[index],
+            ...formData,
+            environments: updatedEnvs,
+            updated_at: Date.now()
+          };
+        } else {
+          // 新建
+          const newEnvs = formData.environments.map((env, idx) => ({
+            id: `env-${Date.now()}-${idx}`,
+            name: env.name,
+            url: env.url,
+            variables: env.variables
+          }));
+          const newProject = {
+            id: 'p_' + Date.now(),
+            ...formData,
+            owner_id: currentUserId,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+            environments: newEnvs
+          };
+          projects.push(newProject);
+        }
+        saveData();
+        closeModal();
+        renderProjects();
+      }
+
+      // ---------- 事件绑定 ----------
+      function bindEvents() {
+        document
+          .getElementById('addProjectBtn')
+          .addEventListener('click', () => {
+            if (currentUserId === 'guest') {
+              alert('访客无权限创建');
+              return;
+            }
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新建项目';
+            document.getElementById('projectId').value = '';
+            document.getElementById('projName').value = '';
+            document.getElementById('projSlug').value = '';
+            document.getElementById('projDesc').value = '';
+            document.getElementById('projStack').value = '';
+            document.getElementById('projRepoUrl').value = '';
+            document.getElementById('projCategory').value = '';
+            document.getElementById('projIsPublic').value = '0';
+            const container = document.getElementById('environmentsContainer');
+            container.innerHTML = '';
+            addEnvironmentBlock('dev', '', {});
+            addEnvironmentBlock('prod', '', {});
+            document.getElementById('modalOverlay').classList.remove('hidden');
+            document.getElementById('modalOverlay').classList.add('flex');
+          });
+
+        document
+          .getElementById('closeModalBtn')
+          .addEventListener('click', closeModal);
+        document
+          .getElementById('cancelModalBtn')
+          .addEventListener('click', closeModal);
+        document
+          .getElementById('projectForm')
+          .addEventListener('submit', saveProject);
+
+        document
+          .getElementById('addEnvironmentBtn')
+          .addEventListener('click', () => {
+            addEnvironmentBlock('', '', {});
+          });
+
+        document
+          .getElementById('searchInput')
+          .addEventListener('input', (e) => {
+            searchKeyword = e.target.value;
+            renderProjects();
+          });
+        document
+          .getElementById('categoryFilter')
+          .addEventListener('change', (e) => {
+            categoryFilter = e.target.value;
+            renderProjects();
+          });
+        document
+          .getElementById('userSelect')
+          .addEventListener('change', (e) => {
+            currentUserId = e.target.value;
+            if (currentUserId === 'guest') {
+              document.getElementById('addProjectBtn').disabled = true;
+              document
+                .getElementById('addProjectBtn')
+                .classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+              document.getElementById('addProjectBtn').disabled = false;
+              document
+                .getElementById('addProjectBtn')
+                .classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            renderProjects();
+          });
+
+        // 视图切换
+        document.getElementById('cardViewBtn').addEventListener('click', () => {
+          viewMode = 'card';
+          document
+            .getElementById('cardViewBtn')
+            .classList.add(
+              'bg-[var(--color-elevated)]',
+              'shadow-sm',
+              'text-[var(--color-primary)]'
+            );
+          document
+            .getElementById('compactViewBtn')
+            .classList.remove(
+              'bg-[var(--color-elevated)]',
+              'shadow-sm',
+              'text-[var(--color-primary)]'
+            );
+          document
+            .getElementById('compactViewBtn')
+            .classList.add('text-[var(--color-secondary-text)]');
+          renderProjects();
+        });
+        document
+          .getElementById('compactViewBtn')
+          .addEventListener('click', () => {
+            viewMode = 'compact';
+            document
+              .getElementById('compactViewBtn')
+              .classList.add(
+                'bg-[var(--color-elevated)]',
+                'shadow-sm',
+                'text-[var(--color-primary)]'
+              );
+            document
+              .getElementById('cardViewBtn')
+              .classList.remove(
+                'bg-[var(--color-elevated)]',
+                'shadow-sm',
+                'text-[var(--color-primary)]'
+              );
+            document
+              .getElementById('cardViewBtn')
+              .classList.add('text-[var(--color-secondary-text)]');
+            renderProjects();
+          });
+      }
+
+      // 启动
+      loadData();
+      bindEvents();
+    </script>
+  </body>
+</html>
