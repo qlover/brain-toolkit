@@ -37,7 +37,9 @@ function parseOrder(raw: string | null): 'asc' | 'desc' {
   return v === 'asc' ? 'asc' : 'desc';
 }
 
-export class SearchParamsValidator implements ValidatorInterface<ResourceSearchParams> {
+export class SearchParamsValidator
+  implements ValidatorInterface<ResourceSearchParams>
+{
   protected parseFromSearchParams(
     searchParams: URLSearchParams
   ): ResourceSearchParams {

@@ -35,9 +35,11 @@ export interface BootstrapServerContextOptions extends BootstrapPluginOptions {
   ctx?: UserLoginContext;
 }
 
-export interface BootstrapServerPlugin extends LifecyclePluginInterface<BootstrapServerContext> {}
+export interface BootstrapServerPlugin
+  extends LifecyclePluginInterface<BootstrapServerContext> {}
 
-export interface BootstrapServerContext extends ExecutorContextInterface<BootstrapServerContextOptions> {}
+export interface BootstrapServerContext
+  extends ExecutorContextInterface<BootstrapServerContextOptions> {}
 
 export interface ServerInterface {
   readonly logger: LoggerInterface;

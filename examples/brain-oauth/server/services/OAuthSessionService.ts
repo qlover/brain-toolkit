@@ -13,7 +13,9 @@ import type {
  * HttpOnly session cookie for authenticated users during OAuth authorize.
  */
 @injectable()
-export class OAuthSessionService implements OAuthSessionInterface<OAuthSessionPayload> {
+export class OAuthSessionService
+  implements OAuthSessionInterface<OAuthSessionPayload>
+{
   constructor(
     @inject(I.AppConfig) protected config: SeedServerConfigInterface
   ) {}
