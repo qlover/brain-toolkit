@@ -5,40 +5,63 @@ import {
 import { inject, injectable } from '@shared/container';
 import {
   PAMEnvironmentsSchema,
+  PAMPROJECT_TSVECTOR_KEY,
   PAMProjectSchema,
   PAMPublicType,
   type PAMEnvironmentsSchemaType,
   type PAMProjectSchemaType
 } from '@schemas/PAMProjectSchema';
-import { searchResultSchema } from '@schemas/SearchResultSchema';
+import {
+  Operators,
+  type RepoSearchInterface
+} from '@server/interfaces/DBBridgeInterface';
 import type {
   ProjectFilter,
   ProjectWithEnvironments
 } from '@server/interfaces/PAMServiceInterface';
-import { BaseRepo } from './BaseRepo';
-import { SupabaseBridge } from './SupabaseBridge';
+import { BaseRepository } from './BaseRepository';
+import { SupabaseRepo } from './SupabaseRepo';
 import { SupabaseServiceRoleBridge } from './SupabaseServiceRoleBridge';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
-// ============================================================
-// Repo 实现
-// ============================================================
 @injectable()
-export class PAMProjectRepo extends BaseRepo {
+export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
   constructor(
     @inject(SupabaseServiceRoleBridge)
-    protected supabaseServiceBridge: SupabaseBridge,
-    @inject(SupabaseBridge)
-    protected supabaseBridge: SupabaseBridge
+    protected supabaseServiceBridge: RepoSearchInterface<PAMProjectSchemaType>,
+    @inject(SupabaseRepo)
+    protected supabaseRepo: SupabaseRepo<PAMProjectSchemaType>
   ) {
-    super(supabaseBridge, 'pam_projects');
+    super('pam_projects');
   }
 
   /**
-   * 获取 Service Role 客户端（绕过 RLS，用于管理操作）
+   * @override
    */
-  protected async getSupabaseService(): Promise<SupabaseClient> {
-    return this.supabaseServiceBridge.getSupabase();
+  public async search(
+    params: ResourceSearchParams & {
+      /**
+       * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
+       */
+      user_id?: string;
+    }
+  ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
+    const { page = 1, pageSize = 20, user_id } = params;
+
+    return await this.supabaseRepo.search({
+      table: this.getName(),
+      page: page,
+      pageSize: pageSize,
+      sort: params.sort,
+      fullTextSearch: params.keyword
+        ? {
+            column: PAMPROJECT_TSVECTOR_KEY,
+            query: params.keyword,
+            config: 'english'
+          }
+        : undefined,
+      where: [['is_public', Operators.eq, PAMPublicType.public]],
+      whereOr: user_id ? [['owner_id', Operators.eq, user_id]] : undefined
+    });
   }
 
   /**
@@ -46,47 +69,12 @@ export class PAMProjectRepo extends BaseRepo {
    * @param params
    * @returns
    */
-  public async searchProjects(
+  public searchProjects(
     params: ResourceSearchParams & {
       user_id?: string;
     }
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
-    const { page = 1, pageSize = 20, user_id } = params;
-    const supabase = await this.supabaseServiceBridge.getSupabase();
-
-    const builder = supabase
-      .from('pam_projects')
-      .select('*')
-      .eq('is_public', PAMPublicType.public);
-
-    if (user_id) {
-      builder.or(`owner_id.eq.${user_id}`);
-    }
-
-    builder.range((page - 1) * pageSize, page * pageSize - 1);
-
-    const result = await builder;
-
-    // const result = await this.supabaseServiceBridge.pagination({
-    //   table: 'pam_projects',
-    //   fields: '*',
-    //   page: page,
-    //   pageSize: pageSize,
-    //   // TODO: 排序还需要修改
-    //   // orderBy: [],
-    //   where: [['is_public', '=', PAMPublicType.public]]
-    // });
-
-    // this.supabaseServiceBridge.throwIfError(result);
-
-    const raw = (result.data ?? []) as PAMProjectSchemaType[];
-
-    return searchResultSchema(PAMProjectSchema).parse({
-      items: raw,
-      total: result.count ?? 0,
-      page: page,
-      pageSize: pageSize
-    });
+    return this.search(params);
   }
 
   /**

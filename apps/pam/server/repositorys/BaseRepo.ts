@@ -4,6 +4,9 @@ import { SupabaseBridge } from './SupabaseBridge';
 import type { LoggerInterface } from '@qlover/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+/**
+ * @deprecated
+ */
 export class BaseRepo {
   @inject(I.Logger)
   protected logger!: LoggerInterface;

@@ -172,3 +172,21 @@ VALUES
     ('<project1-id>', 'dev', 'https://dev-backend.brain.ai', '{"LOG_LEVEL": "debug", "RATE_LIMIT": "1000"}'::jsonb),
     ('<project1-id>', 'prod', 'https://backend.brain.ai', '{"LOG_LEVEL": "error", "RATE_LIMIT": "5000"}'::jsonb);
 */
+
+-- ============================================================
+-- 6. 添加全文搜索支持 (tsvector + GIN 索引)
+-- ============================================================
+
+-- 6.1 为 pam_projects 添加生成的 tsvector 列，组合多个字段，并设置权重
+ALTER TABLE pam_projects
+ADD COLUMN search_vector tsvector
+GENERATED ALWAYS AS (
+    setweight(to_tsvector('english', coalesce(name, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(description, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(stack, '')), 'C') ||
+    setweight(to_tsvector('english', coalesce(category, '')), 'D')
+) STORED;
+
+-- 6.2 在该列上创建 GIN 索引，加速全文搜索查询
+CREATE INDEX idx_pam_projects_search_vector
+ON pam_projects USING GIN (search_vector);

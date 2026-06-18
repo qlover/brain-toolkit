@@ -2,10 +2,7 @@ import pLimit from 'p-limit';
 import { inject, injectable } from '@shared/container';
 import { localesSchema, type LocalesSchema } from '@schemas/LocalesSchema';
 import type { PaginationResult } from '@schemas/SearchResultSchema';
-import type {
-  BridgeOrderBy,
-  DBBridgeInterface
-} from '@server/interfaces/DBBridgeInterface';
+import type { BridgeOrderBy } from '@server/interfaces/DBBridgeInterface';
 import { DBTablePaginationParams } from '@server/interfaces/DBTableInterface';
 import { Datetime } from '@server/utils/Datetime';
 import { SupabaseBridge } from './SupabaseBridge';
@@ -21,7 +18,7 @@ export class LocalesRepository implements LocalesRepositoryInterface {
   protected safeFields = Object.keys(localesSchema.shape);
 
   constructor(
-    @inject(SupabaseBridge) protected dbBridge: DBBridgeInterface,
+    @inject(SupabaseBridge) protected dbBridge: SupabaseBridge,
     @inject(Datetime) protected datetime: Datetime
   ) {}
 

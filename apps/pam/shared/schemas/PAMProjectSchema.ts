@@ -5,6 +5,12 @@ export const PAMPublicType = {
   private: 0
 } as const;
 
+/**
+ * 数据库中用于 tsvector 列名字
+ * @see makes/sql/003-pam-base.sql
+ */
+export const PAMPROJECT_TSVECTOR_KEY = 'search_vector' as const;
+
 export const PAMProjectSchema = z.object({
   id: z.uuid(),
   slug: z.string(),

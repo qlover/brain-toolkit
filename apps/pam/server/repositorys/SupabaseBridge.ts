@@ -6,7 +6,6 @@ import { isPGRSTSchema } from '@schemas/PGRSTSchema';
 import { UserRole, UserSchema } from '@schemas/UserSchema';
 import type {
   BridgeEvent,
-  DBBridgeInterface,
   DBBridgeResponse,
   BridgeOrderBy,
   Where
@@ -33,8 +32,11 @@ const whereHandlerMaps = {
 export type SupabaseBridgeResponse<T> = DBBridgeResponse<T> &
   PostgrestResponse<T>;
 
+/**
+ * @deprecated
+ */
 @injectable()
-export class SupabaseBridge implements DBBridgeInterface {
+export class SupabaseBridge {
   public async getSupabase(): Promise<SupabaseClient> {
     return await createClient();
   }
@@ -131,9 +133,6 @@ export class SupabaseBridge implements DBBridgeInterface {
     }
   }
 
-  /**
-   * @override
-   */
   public async add(event: BridgeEvent): Promise<DBBridgeResponse<unknown>> {
     const { table, data } = event;
     if (!data) {
@@ -146,9 +145,6 @@ export class SupabaseBridge implements DBBridgeInterface {
     return this.catch(res);
   }
 
-  /**
-   * @override
-   */
   public async upsert(event: BridgeEvent): Promise<DBBridgeResponse<unknown>> {
     const { table, data, fields = '*' } = event;
     if (!data) {
@@ -166,9 +162,6 @@ export class SupabaseBridge implements DBBridgeInterface {
     return this.catch(res);
   }
 
-  /**
-   * @override
-   */
   public async update(event: BridgeEvent): Promise<DBBridgeResponse<unknown>> {
     const { table, data, where } = event;
     if (!data) {
@@ -183,9 +176,6 @@ export class SupabaseBridge implements DBBridgeInterface {
     return this.catch(await handler);
   }
 
-  /**
-   * @override
-   */
   public async delete(event: BridgeEvent): Promise<DBBridgeResponse<unknown>> {
     const { table, where } = event;
     const supabase = await this.getSupabase();
@@ -197,9 +187,6 @@ export class SupabaseBridge implements DBBridgeInterface {
     return this.catch(await handler);
   }
 
-  /**
-   * @override
-   */
   public async get(
     event: BridgeEvent
   ): Promise<SupabaseBridgeResponse<unknown>> {
@@ -216,9 +203,6 @@ export class SupabaseBridge implements DBBridgeInterface {
     return this.catch(await handler);
   }
 
-  /**
-   * @override
-   */
   public async pagination(
     event: BridgeEvent
   ): Promise<DBBridgeResponse<unknown[]>> {
