@@ -1,15 +1,11 @@
 import type {
   PAMProjectSchemaType,
-  PAMEnvironmentsSchemaType
+  PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
 import type {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
-
-export type ProjectWithEnvironments = PAMProjectSchemaType & {
-  environments: PAMEnvironmentsSchemaType[];
-};
 
 // 查询过滤参数
 export interface ProjectFilter {
@@ -37,4 +33,12 @@ export interface PAMServiceInterface {
   searchProjects(
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>>;
+
+  /**
+   * 获取一个 pam 项目, 同时会带上 enverionments
+   * @param id
+   */
+  getProjectWithEnvironment(
+    id: string
+  ): Promise<PAMProjectWithEnvironmentsSchemaType | null>;
 }

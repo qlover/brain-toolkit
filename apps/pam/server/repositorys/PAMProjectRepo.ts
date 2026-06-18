@@ -3,6 +3,7 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
+import { I } from '@config/ioc-identifiter';
 import {
   PAMEnvironmentsSchema,
   PAMPROJECT_TSVECTOR_KEY,
@@ -16,16 +17,17 @@ import {
   Operators,
   type RepoSearchInterface
 } from '@server/interfaces/DBBridgeInterface';
-import type {
-  ProjectFilter,
-  ProjectWithEnvironments
-} from '@server/interfaces/PAMServiceInterface';
+import type { ProjectFilter } from '@server/interfaces/PAMServiceInterface';
 import { BaseRepository } from './BaseRepository';
 import { SupabaseRepo } from './SupabaseRepo';
 import { SupabaseServiceRoleBridge } from './SupabaseServiceRoleBridge';
+import type { LoggerInterface } from '@qlover/logger';
 
 @injectable()
 export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
+  @inject(I.Logger)
+  protected logger!: LoggerInterface;
+
   constructor(
     @inject(SupabaseServiceRoleBridge)
     protected supabaseServiceBridge: RepoSearchInterface<PAMProjectSchemaType>,

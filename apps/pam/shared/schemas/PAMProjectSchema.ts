@@ -47,3 +47,11 @@ export const PAMEnvironmentsSchema = z.object({
 });
 
 export type PAMEnvironmentsSchemaType = z.infer<typeof PAMEnvironmentsSchema>;
+
+export const PAMProjectWithEnvironmentsSchema = PAMProjectSchema.extend({
+  environments: z.array(PAMEnvironmentsSchema)
+});
+
+export type PAMProjectWithEnvironmentsSchemaType = z.infer<
+  typeof PAMProjectWithEnvironmentsSchema
+>;

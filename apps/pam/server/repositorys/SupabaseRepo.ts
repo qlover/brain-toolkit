@@ -1,5 +1,7 @@
+import { inject, injectable } from '@shared/container';
 import { createAdminClient } from '@shared/supabase/admin';
 import { createClient } from '@shared/supabase/server';
+import { I } from '@config/ioc-identifiter';
 import {
   Operators,
   type OperatorType,
@@ -7,6 +9,7 @@ import {
 } from '@server/interfaces/DBBridgeInterface';
 import { BaseRepository } from './BaseRepository';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
+import type { LoggerInterface } from '@qlover/logger';
 import type {
   SupabaseClient,
   PostgrestFilterBuilder
@@ -15,7 +18,10 @@ import type {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FilterBuilder = PostgrestFilterBuilder<any, any, any, any, any, any, any>;
 
+@injectable()
 export class SupabaseRepo<T> extends BaseRepository<T> {
+  @inject(I.Logger)
+  protected logger!: LoggerInterface;
   protected clientPromise: Promise<SupabaseClient> | null = null;
 
   constructor(tableName: string = '') {
@@ -38,14 +44,13 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
     return createAdminClient();
   }
 
-  /**
-   * @override
-   */
-  public async search(
+  protected async getSearchBuilder(
     params: RepoSearchParams<T> & {
       table?: string;
     }
-  ): Promise<ResourceSearchResult<T>> {
+  ): Promise<
+    [FilterBuilder, Pick<RepoSearchParams<T>, 'pageSize' | 'offset'>]
+  > {
     const client = await this.getSupabase();
 
     let selector = '*';
@@ -125,16 +130,34 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
       query = query.range(0, pageSize - 1) as FilterBuilder;
     }
 
+    return [
+      query,
+      {
+        offset,
+        pageSize
+      }
+    ];
+  }
+
+  /**
+   * @override
+   */
+  public async search(
+    params: RepoSearchParams<T> & {
+      table?: string;
+    }
+  ): Promise<ResourceSearchResult<T>> {
+    const [query, { offset, pageSize }] = await this.getSearchBuilder(params);
     // 5. 执行查询
     const { data, error, count } = await query;
-    if (error) {
-      throw new Error(`Supabase search failed: ${error.message}`);
-    }
-
     const items = (data || []) as T[];
     const total = count || 0;
     const hasMore =
       offset !== undefined ? offset + items.length < total : false;
+
+    if (error) {
+      this.logger.error('SupabaseRepo.search ', error);
+    }
 
     return {
       items,
