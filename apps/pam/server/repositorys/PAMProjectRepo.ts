@@ -39,6 +39,9 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
    */
   public async search(
     params: ResourceSearchParams & {
+      /**
+       * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
+       */
       user_id?: string;
     }
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
