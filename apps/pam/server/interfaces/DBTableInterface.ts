@@ -8,6 +8,9 @@ export type DBTablePaginationParams = PaginationInfo & {
   orderBy?: BridgeOrderBy;
 };
 
+/**
+ * @deprecated
+ */
 export interface DBTableInterface {
   readonly repoName: string;
 

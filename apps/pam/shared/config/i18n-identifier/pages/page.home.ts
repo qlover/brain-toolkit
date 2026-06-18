@@ -1,7 +1,7 @@
 /**
  * @description Home page title
- * @localZh Next OAuth
- * @localEn Next OAuth
+ * @localZh PAM 资产中心
+ * @localEn PAM 资产中心
  */
 export const PAGE_HOME_TITLE = 'page_home:title';
 
@@ -14,8 +14,8 @@ export const PAGE_HOME_DESCRIPTION = 'page_home:description';
 
 /**
  * @description Home page keywords
- * @localZh OAuth 2.0, 第三方登录, GitHub, Google, Supabase, Next OAuth
- * @localEn OAuth 2.0, third-party login, GitHub, Google, Supabase, Next OAuth
+ * @localZh OAuth 2.0, 第三方登录, GitHub, Google, Supabase, PAM 资产中心
+ * @localEn OAuth 2.0, third-party login, GitHub, Google, Supabase, PAM 资产中心
  */
 export const PAGE_HOME_KEYWORDS = 'page_home:keywords';
 
