@@ -3,8 +3,15 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
-import type { PAMProjectSchemaType } from '@schemas/PAMProjectSchema';
-import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
+import type {
+  PAMProjectSchemaType,
+  PAMProjectWithEnvironmentsSchemaType
+} from '@schemas/PAMProjectSchema';
+import type {
+  PAMServiceInterface,
+  ProjectDetailParams
+} from '@server/interfaces/PAMServiceInterface';
+import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { OAuthUserService } from './OAuthUserService';
 
@@ -14,7 +21,7 @@ export class PAMService implements PAMServiceInterface {
   protected readonly projectRepo!: PAMProjectRepo;
 
   @inject(OAuthUserService)
-  protected readonly userService!: OAuthUserService;
+  protected readonly userService!: ServerAuthInterface;
 
   /**
    * @override
@@ -30,5 +37,19 @@ export class PAMService implements PAMServiceInterface {
       // 如果没有登陆则查询公开项目
       user_id: user?.id
     });
+  }
+
+  /**
+   * @override
+   */
+  public async getProjectDetail(
+    params: ProjectDetailParams
+  ): Promise<PAMProjectWithEnvironmentsSchemaType | null> {
+    const { id, withEnvironments } = params;
+    if (withEnvironments) {
+      return await this.projectRepo.getProjectWithEnvironments(id);
+    }
+
+    return await this.projectRepo.getProjectById(id);
   }
 }

@@ -64,7 +64,7 @@ type ValueByOperator<T, K extends keyof T, Op extends OperatorType> =
         : // 其他操作符（=, !=, >, >=, <, <=, @>, <@），值必须严格等于字段类型 T[K]
           T[K];
 
-type FilterTriple<T> = {
+export type FilterTriple<T> = {
   // 遍历 T 的每个字段 K
   [K in keyof T]: {
     // 遍历每个操作符 Op
@@ -77,7 +77,7 @@ type FilterTriple<T> = {
 }[keyof T]; // 再次取索引值，扁平化为一个大的联合类型
 
 export interface RepoSearchParams<T = unknown> extends ResourceSearchParams {
-  fields?: string | keyof T[];
+  fields?: (keyof T)[] | string;
   where?: FilterTriple<T>[]; // AND 条件组，完全类型安全
   whereOr?: FilterTriple<T>[]; // OR 条件组，完全类型安全
   /**

@@ -90,6 +90,15 @@ export const API_OAUTH_PLAYGROUND_VALIDATE =
 export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 
 /**
+ * API path: `/api/pam/detail/:id`
+ *
+ * @see [src/app/api/pam/detail/[id]/route.ts](../../src/app/api/pam/detail/[id]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/detail/[id]/route.ts`
+ */
+export const API_PAM_DETAIL = '/api/pam/detail/:id' as const;
+
+/**
  * API path: `/api/pam/search`
  *
  * @see [src/app/api/pam/search/route.ts](../../src/app/api/pam/search/route.ts)
@@ -189,6 +198,7 @@ export type ApiRoutePath =
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
+  | typeof API_PAM_DETAIL
   | typeof API_PAM_SEARCH
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN

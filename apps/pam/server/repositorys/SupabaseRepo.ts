@@ -1,5 +1,17 @@
+import { ExecutorError } from '@qlover/fe-corekit';
+import {
+  type SupabaseClient,
+  type PostgrestFilterBuilder,
+  isAuthApiError,
+  AuthResponse,
+  UserResponse,
+  isAuthError
+} from '@supabase/supabase-js';
+import { inject, injectable } from '@shared/container';
 import { createAdminClient } from '@shared/supabase/admin';
 import { createClient } from '@shared/supabase/server';
+import { I } from '@config/ioc-identifiter';
+import { isPGRSTSchema } from '@schemas/PGRSTSchema';
 import {
   Operators,
   type OperatorType,
@@ -7,15 +19,15 @@ import {
 } from '@server/interfaces/DBBridgeInterface';
 import { BaseRepository } from './BaseRepository';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
-import type {
-  SupabaseClient,
-  PostgrestFilterBuilder
-} from '@supabase/supabase-js';
+import type { LoggerInterface } from '@qlover/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FilterBuilder = PostgrestFilterBuilder<any, any, any, any, any, any, any>;
 
+@injectable()
 export class SupabaseRepo<T> extends BaseRepository<T> {
+  @inject(I.Logger)
+  protected logger!: LoggerInterface;
   protected clientPromise: Promise<SupabaseClient> | null = null;
 
   constructor(tableName: string = '') {
@@ -38,15 +50,14 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
     return createAdminClient();
   }
 
-  /**
-   * @override
-   */
-  public async search(
+  protected async getSearchBuilder(
     params: RepoSearchParams<T> & {
       table?: string;
     }
-  ): Promise<ResourceSearchResult<T>> {
-    const client = await this.getSupabase();
+  ): Promise<
+    [FilterBuilder, Pick<RepoSearchParams<T>, 'pageSize' | 'offset'>]
+  > {
+    const client = await this.getAdminSupabase();
 
     let selector = '*';
     if (params.fields) {
@@ -125,16 +136,34 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
       query = query.range(0, pageSize - 1) as FilterBuilder;
     }
 
+    return [
+      query,
+      {
+        offset,
+        pageSize
+      }
+    ];
+  }
+
+  /**
+   * @override
+   */
+  public async search(
+    params: RepoSearchParams<T> & {
+      table?: string;
+    }
+  ): Promise<ResourceSearchResult<T>> {
+    const [query, { offset, pageSize }] = await this.getSearchBuilder(params);
     // 5. 执行查询
     const { data, error, count } = await query;
-    if (error) {
-      throw new Error(`Supabase search failed: ${error.message}`);
-    }
-
     const items = (data || []) as T[];
     const total = count || 0;
     const hasMore =
       offset !== undefined ? offset + items.length < total : false;
+
+    if (error) {
+      this.logger.error('SupabaseRepo.search ', error);
+    }
 
     return {
       items,
@@ -231,6 +260,9 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
   /**
    * 将单个条件转换为 PostgREST OR 字符串片段
    */
+  /**
+   * 将单个条件转换为 PostgREST OR 字符串片段
+   */
   protected conditionToOrString(cond: unknown): string {
     const [field, op, rawValue] = this.normalizeCondition(cond);
 
@@ -245,14 +277,12 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
 
     let valueStr: string;
     if (Array.isArray(rawValue)) {
-      const isString = rawValue.length > 0 && typeof rawValue[0] === 'string';
-      if (isString) {
-        valueStr = `(${rawValue.map((v) => `'${String(v)}'`).join(',')})`;
-      } else {
-        valueStr = `(${rawValue.join(',')})`;
-      }
+      // 数组处理：如果元素是字符串，直接拼接不加引号（适用于 UUID 数组）
+      const values = rawValue.map((v) => String(v)).join(',');
+      valueStr = `(${values})`;
     } else if (typeof rawValue === 'string') {
-      valueStr = `'${rawValue}'`;
+      // 关键修改：不再添加单引号
+      valueStr = rawValue;
     } else if (typeof rawValue === 'number' || typeof rawValue === 'boolean') {
       valueStr = String(rawValue);
     } else if (rawValue === null || rawValue === undefined) {
@@ -262,5 +292,37 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
     }
 
     return `${field}.${supabaseOp}.${valueStr}`;
+  }
+
+  /**
+   * 该方法用于统一手动处理 supabase sdk 查询回来的结果
+   *
+   * 如果有 error 则会将错误抛出
+   *
+   * @param response
+   */
+  public throwIfError(
+    response: AuthResponse | UserResponse | { error: unknown }
+  ): void {
+    const { error } = response;
+
+    if (error) {
+      if (isAuthApiError(error)) {
+        // TODO:
+        // 当 email_not_confirmed 时应该重新验证邮箱
+        throw new ExecutorError(error.code ?? 'SupabaseAuthApiError', error);
+      }
+
+      if (isAuthError(error) || error instanceof Error) {
+        throw new ExecutorError('SupabaseAuthError', response);
+      }
+
+      if (isPGRSTSchema(error)) {
+        // FIXME: 拦截返回信息
+        throw new ExecutorError('SupabasePGRSTError', response);
+      }
+
+      throw error;
+    }
   }
 }
