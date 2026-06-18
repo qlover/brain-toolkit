@@ -3,7 +3,6 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit';
-import { isEmpty } from 'lodash';
 import { inject, injectable } from '@shared/container';
 import { API_PAM_PROJECT_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
@@ -166,10 +165,6 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
 
     this.supabaseRepo.throwIfError(result);
 
-    if (isEmpty(result.data)) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
-
     this.logger.debug(
       `[PAMProjectRepo] update project ${id} success`,
       result.data
@@ -220,6 +215,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     updates: PAMProjectUpdateSchemaType
   ): Promise<PAMProjectWithEnvironmentsSchemaType> {
     const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
+
+    await this.getProjectById(id);
 
     // 1. 更新项目字段
     await this.updateProjectFields(id, projectUpdates);

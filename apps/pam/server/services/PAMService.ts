@@ -3,6 +3,7 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
+import { API_PAM_PROJECT_NOT_FOUND } from '@config/i18n-identifier/api';
 import type {
   PAMProjectSchemaType,
   PAMProjectUpdateSchemaType,
@@ -61,6 +62,13 @@ export class PAMService implements PAMServiceInterface {
     id: string,
     params: PAMProjectUpdateSchemaType
   ): Promise<PAMProjectUpdateSchemaType> {
+    // 检查是否有权限
+    const project = await this.projectRepo.getProjectById(id);
+
+    if (!project) {
+      throw new Error(API_PAM_PROJECT_NOT_FOUND);
+    }
+
     return await this.projectRepo.updateProject(id, params);
   }
 }

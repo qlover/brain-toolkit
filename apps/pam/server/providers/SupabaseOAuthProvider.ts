@@ -1,9 +1,7 @@
 import { LoginParams } from '@qlover/corekit-bridge';
 import { type EncryptorInterface } from '@qlover/fe-corekit';
 import { OAuthWrapperService } from '@qlover/oauth-wrapper';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { inject, injectable } from '@shared/container';
-import { SUPABASE_KEY, SUPABASE_URL } from '@shared/supabase/conts';
 import { I } from '@config/ioc-identifiter';
 import { localePage, ROUTE_CALLBACK_EMAIL_LOGIN } from '@config/route';
 import { UserRole, type UserSchema } from '@schemas/UserSchema';
@@ -29,16 +27,6 @@ import type {
 import type { Session, User } from '@supabase/supabase-js';
 
 type SupabaseUserMetadata = Record<string, unknown>;
-
-function createHeadlessSupabaseClient() {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY are required');
-  }
-
-  return createSupabaseClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 
 function shouldMd5Password(): boolean {
   const flag = process.env.SUPABASE_LOGIN_PASSWORD_MD5?.trim().toLowerCase();
@@ -119,7 +107,7 @@ export class SupabaseOAuthProvider
   }
 
   protected async refreshSession(refreshToken: string): Promise<Session> {
-    const supabase = createHeadlessSupabaseClient();
+    const supabase = await this.supabaseBridge.getSupabase();
     const result = await supabase.auth.refreshSession({
       refresh_token: refreshToken
     });
@@ -146,7 +134,7 @@ export class SupabaseOAuthProvider
       throw new Error('Email and password are required for Supabase login');
     }
 
-    const supabase = createHeadlessSupabaseClient();
+    const supabase = await this.supabaseBridge.getSupabase();
     const result = await supabase.auth.signInWithPassword({
       email,
       password: this.resolvePassword(password)
@@ -222,7 +210,7 @@ export class SupabaseOAuthProvider
       throw new Error('Supabase access token is required');
     }
 
-    const supabase = createHeadlessSupabaseClient();
+    const supabase = await this.supabaseBridge.getSupabase();
     const result = await supabase.auth.getUser(token);
     this.supabaseBridge.throwIfError(result);
 
@@ -315,7 +303,7 @@ export class SupabaseOAuthProvider
    * @override
    */
   public async signWithOtp(params: SignWithOtpParams): Promise<SignOtpResult> {
-    const supabase = createHeadlessSupabaseClient();
+    const supabase = await this.supabaseBridge.getSupabase();
 
     if ('email' in params) {
       const locale = await this.serverState.getLocale();
@@ -351,7 +339,7 @@ export class SupabaseOAuthProvider
       throw new Error('OTP token is required for verification');
     }
 
-    const supabase = createHeadlessSupabaseClient();
+    const supabase = await this.supabaseBridge.getSupabase();
 
     let result;
     if ('email' in params && params.email) {

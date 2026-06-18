@@ -1,5 +1,5 @@
 import { injectable } from '@shared/container';
-import { createAdminClient } from '@shared/supabase/admin';
+import { createAdminClient } from '@shared/supabase/server';
 import { SupabaseBridge } from './SupabaseBridge';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
