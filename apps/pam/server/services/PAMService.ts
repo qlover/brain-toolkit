@@ -7,7 +7,6 @@ import type {
   PAMProjectSchemaType,
   PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
-import type { UserSchema } from '@schemas/UserSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
@@ -27,11 +26,7 @@ export class PAMService implements PAMServiceInterface {
   public async searchProjects(
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
-    let user: UserSchema | null = null;
-    try {
-      // FIXME: 按理说 ServerAuthInterface 定义 getUser 不应该抛出错误, 但是 OAuthUserService 会抛出错误
-      user = await this.userService.getUser();
-    } catch {}
+    const user = await this.userService.getUser();
 
     return await this.projectRepo.searchProjects({
       ...params,

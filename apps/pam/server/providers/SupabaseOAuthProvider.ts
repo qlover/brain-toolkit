@@ -17,7 +17,6 @@ import { PasswordEncrypt } from '@server/utils/PasswordEncrypt';
 import { TokenEncryption } from '@server/utils/TokenEncryption';
 import type { LoggerInterface } from '@qlover/logger';
 import type {
-  OAuthSessionInterface,
   OAuthSessionPayload,
   OAuthUserAccessToken,
   OAuthUserCredentials,
@@ -101,15 +100,17 @@ export class SupabaseOAuthProvider
 
   constructor(
     @inject(I.AppConfig) config: SeedServerConfigInterface,
-    @inject(OAuthSessionService)
-    oauthSession: OAuthSessionInterface<OAuthSessionPayload>,
     @inject(OAuthWrapperRepository)
     oauthRepo: OAuthWrapperRepositoryInterface,
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
     @inject(SupabaseBridge) protected supabaseBridge: SupabaseBridge
   ) {
-    super(oauthSession, new TokenEncryption(config.encryptionKey), oauthRepo);
+    super(
+      new OAuthSessionService(config),
+      new TokenEncryption(config.encryptionKey),
+      oauthRepo
+    );
     this.appHost = config.appHost;
   }
 
