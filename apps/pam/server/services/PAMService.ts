@@ -4,7 +4,6 @@ import {
 } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
 import type { PAMProjectSchemaType } from '@schemas/PAMProjectSchema';
-import type { UserSchema } from '@schemas/UserSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { OAuthUserService } from './OAuthUserService';
@@ -23,10 +22,7 @@ export class PAMService implements PAMServiceInterface {
   public async searchProjects(
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
-    let user: UserSchema | null = null;
-    try {
-      user = await this.userService.getUser();
-    } catch {}
+    const user = await this.userService.getUser();
 
     return await this.projectRepo.searchProjects({
       ...params,

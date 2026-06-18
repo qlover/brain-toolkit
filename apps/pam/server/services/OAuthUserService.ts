@@ -129,12 +129,12 @@ export class OAuthUserService
   /**
    * @override
    */
-  public async getUser(): Promise<UserSchema> {
+  public async getUser(): Promise<UserSchema | null> {
     const user = await this.oauthProvider.getUserSchema();
 
-    if (!user) {
-      throw new ExecutorError(API_USER_NOT_FOUND);
-    }
+    // if (!user) {
+    //   throw new ExecutorError(API_USER_NOT_FOUND);
+    // }
 
     return user;
   }

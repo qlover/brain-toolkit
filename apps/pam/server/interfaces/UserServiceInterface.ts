@@ -31,7 +31,7 @@ export interface UserServiceInterface {
   logout(context?: UserLoginContext): Promise<void>;
 
   refresh(): Promise<UserSchema>;
-  getUser(): Promise<UserSchema>;
+  getUser(): Promise<UserSchema | null>;
 
   signWithOtp(body: SignWithOtpSchema): Promise<SignOtpResult>;
   loginWithProvider(params: {
