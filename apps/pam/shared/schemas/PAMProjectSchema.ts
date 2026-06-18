@@ -28,6 +28,12 @@ export const PAMProjectSchema = z.object({
   updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
 });
 
+export const PAMProjectSafeFields = Object.keys(
+  PAMProjectSchema.omit({
+    owner_id: true
+  }).shape
+) as (keyof PAMProjectSchemaType)[];
+
 export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;
 
 export const PAMEnvironmentsSchema = z.object({

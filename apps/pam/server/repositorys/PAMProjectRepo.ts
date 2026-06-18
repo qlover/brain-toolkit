@@ -6,6 +6,7 @@ import { inject, injectable } from '@shared/container';
 import {
   PAMEnvironmentsSchema,
   PAMPROJECT_TSVECTOR_KEY,
+  PAMProjectSafeFields,
   PAMProjectSchema,
   PAMPublicType,
   type PAMEnvironmentsSchemaType,
@@ -49,6 +50,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
 
     return await this.supabaseRepo.search({
       table: this.getName(),
+      fields: PAMProjectSafeFields,
       page: page,
       pageSize: pageSize,
       sort: params.sort,

@@ -77,7 +77,7 @@ type FilterTriple<T> = {
 }[keyof T]; // 再次取索引值，扁平化为一个大的联合类型
 
 export interface RepoSearchParams<T = unknown> extends ResourceSearchParams {
-  fields?: string | keyof T[];
+  fields?: (keyof T)[] | string;
   where?: FilterTriple<T>[]; // AND 条件组，完全类型安全
   whereOr?: FilterTriple<T>[]; // OR 条件组，完全类型安全
   /**
