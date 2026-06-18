@@ -5,6 +5,11 @@ export const PAMPublicType = {
   private: 0
 } as const;
 
+export const PAMProjectTableName = 'pam_projects' as const;
+export const PAMEnvironmentsTableName = 'pam_environments' as const;
+
+export const PAMProjectEnvKey = 'environments' as const;
+
 /**
  * 数据库中用于 tsvector 列名字
  * @see makes/sql/003-pam-base.sql
@@ -28,13 +33,16 @@ export const PAMProjectSchema = z.object({
   updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
 });
 
+export const PAMProjectSafeSchema = PAMProjectSchema.omit({
+  owner_id: true
+});
+
 export const PAMProjectSafeFields = Object.keys(
-  PAMProjectSchema.omit({
-    owner_id: true
-  }).shape
+  PAMProjectSafeSchema.shape
 ) as (keyof PAMProjectSchemaType)[];
 
 export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;
+export type PAMProjectSafeSchemaType = z.infer<typeof PAMProjectSafeSchema>;
 
 export const PAMEnvironmentsSchema = z.object({
   id: z.uuid(),
@@ -48,8 +56,14 @@ export const PAMEnvironmentsSchema = z.object({
 
 export type PAMEnvironmentsSchemaType = z.infer<typeof PAMEnvironmentsSchema>;
 
-export const PAMProjectWithEnvironmentsSchema = PAMProjectSchema.extend({
-  environments: z.array(PAMEnvironmentsSchema)
+export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
+  /**
+   * 变成可选是为了保证数据完整性
+   *
+   * - 如果为空则表示没有环境，仅保存了项目信息
+   * - 有则表示项目信息，以及环境信息
+   */
+  [PAMProjectEnvKey]: z.array(PAMEnvironmentsSchema).optional()
 });
 
 export type PAMProjectWithEnvironmentsSchemaType = z.infer<

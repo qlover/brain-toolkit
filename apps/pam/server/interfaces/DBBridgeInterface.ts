@@ -64,7 +64,7 @@ type ValueByOperator<T, K extends keyof T, Op extends OperatorType> =
         : // 其他操作符（=, !=, >, >=, <, <=, @>, <@），值必须严格等于字段类型 T[K]
           T[K];
 
-type FilterTriple<T> = {
+export type FilterTriple<T> = {
   // 遍历 T 的每个字段 K
   [K in keyof T]: {
     // 遍历每个操作符 Op

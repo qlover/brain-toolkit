@@ -30,9 +30,16 @@ export class PAMController {
   }
 
   public getPamDetail(
-    pamId: string
+    pamId: string,
+    request: NextRequest
   ): Promise<PAMProjectWithEnvironmentsSchemaType | null> {
     const id = uuidSchema.parse(pamId);
-    return this.pamService.getProjectWithEnvironment(id);
+
+    const withEnvironments = request.nextUrl.searchParams.get('isEnv') === '1';
+
+    return this.pamService.getProjectDetail({
+      id,
+      withEnvironments
+    });
   }
 }

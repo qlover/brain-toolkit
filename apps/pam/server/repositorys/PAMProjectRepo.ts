@@ -5,15 +5,20 @@ import {
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import {
-  PAMEnvironmentsSchema,
+  PAMEnvironmentsTableName,
   PAMPROJECT_TSVECTOR_KEY,
+  PAMProjectEnvKey,
   PAMProjectSafeFields,
+  PAMProjectSafeSchema,
+  PAMProjectSafeSchemaType,
   PAMProjectSchema,
-  PAMPublicType,
-  type PAMEnvironmentsSchemaType,
+  PAMProjectTableName,
+  PAMProjectWithEnvironmentsSchema,
+  PAMProjectWithEnvironmentsSchemaType,
   type PAMProjectSchemaType
 } from '@schemas/PAMProjectSchema';
 import {
+  FilterTriple,
   Operators,
   type RepoSearchInterface
 } from '@server/interfaces/DBBridgeInterface';
@@ -34,7 +39,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     @inject(SupabaseRepo)
     protected supabaseRepo: SupabaseRepo<PAMProjectSchemaType>
   ) {
-    super('pam_projects');
+    super(PAMProjectTableName);
   }
 
   /**
@@ -50,6 +55,13 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
     const { page = 1, pageSize = 20, user_id } = params;
 
+    const orConditions: FilterTriple<PAMProjectSchemaType>[] = [
+      ['is_public', Operators.eq, 1]
+    ];
+    if (user_id) {
+      orConditions.push(['owner_id', Operators.eq, user_id]);
+    }
+
     return await this.supabaseRepo.search({
       table: this.getName(),
       fields: PAMProjectSafeFields,
@@ -63,8 +75,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
             config: 'english'
           }
         : undefined,
-      where: [['is_public', Operators.eq, PAMPublicType.public]],
-      whereOr: user_id ? [['owner_id', Operators.eq, user_id]] : undefined
+      whereOr: orConditions
     });
   }
 
@@ -79,6 +90,59 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     }
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
     return this.search(params);
+  }
+
+  /**
+   * 获取项目及其所有环境（联表查询）
+   *
+   * 获取用户的一个 project, 包含 RLS 包含 env
+   *
+   */
+  public async getProjectWithEnvironments(
+    id: string
+  ): Promise<PAMProjectWithEnvironmentsSchemaType | null> {
+    // 一定是 rls 的 api
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(this.getName())
+      .select(
+        PAMProjectSafeFields.join(',') +
+          `,${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(*)`
+      )
+      .eq('id', id)
+      // 启用了rls 就不需要 owner_id
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    // 可能受 rls 限制，这里直接返回 null
+    if (!result.data) {
+      return null;
+    }
+
+    return PAMProjectWithEnvironmentsSchema.parse(result.data);
+  }
+
+  /**
+   * 获取用户的一个 project, 包含 RLS 不包含 env
+   * @param id
+   * @returns
+   */
+  public async getProjectById(
+    id: string
+  ): Promise<PAMProjectSafeSchemaType | null> {
+    // 一定是 rls 的 api
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(this.getName())
+      .select(PAMProjectSafeFields.join(','))
+      .eq('id', id)
+      // 启用了rls 就不需要 owner_id
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return PAMProjectSafeSchema.parse(result.data);
   }
 
   /**
@@ -162,42 +226,6 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     }
 
     return data.map((item) => PAMProjectSchema.parse(item));
-  }
-
-  /**
-   * 获取项目及其所有环境（联表查询）
-   */
-  public async getProjectWithEnvironments(
-    id: string
-  ): Promise<ProjectWithEnvironments | null> {
-    const supabase = await this.getSupabase();
-    const { data, error } = await supabase
-      .from(this.repoName)
-      .select(
-        `
-          *,
-          environments: pam_environments(*)
-        `
-      )
-      .eq('id', id)
-      .maybeSingle();
-
-    if (error) {
-      this.logger.error(
-        'PAMProjectRepo.getProjectWithEnvironments failed',
-        error
-      );
-      throw new Error(`查询项目及环境失败: ${error.message}`);
-    }
-
-    if (!data) return null;
-
-    const project = PAMProjectSchema.parse(data);
-    const environments = (
-      (data.environments || []) as PAMEnvironmentsSchemaType[]
-    ).map((env) => PAMEnvironmentsSchema.parse(env));
-
-    return { ...project, environments };
   }
 
   // ------------------------------------------------------------------

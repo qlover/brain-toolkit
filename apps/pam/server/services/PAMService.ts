@@ -7,7 +7,10 @@ import type {
   PAMProjectSchemaType,
   PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
-import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
+import type {
+  PAMServiceInterface,
+  ProjectDetailParams
+} from '@server/interfaces/PAMServiceInterface';
 import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { OAuthUserService } from './OAuthUserService';
@@ -39,11 +42,14 @@ export class PAMService implements PAMServiceInterface {
   /**
    * @override
    */
-  public async getProjectWithEnvironment(
-    id: string
+  public async getProjectDetail(
+    params: ProjectDetailParams
   ): Promise<PAMProjectWithEnvironmentsSchemaType | null> {
-    const project = await this.projectRepo.getProjectWithEnvironments(id);
+    const { id, withEnvironments } = params;
+    if (withEnvironments) {
+      return await this.projectRepo.getProjectWithEnvironments(id);
+    }
 
-    return project;
+    return await this.projectRepo.getProjectById(id);
   }
 }

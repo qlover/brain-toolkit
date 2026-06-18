@@ -16,6 +16,19 @@ export interface ProjectFilter {
   limit?: number;
   offset?: number;
 }
+
+export interface ProjectDetailParams {
+  /**
+   * project_id
+   */
+  id: string;
+
+  /**
+   * 是否查询带环境的项目详情
+   */
+  withEnvironments?: boolean;
+}
+
 /**
  * PAM Service 统一接口
  *
@@ -36,9 +49,12 @@ export interface PAMServiceInterface {
 
   /**
    * 获取一个 pam 项目, 同时会带上 enverionments
+   *
+   * 当传递 withEnvironments 参数时，会返回带 environments 的项目详情
+   *
    * @param id
    */
-  getProjectWithEnvironment(
-    id: string
+  getProjectDetail(
+    params: ProjectDetailParams
   ): Promise<PAMProjectWithEnvironmentsSchemaType | null>;
 }
