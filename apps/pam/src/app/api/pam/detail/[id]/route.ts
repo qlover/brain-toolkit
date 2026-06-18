@@ -1,4 +1,4 @@
-import { API_PAM_SEARCH } from '@config/route';
+import { API_PAM_DETAIL } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
 import type { NextRequest } from 'next/server';
@@ -220,7 +220,7 @@ export function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return new NextApiServer(API_PAM_SEARCH, req).runWithJson(
+  return new NextApiServer(API_PAM_DETAIL, req).runWithJson(
     async ({ parameters: { IOC } }) =>
       IOC(PAMController).getPamDetail((await params).id, req)
   );

@@ -2,19 +2,24 @@ import {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
+import { ExecutorError } from '@qlover/fe-corekit';
+import { isEmpty } from 'lodash';
 import { inject, injectable } from '@shared/container';
+import { API_PAM_PROJECT_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import {
+  PAMEnvironmentUpdateSchemaType,
   PAMEnvironmentsTableName,
   PAMPROJECT_TSVECTOR_KEY,
   PAMProjectEnvKey,
   PAMProjectSafeFields,
   PAMProjectSafeSchema,
   PAMProjectSafeSchemaType,
-  PAMProjectSchema,
   PAMProjectTableName,
+  PAMProjectUpdateSchemaType,
   PAMProjectWithEnvironmentsSchema,
   PAMProjectWithEnvironmentsSchemaType,
+  PAMUpdateSQLFunctionName,
   type PAMProjectSchemaType
 } from '@schemas/PAMProjectSchema';
 import {
@@ -22,7 +27,6 @@ import {
   Operators,
   type RepoSearchInterface
 } from '@server/interfaces/DBBridgeInterface';
-import type { ProjectFilter } from '@server/interfaces/PAMServiceInterface';
 import { BaseRepository } from './BaseRepository';
 import { SupabaseRepo } from './SupabaseRepo';
 import { SupabaseServiceRoleBridge } from './SupabaseServiceRoleBridge';
@@ -146,239 +150,145 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
   }
 
   /**
-   * 根据 ID 查询项目
+   * 更新项目基本信息（仅字段）
    */
-  public async findById(id: string): Promise<PAMProjectSchemaType | null> {
-    const supabase = await this.getSupabase();
-    const { data, error } = await supabase
-      .from(this.repoName)
-      .select('*')
+  private async updateProjectFields(
+    id: string,
+    updates: Partial<PAMProjectSchemaType>
+  ): Promise<void> {
+    if (Object.keys(updates).length === 0) return;
+
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(this.getName())
+      .update(updates)
+      .eq('id', id);
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (isEmpty(result.data)) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    this.logger.debug(
+      `[PAMProjectRepo] update project ${id} success`,
+      result.data
+    );
+  }
+
+  /**
+   * 同步环境列表（仅新增/更新，不删除）
+   * - 若传入的环境对象包含 id，则更新对应记录；
+   * - 若不包含 id，则插入新记录（Supabase 自动生成 UUID）。
+   */
+  private async syncEnvironments(
+    projectId: string,
+    envUpdates: PAMEnvironmentUpdateSchemaType[]
+  ): Promise<void> {
+    if (!envUpdates || envUpdates.length === 0) return;
+
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    // 准备 upsert 数据
+    const upsertData = envUpdates.map((env) => ({
+      id: 'id' in env ? env.id : undefined, // 如果有 id 则更新，否则由 Supabase 生成新 id
+      project_id: projectId,
+      name: env.name,
+      url: env.url,
+      variables: env.variables || {}
+    }));
+
+    const result = await supabase
+      .from(PAMEnvironmentsTableName)
+      .upsert(upsertData, { onConflict: 'id' });
+
+    this.supabaseRepo.throwIfError(result);
+
+    this.logger.debug(
+      `[PAMProjectRepo] upsert environments success`,
+      result.data
+    );
+  }
+
+  /**
+   * 更新项目（含环境）
+   *
+   * 但是逻辑分离，并不支持事务
+   */
+  public async updateProject(
+    id: string,
+    updates: PAMProjectUpdateSchemaType
+  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
+
+    // 1. 更新项目字段
+    await this.updateProjectFields(id, projectUpdates);
+
+    // 2. 更新环境（如果提供了）
+    if (envUpdates !== undefined) {
+      await this.syncEnvironments(id, envUpdates);
+    }
+
+    // 3. 返回最新数据
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(this.getName())
+      .select(
+        PAMProjectSafeFields.join(',') +
+          `,${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(*)`
+      )
       .eq('id', id)
       .maybeSingle();
 
-    if (error) {
-      this.logger.error('PAMProjectRepo.findById failed', error);
-      throw new Error(`查询项目失败: ${error.message}`);
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    return data ? PAMProjectSchema.parse(data) : null;
+    this.logger.info(
+      `[PAMProjectRepo] update project ${id} success`,
+      result.data
+    );
+    return PAMProjectWithEnvironmentsSchema.parse(result.data);
   }
 
   /**
-   * 根据 slug 查询项目
+   * 更新项目（含环境）
+   *
+   * 该方式使用 rpc 更新支持事务
+   *
+   * @param id
+   * @param updates
+   * @returns
    */
-  public async findBySlug(slug: string): Promise<PAMProjectSchemaType | null> {
-    const supabase = await this.getSupabase();
-    const { data, error } = await supabase
-      .from(this.repoName)
-      .select('*')
-      .eq('slug', slug)
-      .maybeSingle();
+  public async updateProjectWithEnvironments(
+    id: string,
+    updates: PAMProjectUpdateSchemaType
+  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    const supabase = await this.supabaseRepo.getSupabase();
 
-    if (error) {
-      this.logger.error('PAMProjectRepo.findBySlug failed', error);
-      throw new Error(`查询项目失败: ${error.message}`);
-    }
+    // 准备参数
+    const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
 
-    return data ? PAMProjectSchema.parse(data) : null;
-  }
+    // 转换环境数组为 JSONB 格式（Supabase 自动处理）
+    const envJson = envUpdates ? envUpdates : null;
 
-  /**
-   * 查询项目列表，支持过滤和分页
-   */
-  public async findAll(
-    filter: ProjectFilter = {}
-  ): Promise<PAMProjectSchemaType[]> {
-    const supabase = await this.getSupabase();
-    let query = supabase.from(this.repoName).select('*');
-
-    if (filter.is_public !== undefined) {
-      query = query.eq('is_public', filter.is_public);
-    }
-    if (filter.ownerId) {
-      query = query.eq('owner_id', filter.ownerId);
-    }
-    if (filter.category) {
-      query = query.eq('category', filter.category);
-    }
-    if (filter.search) {
-      query = query.or(
-        `name.ilike.%${filter.search}%,description.ilike.%${filter.search}%,stack.ilike.%${filter.search}%`
-      );
-    }
-    if (filter.limit) {
-      query = query.limit(filter.limit);
-    }
-    if (filter.offset) {
-      query = query.range(
-        filter.offset,
-        filter.offset + (filter.limit || 10) - 1
-      );
-    }
-
-    const { data, error } = await query.order('created_at', {
-      ascending: false
+    // 调用 RPC
+    const result = await supabase.rpc(PAMUpdateSQLFunctionName, {
+      p_project_id: id,
+      p_updates: projectUpdates,
+      p_environments: envJson
     });
 
-    if (error) {
-      this.logger.error('PAMProjectRepo.findAll failed', error);
-      throw new Error(`查询项目列表失败: ${error.message}`);
-    }
+    this.supabaseRepo.throwIfError(result);
 
-    return data.map((item) => PAMProjectSchema.parse(item));
-  }
+    // data 是 JSONB 对象，需要解析
+    const parsed = PAMProjectWithEnvironmentsSchema.parse({
+      ...result.data.project,
+      environments: result.data.environments || []
+    });
 
-  // ------------------------------------------------------------------
-  // 写入方法（受 RLS 限制）
-  // ------------------------------------------------------------------
-
-  /**
-   * 创建新项目（owner_id 由 RLS 自动绑定）
-   */
-  public async create(
-    data: Omit<
-      PAMProjectSchemaType,
-      'id' | 'created_at' | 'updated_at' | 'owner_id'
-    >
-  ): Promise<PAMProjectSchemaType> {
-    // 可选：使用 Zod 验证输入
-    const validated = PAMProjectSchema.omit({
-      id: true,
-      created_at: true,
-      updated_at: true,
-      owner_id: true
-    }).parse(data);
-
-    const supabase = await this.getSupabase();
-    const { data: result, error } = await supabase
-      .from(this.repoName)
-      .insert(validated)
-      .select()
-      .single();
-
-    if (error) {
-      this.logger.error('PAMProjectRepo.create failed', error);
-      throw new Error(`创建项目失败: ${error.message}`);
-    }
-
-    return PAMProjectSchema.parse(result);
-  }
-
-  /**
-   * 更新项目（仅所有者可更新）
-   */
-  public async update(
-    id: string,
-    updates: Partial<
-      Omit<
-        PAMProjectSchemaType,
-        'id' | 'created_at' | 'updated_at' | 'owner_id'
-      >
-    >
-  ): Promise<PAMProjectSchemaType> {
-    // 可选：使用 Zod 部分验证
-    const validated = PAMProjectSchema.partial()
-      .omit({ id: true, created_at: true, updated_at: true, owner_id: true })
-      .parse(updates);
-
-    const supabase = await this.getSupabase();
-    const { data, error } = await supabase
-      .from(this.repoName)
-      .update(validated)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      this.logger.error('PAMProjectRepo.update failed', error);
-      throw new Error(`更新项目失败: ${error.message}`);
-    }
-
-    return PAMProjectSchema.parse(data);
-  }
-
-  /**
-   * 删除项目（仅所有者可删除，级联删除关联环境）
-   */
-  public async delete(id: string): Promise<void> {
-    const supabase = await this.getSupabase();
-    const { error } = await supabase.from(this.repoName).delete().eq('id', id);
-
-    if (error) {
-      this.logger.error('PAMProjectRepo.delete failed', error);
-      throw new Error(`删除项目失败: ${error.message}`);
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // 管理员操作（使用 Service Role，绕过 RLS）
-  // ------------------------------------------------------------------
-
-  public async adminFindById(id: string): Promise<PAMProjectSchemaType | null> {
-    const supabase = await this.getSupabaseService();
-    const { data, error } = await supabase
-      .from(this.repoName)
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (error) {
-      this.logger.error('PAMProjectRepo.adminFindById failed', error);
-      throw new Error(`管理员查询项目失败: ${error.message}`);
-    }
-
-    return data ? PAMProjectSchema.parse(data) : null;
-  }
-
-  public async adminDelete(id: string): Promise<void> {
-    const supabase = await this.getSupabaseService();
-    const { error } = await supabase.from(this.repoName).delete().eq('id', id);
-
-    if (error) {
-      this.logger.error('PAMProjectRepo.adminDelete failed', error);
-      throw new Error(`管理员删除项目失败: ${error.message}`);
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // 辅助方法
-  // ------------------------------------------------------------------
-
-  /**
-   * 检查 slug 是否已存在
-   */
-  public async isSlugExists(slug: string): Promise<boolean> {
-    const supabase = await this.getSupabase();
-    const { count, error } = await supabase
-      .from(this.repoName)
-      .select('id', { count: 'exact', head: true })
-      .eq('slug', slug);
-
-    if (error) {
-      this.logger.error('PAMProjectRepo.isSlugExists failed', error);
-      throw new Error(`检查 slug 失败: ${error.message}`);
-    }
-
-    return (count ?? 0) > 0;
-  }
-
-  /**
-   * 获取当前用户的所有项目（快捷方法）
-   */
-  public async findMyProjects(): Promise<PAMProjectSchemaType[]> {
-    // 获取当前用户 ID，可以从 auth 中获取
-    const supabase = await this.getSupabase();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) return [];
-    return this.findAll({ ownerId: user.id });
-  }
-
-  /**
-   * 获取公开项目列表（快捷方法）
-   */
-  public async findPublicProjects(): Promise<PAMProjectSchemaType[]> {
-    return this.findAll({ is_public: 1 });
+    return parsed;
   }
 }

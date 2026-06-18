@@ -141,3 +141,17 @@ export const API_OAUTH_SERVER_ERROR = 'api:oauth_server_error';
  * @localEn OAuth wrapper sign-in failed
  */
 export const API_OAUTH_WRAPPER_AUTH_FAILED = 'api:oauth_wrapper_auth_failed';
+
+/**
+ * @description 请求体为空
+ * @localZh 请求参数为空空
+ * @localEn Request Params is required
+ */
+export const API_REQUEST_BODY_EMPTY = 'api:request_body_empty';
+
+/**
+ * @description 没有pam 项目
+ * @localZh 项目未找到
+ * @localEn Project Not Found
+ */
+export const API_PAM_PROJECT_NOT_FOUND = 'api:pam_project_not_found';

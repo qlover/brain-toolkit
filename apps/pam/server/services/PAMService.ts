@@ -5,6 +5,7 @@ import {
 import { inject, injectable } from '@shared/container';
 import type {
   PAMProjectSchemaType,
+  PAMProjectUpdateSchemaType,
   PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
 import type {
@@ -51,5 +52,15 @@ export class PAMService implements PAMServiceInterface {
     }
 
     return await this.projectRepo.getProjectById(id);
+  }
+
+  /**
+   * @override
+   */
+  public async updateProject(
+    id: string,
+    params: PAMProjectUpdateSchemaType
+  ): Promise<PAMProjectUpdateSchemaType> {
+    return await this.projectRepo.updateProject(id, params);
   }
 }
