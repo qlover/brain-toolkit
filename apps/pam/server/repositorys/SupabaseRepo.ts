@@ -1,0 +1,266 @@
+import { createAdminClient } from '@shared/supabase/admin';
+import { createClient } from '@shared/supabase/server';
+import {
+  Operators,
+  type OperatorType,
+  type RepoSearchParams
+} from '@server/interfaces/DBBridgeInterface';
+import { BaseRepository } from './BaseRepository';
+import type { ResourceSearchResult } from '@qlover/corekit-bridge';
+import type {
+  SupabaseClient,
+  PostgrestFilterBuilder
+} from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FilterBuilder = PostgrestFilterBuilder<any, any, any, any, any, any, any>;
+
+export class SupabaseRepo<T> extends BaseRepository<T> {
+  protected clientPromise: Promise<SupabaseClient> | null = null;
+
+  constructor(tableName: string = '') {
+    super(tableName);
+  }
+
+  /**
+   * 获取用户 supabase 客户端，包含 RLS 权限控制
+   * @returns
+   */
+  public async getSupabase(): Promise<SupabaseClient> {
+    return await createClient();
+  }
+
+  /**
+   * 获取管理员 supabase 客户端，**不包含 RLS 权限控制**
+   * @returns
+   */
+  public getAdminSupabase(): SupabaseClient {
+    return createAdminClient();
+  }
+
+  /**
+   * @override
+   */
+  public async search(
+    params: RepoSearchParams<T> & {
+      table?: string;
+    }
+  ): Promise<ResourceSearchResult<T>> {
+    const client = await this.getSupabase();
+
+    let selector = '*';
+    if (params.fields) {
+      if (Array.isArray(params.fields)) {
+        selector = params.fields.join(',');
+      }
+      if (typeof params.fields === 'string') {
+        selector = params.fields;
+      }
+    }
+
+    // 显式标注 query 类型为 AnyFilterBuilder
+    let query: FilterBuilder = client
+      .from(params.table ?? this.getName())
+      .select(selector, { count: 'exact', head: false }) as FilterBuilder;
+
+    // 1. 处理 where (AND 条件)
+    if (params.where && params.where.length) {
+      for (const cond of params.where) {
+        query = this.applyFilter(query, cond);
+      }
+    }
+
+    // 2. 处理 whereOr (OR 条件组)
+    if (params.whereOr && params.whereOr.length) {
+      const orString = this.buildOrString(params.whereOr);
+      query = query.or(orString) as FilterBuilder;
+    }
+
+    // 3. 处理排序（适配 ResourceSortClause）
+    if (params.sort && params.sort.length) {
+      for (const sort of params.sort) {
+        const field = sort.orderBy;
+        let ascending = true;
+        let nullsFirst: boolean | undefined = undefined;
+
+        if (typeof sort.order === 'string') {
+          ascending = sort.order === 'asc';
+        } else if (sort.order && typeof sort.order === 'object') {
+          const orderObj = sort.order as { direction?: string; nulls?: string };
+          if (orderObj.direction) {
+            ascending = orderObj.direction === 'asc';
+          }
+          if (orderObj.nulls) {
+            nullsFirst = orderObj.nulls === 'first';
+          }
+        }
+        query = query.order(field, {
+          ascending,
+          nullsFirst
+        }) as FilterBuilder;
+      }
+    }
+
+    // ✨ 3. 新增：全文搜索（与上述条件为 AND 关系）
+    if (params.fullTextSearch) {
+      const {
+        column,
+        query: searchQuery,
+        config = 'english'
+      } = params.fullTextSearch;
+      query = query.textSearch(column, searchQuery, {
+        config
+      }) as FilterBuilder;
+    }
+
+    // 4. 处理分页
+    const pageSize = params.pageSize || 20;
+    let offset = params.offset;
+    if (offset === undefined && params.page !== undefined) {
+      offset = (params.page - 1) * pageSize;
+    }
+    if (offset !== undefined) {
+      query = query.range(offset, offset + pageSize - 1) as FilterBuilder;
+    } else if (params.pageSize) {
+      query = query.range(0, pageSize - 1) as FilterBuilder;
+    }
+
+    // 5. 执行查询
+    const { data, error, count } = await query;
+    if (error) {
+      throw new Error(`Supabase search failed: ${error.message}`);
+    }
+
+    const items = (data || []) as T[];
+    const total = count || 0;
+    const hasMore =
+      offset !== undefined ? offset + items.length < total : false;
+
+    return {
+      items,
+      total,
+      page: params.page,
+      pageSize,
+      hasMore,
+      nextCursor: null,
+      prevCursor: null
+    };
+  }
+
+  // ---- 辅助方法（完全类型安全） ----
+
+  /**
+   * 操作符映射表（PostgREST）
+   */
+  protected mapOperator(op: OperatorType): string {
+    const map: Record<OperatorType, string> = {
+      [Operators.eq]: 'eq',
+      [Operators.notEq]: 'neq',
+      [Operators.gt]: 'gt',
+      [Operators.gte]: 'gte',
+      [Operators.lt]: 'lt',
+      [Operators.lte]: 'lte',
+      [Operators.in]: 'in',
+      [Operators.notIn]: 'not.in',
+      [Operators.like]: 'like',
+      [Operators.ilike]: 'ilike',
+      [Operators.isNull]: 'is', // 特殊处理
+      [Operators.isNotNull]: 'not.is',
+      [Operators.contains]: 'contains',
+      [Operators.containedBy]: 'containedBy'
+    };
+    return map[op] || op;
+  }
+
+  /**
+   * 规范化条件：确保输入为二元组或三元组，返回 [field, op, value]
+   * 使用 unknown 替代 any，进行类型守卫
+   */
+  protected normalizeCondition(cond: unknown): [string, OperatorType, unknown] {
+    if (!Array.isArray(cond)) {
+      throw new Error(`Invalid condition: expected array, got ${typeof cond}`);
+    }
+    if (cond.length === 2) {
+      const [field, op] = cond;
+      if (typeof field !== 'string') {
+        throw new Error(`Invalid field: expected string, got ${typeof field}`);
+      }
+      if (typeof op !== 'string') {
+        throw new Error(`Invalid operator: expected string, got ${typeof op}`);
+      }
+      return [field, op as OperatorType, null];
+    }
+    if (cond.length === 3) {
+      const [field, op, value] = cond;
+      if (typeof field !== 'string') {
+        throw new Error(`Invalid field: expected string, got ${typeof field}`);
+      }
+      if (typeof op !== 'string') {
+        throw new Error(`Invalid operator: expected string, got ${typeof op}`);
+      }
+      return [field, op as OperatorType, value];
+    }
+    throw new Error(
+      `Invalid condition: expected 2 or 3 elements, got ${cond.length}`
+    );
+  }
+
+  /**
+   * 将单个条件应用到查询（用于 where 的 AND）
+   */
+  protected applyFilter(query: FilterBuilder, cond: unknown): FilterBuilder {
+    const [field, op, value] = this.normalizeCondition(cond);
+    const supabaseOp = this.mapOperator(op);
+
+    if ((op === 'IN' || op === 'NOT IN') && !Array.isArray(value)) {
+      return query.filter(field, supabaseOp, [value]) as FilterBuilder;
+    }
+    return query.filter(field, supabaseOp, value) as FilterBuilder;
+  }
+
+  /**
+   * 构建 OR 字符串（用于 whereOr）
+   */
+  protected buildOrString(conditions: unknown[]): string {
+    return conditions
+      .map((cond) => this.conditionToOrString(cond))
+      .filter((s) => s !== '')
+      .join(',');
+  }
+
+  /**
+   * 将单个条件转换为 PostgREST OR 字符串片段
+   */
+  protected conditionToOrString(cond: unknown): string {
+    const [field, op, rawValue] = this.normalizeCondition(cond);
+
+    if (op === 'IS NULL') {
+      return `${field}.is.null`;
+    }
+    if (op === 'IS NOT NULL') {
+      return `${field}.not.is.null`;
+    }
+
+    const supabaseOp = this.mapOperator(op);
+
+    let valueStr: string;
+    if (Array.isArray(rawValue)) {
+      const isString = rawValue.length > 0 && typeof rawValue[0] === 'string';
+      if (isString) {
+        valueStr = `(${rawValue.map((v) => `'${String(v)}'`).join(',')})`;
+      } else {
+        valueStr = `(${rawValue.join(',')})`;
+      }
+    } else if (typeof rawValue === 'string') {
+      valueStr = `'${rawValue}'`;
+    } else if (typeof rawValue === 'number' || typeof rawValue === 'boolean') {
+      valueStr = String(rawValue);
+    } else if (rawValue === null || rawValue === undefined) {
+      valueStr = 'null';
+    } else {
+      valueStr = String(rawValue);
+    }
+
+    return `${field}.${supabaseOp}.${valueStr}`;
+  }
+}
