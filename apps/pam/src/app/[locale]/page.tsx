@@ -1,12 +1,5 @@
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
-import {
-  HomeApiSnippet,
-  HomeArchitecture,
-  HomeCta,
-  HomeFeatures,
-  HomeFooter,
-  HomeHero
-} from '@/uikit/components-app/home/HomeSections';
+import { PAMRoot } from '@/uikit/components-app/PAMRoot';
 import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
 import { homeI18n, homeI18nNamespace } from '@config/i18n-mapping/HomeI18n';
@@ -45,12 +38,7 @@ export default async function Home({ params }: PageParamsProps) {
         authButtonLoginOnly
         authButtonShowLogoutLabel
       >
-        <HomeHero tt={tt} />
-        <HomeArchitecture tt={tt} />
-        <HomeFeatures tt={tt} />
-        <HomeApiSnippet tt={tt} />
-        <HomeCta tt={tt} />
-        <HomeFooter tt={tt} />
+        <PAMRoot />
       </AppRoutePage>
     </PageI18nProvider>
   );
