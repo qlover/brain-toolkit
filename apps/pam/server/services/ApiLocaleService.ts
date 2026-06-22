@@ -1,3 +1,8 @@
+import {
+  ResourceSearchParams,
+  ResourceSearchResult,
+  ResourceSortClause
+} from '@qlover/corekit-bridge';
 import { omit } from 'lodash';
 import { revalidateTag } from 'next/cache';
 import { inject, injectable } from '@shared/container';
@@ -5,13 +10,10 @@ import type { LocaleType } from '@config/i18n';
 import { i18nConfig } from '@config/i18n';
 import { splitI18nKey } from '@schemas/i18nKeyScheam';
 import type { LocalesSchema } from '@schemas/LocalesSchema';
-import type { PaginationResult } from '@schemas/SearchResultSchema';
-import type { DBTablePaginationParams } from '@server/interfaces/DBTableInterface';
 import {
   LocalesRepository,
   UpsertResult
 } from '../repositorys/LocalesRepository';
-import type { BridgeOrderBy } from '../interfaces/DBBridgeInterface';
 
 export type ImportLocalesData = {
   namespace?: string;
@@ -30,7 +32,7 @@ export class ApiLocaleService {
 
   public async getLocalesJson(
     localeName: string,
-    _orderBy?: BridgeOrderBy
+    _orderBy?: ResourceSortClause
   ): Promise<Record<string, string>> {
     const locales = await this.localesRepository.getLocales(localeName);
     return locales.reduce(
@@ -44,13 +46,9 @@ export class ApiLocaleService {
   }
 
   public async getLocales(
-    params: DBTablePaginationParams
-  ): Promise<PaginationResult<LocalesSchema>> {
-    return this.localesRepository.pagination({
-      page: params.page,
-      pageSize: params.pageSize,
-      orderBy: params.orderBy
-    });
+    params: ResourceSearchParams
+  ): Promise<ResourceSearchResult<LocalesSchema>> {
+    return this.localesRepository.pagination(params);
   }
 
   public async update(data: Partial<LocalesSchema>): Promise<void> {

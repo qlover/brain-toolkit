@@ -1,8 +1,10 @@
 /* eslint-disable unused-imports/no-unused-vars */
+import {
+  ResourceSearchParams,
+  ResourceSearchResult
+} from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
 import { localesSchema, type LocalesSchema } from '@schemas/LocalesSchema';
-import type { PaginationResult } from '@schemas/SearchResultSchema';
-import { DBTablePaginationParams } from '@server/interfaces/DBTableInterface';
 import { Datetime } from '@server/utils/Datetime';
 import { SupabaseRepo } from './SupabaseRepo';
 
@@ -53,8 +55,8 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   }
 
   public async pagination<T = LocalesSchema>(
-    params: DBTablePaginationParams
-  ): Promise<PaginationResult<T>> {
+    params: ResourceSearchParams
+  ): Promise<ResourceSearchResult<T>> {
     throw new Error('LocalesRepository.pagination Method not implemented.');
   }
 

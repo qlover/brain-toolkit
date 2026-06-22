@@ -1,12 +1,12 @@
+import { ResourceSortClause } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
-import { BridgeOrderBy } from '@server/interfaces/DBBridgeInterface';
 import { ApiLocaleService } from '../services/ApiLocaleService';
 
 export interface LocalesControllerJsonQuery {
   locale: string;
-  orderBy?: BridgeOrderBy;
+  orderBy?: ResourceSortClause;
 }
 
 @injectable()

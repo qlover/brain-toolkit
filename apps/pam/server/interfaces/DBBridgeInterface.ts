@@ -1,5 +1,3 @@
-import type { PaginationParams } from '@schemas/SearchResultSchema';
-import type { DBTablePaginationParams } from './DBTableInterface';
 import type {
   ResourceSearchParams,
   ResourceSearchResult
@@ -9,27 +7,6 @@ import type { ValueOf } from '@qlover/fe-corekit';
 export type WhereOperation = '=' | '!=' | '>' | '<' | '>=' | '<=';
 export type Where = [string, WhereOperation, string | number];
 
-export interface BridgeEvent extends Partial<DBTablePaginationParams> {
-  table: string;
-  fields?: string | string[];
-  where?: Where[];
-  data?: unknown;
-}
-
-/**
- * @deprecated
- */
-export type BridgeOrderBy = [string, 0 | 1]; // 0: asc, 1: desc
-
-/**
- * @deprecated
- */
-export interface DBBridgeResponse<T> {
-  error?: unknown;
-  data: T;
-  count?: number;
-  pagination?: PaginationParams;
-}
 export const Operators = {
   eq: '=',
   notEq: '!=',
