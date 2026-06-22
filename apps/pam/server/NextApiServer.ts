@@ -12,7 +12,6 @@ import type {
   BootstrapServerContextOptions,
   BootstrapServerPlugin
 } from './interfaces/ServerInterface';
-import type { UserLoginContext } from './interfaces/UserServiceInterface';
 import type {
   ResultHandlerInterface,
   ResultHandlerOptions
@@ -82,59 +81,6 @@ export class NextApiServer extends BootstrapServer {
     this.resultHandler = new NextApiHandler();
   }
 
-  protected getLoginContext(req: NextRequest): UserLoginContext {
-    const forwarded = req.headers.get('x-forwarded-for');
-    const ip =
-      forwarded?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
-    return {
-      userAgent: req.headers.get('user-agent'),
-      ipAddress: ip
-    };
-  }
-
-  /**
-   * Adds `parameters.ctx` from {@link getLoginContext} when constructed with `NextRequest`.
-   */
-  protected override getContext(): BootstrapServerContextOptions {
-    const base = super.getContext();
-    if (this.context.nextRequest === undefined) {
-      return base;
-    }
-    return { ...base, ctx: this.getLoginContext(this.context.nextRequest) };
-  }
-
-  protected tryLogHttpApiRequest(
-    req: NextRequest,
-    result: AppApiResult<unknown>,
-    durationMs: number
-  ): void {
-    const { userAgent, ipAddress } = this.getLoginContext(req);
-    const success = result.success === true;
-    const httpStatus = success ? 200 : 400;
-    const errorCode = success ? null : result.id;
-    const errorMessage = success ? null : (result.message ?? null);
-    const correlationId = result.requestId;
-
-    void this.IOC(RequestLogsRepository).insertEvent({
-      event_category: this.context.event_category,
-      event_type: this.context.event_type,
-      success,
-      request_id: correlationId?.trim() ? correlationId : null,
-      record_type: req.nextUrl.pathname,
-      payload: {
-        http_method: req.method,
-        http_path: req.nextUrl.pathname,
-        http_status: httpStatus,
-        duration_ms: durationMs,
-        user_agent: userAgent,
-        ip_address: ipAddress,
-        correlation_id: correlationId,
-        error_code: errorCode,
-        error_message: errorMessage
-      }
-    });
-  }
-
   public async run<Result>(
     task?: ExecutorAsyncTask<
       Result | AppApiResult<Result>,
@@ -160,8 +106,12 @@ export class NextApiServer extends BootstrapServer {
     const envelope = this.resultHandler.handler<Result>(result, options);
 
     if (this.context.nextRequest) {
-      const durationMs = Math.round(performance.now() - options.started);
-      this.tryLogHttpApiRequest(this.context.nextRequest, envelope, durationMs);
+      this.IOC(RequestLogsRepository).insertWithApiResult(envelope, {
+        request: this.context.nextRequest,
+        started: options.started,
+        event_category: this.context.event_category,
+        event_type: this.context.event_type
+      });
     }
 
     return envelope;

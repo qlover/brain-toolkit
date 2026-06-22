@@ -20,7 +20,7 @@ import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import { SupabaseBridge } from '@server/repositorys/SupabaseBridge';
+import { SupabaseRepo } from '@server/repositorys/SupabaseRepo';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
 import { PasswordEncrypt } from '../utils/PasswordEncrypt';
@@ -51,8 +51,8 @@ export class OAuthUserService
     protected requestLogsRepository: RequestLogsRepositoryInterface,
     @inject(I.OAuthWrapperProviderInterface)
     protected oauthProvider: OAuthWrapperProviderInterface,
-    @inject(SupabaseBridge)
-    protected supabaseBridge: SupabaseBridge
+    @inject(SupabaseRepo)
+    protected supabaseRepo: SupabaseRepo<unknown>
   ) {}
 
   /**
@@ -129,12 +129,20 @@ export class OAuthUserService
   /**
    * @override
    */
-  public async getUser(): Promise<UserSchema | null> {
+  public async getUser(): Promise<UserSchema | null>;
+  /**
+   * @override
+   */
+  public async getUser(throwError: boolean): Promise<UserSchema>;
+  /**
+   * @override
+   */
+  public async getUser(throwError?: boolean): Promise<UserSchema | null> {
     const user = await this.oauthProvider.getUserSchema();
 
-    // if (!user) {
-    //   throw new ExecutorError(API_USER_NOT_FOUND);
-    // }
+    if (throwError && !user) {
+      throw new ExecutorError(API_USER_NOT_FOUND);
+    }
 
     return user;
   }
@@ -199,7 +207,7 @@ export class OAuthUserService
   }: {
     provider: LoginProviderType;
   }): Promise<LoginProviderResult> {
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
 
     // FIXME: toLocaleLowerCase 不够严谨
     const supabsaeProvider = provider.toLocaleLowerCase() as Provider;
@@ -218,7 +226,7 @@ export class OAuthUserService
       }
     });
 
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     return {
       providerUrl: result.data.url!,
@@ -232,11 +240,11 @@ export class OAuthUserService
   public async loginWithProviderCallback(
     query: LoginWithProviderCallbackSchema
   ): Promise<ResultHandlerContext> {
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase.auth.exchangeCodeForSession(query.code);
 
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     await this.oauthProvider.loginWithSession?.(result.data.session!);
 

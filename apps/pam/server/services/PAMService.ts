@@ -38,13 +38,13 @@ export class PAMService implements PAMServiceInterface {
   public async searchProjects(
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
-    const user = await this.userService.getUser();
+    const user = await this.userService.getUser(true);
 
     return await this.projectRepo.searchProjects({
       ...params,
       // 如果已经登陆则查询包含用户本身的
       // 如果没有登陆则查询公开项目
-      user_id: user?.id
+      user_id: user.id
     });
   }
 
@@ -106,13 +106,11 @@ export class PAMService implements PAMServiceInterface {
         throw new ExecutorError(API_PAM_ENV_NAME_EXISTS, { names });
       }
     }
-    const user = await this.userService.getUser();
-
-    const owner_id = user!.id;
+    const user = await this.userService.getUser(true);
 
     return await this.projectRepo.createProject({
       ...params,
-      owner_id
+      owner_id: user.id
     });
   }
 }

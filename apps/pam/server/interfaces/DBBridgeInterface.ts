@@ -1,5 +1,3 @@
-import type { PaginationParams } from '@schemas/SearchResultSchema';
-import type { DBTablePaginationParams } from './DBTableInterface';
 import type {
   ResourceSearchParams,
   ResourceSearchResult
@@ -9,27 +7,6 @@ import type { ValueOf } from '@qlover/fe-corekit';
 export type WhereOperation = '=' | '!=' | '>' | '<' | '>=' | '<=';
 export type Where = [string, WhereOperation, string | number];
 
-export interface BridgeEvent extends Partial<DBTablePaginationParams> {
-  table: string;
-  fields?: string | string[];
-  where?: Where[];
-  data?: unknown;
-}
-
-/**
- * @deprecated
- */
-export type BridgeOrderBy = [string, 0 | 1]; // 0: asc, 1: desc
-
-/**
- * @deprecated
- */
-export interface DBBridgeResponse<T> {
-  error?: unknown;
-  data: T;
-  count?: number;
-  pagination?: PaginationParams;
-}
 export const Operators = {
   eq: '=',
   notEq: '!=',
@@ -127,6 +104,29 @@ export interface RepoSearchInterface<T> {
   search(params: RepoSearchParams<T>): Promise<ResourceSearchResult<T>>;
 }
 
+export type RepoInsertParams<T> = {
+  table?: string;
+  data: T;
+};
+
+export type RepoInsertGetParams<T> = RepoInsertParams<T> & {
+  /**
+   * 当指定了该字段，会根据字段返回插入后的数据
+   */
+  fields?: (keyof T)[] | string;
+};
+
 export interface RepositoryInterface<T> extends RepoSearchInterface<T> {
-  getName(): string;
+  getRepoName(): string;
+
+  /**
+   * 插入一条数据
+   * @param data
+   */
+  insert(params: RepoInsertParams<T>): Promise<void>;
+  /**
+   * 插入一条数据后返回新的数据
+   * @param params
+   */
+  insert(params: RepoInsertGetParams<T>): Promise<T>;
 }
