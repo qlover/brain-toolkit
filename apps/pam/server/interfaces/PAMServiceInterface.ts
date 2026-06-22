@@ -1,4 +1,5 @@
 import type {
+  PAMProjectCreateWithEnvSchemaType,
   PAMProjectSchemaType,
   PAMProjectUpdateSchemaType,
   PAMProjectWithEnvironmentsSchemaType
@@ -76,4 +77,11 @@ export interface PAMServiceInterface {
       useRPC?: boolean;
     }
   ): Promise<PAMProjectUpdateSchemaType>;
+
+  /**
+   * 创建一个新的 PAM 项目
+   */
+  createProject(
+    params: PAMProjectCreateWithEnvSchemaType
+  ): Promise<PAMProjectWithEnvironmentsSchemaType>;
 }

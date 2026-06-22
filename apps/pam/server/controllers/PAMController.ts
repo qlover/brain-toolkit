@@ -9,7 +9,8 @@ import {
   PAMProjectSchemaType,
   PAMProjectWithEnvironmentsSchemaType,
   PAMProjectUpdateSchema,
-  PAMProjectUpdateSchemaType
+  PAMProjectUpdateSchemaType,
+  PAMProjectCreateWithEnvSchema
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMService } from '@server/services/PAMService';
@@ -69,5 +70,14 @@ export class PAMController {
     return this.pamService.updateProject(id, parsed, {
       useRPC
     });
+  }
+
+  public async createProject(
+    request: NextRequest
+  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    const body = await request.json();
+    const parsed = PAMProjectCreateWithEnvSchema.parse(body);
+
+    return this.pamService.createProject(parsed);
   }
 }
