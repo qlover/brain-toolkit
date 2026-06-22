@@ -13,6 +13,8 @@ import { I } from '@config/ioc-identifiter';
 import { isPGRSTSchema } from '@schemas/PGRSTSchema';
 import {
   Operators,
+  RepoInsertGetParams,
+  RepoInsertParams,
   type OperatorType,
   type RepoSearchParams
 } from '@server/interfaces/DBBridgeInterface';
@@ -70,7 +72,7 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
 
     // 显式标注 query 类型为 AnyFilterBuilder
     let query: FilterBuilder = client
-      .from(params.table ?? this.getName())
+      .from(params.table ?? this.getRepoName())
       .select(selector, { count: 'exact', head: false }) as FilterBuilder;
 
     // 1. 处理 where (AND 条件)
@@ -175,6 +177,42 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
     };
   }
 
+  /**
+   * 插入一条数据
+   * @override
+   * @param data
+   */
+  public insert(params: RepoInsertParams<T>): Promise<void>;
+  /**
+   * 插入一条数据后返回新的数据
+   * @override
+   * @param params
+   */
+  public insert(params: RepoInsertGetParams<T>): Promise<T>;
+  /**
+   * @override
+   */
+  public async insert(
+    params: RepoInsertParams<T> | RepoInsertGetParams<T>
+  ): Promise<T | void> {
+    const { data, fields } = params as RepoInsertGetParams<T>;
+    const client = await this.getSupabase();
+    const query = client
+      .from(this.getRepoName())
+      .insert(data as Record<string, unknown>);
+
+    if (Array.isArray(fields) && fields.length > 0) {
+      const result = await query.select(fields.join(',')).maybeSingle();
+
+      this.throwIfError(result);
+      return result.data as T;
+    }
+
+    const result = await query;
+
+    this.throwIfError(result);
+  }
+
   // ---- 辅助方法（完全类型安全） ----
 
   /**
@@ -256,9 +294,6 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
       .join(',');
   }
 
-  /**
-   * 将单个条件转换为 PostgREST OR 字符串片段
-   */
   /**
    * 将单个条件转换为 PostgREST OR 字符串片段
    */

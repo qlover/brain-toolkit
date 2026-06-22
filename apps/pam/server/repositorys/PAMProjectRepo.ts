@@ -73,7 +73,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     }
 
     return await this.supabaseRepo.search({
-      table: this.getName(),
+      table: this.getRepoName(),
       fields: PAMProjectSafeFields,
       page: page,
       pageSize: pageSize,
@@ -114,7 +114,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     // 一定是 rls 的 api
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .select(
         PAMProjectSafeFields.join(',') +
           `,${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(*)`
@@ -144,7 +144,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .select(PAMProjectSafeFields.join(','))
       .eq('id', id)
       // 启用了rls 就不需要 owner_id
@@ -176,7 +176,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     }
 
     const result = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .select('id')
       .eq('id', id)
       .eq('owner_id', userId)
@@ -197,7 +197,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
 
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .update(updates)
       .eq('id', id);
 
@@ -289,7 +289,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     // 3. 返回最新数据
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .select(
         !envUpdates
           ? PAMProjectSafeFields.join(',')
@@ -355,7 +355,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .select('id')
       .eq('slug', slug)
       .maybeSingle();
@@ -382,7 +382,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
 
     // 1. 创建项目（RLS 自动设置 owner_id）
     const createResult = await supabase
-      .from(this.getName())
+      .from(this.getRepoName())
       .insert(projectData)
       .select(PAMProjectSafeFields.join(','))
       .single();
