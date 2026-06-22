@@ -128,6 +128,7 @@ export interface RepoSearchInterface<T> {
 }
 
 export type RepoInsertParams<T> = {
+  table?: string;
   data: T;
 };
 

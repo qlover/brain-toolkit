@@ -31,11 +31,11 @@ import {
 import {
   FilterTriple,
   Operators,
-  type RepoSearchInterface
+  RepoInsertGetParams,
+  RepoInsertParams
 } from '@server/interfaces/DBBridgeInterface';
 import { BaseRepository } from './BaseRepository';
 import { SupabaseRepo } from './SupabaseRepo';
-import { SupabaseServiceRoleBridge } from './SupabaseServiceRoleBridge';
 import type { LoggerInterface } from '@qlover/logger';
 
 @injectable()
@@ -44,12 +44,31 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
   protected logger!: LoggerInterface;
 
   constructor(
-    @inject(SupabaseServiceRoleBridge)
-    protected supabaseServiceBridge: RepoSearchInterface<PAMProjectSchemaType>,
     @inject(SupabaseRepo)
     protected supabaseRepo: SupabaseRepo<PAMProjectSchemaType>
   ) {
     super(PAMProjectTableName);
+  }
+
+  /**
+   * @override
+   */
+  public insert(params: RepoInsertParams<PAMProjectSchemaType>): Promise<void>;
+  /**
+   * @override
+   */
+  public insert(
+    params: RepoInsertGetParams<PAMProjectSchemaType>
+  ): Promise<PAMProjectSchemaType>;
+  /**
+   * @override
+   */
+  public async insert(
+    params:
+      | RepoInsertParams<PAMProjectSchemaType>
+      | RepoInsertGetParams<PAMProjectSchemaType>
+  ): Promise<PAMProjectSchemaType | void> {
+    return await this.supabaseRepo.insert(params);
   }
 
   /**
@@ -381,20 +400,18 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     const { [PAMProjectEnvKey]: envs, ...projectData } = params;
 
     // 1. 创建项目（RLS 自动设置 owner_id）
-    const createResult = await supabase
-      .from(this.getRepoName())
-      .insert(projectData)
-      .select(PAMProjectSafeFields.join(','))
-      .single();
+    const createResult = await this.insert({
+      table: this.getRepoName(),
+      data: projectData as PAMProjectSchemaType,
+      fields: PAMProjectSafeFields
+    });
 
     this.logger.info(
       `[PAMProjectRepo] create project ${projectData.name} success`,
       projectData
     );
 
-    this.supabaseRepo.throwIfError(createResult);
-
-    const project = PAMProjectSafeSchema.parse(createResult.data);
+    const project = PAMProjectSafeSchema.parse(createResult);
 
     // 2. 创建环境（如果有）
     let createdEnvs: PAMEnvironmentsSchemaType[] = [];

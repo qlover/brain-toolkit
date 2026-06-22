@@ -195,14 +195,19 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
   public async insert(
     params: RepoInsertParams<T> | RepoInsertGetParams<T>
   ): Promise<T | void> {
-    const { data, fields } = params as RepoInsertGetParams<T>;
+    const { data, fields, table } = params as RepoInsertGetParams<T>;
     const client = await this.getSupabase();
     const query = client
-      .from(this.getRepoName())
+      .from(table || this.getRepoName())
       .insert(data as Record<string, unknown>);
 
-    if (Array.isArray(fields) && fields.length > 0) {
-      const result = await query.select(fields.join(',')).maybeSingle();
+    if (fields) {
+      const selectString =
+        Array.isArray(fields) && fields.length > 0
+          ? fields.join(',')
+          : (fields as string);
+
+      const result = await query.select(selectString).maybeSingle();
 
       this.throwIfError(result);
       return result.data as T;

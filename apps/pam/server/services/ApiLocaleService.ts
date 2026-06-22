@@ -7,12 +7,11 @@ import { splitI18nKey } from '@schemas/i18nKeyScheam';
 import type { LocalesSchema } from '@schemas/LocalesSchema';
 import type { PaginationResult } from '@schemas/SearchResultSchema';
 import type { DBTablePaginationParams } from '@server/interfaces/DBTableInterface';
-import { LocalesRepository } from '../repositorys/LocalesRepository';
-import type { BridgeOrderBy } from '../interfaces/DBBridgeInterface';
-import type {
-  LocalesRepositoryInterface,
+import {
+  LocalesRepository,
   UpsertResult
-} from '../interfaces/LocalesRepositoryInterface';
+} from '../repositorys/LocalesRepository';
+import type { BridgeOrderBy } from '../interfaces/DBBridgeInterface';
 
 export type ImportLocalesData = {
   namespace?: string;
@@ -26,17 +25,14 @@ export type ImportLocalesData = {
 export class ApiLocaleService {
   constructor(
     @inject(LocalesRepository)
-    protected localesRepository: LocalesRepositoryInterface
+    protected localesRepository: LocalesRepository
   ) {}
 
   public async getLocalesJson(
     localeName: string,
-    orderBy?: BridgeOrderBy
+    _orderBy?: BridgeOrderBy
   ): Promise<Record<string, string>> {
-    const locales = await this.localesRepository.getLocales(
-      localeName,
-      orderBy
-    );
+    const locales = await this.localesRepository.getLocales(localeName);
     return locales.reduce(
       (acc, locale) => {
         // @ts-expect-error localeName is valid
