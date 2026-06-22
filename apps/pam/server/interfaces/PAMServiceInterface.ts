@@ -66,6 +66,14 @@ export interface PAMServiceInterface {
    */
   updateProject(
     id: string,
-    params: PAMProjectUpdateSchemaType
+    params: PAMProjectUpdateSchemaType,
+    extra?: {
+      /**
+       * 提供 RPC 调用， rpc 支持事务
+       *
+       * @default false
+       */
+      useRPC?: boolean;
+    }
   ): Promise<PAMProjectUpdateSchemaType>;
 }

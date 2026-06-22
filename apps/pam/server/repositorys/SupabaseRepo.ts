@@ -313,12 +313,12 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
       }
 
       if (isAuthError(error) || error instanceof Error) {
-        throw new ExecutorError('SupabaseAuthError', response);
+        throw new ExecutorError('SupabaseAuthError', { cause: error });
       }
 
       if (isPGRSTSchema(error)) {
         // FIXME: 拦截返回信息
-        throw new ExecutorError('SupabasePGRSTError', response);
+        throw new ExecutorError('SupabasePGRSTError', { cause: error });
       }
 
       throw error;

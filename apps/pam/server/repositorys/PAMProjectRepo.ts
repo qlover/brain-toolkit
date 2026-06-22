@@ -3,11 +3,16 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit';
+import { isEmpty } from 'lodash';
 import { inject, injectable } from '@shared/container';
-import { API_PAM_PROJECT_NOT_FOUND } from '@config/i18n-identifier/api';
+import {
+  API_NOT_AUTHORIZED,
+  API_PAM_ENV_NOT_FOUND,
+  API_PAM_PROJECT_NOT_FOUND
+} from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import {
-  PAMEnvironmentUpdateSchemaType,
+  PAMEnvironmentEditSchemaType,
   PAMEnvironmentsTableName,
   PAMPROJECT_TSVECTOR_KEY,
   PAMProjectEnvKey,
@@ -134,8 +139,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
   public async getProjectById(
     id: string
   ): Promise<PAMProjectSafeSchemaType | null> {
-    // 一定是 rls 的 api
     const supabase = await this.supabaseRepo.getSupabase();
+
     const result = await supabase
       .from(this.getName())
       .select(PAMProjectSafeFields.join(','))
@@ -146,6 +151,37 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     this.supabaseRepo.throwIfError(result);
 
     return PAMProjectSafeSchema.parse(result.data);
+  }
+
+  /**
+   * 检查项目是否有权限
+   *
+   * id 只能是自己的，不论是 public 还是 private
+   *
+   * @param id
+   * @returns
+   */
+  public async hasAuthProject(id: string): Promise<boolean> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const userResult = await supabase.auth.getUser();
+    this.supabaseRepo.throwIfError(userResult);
+
+    const userId = userResult.data.user?.id;
+
+    if (!userId) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const result = await supabase
+      .from(this.getName())
+      .select('id')
+      .eq('id', id)
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+    return !isEmpty(result.data);
   }
 
   /**
@@ -164,45 +200,65 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
       .eq('id', id);
 
     this.supabaseRepo.throwIfError(result);
-
-    this.logger.debug(
-      `[PAMProjectRepo] update project ${id} success`,
-      result.data
-    );
   }
 
   /**
-   * 同步环境列表（仅新增/更新，不删除）
-   * - 若传入的环境对象包含 id，则更新对应记录；
-   * - 若不包含 id，则插入新记录（Supabase 自动生成 UUID）。
+   * 更新现有环境（仅更新传入的字段）
+   * - 每个环境对象必须包含 id
+   * - 所有 id 必须已存在于数据库中
+   * - 不会新增或删除环境
+   * @throws 若缺少 id 或 id 不存在，则抛出异常
    */
   private async syncEnvironments(
     projectId: string,
-    envUpdates: PAMEnvironmentUpdateSchemaType[]
+    envUpdates: PAMEnvironmentEditSchemaType[]
   ): Promise<void> {
     if (!envUpdates || envUpdates.length === 0) return;
 
+    // 1. 验证都有 id
+    const missingId = envUpdates.some((env) => !env.id);
+    if (missingId) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
     const supabase = await this.supabaseRepo.getSupabase();
 
-    // 准备 upsert 数据
-    const upsertData = envUpdates.map((env) => ({
-      id: 'id' in env ? env.id : undefined, // 如果有 id 则更新，否则由 Supabase 生成新 id
-      project_id: projectId,
-      name: env.name,
-      url: env.url,
-      variables: env.variables || {}
-    }));
-
-    const result = await supabase
+    // 2. 获取现有环境 ID
+    const existResult = await supabase
       .from(PAMEnvironmentsTableName)
-      .upsert(upsertData, { onConflict: 'id' });
+      .select('id')
+      .eq('project_id', projectId);
+    this.supabaseRepo.throwIfError(existResult);
 
-    this.supabaseRepo.throwIfError(result);
+    const existing = existResult.data || [];
+    const existingIds = new Set(existing.map((e) => e.id));
+    const incomingIds = new Set(envUpdates.map((env) => env.id));
 
-    this.logger.debug(
-      `[PAMProjectRepo] upsert environments success`,
-      result.data
+    // 3. 检查是否有不存在的 id
+    const invalidIds = Array.from(incomingIds).filter(
+      (id) => !existingIds.has(id)
     );
+    if (invalidIds.length > 0) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND, invalidIds);
+    }
+
+    // 4. 逐个更新，只更新传入的字段
+    for (const env of envUpdates) {
+      const updateData: Partial<
+        Pick<PAMEnvironmentEditSchemaType, 'name' | 'url' | 'variables'>
+      > = {};
+      if (env.name !== undefined) updateData.name = env.name;
+      if (env.url !== undefined) updateData.url = env.url;
+      if (env.variables !== undefined) updateData.variables = env.variables;
+
+      if (Object.keys(updateData).length === 0) continue; // 无字段跳过
+
+      const result = await supabase
+        .from(PAMEnvironmentsTableName)
+        .update(updateData)
+        .eq('id', env.id);
+      this.supabaseRepo.throwIfError(result);
+    }
   }
 
   /**
@@ -231,8 +287,10 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     const result = await supabase
       .from(this.getName())
       .select(
-        PAMProjectSafeFields.join(',') +
-          `,${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(*)`
+        !envUpdates
+          ? PAMProjectSafeFields.join(',')
+          : PAMProjectSafeFields.join(',') +
+              `,${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(*)`
       )
       .eq('id', id)
       .maybeSingle();
@@ -259,7 +317,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
    * @param updates
    * @returns
    */
-  public async updateProjectWithEnvironments(
+  public async rpc_updateProject(
     id: string,
     updates: PAMProjectUpdateSchemaType
   ): Promise<PAMProjectWithEnvironmentsSchemaType> {

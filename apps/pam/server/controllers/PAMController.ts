@@ -54,6 +54,8 @@ export class PAMController {
   ): Promise<PAMProjectUpdateSchemaType> {
     const body = await request.json();
 
+    const useRPC = request.nextUrl.searchParams.get('rpc') === '1';
+
     if (isEmpty(body)) {
       throw new ExecutorError(API_REQUEST_BODY_EMPTY);
     }
@@ -64,6 +66,8 @@ export class PAMController {
       throw new ExecutorError(API_REQUEST_BODY_EMPTY);
     }
 
-    return this.pamService.updateProject(id, parsed);
+    return this.pamService.updateProject(id, parsed, {
+      useRPC
+    });
   }
 }

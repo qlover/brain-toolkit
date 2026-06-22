@@ -71,18 +71,15 @@ export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
   [PAMProjectEnvKey]: z.array(PAMEnvironmentsSchema).optional()
 });
 
-/**
- * 更新环境必须要id
- */
+// 更新环境：id 必填，其他字段可选（支持部分更新）
 export const PAMEnvironmentEditSchema = PAMEnvironmentsSchema.pick({
-  /**
-   * 必须将 id pick 出来
-   */
   id: true,
   name: true,
   url: true,
   variables: true
-});
+})
+  .partial() // 所有字段变为可选
+  .required({ id: true }); // 强制 id 必填
 
 /**
  * 新增环境不能要id，否则就是更新
@@ -92,11 +89,6 @@ export const PAMEnvironmentCreateSchema = PAMEnvironmentsSchema.pick({
   url: true,
   variables: true
 });
-
-export const PAMEnvironmentUpdateSchema = z.union([
-  PAMEnvironmentEditSchema,
-  PAMEnvironmentCreateSchema
-]);
 
 /**
  * 修改的时候只允许修改部分属性
@@ -112,15 +104,15 @@ export const PAMProjectUpdateSchema = PAMProjectSchema.pick({
 })
   .partial()
   .extend({
-    [PAMProjectEnvKey]: PAMEnvironmentUpdateSchema.array().optional()
+    [PAMProjectEnvKey]: PAMEnvironmentEditSchema.array().optional()
   });
 
 export type PAMProjectUpdateSchemaType = z.infer<typeof PAMProjectUpdateSchema>;
 export type PAMProjectWithEnvironmentsSchemaType = z.infer<
   typeof PAMProjectWithEnvironmentsSchema
 >;
-export type PAMEnvironmentUpdateSchemaType = z.infer<
-  typeof PAMEnvironmentUpdateSchema
+export type PAMEnvironmentEditSchemaType = z.infer<
+  typeof PAMEnvironmentEditSchema
 >;
 export type PAMEnvironmentsSchemaType = z.infer<typeof PAMEnvironmentsSchema>;
 export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;

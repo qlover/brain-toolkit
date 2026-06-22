@@ -155,3 +155,10 @@ export const API_REQUEST_BODY_EMPTY = 'api:request_body_empty';
  * @localEn Project Not Found
  */
 export const API_PAM_PROJECT_NOT_FOUND = 'api:pam_project_not_found';
+
+/**
+ * @description 没有pam 环境
+ * @localZh 环境无效
+ * @localEn PAM Environment Invalid
+ */
+export const API_PAM_ENV_NOT_FOUND = 'api:pam_env_not_found';
