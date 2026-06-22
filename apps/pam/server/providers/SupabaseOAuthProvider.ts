@@ -9,7 +9,7 @@ import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface'
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import type { ServerStateInterface } from '@server/interfaces/ServerStateInterface';
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
-import { SupabaseBridge } from '@server/repositorys/SupabaseBridge';
+import { SupabaseRepo } from '@server/repositorys/SupabaseRepo';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { PasswordEncrypt } from '@server/utils/PasswordEncrypt';
 import { TokenEncryption } from '@server/utils/TokenEncryption';
@@ -92,7 +92,7 @@ export class SupabaseOAuthProvider
     oauthRepo: OAuthWrapperRepositoryInterface,
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
-    @inject(SupabaseBridge) protected supabaseBridge: SupabaseBridge
+    @inject(SupabaseRepo) protected supabaseRepo: SupabaseRepo<unknown>
   ) {
     super(
       new OAuthSessionService(config),
@@ -107,11 +107,11 @@ export class SupabaseOAuthProvider
   }
 
   protected async refreshSession(refreshToken: string): Promise<Session> {
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase.auth.refreshSession({
       refresh_token: refreshToken
     });
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     const session = result.data.session;
     if (!session) {
@@ -134,12 +134,12 @@ export class SupabaseOAuthProvider
       throw new Error('Email and password are required for Supabase login');
     }
 
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase.auth.signInWithPassword({
       email,
       password: this.resolvePassword(password)
     });
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     const session = result.data.session;
     const refreshToken = requireSupabaseRefreshToken(session);
@@ -210,9 +210,9 @@ export class SupabaseOAuthProvider
       throw new Error('Supabase access token is required');
     }
 
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase.auth.getUser(token);
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     const user = result.data.user;
     if (!user) {
@@ -303,7 +303,7 @@ export class SupabaseOAuthProvider
    * @override
    */
   public async signWithOtp(params: SignWithOtpParams): Promise<SignOtpResult> {
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
 
     if ('email' in params) {
       const locale = await this.serverState.getLocale();
@@ -313,7 +313,7 @@ export class SupabaseOAuthProvider
         email: params.email,
         options: { emailRedirectTo: redirectTo }
       });
-      this.supabaseBridge.throwIfError(result);
+      this.supabaseRepo.throwIfError(result);
 
       return {
         expired: Math.floor(Date.now() / 1000) + 3600
@@ -323,7 +323,7 @@ export class SupabaseOAuthProvider
     const result = await supabase.auth.signInWithOtp({
       phone: params.phone
     });
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     return {
       expired: Math.floor(Date.now() / 1000) + 3600,
@@ -339,7 +339,7 @@ export class SupabaseOAuthProvider
       throw new Error('OTP token is required for verification');
     }
 
-    const supabase = await this.supabaseBridge.getSupabase();
+    const supabase = await this.supabaseRepo.getSupabase();
 
     let result;
     if ('email' in params && params.email) {
@@ -360,7 +360,7 @@ export class SupabaseOAuthProvider
       );
     }
 
-    this.supabaseBridge.throwIfError(result);
+    this.supabaseRepo.throwIfError(result);
 
     const session = result.data.session;
     if (!session) {
