@@ -33,4 +33,9 @@ export interface OAuthWrapperProviderInterface
    * Providers that do not support this flow should throw.
    */
   loginWithSession?(session: SupabaseSession): Promise<void>;
+
+  /**
+   * 刷新会话信息
+   */
+  refreshUser(): Promise<UserSchema>;
 }

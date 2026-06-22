@@ -24,7 +24,6 @@ import { SupabaseRepo } from '@server/repositorys/SupabaseRepo';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
 import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
 import { PasswordEncrypt } from '../utils/PasswordEncrypt';
-import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
 import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 import type {
   UserLoginContext,
@@ -48,7 +47,7 @@ export class OAuthUserService
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
     @inject(RequestLogsRepository)
-    protected requestLogsRepository: RequestLogsRepositoryInterface,
+    protected requestLogsRepository: RequestLogsRepository,
     @inject(I.OAuthWrapperProviderInterface)
     protected oauthProvider: OAuthWrapperProviderInterface,
     @inject(SupabaseRepo)
@@ -75,16 +74,12 @@ export class OAuthUserService
 
     this.logger.info('OAuth wrapper login success', { email: params.email });
 
-    await this.requestLogsRepository.insertEvent({
-      event_category: 'auth',
+    await this.requestLogsRepository.insertWithAuth({
       event_type: 'login',
-      success: true,
-      payload: {
-        auth_provider: 'oauth-wrapper',
-        user_agent: params.loginContext?.userAgent ?? null,
-        ip_address: params.loginContext?.ipAddress ?? null,
-        login_method: 'password'
-      }
+      auth_provider: 'oauth-wrapper',
+      userAgent: params.loginContext?.userAgent ?? null,
+      ipAddress: params.loginContext?.ipAddress ?? null,
+      login_method: 'password'
     });
 
     const user = await this.oauthProvider.getUserSchema();
@@ -104,16 +99,12 @@ export class OAuthUserService
   public async logout(context?: UserLoginContext): Promise<void> {
     const user = await this.oauthProvider.getUserSchema();
 
-    await this.requestLogsRepository.insertEvent({
-      event_category: 'auth',
+    await this.requestLogsRepository.insertWithAuth({
       event_type: 'logout',
-      success: true,
-      payload: {
-        auth_provider: 'next-oauth',
-        user_agent: context?.userAgent ?? null,
-        ip_address: context?.ipAddress ?? null,
-        user_id: user?.id ?? null
-      }
+      auth_provider: 'next-oauth',
+      userAgent: context?.userAgent ?? null,
+      ipAddress: context?.ipAddress ?? null,
+      user_id: user?.id
     });
 
     await this.clear();
@@ -123,17 +114,18 @@ export class OAuthUserService
    * @override
    */
   public async refresh(): Promise<UserSchema> {
-    throw new Error('Method not implemented.');
+    return await this.oauthProvider.refreshUser();
   }
 
   /**
    * @override
    */
-  public async getUser(): Promise<UserSchema | null>;
+  public async getUser(): Promise<UserSchema>;
   /**
    * @override
    */
-  public async getUser(throwError: boolean): Promise<UserSchema>;
+  public async getUser(throwError?: boolean): Promise<UserSchema | null>;
+
   /**
    * @override
    */

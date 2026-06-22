@@ -7,7 +7,7 @@ import { localePage, ROUTE_CALLBACK_EMAIL_LOGIN } from '@config/route';
 import { UserRole, type UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import type { ServerStateInterface } from '@server/interfaces/ServerStateInterface';
+import type { ServerContextInterface } from '@server/interfaces/ServerContextInterface';
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { SupabaseRepo } from '@server/repositorys/SupabaseRepo';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
@@ -81,8 +81,8 @@ export class SupabaseOAuthProvider
 {
   @inject(I.Logger)
   protected logger!: LoggerInterface;
-  @inject(I.ServerStateInterface)
-  protected serverState!: ServerStateInterface;
+  @inject(I.ServerContextInterface)
+  protected serverContext!: ServerContextInterface;
 
   protected readonly appHost: string;
 
@@ -106,7 +106,7 @@ export class SupabaseOAuthProvider
     return shouldMd5Password() ? this.encryptor.encrypt(password) : password;
   }
 
-  protected async refreshSession(refreshToken: string): Promise<Session> {
+  protected async retrieveNewSession(refreshToken: string): Promise<Session> {
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase.auth.refreshSession({
       refresh_token: refreshToken
@@ -119,6 +119,40 @@ export class SupabaseOAuthProvider
     }
 
     return session;
+  }
+
+  /**
+   * @override
+   */
+  public async refreshUser(): Promise<UserSchema> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const refreshed = await supabase.auth.refreshSession();
+
+    this.supabaseRepo.throwIfError(refreshed);
+
+    const session = refreshed.data.session!;
+    await this.syncUserSession(session);
+
+    const profile = toOAuthUserProfile(refreshed.data.user!);
+
+    const role = profile.roles?.includes('admin')
+      ? UserRole.ADMIN
+      : UserRole.USER;
+
+    return {
+      id: String(profile.id),
+      email: profile.email,
+      role,
+      password: '',
+      credential_token: session.refresh_token,
+      created_at:
+        typeof profile.created_at === 'string'
+          ? profile.created_at
+          : new Date().toISOString(),
+      updated_at:
+        typeof profile.updated_at === 'string' ? profile.updated_at : null
+    } as UserSchema;
   }
 
   /**
@@ -169,7 +203,7 @@ export class SupabaseOAuthProvider
       throw new Error('Supabase refresh token is required');
     }
 
-    const session = await this.refreshSession(refreshToken);
+    const session = await this.retrieveNewSession(refreshToken);
 
     return {
       access_token: session.access_token,
@@ -189,7 +223,7 @@ export class SupabaseOAuthProvider
       throw new Error('Supabase refresh token is required');
     }
 
-    const session = await this.refreshSession(refreshToken);
+    const session = await this.retrieveNewSession(refreshToken);
     const user = session.user;
 
     if (!user) {
@@ -277,14 +311,18 @@ export class SupabaseOAuthProvider
 
     // Refresh the session — Supabase rotates refresh tokens, so we must
     // use the NEW refresh token returned by refreshSession().
-    const refreshed = await this.refreshSession(initialRefreshToken);
-    const refreshToken = requireSupabaseRefreshToken(refreshed);
+    const refreshed = await this.retrieveNewSession(initialRefreshToken);
+    await this.syncUserSession(refreshed);
+  }
 
-    if (!refreshed.user) {
+  protected async syncUserSession(session: Session): Promise<void> {
+    const refreshToken = requireSupabaseRefreshToken(session);
+
+    if (!session.user) {
       throw new Error('Refreshed Supabase session is missing user info');
     }
 
-    const profile = toOAuthUserProfile(refreshed.user);
+    const profile = toOAuthUserProfile(session.user);
     const sessionPayload = this.generageSessionPayload({
       email: profile.email,
       ...profile,
@@ -306,7 +344,7 @@ export class SupabaseOAuthProvider
     const supabase = await this.supabaseRepo.getSupabase();
 
     if ('email' in params) {
-      const locale = await this.serverState.getLocale();
+      const locale = await this.serverContext.getLocale();
       const redirectTo =
         this.appHost + localePage(ROUTE_CALLBACK_EMAIL_LOGIN, locale);
       const result = await supabase.auth.signInWithOtp({

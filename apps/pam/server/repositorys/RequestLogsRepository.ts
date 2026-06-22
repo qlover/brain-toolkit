@@ -6,9 +6,9 @@ import {
   type RequestLogRow
 } from '@schemas/RequestLogSchema';
 import { AppApiResult } from '@interfaces/AppApiInterface';
+import type { ServerContextInterface } from '@server/interfaces/ServerContextInterface';
 import { UserLoginContext } from '@server/interfaces/UserServiceInterface';
 import { SupabaseRepo } from './SupabaseRepo';
-
 import type { LoggerInterface } from '@qlover/logger';
 
 const TABLE = 'request_logs';
@@ -29,6 +29,9 @@ export type HttpReqeustLogParams = {
 export class RequestLogsRepository extends SupabaseRepo<RequestLogRow> {
   @inject(I.Logger)
   protected logger!: LoggerInterface;
+
+  @inject(I.ServerContextInterface)
+  protected serverContext!: ServerContextInterface;
 
   constructor() {
     super(TABLE);
@@ -54,14 +57,13 @@ export class RequestLogsRepository extends SupabaseRepo<RequestLogRow> {
     result: AppApiResult<unknown>,
     params: {
       request: NextRequest;
-      started: number;
-      event_category: string;
-      event_type: string;
       user_id?: string;
     }
   ): Promise<RequestLogCreateType> {
-    const { request, started, event_category, event_type } = params;
-    const durationMs = Math.round(performance.now() - started);
+    const { request } = params;
+    const durationMs = Math.round(
+      performance.now() - this.serverContext.getState('started')
+    );
     const { userAgent, ipAddress } = this.getLoginContext(request);
     const success = result.success === true;
     const httpStatus = success ? 200 : 400;
@@ -70,8 +72,8 @@ export class RequestLogsRepository extends SupabaseRepo<RequestLogRow> {
     const correlationId = result.requestId;
 
     const data: RequestLogCreateType = {
-      event_category: event_category,
-      event_type: event_type,
+      event_category: 'api',
+      event_type: this.serverContext.getState('event_type') || '_default.type',
       success,
       request_id: correlationId?.trim() ? correlationId : null,
       record_type: request.nextUrl.pathname,
@@ -95,5 +97,32 @@ export class RequestLogsRepository extends SupabaseRepo<RequestLogRow> {
     await this.insert({ data: data as RequestLogRow });
 
     return data;
+  }
+
+  public async insertWithAuth(
+    params: UserLoginContext & {
+      auth_provider: string;
+      event_type: string;
+      user_id?: string;
+      login_method?: string;
+    }
+  ): Promise<void> {
+    const data: RequestLogCreateType = {
+      event_category: 'auth',
+      event_type: params.event_type,
+      success: true,
+      request_id: this.serverContext.getState('uid'),
+      record_type: 'auth',
+      payload: {
+        auth_provider: params.auth_provider,
+        user_agent: params.userAgent,
+        ip_address: params.ipAddress,
+        login_method: params.login_method
+      }
+    };
+
+    await this.insert({
+      data: data as RequestLogRow
+    });
   }
 }

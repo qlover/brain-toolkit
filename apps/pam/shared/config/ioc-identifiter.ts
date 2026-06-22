@@ -5,7 +5,7 @@ import type { UserService } from '@/impls/UserService';
 import type { ZustandCounterService } from '@/impls/ZustandCounterService';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import type { ServerStateInterface } from '@server/interfaces/ServerStateInterface';
+import type { ServerContextInterface } from '@server/interfaces/ServerContextInterface';
 import type * as CorekitBridge from '@qlover/corekit-bridge';
 import type * as FeCorekit from '@qlover/fe-corekit';
 import type { LoggerInterface } from '@qlover/logger';
@@ -35,7 +35,7 @@ export const IOCIdentifier = Object.freeze({
    *
    * 比如当次请求的 locale 等
    */
-  ServerStateInterface: 'ServerStateInterface'
+  ServerContextInterface: 'ServerContextInterface'
 });
 
 export const I = IOCIdentifier;
@@ -74,5 +74,5 @@ export interface IOCIdentifierMapServer {
   [IOCIdentifier.Logger]: LoggerInterface;
   [IOCIdentifier.AppConfig]: SeedServerConfigInterface;
   [IOCIdentifier.OAuthWrapperProviderInterface]: OAuthWrapperProviderInterface;
-  [IOCIdentifier.ServerStateInterface]: ServerStateInterface;
+  [IOCIdentifier.ServerContextInterface]: ServerContextInterface;
 }
