@@ -2,12 +2,19 @@ import {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
+import { ExecutorError } from '@qlover/fe-corekit';
 import { inject, injectable } from '@shared/container';
-import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
-import type {
-  PAMProjectSchemaType,
-  PAMProjectUpdateSchemaType,
-  PAMProjectWithEnvironmentsSchemaType
+import {
+  API_NOT_AUTHORIZED,
+  API_PAM_ENV_NAME_EXISTS,
+  API_PAM_SLUG_EXISTS
+} from '@config/i18n-identifier/api';
+import {
+  PAMProjectEnvKey,
+  type PAMProjectCreateWithEnvSchemaType,
+  type PAMProjectSchemaType,
+  type PAMProjectUpdateSchemaType,
+  type PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
 import type {
   PAMServiceInterface,
@@ -75,5 +82,37 @@ export class PAMService implements PAMServiceInterface {
     }
 
     return await this.projectRepo.updateProject(id, params);
+  }
+
+  /**
+   * @override
+   */
+  public async createProject(
+    params: PAMProjectCreateWithEnvSchemaType
+  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    const { slug, [PAMProjectEnvKey]: envs } = params;
+    // slug 不能重复
+    const pamWithSlug = await this.projectRepo.hasProjectWithSlug(slug);
+
+    if (pamWithSlug) {
+      throw new ExecutorError(API_PAM_SLUG_EXISTS, { slug });
+    }
+
+    // env 不能重复
+    if (Array.isArray(envs)) {
+      const len = envs.length;
+      const names = new Set(envs.map(({ name }) => name));
+      if (names.size !== len) {
+        throw new ExecutorError(API_PAM_ENV_NAME_EXISTS, { names });
+      }
+    }
+    const user = await this.userService.getUser();
+
+    const owner_id = user!.id;
+
+    return await this.projectRepo.createProject({
+      ...params,
+      owner_id
+    });
   }
 }

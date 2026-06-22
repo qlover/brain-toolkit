@@ -162,3 +162,17 @@ export const API_PAM_PROJECT_NOT_FOUND = 'api:pam_project_not_found';
  * @localEn PAM Environment Invalid
  */
 export const API_PAM_ENV_NOT_FOUND = 'api:pam_env_not_found';
+
+/**
+ * @description 项目 slug 不能重复
+ * @localZh 项目 slug 已存在
+ * @localEn PAM slug already exists
+ */
+export const API_PAM_SLUG_EXISTS = 'api:pam_slug_exists';
+
+/**
+ * @description 环境名不能重复
+ * @localZh 环境名已存在
+ * @localEn Env name already exists
+ */
+export const API_PAM_ENV_NAME_EXISTS = 'api:pam_env_name_exists';

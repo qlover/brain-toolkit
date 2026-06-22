@@ -32,13 +32,23 @@ export const PAMProjectSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   stack: z.string().optional(),
-  repo_url: z.string().optional(),
+  repo_url: z.url().optional(),
   category: z.string(),
   /**
    * 0: private, 1: public
    */
   is_public: z.enum(PAMPublicType),
   owner_id: z.uuid(),
+  created_at: z.union([z.string(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+  updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+});
+
+export const PAMEnvironmentsSchema = z.object({
+  id: z.uuid(),
+  project_id: z.uuid(),
+  name: z.string(),
+  url: z.url(),
+  variables: z.json().optional(),
   created_at: z.union([z.string(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
   updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
 });
@@ -50,16 +60,6 @@ export const PAMProjectSafeSchema = PAMProjectSchema.omit({
 export const PAMProjectSafeFields = Object.keys(
   PAMProjectSafeSchema.shape
 ) as (keyof PAMProjectSchemaType)[];
-
-export const PAMEnvironmentsSchema = z.object({
-  id: z.uuid(),
-  project_id: z.uuid(),
-  name: z.string(),
-  url: z.string(),
-  variables: z.json().optional(),
-  created_at: z.union([z.string(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
-  updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
-});
 
 export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
   /**
@@ -107,6 +107,14 @@ export const PAMProjectUpdateSchema = PAMProjectSchema.pick({
     [PAMProjectEnvKey]: PAMEnvironmentEditSchema.array().optional()
   });
 
+export const PAMProjectCreateWithEnvSchema = PAMProjectSafeSchema.omit({
+  id: true,
+  created_at: true,
+  updated_at: true
+}).extend({
+  [PAMProjectEnvKey]: PAMEnvironmentCreateSchema.array().optional()
+});
+
 export type PAMProjectUpdateSchemaType = z.infer<typeof PAMProjectUpdateSchema>;
 export type PAMProjectWithEnvironmentsSchemaType = z.infer<
   typeof PAMProjectWithEnvironmentsSchema
@@ -117,3 +125,6 @@ export type PAMEnvironmentEditSchemaType = z.infer<
 export type PAMEnvironmentsSchemaType = z.infer<typeof PAMEnvironmentsSchema>;
 export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;
 export type PAMProjectSafeSchemaType = z.infer<typeof PAMProjectSafeSchema>;
+export type PAMProjectCreateWithEnvSchemaType = z.infer<
+  typeof PAMProjectCreateWithEnvSchema
+>;

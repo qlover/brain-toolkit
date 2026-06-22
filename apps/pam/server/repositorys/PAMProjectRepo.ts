@@ -13,8 +13,10 @@ import {
 import { I } from '@config/ioc-identifiter';
 import {
   PAMEnvironmentEditSchemaType,
+  PAMEnvironmentsSchemaType,
   PAMEnvironmentsTableName,
   PAMPROJECT_TSVECTOR_KEY,
+  PAMProjectCreateWithEnvSchemaType,
   PAMProjectEnvKey,
   PAMProjectSafeFields,
   PAMProjectSafeSchema,
@@ -264,6 +266,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
   /**
    * 更新项目（含环境）
    *
+   * TODO: 更新后的 env name 需要去重
+   *
    * 但是逻辑分离，并不支持事务
    */
   public async updateProject(
@@ -345,5 +349,82 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
     });
 
     return parsed;
+  }
+
+  public async hasProjectWithSlug(slug: string): Promise<boolean> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const result = await supabase
+      .from(this.getName())
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(result);
+
+    return !isEmpty(result.data);
+  }
+
+  /**
+   * 创建项目（含环境）
+   * - 项目字段由 RLS 自动填充 owner_id
+   * - 环境批量插入，自动生成 id
+   * - 返回完整的项目及环境列表
+   */
+  public async createProject(
+    params: PAMProjectCreateWithEnvSchemaType & {
+      owner_id: string;
+    }
+  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    // 分离环境和项目字段
+    const { [PAMProjectEnvKey]: envs, ...projectData } = params;
+
+    // 1. 创建项目（RLS 自动设置 owner_id）
+    const createResult = await supabase
+      .from(this.getName())
+      .insert(projectData)
+      .select(PAMProjectSafeFields.join(','))
+      .single();
+
+    this.logger.info(
+      `[PAMProjectRepo] create project ${projectData.name} success`,
+      projectData
+    );
+
+    this.supabaseRepo.throwIfError(createResult);
+
+    const project = PAMProjectSafeSchema.parse(createResult.data);
+
+    // 2. 创建环境（如果有）
+    let createdEnvs: PAMEnvironmentsSchemaType[] = [];
+
+    this.logger.debug('[PAMProjectRepo] create envs length:', envs?.length);
+
+    if (Array.isArray(envs) && envs.length > 0) {
+      const envsToInsert = envs.map((env) => ({
+        project_id: project.id,
+        name: env.name,
+        url: env.url,
+        variables: env.variables || {}
+      }));
+
+      const envResult = await supabase
+        .from(PAMEnvironmentsTableName)
+        .insert(envsToInsert)
+        .select('*');
+
+      this.supabaseRepo.throwIfError(envResult);
+
+      if (envResult.data) {
+        createdEnvs = envResult.data;
+      }
+    }
+
+    // 3. 组装返回（符合 PAMProjectWithEnvironmentsSchema）
+    return PAMProjectWithEnvironmentsSchema.parse({
+      ...project,
+      [PAMProjectEnvKey]: createdEnvs
+    });
   }
 }
