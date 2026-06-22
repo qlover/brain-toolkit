@@ -12,4 +12,5 @@ export interface ServerAuthInterface {
   throwIfNotAuth(): Promise<void>;
 
   getUser(): Promise<UserSchema | null>;
+  getUser(throwError: boolean): Promise<UserSchema>;
 }
