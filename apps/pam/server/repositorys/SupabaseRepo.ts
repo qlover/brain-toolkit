@@ -8,8 +8,7 @@ import {
   isAuthError
 } from '@supabase/supabase-js';
 import { inject, injectable } from '@shared/container';
-import { createAdminClient } from '@shared/supabase/admin';
-import { createClient } from '@shared/supabase/server';
+import { createServerClient, createAdminClient } from '@shared/supabase/server';
 import { I } from '@config/ioc-identifiter';
 import { isPGRSTSchema } from '@schemas/PGRSTSchema';
 import {
@@ -39,7 +38,7 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
    * @returns
    */
   public async getSupabase(): Promise<SupabaseClient> {
-    return await createClient();
+    return await createServerClient();
   }
 
   /**
@@ -314,12 +313,12 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
       }
 
       if (isAuthError(error) || error instanceof Error) {
-        throw new ExecutorError('SupabaseAuthError', response);
+        throw new ExecutorError('SupabaseAuthError', { cause: error });
       }
 
       if (isPGRSTSchema(error)) {
         // FIXME: 拦截返回信息
-        throw new ExecutorError('SupabasePGRSTError', response);
+        throw new ExecutorError('SupabasePGRSTError', { cause: error });
       }
 
       throw error;

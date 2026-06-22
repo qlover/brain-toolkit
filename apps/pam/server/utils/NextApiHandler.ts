@@ -205,13 +205,19 @@ export class NextApiHandler implements ResultHandlerInterface {
     error: ExecutorError,
     options: Readonly<ResultHandlerOptions>
   ): AppApiErrorInterface {
+    const cause = error.cause;
     // 如果配置为生产环境，则返回空消息的错
     if (options.config.isProduction) {
       return NextApiHandler.createApiError(error.id, '', options);
     }
 
-    if (error.cause instanceof ZodError) {
-      return NextApiHandler.createWithZodError(error.cause, options);
+    if (cause instanceof ZodError) {
+      return NextApiHandler.createWithZodError(cause, options);
+    }
+
+    // 如果 cause 是一个普通数据, 则返回到 data 中
+    if (isPlainObject(cause) || Array.isArray(cause)) {
+      return NextApiHandler.createApiErrorWithCause(error.id, cause, options);
     }
 
     return NextApiHandler.createApiError(error.id, error.message, options);
@@ -227,6 +233,19 @@ export class NextApiHandler implements ResultHandlerInterface {
       success: false,
       requestId: options.requestId,
       message
+    };
+  }
+
+  public static createApiErrorWithCause(
+    id: string,
+    data: unknown,
+    options: Readonly<ResultHandlerOptions>
+  ): AppApiErrorInterface {
+    return {
+      id,
+      success: false,
+      requestId: options.requestId,
+      data
     };
   }
 

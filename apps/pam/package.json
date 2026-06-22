@@ -1,5 +1,5 @@
 {
-  "name": "examples/next-oauth",
+  "name": "@btain-toolkit/pam",
   "version": "0.0.0",
   "private": true,
   "scripts": {

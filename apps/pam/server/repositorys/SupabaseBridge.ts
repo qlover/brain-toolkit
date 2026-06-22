@@ -1,7 +1,7 @@
 import { ExecutorError } from '@qlover/fe-corekit';
 import { AuthApiError, AuthError } from '@supabase/supabase-js';
 import { injectable } from '@shared/container';
-import { createClient } from '@shared/supabase/server';
+import { createServerClient } from '@shared/supabase/server';
 import { isPGRSTSchema } from '@schemas/PGRSTSchema';
 import { UserRole, UserSchema } from '@schemas/UserSchema';
 import type {
@@ -38,7 +38,7 @@ export type SupabaseBridgeResponse<T> = DBBridgeResponse<T> &
 @injectable()
 export class SupabaseBridge {
   public async getSupabase(): Promise<SupabaseClient> {
-    return await createClient();
+    return await createServerClient();
   }
 
   public async execSql(sql: string): Promise<SupabaseBridgeResponse<unknown>> {

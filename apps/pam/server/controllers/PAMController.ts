@@ -1,10 +1,15 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
+import { ExecutorError } from '@qlover/fe-corekit';
+import { isEmpty } from 'lodash';
 import { inject, injectable } from '@shared/container';
 import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator';
+import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
 import { uuidSchema } from '@schemas/common';
 import {
   PAMProjectSchemaType,
-  PAMProjectWithEnvironmentsSchemaType
+  PAMProjectWithEnvironmentsSchemaType,
+  PAMProjectUpdateSchema,
+  PAMProjectUpdateSchemaType
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMService } from '@server/services/PAMService';
@@ -40,6 +45,29 @@ export class PAMController {
     return this.pamService.getProjectDetail({
       id,
       withEnvironments
+    });
+  }
+
+  public async updateProject(
+    id: string,
+    request: NextRequest
+  ): Promise<PAMProjectUpdateSchemaType> {
+    const body = await request.json();
+
+    const useRPC = request.nextUrl.searchParams.get('rpc') === '1';
+
+    if (isEmpty(body)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+
+    const parsed = PAMProjectUpdateSchema.parse(body);
+
+    if (isEmpty(parsed)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+
+    return this.pamService.updateProject(id, parsed, {
+      useRPC
     });
   }
 }

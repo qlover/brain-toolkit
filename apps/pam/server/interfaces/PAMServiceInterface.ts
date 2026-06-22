@@ -1,5 +1,6 @@
 import type {
   PAMProjectSchemaType,
+  PAMProjectUpdateSchemaType,
   PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
 import type {
@@ -57,4 +58,22 @@ export interface PAMServiceInterface {
   getProjectDetail(
     params: ProjectDetailParams
   ): Promise<PAMProjectWithEnvironmentsSchemaType | null>;
+
+  /**
+   * 更新 project， 可携带 env 更新
+   * @param id
+   * @param params
+   */
+  updateProject(
+    id: string,
+    params: PAMProjectUpdateSchemaType,
+    extra?: {
+      /**
+       * 提供 RPC 调用， rpc 支持事务
+       *
+       * @default false
+       */
+      useRPC?: boolean;
+    }
+  ): Promise<PAMProjectUpdateSchemaType>;
 }
