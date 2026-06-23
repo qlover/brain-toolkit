@@ -43,6 +43,30 @@ function requireSupabaseRefreshToken(
   return token;
 }
 
+function toUserSchema(
+  session: Session,
+  emailFallback?: string | null
+): UserSchema {
+  const profile = toOAuthUserProfile(session.user!);
+  const role = profile.roles?.includes('admin')
+    ? UserRole.ADMIN
+    : UserRole.USER;
+
+  return {
+    id: String(profile.id),
+    email: profile.email ?? emailFallback,
+    role,
+    password: '',
+    credential_token: requireSupabaseRefreshToken(session),
+    created_at:
+      typeof profile.created_at === 'string'
+        ? profile.created_at
+        : new Date().toISOString(),
+    updated_at:
+      typeof profile.updated_at === 'string' ? profile.updated_at : null
+  } as UserSchema;
+}
+
 function toOAuthUserProfile(user: User): OAuthUserProfile {
   const metadata = (user.user_metadata ?? {}) as SupabaseUserMetadata;
 
@@ -125,34 +149,16 @@ export class SupabaseOAuthProvider
    * @override
    */
   public async refreshUser(): Promise<UserSchema> {
-    const supabase = await this.supabaseRepo.getSupabase();
+    const payload = await this.oauthSession.getSession();
+    const refreshToken = payload?.providerSessionToken?.trim();
+    if (!refreshToken) {
+      throw new Error('No refresh token in app session');
+    }
 
-    const refreshed = await supabase.auth.refreshSession();
-
-    this.supabaseRepo.throwIfError(refreshed);
-
-    const session = refreshed.data.session!;
+    const session = await this.retrieveNewSession(refreshToken);
     await this.syncUserSession(session);
 
-    const profile = toOAuthUserProfile(refreshed.data.user!);
-
-    const role = profile.roles?.includes('admin')
-      ? UserRole.ADMIN
-      : UserRole.USER;
-
-    return {
-      id: String(profile.id),
-      email: profile.email,
-      role,
-      password: '',
-      credential_token: session.refresh_token,
-      created_at:
-        typeof profile.created_at === 'string'
-          ? profile.created_at
-          : new Date().toISOString(),
-      updated_at:
-        typeof profile.updated_at === 'string' ? profile.updated_at : null
-    } as UserSchema;
+    return toUserSchema(session, payload?.email);
   }
 
   /**
@@ -273,24 +279,10 @@ export class SupabaseOAuthProvider
       return null;
     }
 
-    const profile = await this.providerGetUserInfo(token);
-    const role = profile.roles?.includes('admin')
-      ? UserRole.ADMIN
-      : UserRole.USER;
+    const supabaseSession = await this.retrieveNewSession(token);
+    await this.syncUserSession(supabaseSession);
 
-    return {
-      id: String(profile.id),
-      email: profile.email ?? session2.email,
-      role,
-      password: '',
-      credential_token: token,
-      created_at:
-        typeof profile.created_at === 'string'
-          ? profile.created_at
-          : new Date().toISOString(),
-      updated_at:
-        typeof profile.updated_at === 'string' ? profile.updated_at : null
-    } as UserSchema;
+    return toUserSchema(supabaseSession, session2.email);
   }
 
   /**
