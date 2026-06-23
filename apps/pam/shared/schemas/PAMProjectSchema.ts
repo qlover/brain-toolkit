@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { ResourceSearchParams } from '@qlover/corekit-bridge';
 
 export const PAMPublicType = {
   public: 1,
@@ -128,3 +129,10 @@ export type PAMProjectSafeSchemaType = z.infer<typeof PAMProjectSafeSchema>;
 export type PAMProjectCreateWithEnvSchemaType = z.infer<
   typeof PAMProjectCreateWithEnvSchema
 >;
+
+/**
+ * 搜索参数
+ *
+ * FIXME: 目前 controller 使用 SearchParamsValidator 直接校验
+ */
+export interface PAMSearchParams extends ResourceSearchParams {}
