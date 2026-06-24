@@ -14,6 +14,7 @@ import {
   useFieldArray,
   useWatch
 } from 'react-hook-form';
+import { v4 as uuid } from 'uuid';
 import type {
   PAMEnvironmentCreateSchemaType,
   PAMProjectCreateWithEnvSchemaType
@@ -62,28 +63,20 @@ export const PAMFormEnvironments: React.FC = () => {
       const envs = environments || [];
       const env = envs[envIndex];
       if (!env) return;
-      const variables = { ...(env.variables || {}) };
 
-      // 检查是否已有不完整的变量（键或值为空）
-      const hasIncomplete = Object.entries(variables).some(
-        ([key, value]) => key.trim() === '' || value.trim() === ''
+      const variables = env.variables || [];
+      // 检查是否有不完整项（key或value为空）
+      const hasIncomplete = variables.some(
+        (item) => item.key.trim() === '' || item.value.trim() === ''
       );
       if (hasIncomplete) {
+        // FIXME:
         alert('请先填写完整当前所有环境变量（键和值都不能为空）');
         return;
       }
 
-      // 生成唯一的默认键名（如 new_var, new_var2 ...）
-      const baseKey = 'new_var';
-      let counter = 1;
-      let newKey = baseKey;
-      while (variables[newKey] !== undefined) {
-        counter++;
-        newKey = `${baseKey}${counter}`;
-      }
-
-      variables[newKey] = '';
-      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, variables);
+      const updated = [...variables, { id: uuid(), key: '', value: '' }];
+      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);
       setCollapsedEnvs((prev) => ({ ...prev, [envIndex]: false }));
       trigger(`${PAMProjectEnvKey}.${envIndex}.variables`);
     },
@@ -95,9 +88,9 @@ export const PAMFormEnvironments: React.FC = () => {
       const envs = environments || [];
       const env = envs[envIndex];
       if (!env) return;
-      const variables = { ...(env.variables || {}) };
-      delete variables[key];
-      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, variables);
+      const variables = env.variables || [];
+      const updated = variables.filter((item) => item.key !== key);
+      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);
       trigger(`${PAMProjectEnvKey}.${envIndex}.variables`);
     },
     [environments, setValue, trigger]
@@ -109,18 +102,24 @@ export const PAMFormEnvironments: React.FC = () => {
       const env = envs[envIndex];
       if (!env) return;
 
-      // 如果新键名为空，则删除该变量（用户意图是删除）
       if (newKey.trim() === '') {
         removeVariable(envIndex, oldKey);
         return;
       }
 
-      const variables = { ...(env.variables || {}) };
-      if (oldKey !== newKey) {
-        delete variables[oldKey];
-      }
-      variables[newKey.trim()] = value;
-      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, variables);
+      const variables = env.variables || [];
+      const index = variables.findIndex((item) => item.key === oldKey);
+      if (index === -1) return;
+
+      // 保留原有 id 和 _tempId，更新 key/value
+      const oldItem = variables[index];
+      const updated = [...variables];
+      updated[index] = {
+        ...oldItem,
+        key: newKey.trim(),
+        value
+      };
+      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);
       trigger(`${PAMProjectEnvKey}.${envIndex}.variables`);
     },
     [environments, setValue, trigger, removeVariable]
@@ -131,7 +130,10 @@ export const PAMFormEnvironments: React.FC = () => {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
       const isCollapsed = collapsedEnvs[index] ?? (isMobile && index >= 1);
       const env = environments[index];
-      const varKeys = Object.keys(env?.variables || {}).filter((k) => k.trim());
+
+      if (!env) return null;
+
+      const variables = env.variables || [];
 
       return (
         <div
@@ -230,54 +232,77 @@ export const PAMFormEnvironments: React.FC = () => {
                   </button>
                 </label>
                 <div className="env-vars-list mt-2 space-y-1.5 max-h-40 overflow-y-auto">
-                  {varKeys.length === 0 ? (
+                  {variables.length === 0 ? (
                     <div className="text-xs text-tertiary-text py-1">
                       暂无环境变量
                     </div>
                   ) : (
-                    varKeys.map((key) => (
-                      <div
-                        data-testid="renderEnvironmentBlock"
-                        key={key}
-                        className="env-var-row flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 items-center"
-                      >
-                        <input
-                          type="text"
-                          placeholder="KEY"
-                          value={key}
-                          onChange={(e) => {
-                            const newKey = e.target.value;
-                            if (newKey !== key) {
-                              updateVariable(
-                                index,
-                                key,
-                                newKey,
-                                env?.variables?.[key] || ''
-                              );
-                            }
-                          }}
-                          className="env-var-key flex-1 min-w-15 border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
-                        />
-                        <input
-                          type="text"
-                          placeholder="value"
-                          value={env?.variables?.[key] || ''}
-                          onChange={(e) =>
-                            updateVariable(index, key, key, e.target.value)
-                          }
-                          className="env-var-value flex-[1.5] min-w-20 border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeVariable(index, key)}
-                          className="text-(--fe-color-error) hover:text-(--fe-color-error)/80 touch-manipulation shrink-0 p-1 rounded-lg hover:bg-(--fe-color-error)/10 transition cursor-pointer"
+                    variables.map((item, idx) => {
+                      // 获取当前变量的错误
+                      const keyError =
+                        errors.environments?.[index]?.variables?.[idx]?.key;
+                      const valueError =
+                        errors.environments?.[index]?.variables?.[idx]?.value;
+
+                      return (
+                        <div
+                          data-testid="renderEnvironmentBlock"
+                          key={item.id || idx}
+                          className="space-y-0.5"
                         >
-                          <span>
-                            <DeleteOutlined className="text-xs" />
-                          </span>
-                        </button>
-                      </div>
-                    ))
+                          <div className="env-var-row flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 items-center">
+                            <input
+                              type="text"
+                              placeholder="KEY"
+                              value={item.key}
+                              onChange={(e) =>
+                                updateVariable(
+                                  index,
+                                  item.key,
+                                  e.target.value,
+                                  item.value
+                                )
+                              }
+                              className={`env-var-key flex-1 min-w-15 border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation ${
+                                keyError
+                                  ? 'border-(--fe-color-error)'
+                                  : 'border-primary-border'
+                              }`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="value"
+                              value={item.value}
+                              onChange={(e) =>
+                                updateVariable(
+                                  index,
+                                  item.key,
+                                  item.key,
+                                  e.target.value
+                                )
+                              }
+                              className={`env-var-value flex-[1.5] min-w-20 border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation ${
+                                valueError
+                                  ? 'border-(--fe-color-error)'
+                                  : 'border-primary-border'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeVariable(index, item.key)}
+                              className="text-(--fe-color-error) hover:text-(--fe-color-error)/80 touch-manipulation shrink-0 p-1 rounded-lg hover:bg-(--fe-color-error)/10 transition cursor-pointer"
+                            >
+                              <DeleteOutlined className="text-xs" />
+                            </button>
+                          </div>
+                          {(keyError || valueError) && (
+                            <div className="text-(--fe-color-error) text-xs mt-0.5 col-span-full">
+                              {keyError?.message || valueError?.message}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -300,7 +325,7 @@ export const PAMFormEnvironments: React.FC = () => {
   );
 
   const handleAddEnvironment = () => {
-    append({ name: '', url: '', variables: {} });
+    append({ name: '', url: '', variables: [] });
     const newIndex = fields.length;
     setCollapsedEnvs((prev) => ({ ...prev, [newIndex]: false }));
     setTimeout(() => {

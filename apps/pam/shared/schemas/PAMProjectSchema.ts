@@ -62,7 +62,7 @@ export const PAMProjectSchema = z.object({
 });
 
 export const PAMVariableSchema = z.object({
-  id: z.uuid(),
+  id: z.uuid().optional(),
   key: z.string().trim().min(1, 'Key can not be empty'),
   value: z.string().trim().min(1, 'Value can not be empty')
 });
