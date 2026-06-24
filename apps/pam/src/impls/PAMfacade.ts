@@ -119,8 +119,6 @@ export class PAMFacade
   public createProject(
     data: PAMProjectCreateWithEnvSchemaType
   ): Promise<GatewayResult<PAMProjectWithEnvironmentsSchemaType>> {
-    this.logger.debug('pamfacade.createProject', data);
-    throw new Error('Method not implemented.');
     this.createStore.start();
 
     return this.pamApi
