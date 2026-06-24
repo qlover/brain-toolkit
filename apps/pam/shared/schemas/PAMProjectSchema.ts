@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  V_PAM_ENV_NAME_REPEAT,
+  V_REQUIRED
+} from '@config/i18n-identifier/common/validators';
+import { DeleteStatus } from './common';
 import type { ResourceSearchParams } from '@qlover/corekit-bridge';
 
 export const PAMPublicType = {
@@ -27,31 +32,49 @@ export const PAMPROJECT_TSVECTOR_KEY = 'search_vector' as const;
 export const PAMUpdateSQLFunctionName =
   'update_project_with_environments' as const;
 
+/**
+ * description， stack， repo_url 可能是 null 则需要使用 nullish 而不是 optional
+ *
+ * sql 中描述时并没有明确规定 not null, 也就是如果入库的时候没有值那么默认就是 null
+ */
 export const PAMProjectSchema = z.object({
   id: z.uuid(),
-  slug: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  stack: z.string().optional(),
-  repo_url: z.url().optional(),
-  category: z.string(),
+  /**
+   * TODO: 验证 slug 格式, 理论来按说应该是 纯英文，数字，下划线，短横线没有空白字符
+   */
+  slug: z.string().trim().min(1, { message: V_REQUIRED }),
+  name: z.string().trim().min(1, { message: V_REQUIRED }),
+  category: z.string().trim().min(1, { message: V_REQUIRED }),
+  description: z.string().trim().or(z.literal('')).nullish(),
+  stack: z.string().trim().or(z.literal('')).nullish(),
+  repo_url: z.url().trim().or(z.literal('')).nullish(),
   /**
    * 0: private, 1: public
    */
   is_public: z.enum(PAMPublicType),
+  /**
+   * 是否已删除
+   */
+  is_deleted: z.enum(DeleteStatus),
   owner_id: z.uuid(),
-  created_at: z.union([z.string(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
-  updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+  created_at: z.union([z.string().trim(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+  updated_at: z.union([z.string().trim(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+});
+
+export const PAMVariableSchema = z.object({
+  id: z.uuid(),
+  key: z.string().trim().min(1, 'Key can not be empty'),
+  value: z.string().trim().min(1, 'Value can not be empty')
 });
 
 export const PAMEnvironmentsSchema = z.object({
   id: z.uuid(),
   project_id: z.uuid(),
-  name: z.string(),
+  name: z.string().trim().min(1),
   url: z.url(),
-  variables: z.json().optional(),
-  created_at: z.union([z.string(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
-  updated_at: z.union([z.string(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+  variables: z.array(PAMVariableSchema).optional(),
+  created_at: z.union([z.string().trim(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
+  updated_at: z.union([z.string().trim(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
 });
 
 export const PAMProjectSafeSchema = PAMProjectSchema.omit({
@@ -69,7 +92,19 @@ export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
    * - 如果为空则表示没有环境，仅保存了项目信息
    * - 有则表示项目信息，以及环境信息
    */
-  [PAMProjectEnvKey]: z.array(PAMEnvironmentsSchema).optional()
+  [PAMProjectEnvKey]: z
+    .array(PAMEnvironmentsSchema)
+    .optional() // 添加自定义验证：环境名称不能重复
+    .refine(
+      (environments) => {
+        if (!environments) return true;
+        const names = environments
+          .map((env) => env.name)
+          .filter((name) => name.trim() !== '');
+        return new Set(names).size === names.length;
+      },
+      { message: V_PAM_ENV_NAME_REPEAT }
+    )
 });
 
 // 更新环境：id 必填，其他字段可选（支持部分更新）
@@ -111,7 +146,8 @@ export const PAMProjectUpdateSchema = PAMProjectSchema.pick({
 export const PAMProjectCreateWithEnvSchema = PAMProjectSafeSchema.omit({
   id: true,
   created_at: true,
-  updated_at: true
+  updated_at: true,
+  is_deleted: true
 }).extend({
   [PAMProjectEnvKey]: PAMEnvironmentCreateSchema.array().optional()
 });
@@ -128,6 +164,9 @@ export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;
 export type PAMProjectSafeSchemaType = z.infer<typeof PAMProjectSafeSchema>;
 export type PAMProjectCreateWithEnvSchemaType = z.infer<
   typeof PAMProjectCreateWithEnvSchema
+>;
+export type PAMEnvironmentCreateSchemaType = z.infer<
+  typeof PAMEnvironmentCreateSchema
 >;
 
 /**

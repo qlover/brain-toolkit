@@ -61,3 +61,17 @@ export const V_REQUEST_LOGS_QUERY_INVALID =
  * @localEn Ivalid id
  */
 export const V_INVALID_ID = 'common:v:invalid_id';
+
+/**
+ * @description 环境的名字不能重复
+ * @localZh 环境的名字不能重复
+ * @localEn Environment name cannot repeat
+ */
+export const V_PAM_ENV_NAME_REPEAT = 'common:v:pam_env_name_repeat';
+
+/**
+ * @description 通用的不能为空
+ * @localZh 不能为空
+ * @localEn Is required
+ */
+export const V_REQUIRED = 'common:v:required';

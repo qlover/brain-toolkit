@@ -17,6 +17,7 @@ CREATE TABLE pam_projects (
     repo_url TEXT,
     category TEXT,
     is_public INT NOT NULL DEFAULT 0 CHECK (is_public IN (0, 1)),
+    is_deleted INT NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

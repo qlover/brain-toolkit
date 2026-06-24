@@ -11,6 +11,7 @@ import {
   API_PAM_PROJECT_NOT_FOUND
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
+import { DeleteStatus } from '@schemas/common';
 import {
   PAMEnvironmentEditSchemaType,
   PAMEnvironmentsSchemaType,
@@ -104,6 +105,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
             config: 'english'
           }
         : undefined,
+      where: [['is_deleted', Operators.eq, DeleteStatus.UNDELETE]],
       whereOr: orConditions
     });
   }

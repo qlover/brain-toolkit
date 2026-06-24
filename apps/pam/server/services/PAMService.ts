@@ -99,6 +99,7 @@ export class PAMService implements PAMServiceInterface {
     }
 
     // env 不能重复
+    // FIXME: scheam 可能已经验证
     if (Array.isArray(envs)) {
       const len = envs.length;
       const names = new Set(envs.map(({ name }) => name));
