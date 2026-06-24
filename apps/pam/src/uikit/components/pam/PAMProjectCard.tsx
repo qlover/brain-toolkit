@@ -1,23 +1,11 @@
 import React from 'react';
+import type { PAMProjectWithEnvironmentsSchemaType } from '@schemas/PAMProjectSchema';
 import { PAMIcon } from './PAMIcon';
 
-export interface ProjectCardData {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string;
-  stack?: string;
-  repo_url?: string;
-  category?: string;
-  is_public: 0 | 1;
-  owner_id: string;
-  environments?: Array<{
-    id: string;
-    name: string;
-    url?: string;
-    variables: Record<string, string>;
-  }>;
-}
+/**
+ * @deprecated use `PAMProjectWithEnvironmentsSchemaType`
+ */
+export interface ProjectCardData extends PAMProjectWithEnvironmentsSchemaType {}
 
 interface PAMProjectCardProps {
   project: ProjectCardData;
@@ -179,12 +167,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
 
       <div className="bg-primary-bg px-5 py-2 text-right text-xs text-tertiary-text flex justify-between">
         <span>
-          <i className="far fa-user-circle"></i>{' '}
-          {project.owner_id === 'alice'
-            ? 'Alice'
-            : project.owner_id === 'bob'
-              ? 'Bob'
-              : project.owner_id}
+          <i className="far fa-user-circle"></i> todo: 用户信息
         </span>
         <span>{envs.length} 个环境</span>
       </div>

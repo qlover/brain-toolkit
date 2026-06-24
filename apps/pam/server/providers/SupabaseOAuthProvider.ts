@@ -1,10 +1,9 @@
 import { LoginParams } from '@qlover/corekit-bridge';
-import { type EncryptorInterface } from '@qlover/fe-corekit';
 import { OAuthWrapperService } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import { localePage, ROUTE_CALLBACK_EMAIL_LOGIN } from '@config/route';
-import { UserRole, type UserSchema } from '@schemas/UserSchema';
+import { UserRole, userSchema, type UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import type { ServerContextInterface } from '@server/interfaces/ServerContextInterface';
@@ -13,20 +12,18 @@ import { SupabaseRepo } from '@server/repositorys/SupabaseRepo';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { PasswordEncrypt } from '@server/utils/PasswordEncrypt';
 import { TokenEncryption } from '@server/utils/TokenEncryption';
+import type { EncryptorInterface } from '@qlover/fe-corekit';
 import type { LoggerInterface } from '@qlover/logger';
 import type {
   OAuthSessionPayload,
-  OAuthUserAccessToken,
-  OAuthUserCredentials,
-  OAuthUserProfile,
+  OAuthWrapperAccessToken,
   OAuthWrapperRepositoryInterface,
   SignOtpResult,
   SignWithOtpParams,
-  VerifyOtpParams
+  VerifyOtpParams,
+  WithUserSession
 } from '@qlover/oauth-wrapper';
 import type { Session, User } from '@supabase/supabase-js';
-
-type SupabaseUserMetadata = Record<string, unknown>;
 
 function shouldMd5Password(): boolean {
   const flag = process.env.SUPABASE_LOGIN_PASSWORD_MD5?.trim().toLowerCase();
@@ -43,40 +40,34 @@ function requireSupabaseRefreshToken(
   return token;
 }
 
-function toOAuthUserProfile(user: User): OAuthUserProfile {
-  const metadata = (user.user_metadata ?? {}) as SupabaseUserMetadata;
-
-  const firstName =
-    typeof metadata.first_name === 'string' ? metadata.first_name : null;
-  const lastName =
-    typeof metadata.last_name === 'string' ? metadata.last_name : null;
-  const fullName =
-    typeof metadata.full_name === 'string'
-      ? metadata.full_name
-      : typeof metadata.name === 'string'
-        ? metadata.name
-        : null;
-  const name =
-    (fullName ?? [firstName, lastName].filter(Boolean).join(' ')) || null;
-
+function supababseUserToUserSchema(
+  user: User,
+  credential_token = ''
+): UserSchema {
   return {
     id: user.id,
-    email: user.email,
-    name,
-    first_name: firstName,
-    last_name: lastName,
-    roles: user.role ? [user.role] : undefined,
-    created_at: user.created_at,
-    updated_at: user.updated_at
+    // FIXME: 邮箱类型
+    email: user.email || user.new_email!,
+    role: UserRole.USER,
+    credential_token,
+    created_at: user.created_at
   };
 }
+function supabaseSessionToUserSchema(session: Session): UserSchema {
+  const user = session.user;
+  return userSchema.parse(
+    supababseUserToUserSchema(user, session.access_token)
+  );
+}
+
+export interface SupabaseSession extends OAuthSessionPayload {}
 
 /**
  * Demo reference provider: Supabase Auth (`@supabase/supabase-js`).
  */
 @injectable()
 export class SupabaseOAuthProvider
-  extends OAuthWrapperService
+  extends OAuthWrapperService<UserSchema, SupabaseSession>
   implements OAuthWrapperProviderInterface
 {
   @inject(I.Logger)
@@ -124,35 +115,25 @@ export class SupabaseOAuthProvider
   /**
    * @override
    */
-  public async refreshUser(): Promise<UserSchema> {
-    const supabase = await this.supabaseRepo.getSupabase();
+  public async refreshUser(): Promise<
+    WithUserSession<SupabaseSession, UserSchema>
+  > {
+    const payload = await this.oauthSession.getSession();
+    const refreshToken = payload?.providerRefreshToken?.trim();
+    if (!refreshToken) {
+      throw new Error('No refresh token in app session');
+    }
 
-    const refreshed = await supabase.auth.refreshSession();
-
-    this.supabaseRepo.throwIfError(refreshed);
-
-    const session = refreshed.data.session!;
+    const session = await this.retrieveNewSession(refreshToken);
     await this.syncUserSession(session);
 
-    const profile = toOAuthUserProfile(refreshed.data.user!);
-
-    const role = profile.roles?.includes('admin')
-      ? UserRole.ADMIN
-      : UserRole.USER;
+    const user = supabaseSessionToUserSchema(session);
 
     return {
-      id: String(profile.id),
-      email: profile.email,
-      role,
-      password: '',
-      credential_token: session.refresh_token,
-      created_at:
-        typeof profile.created_at === 'string'
-          ? profile.created_at
-          : new Date().toISOString(),
-      updated_at:
-        typeof profile.updated_at === 'string' ? profile.updated_at : null
-    } as UserSchema;
+      user: user,
+      userId: user.id,
+      providerRefreshToken: session.refresh_token
+    };
   }
 
   /**
@@ -160,7 +141,7 @@ export class SupabaseOAuthProvider
    */
   protected async providerLogin(
     params: LoginParams
-  ): Promise<OAuthUserCredentials> {
+  ): Promise<WithUserSession<SupabaseSession, UserSchema>> {
     const email = params.email?.trim();
     const password = params.password;
 
@@ -176,39 +157,39 @@ export class SupabaseOAuthProvider
     this.supabaseRepo.throwIfError(result);
 
     const session = result.data.session;
-    const refreshToken = requireSupabaseRefreshToken(session);
-
+    const user = result.data.user;
     this.logger.debug('Supabase login successful', {
-      userId: session?.user?.id
+      userId: user?.id
     });
 
     return {
-      token: refreshToken,
-      access_token: session?.access_token,
-      expires_in: session?.expires_in,
-      refresh_token: refreshToken,
-      user: session?.user
+      userId: user!.id,
+      providerRefreshToken: session!.refresh_token,
+      user: supabaseSessionToUserSchema(session!)
     };
   }
 
   /**
    * @override
    */
-  protected async providerExchangeAccessToken(params: {
-    token: string;
-    lang?: string;
-  }): Promise<OAuthUserAccessToken> {
-    const refreshToken = params.token?.trim();
+  protected async providerExchangeAccessToken(
+    session: SupabaseSession
+  ): Promise<OAuthWrapperAccessToken> {
+    const refreshToken = session.providerRefreshToken;
     if (!refreshToken) {
       throw new Error('Supabase refresh token is required');
     }
 
-    const session = await this.retrieveNewSession(refreshToken);
+    const session2 = await this.retrieveNewSession(refreshToken);
 
     return {
-      access_token: session.access_token,
-      expires_in: session.expires_in ?? 3600,
-      refresh_token: session.refresh_token ?? refreshToken
+      ...session2,
+      provider_token: session2.provider_token ?? '',
+      provider_refresh_token: session2.provider_refresh_token ?? '',
+      token_type: session2.token_type,
+      access_token: session2.access_token,
+      expires_in: session2.expires_in ?? 3600,
+      refresh_token: session2.refresh_token ?? refreshToken
     };
   }
 
@@ -217,7 +198,7 @@ export class SupabaseOAuthProvider
    */
   protected async providerGetUserInfo(
     sessionToken: string
-  ): Promise<OAuthUserProfile> {
+  ): Promise<UserSchema> {
     const refreshToken = sessionToken.trim();
     if (!refreshToken) {
       throw new Error('Supabase refresh token is required');
@@ -230,7 +211,7 @@ export class SupabaseOAuthProvider
       throw new Error('Failed to load Supabase user profile');
     }
 
-    return toOAuthUserProfile(user);
+    return supabaseSessionToUserSchema(session);
   }
 
   /**
@@ -238,7 +219,7 @@ export class SupabaseOAuthProvider
    */
   protected async providerGetUserInfoByAccessToken(
     accessToken: string
-  ): Promise<OAuthUserProfile> {
+  ): Promise<UserSchema> {
     const token = accessToken.trim();
     if (!token) {
       throw new Error('Supabase access token is required');
@@ -253,7 +234,7 @@ export class SupabaseOAuthProvider
       throw new Error('Failed to load Supabase user profile');
     }
 
-    return toOAuthUserProfile(user);
+    return supababseUserToUserSchema(user, accessToken);
   }
 
   /**
@@ -268,29 +249,12 @@ export class SupabaseOAuthProvider
       return null;
     }
 
-    const token = session2.providerSessionToken?.trim();
+    const token = session2.providerRefreshToken?.trim();
     if (!token) {
       return null;
     }
 
-    const profile = await this.providerGetUserInfo(token);
-    const role = profile.roles?.includes('admin')
-      ? UserRole.ADMIN
-      : UserRole.USER;
-
-    return {
-      id: String(profile.id),
-      email: profile.email ?? session2.email,
-      role,
-      password: '',
-      credential_token: token,
-      created_at:
-        typeof profile.created_at === 'string'
-          ? profile.created_at
-          : new Date().toISOString(),
-      updated_at:
-        typeof profile.updated_at === 'string' ? profile.updated_at : null
-    } as UserSchema;
+    return await this.providerGetUserInfo(token);
   }
 
   /**
@@ -322,18 +286,17 @@ export class SupabaseOAuthProvider
       throw new Error('Refreshed Supabase session is missing user info');
     }
 
-    const profile = toOAuthUserProfile(session.user);
-    const sessionPayload = this.generageSessionPayload({
-      email: profile.email,
-      ...profile,
-      sessionToken: refreshToken
+    const profile = supabaseSessionToUserSchema(session);
+
+    this.oauthSession.setSession({
+      userId: profile.id,
+      user: profile,
+      providerRefreshToken: refreshToken
     });
 
-    this.oauthSession.setSession(sessionPayload);
-
     const oauthRepo = this.getOAuthRepo();
-    await oauthRepo.upsertUserCredentials(sessionPayload.userId, {
-      provider_session_token: sessionPayload.providerSessionToken
+    await oauthRepo.upsertUserCredentials(profile.id, {
+      provider_session_token: profile.credential_token
     });
   }
 

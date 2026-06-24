@@ -7,7 +7,7 @@ import type {
 import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 export interface OAuthWrapperProviderInterface
-  extends OAuthProviderInterface<OAuthSessionPayload>,
+  extends OAuthProviderInterface<UserSchema, OAuthSessionPayload>,
     OAuthOTPProviderInterface {
   /**
    * OAuthWrapper 用户信息交换
@@ -33,9 +33,4 @@ export interface OAuthWrapperProviderInterface
    * Providers that do not support this flow should throw.
    */
   loginWithSession?(session: SupabaseSession): Promise<void>;
-
-  /**
-   * 刷新会话信息
-   */
-  refreshUser(): Promise<UserSchema>;
 }

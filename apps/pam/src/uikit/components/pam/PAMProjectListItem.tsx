@@ -1,8 +1,8 @@
 import React from 'react';
-import type { ProjectCardData } from './PAMProjectCard';
+import type { PAMProjectWithEnvironmentsSchemaType } from '@schemas/PAMProjectSchema';
 
 interface PAMProjectListItemProps {
-  project: ProjectCardData;
+  project: PAMProjectWithEnvironmentsSchemaType;
   isOwner: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -23,11 +23,13 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
       data-testid="PAMProjectListItem"
       className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-primary-bg transition border-b border-primary-border last:border-b-0"
     >
-      <div className="min-w-[150px]">
+      <div className="min-w-37">
         <div className="font-semibold text-primary-text">{project.name}</div>
         <div className="flex flex-wrap gap-1 items-center">
           {project.category && (
-            <span className="category-badge text-xs">{project.category}</span>
+            <span className="category-badge text-brand-active text-xs">
+              {project.category}
+            </span>
           )}
           <span className="text-xs text-tertiary-text">
             {project.stack || ''}

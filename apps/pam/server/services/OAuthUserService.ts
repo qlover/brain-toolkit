@@ -114,7 +114,13 @@ export class OAuthUserService
    * @override
    */
   public async refresh(): Promise<UserSchema> {
-    return await this.oauthProvider.refreshUser();
+    const result = await this.oauthProvider.refreshUser();
+
+    if (!result.user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    return result.user;
   }
 
   /**
