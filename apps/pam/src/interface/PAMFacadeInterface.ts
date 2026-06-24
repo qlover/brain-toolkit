@@ -1,12 +1,22 @@
 import type {
-  PAMProjectSchemaType,
+  PAMProjectCreateWithEnvSchemaType,
+  PAMProjectWithEnvironmentsSchemaType,
   PAMSearchParams
 } from '@schemas/PAMProjectSchema';
 import type {
   AsyncStoreStateInterface,
+  GatewayResult,
   ResourceSearchResult,
   StoreInterface
 } from '@qlover/corekit-bridge';
+import type { ValueOf } from '@qlover/fe-corekit';
+
+export const PAMViewMode = {
+  Card: 'card',
+  Compact: 'compact'
+} as const;
+
+export type PAMViewModeType = ValueOf<typeof PAMViewMode>;
 
 /**
  * 该接口用于描述前端操作 pam 列表相关的业务状态接口
@@ -19,8 +29,9 @@ import type {
  *
  * 所有数据应该额外保存
  */
-export interface PAMSearchStateInterface<T extends PAMProjectSchemaType>
-  extends AsyncStoreStateInterface<ResourceSearchResult<T>> {
+export interface PAMFacadeStateInterface<
+  T extends PAMProjectCreateWithEnvSchemaType
+> extends AsyncStoreStateInterface<ResourceSearchResult<T>> {
   /**
    * 拉取list 请求参数
    *
@@ -32,13 +43,25 @@ export interface PAMSearchStateInterface<T extends PAMProjectSchemaType>
    * 额外保存的拉取的所有项目数据
    */
   projects: T[];
+
+  /**
+   * 列表显示的两种模式
+   */
+  viewMode: PAMViewModeType;
+
+  /**
+   * 是否打开 新增/编辑 项目对话框
+   */
+  openDialog: boolean;
 }
 
 /**
  * 该接口用于描述前端操作 pam 相关的业务逻辑接口
  */
-export interface PAMFacadeInterface<T extends PAMProjectSchemaType> {
-  getSearchStore(): StoreInterface<PAMSearchStateInterface<T>>;
+export interface PAMFacadeInterface<
+  T extends PAMProjectCreateWithEnvSchemaType
+> {
+  getFacadeStore(): StoreInterface<PAMFacadeStateInterface<T>>;
 
   /**
    * 该方法用于拉取项目列表
@@ -47,4 +70,15 @@ export interface PAMFacadeInterface<T extends PAMProjectSchemaType> {
    * @param params
    */
   pullProjectList(params?: PAMSearchParams): Promise<ResourceSearchResult<T>>;
+
+  /**
+   * 创建一个新的项目，允许传入环境信息
+   *
+   * 这里使用了 GatewayResult 作为返回结果，就是期望方法不会抛出错误，而是返回错误信息
+   *
+   * @param data
+   */
+  createProject(
+    data: PAMProjectCreateWithEnvSchemaType
+  ): Promise<GatewayResult<PAMProjectWithEnvironmentsSchemaType>>;
 }
