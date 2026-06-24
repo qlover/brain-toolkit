@@ -77,8 +77,15 @@ export const PAMEnvironmentsSchema = z.object({
   updated_at: z.union([z.string().trim(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
 });
 
+/**
+ * 该类型用于表示从数据库直接获取出来的数据类型, 去掉了敏感数据
+ *
+ * 原本是 omit owner_id, 后发现 uuid 本身不是一个敏感数据,则去掉
+ *
+ * 后续如果有敏感信息则在 omit
+ */
 export const PAMProjectSafeSchema = PAMProjectSchema.omit({
-  owner_id: true
+  is_deleted: true
 });
 
 export const PAMProjectSafeFields = Object.keys(
@@ -147,9 +154,25 @@ export const PAMProjectCreateWithEnvSchema = PAMProjectSafeSchema.omit({
   id: true,
   created_at: true,
   updated_at: true,
-  is_deleted: true
+  owner_id: true
 }).extend({
   [PAMProjectEnvKey]: PAMEnvironmentCreateSchema.array().optional()
+});
+
+/**
+ * 该接口用于 api/pam/search 接口返回 api 数据的扩展
+ *
+ * 也就是前端应该使用该类型
+ *
+ * 将 owner_id 可选,原因是因为当没有权限查询时只能获取 public 的项目,此时无需返回 owner_id
+ */
+export const PAMApiProjectSchema = PAMProjectWithEnvironmentsSchema.extend({
+  /**
+   * 用来判断是否属于当前用户项目
+   */
+  is_owner: z.boolean().optional()
+}).partial({
+  owner_id: true
 });
 
 export type PAMProjectUpdateSchemaType = z.infer<typeof PAMProjectUpdateSchema>;
@@ -174,4 +197,11 @@ export type PAMEnvironmentCreateSchemaType = z.infer<
  *
  * FIXME: 目前 controller 使用 SearchParamsValidator 直接校验
  */
-export interface PAMSearchParams extends ResourceSearchParams {}
+export interface PAMSearchParams extends Omit<ResourceSearchParams, 'sort'> {
+  /**
+   * 重新 sort, 现在仅仅传递一个 json 字符串
+   */
+  sort?: string;
+}
+
+export type PAMApiProjectSchemaType = z.infer<typeof PAMApiProjectSchema>;

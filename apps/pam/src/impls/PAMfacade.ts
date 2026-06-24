@@ -16,6 +16,7 @@ import { inject, injectable } from '@shared/container';
 import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
 import type {
+  PAMApiProjectSchemaType,
   PAMProjectCreateWithEnvSchemaType,
   PAMProjectWithEnvironmentsSchemaType,
   PAMSearchParams
@@ -23,10 +24,10 @@ import type {
 import { PAMApi } from './appApi/PAMApi';
 import type { LoggerInterface } from '@qlover/logger';
 
-function defaultFacadeState(): PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType> {
+function defaultFacadeState(): PAMFacadeStateInterface<PAMApiProjectSchemaType> {
   return Object.assign<
-    PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>,
-    Partial<PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>>
+    PAMFacadeStateInterface<PAMApiProjectSchemaType>,
+    Partial<PAMFacadeStateInterface<PAMApiProjectSchemaType>>
   >(createAsyncState(), {
     result: {
       page: defaultSearchParams.page,
@@ -42,14 +43,12 @@ function defaultFacadeState(): PAMFacadeStateInterface<PAMProjectWithEnvironment
 }
 
 @injectable()
-export class PAMFacade
-  implements PAMFacadeInterface<PAMProjectWithEnvironmentsSchemaType>
-{
+export class PAMFacade implements PAMFacadeInterface<PAMApiProjectSchemaType> {
   @inject(I.Logger)
   protected readonly logger!: LoggerInterface;
 
   protected searchStore: AsyncStore<
-    PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>,
+    PAMFacadeStateInterface<PAMApiProjectSchemaType>,
     string
   >;
 
@@ -57,7 +56,7 @@ export class PAMFacade
    * 仅用于创建 pam 时的状态
    */
   protected createStore: AsyncStore<
-    AsyncStoreStateInterface<PAMProjectWithEnvironmentsSchemaType>,
+    AsyncStoreStateInterface<PAMApiProjectSchemaType>,
     string
   >;
   constructor(
@@ -72,13 +71,13 @@ export class PAMFacade
    * @override
    */
   public getFacadeStore(): StoreInterface<
-    PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>
+    PAMFacadeStateInterface<PAMApiProjectSchemaType>
   > {
     return this.searchStore.getStore();
   }
 
   public getCreateStore(): StoreInterface<
-    AsyncStoreStateInterface<PAMProjectWithEnvironmentsSchemaType>
+    AsyncStoreStateInterface<PAMApiProjectSchemaType>
   > {
     return this.createStore.getStore();
   }
@@ -88,7 +87,7 @@ export class PAMFacade
    */
   public pullProjectList(
     params?: PAMSearchParams
-  ): Promise<ResourceSearchResult<PAMProjectWithEnvironmentsSchemaType>> {
+  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>> {
     const mergedParams = Object.assign(
       {},
       this.searchStore.getState().searchParams,

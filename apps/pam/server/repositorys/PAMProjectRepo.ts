@@ -1,7 +1,4 @@
-import {
-  ResourceSearchParams,
-  ResourceSearchResult
-} from '@qlover/corekit-bridge';
+import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit';
 import { isEmpty } from 'lodash';
 import { inject, injectable } from '@shared/container';
@@ -33,11 +30,20 @@ import {
   FilterTriple,
   Operators,
   RepoInsertGetParams,
-  RepoInsertParams
+  RepoInsertParams,
+  RepoSearchParams
 } from '@server/interfaces/DBBridgeInterface';
 import { BaseRepository } from './BaseRepository';
 import { SupabaseRepo } from './SupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
+
+export interface PAMProjectSearchParams
+  extends RepoSearchParams<PAMProjectSchemaType> {
+  /**
+   * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
+   */
+  user_id?: string;
+}
 
 @injectable()
 export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
@@ -76,25 +82,21 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
    * @override
    */
   public async search(
-    params: ResourceSearchParams & {
-      /**
-       * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
-       */
-      user_id?: string;
-    }
+    params: PAMProjectSearchParams
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
-    const { page = 1, pageSize = 20, user_id } = params;
+    const { page = 1, pageSize = 20, user_id, fields } = params;
 
     const orConditions: FilterTriple<PAMProjectSchemaType>[] = [
       ['is_public', Operators.eq, 1]
     ];
+
     if (user_id) {
       orConditions.push(['owner_id', Operators.eq, user_id]);
     }
 
     return await this.supabaseRepo.search({
       table: this.getRepoName(),
-      fields: PAMProjectSafeFields,
+      fields: fields ?? PAMProjectSafeFields,
       page: page,
       pageSize: pageSize,
       sort: params.sort,
@@ -112,13 +114,14 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectSchemaType> {
 
   /**
    * 搜索项目列表
+   *
+   * - params.fields 默认 {@link PAMProjectSafeFields} 所有属性
+   *
    * @param params
    * @returns
    */
   public searchProjects(
-    params: ResourceSearchParams & {
-      user_id?: string;
-    }
+    params: PAMProjectSearchParams
   ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
     return this.search(params);
   }

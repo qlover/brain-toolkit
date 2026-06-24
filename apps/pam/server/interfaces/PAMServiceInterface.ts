@@ -1,6 +1,6 @@
 import type {
+  PAMApiProjectSchemaType,
   PAMProjectCreateWithEnvSchemaType,
-  PAMProjectSchemaType,
   PAMProjectUpdateSchemaType,
   PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
@@ -47,7 +47,7 @@ export interface PAMServiceInterface {
    */
   searchProjects(
     params: ResourceSearchParams
-  ): Promise<ResourceSearchResult<PAMProjectSchemaType>>;
+  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>>;
 
   /**
    * 获取一个 pam 项目, 同时会带上 enverionments

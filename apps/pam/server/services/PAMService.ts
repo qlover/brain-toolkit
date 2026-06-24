@@ -3,6 +3,7 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit';
+import { omit } from 'lodash';
 import { inject, injectable } from '@shared/container';
 import {
   API_NOT_AUTHORIZED,
@@ -10,9 +11,10 @@ import {
   API_PAM_SLUG_EXISTS
 } from '@config/i18n-identifier/api';
 import {
+  PAMApiProjectSchemaType,
   PAMProjectEnvKey,
+  PAMProjectSafeFields,
   type PAMProjectCreateWithEnvSchemaType,
-  type PAMProjectSchemaType,
   type PAMProjectUpdateSchemaType,
   type PAMProjectWithEnvironmentsSchemaType
 } from '@schemas/PAMProjectSchema';
@@ -37,15 +39,30 @@ export class PAMService implements PAMServiceInterface {
    */
   public async searchProjects(
     params: ResourceSearchParams
-  ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
-    const user = await this.userService.getUser(true);
+  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>> {
+    const user = await this.userService.getUser();
 
-    return await this.projectRepo.searchProjects({
+    const result = await this.projectRepo.searchProjects({
       ...params,
       // 如果已经登陆则查询包含用户本身的
       // 如果没有登陆则查询公开项目
-      user_id: user.id
+      user_id: user?.id,
+      fields: user
+        ? PAMProjectSafeFields
+        : omit(PAMProjectSafeFields, 'owner_id')
     });
+
+    if (user && result.items && result.items.length > 0) {
+      const newItems = result.items.map((item) =>
+        Object.assign({}, item, {
+          is_owner: user.id === item.owner_id
+        } as PAMApiProjectSchemaType)
+      );
+
+      return Object.assign(result, { items: newItems });
+    }
+
+    return result;
   }
 
   /**

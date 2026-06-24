@@ -1,14 +1,9 @@
 import React from 'react';
-import type { PAMProjectWithEnvironmentsSchemaType } from '@schemas/PAMProjectSchema';
+import type { PAMApiProjectSchemaType } from '@schemas/PAMProjectSchema';
 import { PAMIcon } from './PAMIcon';
 
-/**
- * @deprecated use `PAMProjectWithEnvironmentsSchemaType`
- */
-export interface ProjectCardData extends PAMProjectWithEnvironmentsSchemaType {}
-
 interface PAMProjectCardProps {
-  project: ProjectCardData;
+  project: PAMApiProjectSchemaType;
   isOwner: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;

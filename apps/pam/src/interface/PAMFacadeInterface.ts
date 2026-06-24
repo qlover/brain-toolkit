@@ -1,5 +1,5 @@
 import type {
-  PAMProjectCreateWithEnvSchemaType,
+  PAMApiProjectSchemaType,
   PAMProjectWithEnvironmentsSchemaType,
   PAMSearchParams
 } from '@schemas/PAMProjectSchema';
@@ -29,9 +29,8 @@ export type PAMViewModeType = ValueOf<typeof PAMViewMode>;
  *
  * 所有数据应该额外保存
  */
-export interface PAMFacadeStateInterface<
-  T extends PAMProjectCreateWithEnvSchemaType
-> extends AsyncStoreStateInterface<ResourceSearchResult<T>> {
+export interface PAMFacadeStateInterface<T extends PAMApiProjectSchemaType>
+  extends AsyncStoreStateInterface<ResourceSearchResult<T>> {
   /**
    * 拉取list 请求参数
    *
@@ -58,9 +57,7 @@ export interface PAMFacadeStateInterface<
 /**
  * 该接口用于描述前端操作 pam 相关的业务逻辑接口
  */
-export interface PAMFacadeInterface<
-  T extends PAMProjectCreateWithEnvSchemaType
-> {
+export interface PAMFacadeInterface<T extends PAMApiProjectSchemaType> {
   getFacadeStore(): StoreInterface<PAMFacadeStateInterface<T>>;
 
   /**
@@ -79,6 +76,6 @@ export interface PAMFacadeInterface<
    * @param data
    */
   createProject(
-    data: PAMProjectCreateWithEnvSchemaType
+    data: PAMApiProjectSchemaType
   ): Promise<GatewayResult<PAMProjectWithEnvironmentsSchemaType>>;
 }

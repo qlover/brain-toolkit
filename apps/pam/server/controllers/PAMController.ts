@@ -6,11 +6,11 @@ import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator'
 import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
 import { uuidSchema } from '@schemas/common';
 import {
-  PAMProjectSchemaType,
   PAMProjectWithEnvironmentsSchemaType,
   PAMProjectUpdateSchema,
   PAMProjectUpdateSchemaType,
-  PAMProjectCreateWithEnvSchema
+  PAMProjectCreateWithEnvSchema,
+  PAMApiProjectSchemaType
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMService } from '@server/services/PAMService';
@@ -26,7 +26,7 @@ export class PAMController {
 
   public async searchPamList(
     request: NextRequest
-  ): Promise<ResourceSearchResult<PAMProjectSchemaType>> {
+  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>> {
     const searchParams = request.nextUrl.searchParams;
     const search = this.searchParamsValidator.getThrow(searchParams);
 

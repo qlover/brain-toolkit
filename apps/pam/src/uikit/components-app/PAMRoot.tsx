@@ -43,9 +43,7 @@ export function PAMRoot() {
       <PAMProjectList
         projects={projects}
         viewMode={viewMode}
-        isOwner={() => {
-          return false;
-        }}
+        isOwner={(data) => !!data.is_owner}
         onEdit={function (id: string): void {
           throw new Error('Function not implemented.');
         }}
