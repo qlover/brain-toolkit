@@ -1,6 +1,7 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
 import { API_PAM_CREATE, API_PAM_SEARCH } from '@config/apiRoutes';
+import { buildApiPamDetail, buildApiPamEdit } from '@config/route';
 import {
   SearchPAMProject,
   PAMProjectCreateWithEnv,
@@ -44,6 +45,31 @@ export class PAMApi {
       AppApiSuccessInterface<PAMProjectWithEnvironments>,
       PAMProjectCreateWithEnv
     >(API_PAM_CREATE, data);
+
+    return response.data.data!;
+  }
+
+  public async getProjectDetail(params: {
+    id: string;
+  }): Promise<PAMProjectWithEnvironments> {
+    const response = await this.appApiRequester.get<
+      AppApiSuccessInterface<PAMProjectWithEnvironments>,
+      { isEnv: 1 | 0 }
+    >(buildApiPamDetail(params.id), {
+      params: { isEnv: 1 }
+    });
+
+    return response.data.data!;
+  }
+
+  public async updateProject(
+    id: string,
+    data: PAMProjectCreateWithEnv
+  ): Promise<PAMProjectWithEnvironments> {
+    const response = await this.appApiRequester.post<
+      AppApiSuccessInterface<PAMProjectWithEnvironments>,
+      PAMProjectCreateWithEnv
+    >(buildApiPamEdit(id), data);
 
     return response.data.data!;
   }

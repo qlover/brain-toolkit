@@ -1,3 +1,4 @@
+import { EditOutlined } from '@ant-design/icons';
 import React from 'react';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 
@@ -77,9 +78,9 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           <>
             <button
               onClick={() => onEdit(project.id)}
-              className="text-primary hover:bg-primary-bg p-1.5 rounded transition"
+              className="text-primary-text cursor-pointer hover:text-primary-text-hover hover:bg-primary-bg p-1.5 rounded transition"
             >
-              <i className="fas fa-edit"></i>
+              <EditOutlined />
             </button>
             <button
               onClick={() => onDelete(project.id)}

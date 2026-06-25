@@ -22,6 +22,7 @@ export interface PAMFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   className?: string;
+  mode?: 'create' | 'edit';
 }
 
 function generateSlug(name: string): string {
@@ -38,7 +39,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   onCancel,
   onSubmit,
   isSubmitting = false,
-  className = ''
+  className = '',
+  mode = 'create'
 }) => {
   const methods = useForm<FormValues>({
     resolver: zodResolver(PAMProjectCreateWithEnvSchema),
@@ -60,8 +62,22 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     formState: { errors, isSubmitting: formIsSubmitting },
     setValue,
     trigger,
-    watch
+    watch,
+    reset
   } = methods;
+
+  useEffect(() => {
+    reset({
+      name: initialData?.name ?? '',
+      slug: initialData?.slug ?? '',
+      description: initialData?.description ?? '',
+      stack: initialData?.stack ?? '',
+      repo_url: initialData?.repo_url ?? '',
+      category: initialData?.category ?? '',
+      is_public: initialData?.is_public ?? PAMPublicType.private,
+      environments: initialData?.environments || []
+    });
+  }, [initialData, reset]);
 
   const watchName = watch('name');
   useEffect(() => {
@@ -92,6 +108,11 @@ export const PAMForm: React.FC<PAMFormProps> = ({
         onSubmit={handleSubmit(onValidSubmit)}
         className={`space-y-4 sm:space-y-6 ${className}`}
       >
+        <div className="flex items-center justify-between px-4 pt-4 sm:px-0 sm:pt-0">
+          <div className="text-lg font-semibold text-primary-text">
+            {mode === 'edit' ? '编辑项目' : '新建项目'}
+          </div>
+        </div>
         <div className="space-y-3 sm:space-y-4 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="sm:col-span-2 lg:col-span-2">
@@ -294,7 +315,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <span>
                   <SaveOutlined />
                 </span>
-                保存项目
+                {mode === 'edit' ? '保存修改' : '保存项目'}
               </>
             )}
           </button>

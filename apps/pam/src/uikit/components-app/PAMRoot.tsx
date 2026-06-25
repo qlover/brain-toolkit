@@ -13,6 +13,10 @@ export function PAMRoot() {
   const pamFacade = useIOC(PAMFacade);
   const pamFacadeStore = pamFacade.getFacadeStore();
   const createState = useStore(pamFacade.getCreateStore());
+  const detailState = useStore(pamFacade.getDetailStore());
+  const editProject = detailState.result;
+  const isEditMode = Boolean(editProject);
+
   const projects = useStore(
     pamFacadeStore,
     (state) => state.result?.items || []
@@ -30,48 +34,37 @@ export function PAMRoot() {
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full"
     >
       <div>
-        <Button
-          onClick={() => {
-            pamFacadeStore.update({
-              openDialog: true
-            });
-          }}
-        >
-          新建
-        </Button>
+        <Button onClick={() => pamFacade.openDialog()}>新建</Button>
       </div>
       <PAMProjectList
         projects={projects}
         viewMode={viewMode}
         isOwner={(data) => !!data.is_owner}
-        onEdit={function (id: string): void {
+        onEdit={(id) => pamFacade.triggerEdit(id)}
+        onDelete={() => {
           throw new Error('Function not implemented.');
         }}
-        onDelete={function (id: string): void {
-          throw new Error('Function not implemented.');
-        }}
-        onManageEnv={function (id: string): void {
+        onManageEnv={() => {
           throw new Error('Function not implemented.');
         }}
       />
 
       <ResponsiveModal
         open={openDialog}
-        onClose={() => {
-          pamFacadeStore.update({
-            openDialog: false
-          });
-        }}
+        title={isEditMode ? '编辑项目' : '新建项目'}
+        onClose={() => pamFacade.closeDialog()}
       >
         <PAMForm
+          initialData={editProject ?? undefined}
+          mode={isEditMode ? 'edit' : 'create'}
           isSubmitting={createState.loading}
+          onCancel={() => pamFacade.closeDialog()}
           onSubmit={(data) => {
-            pamFacade.createProject(data);
-          }}
-          onCancel={() => {
-            pamFacadeStore.update({
-              openDialog: false
-            });
+            if (isEditMode && editProject?.id) {
+              pamFacade.updateProject(editProject.id, data);
+            } else {
+              pamFacade.createProject(data);
+            }
           }}
         />
       </ResponsiveModal>
