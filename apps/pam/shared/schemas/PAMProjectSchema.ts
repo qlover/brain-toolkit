@@ -36,8 +36,10 @@ export const PAMUpdateSQLFunctionName =
  * description， stack， repo_url 可能是 null 则需要使用 nullish 而不是 optional
  *
  * sql 中描述时并没有明确规定 not null, 也就是如果入库的时候没有值那么默认就是 null
+ *
+ * 对应数据库中原始数据类型
  */
-export const PAMProjectSchema = z.object({
+export const PAMProjectRawSchema = z.object({
   id: z.uuid(),
   /**
    * TODO: 验证 slug 格式, 理论来按说应该是 纯英文，数字，下划线，短横线没有空白字符
@@ -67,7 +69,7 @@ export const PAMVariableSchema = z.object({
   value: z.string().trim().min(1, 'Value can not be empty')
 });
 
-export const PAMEnvironmentsSchema = z.object({
+export const PAMEnvironmentsRawSchema = z.object({
   id: z.uuid(),
   project_id: z.uuid(),
   name: z.string().trim().min(1),
@@ -78,21 +80,27 @@ export const PAMEnvironmentsSchema = z.object({
 });
 
 /**
- * 该类型用于表示从数据库直接获取出来的数据类型, 去掉了敏感数据
+ * 该类型去掉了敏感数据后的项目数据
  *
- * 原本是 omit owner_id, 后发现 uuid 本身不是一个敏感数据,则去掉
- *
- * 后续如果有敏感信息则在 omit
+ * - is_deleted 仅用于服务端
+ * - owner_id 允许不返回用户的 id
  */
-export const PAMProjectSafeSchema = PAMProjectSchema.omit({
+export const PAMProjectSchema = PAMProjectRawSchema.omit({
   is_deleted: true
+}).partial({
+  owner_id: true
 });
 
-export const PAMProjectSafeFields = Object.keys(
-  PAMProjectSafeSchema.shape
-) as (keyof PAMProjectSchemaType)[];
+/**
+ * 该数组用来表示查询数据库时的字段名
+ *
+ * 去掉了敏感数据属性, 比如 is_deleted
+ */
+export const PAMProjectFields = Object.keys(
+  PAMProjectSchema.shape
+) as (keyof PAMProject)[];
 
-export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
+export const PAMProjectWithEnvironmentsSchema = PAMProjectSchema.extend({
   /**
    * 变成可选是为了保证数据完整性
    *
@@ -100,7 +108,7 @@ export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
    * - 有则表示项目信息，以及环境信息
    */
   [PAMProjectEnvKey]: z
-    .array(PAMEnvironmentsSchema)
+    .array(PAMEnvironmentsRawSchema)
     .optional() // 添加自定义验证：环境名称不能重复
     .refine(
       (environments) => {
@@ -115,7 +123,7 @@ export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
 });
 
 // 更新环境：id 必填，其他字段可选（支持部分更新）
-export const PAMEnvironmentEditSchema = PAMEnvironmentsSchema.pick({
+export const PAMEnvironmentEditSchema = PAMEnvironmentsRawSchema.pick({
   id: true,
   name: true,
   url: true,
@@ -127,7 +135,7 @@ export const PAMEnvironmentEditSchema = PAMEnvironmentsSchema.pick({
 /**
  * 新增环境不能要id，否则就是更新
  */
-export const PAMEnvironmentCreateSchema = PAMEnvironmentsSchema.pick({
+export const PAMEnvironmentCreateSchema = PAMEnvironmentsRawSchema.pick({
   name: true,
   url: true,
   variables: true
@@ -136,7 +144,7 @@ export const PAMEnvironmentCreateSchema = PAMEnvironmentsSchema.pick({
 /**
  * 修改的时候只允许修改部分属性
  */
-export const PAMProjectUpdateSchema = PAMProjectSchema.pick({
+export const PAMProjectUpdateSchema = PAMProjectRawSchema.pick({
   slug: true,
   name: true,
   description: true,
@@ -150,7 +158,7 @@ export const PAMProjectUpdateSchema = PAMProjectSchema.pick({
     [PAMProjectEnvKey]: PAMEnvironmentEditSchema.array().optional()
   });
 
-export const PAMProjectCreateWithEnvSchema = PAMProjectSafeSchema.omit({
+export const PAMProjectCreateWithEnvSchema = PAMProjectSchema.omit({
   id: true,
   created_at: true,
   updated_at: true,
@@ -166,9 +174,11 @@ export const PAMProjectCreateWithEnvSchema = PAMProjectSafeSchema.omit({
  *
  * 将 owner_id 可选,原因是因为当没有权限查询时只能获取 public 的项目,此时无需返回 owner_id
  */
-export const PAMApiProjectSchema = PAMProjectWithEnvironmentsSchema.extend({
+export const SearchPAMProjectSchema = PAMProjectWithEnvironmentsSchema.extend({
   /**
    * 用来判断是否属于当前用户项目
+   *
+   * 额外增加属性
    */
   is_owner: z.boolean().optional()
 }).partial({
@@ -176,21 +186,17 @@ export const PAMApiProjectSchema = PAMProjectWithEnvironmentsSchema.extend({
 });
 
 export type PAMProjectUpdateSchemaType = z.infer<typeof PAMProjectUpdateSchema>;
-export type PAMProjectWithEnvironmentsSchemaType = z.infer<
+export type PAMProjectWithEnvironments = z.infer<
   typeof PAMProjectWithEnvironmentsSchema
 >;
-export type PAMEnvironmentEditSchemaType = z.infer<
-  typeof PAMEnvironmentEditSchema
->;
-export type PAMEnvironmentsSchemaType = z.infer<typeof PAMEnvironmentsSchema>;
-export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;
-export type PAMProjectSafeSchemaType = z.infer<typeof PAMProjectSafeSchema>;
-export type PAMProjectCreateWithEnvSchemaType = z.infer<
+export type PAMEnvironmentEdit = z.infer<typeof PAMEnvironmentEditSchema>;
+export type PAMEnvironmentsRaw = z.infer<typeof PAMEnvironmentsRawSchema>;
+export type PAMProjectRaw = z.infer<typeof PAMProjectRawSchema>;
+export type PAMProject = z.infer<typeof PAMProjectSchema>;
+export type PAMProjectCreateWithEnv = z.infer<
   typeof PAMProjectCreateWithEnvSchema
 >;
-export type PAMEnvironmentCreateSchemaType = z.infer<
-  typeof PAMEnvironmentCreateSchema
->;
+export type PAMEnvironmentCreate = z.infer<typeof PAMEnvironmentCreateSchema>;
 
 /**
  * 搜索参数
@@ -204,4 +210,4 @@ export interface PAMSearchParams extends Omit<ResourceSearchParams, 'sort'> {
   sort?: string;
 }
 
-export type PAMApiProjectSchemaType = z.infer<typeof PAMApiProjectSchema>;
+export type SearchPAMProject = z.infer<typeof SearchPAMProjectSchema>;

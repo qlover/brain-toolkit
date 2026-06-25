@@ -3,7 +3,6 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit';
-import { omit } from 'lodash';
 import { inject, injectable } from '@shared/container';
 import {
   API_NOT_AUTHORIZED,
@@ -11,12 +10,11 @@ import {
   API_PAM_SLUG_EXISTS
 } from '@config/i18n-identifier/api';
 import {
-  PAMApiProjectSchemaType,
+  SearchPAMProject,
   PAMProjectEnvKey,
-  PAMProjectSafeFields,
-  type PAMProjectCreateWithEnvSchemaType,
+  type PAMProjectCreateWithEnv,
   type PAMProjectUpdateSchemaType,
-  type PAMProjectWithEnvironmentsSchemaType
+  type PAMProjectWithEnvironments
 } from '@schemas/PAMProjectSchema';
 import type {
   PAMServiceInterface,
@@ -39,24 +37,21 @@ export class PAMService implements PAMServiceInterface {
    */
   public async searchProjects(
     params: ResourceSearchParams
-  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>> {
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
     const user = await this.userService.getUser();
 
     const result = await this.projectRepo.searchProjects({
       ...params,
       // 如果已经登陆则查询包含用户本身的
       // 如果没有登陆则查询公开项目
-      user_id: user?.id,
-      fields: user
-        ? PAMProjectSafeFields
-        : omit(PAMProjectSafeFields, 'owner_id')
+      user_id: user?.id
     });
 
     if (user && result.items && result.items.length > 0) {
       const newItems = result.items.map((item) =>
         Object.assign({}, item, {
           is_owner: user.id === item.owner_id
-        } as PAMApiProjectSchemaType)
+        } as SearchPAMProject)
       );
 
       return Object.assign(result, { items: newItems });
@@ -70,7 +65,7 @@ export class PAMService implements PAMServiceInterface {
    */
   public async getProjectDetail(
     params: ProjectDetailParams
-  ): Promise<PAMProjectWithEnvironmentsSchemaType | null> {
+  ): Promise<PAMProjectWithEnvironments | null> {
     const { id, withEnvironments } = params;
     if (withEnvironments) {
       return await this.projectRepo.getProjectWithEnvironments(id);
@@ -105,8 +100,8 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async createProject(
-    params: PAMProjectCreateWithEnvSchemaType
-  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    params: PAMProjectCreateWithEnv
+  ): Promise<PAMProjectWithEnvironments> {
     const { slug, [PAMProjectEnvKey]: envs } = params;
     // slug 不能重复
     const pamWithSlug = await this.projectRepo.hasProjectWithSlug(slug);

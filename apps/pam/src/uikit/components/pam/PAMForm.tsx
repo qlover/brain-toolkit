@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
 import React, { useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import type { PAMProjectCreateWithEnvSchemaType } from '@schemas/PAMProjectSchema';
+import type { PAMProjectCreateWithEnv } from '@schemas/PAMProjectSchema';
 import {
   PAMProjectCreateWithEnvSchema,
   PAMPublicType
@@ -17,8 +17,8 @@ import {
 import { PAMFormEnvironments } from './PAMFormEnvironments';
 
 export interface PAMFormProps {
-  initialData?: PAMProjectCreateWithEnvSchemaType;
-  onSubmit: (data: PAMProjectCreateWithEnvSchemaType) => Promise<void> | void;
+  initialData?: PAMProjectCreateWithEnv;
+  onSubmit: (data: PAMProjectCreateWithEnv) => Promise<void> | void;
   onCancel: () => void;
   isSubmitting?: boolean;
   className?: string;
@@ -31,7 +31,7 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-type FormValues = PAMProjectCreateWithEnvSchemaType;
+type FormValues = PAMProjectCreateWithEnv;
 
 export const PAMForm: React.FC<PAMFormProps> = ({
   initialData,

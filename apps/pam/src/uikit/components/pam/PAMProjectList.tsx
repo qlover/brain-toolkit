@@ -1,12 +1,12 @@
 import React from 'react';
-import type { PAMApiProjectSchemaType } from '@schemas/PAMProjectSchema';
+import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMProjectCard } from './PAMProjectCard';
 import { PAMProjectListItem } from './PAMProjectListItem';
 
 interface PAMProjectListProps {
-  projects: readonly PAMApiProjectSchemaType[];
+  projects: readonly SearchPAMProject[];
   viewMode: 'card' | 'compact';
-  isOwner: (project: PAMApiProjectSchemaType) => boolean;
+  isOwner: (project: SearchPAMProject) => boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onManageEnv: (id: string) => void;

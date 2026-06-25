@@ -2,9 +2,9 @@ import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
 import { API_PAM_CREATE, API_PAM_SEARCH } from '@config/apiRoutes';
 import {
-  PAMApiProjectSchemaType,
-  PAMProjectCreateWithEnvSchemaType,
-  PAMProjectWithEnvironmentsSchemaType,
+  SearchPAMProject,
+  PAMProjectCreateWithEnv,
+  PAMProjectWithEnvironments,
   PAMSearchParams
 } from '@schemas/PAMProjectSchema';
 import { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
@@ -18,9 +18,9 @@ export class PAMApi {
 
   public async searchProjects(
     params: PAMSearchParams
-  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>> {
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
     const response = await this.appApiRequester.get<
-      AppApiSuccessInterface<ResourceSearchResult<PAMApiProjectSchemaType>>,
+      AppApiSuccessInterface<ResourceSearchResult<SearchPAMProject>>,
       PAMSearchParams
     >(API_PAM_SEARCH, {
       params: {
@@ -38,11 +38,11 @@ export class PAMApi {
   }
 
   public async createProject(
-    data: PAMProjectCreateWithEnvSchemaType
-  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+    data: PAMProjectCreateWithEnv
+  ): Promise<PAMProjectWithEnvironments> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectWithEnvironmentsSchemaType>,
-      PAMProjectCreateWithEnvSchemaType
+      AppApiSuccessInterface<PAMProjectWithEnvironments>,
+      PAMProjectCreateWithEnv
     >(API_PAM_CREATE, data);
 
     return response.data.data!;

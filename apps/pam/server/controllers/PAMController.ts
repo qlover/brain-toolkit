@@ -6,11 +6,11 @@ import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator'
 import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
 import { uuidSchema } from '@schemas/common';
 import {
-  PAMProjectWithEnvironmentsSchemaType,
+  PAMProjectWithEnvironments,
   PAMProjectUpdateSchema,
   PAMProjectUpdateSchemaType,
   PAMProjectCreateWithEnvSchema,
-  PAMApiProjectSchemaType
+  SearchPAMProject
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMService } from '@server/services/PAMService';
@@ -26,7 +26,7 @@ export class PAMController {
 
   public async searchPamList(
     request: NextRequest
-  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>> {
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
     const searchParams = request.nextUrl.searchParams;
     const search = this.searchParamsValidator.getThrow(searchParams);
 
@@ -38,7 +38,7 @@ export class PAMController {
   public getPamDetail(
     pamId: string,
     request: NextRequest
-  ): Promise<PAMProjectWithEnvironmentsSchemaType | null> {
+  ): Promise<PAMProjectWithEnvironments | null> {
     const id = uuidSchema.parse(pamId);
 
     const withEnvironments = request.nextUrl.searchParams.get('isEnv') === '1';
@@ -74,7 +74,7 @@ export class PAMController {
 
   public async createProject(
     request: NextRequest
-  ): Promise<PAMProjectWithEnvironmentsSchemaType> {
+  ): Promise<PAMProjectWithEnvironments> {
     const body = await request.json();
     const parsed = PAMProjectCreateWithEnvSchema.parse(body);
 

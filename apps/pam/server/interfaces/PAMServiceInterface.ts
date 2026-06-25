@@ -1,8 +1,8 @@
 import type {
-  PAMApiProjectSchemaType,
-  PAMProjectCreateWithEnvSchemaType,
+  SearchPAMProject,
+  PAMProjectCreateWithEnv,
   PAMProjectUpdateSchemaType,
-  PAMProjectWithEnvironmentsSchemaType
+  PAMProjectWithEnvironments
 } from '@schemas/PAMProjectSchema';
 import type {
   ResourceSearchParams,
@@ -47,7 +47,7 @@ export interface PAMServiceInterface {
    */
   searchProjects(
     params: ResourceSearchParams
-  ): Promise<ResourceSearchResult<PAMApiProjectSchemaType>>;
+  ): Promise<ResourceSearchResult<SearchPAMProject>>;
 
   /**
    * 获取一个 pam 项目, 同时会带上 enverionments
@@ -58,7 +58,7 @@ export interface PAMServiceInterface {
    */
   getProjectDetail(
     params: ProjectDetailParams
-  ): Promise<PAMProjectWithEnvironmentsSchemaType | null>;
+  ): Promise<PAMProjectWithEnvironments | null>;
 
   /**
    * 更新 project， 可携带 env 更新
@@ -82,6 +82,6 @@ export interface PAMServiceInterface {
    * 创建一个新的 PAM 项目
    */
   createProject(
-    params: PAMProjectCreateWithEnvSchemaType
-  ): Promise<PAMProjectWithEnvironmentsSchemaType>;
+    params: PAMProjectCreateWithEnv
+  ): Promise<PAMProjectWithEnvironments>;
 }

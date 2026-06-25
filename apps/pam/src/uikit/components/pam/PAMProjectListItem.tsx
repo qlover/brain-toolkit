@@ -1,8 +1,8 @@
 import React from 'react';
-import type { PAMApiProjectSchemaType } from '@schemas/PAMProjectSchema';
+import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 
 interface PAMProjectListItemProps {
-  project: PAMApiProjectSchemaType;
+  project: SearchPAMProject;
   isOwner: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
