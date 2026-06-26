@@ -72,7 +72,7 @@ export const logPrefixTemplate: string =
 
 export const defaultSearchParams = {
   page: 1,
-  pageSize: 20,
+  pageSize: 10,
   sort: [{ orderBy: 'created_at', order: 'desc' }]
 } as const;
 

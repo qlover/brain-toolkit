@@ -89,8 +89,9 @@ export class SupabaseRepo<Raw, T = Raw> extends BaseRepository<Raw, T> {
     }
 
     // 3. 处理排序（适配 ResourceSortClause）
-    if (params.sort && params.sort.length) {
-      for (const sort of params.sort) {
+    const sortClauses = this.ensureStableSort(params.sort);
+    if (sortClauses.length) {
+      for (const sort of sortClauses) {
         const field = sort.orderBy;
         let ascending = true;
         let nullsFirst: boolean | undefined = undefined;
@@ -219,6 +220,30 @@ export class SupabaseRepo<Raw, T = Raw> extends BaseRepository<Raw, T> {
   }
 
   // ---- 辅助方法（完全类型安全） ----
+
+  /**
+   * Append a unique tiebreaker so OFFSET/LIMIT pagination stays stable when
+   * earlier sort keys collide (e.g. many rows share the same created_at).
+   */
+  protected ensureStableSort(
+    sort?: RepoSearchParams<Raw>['sort']
+  ): NonNullable<RepoSearchParams<Raw>['sort']> {
+    const sortClauses = [...(sort ?? [])];
+    if (sortClauses.length === 0) {
+      return sortClauses;
+    }
+
+    const hasIdSort = sortClauses.some((clause) => clause.orderBy === 'id');
+    if (!hasIdSort) {
+      const lastOrder = sortClauses[sortClauses.length - 1]?.order;
+      sortClauses.push({
+        orderBy: 'id',
+        order: typeof lastOrder === 'string' ? lastOrder : 'desc'
+      });
+    }
+
+    return sortClauses;
+  }
 
   /**
    * 操作符映射表（PostgREST）

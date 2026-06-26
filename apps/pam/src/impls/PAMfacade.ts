@@ -6,6 +6,7 @@ import {
   AsyncStoreStateInterface,
   GatewayResult
 } from '@qlover/corekit-bridge';
+import { ValueOf } from '@qlover/fe-corekit';
 import { cloneDeep, find } from 'lodash';
 import {
   PAMViewMode,
@@ -26,6 +27,13 @@ import type {
 import { PAMApi } from './appApi/PAMApi';
 import type { LoggerInterface } from '@qlover/logger';
 
+export const ProjectsStrategy = {
+  Push: 'push',
+  Replace: 'replace'
+} as const;
+
+export type ProjectsStrategyType = ValueOf<typeof ProjectsStrategy>;
+
 function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
   return Object.assign<
     PAMFacadeStateInterface<SearchPAMProject>,
@@ -42,7 +50,8 @@ function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
       pageSize: defaultSearchParams.pageSize,
       sort: [
         { orderBy: 'is_public', order: 'desc' },
-        ...cloneDeep(defaultSearchParams.sort)
+        ...cloneDeep(defaultSearchParams.sort),
+        { orderBy: 'id', order: 'desc' }
       ]
     },
     projects: [],
@@ -111,22 +120,60 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    * @override
    */
   public pullProjectList(
-    params?: PAMSearchParams
+    params?: PAMSearchParams & {
+      /**
+       * 每次拉取之前是否重置当前 result 中保存的 items 数据
+       *
+       * 有些时候会需要保留当前数据的基础上再加载，成功后会替换 result 中的 items 数据
+       *
+       * @default `true`
+       */
+      resetResult?: boolean;
+      /**
+       * 拉取数据后对 projects 的处理策略
+       *
+       * - `'push'` 每次新数据追加到 projects 状态中, 适合滚动加载
+       * - `'replace'` 每次新数据替换 projects 状态中的数据, 适合分页加载
+       *
+       * @default `'replace'`
+       */
+      projectsStrategy?: ProjectsStrategyType;
+    }
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    const {
+      projectsStrategy = ProjectsStrategy.Replace,
+      resetResult = true,
+      ...restParams
+    } = params ?? {};
+
+    this.logger.debug(
+      `PAMFacade pullProjectList page ${restParams.page}, projectsStrategy ${projectsStrategy}`
+    );
+
     const mergedParams = Object.assign(
       {},
       this.searchStore.getState().searchParams,
-      params
+      restParams
     );
 
-    this.searchStore.start();
+    this.searchStore.start(
+      resetResult ? undefined : this.searchStore.getState().result
+    );
 
     return this.pamApi
       .searchProjects(mergedParams)
       .then((response) => {
+        const projects = this.withProjectsStrategy(projectsStrategy, response);
+
+        this.logger.debug(
+          `PAMFacade pullProjectList success projects ids`,
+          response.items.map((item) => item.id)
+        );
+
         this.searchStore.success(response);
         this.searchStore.emit({
-          searchParams: mergedParams
+          searchParams: mergedParams,
+          projects: projects
         });
 
         return response;
@@ -135,6 +182,18 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
         this.searchStore.failed(error);
         return this.getFacadeStore().getState().result!;
       });
+  }
+
+  protected withProjectsStrategy(
+    projectsStrategy: ProjectsStrategyType,
+    response: ResourceSearchResult<SearchPAMProject>
+  ): SearchPAMProject[] {
+    switch (projectsStrategy) {
+      case ProjectsStrategy.Push:
+        return [...this.searchStore.getState().projects, ...response.items];
+      case ProjectsStrategy.Replace:
+        return response.items as SearchPAMProject[];
+    }
   }
 
   /**
@@ -173,6 +232,14 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       .updateProject(id, data)
       .then((response) => {
         this.createStore.success(response);
+
+        // 更新 projects 中的数据, 不用拉取列表数据
+        this.searchStore.emit({
+          projects: this.searchStore
+            .getState()
+            .projects.map((item) => (item.id === id ? response : item))
+        });
+
         return { data: response, error: null };
       })
       .catch((error) => {
@@ -195,7 +262,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   }
 
   public triggerEdit(id: string): void {
-    const projects = this.getFacadeStore().getState().result?.items ?? [];
+    const projects = this.getFacadeStore().getState().projects ?? [];
     const target = find(projects, ['id', id]);
 
     if (!target) {
@@ -249,5 +316,12 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
 
   public async deleteProject(project: SearchPAMProject): Promise<void> {
     await this.pamApi.deleteProject(project.id);
+
+    // 删除成功后，删除 projects 中的数据
+    this.searchStore.emit({
+      projects: this.searchStore
+        .getState()
+        .projects.filter((item) => item.id !== project.id)
+    });
   }
 }
