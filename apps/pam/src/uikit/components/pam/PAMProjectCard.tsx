@@ -1,26 +1,30 @@
-import React from 'react';
-import type { PAMProjectWithEnvironmentsSchemaType } from '@schemas/PAMProjectSchema';
+import {
+  GlobalOutlined,
+  LockOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EnvironmentOutlined,
+  LinkOutlined,
+  SettingOutlined,
+  UserOutlined
+} from '@ant-design/icons';
+import { clsx } from 'clsx';
+import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 import { PAMIcon } from './PAMIcon';
 
-/**
- * @deprecated use `PAMProjectWithEnvironmentsSchemaType`
- */
-export interface ProjectCardData extends PAMProjectWithEnvironmentsSchemaType {}
-
 interface PAMProjectCardProps {
-  project: ProjectCardData;
+  project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onManageEnv: (id: string) => void; // 打开环境管理（当前复用编辑模态框）
 }
 
 export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   project,
   isOwner,
   onEdit,
-  onDelete,
-  onManageEnv
+  onDelete
 }) => {
   const envs = project.environments || [];
   const firstEnv = envs[0];
@@ -63,20 +67,21 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 </span>
               )}
               <span
-                className={`text-xs ${
+                className={clsx(
+                  'text-xs',
                   project.is_public === 1 ? 'text-green-600' : 'text-amber-600'
-                }`}
+                )}
               >
-                <i
-                  className={`fas ${
-                    project.is_public === 1 ? 'fa-globe' : 'fa-lock'
-                  }`}
-                ></i>{' '}
+                {project.is_public === 1 ? (
+                  <GlobalOutlined className="mr-0.5" />
+                ) : (
+                  <LockOutlined className="mr-0.5" />
+                )}{' '}
                 {project.is_public === 1 ? '公开' : '私有'}
               </span>
               {!isOwner && (
                 <span className="text-xs bg-primary-bg text-tertiary-text px-2 py-0.5 rounded-full">
-                  <i className="fas fa-eye"></i> 只读
+                  <EyeOutlined className="mr-0.5" /> 只读
                 </span>
               )}
             </div>
@@ -87,13 +92,13 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 onClick={() => onEdit(project.id)}
                 className="text-primary hover:text-primary-hover p-1.5 rounded-lg transition"
               >
-                <i className="fas fa-edit"></i>
+                <EditOutlined />
               </button>
               <button
                 onClick={() => onDelete(project.id)}
                 className="text-red-500 hover:text-red-700 p-1.5 rounded-lg transition"
               >
-                <i className="fas fa-trash-alt"></i>
+                <DeleteOutlined />
               </button>
             </div>
           )}
@@ -119,7 +124,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
 
         <div className="mt-4">
           <div className="text-xs font-semibold text-secondary-text mb-2">
-            <i className="fas fa-globe-asia mr-1"></i> 环境直达
+            <EnvironmentOutlined className="mr-1" /> 环境直达
           </div>
           <div className="flex flex-wrap gap-2">
             {envs.length > 0 ? (
@@ -130,15 +135,19 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                   href={env.url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition ${
-                    env.name === 'prod'
-                      ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                      : env.name === 'dev'
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className={clsx(
+                    'inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition',
+                    {
+                      'bg-blue-100 text-blue-700 hover:bg-blue-200':
+                        env.name === 'prod',
+                      'bg-green-100 text-green-700 hover:bg-green-200':
+                        env.name === 'dev',
+                      'bg-gray-100 text-gray-700 hover:bg-gray-200':
+                        env.name !== 'prod' && env.name !== 'dev'
+                    }
+                  )}
                 >
-                  <i className="fas fa-link"></i> {env.name.toUpperCase()}
+                  <LinkOutlined /> {env.name.toUpperCase()}
                 </a>
               ))
             ) : (
@@ -150,16 +159,8 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         <div className="mt-3 pt-2 border-t border-primary-border">
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-secondary-text">
-              <i className="fas fa-cog"></i> 环境变量示例
+              <SettingOutlined className="mr-1" /> 环境变量示例
             </span>
-            {isOwner && (
-              <button
-                onClick={() => onManageEnv(project.id)}
-                className="text-primary text-xs hover:text-primary-hover"
-              >
-                <i className="fas fa-edit"></i> 管理
-              </button>
-            )}
           </div>
           <div className="flex flex-wrap gap-1 mt-1.5">{envVarsPreview}</div>
         </div>
@@ -167,7 +168,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
 
       <div className="bg-primary-bg px-5 py-2 text-right text-xs text-tertiary-text flex justify-between">
         <span>
-          <i className="far fa-user-circle"></i> todo: 用户信息
+          <UserOutlined className="mr-1" /> todo: 用户信息
         </span>
         <span>{envs.length} 个环境</span>
       </div>

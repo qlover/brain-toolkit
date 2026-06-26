@@ -6,9 +6,10 @@ import {
   AsyncStoreStateInterface,
   GatewayResult
 } from '@qlover/corekit-bridge';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, find } from 'lodash';
 import {
   PAMViewMode,
+  PAMViewModeType,
   type PAMFacadeInterface,
   type PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
@@ -16,17 +17,19 @@ import { inject, injectable } from '@shared/container';
 import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
 import type {
-  PAMProjectCreateWithEnvSchemaType,
-  PAMProjectWithEnvironmentsSchemaType,
-  PAMSearchParams
+  SearchPAMProject,
+  PAMSearchParams,
+  PAMProjectDetail,
+  PAMProjectCreate,
+  PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import { PAMApi } from './appApi/PAMApi';
 import type { LoggerInterface } from '@qlover/logger';
 
-function defaultFacadeState(): PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType> {
+function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
   return Object.assign<
-    PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>,
-    Partial<PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>>
+    PAMFacadeStateInterface<SearchPAMProject>,
+    Partial<PAMFacadeStateInterface<SearchPAMProject>>
   >(createAsyncState(), {
     result: {
       page: defaultSearchParams.page,
@@ -42,14 +45,12 @@ function defaultFacadeState(): PAMFacadeStateInterface<PAMProjectWithEnvironment
 }
 
 @injectable()
-export class PAMFacade
-  implements PAMFacadeInterface<PAMProjectWithEnvironmentsSchemaType>
-{
+export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   @inject(I.Logger)
   protected readonly logger!: LoggerInterface;
 
   protected searchStore: AsyncStore<
-    PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>,
+    PAMFacadeStateInterface<SearchPAMProject>,
     string
   >;
 
@@ -57,30 +58,46 @@ export class PAMFacade
    * 仅用于创建 pam 时的状态
    */
   protected createStore: AsyncStore<
-    AsyncStoreStateInterface<PAMProjectWithEnvironmentsSchemaType>,
+    AsyncStoreStateInterface<SearchPAMProject>,
     string
   >;
+
+  /**
+   * 仅用于创建 pam 时的状态
+   */
+  protected detailStore: AsyncStore<
+    AsyncStoreStateInterface<PAMProjectDetail>,
+    string
+  >;
+
   constructor(
     @inject(PAMApi)
     protected readonly pamApi: PAMApi
   ) {
     this.searchStore = new AsyncStore({ defaultState: defaultFacadeState });
     this.createStore = new AsyncStore();
+    this.detailStore = new AsyncStore();
   }
 
   /**
    * @override
    */
   public getFacadeStore(): StoreInterface<
-    PAMFacadeStateInterface<PAMProjectWithEnvironmentsSchemaType>
+    PAMFacadeStateInterface<SearchPAMProject>
   > {
     return this.searchStore.getStore();
   }
 
   public getCreateStore(): StoreInterface<
-    AsyncStoreStateInterface<PAMProjectWithEnvironmentsSchemaType>
+    AsyncStoreStateInterface<SearchPAMProject>
   > {
     return this.createStore.getStore();
+  }
+
+  public getDetailStore(): StoreInterface<
+    AsyncStoreStateInterface<SearchPAMProject>
+  > {
+    return this.detailStore.getStore();
   }
 
   /**
@@ -88,7 +105,7 @@ export class PAMFacade
    */
   public pullProjectList(
     params?: PAMSearchParams
-  ): Promise<ResourceSearchResult<PAMProjectWithEnvironmentsSchemaType>> {
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
     const mergedParams = Object.assign(
       {},
       this.searchStore.getState().searchParams,
@@ -117,8 +134,8 @@ export class PAMFacade
    * @override
    */
   public createProject(
-    data: PAMProjectCreateWithEnvSchemaType
-  ): Promise<GatewayResult<PAMProjectWithEnvironmentsSchemaType>> {
+    data: PAMProjectCreate
+  ): Promise<GatewayResult<PAMProjectDetail>> {
     this.createStore.start();
 
     return this.pamApi
@@ -134,5 +151,92 @@ export class PAMFacade
           error
         };
       });
+  }
+
+  /**
+   * @override
+   */
+  public updateProject(
+    id: string,
+    data: PAMProjectUpdate
+  ): Promise<GatewayResult<PAMProjectDetail>> {
+    this.createStore.start();
+
+    return this.pamApi
+      .updateProject(id, data)
+      .then((response) => {
+        this.createStore.success(response);
+        return { data: response, error: null };
+      })
+      .catch((error) => {
+        this.createStore.failed(error);
+        return {
+          data: null,
+          error
+        };
+      });
+  }
+
+  public openDialog(): void {
+    this.detailStore.reset();
+    this.searchStore.emit({ openDialog: true });
+  }
+
+  public closeDialog(): void {
+    this.searchStore.emit({ openDialog: false });
+    this.detailStore.reset();
+  }
+
+  public triggerEdit(id: string): void {
+    const projects = this.getFacadeStore().getState().result?.items ?? [];
+    const target = find(projects, ['id', id]);
+
+    if (!target) {
+      this.logger.warn('PAMFacade.triggerEdit project not found');
+      return;
+    }
+
+    if (!target.is_owner) {
+      this.logger.warn('PAMFacade.triggerEdit project not authorized');
+      return;
+    }
+
+    // 同时打开 dialog
+    this.openDialog();
+
+    // 先给详细数据设置list 中的数据
+    // 然后后台拉取 env 变量, 这里不要使用 await，不然后阻塞打开弹窗
+    this.getProjectDetail(id, target);
+  }
+
+  public getProjectDetail(
+    id: string,
+    preProject?: SearchPAMProject
+  ): Promise<GatewayResult<PAMProjectDetail>> {
+    this.detailStore.start(preProject);
+
+    return this.pamApi
+      .getProjectDetail({ id })
+      .then((result) => {
+        // 为了防止丢失基础数据，改用合并更新
+        if (preProject) {
+          const newResult = Object.assign({}, preProject, result);
+          this.detailStore.success(newResult);
+          return { data: newResult, error: null };
+        }
+
+        this.detailStore.success(result);
+        return { data: result, error: null };
+      })
+      .catch((error) => {
+        this.detailStore.failed(error);
+        return { data: null, error };
+      });
+  }
+
+  public changeViewMode(mode: PAMViewModeType): void {
+    this.searchStore.emit({
+      viewMode: mode
+    });
   }
 }

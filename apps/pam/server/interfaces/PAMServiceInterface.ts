@@ -1,9 +1,9 @@
 import type {
-  PAMProjectCreateWithEnvSchemaType,
-  PAMProjectSchemaType,
-  PAMProjectUpdateSchemaType,
-  PAMProjectWithEnvironmentsSchemaType
-} from '@schemas/PAMProjectSchema';
+  SearchPAMProject,
+  PAMProjectDetail,
+  PAMProjectCreate,
+  PAMProjectUpdate
+} from '@shared/schemas/PAMProjectSchema';
 import type {
   ResourceSearchParams,
   ResourceSearchResult
@@ -47,7 +47,7 @@ export interface PAMServiceInterface {
    */
   searchProjects(
     params: ResourceSearchParams
-  ): Promise<ResourceSearchResult<PAMProjectSchemaType>>;
+  ): Promise<ResourceSearchResult<SearchPAMProject>>;
 
   /**
    * 获取一个 pam 项目, 同时会带上 enverionments
@@ -58,7 +58,7 @@ export interface PAMServiceInterface {
    */
   getProjectDetail(
     params: ProjectDetailParams
-  ): Promise<PAMProjectWithEnvironmentsSchemaType | null>;
+  ): Promise<PAMProjectDetail | null>;
 
   /**
    * 更新 project， 可携带 env 更新
@@ -66,8 +66,7 @@ export interface PAMServiceInterface {
    * @param params
    */
   updateProject(
-    id: string,
-    params: PAMProjectUpdateSchemaType,
+    params: PAMProjectUpdate,
     extra?: {
       /**
        * 提供 RPC 调用， rpc 支持事务
@@ -76,12 +75,10 @@ export interface PAMServiceInterface {
        */
       useRPC?: boolean;
     }
-  ): Promise<PAMProjectUpdateSchemaType>;
+  ): Promise<PAMProjectDetail>;
 
   /**
    * 创建一个新的 PAM 项目
    */
-  createProject(
-    params: PAMProjectCreateWithEnvSchemaType
-  ): Promise<PAMProjectWithEnvironmentsSchemaType>;
+  createProject(params: PAMProjectCreate): Promise<PAMProjectDetail>;
 }

@@ -1,11 +1,13 @@
 import type {
-  PAMProjectCreateWithEnvSchemaType,
-  PAMProjectWithEnvironmentsSchemaType,
-  PAMSearchParams
+  SearchPAMProject,
+  PAMProjectWithEnvs,
+  PAMSearchParams,
+  PAMProjectUpdateWithEnv
 } from '@schemas/PAMProjectSchema';
 import type {
   AsyncStoreStateInterface,
   GatewayResult,
+  ResourceSearchParams,
   ResourceSearchResult,
   StoreInterface
 } from '@qlover/corekit-bridge';
@@ -29,15 +31,14 @@ export type PAMViewModeType = ValueOf<typeof PAMViewMode>;
  *
  * 所有数据应该额外保存
  */
-export interface PAMFacadeStateInterface<
-  T extends PAMProjectCreateWithEnvSchemaType
-> extends AsyncStoreStateInterface<ResourceSearchResult<T>> {
+export interface PAMFacadeStateInterface<T extends SearchPAMProject>
+  extends AsyncStoreStateInterface<ResourceSearchResult<T>> {
   /**
    * 拉取list 请求参数
    *
    * 比如 page, pageSize, sort, keyword 等参数
    */
-  searchParams: PAMSearchParams;
+  searchParams: ResourceSearchParams;
 
   /**
    * 额外保存的拉取的所有项目数据
@@ -58,9 +59,7 @@ export interface PAMFacadeStateInterface<
 /**
  * 该接口用于描述前端操作 pam 相关的业务逻辑接口
  */
-export interface PAMFacadeInterface<
-  T extends PAMProjectCreateWithEnvSchemaType
-> {
+export interface PAMFacadeInterface<T extends SearchPAMProject> {
   getFacadeStore(): StoreInterface<PAMFacadeStateInterface<T>>;
 
   /**
@@ -79,6 +78,17 @@ export interface PAMFacadeInterface<
    * @param data
    */
   createProject(
-    data: PAMProjectCreateWithEnvSchemaType
-  ): Promise<GatewayResult<PAMProjectWithEnvironmentsSchemaType>>;
+    data: SearchPAMProject
+  ): Promise<GatewayResult<PAMProjectWithEnvs>>;
+
+  /**
+   * 更新一个项目，允许传入环境信息
+   *
+   * @param id
+   * @param data
+   */
+  updateProject(
+    id: string,
+    data: PAMProjectUpdateWithEnv
+  ): Promise<GatewayResult<PAMProjectWithEnvs>>;
 }

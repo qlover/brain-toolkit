@@ -1,4 +1,4 @@
-import { API_CLIENTS_2 } from './apiRoutes';
+import { API_CLIENTS_2, API_PAM_DETAIL, API_PAM_EDIT } from './apiRoutes';
 import { i18nConfig } from './i18n';
 import type { LocaleType } from './i18n';
 import type { NextURL } from 'next/dist/server/web/next-url';
@@ -195,4 +195,48 @@ export function redirectToPath(
   url.pathname = targetRoute;
   url.search = `redirect=${encodeURIComponent(returnPath)}`;
   return url;
+}
+
+/**
+ * 用于构建一个带 path 参数的 api 请求地址
+ *
+ * @example
+ * ```
+ * /api/user/:id/detail
+ *
+ * buildApiWithPath('/api/user/:id/detail', { id: '123' })
+ * // => /api/user/123/detail
+ * ```
+ *
+ * @param pathname
+ * @param vars
+ * @returns
+ */
+export function buildApiWithPath(
+  pathname: string,
+  vars: Record<string, string>
+): string {
+  let newPathname = pathname;
+
+  Object.keys(vars).forEach((key) => {
+    const pathKey = key.startsWith(':') ? key : ':' + key;
+    if (pathname.includes(pathKey)) {
+      newPathname = pathname.replace(pathKey, vars[key]);
+    }
+  });
+
+  return newPathname;
+}
+
+/**
+ * @see {@link API_PAM_DETAIL}
+ * @param id
+ * @returns
+ */
+export function buildApiPamDetail(id: string): string {
+  return buildApiWithPath(API_PAM_DETAIL, { id });
+}
+
+export function buildApiPamEdit(id: string): string {
+  return buildApiWithPath(API_PAM_EDIT, { id });
 }

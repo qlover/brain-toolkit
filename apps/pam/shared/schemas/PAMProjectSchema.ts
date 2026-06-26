@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import {
-  V_PAM_ENV_NAME_REPEAT,
-  V_REQUIRED
-} from '@config/i18n-identifier/common/validators';
+import { V_REQUIRED } from '@config/i18n-identifier/common/validators';
 import { DeleteStatus } from './common';
+import { PAMEnvWriteableSchema } from './PAMEnvironmentSchema';
+import type { PAMEnvWriteable } from './PAMEnvironmentSchema';
 import type { ResourceSearchParams } from '@qlover/corekit-bridge';
 
 export const PAMPublicType = {
@@ -12,8 +11,6 @@ export const PAMPublicType = {
 } as const;
 
 export const PAMProjectTableName = 'pam_projects' as const;
-export const PAMEnvironmentsTableName = 'pam_environments' as const;
-
 export const PAMProjectEnvKey = 'environments' as const;
 
 /**
@@ -36,8 +33,10 @@ export const PAMUpdateSQLFunctionName =
  * description， stack， repo_url 可能是 null 则需要使用 nullish 而不是 optional
  *
  * sql 中描述时并没有明确规定 not null, 也就是如果入库的时候没有值那么默认就是 null
+ *
+ * 对应数据库中原始数据类型
  */
-export const PAMProjectSchema = z.object({
+export const PAMProjectRawSchema = z.object({
   id: z.uuid(),
   /**
    * TODO: 验证 slug 格式, 理论来按说应该是 纯英文，数字，下划线，短横线没有空白字符
@@ -60,118 +59,92 @@ export const PAMProjectSchema = z.object({
   created_at: z.union([z.string().trim(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
   updated_at: z.union([z.string().trim(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
 });
+export type PAMProjectRaw = z.infer<typeof PAMProjectRawSchema>;
 
-export const PAMVariableSchema = z.object({
-  id: z.uuid().optional(),
-  key: z.string().trim().min(1, 'Key can not be empty'),
-  value: z.string().trim().min(1, 'Value can not be empty')
-});
+export const SearchPAMProjectFields = Object.keys(
+  PAMProjectRawSchema.omit({ is_deleted: true }).shape
+) as (keyof SearchPAMRawProject)[];
 
-export const PAMEnvironmentsSchema = z.object({
-  id: z.uuid(),
-  project_id: z.uuid(),
-  name: z.string().trim().min(1),
-  url: z.url(),
-  variables: z.array(PAMVariableSchema).optional(),
-  created_at: z.union([z.string().trim(), z.number()]), // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
-  updated_at: z.union([z.string().trim(), z.number()]) // Support both string (TIMESTAMPTZ) and number (Unix timestamp)
-});
+export type SearchPAMRawProject = Omit<PAMProjectRaw, 'is_deleted'>;
 
-export const PAMProjectSafeSchema = PAMProjectSchema.omit({
-  owner_id: true
-});
-
-export const PAMProjectSafeFields = Object.keys(
-  PAMProjectSafeSchema.shape
-) as (keyof PAMProjectSchemaType)[];
-
-export const PAMProjectWithEnvironmentsSchema = PAMProjectSafeSchema.extend({
+/**
+ * 该接口用于 api/pam/search 接口返回 api 数据的扩展
+ *
+ * is_deleted 不能出现仅用于服务器内部
+ *
+ * 也就是前端应该使用该类型
+ *
+ * 将 owner_id 可选,原因是因为当没有权限查询时只能获取 public 的项目,此时无需返回 owner_id
+ */
+export type SearchPAMProject = SearchPAMRawProject & {
   /**
-   * 变成可选是为了保证数据完整性
+   * 用来判断是否属于当前用户项目
    *
-   * - 如果为空则表示没有环境，仅保存了项目信息
-   * - 有则表示项目信息，以及环境信息
+   * 额外增加属性
    */
-  [PAMProjectEnvKey]: z
-    .array(PAMEnvironmentsSchema)
-    .optional() // 添加自定义验证：环境名称不能重复
-    .refine(
-      (environments) => {
-        if (!environments) return true;
-        const names = environments
-          .map((env) => env.name)
-          .filter((name) => name.trim() !== '');
-        return new Set(names).size === names.length;
-      },
-      { message: V_PAM_ENV_NAME_REPEAT }
-    )
-});
-
-// 更新环境：id 必填，其他字段可选（支持部分更新）
-export const PAMEnvironmentEditSchema = PAMEnvironmentsSchema.pick({
-  id: true,
-  name: true,
-  url: true,
-  variables: true
-})
-  .partial() // 所有字段变为可选
-  .required({ id: true }); // 强制 id 必填
+  is_owner?: boolean;
+};
 
 /**
- * 新增环境不能要id，否则就是更新
+ * 该类型主要用于查询单个 project 或需要携带 env 数据的 project
  */
-export const PAMEnvironmentCreateSchema = PAMEnvironmentsSchema.pick({
-  name: true,
-  url: true,
-  variables: true
-});
+export type PAMProjectDetail = SearchPAMRawProject & {
+  [PAMProjectEnvKey]?: PAMEnvWriteable[];
+};
 
 /**
- * 修改的时候只允许修改部分属性
+ * 对应 api/pam/create 接口 body 数据
  */
-export const PAMProjectUpdateSchema = PAMProjectSchema.pick({
-  slug: true,
-  name: true,
-  description: true,
-  stack: true,
-  repo_url: true,
-  category: true,
-  is_public: true
-})
-  .partial()
-  .extend({
-    [PAMProjectEnvKey]: PAMEnvironmentEditSchema.array().optional()
-  });
-
-export const PAMProjectCreateWithEnvSchema = PAMProjectSafeSchema.omit({
+export const PAMProjectCreateSchema = PAMProjectRawSchema.omit({
   id: true,
+  is_deleted: true,
   created_at: true,
   updated_at: true,
-  is_deleted: true
+  owner_id: true
 }).extend({
-  [PAMProjectEnvKey]: PAMEnvironmentCreateSchema.array().optional()
+  [PAMProjectEnvKey]: z
+    .array(
+      PAMEnvWriteableSchema.omit({
+        id: true
+      })
+    )
+    .optional()
 });
 
-export type PAMProjectUpdateSchemaType = z.infer<typeof PAMProjectUpdateSchema>;
-export type PAMProjectWithEnvironmentsSchemaType = z.infer<
-  typeof PAMProjectWithEnvironmentsSchema
->;
-export type PAMEnvironmentEditSchemaType = z.infer<
-  typeof PAMEnvironmentEditSchema
->;
-export type PAMEnvironmentsSchemaType = z.infer<typeof PAMEnvironmentsSchema>;
-export type PAMProjectSchemaType = z.infer<typeof PAMProjectSchema>;
-export type PAMProjectSafeSchemaType = z.infer<typeof PAMProjectSafeSchema>;
-export type PAMProjectCreateWithEnvSchemaType = z.infer<
-  typeof PAMProjectCreateWithEnvSchema
->;
-export type PAMEnvironmentCreateSchemaType = z.infer<
-  typeof PAMEnvironmentCreateSchema
->;
+/**
+ * 对应 api/pam/edit 接口 body 数据
+ */
+export const PAMProjectUpdateSchema = PAMProjectRawSchema.omit({
+  is_deleted: true,
+  created_at: true,
+  updated_at: true,
+  owner_id: true
+}).extend({
+  [PAMProjectEnvKey]: z
+    .array(
+      PAMEnvWriteableSchema.partial({
+        /**
+         * 当没有id则表示删除
+         *
+         * 修改时必须带上id
+         */
+        id: true
+      })
+    )
+    .optional()
+});
+
+export type PAMProjectCreate = z.infer<typeof PAMProjectCreateSchema>;
+export type PAMProjectUpdate = z.infer<typeof PAMProjectUpdateSchema>;
 
 /**
  * 搜索参数
  *
  * FIXME: 目前 controller 使用 SearchParamsValidator 直接校验
  */
-export interface PAMSearchParams extends ResourceSearchParams {}
+export interface PAMSearchParams extends Omit<ResourceSearchParams, 'sort'> {
+  /**
+   * 重新 sort, 现在仅仅传递一个 json 字符串
+   */
+  sort?: string;
+}

@@ -7,21 +7,29 @@ import {
 } from '@ant-design/icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import type { PAMProjectCreateWithEnvSchemaType } from '@schemas/PAMProjectSchema';
+import type {
+  PAMProjectCreate,
+  PAMProjectUpdate
+} from '@schemas/PAMProjectSchema';
 import {
-  PAMProjectCreateWithEnvSchema,
+  PAMProjectCreateSchema,
+  PAMProjectEnvKey,
+  PAMProjectUpdateSchema,
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
 import { PAMFormEnvironments } from './PAMFormEnvironments';
 
+type PAMFormProject = PAMProjectCreate | PAMProjectUpdate;
+
 export interface PAMFormProps {
-  initialData?: PAMProjectCreateWithEnvSchemaType;
-  onSubmit: (data: PAMProjectCreateWithEnvSchemaType) => Promise<void> | void;
+  initialData?: PAMFormProject;
+  onSubmit: (data: PAMFormProject) => Promise<void> | void;
   onCancel: () => void;
   isSubmitting?: boolean;
   className?: string;
+  mode?: 'create' | 'edit';
 }
 
 function generateSlug(name: string): string {
@@ -31,18 +39,23 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-type FormValues = PAMProjectCreateWithEnvSchemaType;
-
 export const PAMForm: React.FC<PAMFormProps> = ({
   initialData,
   onCancel,
   onSubmit,
   isSubmitting = false,
-  className = ''
+  className = '',
+  mode = 'create'
 }) => {
-  const methods = useForm<FormValues>({
-    resolver: zodResolver(PAMProjectCreateWithEnvSchema),
+  const zodResolover = useMemo(
+    () => (mode === 'create' ? PAMProjectCreateSchema : PAMProjectUpdateSchema),
+    [mode]
+  );
+
+  const methods = useForm<PAMFormProject>({
+    resolver: zodResolver(zodResolover),
     defaultValues: {
+      id: mode === 'edit' ? (initialData as PAMProjectUpdate).id : undefined,
       name: initialData?.name,
       slug: initialData?.slug,
       description: initialData?.description,
@@ -50,7 +63,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       repo_url: initialData?.repo_url,
       category: initialData?.category,
       is_public: initialData?.is_public ?? PAMPublicType.private,
-      environments: initialData?.environments || []
+      [PAMProjectEnvKey]: initialData?.environments || []
     }
   });
 
@@ -60,8 +73,24 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     formState: { errors, isSubmitting: formIsSubmitting },
     setValue,
     trigger,
-    watch
+    watch,
+    reset
   } = methods;
+
+  const is_public = watch('is_public');
+
+  useEffect(() => {
+    reset({
+      name: initialData?.name ?? '',
+      slug: initialData?.slug ?? '',
+      description: initialData?.description ?? '',
+      stack: initialData?.stack ?? '',
+      repo_url: initialData?.repo_url ?? '',
+      category: initialData?.category ?? '',
+      is_public: initialData?.is_public ?? PAMPublicType.private,
+      environments: initialData?.environments || []
+    });
+  }, [initialData, reset]);
 
   const watchName = watch('name');
   useEffect(() => {
@@ -70,8 +99,20 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     }
   }, [watchName, setValue, watch]);
 
-  const onValidSubmit = (data: FormValues) => {
-    const parsed = PAMProjectCreateWithEnvSchema.safeParse(data);
+  const onValidSubmit = (data: PAMFormProject) => {
+    // const newData = clone(data);
+    // if (mode === 'edit' && initialData && 'id' in initialData) {
+    //   Object.assign<PAMFormProject, Partial<PAMProjectUpdate>>(newData, {
+    //     id: initialData.id
+    //   });
+    // }
+
+    if (mode === 'edit' && !('id' in data)) {
+      console.log('致命错误,修改项目缺少ID');
+      return;
+    }
+
+    const parsed = zodResolover.safeParse(data);
     if (!parsed.success) {
       console.error(parsed.error);
       return;
@@ -80,10 +121,12 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   };
 
   const togglePublic = () => {
-    const current = watch('is_public');
+    const current = is_public;
     setValue('is_public', current === 0 ? 1 : 0);
     trigger('is_public');
   };
+
+  const lockTitle = is_public === PAMPublicType.public ? '公开' : '私有';
 
   return (
     <FormProvider {...methods}>
@@ -92,6 +135,10 @@ export const PAMForm: React.FC<PAMFormProps> = ({
         onSubmit={handleSubmit(onValidSubmit)}
         className={`space-y-4 sm:space-y-6 ${className}`}
       >
+        {mode === 'edit' && (
+          <input className="hidden" type="hidden" {...register('id')} />
+        )}
+
         <div className="space-y-3 sm:space-y-4 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="sm:col-span-2 lg:col-span-2">
@@ -108,38 +155,27 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <div className="min-w-12">
                   <button
                     type="button"
+                    title={lockTitle}
                     onClick={togglePublic}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-primary-border hover:bg-primary-bg transition cursor-pointer touch-manipulation"
+                    className={clsx(
+                      'flex items-center gap-2 px-3 py-2 rounded-xl border border-primary-border hover:bg-primary-bg transition cursor-pointer touch-manipulation',
+                      is_public === PAMPublicType.public
+                        ? 'text-brand'
+                        : 'text-tertiary-text'
+                    )}
                   >
-                    <span
-                      title={
-                        watch('is_public') === PAMPublicType.public
-                          ? '公开'
-                          : '私有'
-                      }
-                      className={clsx(
-                        'text-base',
-                        watch('is_public') === PAMPublicType.public
-                          ? 'text-brand'
-                          : 'text-tertiary-text'
-                      )}
-                    >
-                      {watch('is_public') === PAMPublicType.public ? (
-                        <UnlockOutlined />
-                      ) : (
-                        <LockOutlined className="text-tertiary-text" />
-                      )}
-                    </span>
-                    <span className="text-sm font-medium text-primary-text">
-                      {watch('is_public') === PAMPublicType.public
-                        ? '公开'
-                        : '私有'}
-                    </span>
+                    {is_public === PAMPublicType.public ? (
+                      <UnlockOutlined />
+                    ) : (
+                      <LockOutlined />
+                    )}
+
+                    <span>{lockTitle}</span>
                   </button>
                   <input
                     type="hidden"
                     {...register('is_public')}
-                    value={watch('is_public')}
+                    value={is_public}
                   />
                 </div>
               </div>
@@ -294,7 +330,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <span>
                   <SaveOutlined />
                 </span>
-                保存项目
+                {mode === 'edit' ? '保存修改' : '保存项目'}
               </>
             )}
           </button>

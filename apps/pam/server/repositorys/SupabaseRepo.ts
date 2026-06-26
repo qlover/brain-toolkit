@@ -26,7 +26,7 @@ import type { LoggerInterface } from '@qlover/logger';
 type FilterBuilder = PostgrestFilterBuilder<any, any, any, any, any, any, any>;
 
 @injectable()
-export class SupabaseRepo<T> extends BaseRepository<T> {
+export class SupabaseRepo<Raw, T = Raw> extends BaseRepository<Raw, T> {
   @inject(I.Logger)
   protected logger!: LoggerInterface;
   protected clientPromise: Promise<SupabaseClient> | null = null;
@@ -52,11 +52,11 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
   }
 
   protected async getSearchBuilder(
-    params: RepoSearchParams<T> & {
+    params: RepoSearchParams<Raw> & {
       table?: string;
     }
   ): Promise<
-    [FilterBuilder, Pick<RepoSearchParams<T>, 'pageSize' | 'offset'>]
+    [FilterBuilder, Pick<RepoSearchParams<Raw>, 'pageSize' | 'offset'>]
   > {
     const client = await this.getAdminSupabase();
 
@@ -150,7 +150,7 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
    * @override
    */
   public async search(
-    params: RepoSearchParams<T> & {
+    params: RepoSearchParams<Raw> & {
       table?: string;
     }
   ): Promise<ResourceSearchResult<T>> {
@@ -182,20 +182,20 @@ export class SupabaseRepo<T> extends BaseRepository<T> {
    * @override
    * @param data
    */
-  public insert(params: RepoInsertParams<T>): Promise<void>;
+  public insert(params: RepoInsertParams<Raw>): Promise<void>;
   /**
    * 插入一条数据后返回新的数据
    * @override
    * @param params
    */
-  public insert(params: RepoInsertGetParams<T>): Promise<T>;
+  public insert(params: RepoInsertGetParams<Raw>): Promise<T>;
   /**
    * @override
    */
   public async insert(
-    params: RepoInsertParams<T> | RepoInsertGetParams<T>
+    params: RepoInsertParams<Raw> | RepoInsertGetParams<Raw>
   ): Promise<T | void> {
-    const { data, fields, table } = params as RepoInsertGetParams<T>;
+    const { data, fields, table } = params as RepoInsertGetParams<Raw>;
     const client = await this.getSupabase();
     const query = client
       .from(table || this.getRepoName())
