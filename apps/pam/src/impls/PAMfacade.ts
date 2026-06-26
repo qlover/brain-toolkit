@@ -196,6 +196,34 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     }
   }
 
+  protected reloadProjectListFromFirstPage(): Promise<
+    ResourceSearchResult<SearchPAMProject>
+  > {
+    return this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: true,
+      projectsStrategy: ProjectsStrategy.Replace
+    });
+  }
+
+  /**
+   *
+   * 处理创建成功后的逻辑,主要用来重置列表
+   *
+   * 新增后 重置分页，重新从第 1 页加载（丢弃旧列表）
+   *
+   * FIXME: 数据完成后重置列表, 重新刷新,未来可考虑使用
+   * 未来可用 offset + pageSize 的方式拉取
+   *
+   * @param response
+   */
+  protected handlerCreateSuccess(
+    response: PAMProjectDetail
+  ): Promise<PAMProjectDetail> {
+    this.closeDialog();
+    return this.reloadProjectListFromFirstPage().then(() => response);
+  }
+
   /**
    * @override
    */
@@ -206,6 +234,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
 
     return this.pamApi
       .createProject(data)
+      .then((response) => this.handlerCreateSuccess(response))
       .then((response) => {
         this.createStore.success(response);
         return { data: response, error: null };
@@ -316,12 +345,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
 
   public async deleteProject(project: SearchPAMProject): Promise<void> {
     await this.pamApi.deleteProject(project.id);
-
-    // 删除成功后，删除 projects 中的数据
-    this.searchStore.emit({
-      projects: this.searchStore
-        .getState()
-        .projects.filter((item) => item.id !== project.id)
-    });
+    // 这里不要 await,后台完成即可
+    this.reloadProjectListFromFirstPage();
   }
 }
