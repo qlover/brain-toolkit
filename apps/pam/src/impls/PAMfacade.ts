@@ -37,7 +37,14 @@ function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
       total: 0,
       items: []
     },
-    searchParams: cloneDeep(defaultSearchParams),
+    searchParams: {
+      page: defaultSearchParams.page,
+      pageSize: defaultSearchParams.pageSize,
+      sort: [
+        { orderBy: 'is_public', order: 'desc' },
+        ...cloneDeep(defaultSearchParams.sort)
+      ]
+    },
     projects: [],
     viewMode: PAMViewMode.Compact,
     openDialog: false
@@ -238,5 +245,9 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     this.searchStore.emit({
       viewMode: mode
     });
+  }
+
+  public async deleteProject(project: SearchPAMProject): Promise<void> {
+    await this.pamApi.deleteProject(project.id);
   }
 }

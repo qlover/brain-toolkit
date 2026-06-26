@@ -99,6 +99,15 @@ export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 export const API_PAM_CREATE = '/api/pam/create' as const;
 
 /**
+ * API path: `/api/pam/delete/:id`
+ *
+ * @see [src/app/api/pam/delete/[id]/route.ts](../../src/app/api/pam/delete/[id]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/delete/[id]/route.ts`
+ */
+export const API_PAM_DELETE = '/api/pam/delete/:id' as const;
+
+/**
  * API path: `/api/pam/detail/:id`
  *
  * @see [src/app/api/pam/detail/[id]/route.ts](../../src/app/api/pam/detail/[id]/route.ts)
@@ -217,6 +226,7 @@ export type ApiRoutePath =
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
   | typeof API_PAM_CREATE
+  | typeof API_PAM_DELETE
   | typeof API_PAM_DETAIL
   | typeof API_PAM_EDIT
   | typeof API_PAM_SEARCH

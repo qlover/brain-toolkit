@@ -82,4 +82,8 @@ export class PAMController {
 
     return this.pamService.createProject(parsed);
   }
+
+  public deleteProject(id: string): unknown {
+    return this.pamService.deleteProject(id);
+  }
 }

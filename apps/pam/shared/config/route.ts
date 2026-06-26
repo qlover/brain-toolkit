@@ -1,4 +1,9 @@
-import { API_CLIENTS_2, API_PAM_DETAIL, API_PAM_EDIT } from './apiRoutes';
+import {
+  API_CLIENTS_2,
+  API_PAM_DELETE,
+  API_PAM_DETAIL,
+  API_PAM_EDIT
+} from './apiRoutes';
 import { i18nConfig } from './i18n';
 import type { LocaleType } from './i18n';
 import type { NextURL } from 'next/dist/server/web/next-url';
@@ -239,4 +244,8 @@ export function buildApiPamDetail(id: string): string {
 
 export function buildApiPamEdit(id: string): string {
   return buildApiWithPath(API_PAM_EDIT, { id });
+}
+
+export function buildApiPamDetele(id: string): string {
+  return buildApiWithPath(API_PAM_DELETE, { id });
 }

@@ -81,4 +81,6 @@ export interface PAMServiceInterface {
    * 创建一个新的 PAM 项目
    */
   createProject(params: PAMProjectCreate): Promise<PAMProjectDetail>;
+
+  deleteProject(id: string): Promise<void>;
 }

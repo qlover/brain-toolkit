@@ -1,5 +1,4 @@
 import {
-  GlobalOutlined,
   LockOutlined,
   EyeOutlined,
   EditOutlined,
@@ -17,7 +16,7 @@ interface PAMProjectCardProps {
   project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (project: PAMProjectDetail) => void;
 }
 
 export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
@@ -53,7 +52,23 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-lg font-bold text-primary-text truncate">
-              {project.name}
+              <span
+                title={project.is_public === 1 ? '公开的' : '私有的'}
+                className={clsx(
+                  'text-xs mr-2',
+                  project.is_public === 1
+                    ? 'text-emerald-600'
+                    : 'text-amber-600'
+                )}
+              >
+                {project.is_public === 1 ? (
+                  <EyeOutlined className="text-sm" />
+                ) : (
+                  <LockOutlined className="text-sm" />
+                )}
+              </span>
+
+              <span title={project.name}>{project.name}</span>
             </h3>
             <div className="flex flex-wrap gap-2 mt-1 items-center">
               {project.stack && (
@@ -66,19 +81,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                   {project.category}
                 </span>
               )}
-              <span
-                className={clsx(
-                  'text-xs',
-                  project.is_public === 1 ? 'text-green-600' : 'text-amber-600'
-                )}
-              >
-                {project.is_public === 1 ? (
-                  <GlobalOutlined className="mr-0.5" />
-                ) : (
-                  <LockOutlined className="mr-0.5" />
-                )}{' '}
-                {project.is_public === 1 ? '公开' : '私有'}
-              </span>
+
               {!isOwner && (
                 <span className="text-xs bg-primary-bg text-tertiary-text px-2 py-0.5 rounded-full">
                   <EyeOutlined className="mr-0.5" /> 只读
@@ -95,7 +98,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 <EditOutlined />
               </button>
               <button
-                onClick={() => onDelete(project.id)}
+                onClick={() => onDelete(project)}
                 className="text-red-500 hover:text-red-700 p-1.5 rounded-lg transition"
               >
                 <DeleteOutlined />

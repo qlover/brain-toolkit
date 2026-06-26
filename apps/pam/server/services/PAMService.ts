@@ -212,4 +212,15 @@ export class PAMService implements PAMServiceInterface {
       owner_id: user.id
     });
   }
+
+  /**
+   * @override
+   */
+  public async deleteProject(id: string): Promise<void> {
+    // 权限校验
+    const project = await this.projectRepo.hasAuthProject(id);
+    if (!project) throw new Error(API_NOT_AUTHORIZED);
+
+    await this.projectRepo.deleteProject(id);
+  }
 }

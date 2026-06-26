@@ -1,13 +1,17 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { inject, injectable } from '@shared/container';
 import { API_PAM_CREATE, API_PAM_SEARCH } from '@config/apiRoutes';
-import { buildApiPamDetail, buildApiPamEdit } from '@config/route';
+import {
+  buildApiPamDetail,
+  buildApiPamDetele,
+  buildApiPamEdit
+} from '@config/route';
 import {
   SearchPAMProject,
-  PAMProjectCreateWithEnv,
-  PAMProjectWithEnvs,
   PAMSearchParams,
-  PAMProjectUpdateWithEnv
+  PAMProjectDetail,
+  PAMProjectCreate,
+  PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
 import { AppApiRequester } from './AppApiRequester';
@@ -40,11 +44,11 @@ export class PAMApi {
   }
 
   public async createProject(
-    data: PAMProjectCreateWithEnv
-  ): Promise<PAMProjectWithEnvs> {
+    data: PAMProjectCreate
+  ): Promise<PAMProjectDetail> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectWithEnvs>,
-      PAMProjectCreateWithEnv
+      AppApiSuccessInterface<PAMProjectDetail>,
+      PAMProjectCreate
     >(API_PAM_CREATE, data);
 
     return response.data.data!;
@@ -52,9 +56,9 @@ export class PAMApi {
 
   public async getProjectDetail(params: {
     id: string;
-  }): Promise<PAMProjectWithEnvs> {
+  }): Promise<PAMProjectDetail> {
     const response = await this.appApiRequester.get<
-      AppApiSuccessInterface<PAMProjectWithEnvs>,
+      AppApiSuccessInterface<PAMProjectDetail>,
       { isEnv: 1 | 0 }
     >(buildApiPamDetail(params.id), {
       params: { isEnv: 1 }
@@ -65,13 +69,17 @@ export class PAMApi {
 
   public async updateProject(
     id: string,
-    data: PAMProjectUpdateWithEnv
-  ): Promise<PAMProjectWithEnvs> {
+    data: PAMProjectUpdate
+  ): Promise<PAMProjectDetail> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectWithEnvs>,
-      PAMProjectUpdateWithEnv
+      AppApiSuccessInterface<PAMProjectDetail>,
+      PAMProjectUpdate
     >(buildApiPamEdit(id), data);
 
     return response.data.data!;
+  }
+
+  public deleteProject(id: string): Promise<void> {
+    return this.appApiRequester.post(buildApiPamDetele(id));
   }
 }
