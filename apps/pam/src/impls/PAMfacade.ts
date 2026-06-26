@@ -37,7 +37,14 @@ function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
       total: 0,
       items: []
     },
-    searchParams: cloneDeep(defaultSearchParams),
+    searchParams: {
+      page: defaultSearchParams.page,
+      pageSize: defaultSearchParams.pageSize,
+      sort: [
+        { orderBy: 'is_public', order: 'desc' },
+        ...cloneDeep(defaultSearchParams.sort)
+      ]
+    },
     projects: [],
     viewMode: PAMViewMode.Compact,
     openDialog: false

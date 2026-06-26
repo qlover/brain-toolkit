@@ -30,7 +30,23 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
       className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-primary-bg transition border-b border-primary-border last:border-b-0"
     >
       <div className="min-w-37">
-        <div className="font-semibold text-primary-text">{project.name}</div>
+        <div className="font-semibold text-primary-text">
+          <span
+            title={project.is_public === 1 ? '公开的' : '私有的'}
+            className={clsx(
+              'text-xs mr-2',
+              project.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'
+            )}
+          >
+            {project.is_public === 1 ? (
+              <EyeOutlined className="text-sm" />
+            ) : (
+              <LockOutlined className="text-sm" />
+            )}
+          </span>
+
+          <span title={project.name}>{project.name}</span>
+        </div>
         <div className="flex flex-wrap gap-1 items-center">
           {project.category && (
             <span className="category-badge text-brand-active text-xs">
@@ -71,18 +87,6 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
-        <span
-          className={clsx(
-            'text-xs',
-            project.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'
-          )}
-        >
-          {project.is_public === 1 ? (
-            <EyeOutlined className="text-sm" />
-          ) : (
-            <LockOutlined className="text-sm" />
-          )}
-        </span>
         {isOwner ? (
           <>
             <button

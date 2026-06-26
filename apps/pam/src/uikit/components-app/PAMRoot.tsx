@@ -58,6 +58,7 @@ export function PAMRoot() {
         onEdit={(id) => pamFacade.triggerEdit(id)}
         onDelete={(project) => {
           dialog.confirm({
+            type: 'error',
             title: '删除项目',
             content: '确定是否删除: ' + project.name,
             onOk: () => pamFacade.deleteProject(project)
