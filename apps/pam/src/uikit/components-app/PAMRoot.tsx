@@ -3,8 +3,10 @@
 import { Button } from 'antd';
 import { useEffect } from 'react';
 import { PAMFacade } from '@/impls/PAMfacade';
+import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
 import { PAMForm } from '../components/pam/PAMForm';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
+import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
 import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
@@ -36,15 +38,27 @@ export function PAMRoot() {
       <div>
         <Button onClick={() => pamFacade.openDialog()}>新建</Button>
       </div>
+
+      <PAMToolbar
+        searchValue={''}
+        onSearchChange={() => {
+          throw new Error('Function not implemented.');
+        }}
+        categoryValue={''}
+        onCategoryChange={() => {
+          throw new Error('Function not implemented.');
+        }}
+        viewMode={viewMode}
+        onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
+        categories={[]}
+      />
+
       <PAMProjectList
         projects={projects}
         viewMode={viewMode}
         isOwner={(data) => !!data.is_owner}
         onEdit={(id) => pamFacade.triggerEdit(id)}
         onDelete={() => {
-          throw new Error('Function not implemented.');
-        }}
-        onManageEnv={() => {
           throw new Error('Function not implemented.');
         }}
       />
@@ -61,7 +75,7 @@ export function PAMRoot() {
           onCancel={() => pamFacade.closeDialog()}
           onSubmit={(data) => {
             if (isEditMode && editProject?.id) {
-              pamFacade.updateProject(editProject.id, data);
+              pamFacade.updateProject(editProject.id, data as PAMProjectUpdate);
             } else {
               pamFacade.createProject(data);
             }

@@ -9,6 +9,7 @@ import {
 import { cloneDeep, find } from 'lodash';
 import {
   PAMViewMode,
+  PAMViewModeType,
   type PAMFacadeInterface,
   type PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
@@ -17,10 +18,10 @@ import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
 import type {
   SearchPAMProject,
-  PAMProjectCreateWithEnv,
-  PAMProjectWithEnvs,
   PAMSearchParams,
-  PAMProjectUpdateWithEnv
+  PAMProjectDetail,
+  PAMProjectCreate,
+  PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import { PAMApi } from './appApi/PAMApi';
 import type { LoggerInterface } from '@qlover/logger';
@@ -65,7 +66,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    * 仅用于创建 pam 时的状态
    */
   protected detailStore: AsyncStore<
-    AsyncStoreStateInterface<PAMProjectWithEnvs>,
+    AsyncStoreStateInterface<PAMProjectDetail>,
     string
   >;
 
@@ -133,8 +134,8 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    * @override
    */
   public createProject(
-    data: PAMProjectCreateWithEnv
-  ): Promise<GatewayResult<PAMProjectWithEnvs>> {
+    data: PAMProjectCreate
+  ): Promise<GatewayResult<PAMProjectDetail>> {
     this.createStore.start();
 
     return this.pamApi
@@ -157,8 +158,8 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    */
   public updateProject(
     id: string,
-    data: PAMProjectUpdateWithEnv
-  ): Promise<GatewayResult<PAMProjectWithEnvs>> {
+    data: PAMProjectUpdate
+  ): Promise<GatewayResult<PAMProjectDetail>> {
     this.createStore.start();
 
     return this.pamApi
@@ -211,7 +212,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   public getProjectDetail(
     id: string,
     preProject?: SearchPAMProject
-  ): Promise<GatewayResult<PAMProjectWithEnvs>> {
+  ): Promise<GatewayResult<PAMProjectDetail>> {
     this.detailStore.start(preProject);
 
     return this.pamApi
@@ -231,5 +232,11 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
         this.detailStore.failed(error);
         return { data: null, error };
       });
+  }
+
+  public changeViewMode(mode: PAMViewModeType): void {
+    this.searchStore.emit({
+      viewMode: mode
+    });
   }
 }

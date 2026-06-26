@@ -1,3 +1,8 @@
+import {
+  CloudServerOutlined,
+  DeleteOutlined,
+  PlusCircleOutlined
+} from '@ant-design/icons';
 import React, { useState } from 'react';
 import { PAMEnvVarInput } from './PAMEnvVarInput';
 
@@ -60,7 +65,7 @@ export const PAMEnvironmentBlock: React.FC<PAMEnvironmentBlockProps> = ({
     >
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
-          <i className="fas fa-server text-primary"></i>
+          <CloudServerOutlined className="text-primary" />
           <input
             type="text"
             placeholder="环境名称 (如 dev, prod)"
@@ -72,9 +77,9 @@ export const PAMEnvironmentBlock: React.FC<PAMEnvironmentBlockProps> = ({
         <button
           type="button"
           onClick={onRemove}
-          className="text-red-500 hover:text-red-700 text-sm"
+          className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1"
         >
-          <i className="fas fa-trash-alt"></i> 删除环境
+          <DeleteOutlined /> 删除环境
         </button>
       </div>
 
@@ -97,9 +102,9 @@ export const PAMEnvironmentBlock: React.FC<PAMEnvironmentBlockProps> = ({
           <button
             type="button"
             onClick={addVar}
-            className="text-primary text-xs ml-2 hover:text-primary-hover"
+            className="text-primary text-xs ml-2 hover:text-primary-hover flex items-center gap-1"
           >
-            <i className="fas fa-plus-circle"></i> 添加变量
+            <PlusCircleOutlined /> 添加变量
           </button>
         </label>
         <div className="mt-2">

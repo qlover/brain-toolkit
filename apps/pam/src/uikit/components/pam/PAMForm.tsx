@@ -77,6 +77,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     reset
   } = methods;
 
+  const is_public = watch('is_public');
+
   useEffect(() => {
     reset({
       name: initialData?.name ?? '',
@@ -119,12 +121,12 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   };
 
   const togglePublic = () => {
-    const current = watch('is_public');
+    const current = is_public;
     setValue('is_public', current === 0 ? 1 : 0);
     trigger('is_public');
   };
 
-  console.log('errors', errors);
+  const lockTitle = is_public === PAMPublicType.public ? '公开' : '私有';
 
   return (
     <FormProvider {...methods}>
@@ -153,38 +155,27 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <div className="min-w-12">
                   <button
                     type="button"
+                    title={lockTitle}
                     onClick={togglePublic}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-primary-border hover:bg-primary-bg transition cursor-pointer touch-manipulation"
+                    className={clsx(
+                      'flex items-center gap-2 px-3 py-2 rounded-xl border border-primary-border hover:bg-primary-bg transition cursor-pointer touch-manipulation',
+                      is_public === PAMPublicType.public
+                        ? 'text-brand'
+                        : 'text-tertiary-text'
+                    )}
                   >
-                    <span
-                      title={
-                        watch('is_public') === PAMPublicType.public
-                          ? '公开'
-                          : '私有'
-                      }
-                      className={clsx(
-                        'text-base',
-                        watch('is_public') === PAMPublicType.public
-                          ? 'text-brand'
-                          : 'text-tertiary-text'
-                      )}
-                    >
-                      {watch('is_public') === PAMPublicType.public ? (
-                        <UnlockOutlined />
-                      ) : (
-                        <LockOutlined className="text-tertiary-text" />
-                      )}
-                    </span>
-                    <span className="text-sm font-medium text-primary-text">
-                      {watch('is_public') === PAMPublicType.public
-                        ? '公开'
-                        : '私有'}
-                    </span>
+                    {is_public === PAMPublicType.public ? (
+                      <UnlockOutlined />
+                    ) : (
+                      <LockOutlined />
+                    )}
+
+                    <span>{lockTitle}</span>
                   </button>
                   <input
                     type="hidden"
                     {...register('is_public')}
-                    value={watch('is_public')}
+                    value={is_public}
                   />
                 </div>
               </div>

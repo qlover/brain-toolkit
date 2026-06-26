@@ -1,3 +1,4 @@
+import { UploadOutlined } from '@ant-design/icons';
 import React from 'react';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMProjectCard } from './PAMProjectCard';
@@ -9,7 +10,6 @@ interface PAMProjectListProps {
   isOwner: (project: SearchPAMProject) => boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onManageEnv: (id: string) => void;
 }
 
 export const PAMProjectList: React.FC<PAMProjectListProps> = ({
@@ -17,8 +17,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   viewMode,
   isOwner,
   onEdit,
-  onDelete,
-  onManageEnv
+  onDelete
 }) => {
   if (projects.length === 0) {
     return (
@@ -26,7 +25,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
         data-testid="PAMProjectList"
         className="text-center py-16 bg-bg-container rounded-2xl border border-dashed border-primary-border mt-4"
       >
-        <i className="fas fa-cloud-upload-alt text-5xl text-tertiary-text mb-3"></i>
+        <UploadOutlined className="text-5xl text-tertiary-text mb-3" />
         <p className="text-secondary-text">暂无项目，点击「新增资产」创建</p>
       </div>
     );
@@ -45,7 +44,6 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             isOwner={isOwner(project)}
             onEdit={onEdit}
             onDelete={onDelete}
-            onManageEnv={onManageEnv}
           />
         ))}
       </div>
@@ -65,7 +63,6 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             isOwner={isOwner(project)}
             onEdit={onEdit}
             onDelete={onDelete}
-            onManageEnv={onManageEnv}
           />
         ))}
       </div>

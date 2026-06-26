@@ -89,7 +89,7 @@ export type SearchPAMProject = SearchPAMRawProject & {
  * 该类型主要用于查询单个 project 或需要携带 env 数据的 project
  */
 export type PAMProjectDetail = SearchPAMRawProject & {
-  [PAMProjectEnvKey]?: PAMEnvWriteable;
+  [PAMProjectEnvKey]?: PAMEnvWriteable[];
 };
 
 /**

@@ -1,21 +1,26 @@
-import { EditOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  LockOutlined,
+  LinkOutlined
+} from '@ant-design/icons';
+import { clsx } from 'clsx';
 import React from 'react';
-import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
+import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 
 interface PAMProjectListItemProps {
-  project: SearchPAMProject;
+  project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onManageEnv: (id: string) => void;
 }
 
 export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   project,
   isOwner,
   onEdit,
-  onDelete,
-  onManageEnv
+  onDelete
 }) => {
   const envs = project.environments || [];
 
@@ -42,21 +47,22 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         {envs.length > 0 ? (
           envs.map((env) => (
             <a
-              data-testid="PAMProjectListItem"
+              data-testid={'PAMProjectListItemAction-' + env.id}
               key={env.id}
               href={env.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className={`text-xs px-2 py-1 rounded-md hover:opacity-80 transition inline-flex items-center gap-1 ${
-                env.name === 'prod'
-                  ? 'bg-blue-100 text-blue-700'
-                  : env.name === 'dev'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-700'
-              }`}
+              className={clsx(
+                'text-xs px-2 py-1 rounded-md hover:opacity-80 transition inline-flex items-center gap-1',
+                {
+                  'bg-blue-100 text-blue-700': env.name === 'prod',
+                  'bg-green-100 text-green-700': env.name === 'dev',
+                  'bg-gray-100 text-gray-700':
+                    env.name !== 'prod' && env.name !== 'dev'
+                }
+              )}
             >
-              <i className="fas fa-external-link-alt text-[10px]"></i>{' '}
-              {env.name.toUpperCase()}
+              <LinkOutlined className="text-sm" /> {env.name.toUpperCase()}
             </a>
           ))
         ) : (
@@ -66,39 +72,33 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
 
       <div className="flex items-center gap-2 ml-auto">
         <span
-          className={`text-xs ${
+          className={clsx(
+            'text-xs',
             project.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'
-          }`}
+          )}
         >
-          <i
-            className={`fas ${project.is_public === 1 ? 'fa-eye' : 'fa-lock'}`}
-          ></i>
+          {project.is_public === 1 ? (
+            <EyeOutlined className="text-sm" />
+          ) : (
+            <LockOutlined className="text-sm" />
+          )}
         </span>
         {isOwner ? (
           <>
             <button
               onClick={() => onEdit(project.id)}
-              className="text-primary-text cursor-pointer hover:text-primary-text-hover hover:bg-primary-bg p-1.5 rounded transition"
+              className="text-sm text-brand hover:text-brand-hover hover:bg-primary-bg p-1.5 rounded transition"
             >
               <EditOutlined />
             </button>
             <button
               onClick={() => onDelete(project.id)}
-              className="text-red-500 hover:bg-red-50 p-1.5 rounded transition"
+              className="text-sm text-red-500 hover:bg-red-500 hover:text-primary-text p-1.5 rounded transition"
             >
-              <i className="fas fa-trash-alt"></i>
-            </button>
-            <button
-              onClick={() => onManageEnv(project.id)}
-              className="text-secondary-text hover:text-primary p-1.5 rounded transition"
-              title="管理环境变量"
-            >
-              <i className="fas fa-cog"></i>
+              <DeleteOutlined />
             </button>
           </>
-        ) : (
-          <span className="text-xs text-tertiary-text">只读</span>
-        )}
+        ) : null}
       </div>
     </div>
   );
