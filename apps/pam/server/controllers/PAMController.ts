@@ -6,10 +6,9 @@ import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator'
 import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
 import { uuidSchema } from '@schemas/common';
 import {
-  PAMProjectWithEnvironments,
+  PAMProjectCreateSchema,
+  PAMProjectDetail,
   PAMProjectUpdateSchema,
-  PAMProjectUpdateSchemaType,
-  PAMProjectCreateWithEnvSchema,
   SearchPAMProject
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
@@ -23,6 +22,11 @@ export class PAMController {
 
   @inject(SearchParamsValidator)
   protected searchParamsValidator!: SearchParamsValidator;
+
+  /**
+   * 是否在返回数据的时候
+   */
+  protected checkResult: boolean = true;
 
   public async searchPamList(
     request: NextRequest
@@ -38,7 +42,7 @@ export class PAMController {
   public getPamDetail(
     pamId: string,
     request: NextRequest
-  ): Promise<PAMProjectWithEnvironments | null> {
+  ): Promise<PAMProjectDetail | null> {
     const id = uuidSchema.parse(pamId);
 
     const withEnvironments = request.nextUrl.searchParams.get('isEnv') === '1';
@@ -52,7 +56,7 @@ export class PAMController {
   public async updateProject(
     id: string,
     request: NextRequest
-  ): Promise<PAMProjectUpdateSchemaType> {
+  ): Promise<PAMProjectDetail> {
     const body = await request.json();
 
     const useRPC = request.nextUrl.searchParams.get('rpc') === '1';
@@ -61,22 +65,20 @@ export class PAMController {
       throw new ExecutorError(API_REQUEST_BODY_EMPTY);
     }
 
-    const parsed = PAMProjectUpdateSchema.parse(body);
+    const parsed = PAMProjectUpdateSchema.parse({ ...body, id });
 
     if (isEmpty(parsed)) {
       throw new ExecutorError(API_REQUEST_BODY_EMPTY);
     }
 
-    return this.pamService.updateProject(id, parsed, {
+    return this.pamService.updateProject(parsed, {
       useRPC
     });
   }
 
-  public async createProject(
-    request: NextRequest
-  ): Promise<PAMProjectWithEnvironments> {
+  public async createProject(request: NextRequest): Promise<PAMProjectDetail> {
     const body = await request.json();
-    const parsed = PAMProjectCreateWithEnvSchema.parse(body);
+    const parsed = PAMProjectCreateSchema.parse(body);
 
     return this.pamService.createProject(parsed);
   }

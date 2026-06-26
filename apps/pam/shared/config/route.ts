@@ -1,4 +1,4 @@
-import { API_CLIENTS_2, API_PAM_DETAIL } from './apiRoutes';
+import { API_CLIENTS_2, API_PAM_DETAIL, API_PAM_EDIT } from './apiRoutes';
 import { i18nConfig } from './i18n';
 import type { LocaleType } from './i18n';
 import type { NextURL } from 'next/dist/server/web/next-url';

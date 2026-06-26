@@ -18,8 +18,9 @@ import { I } from '@config/ioc-identifiter';
 import type {
   SearchPAMProject,
   PAMProjectCreateWithEnv,
-  PAMProjectWithEnvironments,
-  PAMSearchParams
+  PAMProjectWithEnvs,
+  PAMSearchParams,
+  PAMProjectUpdateWithEnv
 } from '@schemas/PAMProjectSchema';
 import { PAMApi } from './appApi/PAMApi';
 import type { LoggerInterface } from '@qlover/logger';
@@ -64,7 +65,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    * 仅用于创建 pam 时的状态
    */
   protected detailStore: AsyncStore<
-    AsyncStoreStateInterface<PAMProjectWithEnvironments>,
+    AsyncStoreStateInterface<PAMProjectWithEnvs>,
     string
   >;
 
@@ -133,7 +134,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    */
   public createProject(
     data: PAMProjectCreateWithEnv
-  ): Promise<GatewayResult<PAMProjectWithEnvironments>> {
+  ): Promise<GatewayResult<PAMProjectWithEnvs>> {
     this.createStore.start();
 
     return this.pamApi
@@ -156,8 +157,8 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
    */
   public updateProject(
     id: string,
-    data: PAMProjectCreateWithEnv
-  ): Promise<GatewayResult<PAMProjectWithEnvironments>> {
+    data: PAMProjectUpdateWithEnv
+  ): Promise<GatewayResult<PAMProjectWithEnvs>> {
     this.createStore.start();
 
     return this.pamApi
@@ -210,7 +211,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   public getProjectDetail(
     id: string,
     preProject?: SearchPAMProject
-  ): Promise<GatewayResult<PAMProjectWithEnvironments>> {
+  ): Promise<GatewayResult<PAMProjectWithEnvs>> {
     this.detailStore.start(preProject);
 
     return this.pamApi

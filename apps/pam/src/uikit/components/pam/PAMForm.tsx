@@ -7,18 +7,25 @@ import {
 } from '@ant-design/icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import type { PAMProjectCreateWithEnv } from '@schemas/PAMProjectSchema';
+import type {
+  PAMProjectCreate,
+  PAMProjectUpdate
+} from '@schemas/PAMProjectSchema';
 import {
-  PAMProjectCreateWithEnvSchema,
+  PAMProjectCreateSchema,
+  PAMProjectEnvKey,
+  PAMProjectUpdateSchema,
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
 import { PAMFormEnvironments } from './PAMFormEnvironments';
 
+type PAMFormProject = PAMProjectCreate | PAMProjectUpdate;
+
 export interface PAMFormProps {
-  initialData?: PAMProjectCreateWithEnv;
-  onSubmit: (data: PAMProjectCreateWithEnv) => Promise<void> | void;
+  initialData?: PAMFormProject;
+  onSubmit: (data: PAMFormProject) => Promise<void> | void;
   onCancel: () => void;
   isSubmitting?: boolean;
   className?: string;
@@ -32,8 +39,6 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-type FormValues = PAMProjectCreateWithEnv;
-
 export const PAMForm: React.FC<PAMFormProps> = ({
   initialData,
   onCancel,
@@ -42,9 +47,15 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   className = '',
   mode = 'create'
 }) => {
-  const methods = useForm<FormValues>({
-    resolver: zodResolver(PAMProjectCreateWithEnvSchema),
+  const zodResolover = useMemo(
+    () => (mode === 'create' ? PAMProjectCreateSchema : PAMProjectUpdateSchema),
+    [mode]
+  );
+
+  const methods = useForm<PAMFormProject>({
+    resolver: zodResolver(zodResolover),
     defaultValues: {
+      id: mode === 'edit' ? (initialData as PAMProjectUpdate).id : undefined,
       name: initialData?.name,
       slug: initialData?.slug,
       description: initialData?.description,
@@ -52,7 +63,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       repo_url: initialData?.repo_url,
       category: initialData?.category,
       is_public: initialData?.is_public ?? PAMPublicType.private,
-      environments: initialData?.environments || []
+      [PAMProjectEnvKey]: initialData?.environments || []
     }
   });
 
@@ -86,8 +97,20 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     }
   }, [watchName, setValue, watch]);
 
-  const onValidSubmit = (data: FormValues) => {
-    const parsed = PAMProjectCreateWithEnvSchema.safeParse(data);
+  const onValidSubmit = (data: PAMFormProject) => {
+    // const newData = clone(data);
+    // if (mode === 'edit' && initialData && 'id' in initialData) {
+    //   Object.assign<PAMFormProject, Partial<PAMProjectUpdate>>(newData, {
+    //     id: initialData.id
+    //   });
+    // }
+
+    if (mode === 'edit' && !('id' in data)) {
+      console.log('致命错误,修改项目缺少ID');
+      return;
+    }
+
+    const parsed = zodResolover.safeParse(data);
     if (!parsed.success) {
       console.error(parsed.error);
       return;
@@ -101,6 +124,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     trigger('is_public');
   };
 
+  console.log('errors', errors);
+
   return (
     <FormProvider {...methods}>
       <form
@@ -108,11 +133,10 @@ export const PAMForm: React.FC<PAMFormProps> = ({
         onSubmit={handleSubmit(onValidSubmit)}
         className={`space-y-4 sm:space-y-6 ${className}`}
       >
-        <div className="flex items-center justify-between px-4 pt-4 sm:px-0 sm:pt-0">
-          <div className="text-lg font-semibold text-primary-text">
-            {mode === 'edit' ? '编辑项目' : '新建项目'}
-          </div>
-        </div>
+        {mode === 'edit' && (
+          <input className="hidden" type="hidden" {...register('id')} />
+        )}
+
         <div className="space-y-3 sm:space-y-4 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="sm:col-span-2 lg:col-span-2">

@@ -5,8 +5,9 @@ import { buildApiPamDetail, buildApiPamEdit } from '@config/route';
 import {
   SearchPAMProject,
   PAMProjectCreateWithEnv,
-  PAMProjectWithEnvironments,
-  PAMSearchParams
+  PAMProjectWithEnvs,
+  PAMSearchParams,
+  PAMProjectUpdateWithEnv
 } from '@schemas/PAMProjectSchema';
 import { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
 import { AppApiRequester } from './AppApiRequester';
@@ -40,9 +41,9 @@ export class PAMApi {
 
   public async createProject(
     data: PAMProjectCreateWithEnv
-  ): Promise<PAMProjectWithEnvironments> {
+  ): Promise<PAMProjectWithEnvs> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectWithEnvironments>,
+      AppApiSuccessInterface<PAMProjectWithEnvs>,
       PAMProjectCreateWithEnv
     >(API_PAM_CREATE, data);
 
@@ -51,9 +52,9 @@ export class PAMApi {
 
   public async getProjectDetail(params: {
     id: string;
-  }): Promise<PAMProjectWithEnvironments> {
+  }): Promise<PAMProjectWithEnvs> {
     const response = await this.appApiRequester.get<
-      AppApiSuccessInterface<PAMProjectWithEnvironments>,
+      AppApiSuccessInterface<PAMProjectWithEnvs>,
       { isEnv: 1 | 0 }
     >(buildApiPamDetail(params.id), {
       params: { isEnv: 1 }
@@ -64,11 +65,11 @@ export class PAMApi {
 
   public async updateProject(
     id: string,
-    data: PAMProjectCreateWithEnv
-  ): Promise<PAMProjectWithEnvironments> {
+    data: PAMProjectUpdateWithEnv
+  ): Promise<PAMProjectWithEnvs> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectWithEnvironments>,
-      PAMProjectCreateWithEnv
+      AppApiSuccessInterface<PAMProjectWithEnvs>,
+      PAMProjectUpdateWithEnv
     >(buildApiPamEdit(id), data);
 
     return response.data.data!;

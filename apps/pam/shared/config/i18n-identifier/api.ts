@@ -176,3 +176,17 @@ export const API_PAM_SLUG_EXISTS = 'api:pam_slug_exists';
  * @localEn Env name already exists
  */
 export const API_PAM_ENV_NAME_EXISTS = 'api:pam_env_name_exists';
+
+/**
+ * @description 环境id不存在
+ * @localZh 环境id不存在
+ * @localEn Env id not exists
+ */
+export const API_PAM_ENV_ID_NOT_EXISTS = 'api:pam_env_id_not_exists';
+
+/**
+ * @description 环境id不存在
+ * @localZh 环境变量 key 重复
+ * @localEn Env var key duplicate
+ */
+export const API_PAM_VARIABLE_KEY_DUPLICATE = 'api:pam_variable_key_duplicate';

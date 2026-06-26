@@ -2,6 +2,11 @@ import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit';
 import { isEmpty } from 'lodash';
 import { inject, injectable } from '@shared/container';
+import {
+  PAMEnvWriteable,
+  PAMEnvRaw,
+  PAMEnvTableName
+} from '@shared/schemas/PAMEnvironmentSchema';
 import { Join } from '@shared/type';
 import {
   API_NOT_AUTHORIZED,
@@ -11,21 +16,17 @@ import {
 import { I } from '@config/ioc-identifiter';
 import { DeleteStatus } from '@schemas/common';
 import {
-  PAMEnvironmentEdit,
-  PAMEnvironmentsRaw,
-  PAMEnvironmentsTableName,
-  PAMPROJECT_TSVECTOR_KEY,
-  PAMProjectCreateWithEnv,
   PAMProjectEnvKey,
-  PAMProjectFields,
-  PAMProjectSchema,
+  SearchPAMProjectFields,
   PAMProjectTableName,
-  PAMProjectUpdateSchemaType,
-  PAMProjectWithEnvironmentsSchema,
-  PAMProjectWithEnvironments,
+  PAMPROJECT_TSVECTOR_KEY,
+  SearchPAMRawProject,
+  PAMProjectRaw,
+  SearchPAMProject,
+  PAMProjectDetail,
   PAMUpdateSQLFunctionName,
-  type PAMProject,
-  PAMProjectRaw
+  PAMProjectUpdate,
+  PAMProjectCreate
 } from '@schemas/PAMProjectSchema';
 import {
   FilterTriple,
@@ -38,24 +39,26 @@ import { BaseRepository } from './BaseRepository';
 import { SupabaseRepo } from './SupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
-export interface PAMProjectSearchParams
-  extends RepoSearchParams<PAMProjectRaw> {
+interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
   /**
    * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
    */
   user_id?: string;
 }
 
-type EnvField = keyof PAMEnvironmentsRaw;
+type EnvField = keyof PAMEnvWriteable;
 
 type JoinEnvFieldsResult<T extends '*' | readonly EnvField[]> = T extends '*'
-  ? `${typeof PAMProjectEnvKey}: ${typeof PAMEnvironmentsTableName}(*)`
+  ? `${typeof PAMProjectEnvKey}: ${typeof PAMEnvTableName}(*)`
   : T extends readonly EnvField[]
-    ? `${typeof PAMProjectEnvKey}: ${typeof PAMEnvironmentsTableName}(${Join<T>})`
+    ? `${typeof PAMProjectEnvKey}: ${typeof PAMEnvTableName}(${Join<T>})`
     : never;
 
 @injectable()
-export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
+export class PAMProjectRepo extends BaseRepository<
+  PAMProjectRaw,
+  SearchPAMRawProject
+> {
   @inject(I.Logger)
   protected logger!: LoggerInterface;
 
@@ -75,22 +78,24 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    */
   public insert(
     params: RepoInsertGetParams<PAMProjectRaw>
-  ): Promise<PAMProject>;
+  ): Promise<SearchPAMRawProject>;
   /**
    * @override
    */
   public async insert(
     params: RepoInsertParams<PAMProjectRaw> | RepoInsertGetParams<PAMProjectRaw>
-  ): Promise<PAMProject | void> {
+  ): Promise<SearchPAMRawProject | void> {
     return await this.supabaseRepo.insert(params);
   }
 
   /**
+   * search 方法可能返回除了 is_deleted 的所有属性
+   *
    * @override
    */
   public async search(
     params: PAMProjectSearchParams
-  ): Promise<ResourceSearchResult<PAMProject>> {
+  ): Promise<ResourceSearchResult<SearchPAMRawProject>> {
     const { page = 1, pageSize = 20, user_id, fields } = params;
 
     const orConditions: FilterTriple<PAMProjectRaw>[] = [
@@ -103,7 +108,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
 
     return await this.supabaseRepo.search({
       table: this.getRepoName(),
-      fields: fields ?? PAMProjectFields,
+      fields: fields ?? SearchPAMProjectFields,
       page: page,
       pageSize: pageSize,
       sort: params.sort,
@@ -122,21 +127,21 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
   /**
    * 搜索项目列表
    *
-   * - params.fields 默认 {@link PAMProjectFields} 所有属性
+   * - params.fields 默认 {@link SearchPAMProjectFields} 所有属性
    *
    * @param params
    * @returns
    */
   public searchProjects(
     params: PAMProjectSearchParams
-  ): Promise<ResourceSearchResult<PAMProject>> {
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
     // 如果没有传递 user_id 则，不需要查询在 fields 中增加 user_id
-    let fields: (keyof PAMProjectRaw)[] = [];
+    let fields: (keyof SearchPAMRawProject)[] = [];
 
     // NOTE: 默认查询所有字段
     const excludedFields = params.user_id ? [] : ['owner_id'];
 
-    fields = PAMProjectFields.filter(
+    fields = SearchPAMProjectFields.filter(
       (field) => !excludedFields.includes(field)
     );
 
@@ -144,12 +149,12 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
     // 环境变量单独查询
     const envField = this.buildJoinEnvFields(['id', 'name', 'url'] as const);
 
-    fields.push(envField as keyof PAMProjectRaw);
+    fields.push(envField as keyof SearchPAMRawProject);
 
     return this.search({
       ...params,
       fields
-    });
+    }) as Promise<ResourceSearchResult<SearchPAMProject>>;
   }
 
   /**
@@ -160,14 +165,14 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    */
   public async getProjectWithEnvironments(
     id: string
-  ): Promise<PAMProjectWithEnvironments | null> {
+  ): Promise<PAMProjectDetail | null> {
     // 一定是 rls 的 api
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase
       .from(this.getRepoName())
       .select(
-        PAMProjectFields.join(',') +
-          `,${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(*)`
+        SearchPAMProjectFields.join(',') +
+          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
       )
       .eq('id', id)
       // 启用了rls 就不需要 owner_id
@@ -180,7 +185,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
       return null;
     }
 
-    return PAMProjectWithEnvironmentsSchema.parse(result.data);
+    return result.data as never;
   }
 
   /**
@@ -188,19 +193,19 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    * @param id
    * @returns
    */
-  public async getProjectById(id: string): Promise<PAMProject | null> {
+  public async getProjectById(id: string): Promise<SearchPAMRawProject | null> {
     const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase
       .from(this.getRepoName())
-      .select(PAMProjectFields.join(','))
+      .select(SearchPAMProjectFields.join(','))
       .eq('id', id)
       // 启用了rls 就不需要 owner_id
       .maybeSingle();
 
     this.supabaseRepo.throwIfError(result);
 
-    return PAMProjectSchema.parse(result.data);
+    return result.data as never;
   }
 
   /**
@@ -234,12 +239,27 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
     return !isEmpty(result.data);
   }
 
+  public async getEnvIdAndNamesByProjectId(
+    id: string
+  ): Promise<Pick<PAMEnvRaw, 'id' | 'name'>[]> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const result = await supabase
+      .from(PAMEnvTableName)
+      // FIXME: select 使用常量，修复 FIXME
+      .select('id,name')
+      .eq('project_id', id);
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data || [];
+  }
   /**
    * 更新项目基本信息（仅字段）
    */
   private async updateProjectFields(
     id: string,
-    updates: Partial<PAMProject>
+    updates: Partial<PAMProjectUpdate>
   ): Promise<void> {
     if (Object.keys(updates).length === 0) return;
 
@@ -261,53 +281,77 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    */
   private async syncEnvironments(
     projectId: string,
-    envUpdates: PAMEnvironmentEdit[]
+    requestEnvs: Partial<PAMEnvRaw>[]
   ): Promise<void> {
-    if (!envUpdates || envUpdates.length === 0) return;
-
-    // 1. 验证都有 id
-    const missingId = envUpdates.some((env) => !env.id);
-    if (missingId) {
-      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
-    }
-
     const supabase = await this.supabaseRepo.getSupabase();
 
-    // 2. 获取现有环境 ID
-    const existResult = await supabase
-      .from(PAMEnvironmentsTableName)
+    // 1. 获取当前数据库中该项目的所有环境（仅 id）
+    const existingResult = await supabase
+      .from(PAMEnvTableName)
       .select('id')
       .eq('project_id', projectId);
-    this.supabaseRepo.throwIfError(existResult);
+    this.supabaseRepo.throwIfError(existingResult);
+    const existingIds = new Set(existingResult.data?.map((e) => e.id) || []);
 
-    const existing = existResult.data || [];
-    const existingIds = new Set(existing.map((e) => e.id));
-    const incomingIds = new Set(envUpdates.map((env) => env.id));
+    // 2. 区分请求中的更新和新增
+    const toUpdate = requestEnvs.filter((env) => env.id);
+    const toInsert = requestEnvs.filter((env) => !env.id);
 
-    // 3. 检查是否有不存在的 id
-    const invalidIds = Array.from(incomingIds).filter(
-      (id) => !existingIds.has(id)
+    // 3. 计算需要删除的 id：existingIds - (更新环境的id集合)
+    const updateIds = new Set(toUpdate.map((env) => env.id!));
+    const toDeleteIds = Array.from(existingIds).filter(
+      (id) => !updateIds.has(id)
     );
-    if (invalidIds.length > 0) {
-      throw new ExecutorError(API_PAM_ENV_NOT_FOUND, invalidIds);
+
+    // 4. 执行删除
+    if (toDeleteIds.length > 0) {
+      const deleteResult = await supabase
+        .from(PAMEnvTableName)
+        .delete()
+        .eq('project_id', projectId)
+        .in('id', toDeleteIds);
+      this.supabaseRepo.throwIfError(deleteResult);
     }
 
-    // 4. 逐个更新，只更新传入的字段
-    for (const env of envUpdates) {
-      const updateData: Partial<
-        Pick<PAMEnvironmentEdit, 'name' | 'url' | 'variables'>
-      > = {};
+    // 5. 执行更新（确保 id 存在，但可以在更新时用 project_id 限制）
+    for (const env of toUpdate) {
+      const updateData: Partial<Pick<PAMEnvRaw, 'name' | 'url' | 'variables'>> =
+        {};
       if (env.name !== undefined) updateData.name = env.name;
       if (env.url !== undefined) updateData.url = env.url;
       if (env.variables !== undefined) updateData.variables = env.variables;
+      if (Object.keys(updateData).length === 0) continue;
 
-      if (Object.keys(updateData).length === 0) continue; // 无字段跳过
-
-      const result = await supabase
-        .from(PAMEnvironmentsTableName)
+      const updateResult = await supabase
+        .from(PAMEnvTableName)
         .update(updateData)
-        .eq('id', env.id);
-      this.supabaseRepo.throwIfError(result);
+        .eq('id', env.id)
+        .eq('project_id', projectId); // 防止跨项目更新
+      this.supabaseRepo.throwIfError(updateResult);
+
+      // 可选：检查影响行数，若为0则可能不存在，但因为我们用project_id限制，更安全。
+      if (updateResult.count !== undefined && updateResult.count === 0) {
+        // 可能已经被删除或不属于该项目，可抛出错误
+        throw new ExecutorError(
+          API_PAM_ENV_NOT_FOUND,
+          `Environment ${env.id} not found in this project`
+        );
+      }
+    }
+
+    // 6. 执行新增
+    if (toInsert.length > 0) {
+      const insertData = toInsert.map((env) => ({
+        project_id: projectId,
+        name: env.name!,
+        url: env.url!,
+        variables: env.variables || {}
+      }));
+      const insertResult = await supabase
+        .from(PAMEnvTableName)
+        .insert(insertData)
+        .select();
+      this.supabaseRepo.throwIfError(insertResult);
     }
   }
 
@@ -320,9 +364,13 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
   protected buildJoinEnvFields(
     fields: '*' | readonly EnvField[]
   ): JoinEnvFieldsResult<'*' | readonly EnvField[]> {
+    if (fields === '*') {
+      fields = ['id', 'name', 'url', 'variables'];
+    }
+
     const joinedFields = Array.isArray(fields) ? fields.join(',') : fields;
 
-    return `${PAMProjectEnvKey}: ${PAMEnvironmentsTableName}(${joinedFields})` as JoinEnvFieldsResult<
+    return `${PAMProjectEnvKey}: ${PAMEnvTableName}(${joinedFields})` as JoinEnvFieldsResult<
       '*' | readonly EnvField[]
     >;
   }
@@ -335,8 +383,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    */
   public async updateProject(
     id: string,
-    updates: PAMProjectUpdateSchemaType
-  ): Promise<PAMProjectWithEnvironments> {
+    updates: Omit<PAMProjectUpdate, 'id'>
+  ): Promise<PAMProjectDetail> {
     const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
 
     await this.getProjectById(id);
@@ -355,8 +403,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
       .from(this.getRepoName())
       .select(
         !envUpdates
-          ? PAMProjectFields.join(',')
-          : [PAMProjectFields, this.buildJoinEnvFields('*')].join(',')
+          ? SearchPAMProjectFields.join(',')
+          : [SearchPAMProjectFields, this.buildJoinEnvFields('*')].join(',')
       )
       .eq('id', id)
       .maybeSingle();
@@ -371,7 +419,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
       `[PAMProjectRepo] update project ${id} success`,
       result.data
     );
-    return PAMProjectWithEnvironmentsSchema.parse(result.data);
+
+    return result.data as never;
   }
 
   /**
@@ -385,8 +434,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    */
   public async rpc_updateProject(
     id: string,
-    updates: PAMProjectUpdateSchemaType
-  ): Promise<PAMProjectWithEnvironments> {
+    updates: Omit<PAMProjectUpdate, 'id'>
+  ): Promise<PAMProjectDetail> {
     const supabase = await this.supabaseRepo.getSupabase();
 
     // 准备参数
@@ -404,16 +453,20 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
 
     this.supabaseRepo.throwIfError(result);
 
-    // data 是 JSONB 对象，需要解析
-    const parsed = PAMProjectWithEnvironmentsSchema.parse({
+    return {
       ...result.data.project,
       environments: result.data.environments || []
-    });
-
-    return parsed;
+    };
   }
 
   public async hasProjectWithSlug(slug: string): Promise<boolean> {
+    const result = await this.getProjectWithSlug(slug);
+    return !isEmpty(result);
+  }
+
+  public async getProjectWithSlug(
+    slug: string
+  ): Promise<Pick<PAMProjectDetail, 'id' | 'slug'> | null> {
     const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase
@@ -423,7 +476,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
       .maybeSingle();
     this.supabaseRepo.throwIfError(result);
 
-    return !isEmpty(result.data);
+    return result.data as PAMProjectDetail;
   }
 
   /**
@@ -433,20 +486,20 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
    * - 返回完整的项目及环境列表
    */
   public async createProject(
-    params: PAMProjectCreateWithEnv & {
+    params: PAMProjectCreate & {
       owner_id: string;
     }
-  ): Promise<PAMProjectWithEnvironments> {
+  ): Promise<PAMProjectDetail> {
     const supabase = await this.supabaseRepo.getSupabase();
 
     // 分离环境和项目字段
     const { [PAMProjectEnvKey]: envs, ...projectData } = params;
 
     // 1. 创建项目（RLS 自动设置 owner_id）
-    const createResult = await this.insert({
+    const project = await this.insert({
       table: this.getRepoName(),
       data: projectData as PAMProjectRaw,
-      fields: PAMProjectFields
+      fields: SearchPAMProjectFields
     });
 
     this.logger.info(
@@ -454,10 +507,8 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
       projectData
     );
 
-    const project = PAMProjectSchema.parse(createResult);
-
     // 2. 创建环境（如果有）
-    let createdEnvs: PAMEnvironmentsRaw[] = [];
+    let createdEnvs: PAMEnvWriteable[] = [];
 
     this.logger.debug('[PAMProjectRepo] create envs length:', envs?.length);
 
@@ -470,7 +521,7 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
       }));
 
       const envResult = await supabase
-        .from(PAMEnvironmentsTableName)
+        .from(PAMEnvTableName)
         .insert(envsToInsert)
         .select('*');
 
@@ -482,9 +533,9 @@ export class PAMProjectRepo extends BaseRepository<PAMProjectRaw, PAMProject> {
     }
 
     // 3. 组装返回（符合 PAMProjectWithEnvironmentsSchema）
-    return PAMProjectWithEnvironmentsSchema.parse({
+    return {
       ...project,
       [PAMProjectEnvKey]: createdEnvs
-    });
+    } as never;
   }
 }

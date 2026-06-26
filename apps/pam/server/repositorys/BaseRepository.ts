@@ -9,7 +9,7 @@ import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 /**
  * 一个抽象的中间层，可扩展一些通用能力
  */
-export abstract class BaseRepository<Raw, T>
+export abstract class BaseRepository<Raw, T = Raw>
   implements RepositoryInterface<Raw, T>
 {
   constructor(protected repoName: string = '') {}

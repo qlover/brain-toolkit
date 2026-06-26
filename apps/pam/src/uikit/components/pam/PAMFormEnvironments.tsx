@@ -16,7 +16,7 @@ import {
 } from 'react-hook-form';
 import { v4 as uuid } from 'uuid';
 import type {
-  PAMEnvironmentCreate,
+  PAMEnvCreate,
   PAMProjectCreateWithEnv
 } from '@schemas/PAMProjectSchema';
 import { PAMProjectEnvKey } from '@schemas/PAMProjectSchema';
@@ -126,7 +126,7 @@ export const PAMFormEnvironments: React.FC = () => {
   );
 
   const renderEnvironmentBlock = useCallback(
-    (field: PAMEnvironmentCreate, index: number) => {
+    (field: PAMEnvCreate, index: number) => {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
       const isCollapsed = collapsedEnvs[index] ?? (isMobile && index >= 1);
       const env = environments[index];
