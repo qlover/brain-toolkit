@@ -74,9 +74,9 @@ export function ResponsiveModal({
     onFullscreenChange?.(next);
   }, [isFullscreen, fullscreenProp, onFullscreenChange]);
 
-  // ---------- 新增：ESC 键关闭 ----------
+  // ESC 键关闭
   useEffect(() => {
-    if (!open) return; // 仅在打开时监听
+    if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && onClose) {
@@ -87,7 +87,18 @@ export function ResponsiveModal({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
-  // ------------------------------------
+
+  // 禁止页面滚动（body overflow hidden）
+  useEffect(() => {
+    if (!open) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [open]);
 
   if (!open) return null;
 

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
 import { PAMFacade } from '@/impls/PAMfacade';
+import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
 import { PAMForm } from '../components/pam/PAMForm';
+import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
@@ -14,22 +15,16 @@ import { useStore } from '../hook/useStore';
 export function PAMRoot() {
   const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
+  const pamFacadeInfinite = useIOC(PAMFacadeInfinite);
   const pamFacadeStore = pamFacade.getFacadeStore();
   const createState = useStore(pamFacade.getCreateStore());
   const detailState = useStore(pamFacade.getDetailStore());
   const editProject = detailState.result;
   const isEditMode = Boolean(editProject);
 
-  const projects = useStore(
-    pamFacadeStore,
-    (state) => state.result?.items || []
-  );
+  const projects = useStore(pamFacadeStore, (state) => state.projects || []);
   const viewMode = useStore(pamFacadeStore, (state) => state.viewMode);
   const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
-
-  useEffect(() => {
-    pamFacade.pullProjectList();
-  }, [pamFacade]);
 
   return (
     <div
@@ -65,6 +60,8 @@ export function PAMRoot() {
           });
         }}
       />
+
+      <PAMLoadMoreTrigger infiniteFacade={pamFacadeInfinite} />
 
       <ResponsiveModal
         open={openDialog}

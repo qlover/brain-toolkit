@@ -1,8 +1,8 @@
 import type {
   SearchPAMProject,
-  PAMProjectWithEnvs,
   PAMSearchParams,
-  PAMProjectUpdateWithEnv
+  PAMProjectDetail,
+  PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import type {
   AsyncStoreStateInterface,
@@ -79,7 +79,7 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
    */
   createProject(
     data: SearchPAMProject
-  ): Promise<GatewayResult<PAMProjectWithEnvs>>;
+  ): Promise<GatewayResult<PAMProjectDetail>>;
 
   /**
    * 更新一个项目，允许传入环境信息
@@ -89,6 +89,6 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
    */
   updateProject(
     id: string,
-    data: PAMProjectUpdateWithEnv
-  ): Promise<GatewayResult<PAMProjectWithEnvs>>;
+    data: PAMProjectUpdate
+  ): Promise<GatewayResult<PAMProjectDetail>>;
 }
