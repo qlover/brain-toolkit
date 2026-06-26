@@ -13,7 +13,7 @@ interface PAMProjectListItemProps {
   project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (project: PAMProjectDetail) => void;
 }
 
 export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
@@ -92,7 +92,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
               <EditOutlined />
             </button>
             <button
-              onClick={() => onDelete(project.id)}
+              onClick={() => onDelete(project)}
               className="text-sm text-red-500 hover:bg-red-500 hover:text-primary-text p-1.5 rounded transition"
             >
               <DeleteOutlined />

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { PAMFacade } from '@/impls/PAMfacade';
+import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
 import { PAMForm } from '../components/pam/PAMForm';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
@@ -11,6 +12,7 @@ import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
 
 export function PAMRoot() {
+  const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
   const pamFacadeStore = pamFacade.getFacadeStore();
   const createState = useStore(pamFacade.getCreateStore());
@@ -54,8 +56,12 @@ export function PAMRoot() {
         viewMode={viewMode}
         isOwner={(data) => !!data.is_owner}
         onEdit={(id) => pamFacade.triggerEdit(id)}
-        onDelete={() => {
-          throw new Error('Function not implemented.');
+        onDelete={(project) => {
+          dialog.confirm({
+            title: '删除项目',
+            content: '确定是否删除: ' + project.name,
+            onOk: () => pamFacade.deleteProject(project)
+          });
         }}
       />
 

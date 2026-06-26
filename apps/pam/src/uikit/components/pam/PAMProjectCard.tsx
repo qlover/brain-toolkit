@@ -17,7 +17,7 @@ interface PAMProjectCardProps {
   project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (project: PAMProjectDetail) => void;
 }
 
 export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
@@ -95,7 +95,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 <EditOutlined />
               </button>
               <button
-                onClick={() => onDelete(project.id)}
+                onClick={() => onDelete(project)}
                 className="text-red-500 hover:text-red-700 p-1.5 rounded-lg transition"
               >
                 <DeleteOutlined />

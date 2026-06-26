@@ -166,7 +166,6 @@ export class PAMProjectRepo extends BaseRepository<
   public async getProjectWithEnvironments(
     id: string
   ): Promise<PAMProjectDetail | null> {
-    // 一定是 rls 的 api
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase
       .from(this.getRepoName())
@@ -175,12 +174,11 @@ export class PAMProjectRepo extends BaseRepository<
           `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
       )
       .eq('id', id)
-      // 启用了rls 就不需要 owner_id
+      .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
       .maybeSingle();
 
     this.supabaseRepo.throwIfError(result);
 
-    // 可能受 rls 限制，这里直接返回 null
     if (!result.data) {
       return null;
     }
@@ -200,7 +198,7 @@ export class PAMProjectRepo extends BaseRepository<
       .from(this.getRepoName())
       .select(SearchPAMProjectFields.join(','))
       .eq('id', id)
-      // 启用了rls 就不需要 owner_id
+      .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
       .maybeSingle();
 
     this.supabaseRepo.throwIfError(result);
@@ -233,6 +231,7 @@ export class PAMProjectRepo extends BaseRepository<
       .select('id')
       .eq('id', id)
       .eq('owner_id', userId)
+      .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
       .maybeSingle();
 
     this.supabaseRepo.throwIfError(result);
@@ -242,11 +241,12 @@ export class PAMProjectRepo extends BaseRepository<
   public async getEnvIdAndNamesByProjectId(
     id: string
   ): Promise<Pick<PAMEnvRaw, 'id' | 'name'>[]> {
+    // 环境表本身没有 is_deleted，但通过 project_id 关联的项目需存在且未删除
+    // 此处我们信任调用者已检查项目存在，暂不添加额外查询
     const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase
       .from(PAMEnvTableName)
-      // FIXME: select 使用常量，修复 FIXME
       .select('id,name')
       .eq('project_id', id);
 
@@ -254,6 +254,7 @@ export class PAMProjectRepo extends BaseRepository<
 
     return result.data || [];
   }
+
   /**
    * 更新项目基本信息（仅字段）
    */
@@ -267,7 +268,8 @@ export class PAMProjectRepo extends BaseRepository<
     const result = await supabase
       .from(this.getRepoName())
       .update(updates)
-      .eq('id', id);
+      .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE); // 防止更新已删除项目
 
     this.supabaseRepo.throwIfError(result);
   }
@@ -329,9 +331,7 @@ export class PAMProjectRepo extends BaseRepository<
         .eq('project_id', projectId); // 防止跨项目更新
       this.supabaseRepo.throwIfError(updateResult);
 
-      // 可选：检查影响行数，若为0则可能不存在，但因为我们用project_id限制，更安全。
       if (updateResult.count !== undefined && updateResult.count === 0) {
-        // 可能已经被删除或不属于该项目，可抛出错误
         throw new ExecutorError(
           API_PAM_ENV_NOT_FOUND,
           `Environment ${env.id} not found in this project`
@@ -374,6 +374,7 @@ export class PAMProjectRepo extends BaseRepository<
       '*' | readonly EnvField[]
     >;
   }
+
   /**
    * 更新项目（含环境）
    *
@@ -387,7 +388,11 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<PAMProjectDetail> {
     const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
 
-    await this.getProjectById(id);
+    // 检查项目是否存在且未删除
+    const project = await this.getProjectById(id);
+    if (!project) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
 
     // 1. 更新项目字段
     await this.updateProjectFields(id, projectUpdates);
@@ -407,6 +412,7 @@ export class PAMProjectRepo extends BaseRepository<
           : [SearchPAMProjectFields, this.buildJoinEnvFields('*')].join(',')
       )
       .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
       .maybeSingle();
 
     this.supabaseRepo.throwIfError(result);
@@ -473,6 +479,7 @@ export class PAMProjectRepo extends BaseRepository<
       .from(this.getRepoName())
       .select('id')
       .eq('slug', slug)
+      .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
       .maybeSingle();
     this.supabaseRepo.throwIfError(result);
 
@@ -537,5 +544,27 @@ export class PAMProjectRepo extends BaseRepository<
       ...project,
       [PAMProjectEnvKey]: createdEnvs
     } as never;
+  }
+
+  /**
+   * 软删除项目（仅标记为删除，不实际删除数据）
+   * @param id 项目ID
+   * @throws 若项目不存在或已删除，则抛出异常
+   */
+  public async deleteProject(id: string): Promise<void> {
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(this.getRepoName())
+      .update({ is_deleted: DeleteStatus.DELETE })
+      .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE); // 只允许删除未删除的
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (result.count === 0) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    this.logger.info(`[PAMProjectRepo] soft deleted project ${id}`);
   }
 }

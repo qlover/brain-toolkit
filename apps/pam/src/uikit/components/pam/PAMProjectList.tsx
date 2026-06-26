@@ -9,7 +9,7 @@ interface PAMProjectListProps {
   viewMode: 'card' | 'compact';
   isOwner: (project: SearchPAMProject) => boolean;
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (project: SearchPAMProject) => void;
 }
 
 export const PAMProjectList: React.FC<PAMProjectListProps> = ({

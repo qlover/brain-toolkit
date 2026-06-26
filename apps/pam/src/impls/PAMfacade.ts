@@ -239,4 +239,8 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       viewMode: mode
     });
   }
+
+  public async deleteProject(project: SearchPAMProject): Promise<void> {
+    await this.pamApi.deleteProject(project.id);
+  }
 }
