@@ -15,13 +15,11 @@ import {
   useWatch
 } from 'react-hook-form';
 import { v4 as uuid } from 'uuid';
-import type {
-  PAMEnvCreate,
-  PAMProjectCreateWithEnv
-} from '@schemas/PAMProjectSchema';
+import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
+import type { PAMProjectCreate } from '@schemas/PAMProjectSchema';
 import { PAMProjectEnvKey } from '@schemas/PAMProjectSchema';
 
-type FormValues = PAMProjectCreateWithEnv;
+type FormValues = PAMProjectCreate;
 
 export const PAMFormEnvironments: React.FC = () => {
   const {
@@ -34,7 +32,7 @@ export const PAMFormEnvironments: React.FC = () => {
     control,
     name: PAMProjectEnvKey
   });
-  const environments = useWatch({ control, name: PAMProjectEnvKey }) || [];
+  const environments = useWatch({ control, name: PAMProjectEnvKey });
 
   const [collapsedEnvs, setCollapsedEnvs] = useState<Record<number, boolean>>(
     {}
@@ -126,10 +124,10 @@ export const PAMFormEnvironments: React.FC = () => {
   );
 
   const renderEnvironmentBlock = useCallback(
-    (field: PAMEnvCreate, index: number) => {
+    (field: PAMEnvWriteable, index: number) => {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
       const isCollapsed = collapsedEnvs[index] ?? (isMobile && index >= 1);
-      const env = environments[index];
+      const env = environments?.[index];
 
       if (!env) return null;
 
