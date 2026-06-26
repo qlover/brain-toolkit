@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from 'antd';
 import { useEffect } from 'react';
 import { PAMFacade } from '@/impls/PAMfacade';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
@@ -35,12 +34,9 @@ export function PAMRoot() {
       data-testid="PAMRoot"
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full"
     >
-      <div>
-        <Button onClick={() => pamFacade.openDialog()}>新建</Button>
-      </div>
-
       <PAMToolbar
         searchValue={''}
+        onCreate={() => pamFacade.openDialog()}
         onSearchChange={() => {
           throw new Error('Function not implemented.');
         }}

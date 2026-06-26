@@ -2,7 +2,8 @@ import {
   SearchOutlined,
   DownOutlined,
   AppstoreOutlined,
-  UnorderedListOutlined
+  UnorderedListOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
 import {
@@ -18,6 +19,7 @@ interface PAMToolbarProps {
   viewMode: PAMViewModeType;
   onViewModeChange: (mode: PAMViewModeType) => void;
   categories: string[];
+  onCreate: () => void;
 }
 
 export const PAMToolbar: React.FC<PAMToolbarProps> = ({
@@ -27,7 +29,8 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   onCategoryChange,
   viewMode,
   onViewModeChange,
-  categories
+  categories,
+  onCreate
 }) => {
   return (
     <div
@@ -35,7 +38,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
       className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-bg-container p-3 sm:p-4 rounded-2xl shadow-sm border border-primary-border mb-5 md:mb-6"
     >
       <div className="flex flex-wrap items-center gap-2 flex-1">
-        <div className="relative flex-1 min-w-[140px] max-w-full sm:max-w-xs">
+        <div className="relative flex-1 min-w-35 max-w-full sm:max-w-xs">
           <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary-text text-sm" />
           <input
             type="text"
@@ -46,7 +49,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           />
         </div>
 
-        <div className="relative min-w-[100px]">
+        <div className="relative min-w-25">
           <select
             value={categoryValue}
             onChange={(e) => onCategoryChange(e.target.value)}
@@ -65,15 +68,27 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           </select>
           <DownOutlined className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-tertiary-text text-[10px] sm:text-xs pointer-events-none" />
         </div>
+
+        <button
+          id="addProjectBtn"
+          onClick={onCreate}
+          className="bg-primary hover:bg-primary-hover text-primary-text px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium touch-target"
+        >
+          <PlusOutlined />
+          <span className="hidden xs:inline">新增资产</span>
+          <span className="xs:hidden">新增</span>
+        </button>
       </div>
 
-      <div className="flex items-center gap-1 bg-primary-bg p-1 rounded-xl flex-shrink-0">
+      <div className="flex items-center gap-1 bg-primary-bg p-1 rounded-xl shrink-0">
         <button
+          title="卡片"
           onClick={() => onViewModeChange(PAMViewMode.Card)}
           className={clsx(
             'px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all touch-target-sm',
             {
-              'bg-bg-container shadow-sm text-primary': viewMode === 'card',
+              'bg-bg-container shadow-sm text-brand-active':
+                viewMode === 'card',
               'text-secondary-text hover:bg-bg-container/50':
                 viewMode !== 'card'
             }
@@ -83,11 +98,13 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           <span className="hidden xs:inline">卡片</span>
         </button>
         <button
+          title="列表"
           onClick={() => onViewModeChange(PAMViewMode.Compact)}
           className={clsx(
             'px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all touch-target-sm',
             {
-              'bg-bg-container shadow-sm text-primary': viewMode === 'compact',
+              'bg-bg-container shadow-sm text-brand-active':
+                viewMode === 'compact',
               'text-secondary-text hover:bg-bg-container/50':
                 viewMode !== 'compact'
             }
