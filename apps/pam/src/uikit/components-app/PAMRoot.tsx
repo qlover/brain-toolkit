@@ -41,10 +41,7 @@ export function PAMRoot() {
 
       <PAMToolbar
         tt={tt}
-        searchValue={''}
-        onSearchChange={() => {
-          throw new Error('Function not implemented.');
-        }}
+        facadeInterface={pamFacade}
         categoryValue={''}
         onCategoryChange={() => {
           throw new Error('Function not implemented.');

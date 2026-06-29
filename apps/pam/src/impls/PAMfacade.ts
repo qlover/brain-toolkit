@@ -348,4 +348,18 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     // 这里不要 await,后台完成即可
     this.reloadProjectListFromFirstPage();
   }
+
+  /**
+   * @override
+   */
+  public async searchProjectWithKeyword(
+    keyword: string
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    return this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: true,
+      projectsStrategy: ProjectsStrategy.Replace,
+      keyword
+    });
+  }
 }
