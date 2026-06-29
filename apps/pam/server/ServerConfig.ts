@@ -46,9 +46,15 @@ export class ServerConfig implements SeedServerConfigInterface {
   public readonly stringEncryptorKey: string =
     process.env.NEXT_PUBLIC_STRING_ENCRYPT_KEY ?? '';
 
-  public readonly sessionSecret: string = process.env.SESSION_SECRET ?? '';
+  public readonly sessionSecret: string =
+    process.env.SESSION_SECRET ??
+    // FIXME: 下面仅用于测试，真实开发需要去掉
+    'testabcdtest5fccf34d41ddaaea88eaea9c35d705b581524a586c11d444945e';
 
-  public readonly encryptionKey: string = process.env.ENCRYPTION_KEY ?? '';
+  public readonly encryptionKey: string =
+    process.env.ENCRYPTION_KEY ??
+    // FIXME: 下面仅用于测试，真实开发需要去掉
+    'base64:ZrNkJ4d7VfrLZPP0/ksjINC5XIRKmrIr1bPd+l+Wi7o=';
 
   public readonly apiCorsAllowedOrigins: readonly string[] = parseCsvEnv(
     process.env.API_CORS_ALLOWED_ORIGINS
