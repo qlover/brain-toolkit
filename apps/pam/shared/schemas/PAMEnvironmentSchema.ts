@@ -1,11 +1,15 @@
 import { z } from 'zod';
+import {
+  V_PAM_ENV_VAR_KEY_REQUIRED,
+  V_PAM_ENV_VAR_VALUE_REQUIRED
+} from '@config/i18n-identifier/common/validators';
 
 export const PAMEnvTableName = 'pam_environments' as const;
 
 export const PAMVariableSchema = z.object({
   id: z.uuid().optional(),
-  key: z.string().trim().min(1, 'Key can not be empty'),
-  value: z.string().trim().min(1, 'Value can not be empty')
+  key: z.string().trim().min(1, V_PAM_ENV_VAR_KEY_REQUIRED),
+  value: z.string().trim().min(1, V_PAM_ENV_VAR_VALUE_REQUIRED)
 });
 export type PAMVariable = z.infer<typeof PAMVariableSchema>;
 

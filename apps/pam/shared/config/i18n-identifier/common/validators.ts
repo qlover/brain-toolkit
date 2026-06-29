@@ -75,3 +75,18 @@ export const V_PAM_ENV_NAME_REPEAT = 'common:v:pam_env_name_repeat';
  * @localEn Is required
  */
 export const V_REQUIRED = 'common:v:required';
+
+/**
+ * @description 环境变量的 key 不能为空
+ * @localZh 环境变量的 key 不能为空
+ * @localEn Environment variable key cannot be empty
+ */
+export const V_PAM_ENV_VAR_KEY_REQUIRED = 'common:v:pam_env_var_key_required';
+
+/**
+ * @description 环境变量的 value 不能为空
+ * @localZh 环境变量的 value 不能为空
+ * @localEn Environment variable value cannot be empty
+ */
+export const V_PAM_ENV_VAR_VALUE_REQUIRED =
+  'common:v:pam_env_var_value_required';

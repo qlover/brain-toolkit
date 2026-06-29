@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
 import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type {
   PAMProjectCreate,
   PAMProjectUpdate
@@ -24,6 +25,7 @@ import { PAMFormEnvironments } from './PAMFormEnvironments';
 type PAMFormProject = PAMProjectCreate | PAMProjectUpdate;
 
 export interface PAMFormProps {
+  tt: PAMI18nInterface;
   initialData?: PAMFormProject;
   onSubmit: (data: PAMFormProject) => Promise<void> | void;
   onCancel: () => void;
@@ -40,6 +42,7 @@ function generateSlug(name: string): string {
 }
 
 export const PAMForm: React.FC<PAMFormProps> = ({
+  tt,
   initialData,
   onCancel,
   onSubmit,
@@ -108,7 +111,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     // }
 
     if (mode === 'edit' && !('id' in data)) {
-      console.log('致命错误,修改项目缺少ID');
+      console.log(tt.tipFalteError);
       return;
     }
 
@@ -126,7 +129,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     trigger('is_public');
   };
 
-  const lockTitle = is_public === PAMPublicType.public ? '公开' : '私有';
+  const lockTitle = is_public === PAMPublicType.public ? tt.public : tt.private;
 
   return (
     <FormProvider {...methods}>
@@ -143,14 +146,15 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="sm:col-span-2 lg:col-span-2">
               <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-                项目名称 <span className="text-(--fe-color-error)">*</span>
+                {tt.labelName}
+                <span className="text-(--fe-color-error)">*</span>
               </label>
               <div className="flex items-center justify-between gap-2">
                 <input
                   {...register('name')}
                   type="text"
                   className="flex-1 border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
-                  placeholder="例如: Brain Backend"
+                  placeholder={tt.placeholderName}
                 />
                 <div className="min-w-12">
                   <button
@@ -187,12 +191,13 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-                Slug <span className="text-(--fe-color-error)">*</span>
+                {tt.labelSlug}
+                <span className="text-(--fe-color-error)">*</span>
               </label>
               <input
                 {...register('slug')}
                 type="text"
-                placeholder="auto"
+                placeholder={tt.placeholderSlug}
                 className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
               />
               {errors.slug && (
@@ -205,25 +210,25 @@ export const PAMForm: React.FC<PAMFormProps> = ({
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-              技术栈
+              {tt.labelStack}
             </label>
             <input
               {...register('stack')}
               type="text"
-              placeholder="React, Go, Python …"
+              placeholder={tt.placeholderStack}
               className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
             />
           </div>
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-              项目描述
+              {tt.labelDesc}
             </label>
             <textarea
               {...register('description')}
               rows={2}
               className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base resize-y min-h-15"
-              placeholder="简要描述项目…"
+              placeholder={tt.placeholderDesc}
             />
           </div>
 
@@ -233,12 +238,12 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <span className="mr-1">
                   <CodeOutlined />
                 </span>
-                仓库地址
+                {tt.labelRepo}
               </label>
               <input
                 {...register('repo_url')}
                 type="url"
-                placeholder="https://github.com/..."
+                placeholder={tt.placeholderRepo}
                 className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
               />
               {errors.repo_url && (
@@ -249,13 +254,14 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-                分类 <span className="text-(--fe-color-error)">*</span>
+                {tt.labelCategory}
+                <span className="text-(--fe-color-error)">*</span>
               </label>
               <select
                 {...register('category')}
                 className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
               >
-                <option value="">未分类</option>
+                <option value="">{tt.labelUnCategory}</option>
                 <option value="前端">前端</option>
                 <option value="后端">后端</option>
                 <option value="工具">工具</option>
@@ -272,7 +278,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           </div>
         </div>
 
-        <PAMFormEnvironments />
+        <PAMFormEnvironments tt={tt} />
 
         <div
           className="
@@ -300,7 +306,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
               disabled:opacity-50 cursor-pointer
             "
           >
-            取消
+            {tt.formCancel}
           </button>
           <button
             type="submit"
@@ -323,14 +329,14 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <span>
                   <LoadingOutlined className="animate-spin" />
                 </span>
-                保存中…
+                {tt.formSaveing}
               </>
             ) : (
               <>
                 <span>
                   <SaveOutlined />
                 </span>
-                {mode === 'edit' ? '保存修改' : '保存项目'}
+                {mode === 'edit' ? tt.formEdit : tt.formSave}
               </>
             )}
           </button>

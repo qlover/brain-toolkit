@@ -2,7 +2,7 @@ import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { PAMRoot } from '@/uikit/components-app/PAMRoot';
 import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
-import { homeI18n, homeI18nNamespace } from '@config/i18n-mapping/HomeI18n';
+import { pamI18n, pamI18nNamespace } from '@config/i18n-mapping/PAMI18n';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import {
   getI18nInterface,
@@ -22,13 +22,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const resolvedParams = await params;
   const locale = getLocale(resolvedParams);
-  return await getI18nInterface(locale, homeI18n);
+  return await getI18nInterface(locale, pamI18n);
 }
 
 export default async function Home({ params }: PageParamsProps) {
   const resolvedParams = await params!;
   const locale = getLocale(resolvedParams);
-  const tt = await getI18nInterface(locale, homeI18n, homeI18nNamespace);
+  const tt = await getI18nInterface(locale, pamI18n, pamI18nNamespace);
 
   return (
     <PageI18nProvider value={tt}>

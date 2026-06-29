@@ -9,10 +9,12 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
+import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 import { PAMIcon } from './PAMIcon';
 
 interface PAMProjectCardProps {
+  tt: PAMI18nInterface;
   project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
@@ -20,6 +22,7 @@ interface PAMProjectCardProps {
 }
 
 export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
+  tt,
   project,
   isOwner,
   onEdit,
@@ -40,7 +43,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         </span>
       ))
   ) : (
-    <span className="text-xs text-tertiary-text">无环境变量</span>
+    <span className="text-xs text-tertiary-text">{tt.noEnvVars}</span>
   );
 
   return (
@@ -53,7 +56,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           <div>
             <h3 className="text-lg font-bold text-primary-text truncate">
               <span
-                title={project.is_public === 1 ? '公开的' : '私有的'}
+                title={project.is_public === 1 ? tt.public : tt.private}
                 className={clsx(
                   'text-xs mr-2',
                   project.is_public === 1
@@ -72,19 +75,19 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
             </h3>
             <div className="flex flex-wrap gap-2 mt-1 items-center">
               {project.stack && (
-                <span className="bg-primary-bg text-secondary-text text-xs px-2 py-0.5 rounded-full">
+                <span className="bg-primary-bg text-secondary-text text-xs py-0.5 rounded-full">
                   {project.stack}
                 </span>
               )}
               {project.category && (
-                <span className="bg-primary-bg text-primary text-xs px-2 py-0.5 rounded-full font-medium">
+                <span className="bg-primary-bg text-primary-text text-xs py-0.5 rounded-full font-medium">
                   {project.category}
                 </span>
               )}
 
               {!isOwner && (
-                <span className="text-xs bg-primary-bg text-tertiary-text px-2 py-0.5 rounded-full">
-                  <EyeOutlined className="mr-0.5" /> 只读
+                <span className="text-xs bg-primary-bg text-tertiary-text py-0.5 rounded-full">
+                  <EyeOutlined className="mr-0.5" /> {tt.readonly}
                 </span>
               )}
             </div>
@@ -93,7 +96,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
             <div className="flex gap-1">
               <button
                 onClick={() => onEdit(project.id)}
-                className="text-primary hover:text-primary-hover p-1.5 rounded-lg transition"
+                className="text-primary-text hover:text-primary-text-hover p-1.5 rounded-lg transition"
               >
                 <EditOutlined />
               </button>
@@ -108,26 +111,28 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         </div>
 
         <p className="text-secondary-text text-sm mt-2 line-clamp-2">
-          {project.description || '暂无描述'}
+          {project.description || tt.noDesc}
         </p>
 
         <div className="mt-3 flex items-center gap-2">
           {project.repo_url && (
             <a
+              data-testid="PAMRepoUrl"
               href={project.repo_url}
+              title={project.repo_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:text-primary-hover text-sm inline-flex items-center gap-1"
+              className="text-primary-text hover:text-primary-text-hover text-sm inline-flex items-center gap-1"
             >
               <PAMIcon repoUrl={project.repo_url} className="w-4" />
-              仓库
+              {project.repo_url}
             </a>
           )}
         </div>
 
         <div className="mt-4">
           <div className="text-xs font-semibold text-secondary-text mb-2">
-            <EnvironmentOutlined className="mr-1" /> 环境直达
+            <EnvironmentOutlined className="mr-1" /> {tt.envDirectTitle}
           </div>
           <div className="flex flex-wrap gap-2">
             {envs.length > 0 ? (
@@ -154,7 +159,9 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 </a>
               ))
             ) : (
-              <span className="text-xs text-tertiary-text">未配置环境</span>
+              <span className="text-xs text-tertiary-text">
+                {tt.noEnvConfig}
+              </span>
             )}
           </div>
         </div>
@@ -162,7 +169,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         <div className="mt-3 pt-2 border-t border-primary-border">
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-secondary-text">
-              <SettingOutlined className="mr-1" /> 环境变量示例
+              <SettingOutlined className="mr-1" /> {tt.envDemo}
             </span>
           </div>
           <div className="flex flex-wrap gap-1 mt-1.5">{envVarsPreview}</div>
@@ -173,7 +180,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         <span>
           <UserOutlined className="mr-1" /> todo: 用户信息
         </span>
-        <span>{envs.length} 个环境</span>
+        <span>{tt.envCount.replace('[count]', envs.length.toString())}</span>
       </div>
     </div>
   );
