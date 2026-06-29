@@ -5,33 +5,60 @@ import {
   UnorderedListOutlined
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
-import {
-  PAMViewMode,
-  type PAMViewModeType
+import { debounce } from 'lodash';
+import { useCallback, useRef } from 'react';
+import { PAMViewMode } from '@/interface/PAMFacadeInterface';
+import type {
+  PAMViewModeType,
+  PAMFacadeInterface,
+  PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
+import { useStore } from '@/uikit/hook/useStore';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
+import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
+import type { ChangeEvent } from 'react';
 
 interface PAMToolbarProps {
   tt: PAMI18nInterface;
-  searchValue: string;
-  onSearchChange: (value: string) => void;
   categoryValue: string;
   onCategoryChange: (value: string) => void;
   viewMode: PAMViewModeType;
   onViewModeChange: (mode: PAMViewModeType) => void;
   categories: string[];
+  facadeInterface: PAMFacadeInterface<PAMProjectDetail>;
 }
 
+function keywordSelector(state: PAMFacadeStateInterface<PAMProjectDetail>) {
+  return state.searchParams.keyword || '';
+}
 export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   tt,
-  searchValue,
-  onSearchChange,
   categoryValue,
   onCategoryChange,
   viewMode,
   onViewModeChange,
-  categories
+  categories,
+  facadeInterface
 }) => {
+  const facadeStore = facadeInterface.getFacadeStore();
+  const searchValue = useStore(facadeStore, keywordSelector);
+
+  const debouncedSearch = useRef(
+    debounce((keyword: string) => {
+      facadeInterface.searchProjectWithKeyword(keyword);
+    }, 500)
+  ).current;
+
+  const onSearch = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const keyword = e.target.value;
+      facadeStore.update({
+        searchParams: { ...facadeStore.getState().searchParams, keyword }
+      });
+      debouncedSearch(keyword);
+    },
+    [facadeStore, debouncedSearch]
+  );
   return (
     <div
       data-testid="PAMToolbar"
@@ -44,12 +71,12 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             type="text"
             placeholder={tt.placeholderSearch}
             value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={onSearch}
             className="bg-secondary touch-target w-full rounded-xl border border-primary-border py-2 pr-4 pl-9 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:py-2.5"
           />
         </div>
 
-        <div className="relative min-w-25">
+        <div className="hidden relative min-w-25">
           <select
             value={categoryValue}
             onChange={(e) => onCategoryChange(e.target.value)}

@@ -91,4 +91,10 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
     id: string,
     data: PAMProjectUpdate
   ): Promise<GatewayResult<PAMProjectDetail>>;
+
+  /**
+   *
+   * @param keyword
+   */
+  searchProjectWithKeyword(keyword: string): Promise<ResourceSearchResult<T>>;
 }
