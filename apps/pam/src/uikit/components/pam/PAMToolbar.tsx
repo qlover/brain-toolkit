@@ -2,8 +2,7 @@ import {
   SearchOutlined,
   DownOutlined,
   AppstoreOutlined,
-  UnorderedListOutlined,
-  PlusOutlined
+  UnorderedListOutlined
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
 import {
@@ -21,7 +20,6 @@ interface PAMToolbarProps {
   viewMode: PAMViewModeType;
   onViewModeChange: (mode: PAMViewModeType) => void;
   categories: string[];
-  onCreate: () => void;
 }
 
 export const PAMToolbar: React.FC<PAMToolbarProps> = ({
@@ -32,23 +30,22 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   onCategoryChange,
   viewMode,
   onViewModeChange,
-  categories,
-  onCreate
+  categories
 }) => {
   return (
     <div
       data-testid="PAMToolbar"
-      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-bg-container p-3 sm:p-4 rounded-2xl shadow-sm border border-primary-border mb-5 md:mb-6"
+      className="bg-secondary mb-5 flex flex-col gap-3 rounded-2xl border border-primary-border p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-4 md:mb-6"
     >
-      <div className="flex flex-wrap items-center gap-2 flex-1">
-        <div className="relative flex-1 min-w-35 max-w-full sm:max-w-xs">
-          <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary-text text-sm" />
+      <div className="flex flex-1 flex-wrap items-center gap-2">
+        <div className="relative min-w-35 max-w-full flex-1 sm:max-w-xs">
+          <SearchOutlined className="text-tertiary-text absolute top-1/2 left-3 -translate-y-1/2 text-sm" />
           <input
             type="text"
             placeholder={tt.placeholderSearch}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 sm:py-2.5 rounded-xl border border-primary-border bg-bg-container focus:outline-none focus:ring-2 focus:ring-primary text-primary-text placeholder-tertiary-text text-sm touch-target"
+            className="bg-secondary touch-target w-full rounded-xl border border-primary-border py-2 pr-4 pl-9 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:py-2.5"
           />
         </div>
 
@@ -56,7 +53,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           <select
             value={categoryValue}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="appearance-none w-full bg-bg-container border border-primary-border rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 pr-7 sm:pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-primary-text cursor-pointer touch-target"
+            className="bg-secondary touch-target w-full cursor-pointer appearance-none rounded-xl border border-primary-border px-3 py-2 pr-7 text-sm text-primary-text focus:ring-2 focus:ring-brand focus:outline-none sm:px-4 sm:py-2.5 sm:pr-8"
           >
             <option value="">{tt.allCategory}</option>
             {categories.map((cat) => (
@@ -69,52 +66,38 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
               </option>
             ))}
           </select>
-          <DownOutlined className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-tertiary-text text-[10px] sm:text-xs pointer-events-none" />
+          <DownOutlined className="text-tertiary-text pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px] sm:right-3 sm:text-xs" />
         </div>
-
-        <button
-          id="addProjectBtn"
-          onClick={onCreate}
-          className="bg-primary hover:bg-primary-hover text-primary-text px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium touch-target"
-        >
-          <PlusOutlined />
-          <span className="hidden xs:inline">{tt.addPam}</span>
-          <span className="xs:hidden">{tt.addPamsm}</span>
-        </button>
       </div>
 
-      <div className="flex items-center gap-1 bg-primary-bg p-1 rounded-xl shrink-0">
+      <div className="bg-primary flex shrink-0 items-center gap-1 rounded-xl p-1">
         <button
           title={tt.pamViewModeCard}
           onClick={() => onViewModeChange(PAMViewMode.Card)}
           className={clsx(
-            'px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all touch-target-sm',
+            'touch-target-sm flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 sm:text-sm',
             {
-              'bg-bg-container shadow-sm text-brand-active':
-                viewMode === 'card',
-              'text-secondary-text hover:bg-bg-container/50':
-                viewMode !== 'card'
+              'bg-elevated text-brand shadow-sm': viewMode === 'card',
+              'text-secondary-text hover:bg-elevated/50': viewMode !== 'card'
             }
           )}
         >
           <AppstoreOutlined className="text-xs sm:text-sm" />
-          <span className="hidden xs:inline">{tt.pamViewModeCard}</span>
+          <span className="xs:inline hidden">{tt.pamViewModeCard}</span>
         </button>
         <button
           title={tt.pamViewModeList}
           onClick={() => onViewModeChange(PAMViewMode.Compact)}
           className={clsx(
-            'px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all touch-target-sm',
+            'touch-target-sm flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 sm:text-sm',
             {
-              'bg-bg-container shadow-sm text-brand-active':
-                viewMode === 'compact',
-              'text-secondary-text hover:bg-bg-container/50':
-                viewMode !== 'compact'
+              'bg-elevated text-brand shadow-sm': viewMode === 'compact',
+              'text-secondary-text hover:bg-elevated/50': viewMode !== 'compact'
             }
           )}
         >
           <UnorderedListOutlined className="text-xs sm:text-sm" />
-          <span className="hidden xs:inline">{tt.pamViewModeList}</span>
+          <span className="xs:inline hidden">{tt.pamViewModeList}</span>
         </button>
       </div>
     </div>

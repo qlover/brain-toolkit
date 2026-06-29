@@ -46,7 +46,7 @@ export const PAMFormEnvironmentVarRow: React.FC<
             onUpdateVariable(envIndex, item.key, e.target.value, item.value)
           }
           className={clsx(
-            'env-var-key flex-1 min-w-15 border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation',
+            'env-var-key flex-1 min-w-15 border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand touch-manipulation',
             keyError ? 'border-(--fe-color-error)' : 'border-primary-border'
           )}
         />
@@ -58,7 +58,7 @@ export const PAMFormEnvironmentVarRow: React.FC<
             onUpdateVariable(envIndex, item.key, item.key, e.target.value)
           }
           className={clsx(
-            'env-var-value flex-[1.5] min-w-20 border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation',
+            'env-var-value flex-[1.5] min-w-20 border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand touch-manipulation',
             valueError ? 'border-(--fe-color-error)' : 'border-primary-border'
           )}
         />

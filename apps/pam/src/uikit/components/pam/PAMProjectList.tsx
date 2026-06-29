@@ -1,4 +1,4 @@
-import { UploadOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, LoadingOutlined } from '@ant-design/icons';
 import React from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
@@ -12,6 +12,38 @@ interface PAMProjectListProps {
   isOwner: (project: SearchPAMProject) => boolean;
   onEdit: (id: string) => void;
   onDelete: (project: SearchPAMProject) => void;
+  loading?: boolean;
+}
+
+function PAMProjectListEmpty({
+  tt,
+  loading
+}: {
+  tt: PAMI18nInterface;
+  loading: boolean;
+}) {
+  return (
+    <div
+      data-testid="PAMProjectListEmpty"
+      className="bg-secondary mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary-border px-4 py-12 sm:py-16"
+    >
+      {loading ? (
+        <>
+          <LoadingOutlined className="text-brand mb-3 text-4xl sm:text-5xl" />
+          <p className="text-secondary-text text-sm sm:text-base">
+            {tt.loadingText}
+          </p>
+        </>
+      ) : (
+        <>
+          <CloudUploadOutlined className="pam-empty-icon text-tertiary-text mb-3 text-4xl sm:text-5xl" />
+          <p className="text-secondary-text text-sm sm:text-base">
+            {tt.noProject}
+          </p>
+        </>
+      )}
+    </div>
+  );
 }
 
 export const PAMProjectList: React.FC<PAMProjectListProps> = ({
@@ -20,16 +52,13 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   viewMode,
   isOwner,
   onEdit,
-  onDelete
+  onDelete,
+  loading = false
 }) => {
   if (projects.length === 0) {
     return (
-      <div
-        data-testid="PAMProjectList"
-        className="text-center py-16 bg-bg-container rounded-2xl border border-dashed border-primary-border mt-4"
-      >
-        <UploadOutlined className="text-5xl text-tertiary-text mb-3" />
-        <p className="text-secondary-text">{tt.noProject}</p>
+      <div data-testid="PAMProjectList">
+        <PAMProjectListEmpty tt={tt} loading={loading} />
       </div>
     );
   }
@@ -38,7 +67,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
     return (
       <div
         data-testid="PAMProjectList"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
       >
         {projects.map((project) => (
           <PAMProjectCard
@@ -57,7 +86,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   return (
     <div
       data-testid="PAMProjectList"
-      className="bg-bg-container rounded-2xl border border-primary-border overflow-hidden shadow-sm"
+      className="bg-secondary overflow-hidden rounded-2xl border border-primary-border shadow-sm"
     >
       <div className="divide-y divide-primary-border">
         {projects.map((project) => (

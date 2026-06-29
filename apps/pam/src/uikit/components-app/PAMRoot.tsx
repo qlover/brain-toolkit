@@ -7,6 +7,7 @@ import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
 import { PAMForm } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
+import { PAMPageHeader } from '../components/pam/PAMPageHeader';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
@@ -27,18 +28,20 @@ export function PAMRoot() {
   const isEditMode = Boolean(editProject);
 
   const projects = useStore(pamFacadeStore, (state) => state.projects || []);
+  const listLoading = useStore(pamFacadeStore, (state) => state.loading);
   const viewMode = useStore(pamFacadeStore, (state) => state.viewMode);
   const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
 
   return (
     <div
       data-testid="PAMRoot"
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full"
+      className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 w-full"
     >
+      <PAMPageHeader tt={tt} onCreate={() => pamFacade.openDialog()} />
+
       <PAMToolbar
         tt={tt}
         searchValue={''}
-        onCreate={() => pamFacade.openDialog()}
         onSearchChange={() => {
           throw new Error('Function not implemented.');
         }}
@@ -55,6 +58,7 @@ export function PAMRoot() {
         tt={tt}
         projects={projects}
         viewMode={viewMode}
+        loading={listLoading}
         isOwner={(data) => !!data.is_owner}
         onEdit={(id) => pamFacade.triggerEdit(id)}
         onDelete={(project) => {

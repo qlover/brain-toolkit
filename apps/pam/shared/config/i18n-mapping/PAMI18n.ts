@@ -11,6 +11,7 @@ export const pamI18nNamespace = 'page_pam';
 export const pamI18n = Object.freeze({
   // Meta
   title: i18nKeys.PAGE_PAM_TITLE,
+  subtitle: i18nKeys.PAGE_PAM_SUBTITLE,
   description: i18nKeys.PAGE_PAM_DESCRIPTION,
   content: i18nKeys.PAGE_PAM_DESCRIPTION,
   keywords: i18nKeys.PAGE_PAM_KEYWORDS,

@@ -163,7 +163,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
           type="button"
           data-testid="add-environment-button"
           onClick={handleAddEnvironment}
-          className="text-primary-text text-xs sm:text-sm hover:text-primary-text-hover bg-primary-bg hover:bg-primary-bg/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition touch-manipulation flex items-center gap-1.5 cursor-pointer"
+          className="text-brand text-xs sm:text-sm hover:text-brand-hover bg-primary-bg hover:bg-primary-bg/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition touch-manipulation flex items-center gap-1.5 cursor-pointer"
         >
           <span>
             <PlusOutlined />
