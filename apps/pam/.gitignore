@@ -1,0 +1,7 @@
+public/locales
+public/sitemap.xml
+public/sitemap-0.xml
+public/robots.txt
+.env
+.cache
+.vscode
