@@ -130,9 +130,9 @@ export const PAMFormEnvironmentBlock: React.FC<
                 />
               )}
             />
-            {errors.environments?.[index]?.url && (
+            {errors.environments?.[index]?.url?.message && (
               <div className="text-(--fe-color-error) text-xs mt-1">
-                {errors.environments[index].url.message}
+                {errors.environments?.[index]?.url?.message}
               </div>
             )}
           </div>

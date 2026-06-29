@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { hasSessionPath, redirectToPath } from '@config/route';
+import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthSessionServiceInterface } from '@server/interfaces/OAuthSessionServiceInterface';
 import type {
@@ -22,7 +23,7 @@ import type { NextRequest } from 'next/server';
 export class OAuthSessionService
   implements
     OAuthSessionServiceInterface,
-    OAuthSessionInterface<OAuthSessionPayload>
+    OAuthSessionInterface<OAuthSessionPayload, UserSchema>
 {
   protected secure: boolean;
   protected sessionSecret: string;
