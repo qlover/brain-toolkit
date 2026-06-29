@@ -13,6 +13,13 @@ export const PAGE_PAM_TITLE = 'page_pam:title';
 export const PAGE_PAM_DESCRIPTION = 'page_pam:description';
 
 /**
+ * @description PAM page subtitle shown under the main title
+ * @localZh 多环境 · 仓库 · 变量 · 权限隔离
+ * @localEn Multi-env · repos · variables · access control
+ */
+export const PAGE_PAM_SUBTITLE = 'page_pam:subtitle';
+
+/**
  * @description PAM page keywords
  * @localZh 资产管理, 环境变量, 配置中心, PAM
  * @localEn asset management, environment variables, config center, PAM

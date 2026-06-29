@@ -73,7 +73,7 @@ export const PAMFormEnvironmentBlock: React.FC<
                   data-testid="PAMFormEnvironmentBlock"
                   {...nameField}
                   placeholder={tt.placeholderEnvName}
-                  className="font-bold border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 w-24 sm:w-36 text-xs sm:text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
+                  className="font-bold border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 w-24 sm:w-36 text-xs sm:text-sm bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand touch-manipulation"
                 />
               )}
             />
@@ -126,7 +126,7 @@ export const PAMFormEnvironmentBlock: React.FC<
                   {...urlField}
                   type="url"
                   placeholder={tt.placeholderEnvUrl}
-                  className="w-full border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm mt-1 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
+                  className="w-full border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm mt-1 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand touch-manipulation"
                 />
               )}
             />
@@ -143,7 +143,7 @@ export const PAMFormEnvironmentBlock: React.FC<
               <button
                 type="button"
                 onClick={() => onAddVariable(index)}
-                className="text-primary-text hover:text-primary-text-hover text-xs touch-manipulation flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-primary-bg transition cursor-pointer"
+                className="text-brand hover:text-brand-hover text-xs touch-manipulation flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-primary-bg transition cursor-pointer"
               >
                 <span>
                   <PlusOutlined />

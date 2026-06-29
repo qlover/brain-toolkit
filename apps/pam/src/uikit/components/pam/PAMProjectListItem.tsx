@@ -1,14 +1,14 @@
-import {
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  LockOutlined,
-  LinkOutlined
-} from '@ant-design/icons';
-import { clsx } from 'clsx';
-import React from 'react';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Grid } from 'antd';
+import React, { useMemo } from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
+import {
+  PAMPublicType,
+  type PAMProjectDetail
+} from '@schemas/PAMProjectSchema';
+import { PAMEnvLink, PAMProjectName, PAMPublicIcon } from './PAMIcon';
+
+const { useBreakpoint } = Grid;
 
 interface PAMProjectListItemProps {
   tt: PAMI18nInterface;
@@ -25,88 +25,91 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   onEdit,
   onDelete
 }) => {
-  const envs = project.environments || [];
+  const envs = useMemo(
+    () => project.environments || [],
+    [project.environments]
+  );
+
+  const bk = useBreakpoint();
+  const isMobile = bk.xs;
+
+  const renderEnvs = useMemo(() => {
+    if (Array.isArray(envs) && envs.length > 0) {
+      return envs.map((env) => <PAMEnvLink key={env.id} {...env} />);
+    }
+
+    return (
+      <span
+        data-testid="PAMProjectListItemNoEnv"
+        className="text-xs text-tertiary-text"
+      >
+        {tt.noEnv}
+      </span>
+    );
+  }, [envs, tt.noEnv]);
 
   return (
     <div
       data-testid="PAMProjectListItem"
-      className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-primary-bg transition border-b border-primary-border last:border-b-0"
+      className="px-5 py-3 bg-secondary hover:bg-primary/80 transition border-b border-primary-border last:border-b-0"
     >
-      <div className="min-w-37">
-        <div className="font-semibold text-primary-text">
-          <span
-            title={project.is_public === 1 ? tt.public : tt.private}
-            className={clsx(
-              'text-xs mr-2',
-              project.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-37">
+          <div className="font-semibold text-md md:text-lg text-primary-text truncate flex items-center gap-2">
+            <PAMProjectName
+              name={project.name}
+              repoUrl={project.repo_url ?? ''}
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-1 items-center">
+            {project.stack && (
+              <span className="text-secondary-text bg-primary text-xs py-0.5 px-1 rounded-full">
+                {project.stack}
+              </span>
             )}
-          >
-            {project.is_public === 1 ? (
-              <EyeOutlined className="text-sm" />
-            ) : (
-              <LockOutlined className="text-sm" />
+            {project.category && (
+              <span className="text-brand font-bold bg-primary text-xs py-0.5 px-2 rounded-full">
+                {project.category}
+              </span>
             )}
-          </span>
-
-          <span title={project.name}>{project.name}</span>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-1 items-center">
-          {project.category && (
-            <span className="category-badge text-brand-active text-xs">
-              {project.category}
-            </span>
-          )}
-          <span className="text-xs text-tertiary-text">
-            {project.stack || ''}
-          </span>
-        </div>
-      </div>
 
-      <div className="flex flex-wrap gap-1 flex-1 env-buttons">
-        {envs.length > 0 ? (
-          envs.map((env) => (
-            <a
-              data-testid={'PAMProjectListItemAction-' + env.id}
-              key={env.id}
-              href={env.url || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={clsx(
-                'text-xs px-2 py-1 rounded-md hover:opacity-80 transition inline-flex items-center gap-1',
-                {
-                  'bg-blue-100 text-blue-700': env.name === 'prod',
-                  'bg-green-100 text-green-700': env.name === 'dev',
-                  'bg-gray-100 text-gray-700':
-                    env.name !== 'prod' && env.name !== 'dev'
-                }
-              )}
-            >
-              <LinkOutlined className="text-sm" /> {env.name.toUpperCase()}
-            </a>
-          ))
-        ) : (
-          <span className="text-xs text-tertiary-text">{tt.noEnv}</span>
+        {!isMobile && (
+          <div className="flex flex-wrap gap-1 flex-1">{renderEnvs}</div>
         )}
+
+        <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-1.5">
+            <PAMPublicIcon
+              isPublic={project.is_public === PAMPublicType.public}
+              publicTitle={tt.public}
+              privateTitle={tt.private}
+            />
+
+            {isOwner && (
+              <button
+                onClick={() => onEdit(project.id)}
+                className="text-sm p-1 text-brand hover:text-brand-hover hover:bg-primary-bg rounded transition"
+              >
+                <EditOutlined />
+              </button>
+            )}
+            {isOwner && (
+              <button
+                onClick={() => onDelete(project)}
+                className="text-sm p-1 text-red-500 hover:bg-red-500 hover:text-primary-text rounded transition"
+              >
+                <DeleteOutlined />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 ml-auto">
-        {isOwner ? (
-          <>
-            <button
-              onClick={() => onEdit(project.id)}
-              className="text-sm text-brand hover:text-brand-hover hover:bg-primary-bg p-1.5 rounded transition"
-            >
-              <EditOutlined />
-            </button>
-            <button
-              onClick={() => onDelete(project)}
-              className="text-sm text-red-500 hover:bg-red-500 hover:text-primary-text p-1.5 rounded transition"
-            >
-              <DeleteOutlined />
-            </button>
-          </>
-        ) : null}
-      </div>
+      {isMobile && (
+        <div className="flex items-center gap-1.5 mt-1">{renderEnvs}</div>
+      )}
     </div>
   );
 };

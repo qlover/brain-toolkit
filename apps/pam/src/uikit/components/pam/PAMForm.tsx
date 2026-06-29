@@ -153,7 +153,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <input
                   {...register('name')}
                   type="text"
-                  className="flex-1 border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
+                  className="flex-1 border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
                   placeholder={tt.placeholderName}
                 />
                 <div className="min-w-12">
@@ -198,7 +198,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 {...register('slug')}
                 type="text"
                 placeholder={tt.placeholderSlug}
-                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
+                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
               />
               {errors.slug && (
                 <div className="text-(--fe-color-error) text-xs mt-1">
@@ -216,7 +216,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
               {...register('stack')}
               type="text"
               placeholder={tt.placeholderStack}
-              className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
+              className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
             />
           </div>
 
@@ -227,7 +227,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             <textarea
               {...register('description')}
               rows={2}
-              className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base resize-y min-h-15"
+              className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base resize-y min-h-15"
               placeholder={tt.placeholderDesc}
             />
           </div>
@@ -244,7 +244,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 {...register('repo_url')}
                 type="url"
                 placeholder={tt.placeholderRepo}
-                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
+                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
               />
               {errors.repo_url && (
                 <div className="text-(--fe-color-error) text-xs mt-1">
@@ -259,7 +259,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
               </label>
               <select
                 {...register('category')}
-                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-container text-primary-text focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base touch-manipulation"
+                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
               >
                 <option value="">{tt.labelUnCategory}</option>
                 <option value="前端">前端</option>
@@ -287,10 +287,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             sticky bottom-0 sm:py-2
             -mx-4 sm:mx-0 px-4 sm:px-0
             md:relative
-            shadow-[0_-4px_12px_rgba(0,0,0,0.04)]
             z-10
           "
-          style={{ backgroundColor: 'var(--fe-color-bg-container, #ffffff)' }}
         >
           <button
             type="button"

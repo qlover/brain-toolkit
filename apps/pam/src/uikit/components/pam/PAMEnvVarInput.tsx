@@ -23,14 +23,14 @@ export const PAMEnvVarInput: React.FC<PAMEnvVarInputProps> = ({
         placeholder="KEY"
         value={keyValue}
         onChange={(e) => onKeyChange(e.target.value)}
-        className="flex-1 border border-primary-border rounded-lg px-3 py-1.5 text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-1 focus:ring-primary"
+        className="flex-1 border border-primary-border rounded-lg px-3 py-1.5 text-sm bg-secondary text-primary-text focus:outline-none focus:ring-1 focus:ring-brand"
       />
       <input
         type="text"
         placeholder="value"
         value={valueValue}
         onChange={(e) => onValueChange(e.target.value)}
-        className="flex-1 border border-primary-border rounded-lg px-3 py-1.5 text-sm bg-bg-container text-primary-text focus:outline-none focus:ring-1 focus:ring-primary"
+        className="flex-1 border border-primary-border rounded-lg px-3 py-1.5 text-sm bg-secondary text-primary-text focus:outline-none focus:ring-1 focus:ring-brand"
       />
       <button
         type="button"
