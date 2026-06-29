@@ -10,8 +10,10 @@ import {
   PAMViewMode,
   type PAMViewModeType
 } from '@/interface/PAMFacadeInterface';
+import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 
 interface PAMToolbarProps {
+  tt: PAMI18nInterface;
   searchValue: string;
   onSearchChange: (value: string) => void;
   categoryValue: string;
@@ -23,6 +25,7 @@ interface PAMToolbarProps {
 }
 
 export const PAMToolbar: React.FC<PAMToolbarProps> = ({
+  tt,
   searchValue,
   onSearchChange,
   categoryValue,
@@ -42,7 +45,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary-text text-sm" />
           <input
             type="text"
-            placeholder="搜索项目..."
+            placeholder={tt.placeholderSearch}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-9 pr-4 py-2 sm:py-2.5 rounded-xl border border-primary-border bg-bg-container focus:outline-none focus:ring-2 focus:ring-primary text-primary-text placeholder-tertiary-text text-sm touch-target"
@@ -55,7 +58,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             onChange={(e) => onCategoryChange(e.target.value)}
             className="appearance-none w-full bg-bg-container border border-primary-border rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 pr-7 sm:pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-primary-text cursor-pointer touch-target"
           >
-            <option value="">所有分类</option>
+            <option value="">{tt.allCategory}</option>
             {categories.map((cat) => (
               <option
                 data-testid="PAMToolbarCategoryItem"
@@ -75,14 +78,14 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           className="bg-primary hover:bg-primary-hover text-primary-text px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium touch-target"
         >
           <PlusOutlined />
-          <span className="hidden xs:inline">新增资产</span>
-          <span className="xs:hidden">新增</span>
+          <span className="hidden xs:inline">{tt.addPam}</span>
+          <span className="xs:hidden">{tt.addPamsm}</span>
         </button>
       </div>
 
       <div className="flex items-center gap-1 bg-primary-bg p-1 rounded-xl shrink-0">
         <button
-          title="卡片"
+          title={tt.pamViewModeCard}
           onClick={() => onViewModeChange(PAMViewMode.Card)}
           className={clsx(
             'px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all touch-target-sm',
@@ -95,10 +98,10 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           )}
         >
           <AppstoreOutlined className="text-xs sm:text-sm" />
-          <span className="hidden xs:inline">卡片</span>
+          <span className="hidden xs:inline">{tt.pamViewModeCard}</span>
         </button>
         <button
-          title="列表"
+          title={tt.pamViewModeList}
           onClick={() => onViewModeChange(PAMViewMode.Compact)}
           className={clsx(
             'px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all touch-target-sm',
@@ -111,7 +114,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           )}
         >
           <UnorderedListOutlined className="text-xs sm:text-sm" />
-          <span className="hidden xs:inline">列表</span>
+          <span className="hidden xs:inline">{tt.pamViewModeList}</span>
         </button>
       </div>
     </div>

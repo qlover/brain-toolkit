@@ -7,9 +7,11 @@ import {
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
 import React from 'react';
+import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 
 interface PAMProjectListItemProps {
+  tt: PAMI18nInterface;
   project: PAMProjectDetail;
   isOwner: boolean;
   onEdit: (id: string) => void;
@@ -17,6 +19,7 @@ interface PAMProjectListItemProps {
 }
 
 export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
+  tt,
   project,
   isOwner,
   onEdit,
@@ -32,7 +35,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
       <div className="min-w-37">
         <div className="font-semibold text-primary-text">
           <span
-            title={project.is_public === 1 ? '公开的' : '私有的'}
+            title={project.is_public === 1 ? tt.public : tt.private}
             className={clsx(
               'text-xs mr-2',
               project.is_public === 1 ? 'text-emerald-600' : 'text-amber-600'
@@ -82,7 +85,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
             </a>
           ))
         ) : (
-          <span className="text-xs text-tertiary-text">无环境</span>
+          <span className="text-xs text-tertiary-text">{tt.noEnv}</span>
         )}
       </div>
 

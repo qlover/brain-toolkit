@@ -1,69 +1,93 @@
-export const PAMCommon = {
-  placeholderSearch: '搜索项目...',
-  allCategory: '所有分类',
-  addPam: '新增资产',
-  addPamsm: '新增',
-  pamViewModeCard: '卡片',
-  pamViewModeList: '列表'
-};
-export const PAMProjectI18n = {
-  noEnvVars: '无环境变量',
-  public: '公开的',
-  private: '私有的',
-  readonly: '只读',
-  delete: '删除',
-  noDesc: '暂无描述',
-  noEnvConfig: '未配置环境',
-  envDemo: '环境变量示例',
-  repoUrlTitle: '仓库',
-  envCount: '个环境',
-  noProject: '暂无项目，点击「新增资产」创建',
-  edit: '编辑'
-};
+import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
+import * as i18nKeys from '../i18n-identifier/pages/page.pam';
 
-export const PAMFormI18n = {
-  tipFalteError: '致命错误,修改项目缺少ID',
-  labelName: '项目名称',
-  placeholderName: '例如: ',
-  labelSlug: 'Slug',
-  placeholderSlug: 'auto',
-  labelStack: '技术栈',
-  placeholderStack: 'React, Go, Python',
-  labelDesc: '项目描述',
-  placeholderDesc: '简要描述项目…',
-  labelRepo: '仓库地址',
-  placeholderRepo: 'https://github.com/',
-  labelCategory: '分类',
-  labelUnCategory: '未分类',
-  formCancel: '取消',
-  formEdit: '保存修改',
-  formSave: '保存项目',
-  formSaveing: '保存中…',
-  tipEnvVariables: '请先填写完整当前所有环境变量（键和值都不能为空）',
-  labelEnvName: '变量名',
-  labelEnvUrl: '访问地址',
-  placeholderEnvName: '环境名称',
-  placeholderEnvUrl: 'https://',
-  collapsed: '展开',
-  uncollapsed: '折叠',
-  envVarAdd: '添加',
-  noEnvVar: '暂无环境变量',
-  placeholderEnvVar: 'Key',
-  labelEnvValue: '变量值',
-  placehoderEnvValue: 'value',
-  mulitEnv: '多环境配置',
-  envAdd: '添加环境',
-  envTip: '每个环境独立访问地址 + 环境变量',
-  envVarAddLabel: '添加变量',
-  envVarTitle: '环境变量',
-  placeholerEnvName: '环境名称',
-  envUrlTitle: '访问地址 (URL)',
-  envDelete: '删除环境'
-};
+/**
+ * PAM page i18n interface
+ */
+export type PAMI18nInterface = typeof pamI18n;
 
-export const PAMI18n = {
-  ...PAMCommon,
-  ...PAMProjectI18n,
-  ...PAMFormI18n
-};
-export type HomeI18nInterface = typeof PAMI18n;
+export const pamI18nNamespace = 'page_pam';
+
+export const pamI18n = Object.freeze({
+  // Meta
+  title: i18nKeys.PAGE_PAM_TITLE,
+  description: i18nKeys.PAGE_PAM_DESCRIPTION,
+  content: i18nKeys.PAGE_PAM_DESCRIPTION,
+  keywords: i18nKeys.PAGE_PAM_KEYWORDS,
+
+  // Common
+  placeholderSearch: i18nKeys.PAGE_PAM_PLACEHOLDER_SEARCH,
+  allCategory: i18nKeys.PAGE_PAM_ALL_CATEGORY,
+  addPam: i18nKeys.PAGE_PAM_ADD_PAM,
+  addPamsm: i18nKeys.PAGE_PAM_ADD_PAMSM,
+  pamViewModeCard: i18nKeys.PAGE_PAM_VIEW_MODE_CARD,
+  pamViewModeList: i18nKeys.PAGE_PAM_VIEW_MODE_LIST,
+  editProjectTitle: i18nKeys.PAGE_PAM_EDIT_PROJECT_TITLE,
+  createProjectTitle: i18nKeys.PAGE_PAM_CREATE_PROJECT_TITLE,
+  deleteProjectTitle: i18nKeys.PAGE_PAM_DELETE_PROJECT_TITLE,
+  deleteProjectContent: i18nKeys.PAGE_PAM_DELETE_PROJECT_CONTENT,
+  loadingText: i18nKeys.PAGE_PAM_LOADING_TEXT,
+  noMoreText: i18nKeys.PAGE_PAM_NO_MORE_TEXT,
+  errorText: i18nKeys.PAGE_PAM_ERROR_TEXT,
+  loadMoreText: i18nKeys.PAGE_PAM_LOAD_MORE_TEXT,
+
+  // Project
+  noEnvVars: i18nKeys.PAGE_PAM_NO_ENV_VARS,
+  noEnv: i18nKeys.PAGE_PAM_NO_ENV,
+  public: i18nKeys.PAGE_PAM_PUBLIC,
+  private: i18nKeys.PAGE_PAM_PRIVATE,
+  readonly: i18nKeys.PAGE_PAM_READONLY,
+  delete: i18nKeys.PAGE_PAM_DELETE,
+  noDesc: i18nKeys.PAGE_PAM_NO_DESC,
+  noEnvConfig: i18nKeys.PAGE_PAM_NO_ENV_CONFIG,
+  envDemo: i18nKeys.PAGE_PAM_ENV_DEMO,
+  /**
+   * @deprecated
+   */
+  repoUrlTitle: i18nKeys.PAGE_PAM_REPO_URL_TITLE,
+  envCount: i18nKeys.PAGE_PAM_ENV_COUNT,
+  noProject: i18nKeys.PAGE_PAM_NO_PROJECT,
+  edit: i18nKeys.PAGE_PAM_EDIT,
+
+  // Form
+  tipFalteError: i18nKeys.PAGE_PAM_TIP_FALTE_ERROR,
+  labelName: i18nKeys.PAGE_PAM_LABEL_NAME,
+  placeholderName: i18nKeys.PAGE_PAM_PLACEHOLDER_NAME,
+  labelSlug: i18nKeys.PAGE_PAM_LABEL_SLUG,
+  placeholderSlug: i18nKeys.PAGE_PAM_PLACEHOLDER_SLUG,
+  labelStack: i18nKeys.PAGE_PAM_LABEL_STACK,
+  placeholderStack: i18nKeys.PAGE_PAM_PLACEHOLDER_STACK,
+  labelDesc: i18nKeys.PAGE_PAM_LABEL_DESC,
+  placeholderDesc: i18nKeys.PAGE_PAM_PLACEHOLDER_DESC,
+  labelRepo: i18nKeys.PAGE_PAM_LABEL_REPO,
+  placeholderRepo: i18nKeys.PAGE_PAM_PLACEHOLDER_REPO,
+  labelCategory: i18nKeys.PAGE_PAM_LABEL_CATEGORY,
+  labelUnCategory: i18nKeys.PAGE_PAM_LABEL_UNCATEGORY,
+  formCancel: i18nKeys.PAGE_PAM_FORM_CANCEL,
+  formEdit: i18nKeys.PAGE_PAM_FORM_EDIT,
+  formSave: i18nKeys.PAGE_PAM_FORM_SAVE,
+  formSaveing: i18nKeys.PAGE_PAM_FORM_SAVEING,
+  tipEnvVariables: i18nKeys.PAGE_PAM_TIP_ENV_VARIABLES,
+  labelEnvName: i18nKeys.PAGE_PAM_LABEL_ENV_NAME,
+  labelEnvUrl: i18nKeys.PAGE_PAM_LABEL_ENV_URL,
+  placeholderEnvName: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_NAME,
+  placeholderEnvUrl: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_URL,
+  collapsed: i18nKeys.PAGE_PAM_COLLAPSED,
+  uncollapsed: i18nKeys.PAGE_PAM_UNCOLLAPSED,
+  envVarAdd: i18nKeys.PAGE_PAM_ENV_VAR_ADD,
+  noEnvVar: i18nKeys.PAGE_PAM_NO_ENV_VAR,
+  placeholderEnvVar: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_VAR,
+  labelEnvValue: i18nKeys.PAGE_PAM_LABEL_ENV_VALUE,
+  placehoderEnvValue: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_VALUE,
+  mulitEnv: i18nKeys.PAGE_PAM_MULIT_ENV,
+  envAdd: i18nKeys.PAGE_PAM_ENV_ADD,
+  envTip: i18nKeys.PAGE_PAM_ENV_TIP,
+  envVarAddLabel: i18nKeys.PAGE_PAM_ENV_VAR_ADD_LABEL,
+  envVarTitle: i18nKeys.PAGE_PAM_ENV_VAR_TITLE,
+  placeholerEnvName: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_NAME_FORM,
+  envUrlTitle: i18nKeys.PAGE_PAM_ENV_URL_TITLE,
+  envDelete: i18nKeys.PAGE_PAM_ENV_DELETE,
+  envDirectTitle: i18nKeys.PAGE_PAM_ENV_DIRECT_TITLE,
+
+  adminTitle: COMMON_ADMIN_TITLE
+});

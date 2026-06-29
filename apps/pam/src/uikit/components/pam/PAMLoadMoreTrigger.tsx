@@ -10,13 +10,15 @@ interface PAMLoadMoreTriggerProps<T extends SearchPAMProject> {
   loadingText?: string;
   noMoreText?: string;
   errorText?: string;
+  loadMoreText?: string;
 }
 
 export function PAMLoadMoreTrigger<T extends SearchPAMProject>({
   infiniteFacade,
   loadingText = '加载中...',
   noMoreText = '— 已全部加载 —',
-  errorText = '加载失败，点击重试'
+  errorText = '加载失败，点击重试',
+  loadMoreText = '加载更多'
 }: PAMLoadMoreTriggerProps<T>) {
   const store = infiniteFacade.getStore();
 
@@ -72,7 +74,7 @@ export function PAMLoadMoreTrigger<T extends SearchPAMProject>({
         className="text-center py-4"
       >
         <Button onClick={loadMore} type="dashed">
-          加载更多
+          {loadMoreText}
         </Button>
       </div>
     );

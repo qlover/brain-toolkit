@@ -1,10 +1,12 @@
 import { UploadOutlined } from '@ant-design/icons';
 import React from 'react';
+import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMProjectCard } from './PAMProjectCard';
 import { PAMProjectListItem } from './PAMProjectListItem';
 
 interface PAMProjectListProps {
+  tt: PAMI18nInterface;
   projects: readonly SearchPAMProject[];
   viewMode: 'card' | 'compact';
   isOwner: (project: SearchPAMProject) => boolean;
@@ -13,6 +15,7 @@ interface PAMProjectListProps {
 }
 
 export const PAMProjectList: React.FC<PAMProjectListProps> = ({
+  tt,
   projects,
   viewMode,
   isOwner,
@@ -26,7 +29,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
         className="text-center py-16 bg-bg-container rounded-2xl border border-dashed border-primary-border mt-4"
       >
         <UploadOutlined className="text-5xl text-tertiary-text mb-3" />
-        <p className="text-secondary-text">暂无项目，点击「新增资产」创建</p>
+        <p className="text-secondary-text">{tt.noProject}</p>
       </div>
     );
   }
@@ -39,6 +42,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
       >
         {projects.map((project) => (
           <PAMProjectCard
+            tt={tt}
             key={project.id}
             project={project}
             isOwner={isOwner(project)}
@@ -58,6 +62,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
       <div className="divide-y divide-primary-border">
         {projects.map((project) => (
           <PAMProjectListItem
+            tt={tt}
             key={project.id}
             project={project}
             isOwner={isOwner(project)}

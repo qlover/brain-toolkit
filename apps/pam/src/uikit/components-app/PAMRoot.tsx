@@ -2,6 +2,7 @@
 
 import { PAMFacade } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
+import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
 import { PAMForm } from '../components/pam/PAMForm';
@@ -9,10 +10,13 @@ import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
+import { usePageI18nMapping } from '../context/PageI18nContext';
 import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
 
 export function PAMRoot() {
+  const tt = usePageI18nMapping<PAMI18nInterface>();
+
   const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
   const pamFacadeInfinite = useIOC(PAMFacadeInfinite);
@@ -32,6 +36,7 @@ export function PAMRoot() {
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full"
     >
       <PAMToolbar
+        tt={tt}
         searchValue={''}
         onCreate={() => pamFacade.openDialog()}
         onSearchChange={() => {
@@ -47,6 +52,7 @@ export function PAMRoot() {
       />
 
       <PAMProjectList
+        tt={tt}
         projects={projects}
         viewMode={viewMode}
         isOwner={(data) => !!data.is_owner}
@@ -54,21 +60,28 @@ export function PAMRoot() {
         onDelete={(project) => {
           dialog.confirm({
             type: 'error',
-            title: '删除项目',
-            content: '确定是否删除: ' + project.name,
+            title: tt.deleteProjectTitle,
+            content: tt.deleteProjectContent.replace('[name]', project.name),
             onOk: () => pamFacade.deleteProject(project)
           });
         }}
       />
 
-      <PAMLoadMoreTrigger infiniteFacade={pamFacadeInfinite} />
+      <PAMLoadMoreTrigger
+        loadingText={tt.loadingText}
+        noMoreText={tt.noMoreText}
+        errorText={tt.errorText}
+        loadMoreText={tt.loadMoreText}
+        infiniteFacade={pamFacadeInfinite}
+      />
 
       <ResponsiveModal
         open={openDialog}
-        title={isEditMode ? '编辑项目' : '新建项目'}
+        title={isEditMode ? tt.editProjectTitle : tt.createProjectTitle}
         onClose={() => pamFacade.closeDialog()}
       >
         <PAMForm
+          tt={tt}
           initialData={editProject ?? undefined}
           mode={isEditMode ? 'edit' : 'create'}
           isSubmitting={createState.loading}
