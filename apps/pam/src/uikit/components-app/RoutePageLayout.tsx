@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { LocaleLink } from '../components/LocaleLink';
+import { PAMLogo } from '../components/PAMLogo';
 import type { AppRoutePageTT } from './AppRoutePage';
 import type { HTMLAttributes, ReactNode } from 'react';
 
@@ -71,12 +72,13 @@ export function RoutePageLayout({
                   title={tt.title}
                   href={headerHref}
                   locale={locale}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 shrink"
+                  className="flex items-center text-5xl text-brand gap-2 hover:opacity-80 transition-opacity min-w-0 shrink"
                 >
+                  <PAMLogo />
                   <span
                     data-testid="base-header-app-name"
                     className={clsx(
-                      'text-base sm:text-lg font-semibold truncate max-w-[8.5rem] min-[380px]:max-w-[10rem] sm:max-w-none',
+                      'text-base sm:text-lg font-semibold truncate max-w-34 min-[380px]:max-w-40 sm:max-w-none',
                       headerTitleClassName ?? 'text-primary-text'
                     )}
                   >

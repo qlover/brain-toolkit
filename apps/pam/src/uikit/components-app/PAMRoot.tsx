@@ -7,7 +7,6 @@ import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
 import { PAMForm } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
-import { PAMPageHeader } from '../components/pam/PAMPageHeader';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
@@ -37,8 +36,6 @@ export function PAMRoot() {
       data-testid="PAMRoot"
       className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 w-full"
     >
-      <PAMPageHeader tt={tt} onCreate={() => pamFacade.openDialog()} />
-
       <PAMToolbar
         tt={tt}
         facadeInterface={pamFacade}
@@ -49,6 +46,7 @@ export function PAMRoot() {
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
         categories={[]}
+        onCreate={() => pamFacade.openDialog()}
       />
 
       <PAMProjectList

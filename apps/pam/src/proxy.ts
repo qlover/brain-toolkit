@@ -1,5 +1,6 @@
-import { type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { isAuthGuestOnlyPath, ROUTE_HOME } from '@config/route';
 import { ServerConfig } from '@server/ServerConfig';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { routing } from './i18n/routing';
@@ -24,6 +25,19 @@ export default async function proxy(request: NextRequest) {
   if (oauthSession.hasNeedProxy(request)) {
     // 将国际化响应作为“通过”时的返回值传给 oauthSession
     return await oauthSession.sessionProxy(request, localPathResponse);
+  }
+
+  const pathname = request.nextUrl.pathname;
+  if (
+    isAuthGuestOnlyPath(pathname) &&
+    oauthSession.hasSessionFromRequest(request)
+  ) {
+    const url = request.nextUrl.clone();
+    // 保留 locale 前缀，例如 /en/auth/login → /en
+    const localeMatch = pathname.match(/^\/([^/]+)\/auth\//);
+    url.pathname = localeMatch ? `/${localeMatch[1]}` : ROUTE_HOME;
+    url.search = '';
+    return NextResponse.redirect(url);
   }
 
   // 不需要登录：返回国际化处理后的响应

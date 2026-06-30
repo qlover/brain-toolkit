@@ -37,6 +37,7 @@ export default async function Home({ params }: PageParamsProps) {
         showAuthButton
         authButtonLoginOnly
         authButtonShowLogoutLabel
+        showHeaderLogo
       >
         <PAMRoot />
       </AppRoutePage>

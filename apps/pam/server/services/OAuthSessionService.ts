@@ -136,4 +136,12 @@ export class OAuthSessionService
     const cookieStore = await cookies();
     cookieStore.delete(this.sessionKey);
   }
+
+  public hasSessionFromRequest(request: NextRequest): boolean {
+    const raw = request.cookies.get(this.sessionKey)?.value;
+    if (!raw) {
+      return false;
+    }
+    return this.parseJWT(raw, this.sessionSecret) != null;
+  }
 }

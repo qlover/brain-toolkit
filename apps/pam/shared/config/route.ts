@@ -107,6 +107,9 @@ export function isOAuthMachinePath(pathname: string): boolean {
   );
 }
 
+/** 仅未登录用户应访问的 auth 页（已登录应 redirect 走） */
+export const GUEST_ONLY_AUTH_PAGES = [ROUTE_LOGIN, ROUTE_REGISTER] as const;
+
 /**
  * Returns true if pathname is a public route (no auth required).
  * Handles locale-prefixed paths (e.g. /en/auth/login).
@@ -248,4 +251,9 @@ export function buildApiPamEdit(id: string): string {
 
 export function buildApiPamDetele(id: string): string {
   return buildApiWithPath(API_PAM_DELETE, { id });
+}
+export function isAuthGuestOnlyPath(pathname: string): boolean {
+  return GUEST_ONLY_AUTH_PAGES.some(
+    (route) => pathname === route || pathname.endsWith(route)
+  );
 }

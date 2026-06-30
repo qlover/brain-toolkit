@@ -1,1 +1,1 @@
-# examples/next-oauth
+# pam

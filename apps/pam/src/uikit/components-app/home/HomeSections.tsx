@@ -44,7 +44,7 @@ export function HomeHero({ tt }: HomeSectionProps) {
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-primary-text mb-3 sm:mb-4 px-1">
           {tt.heroTitle1}
           <br />
-          <span className="bg-gradient-to-r from-brand to-purple-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r to-purple-500 bg-clip-text text-transparent">
             {tt.heroTitle2}
           </span>
         </h1>
