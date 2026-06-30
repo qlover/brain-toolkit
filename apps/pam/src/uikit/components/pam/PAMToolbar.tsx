@@ -69,7 +69,9 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
     >
       <div className="flex flex-1 flex-wrap items-center gap-2">
         <div className="relative min-w-35 max-w-full flex-1 sm:max-w-xs">
-          <SearchOutlined className="text-tertiary-text absolute top-1/2 left-3 -translate-y-1/2 text-sm" />
+          <span className="text-tertiary-text absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+            <SearchOutlined />
+          </span>
           <input
             type="text"
             placeholder={tt.placeholderSearch}
