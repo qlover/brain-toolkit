@@ -2,7 +2,8 @@ import {
   SearchOutlined,
   DownOutlined,
   AppstoreOutlined,
-  UnorderedListOutlined
+  UnorderedListOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { clsx } from 'clsx';
 import { debounce } from 'lodash';
@@ -26,6 +27,7 @@ interface PAMToolbarProps {
   onViewModeChange: (mode: PAMViewModeType) => void;
   categories: string[];
   facadeInterface: PAMFacadeInterface<PAMProjectDetail>;
+  onCreate: () => void;
 }
 
 function keywordSelector(state: PAMFacadeStateInterface<PAMProjectDetail>) {
@@ -38,7 +40,8 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   viewMode,
   onViewModeChange,
   categories,
-  facadeInterface
+  facadeInterface,
+  onCreate
 }) => {
   const facadeStore = facadeInterface.getFacadeStore();
   const searchValue = useStore(facadeStore, keywordSelector);
@@ -62,7 +65,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   return (
     <div
       data-testid="PAMToolbar"
-      className="bg-secondary mb-5 flex flex-col gap-3 rounded-2xl border border-primary-border p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-4 md:mb-6"
+      className="bg-secondary mb-5 flex flex-col gap-3 rounded-2xl border border-primary-border p-3 shadow-sm sm:flex-row sm:justify-between sm:p-4 md:mb-6"
     >
       <div className="flex flex-1 flex-wrap items-center gap-2">
         <div className="relative min-w-35 max-w-full flex-1 sm:max-w-xs">
@@ -97,34 +100,48 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
         </div>
       </div>
 
-      <div className="bg-primary flex shrink-0 items-center gap-1 rounded-xl p-1">
+      <div className="flex gap-2">
+        <div className="flex-1 md:flex-none bg-primary flex shrink-0 items-center gap-1 rounded-xl p-1">
+          <button
+            title={tt.pamViewModeCard}
+            onClick={() => onViewModeChange(PAMViewMode.Card)}
+            className={clsx(
+              'touch-target-sm h-full flex items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 md:text-sm',
+              {
+                'bg-elevated text-brand shadow-sm': viewMode === 'card',
+                'text-secondary-text hover:bg-elevated/50': viewMode !== 'card'
+              }
+            )}
+          >
+            <AppstoreOutlined />
+            <span className="xs:inline hidden">{tt.pamViewModeCard}</span>
+          </button>
+          <button
+            title={tt.pamViewModeList}
+            onClick={() => onViewModeChange(PAMViewMode.Compact)}
+            className={clsx(
+              'touch-target-sm h-full flex items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 md:text-md',
+              {
+                'bg-elevated text-brand shadow-sm': viewMode === 'compact',
+                'text-secondary-text hover:bg-elevated/50':
+                  viewMode !== 'compact'
+              }
+            )}
+          >
+            <UnorderedListOutlined />
+            <span className="xs:inline hidden">{tt.pamViewModeList}</span>
+          </button>
+        </div>
+
         <button
-          title={tt.pamViewModeCard}
-          onClick={() => onViewModeChange(PAMViewMode.Card)}
-          className={clsx(
-            'touch-target-sm flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 sm:text-sm',
-            {
-              'bg-elevated text-brand shadow-sm': viewMode === 'card',
-              'text-secondary-text hover:bg-elevated/50': viewMode !== 'card'
-            }
-          )}
+          type="button"
+          id="addProjectBtn"
+          onClick={onCreate}
+          className="bg-brand flex-1 md:flex-none hover:bg-brand-hover active:bg-brand-active text-on-brand touch-target flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium shadow-md transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
         >
-          <AppstoreOutlined className="text-xs sm:text-sm" />
-          <span className="xs:inline hidden">{tt.pamViewModeCard}</span>
-        </button>
-        <button
-          title={tt.pamViewModeList}
-          onClick={() => onViewModeChange(PAMViewMode.Compact)}
-          className={clsx(
-            'touch-target-sm flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 sm:text-sm',
-            {
-              'bg-elevated text-brand shadow-sm': viewMode === 'compact',
-              'text-secondary-text hover:bg-elevated/50': viewMode !== 'compact'
-            }
-          )}
-        >
-          <UnorderedListOutlined className="text-xs sm:text-sm" />
-          <span className="xs:inline hidden">{tt.pamViewModeList}</span>
+          <PlusOutlined />
+          <span className="xs:inline hidden">{tt.addPam}</span>
+          <span className="xs:hidden">{tt.addPamsm}</span>
         </button>
       </div>
     </div>

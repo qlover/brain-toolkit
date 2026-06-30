@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
+import { setRequestLocale } from 'next-intl/server';
 import { FeatureItem } from '@/uikit/components/FeatureItem';
+import { RegisterForm } from '@/uikit/components/RegisterForm';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
+import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { register18n } from '@config/i18n-mapping/register18n';
@@ -9,7 +12,7 @@ import {
   AppPageRouteParams,
   type PageParamsType
 } from '@server/render/AppPageRouteParams';
-import { RegisterForm } from '../../../../uikit/components/RegisterForm';
+import { getI18nInterface, getLocale } from '@server/render/pageRouteParams';
 import type { Metadata } from 'next';
 
 // Generate static params for all supported locales (used for SSG)
@@ -35,55 +38,58 @@ export async function generateMetadata({
   return await pageParams.getI18nInterface(register18n);
 }
 
-export default async function LoginPage(props: PageParamsProps) {
-  if (!props.params) {
+export default async function LoginPage({ params }: PageParamsProps) {
+  if (!params) {
     return notFound();
   }
 
-  const params = await props.params;
-  const pageParams = new AppPageRouteParams(params);
+  const resolvedParams = await params;
+  const locale = getLocale(resolvedParams);
+  setRequestLocale(locale); // 建议加上
 
-  const tt = await pageParams.getI18nInterface({
+  const tt = await getI18nInterface(locale, {
     ...register18n,
     adminTitle: COMMON_ADMIN_TITLE
   });
 
   return (
-    <AppRoutePage
-      data-testid="AppRoute-RegisterPage"
-      tt={{
-        title: tt.title,
-        adminTitle: tt.adminTitle
-      }}
-      showHeaderNav={false}
-      showAuthButton={false}
-      headerHref=""
-      mainProps={{
-        className: 'text-xs1 bg-primary flex min-h-screen'
-      }}
-    >
-      <div className="hidden lg:flex bg-secondary lg:w-1/2 p-12 flex-col">
-        <h1 className="text-4xl font-bold text-primary-text mb-4">
-          {tt.welcome}
-        </h1>
-        <p className="text-secondary-text text-lg mb-8">{tt.subtitle}</p>
-        <div className="space-y-4">
-          <FeatureItem icon="🎯" text={tt.feature_ai_paths} />
-          <FeatureItem icon="🎯" text={tt.feature_smart_recommendations} />
-          <FeatureItem icon="📊" text={tt.feature_progress_tracking} />
+    <PageI18nProvider value={tt}>
+      <AppRoutePage
+        data-testid="AppRoute-RegisterPage"
+        tt={{
+          title: tt.title,
+          adminTitle: tt.adminTitle
+        }}
+        showHeaderNav={false}
+        showAuthButton={false}
+        headerHref=""
+        mainProps={{
+          className: 'text-xs1 bg-primary flex min-h-screen'
+        }}
+      >
+        <div className="hidden lg:flex bg-secondary lg:w-1/2 p-12 flex-col">
+          <h1 className="text-4xl font-bold text-primary-text mb-4">
+            {tt.welcome}
+          </h1>
+          <p className="text-secondary-text text-lg mb-8">{tt.subtitle}</p>
+          <div className="space-y-4">
+            <FeatureItem icon="🎯" text={tt.feature_ai_paths} />
+            <FeatureItem icon="🎯" text={tt.feature_smart_recommendations} />
+            <FeatureItem icon="📊" text={tt.feature_progress_tracking} />
+          </div>
         </div>
-      </div>
 
-      <div className="w-full lg:w-1/2 p-8 sm:p-12 flex items-center justify-center">
-        <div className="w-full max-w-[420px]">
-          <h2 className="text-2xl font-semibold mb-2 text-primary-text">
-            {tt.title}
-          </h2>
-          <p className="text-secondary-text mb-8">{tt.subtitle}</p>
+        <div className="w-full lg:w-1/2 p-8 sm:p-12 flex items-center justify-center">
+          <div className="w-full max-w-[420px]">
+            <h2 className="text-2xl font-semibold mb-2 text-primary-text">
+              {tt.title}
+            </h2>
+            <p className="text-secondary-text mb-8">{tt.subtitle}</p>
 
-          <RegisterForm tt={tt} />
+            <RegisterForm tt={tt} />
+          </div>
         </div>
-      </div>
-    </AppRoutePage>
+      </AppRoutePage>
+    </PageI18nProvider>
   );
 }
