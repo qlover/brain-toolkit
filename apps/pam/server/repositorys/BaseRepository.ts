@@ -14,11 +14,11 @@ export abstract class BaseRepository<Raw, T = Raw>
 {
   constructor(protected repoName: string = '') {}
 
-  protected isRaw(value: unknown): value is Raw {
+  protected isRaw(_value: unknown): _value is Raw {
     return true;
   }
 
-  protected is(value: unknown): value is T {
+  protected is(_value: unknown): _value is T {
     return true;
   }
 

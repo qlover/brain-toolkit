@@ -21,7 +21,7 @@
 | **上游示例**   | `@brain-toolkit/brain-user`（`BrainUserAdapter`，可替换） |
 | **UI**         | Ant Design 5、Tailwind CSS 4             |
 | **国际化**     | next-intl                                |
-| **主题**       | next-themes                              |
+| **主题**       | @wrksz/themes                            |
 | **依赖注入**   | Inversify、SimpleIOCContainer（项目内）  |
 | **工具库**     | dayjs、lodash、clsx                      |
 | **语言与质量** | TypeScript 5、ESLint、Prettier、Vitest   |

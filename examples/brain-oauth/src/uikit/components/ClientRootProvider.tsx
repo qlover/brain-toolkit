@@ -2,7 +2,6 @@
 import '@ant-design/v5-patch-for-react-19';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { AntdThemeProvider } from '@brain-toolkit/antd-theme-override/react';
-import { ThemeProvider } from 'next-themes';
 import { BootstrapsProvider } from '@/uikit/components/BootstrapsProvider';
 import { I } from '@config/ioc-identifiter';
 import type { CommonThemeConfig } from '@config/theme';
@@ -11,8 +10,7 @@ import { useIOC } from '../hook/useIOC';
 /**
  * ClientRootProvider is a provider for the client components
  *
- * - ThemeProvider
- * - AntdProvider
+ * - AntdProvider (color theme is owned by @wrksz/themes in layout / _app)
  *
  * TODO: 存在问题：
  *
@@ -50,18 +48,9 @@ export function ClientRootProvider(props: {
       theme={themeConfig.antdTheme}
       staticApi={IOC(I.DialogHandler)}
     >
-      <ThemeProvider
-        themes={themeConfig.supportedThemes as unknown as string[]}
-        attribute={themeConfig.domAttribute}
-        defaultTheme={themeConfig.defaultTheme}
-        enableSystem={themeConfig.enableSystem}
-        enableColorScheme={false}
-        storageKey={themeConfig.storageKey}
-      >
-        <AntdRegistry>
-          <BootstrapsProvider>{children}</BootstrapsProvider>
-        </AntdRegistry>
-      </ThemeProvider>
+      <AntdRegistry layer>
+        <BootstrapsProvider>{children}</BootstrapsProvider>
+      </AntdRegistry>
     </AntdThemeProvider>
   );
 }
