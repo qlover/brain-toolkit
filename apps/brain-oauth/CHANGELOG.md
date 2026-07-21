@@ -1,4 +1,4 @@
-# examples/brain-oauth
+# apps/brain-oauth
 
 ## 1.2.1
 

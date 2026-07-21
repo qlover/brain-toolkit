@@ -34,7 +34,7 @@
       "autoMergeReleasePR": true,
       "pushChangeLabels": true,
       "commitArgs": ["--no-verify"],
-      "ignoreReleasePaths": ["examples", "apps"]
+      "ignoreReleasePaths": ["apps"]
     }
   }
 }

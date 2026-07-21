@@ -71,10 +71,10 @@ npx fe-release -V \
   --changesetVersion.skip-changeset \
   --changesetVersion.mode publish \
   --github.mode createRelease \
-  --github.ignore-release-paths examples,apps
+  --github.ignore-release-paths apps
 ```
 
-效果：npm publish、推送 git tag、按包创建 GitHub Release（跳过 `examples` / `apps`）。
+效果：npm publish、推送 git tag、按包创建 GitHub Release（跳过 `apps`）。
 
 若 `fe-config.json` 中 `github.autoMergeReleasePR` 为 `true`，Release PR 创建后可能自动合并。
 
@@ -97,7 +97,7 @@ npx fe-release -V \
       "autoMergeReleasePR": true,
       "pushChangeLabels": true,
       "commitArgs": ["--no-verify"],
-      "ignoreReleasePaths": ["examples", "apps"]
+      "ignoreReleasePaths": ["apps"]
     }
   }
 }
@@ -119,7 +119,7 @@ npx fe-release -V \
 ### 相关脚本
 
 ```bash
-pnpm build:packages:force   # 强制构建 packages（排除 examples）
+pnpm build:packages:force   # 强制构建 packages（排除 apps）
 pnpm test:force             # 全量测试
 pnpm release:branch         # 本地：升版本并推 release 分支（不建 PR）
 ```
@@ -144,7 +144,7 @@ pnpm commit
 
 - 各包独立版本（如 `@brain-toolkit/element-sizer@1.2.0`）
 - 内部依赖由 Changesets 自动 bump
-- `examples`、`apps` 不参与 GitHub Release；仅 `packages/**` 变更会触发 release 工作流 path 过滤
+- `apps` 不参与 GitHub Release；仅 `packages/**` 变更会触发 release 工作流 path 过滤
 
 ## 故障排除
 

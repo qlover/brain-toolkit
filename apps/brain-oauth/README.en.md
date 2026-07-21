@@ -1,4 +1,4 @@
-# Brain OAuth Wrapper (`examples/brain-oauth-wrapper`)
+# Brain OAuth (`apps/brain-oauth`)
 
 > 中文: [README.md](./README.md)
 
@@ -75,7 +75,7 @@ Machine endpoints (no locale, skip session middleware in `src/proxy.ts`):
 ## Quick Start
 
 ```bash
-cd examples/brain-oauth-wrapper
+cd apps/brain-oauth
 npm install
 cp .env.template .env
 ```

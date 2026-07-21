@@ -71,10 +71,10 @@ npx fe-release -V \
   --changesetVersion.skip-changeset \
   --changesetVersion.mode publish \
   --github.mode createRelease \
-  --github.ignore-release-paths examples,apps
+  --github.ignore-release-paths apps
 ```
 
-This publishes to npm, pushes git tags, and creates GitHub Releases per package (skipping `examples` / `apps`).
+This publishes to npm, pushes git tags, and creates GitHub Releases per package (skipping `apps`).
 
 If `github.autoMergeReleasePR` is `true` in `fe-config.json`, the Release PR may be merged automatically after creation.
 
@@ -97,7 +97,7 @@ If `github.autoMergeReleasePR` is `true` in `fe-config.json`, the Release PR may
       "autoMergeReleasePR": true,
       "pushChangeLabels": true,
       "commitArgs": ["--no-verify"],
-      "ignoreReleasePaths": ["examples", "apps"]
+      "ignoreReleasePaths": ["apps"]
     }
   }
 }
@@ -119,7 +119,7 @@ If `github.autoMergeReleasePR` is `true` in `fe-config.json`, the Release PR may
 ### Scripts
 
 ```bash
-pnpm build:packages:force   # force-build packages (exclude examples)
+pnpm build:packages:force   # force-build packages (exclude apps)
 pnpm test:force             # full test run
 pnpm release:branch         # local: bump + push release branch (no PR)
 ```
@@ -144,7 +144,7 @@ pnpm commit
 
 - Independent versions per package (e.g. `@brain-toolkit/element-sizer@1.2.0`)
 - Internal deps are bumped by Changesets
-- `examples` and `apps` skip GitHub Releases; the release workflow path filter is `packages/**`
+- `apps` skip GitHub Releases; the release workflow path filter is `packages/**`
 
 ## Troubleshooting
 

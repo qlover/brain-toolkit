@@ -1,4 +1,4 @@
-# Brain OAuth Wrapper（`examples/brain-oauth-wrapper`）
+# Brain OAuth（`apps/brain-oauth`）
 
 > English: [README.en.md](./README.en.md)
 
@@ -106,13 +106,13 @@ flowchart TB
 
 **IOC 绑定**（更换 Provider 时的关键入口）：
 
-```54:54:examples/brain-oauth-wrapper/server/serverIoc.ts
+```54:54:apps/brain-oauth/server/serverIoc.ts
     ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(BrainUserOAuthProvider));
 ```
 
 `BrainUserOAuthProvider` 将内核与示例实现接在一起：
 
-```18:39:examples/brain-oauth-wrapper/server/providers/BrainUserOAuthProvider.ts
+```18:39:apps/brain-oauth/server/providers/BrainUserOAuthProvider.ts
 export class BrainUserOAuthProvider
   extends OAuthWrapperService
   implements OAuthWrapperProviderInterface
@@ -144,7 +144,7 @@ export class BrainUserOAuthProvider
 ### 1. 安装与配置
 
 ```bash
-cd examples/brain-oauth-wrapper
+cd apps/brain-oauth
 npm install
 cp .env.template .env   # Windows 下手动复制亦可
 ```

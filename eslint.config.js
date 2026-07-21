@@ -21,9 +21,8 @@ export default tseslint.config([
       '**/coverage/**',
       '**/*.d.ts',
       'vitest.setup.js',
-      // apps / examples use their own eslint.config; covered via pnpm -r run lint
-      'apps',
-      'examples'
+      // apps use their own eslint.config; covered via pnpm -r run lint
+      'apps'
     ]
   },
 
@@ -111,7 +110,7 @@ export default tseslint.config([
   // This enables full type information for accurate interface/class method detection
   {
     name: 'lint-ts-class-override',
-    files: ['packages/**/*.{ts,tsx}', 'examples/**/*.{ts,tsx}'],
+    files: ['packages/**/*.{ts,tsx}', 'apps/**/*.{ts,tsx}'],
     ignores: [
       '**/dist/**',
       '**/build/**',
