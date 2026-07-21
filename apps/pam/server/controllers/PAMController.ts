@@ -1,6 +1,6 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
-import { ExecutorError } from '@qlover/fe-corekit';
-import { isEmpty } from 'lodash';
+import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { isEmpty } from 'lodash-es';
 import { inject, injectable } from '@shared/container';
 import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator';
 import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';

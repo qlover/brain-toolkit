@@ -1,4 +1,4 @@
-import { isFunction } from 'lodash';
+import { isFunction } from 'lodash-es';
 import { Loading } from '../components/Loading';
 import { useUserAuth } from '../hook/useUserAuth';
 import type { ReactNode } from 'react';

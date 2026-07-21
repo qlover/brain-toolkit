@@ -1,4 +1,5 @@
-import type { Base64Serializer, EncryptorInterface } from '@qlover/fe-corekit';
+import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
+import type { Base64Serializer } from '@qlover/fe-corekit/serializer';
 
 export class StringEncryptor implements EncryptorInterface<string, string> {
   constructor(

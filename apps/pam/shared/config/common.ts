@@ -1,4 +1,4 @@
-import type { ValueOf } from '@qlover/fe-corekit';
+import type { ValueOf } from '@qlover/fe-corekit/common';
 
 export const envPrefix = 'NEXT_PUBLIC_';
 
@@ -75,6 +75,12 @@ export const defaultSearchParams = {
   pageSize: 10,
   sort: [{ orderBy: 'created_at', order: 'desc' }]
 } as const;
+
+/**
+ * PAM list view mode (`card` | `compact`) storage key.
+ * Used with AsyncStore `persist: new KeyStorage(key, localStorage)` + `persistKeys: ['viewMode']`.
+ */
+export const pamViewModeStorageKey = 'pam_view_mode';
 
 /**
  * 地址栏参数key
