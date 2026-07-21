@@ -25,24 +25,13 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@schemas/*": [
-        "./shared/schemas/*"
-      ],
-      "@config/*": [
-        "./shared/config/*"
-      ],
-      "@interfaces/*": [
-        "./shared/interfaces/*"
-      ],
-      "@shared/*": [
-        "./shared/*"
-      ],
-      "@server/*": [
-        "./server/*"
-      ]
+      "@/*": ["./src/*"],
+      "@schemas/*": ["./shared/schemas/*"],
+      "@config/*": ["./shared/config/*"],
+      "@interfaces/*": ["./shared/interfaces/*"],
+      "@shared/*": ["./shared/*"],
+      "@server/*": ["./server/*"],
+      "@locales/*": ["./public/locales/*"]
     }
   },
   "include": [

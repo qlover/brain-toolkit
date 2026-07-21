@@ -6,7 +6,7 @@ import {
 import { inject, injectable } from '@shared/container';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
-import { i18nKeySchema } from '@schemas/i18nKeyScheam';
+import { isI18nKey } from '@schemas/i18nKey';
 import type { I18nServiceInterface } from '@interfaces/I18nServiceInterface';
 import type { DialogHandlerOptions } from './DialogHandler';
 import type { RouterService } from './RouterService';
@@ -41,8 +41,7 @@ export class DialogErrorPlugin
     const { error, hooksRuntimes } = context;
     const runtimesError = hooksRuntimes.returnValue;
 
-    // 优先使用 runtime 的错误, 他可能在运行时被修改
-    // 比如 RequestError 会被 AppApiPlugin 修改为 ExecutorError
+    // Prefer runtime error — it may have been rewritten (e.g. RequestError → ExecutorError).
     const handleError = runtimesError || error;
 
     if (handleError instanceof ExecutorError) {
@@ -60,6 +59,6 @@ export class DialogErrorPlugin
   }
 
   protected isI18nMessage(message: string): boolean {
-    return i18nKeySchema.safeParse(message).success;
+    return isI18nKey(message);
   }
 }

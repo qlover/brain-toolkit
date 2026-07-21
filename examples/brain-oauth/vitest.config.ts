@@ -16,6 +16,7 @@ export default defineConfig({
       '@config': resolve(__dirname, 'shared/config'),
       '@interfaces': resolve(__dirname, 'shared/interfaces'),
       '@shared': resolve(__dirname, 'shared'),
+      '@locales': resolve(__dirname, 'public/locales'),
       '@brain-toolkit/brain-user': resolve(
         __dirname,
         '../../packages/brain-user/src'
