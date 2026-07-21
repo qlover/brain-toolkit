@@ -9,7 +9,6 @@
     "esModuleInterop": false,
     "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
     "types": ["vite/client", "vitest/globals"],
-    "baseUrl": ".",
     "paths": {
       "@brain-toolkit/react-kit": ["./src"],
       "@brain-toolkit/react-kit/*": ["./src/*"]

@@ -1,4 +1,4 @@
-/* App Router entry — prefer importing leaf sheets via @/ in layout if needed. */
+/* Pages Router entry */
 /* @import './utils/base-root-10px.css'; */
 @import './utils/zIndex.css';
 @import './utils/scrollbar.css';
