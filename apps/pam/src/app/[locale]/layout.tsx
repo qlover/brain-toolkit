@@ -71,9 +71,7 @@ export default async function RootLayout({
               enableColorScheme={false}
               storageKey={themeConfig.storageKey}
             >
-              <ClientRootProvider themeConfig={themeConfig}>
-                {children}
-              </ClientRootProvider>
+              <ClientRootProvider>{children}</ClientRootProvider>
             </ThemeProvider>
           </NextIntlClientProvider>
         </IOCProvider>
