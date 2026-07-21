@@ -19,6 +19,7 @@
     "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "types": ["vitest/globals", "vite/client"],
     "plugins": [
       {
         "name": "next"
@@ -42,6 +43,7 @@
     "shared/**/*.ts",
     "tools/**/*.ts",
     "__tests__/**/*.ts",
+    "__tests__/**/*.tsx",
     ".next/dev/types/**/*.ts",
     ".next/types/**/*.ts"
   ],
