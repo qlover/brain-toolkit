@@ -12,12 +12,12 @@
   "files": [],
   "scripts": {
     "build": "pnpm -r --workspace-concurrency=4 run build && pnpm rebuild",
-    "build:packages:force": "pnpm nx run-many --target=build --all --skip-nx-cache --parallel --maxParallel=4 --exclude=examples/*",
+    "build:packages:force": "pnpm nx run-many --target=build --all --skip-nx-cache --parallel --maxParallel=4 --exclude=apps/*",
     "nx:build": "nx affected:build",
     "nx:build:force": "pnpm build:packages:force",
     "prettier": "prettier --ignore-path .prettierignore **/*.{js,ts,tsx,json,md} --write",
-    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint && pnpm -r --filter \"./apps/**\" --filter \"./examples/**\" run lint",
-    "lint:fix": "eslint --fix --cache --cache-location node_modules/.cache/eslint && pnpm -r --filter \"./apps/**\" --filter \"./examples/**\" run lint:fix",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint && pnpm -r --filter \"./apps/**\" run lint",
+    "lint:fix": "eslint --fix --cache --cache-location node_modules/.cache/eslint && pnpm -r --filter \"./apps/**\" run lint:fix",
     "lint:force": "pnpm lint",
     "fix": "pnpm type-check && pnpm lint:fix && pnpm prettier",
     "test": "vitest run",
@@ -28,10 +28,10 @@
     "clean-branch": "fe-clean-branch",
     "check-packages": "fe-check-packages",
     "prepare": "husky",
-    "type-check": "tsc --build --force && pnpm -r --filter \"./apps/**\" --filter \"./examples/**\" run type-check",
+    "type-check": "tsc --build --force && pnpm -r --filter \"./apps/**\" run type-check",
     "release:branch": "npx fe-release -V -s master --changesetVersion.ignore-non-updated-packages --github.skip-create-release-pr",
-    "dev:brain-user": "pnpm --filter examples/brain-user dev",
-    "dev:brain-oauth": "pnpm --filter examples/brain-oauth dev"
+    "dev:pam": "pnpm --filter @brain-toolkit/pam dev",
+    "dev:brain-oauth": "pnpm --filter @brain-toolkit/brain-oauth dev"
   },
   "keywords": [
     "brain-toolkit",

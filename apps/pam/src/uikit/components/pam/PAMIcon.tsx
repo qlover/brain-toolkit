@@ -1,16 +1,16 @@
 import {
-  EyeOutlined,
-  GlobalOutlined,
-  LinkOutlined,
-  LockOutlined
-} from '@ant-design/icons';
-import {
   faGithub,
   faGitlab,
   faGitAlt
 } from '@fortawesome/free-brands-svg-icons';
 import { faCodeBranch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  EyeIcon,
+  GlobeAltIcon,
+  LinkIcon,
+  LockClosedIcon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React from 'react';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
@@ -55,7 +55,11 @@ export function PAMPublicIcon(props: {
         className
       )}
     >
-      {isPublic ? <GlobalOutlined /> : <LockOutlined />}
+      {isPublic ? (
+        <GlobeAltIcon className="h-4 w-4" />
+      ) : (
+        <LockClosedIcon className="h-4 w-4" />
+      )}
     </span>
   );
 }
@@ -76,7 +80,7 @@ export function PAMAuthIcon(props: {
         className
       )}
     >
-      <EyeOutlined className="mr-0.5" />
+      <EyeIcon className="h-4 w-4 mr-0.5" />
     </span>
   );
 }
@@ -162,7 +166,7 @@ export function PAMEnvLink(
         className
       )}
     >
-      <LinkOutlined /> <span>{showName}</span>
+      <LinkIcon className="h-4 w-4" /> <span>{showName}</span>
     </a>
   );
 }

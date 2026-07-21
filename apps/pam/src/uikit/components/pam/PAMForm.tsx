@@ -1,10 +1,10 @@
 import {
-  SaveOutlined,
-  LoadingOutlined,
-  CodeOutlined,
-  LockOutlined,
-  UnlockOutlined
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckIcon,
+  CodeBracketIcon,
+  LockClosedIcon,
+  LockOpenIcon
+} from '@heroicons/react/24/outline';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
 import React, { useEffect, useMemo } from 'react';
@@ -169,9 +169,9 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                     )}
                   >
                     {is_public === PAMPublicType.public ? (
-                      <UnlockOutlined />
+                      <LockOpenIcon className="h-4 w-4" />
                     ) : (
-                      <LockOutlined />
+                      <LockClosedIcon className="h-4 w-4" />
                     )}
 
                     <span>{lockTitle}</span>
@@ -236,7 +236,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
                 <span className="mr-1">
-                  <CodeOutlined />
+                  <CodeBracketIcon className="h-4 w-4" />
                 </span>
                 {tt.labelRepo}
               </label>
@@ -325,14 +325,14 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             {isSubmitting || formIsSubmitting ? (
               <>
                 <span>
-                  <LoadingOutlined className="animate-spin" />
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
                 </span>
                 {tt.formSaveing}
               </>
             ) : (
               <>
                 <span>
-                  <SaveOutlined />
+                  <CheckIcon className="h-4 w-4" />
                 </span>
                 {mode === 'edit' ? tt.formEdit : tt.formSave}
               </>

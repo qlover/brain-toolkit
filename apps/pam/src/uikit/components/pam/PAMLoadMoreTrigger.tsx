@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import type { InfiniteFacadeInterface } from '@/interface/InfiniteFacadeInterface';
@@ -74,7 +74,7 @@ export function PAMLoadMoreTrigger<T extends SearchPAMProject>({
         data-testid="PAMLoadMoreTrigger"
         className="text-brand flex items-center justify-center gap-2 py-4 text-sm"
       >
-        <LoadingOutlined spin />
+        <ArrowPathIcon className="h-4 w-4 animate-spin" />
         {loadingText}
       </div>
     );

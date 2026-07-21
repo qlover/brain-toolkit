@@ -1,4 +1,4 @@
-import { DeleteOutlined } from '@ant-design/icons';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React from 'react';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
@@ -67,7 +67,7 @@ export const PAMFormEnvironmentVarRow: React.FC<
           onClick={() => onRemoveVariable(envIndex, item.key)}
           className="text-(--fe-color-error) hover:text-(--fe-color-error)/80 touch-manipulation shrink-0 p-1 rounded-lg hover:bg-(--fe-color-error)/10 transition cursor-pointer"
         >
-          <DeleteOutlined className="text-xs" />
+          <TrashIcon className="h-3 w-3 text-xs" />
         </button>
       </div>
       {errorMessage && (

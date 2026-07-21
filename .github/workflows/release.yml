@@ -157,7 +157,7 @@ jobs:
             --changesetVersion.skip-changeset \
             --changesetVersion.mode publish \
             --github.mode createRelease \
-            --github.ignore-release-paths examples,apps
+            --github.ignore-release-paths apps
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

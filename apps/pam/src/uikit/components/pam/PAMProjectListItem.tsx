@@ -1,4 +1,4 @@
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Grid } from 'antd';
 import React, { useMemo } from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
@@ -92,7 +92,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
                 onClick={() => onEdit(project.id)}
                 className="text-sm p-1 text-brand hover:text-brand-hover hover:bg-primary-bg rounded transition"
               >
-                <EditOutlined />
+                <PencilSquareIcon className="h-4 w-4" />
               </button>
             )}
             {isOwner && (
@@ -100,7 +100,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
                 onClick={() => onDelete(project)}
                 className="text-sm p-1 text-red-500 hover:bg-red-500 hover:text-primary-text rounded transition"
               >
-                <DeleteOutlined />
+                <TrashIcon className="h-4 w-4" />
               </button>
             )}
           </div>

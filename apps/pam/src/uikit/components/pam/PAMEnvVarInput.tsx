@@ -1,4 +1,4 @@
-import { MinusCircleFilled } from '@ant-design/icons';
+import { MinusCircleIcon } from '@heroicons/react/24/solid';
 import React from 'react';
 
 interface PAMEnvVarInputProps {
@@ -37,7 +37,7 @@ export const PAMEnvVarInput: React.FC<PAMEnvVarInputProps> = ({
         onClick={onRemove}
         className="text-red-400 hover:text-red-600 transition"
       >
-        <MinusCircleFilled />
+        <MinusCircleIcon className="h-5 w-5" />
       </button>
     </div>
   );
