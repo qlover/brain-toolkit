@@ -1,9 +1,9 @@
 import {
-  CloudServerOutlined,
-  DeleteOutlined,
-  DownOutlined,
-  PlusOutlined
-} from '@ant-design/icons';
+  ChevronDownIcon,
+  PlusIcon,
+  ServerStackIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
@@ -63,7 +63,7 @@ export const PAMFormEnvironmentBlock: React.FC<
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-30">
             <span className="text-brand text-sm cursor-pointer">
-              <CloudServerOutlined />
+              <ServerStackIcon className="h-4 w-4" />
             </span>
             <Controller
               name={`${PAMProjectEnvKey}.${index}.name`}
@@ -84,9 +84,9 @@ export const PAMFormEnvironmentBlock: React.FC<
               title={isCollapsed ? tt.collapsed : tt.uncollapsed}
             >
               <span>
-                <DownOutlined
+                <ChevronDownIcon
                   className={clsx(
-                    'text-xs transition-transform duration-200',
+                    'h-4 w-4 transition-transform duration-200',
                     isCollapsed && '-rotate-90'
                   )}
                 />
@@ -99,7 +99,7 @@ export const PAMFormEnvironmentBlock: React.FC<
             className="text-(--fe-color-error) hover:text-(--fe-color-error)/80 text-xs sm:text-sm touch-manipulation flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-(--fe-color-error)/10 transition cursor-pointer"
           >
             <span>
-              <DeleteOutlined className="text-xs" />
+              <TrashIcon className="h-3 w-3 text-xs" />
             </span>
             <span className="hidden xs:inline">{tt.envDelete}</span>
           </button>
@@ -146,7 +146,7 @@ export const PAMFormEnvironmentBlock: React.FC<
                 className="text-brand hover:text-brand-hover text-xs touch-manipulation flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-primary-bg transition cursor-pointer"
               >
                 <span>
-                  <PlusOutlined />
+                  <PlusIcon className="h-4 w-4" />
                 </span>
                 {tt.envVarAdd}
               </button>

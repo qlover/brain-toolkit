@@ -1,10 +1,10 @@
 import {
-  EditOutlined,
-  DeleteOutlined,
-  EnvironmentOutlined,
-  SettingOutlined,
-  UserOutlined
-} from '@ant-design/icons';
+  Cog6ToothIcon,
+  MapPinIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 import {
@@ -87,13 +87,13 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                     onClick={() => onEdit(project.id)}
                     className="text-brand hover:text-brand-hover p-1.5 rounded-lg transition"
                   >
-                    <EditOutlined />
+                    <PencilSquareIcon className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => onDelete(project)}
                     className="text-red-500 hover:text-red-700 p-1.5 rounded-lg transition"
                   >
-                    <DeleteOutlined />
+                    <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
               )}
@@ -107,7 +107,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
 
         <div className="mt-4">
           <div className="text-xs font-semibold text-secondary-text mb-2">
-            <EnvironmentOutlined className="mr-1" /> {tt.envDirectTitle}
+            <MapPinIcon className="h-4 w-4 mr-1" /> {tt.envDirectTitle}
           </div>
           <div className="flex flex-wrap gap-2">
             {envs.length > 0 ? (
@@ -123,7 +123,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         <div className="hidden mt-3 pt-2 border-t border-primary-border">
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-secondary-text">
-              <SettingOutlined className="mr-1" /> {tt.envDemo}
+              <Cog6ToothIcon className="h-4 w-4 mr-1" /> {tt.envDemo}
             </span>
           </div>
           <div className="flex flex-wrap gap-1 mt-1.5">{envVarsPreview}</div>
@@ -135,7 +135,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           title={project.owner_id}
           className="text-ellipsis overflow-hidden"
         >
-          <UserOutlined className="mr-1" /> {project.owner_id}
+          <UserIcon className="h-4 w-4 mr-1" /> {project.owner_id}
         </span>
         <span>{tt.envCount.replace('[count]', envs.length.toString())}</span>
       </div>

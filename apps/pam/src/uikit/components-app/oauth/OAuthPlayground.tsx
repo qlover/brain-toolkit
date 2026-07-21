@@ -1,14 +1,13 @@
 'use client';
 
 import {
-  CheckCircleOutlined,
-  CopyOutlined,
-  ExperimentOutlined,
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
-  LoadingOutlined,
-  ReloadOutlined
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  BeakerIcon,
+  CheckCircleIcon,
+  ClipboardDocumentIcon,
+  ExclamationCircleIcon,
+  InformationCircleIcon
+} from '@heroicons/react/24/outline';
 import {
   computePkceS256Challenge,
   generatePkceVerifier
@@ -87,15 +86,17 @@ function PlaygroundAlert(props: {
       )}
     >
       {variant === 'error' && (
-        <ExclamationCircleOutlined className="mt-0.5 shrink-0" />
+        <ExclamationCircleIcon className="h-4 w-4 mt-0.5 shrink-0" />
       )}
       {variant === 'success' && (
-        <CheckCircleOutlined className="mt-0.5 shrink-0" />
+        <CheckCircleIcon className="h-4 w-4 mt-0.5 shrink-0" />
       )}
       {variant === 'warning' && (
-        <ExclamationCircleOutlined className="mt-0.5 shrink-0" />
+        <ExclamationCircleIcon className="h-4 w-4 mt-0.5 shrink-0" />
       )}
-      {variant === 'info' && <InfoCircleOutlined className="mt-0.5 shrink-0" />}
+      {variant === 'info' && (
+        <InformationCircleIcon className="h-4 w-4 mt-0.5 shrink-0" />
+      )}
       <div className="flex-1 min-w-0">{children}</div>
       {onClose && (
         <button
@@ -496,7 +497,7 @@ export function OAuthPlayground() {
           <div className="p-6 sm:p-8 border-b border-primary-border">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand text-xl shrink-0">
-                <ExperimentOutlined />
+                <BeakerIcon className="h-4 w-4" />
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-semibold text-primary-text">
@@ -546,11 +547,11 @@ export function OAuthPlayground() {
           <PlaygroundSection title={tt.stepSession} step={1}>
             {authLoading ? (
               <p className="text-secondary-text text-sm flex items-center gap-2">
-                <LoadingOutlined spin /> Loading...
+                <ArrowPathIcon className="h-4 w-4 animate-spin" /> Loading...
               </p>
             ) : success && user ? (
               <p className="text-primary-text text-sm flex items-center gap-2">
-                <CheckCircleOutlined className="text-green-500 shrink-0" />
+                <CheckCircleIcon className="h-4 w-4 text-green-500 shrink-0" />
                 <span>
                   {tt.signedInAs}{' '}
                   <strong className="font-semibold">{user.email}</strong>
@@ -578,7 +579,7 @@ export function OAuthPlayground() {
                 onClick={() => void loadClients()}
                 disabled={!success || clientsLoading}
               >
-                <ReloadOutlined />
+                <ArrowPathIcon className="h-4 w-4" />
               </button>
             }
           >
@@ -683,7 +684,9 @@ export function OAuthPlayground() {
                         disabled={pkceLoading}
                         onClick={() => void regeneratePkce()}
                       >
-                        {pkceLoading && <LoadingOutlined spin />}
+                        {pkceLoading && (
+                          <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                        )}
                         {tt.pkceRegenerate}
                       </button>
                     </>
@@ -774,7 +777,9 @@ export function OAuthPlayground() {
                   }
                   onClick={() => void validateParams()}
                 >
-                  {validating && <LoadingOutlined spin />}
+                  {validating && (
+                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                  )}
                   {tt.validate}
                 </button>
 
@@ -811,7 +816,7 @@ export function OAuthPlayground() {
                         className={secondaryButtonClass}
                         onClick={() => void copyText(authorizeUrl)}
                       >
-                        <CopyOutlined />
+                        <ClipboardDocumentIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -833,7 +838,9 @@ export function OAuthPlayground() {
                 disabled={!success || !validateResult?.valid || consentLoading}
                 onClick={() => void submitConsent('allow')}
               >
-                {consentLoading && <LoadingOutlined spin />}
+                {consentLoading && (
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                )}
                 {tt.allow}
               </button>
               <button
@@ -900,7 +907,9 @@ export function OAuthPlayground() {
               }
               onClick={() => void exchangeToken()}
             >
-              {tokenLoading && <LoadingOutlined spin />}
+              {tokenLoading && (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              )}
               {tt.exchange}
             </button>
             {tokenResponse != null && (
@@ -918,7 +927,9 @@ export function OAuthPlayground() {
               disabled={!hasAccessToken || userinfoLoading}
               onClick={() => void fetchUserinfo()}
             >
-              {userinfoLoading && <LoadingOutlined spin />}
+              {userinfoLoading && (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              )}
               {tt.fetchUserinfo}
             </button>
             {userinfoResponse != null && (
@@ -931,7 +942,7 @@ export function OAuthPlayground() {
 
           <div className="px-5 sm:px-6 py-4 bg-amber-50 dark:bg-amber-950/30 border-t border-primary-border">
             <p className="text-sm text-primary-text flex items-start gap-2">
-              <InfoCircleOutlined className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <InformationCircleIcon className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <span>{tt.simulatedNote}</span>
             </p>
           </div>

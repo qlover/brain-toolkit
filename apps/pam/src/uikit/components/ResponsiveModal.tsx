@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  CloseOutlined,
-  FullscreenExitOutlined,
-  FullscreenOutlined
-} from '@ant-design/icons';
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { useState, useCallback, type ReactNode, useEffect } from 'react';
 
@@ -126,9 +126,9 @@ export function ResponsiveModal({
               className="text-tertiary-text hover:bg-secondary hover:text-secondary-text rounded-full p-1 transition-colors"
             >
               {isFullscreen ? (
-                <FullscreenExitOutlined className="h-5 w-5" />
+                <ArrowsPointingInIcon className="h-5 w-5" />
               ) : (
-                <FullscreenOutlined className="h-5 w-5" />
+                <ArrowsPointingOutIcon className="h-5 w-5" />
               )}
             </button>
           )}
@@ -138,7 +138,7 @@ export function ResponsiveModal({
             onClick={onClose}
             className="text-tertiary-text hover:bg-secondary hover:text-secondary-text rounded-full p-1 transition-colors"
           >
-            <CloseOutlined className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
       </div>

@@ -1,10 +1,10 @@
 import {
-  SearchOutlined,
-  DownOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  PlusOutlined
-} from '@ant-design/icons';
+  ChevronDownIcon,
+  ListBulletIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  Squares2X2Icon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { debounce } from 'lodash';
 import { useCallback, useRef } from 'react';
@@ -70,7 +70,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
       <div className="flex flex-1 flex-wrap items-center gap-2">
         <div className="relative min-w-35 max-w-full flex-1 sm:max-w-xs">
           <span className="text-tertiary-text absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-            <SearchOutlined />
+            <MagnifyingGlassIcon className="h-4 w-4" />
           </span>
           <input
             type="text"
@@ -98,7 +98,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
               </option>
             ))}
           </select>
-          <DownOutlined className="text-tertiary-text pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px] sm:right-3 sm:text-xs" />
+          <ChevronDownIcon className="h-2.5 w-2.5 text-tertiary-text pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 sm:right-3 sm:h-3 sm:w-3" />
         </div>
       </div>
 
@@ -115,7 +115,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
               }
             )}
           >
-            <AppstoreOutlined />
+            <Squares2X2Icon className="h-4 w-4" />
             <span className="xs:inline hidden">{tt.pamViewModeCard}</span>
           </button>
           <button
@@ -130,7 +130,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
               }
             )}
           >
-            <UnorderedListOutlined />
+            <ListBulletIcon className="h-4 w-4" />
             <span className="xs:inline hidden">{tt.pamViewModeList}</span>
           </button>
         </div>
@@ -141,7 +141,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           onClick={onCreate}
           className="bg-brand flex-1 md:flex-none hover:bg-brand-hover active:bg-brand-active text-on-brand touch-target flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium shadow-md transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
         >
-          <PlusOutlined />
+          <PlusIcon className="h-4 w-4" />
           <span className="xs:inline hidden">{tt.addPam}</span>
           <span className="xs:hidden">{tt.addPamsm}</span>
         </button>

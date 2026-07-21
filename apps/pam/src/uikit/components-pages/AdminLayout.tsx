@@ -1,6 +1,6 @@
 'use client';
 
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -95,9 +95,9 @@ export function AdminLayout({
               className="text-primary-text hover:text-primary-text-hover p-1.5 rounded transition-colors"
             >
               {collapsed ? (
-                <MenuUnfoldOutlined className="text-lg" />
+                <Bars3Icon className="h-5 w-5 text-lg" />
               ) : (
-                <MenuFoldOutlined className="text-lg" />
+                <Bars3Icon className="h-5 w-5 text-lg" />
               )}
             </button>
             <span

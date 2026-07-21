@@ -1,4 +1,4 @@
-import { CloudUploadOutlined, LoadingOutlined } from '@ant-design/icons';
+import { ArrowPathIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import React from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
@@ -29,14 +29,14 @@ function PAMProjectListEmpty({
     >
       {loading ? (
         <>
-          <LoadingOutlined className="text-brand mb-3 text-4xl sm:text-5xl" />
+          <ArrowPathIcon className="h-12 w-12 text-brand mb-3 text-4xl sm:text-5xl animate-spin" />
           <p className="text-secondary-text text-sm sm:text-base">
             {tt.loadingText}
           </p>
         </>
       ) : (
         <>
-          <CloudUploadOutlined className="pam-empty-icon text-tertiary-text mb-3 text-4xl sm:text-5xl" />
+          <CloudArrowUpIcon className="h-12 w-12 pam-empty-icon text-tertiary-text mb-3 text-4xl sm:text-5xl" />
           <p className="text-secondary-text text-sm sm:text-base">
             {tt.noProject}
           </p>

@@ -1,15 +1,14 @@
 'use client';
 
 import {
-  CopyOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ExperimentOutlined,
-  KeyOutlined,
-  LoadingOutlined,
-  PlusOutlined
-} from '@ant-design/icons';
-import { message } from 'antd';
+  ArrowPathIcon,
+  BeakerIcon,
+  ClipboardDocumentIcon,
+  KeyIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import {
   useCallback,
@@ -19,12 +18,14 @@ import {
   type FormEvent
 } from 'react';
 import { Link } from '@/i18n/routing';
+import type { DialogHandler } from '@/impls/DialogHandler';
 import {
   DeveloperConfirmDialog,
   type DeveloperConfirmOptions
 } from '@/uikit/components-app/developer/DeveloperConfirmDialog';
 import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
+import { useIOC } from '@/uikit/hook/useIOC';
 import {
   oauthCardClass,
   oauthDangerButtonClass,
@@ -35,6 +36,7 @@ import {
   oauthWarningButtonClass
 } from '@config/component';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
+import { I } from '@config/ioc-identifiter';
 import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import {
   OAuthClientAppForm,
@@ -74,6 +76,7 @@ export function DeveloperAppsPageComponent({
   initialApps
 }: DeveloperAppsPageProps) {
   const tt = useI18nMapping(developerAppsI18n);
+  const dialogHandler = useIOC(I.DialogHandler) as DialogHandler;
   const [apps, setApps] = useState<OAuthClientListItem[]>(initialApps);
   const [loading, setLoading] = useState(true);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -158,13 +161,13 @@ export function DeveloperAppsPageComponent({
       setApps(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Load apps error:', error);
-      message.error(
+      dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
     } finally {
       setLoading(false);
     }
-  }, [tt.toastError]);
+  }, [tt.toastError, dialogHandler]);
 
   useEffect(() => {
     void loadApps();
@@ -178,9 +181,9 @@ export function DeveloperAppsPageComponent({
   const handleCopyClientId = async (clientId: string) => {
     try {
       await copyText(clientId);
-      message.success(tt.copyClientIdSuccess || 'Client ID copied');
+      dialogHandler.success(tt.copyClientIdSuccess || 'Client ID copied');
     } catch {
-      message.error(
+      dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
     }
@@ -191,13 +194,13 @@ export function DeveloperAppsPageComponent({
     try {
       if (field === 'id') {
         await copyText(credentials.clientId);
-        message.success(tt.copyClientIdSuccess || 'Client ID copied');
+        dialogHandler.success(tt.copyClientIdSuccess || 'Client ID copied');
       } else if (credentials.clientSecret) {
         await copyText(credentials.clientSecret);
-        message.success(tt.copySecretSuccess || 'Client Secret copied');
+        dialogHandler.success(tt.copySecretSuccess || 'Client Secret copied');
       }
     } catch {
-      message.error(
+      dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
     }
@@ -260,7 +263,7 @@ export function DeveloperAppsPageComponent({
       });
     } catch (error) {
       console.error('Create app error:', error);
-      message.error(
+      dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
     }
@@ -319,12 +322,12 @@ export function DeveloperAppsPageComponent({
       setEditingApp(null);
       resetEditForm();
 
-      message.success(
+      dialogHandler.success(
         tt.toastUpdateSuccess || 'Application updated successfully'
       );
     } catch (error) {
       console.error('Update app error:', error);
-      message.error(
+      dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
     }
@@ -332,7 +335,7 @@ export function DeveloperAppsPageComponent({
 
   const handleRotateSecret = (clientId: string, confidential = true) => {
     if (!confidential) {
-      message.warning(
+      dialogHandler.warning(
         tt.publicClientNote ||
           'Public clients do not have a client_secret to rotate.'
       );
@@ -366,7 +369,7 @@ export function DeveloperAppsPageComponent({
           });
         } catch (error) {
           console.error('Rotate secret error:', error);
-          message.error(
+          dialogHandler.error(
             tt.toastError || 'Operation failed, please try again later'
           );
           throw error;
@@ -399,10 +402,10 @@ export function DeveloperAppsPageComponent({
           }
 
           setApps((prev) => prev.filter((app) => app.client_id !== clientId));
-          message.success(tt.toastDeleteSuccess || 'Application deleted');
+          dialogHandler.success(tt.toastDeleteSuccess || 'Application deleted');
         } catch (error) {
           console.error('Delete app error:', error);
-          message.error(
+          dialogHandler.error(
             tt.toastError || 'Operation failed, please try again later'
           );
           throw error;
@@ -464,7 +467,7 @@ export function DeveloperAppsPageComponent({
                     href={ROUTE_OAUTH_PLAYGROUND}
                     className={oauthSecondaryButtonClass}
                   >
-                    <ExperimentOutlined />
+                    <BeakerIcon className="h-4 w-4" />
                     {tt.playgroundLink || 'OAuth playground'}
                   </Link>
                   <button
@@ -472,7 +475,7 @@ export function DeveloperAppsPageComponent({
                     className={oauthPrimaryButtonClass}
                     onClick={openCreateModal}
                   >
-                    <PlusOutlined />
+                    <PlusIcon className="h-4 w-4" />
                     {tt.createButton || 'Create New App'}
                   </button>
                 </div>
@@ -482,7 +485,7 @@ export function DeveloperAppsPageComponent({
             <div className="p-5 sm:p-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-secondary-text">
-                  <LoadingOutlined spin className="text-2xl text-brand" />
+                  <ArrowPathIcon className="h-8 w-8 text-brand animate-spin" />
                   <span className="text-sm">
                     {tt.loading || 'Loading applications'}
                   </span>
@@ -543,7 +546,7 @@ export function DeveloperAppsPageComponent({
                                 tt.copyClientIdSuccess || 'Copy Client ID'
                               }
                             >
-                              <CopyOutlined />
+                              <ClipboardDocumentIcon className="h-4 w-4" />
                             </button>
                           </div>
                           <p className="text-sm text-secondary-text break-words">
@@ -563,7 +566,7 @@ export function DeveloperAppsPageComponent({
                             className={oauthGhostActionClass}
                             onClick={() => openEditModal(app)}
                           >
-                            <EditOutlined />
+                            <PencilSquareIcon className="h-4 w-4" />
                             {tt.editButton || 'Edit'}
                           </button>
                           <button
@@ -585,7 +588,7 @@ export function DeveloperAppsPageComponent({
                                 : undefined
                             }
                           >
-                            <KeyOutlined />
+                            <KeyIcon className="h-4 w-4" />
                             {tt.rotateSecretButton || 'Rotate Secret'}
                           </button>
                           <button
@@ -596,7 +599,7 @@ export function DeveloperAppsPageComponent({
                             )}
                             onClick={() => handleDeleteApp(app.client_id)}
                           >
-                            <DeleteOutlined />
+                            <TrashIcon className="h-4 w-4" />
                             {tt.deleteButton || 'Delete'}
                           </button>
                         </div>
@@ -710,7 +713,7 @@ export function DeveloperAppsPageComponent({
                     }
                     disabled={!editValues.confidential}
                   >
-                    <KeyOutlined />
+                    <KeyIcon className="h-4 w-4" />
                     {tt.rotateSecretButton || 'Rotate Secret'}
                   </button>
                   <button
@@ -724,7 +727,7 @@ export function DeveloperAppsPageComponent({
                       handleDeleteApp(clientId);
                     }}
                   >
-                    <DeleteOutlined />
+                    <TrashIcon className="h-4 w-4" />
                     {tt.deleteButton || 'Delete'}
                   </button>
                 </>

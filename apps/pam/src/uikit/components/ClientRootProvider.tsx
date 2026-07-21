@@ -3,15 +3,15 @@ import '@ant-design/v5-patch-for-react-19';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { AntdThemeProvider } from '@brain-toolkit/antd-theme-override/react';
 import { BootstrapsProvider } from '@/uikit/components/BootstrapsProvider';
-import { I } from '@config/ioc-identifiter';
+import { DialogUIHost } from '@/uikit/components/DialogUIHost';
 import type { CommonThemeConfig } from '@config/theme';
-import { useIOC } from '../hook/useIOC';
 
 /**
  * ClientRootProvider is a provider for the client components
  *
  * - ThemeProvider
  * - AntdProvider
+ * - DialogUIHost (sonner toasts + confirm dialog)
  *
  * TODO: 存在问题：
  *
@@ -41,16 +41,16 @@ export function ClientRootProvider(props: {
 }) {
   const { themeConfig, children } = props;
 
-  const IOC = useIOC();
-
   return (
     <AntdThemeProvider
       data-testid="ComboProvider"
       theme={themeConfig.antdTheme}
-      staticApi={IOC(I.DialogHandler)}
     >
       <AntdRegistry layer>
-        <BootstrapsProvider>{children}</BootstrapsProvider>
+        <BootstrapsProvider>
+          <DialogUIHost />
+          {children}
+        </BootstrapsProvider>
       </AntdRegistry>
     </AntdThemeProvider>
   );

@@ -1,9 +1,9 @@
 import {
-  PlusOutlined,
-  CloudUploadOutlined,
-  LinkOutlined,
-  ExclamationCircleOutlined
-} from '@ant-design/icons';
+  CloudArrowUpIcon,
+  ExclamationCircleIcon,
+  LinkIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline';
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
 import { v4 as uuid } from 'uuid';
@@ -143,7 +143,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
       {errors.environments?.message && (
         <div className="bg-(--fe-color-error)/10 border border-(--fe-color-error)/30 text-(--fe-color-error) text-sm rounded-xl px-4 py-3 flex items-center gap-2 mb-3">
           <span>
-            <ExclamationCircleOutlined />
+            <ExclamationCircleIcon className="h-4 w-4" />
           </span>
           <span>{errors.environments.message}</span>
         </div>
@@ -152,7 +152,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <label className="text-sm sm:text-base font-bold text-primary-text flex items-center gap-1.5">
           <span className="text-brand">
-            <CloudUploadOutlined />
+            <CloudArrowUpIcon className="h-4 w-4" />
           </span>
           {tt.mulitEnv}
           <span className="text-[10px] sm:text-xs font-normal text-tertiary-text ml-1">
@@ -166,7 +166,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
           className="text-brand text-xs sm:text-sm hover:text-brand-hover bg-primary-bg hover:bg-primary-bg/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition touch-manipulation flex items-center gap-1.5 cursor-pointer"
         >
           <span>
-            <PlusOutlined />
+            <PlusIcon className="h-4 w-4" />
           </span>
           {tt.envAdd}
         </button>
@@ -196,7 +196,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
 
       <p className="text-[10px] sm:text-xs text-tertiary-text mt-2">
         <span className="mr-1">
-          <LinkOutlined />
+          <LinkIcon className="h-4 w-4" />
         </span>
         {tt.envDirectTitle}
       </p>

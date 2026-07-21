@@ -1,7 +1,7 @@
 'use client';
 
-import { TranslationOutlined } from '@ant-design/icons';
 import { useMountedClient } from '@brain-toolkit/react-kit';
+import { LanguageIcon } from '@heroicons/react/24/outline';
 import { LocaleRouter } from '@qlover/corekit-bridge/url-helper';
 import { Dropdown } from 'antd';
 import { useLocale } from 'next-intl';
@@ -96,7 +96,7 @@ export function LanguageSwitcher() {
         disabled={!mounted || isPending}
         onClick={() => handleLanguageChange(nextLocale)}
       >
-        <TranslationOutlined className="text-base shrink-0" />
+        <LanguageIcon className="h-4 w-4 shrink-0" aria-hidden />
         <span className="hidden sm:inline">{currentLocaleLabel}</span>
       </button>
     </Dropdown>
