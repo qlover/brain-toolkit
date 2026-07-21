@@ -12,7 +12,6 @@
     { "path": "./packages/bridge" },
     { "path": "./packages/element-sizer" },
     { "path": "./packages/ts2locales" },
-    { "path": "./packages/brain-user" },
-    { "path": "./examples/brain-user" }
+    { "path": "./packages/brain-user" }
   ]
 }

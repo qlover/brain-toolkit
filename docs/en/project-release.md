@@ -1,506 +1,200 @@
 # Project Release Guide
 
-This document provides detailed information about the release process, configuration, and best practices for the brain-toolkit project.
+This guide describes brain-toolkit’s automated release flow based on [@qlover/fe-release](https://www.npmjs.com/package/@qlover/fe-release) **5.x** (aligned with fe-base).
 
-## 📋 Release Overview
+## Overview
 
-brain-toolkit uses an automated release process based on the [@qlover/fe-release](https://www.npmjs.com/package/@qlover/fe-release) tool. The release process consists of three main steps:
+```
+feature/*  ──PR──►  master  ──fe-release──►  release/*  ──PR──►  master  ──►  npm
+                 (+ preRelease)              (+ CI-Release)
+```
 
-1. **MergePR Stage** - Automatically detect package changes and add labels
-2. **ReleasePR Stage** - Generate changelog and version numbers
-3. **Release Stage** - Automatically publish to GitHub and npm
+| Phase | Trigger | What happens |
+| --- | --- | --- |
+| 1. Feature PR | PR → `master` | `general-check`: lint / test / build / type-check |
+| 2. Create Release PR | Merge to `master` with **`preRelease`** (or manual `workflow_dispatch`) | Detect changed packages, bump versions, write changelogs, open `release/*` PR |
+| 3. Publish | `release/*` → `master` with **`CI-Release`** | `changeset publish`, push tags, create GitHub Releases |
 
-## 🔄 Detailed Release Process
+> Do **not** put `CI-Release` on feature PRs. Use **`preRelease`** when you want a release.
 
-### Step 1: Create Feature Branch and Pull Request
+## Release Process
 
-#### 1.1 Create Feature Branch
+### 1. Feature branch and PR
 
 ```bash
-# Create feature branch from master
 git checkout master
 git pull origin master
 git checkout -b feature/your-feature-name
 
-# Perform development work
-# ... modify code ...
-
-# Commit changes (follow commit conventions)
+# Develop and commit with Conventional Commits
 git add .
-git commit -m "feat: add new feature"
+pnpm commit   # or: git commit -m "feat(brain-user): ..."
 git push origin feature/your-feature-name
 ```
 
-> 💡 **Commit Convention**: Please refer to the [Commit Convention Guide](./commit-convention.md) for detailed commit message format requirements.
+Open a PR targeting `master`. `general-check` runs quality gates automatically.
 
-#### 1.2 Create Pull Request
+### 2. Labels before merge
 
-Create a Pull Request on GitHub with `master` as the target branch.
+| Label | Who adds it | Purpose |
+| --- | --- | --- |
+| `preRelease` | **Manual** (on feature PR) | After merge, triggers “create Release PR” |
+| `increment:major` / `increment:minor` / `increment:patch` | Optional | Override default patch bump |
+| `CI-Release` | **Auto** (on `release/*` PR) | Marks the release PR; merge triggers publish |
 
-#### 1.3 Add Version Increment Labels (Optional)
+Changed packages are detected via **git diff** (against the PR base SHA). `changes:*` labels are **not** required.
 
-Add the following labels to the PR to control version number increments:
+### 3. Create Release PR
 
-- `increment:major` - Major version increment (1.0.0 → 2.0.0)
-- `increment:minor` - Minor version increment (1.0.0 → 1.1.0)
-- `increment:patch` - Patch version increment (1.0.0 → 1.0.1) **[Default]**
+After a `preRelease`-labeled feature PR merges into `master`, `release.yml` → `create-release-pr`:
 
-### Step 2: MergePR Automation
-
-When the PR is merged into the master branch, GitHub Actions automatically performs the following operations:
-
-#### 2.1 Detect Package Changes
-
-The system automatically analyzes file changes in the `packages/` directory and adds labels for each modified package:
-
-```
-changes:packages/element-sizer
-changes:packages/package-a
-```
-
-#### 2.2 Quality Checks
+1. Build, type-check, lint, test
+2. Runs:
 
 ```bash
-# Automatically executed check process
-pnpm lint      # Code style check
-pnpm test      # Run test suite
-pnpm build     # Build all packages
+npx fe-release -V -s master -i <increment> \
+  --workspaces.compare-ref <PR_BASE_SHA> \
+  --changesetVersion.ignore-non-updated-packages
 ```
 
-#### 2.3 Generate ReleasePR
+3. Pushes `release/<repo>-<id>` and opens a Release PR labeled `CI-Release`
 
-If all checks pass, the system will:
+You can also run **Release sub packages** manually (`workflow_dispatch`) without `preRelease`.
 
-- Automatically generate changelog for each package
-- Update version numbers
-- Create ReleasePR
+### 4. Merge Release PR and publish
 
-### Step 3: Publish to Repository
+When `release/*` + `CI-Release` merges into `master`, the `publish` job runs:
 
-#### 3.1 Auto-merge ReleasePR
-
-Based on the `autoMergeReleasePR` configuration in `fe-config.json`:
-
-```json
-{
-  "release": {
-    "autoMergeReleasePR": true // Auto-merge ReleasePR
-  }
-}
+```bash
+npx fe-release -V \
+  --workspaces.compare-ref <PR_BASE_SHA> \
+  --changesetVersion.skip-changeset \
+  --changesetVersion.mode publish \
+  --github.mode createRelease \
+  --github.ignore-release-paths examples,apps
 ```
 
-#### 3.2 Publish to GitHub and npm
+This publishes to npm, pushes git tags, and creates GitHub Releases per package (skipping `examples` / `apps`).
 
-After ReleasePR is merged, the system automatically:
+If `github.autoMergeReleasePR` is `true` in `fe-config.json`, the Release PR may be merged automatically after creation.
 
-- Creates Git tags
-- Publishes GitHub Release
-- Publishes packages to npm registry
+## Configuration
 
-## ⚙️ Release Configuration
-
-### fe-config.json Configuration Details
+### fe-config.json
 
 ```json
 {
   "protectedBranches": ["master", "develop"],
   "release": {
-    "autoMergeReleasePR": true,
-    "githubPR": {
-      "commitArgs": ["--no-verify"],
-      "pushChangedLabels": true
-    },
-    "changelog": {
+    "changesetVersion": {
+      "changesetRoot": ".changeset",
+      "ignoreNonUpdatedPackages": false,
+      "dependencyReleaseTemplate": "- Update dependency **${name}** from `${oldVersion}` to `${newVersion}`",
       "formatTemplate": "\n- ${scopeHeader} ${commitlint.message} ${commitLink} ${prLink}",
-      "commitBody": true,
-      "types": [
-        { "type": "feat", "section": "#### ✨ Features", "hidden": false },
-        { "type": "fix", "section": "#### 🐞 Bug Fixes", "hidden": false },
-        { "type": "docs", "section": "#### 📝 Documentation", "hidden": false },
-        { "type": "refactor", "section": "#### ♻️ Refactors", "hidden": false },
-        { "type": "perf", "section": "#### 🚀 Performance", "hidden": false },
-        { "type": "build", "section": "#### 🚧 Build", "hidden": false },
-        { "type": "chore", "section": "#### 🔧 Chores", "hidden": true },
-        { "type": "test", "section": "#### 🚨 Tests", "hidden": true },
-        { "type": "style", "section": "#### 🎨 Styles", "hidden": true },
-        { "type": "ci", "section": "#### 🔄 CI", "hidden": true },
-        { "type": "revert", "section": "#### ⏪ Reverts", "hidden": true },
-        { "type": "release", "section": "#### 🔖 Releases", "hidden": true }
-      ]
+      "commitBody": true
+    },
+    "github": {
+      "autoMergeReleasePR": true,
+      "pushChangeLabels": true,
+      "commitArgs": ["--no-verify"],
+      "ignoreReleasePaths": ["examples", "apps"]
     }
   }
 }
 ```
 
-#### Configuration Options
+| Option | Meaning |
+| --- | --- |
+| `changesetVersion.*` | Changesets root, dependency changelog template, commit format / types |
+| `github.autoMergeReleasePR` | Auto-merge the Release PR |
+| `github.pushChangeLabels` | Attach change labels to the Release PR |
+| `github.commitArgs` | Extra git commit args (e.g. `--no-verify`) |
+| `github.ignoreReleasePaths` | Path prefixes skipped for GitHub Releases |
 
-- **protectedBranches**: List of protected branches
-- **autoMergeReleasePR**: Whether to auto-merge ReleasePR
-- **commitArgs**: Additional arguments for Git commits
-- **pushChangedLabels**: Whether to push change labels
-- **formatTemplate**: Changelog format template
-- **types**: Commit type configuration, controls changelog grouping and display
+### GitHub Secrets
 
-### GitHub Actions Configuration
+- `PAT_TOKEN` — create PRs / push tags / GitHub Releases
+- `NPM_TOKEN` — publish to npm
 
-#### release.yml Workflow
-
-```yaml
-name: Release sub packages
-
-on:
-  pull_request:
-    branches: [master]
-    types: [closed]
-    paths: [packages/**]
-
-jobs:
-  release-pull-request:
-    # Execute when PR is merged and doesn't contain CI-Release label
-    if: |
-      github.event.pull_request.merged == true && 
-      !contains(github.event.pull_request.labels.*.name, 'CI-Release')
-
-  release:
-    # Execute when PR is merged and contains CI-Release label
-    if: |
-      github.event.pull_request.merged == true && 
-      contains(github.event.pull_request.labels.*.name, 'CI-Release')
-```
-
-### Environment Variables Configuration
-
-Configure the following Secrets in GitHub repository settings:
+### Scripts
 
 ```bash
-# GitHub Personal Access Token (for creating PRs and Releases)
-PAT_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-
-# npm publish token (for publishing to npm)
-NPM_TOKEN=npm_xxxxxxxxxxxxxxxxxxxx
+pnpm build:packages:force   # force-build packages (exclude examples)
+pnpm test:force             # full test run
+pnpm release:branch         # local: bump + push release branch (no PR)
 ```
 
-## 📝 Commit Convention
+## Commit Convention
 
-### Conventional Commits
-
-The project uses [Conventional Commits](https://www.conventionalcommits.org/) specification:
+Use [Conventional Commits](https://www.conventionalcommits.org/). See [Commit Convention](./commit-convention.md).
 
 ```bash
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-#### Commit Types
-
-| Type       | Description              | Example                                     |
-| ---------- | ------------------------ | ------------------------------------------- |
-| `feat`     | New feature              | `feat(element-sizer): add resize animation` |
-| `fix`      | Bug fix                  | `fix(element-sizer): resolve memory leak`   |
-| `docs`     | Documentation update     | `docs: update installation guide`           |
-| `refactor` | Code refactoring         | `refactor: optimize animation logic`        |
-| `perf`     | Performance optimization | `perf: improve resize calculation`          |
-| `test`     | Test-related             | `test: add unit tests for resizer`          |
-| `build`    | Build-related            | `build: update rollup config`               |
-| `ci`       | CI/CD related            | `ci: add release workflow`                  |
-| `chore`    | Other miscellaneous      | `chore: update dependencies`                |
-
-#### Scope
-
-- `element-sizer` - ElementSizer package related
-- `docs` - Documentation related
-- `config` - Configuration file related
-- `deps` - Dependencies related
-
-### Using Commitizen
-
-The project is configured with Commitizen to help generate standardized commit messages:
-
-```bash
-# Use interactive commit
 pnpm commit
-
-# Or use git cz (if commitizen is globally installed)
-git cz
 ```
 
-## 🏷️ Label Management
+| Type | Use | Example |
+| --- | --- | --- |
+| `feat` | Feature | `feat(element-sizer): add resize animation` |
+| `fix` | Bug fix | `fix(brain-user): resolve otp verify` |
+| `docs` | Docs | `docs: update release guide` |
+| `refactor` / `perf` / `build` | Refactor / perf / build | … |
+| `chore` / `test` / `ci` | Chore / test / CI (hidden in changelog by default) | … |
 
-### Automatic Labels
+## Package Strategy
 
-The system automatically adds labels for packages with changes:
+- Independent versions per package (e.g. `@brain-toolkit/element-sizer@1.2.0`)
+- Internal deps are bumped by Changesets
+- `examples` and `apps` skip GitHub Releases; the release workflow path filter is `packages/**`
 
-```
-changes:packages/element-sizer    # Package change label
-increment:minor                   # Version increment label
-CI-Release                       # Release label (automatically added by system)
-```
+## Troubleshooting
 
-### Manual Label Management
+### Release PR was not created
 
-If a package doesn't need to be released, you can manually remove the corresponding `changes:` label:
+Check:
 
-1. Find the label on the GitHub PR page
-2. Click the ❌ next to the label to remove it
-3. That package will not be included in this release
+- Feature PR had **`preRelease`** before merge
+- Changes touched `packages/**`
+- Head is not already `release/*`
+- `PAT_TOKEN` is valid and Actions succeeded
 
-## 📦 Package Release Strategy
+### Unexpected version bump
 
-### Independent Version Management
+- Check `increment:major` / `increment:minor` / `increment:patch`
+- Confirm commits follow Conventional Commits
 
-Each package has an independent version number, not affecting each other:
-
-```
-@brain-toolkit/element-sizer@1.2.0
-@brain-toolkit/package-a@0.5.1
-@brain-toolkit/package-b@2.1.0
-```
-
-### Dependency Relationship Handling
-
-- **Internal Dependencies**: Inter-package dependencies automatically update version numbers
-- **External Dependencies**: Need manual version range management
-
-### Release Scope Control
-
-You can control which packages participate in the release through labels:
+### Local debugging
 
 ```bash
-# Only release element-sizer package
-# Remove changes: labels for other packages, keep changes:packages/element-sizer
+npx fe-release --dry-run -V -s master \
+  --changesetVersion.ignore-non-updated-packages
+
+pnpm release:branch
 ```
 
-## 🔍 Release Status Monitoring
-
-### GitHub Actions Status
-
-View in the GitHub repository's Actions page:
-
-- ✅ Build status
-- ✅ Test results
-- ✅ Release status
-- ❌ Failure reasons
-
-### npm Release Status
-
-Check if packages are successfully published to npm:
+### Build / test / npm failures
 
 ```bash
-# Check package versions
-npm view @brain-toolkit/element-sizer versions --json
+pnpm install
+pnpm type-check
+pnpm lint
+pnpm test:force
+pnpm build:packages:force
 
-# Check latest version
+npm whoami
 npm view @brain-toolkit/element-sizer version
 ```
 
-### GitHub Release
+## Best Practices
 
-View in the GitHub repository's Releases page:
+- Add `preRelease` on the feature PR **before** merge when a release is needed
+- Use `increment:major` for breaking changes
+- Run type-check / lint / test / build locally first
+- For hotfixes: merge with `preRelease`, or use `workflow_dispatch` to cut a Release PR from current `master`
 
-- 📋 Release Notes
-- 📦 List of published packages
-- 🏷️ Git tags
-- 📅 Release time
+## Related Links
 
-## 🚨 Troubleshooting
-
-### Common Issues
-
-#### 1. Build Failure
-
-**Problem**: GitHub Actions build failure
-
-**Solution**:
-
-```bash
-# Verify build locally
-pnpm install
-pnpm lint
-pnpm test
-pnpm build
-
-# Check error logs
-# Fix issues and resubmit
-```
-
-#### 2. Test Failure
-
-**Problem**: Unit tests or integration tests fail
-
-**Solution**:
-
-```bash
-# Run tests locally
-pnpm test
-
-# Run tests for specific package
-pnpm --filter @brain-toolkit/element-sizer test
-
-# View test coverage
-pnpm test:coverage
-```
-
-#### 3. npm Publish Failure
-
-**Problem**: Package publishing to npm fails
-
-**Possible Causes**:
-
-- npm token expired or invalid
-- Package name exists and version number is duplicate
-- Network connection issues
-
-**Solution**:
-
-```bash
-# Check npm token
-npm whoami
-
-# Manual publish (if needed)
-cd packages/element-sizer
-npm publish
-
-# Check if package name is available
-npm view @brain-toolkit/element-sizer
-```
-
-#### 4. ReleasePR Not Auto-created
-
-**Problem**: ReleasePR not created after merging PR
-
-**Check Items**:
-
-- Does PR contain changes to `packages/` directory
-- Are GitHub Actions running normally
-- Is PAT_TOKEN valid
-- Are there `changes:` labels
-
-#### 5. Incorrect Version Number
-
-**Problem**: Generated version number doesn't meet expectations
-
-**Solution**:
-
-- Check `increment:` labels on PR
-- Confirm commit messages follow [Conventional Commits specification](./commit-convention.md)
-- Review changelog generation logic
-
-#### 6. Non-compliant Commit Messages
-
-**Problem**: Commit messages don't follow specification causing changelog generation errors
-
-**Solution**:
-
-- Refer to [Commit Convention Guide](./commit-convention.md)
-- Use `pnpm commit` for interactive commits
-- Modify commit history (if needed)
-
-### Debugging Tips
-
-#### 1. Local Release Simulation
-
-```bash
-# Install fe-release tool
-npm install -g @qlover/fe-release
-
-# Simulate release process (without actual release)
-npx fe-release --dry-run -V
-
-# View generated changelog
-npx fe-release --dry-run --changelog-only
-```
-
-#### 2. View Detailed Logs
-
-```bash
-# Enable verbose logging
-npx fe-release -V --verbose
-
-# View GitHub Actions logs
-# Check detailed execution logs in GitHub repository's Actions page
-```
-
-#### 3. Manual Release
-
-If automatic release fails, you can execute manually:
-
-```bash
-# 1. Update version number
-cd packages/element-sizer
-npm version patch  # or minor/major
-
-# 2. Generate changelog
-npx fe-release --changelog-only
-
-# 3. Commit changes
-git add .
-git commit -m "chore: release element-sizer@x.x.x"
-
-# 4. Create tag
-git tag @brain-toolkit/element-sizer@x.x.x
-
-# 5. Push to remote
-git push origin master --tags
-
-# 6. Publish to npm
-npm publish
-```
-
-## 🎯 Best Practices
-
-### 1. Pre-release Checklist
-
-- [ ] Code passes all tests
-- [ ] Documentation is updated
-- [ ] Commit messages follow [commit convention](./commit-convention.md)
-- [ ] CHANGELOG format is correct
-- [ ] Version numbers follow semantic versioning
-- [ ] Dependencies are correctly configured
-
-### 2. Version Management Strategy
-
-- **Patch version**: Backward-compatible bug fixes
-- **Minor version**: Backward-compatible new features
-- **Major version**: Non-backward-compatible breaking changes
-
-### 3. Release Timing
-
-- **Regular releases**: Weekly or bi-weekly releases
-- **Emergency fixes**: Important bug fixes released immediately
-- **Feature releases**: Released after new features are completed
-
-### 4. Rollback Strategy
-
-If release issues occur, you can:
-
-```bash
-# 1. Unpublish npm package (within 24 hours)
-npm unpublish @brain-toolkit/element-sizer@x.x.x
-
-# 2. Publish fix version
-npm version patch
-npm publish
-
-# 3. Update documentation explaining the issue
-```
-
-## 🔗 Related Links
-
-- [Commit Convention Guide](./commit-convention.md)
-- [@qlover/fe-release Documentation](https://www.npmjs.com/package/@qlover/fe-release)
-- [Conventional Commits Specification](https://www.conventionalcommits.org/)
+- [Commit Convention](./commit-convention.md)
+- [@qlover/fe-release](https://www.npmjs.com/package/@qlover/fe-release)
+- [Conventional Commits](https://www.conventionalcommits.org/)
 - [Semantic Versioning](https://semver.org/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [npm Publishing Guide](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
-
-## 📞 Support
-
-If you encounter issues during the release process:
-
-1. Check [GitHub Issues](https://github.com/qlover/brain-toolkit/issues)
-2. Review GitHub Actions execution logs
-3. Contact project maintainers
-4. Refer to [@qlover/fe-release](https://www.npmjs.com/package/@qlover/fe-release) documentation
+- [GitHub Actions](https://docs.github.com/en/actions)

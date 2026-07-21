@@ -21,6 +21,8 @@ export default tseslint.config([
       '**/coverage/**',
       '**/*.d.ts',
       'vitest.setup.js',
+      // apps / examples use their own eslint.config; covered via pnpm -r run lint
+      'apps',
       'examples'
     ]
   },
