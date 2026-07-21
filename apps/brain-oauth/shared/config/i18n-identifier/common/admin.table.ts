@@ -1,74 +1,90 @@
 /**
- * Brain OAuth admin — shared data-table action labels (`common` namespace).
- * Used by Brain user management and OAuth audit log tables.
- */
-
-/**
- * @description Brain OAuth admin table — create row action label
+ * @description 表格创建文字
  * @localZh 新建
  * @localEn New
  */
 export const COMMON_ADMIN_TABLE_CREATE = 'common:admin_table__create';
 
 /**
- * @description Brain OAuth admin table — refresh list action label
+ * @description 表格刷新文字
  * @localZh 刷新
  * @localEn Refresh
  */
 export const COMMON_ADMIN_TABLE_REFRESH = 'common:admin_table__refresh';
 
 /**
- * @description Brain OAuth admin table — search action label
+ * @description 表格搜索文字
  * @localZh 搜索
  * @localEn Search
  */
 export const COMMON_ADMIN_TABLE_SEARCH = 'common:admin_table__search';
 
 /**
- * @description Brain OAuth admin table — reset filters action label
+ * @description 表格重置文字
  * @localZh 重置
  * @localEn Reset
  */
 export const COMMON_ADMIN_TABLE_RESET = 'common:admin_table__reset';
 
 /**
- * @description Brain OAuth admin table — export action label
+ * @description 表格导出文字
  * @localZh 导出
  * @localEn Export
  */
 export const COMMON_ADMIN_TABLE_EXPORT = 'common:admin_table__export';
 
 /**
- * @description Brain OAuth admin table — column/settings action label
+ * @description 表格设置
  * @localZh 设置
  * @localEn Settings
  */
 export const COMMON_ADMIN_TABLE_SETTINGS = 'common:admin_table__settings';
 
 /**
- * @description Brain OAuth admin table — row actions column header
+ * @description 表格操作文字
  * @localZh 操作
  * @localEn Action
  */
 export const COMMON_ADMIN_TABLE_ACTION = 'common:admin_table__action';
 
 /**
- * @description Brain OAuth admin table — edit row action label
+ * @description 表格编辑文字
  * @localZh 编辑
  * @localEn Edit
  */
 export const COMMON_ADMIN_TABLE_EDIT = 'common:admin_table__edit';
 
 /**
- * @description Brain OAuth admin table — delete row action label
+ * @description 表格删除文字
  * @localZh 删除
  * @localEn Delete
  */
 export const COMMON_ADMIN_TABLE_DELETE = 'common:admin_table__delete';
 
 /**
- * @description Brain OAuth admin table — view detail action label
+ * @description 表格详情文字
  * @localZh 详情
  * @localEn Detail
  */
 export const COMMON_ADMIN_TABLE_DETAIL = 'common:admin_table__detail';
+
+/**
+ * @description Table pagination previous page
+ * @localZh 上一页
+ * @localEn Prev
+ */
+export const COMMON_ADMIN_TABLE_PREV = 'common:admin_table__prev';
+
+/**
+ * @description Table pagination next page
+ * @localZh 下一页
+ * @localEn Next
+ */
+export const COMMON_ADMIN_TABLE_NEXT = 'common:admin_table__next';
+
+/**
+ * @description Table page size selector (accessibility label)
+ * @localZh 每页条数
+ * @localEn Page size
+ */
+export const COMMON_ADMIN_TABLE_PAGE_SIZE = 'common:admin_table__page_size';

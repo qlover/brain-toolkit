@@ -3,5 +3,6 @@
 @import './utils/zIndex.css';
 @import './utils/scrollbar.css';
 
-/* Antd variable overrides - keep last so they win over tailwind layers */
-@import './antd-themes/index.css';
+button {
+  cursor: pointer;
+}

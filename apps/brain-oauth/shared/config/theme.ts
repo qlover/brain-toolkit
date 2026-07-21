@@ -2,6 +2,9 @@ import type { ThemeConfig } from 'antd';
 
 /**
  * @type {import('@qlover/corekit-bridge').ThemeConfig}
+ *
+ * App shell color theme is owned by `@wrksz/themes`.
+ * `antdTheme` is retained for optional antd surfaces; the shell does not mount it.
  */
 export const themeConfig = {
   domAttribute: 'data-theme',

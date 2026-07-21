@@ -1,6 +1,5 @@
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { Grid } from 'antd';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import {
   PAMPublicType,
@@ -8,7 +7,22 @@ import {
 } from '@schemas/PAMProjectSchema';
 import { PAMEnvLink, PAMProjectName, PAMPublicIcon } from './PAMIcon';
 
-const { useBreakpoint } = Grid;
+/** Matches antd `Grid.useBreakpoint().xs` (~575px). */
+const XS_MQ = '(max-width: 575px)';
+
+function useIsXs() {
+  const [isXs, setIsXs] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia(XS_MQ);
+    const update = () => setIsXs(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  return isXs;
+}
 
 interface PAMProjectListItemProps {
   tt: PAMI18nInterface;
@@ -30,8 +44,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     [project.environments]
   );
 
-  const bk = useBreakpoint();
-  const isMobile = bk.xs;
+  const isMobile = useIsXs();
 
   const renderEnvs = useMemo(() => {
     if (Array.isArray(envs) && envs.length > 0) {
