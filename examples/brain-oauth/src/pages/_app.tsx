@@ -1,6 +1,8 @@
+import { ClientThemeProvider } from '@wrksz/themes/client';
 import dynamic from 'next/dynamic';
 import { NextIntlClientProvider } from 'next-intl';
-import '@/styles/index.css';
+import '@/styles/tailwind-pages.css';
+import '@/styles/pages.css';
 import { IOCProvider } from '@/uikit/components/IOCProvider';
 import { i18nConfig } from '@config/i18n';
 import { themeConfig } from '@config/theme';
@@ -39,9 +41,18 @@ export default function App({
   return (
     <IOCProvider>
       <NextIntlClientProvider locale={locale} messages={pageProps.messages}>
-        <ClientRootProvider themeConfig={themeConfig}>
-          <Component {...pageProps} />
-        </ClientRootProvider>
+        <ClientThemeProvider
+          themes={themeConfig.supportedThemes as unknown as string[]}
+          attribute={themeConfig.domAttribute}
+          defaultTheme={themeConfig.defaultTheme}
+          enableSystem={themeConfig.enableSystem}
+          enableColorScheme={false}
+          storageKey={themeConfig.storageKey}
+        >
+          <ClientRootProvider themeConfig={themeConfig}>
+            <Component {...pageProps} />
+          </ClientRootProvider>
+        </ClientThemeProvider>
       </NextIntlClientProvider>
     </IOCProvider>
   );

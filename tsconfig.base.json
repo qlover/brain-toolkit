@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
     "allowJs": false,
-    "target": "ESNEXT",
+    "target": "ESNext",
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
-    "baseUrl": "./",
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
@@ -20,6 +19,7 @@
     "checkJs": false,
     "incremental": true,
     "strict": true,
+    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx",
     "types": ["vitest/globals"],
     "paths": {

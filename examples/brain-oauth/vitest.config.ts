@@ -1,11 +1,14 @@
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     globals: true,
-    include: ['__tests__/**/*.test.ts'],
+    setupFiles: ['./__tests__/setup.ts'],
+    include: ['__tests__/**/*.test.{ts,tsx}'],
     watch: false
   },
   resolve: {
@@ -16,6 +19,7 @@ export default defineConfig({
       '@config': resolve(__dirname, 'shared/config'),
       '@interfaces': resolve(__dirname, 'shared/interfaces'),
       '@shared': resolve(__dirname, 'shared'),
+      '@locales': resolve(__dirname, 'public/locales'),
       '@brain-toolkit/brain-user': resolve(
         __dirname,
         '../../packages/brain-user/src'

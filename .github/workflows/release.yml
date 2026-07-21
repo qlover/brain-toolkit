@@ -10,24 +10,38 @@ on:
     paths:
       - packages/**
 
+concurrency:
+  group: release-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  release-pull-request:
+  # PR merged to master with preRelease (non-release head) -> version bump + create release PR
+  create-release-pr:
     if: |
-      github.event.pull_request.merged == true && 
-      !contains(github.event.pull_request.labels.*.name, 'CI-Release')
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.pull_request.merged == true &&
+        github.event.pull_request.base.ref == 'master' &&
+        !startsWith(github.event.pull_request.head.ref, 'release/') &&
+        contains(github.event.pull_request.labels.*.name, 'preRelease')
+      )
     runs-on: ubuntu-latest
+    env:
+      NX_DAEMON: 'false'
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          ref: master
           fetch-depth: 0
-          # ref: ${{ github.head_ref || github.ref_name }}
+          fetch-tags: true
 
       - name: Config Git
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"  
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
@@ -35,33 +49,80 @@ jobs:
 
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm nx:build:force
 
-      - name: Release Pull Request
-        run: npx fe-release -V -P --githubPR.push-change-labels --workspaces.change-labels=${{join(github.event.pull_request.labels.*.name,',')}} --changelog.ignore-non-updated-packages
+      - name: Build packages (force)
+        timeout-minutes: 15
+        run: pnpm build:packages:force
+
+      - name: Type check
+        timeout-minutes: 10
+        run: pnpm type-check
+
+      - name: Lint
+        timeout-minutes: 10
+        run: pnpm lint:force
+
+      - name: Test
+        timeout-minutes: 10
+        run: pnpm test:force
+
+      - run: pnpm rebuild
+
+      - name: Create release PR to master
+        if: github.event_name == 'pull_request'
+        run: |
+          INCREMENT=patch
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'increment:major') }}" == "true" ]]; then
+            INCREMENT=major
+          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'increment:minor') }}" == "true" ]]; then
+            INCREMENT=minor
+          fi
+          echo "Using version increment: $INCREMENT"
+          npx fe-release -V \
+            -s master \
+            -i "$INCREMENT" \
+            --workspaces.compare-ref "${{ github.event.pull_request.base.sha }}" \
+            --changesetVersion.ignore-non-updated-packages
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          FE_RELEASE_BRANCH: master
 
-  release:
+      - name: Create release PR to master (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          npx fe-release -V \
+            -s master \
+            --changesetVersion.ignore-non-updated-packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          FE_RELEASE_BRANCH: master
+
+  # release/* PR merged to master with CI-Release -> publish to npm and GitHub
+  publish:
     if: |
-      github.event.pull_request.merged == true && 
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'master' &&
+      startsWith(github.event.pull_request.head.ref, 'release/') &&
       contains(github.event.pull_request.labels.*.name, 'CI-Release')
-
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      NX_DAEMON: 'false'
 
     steps:
+      # PAT is required: default GITHUB_TOKEN from pull_request may not push tags
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # ref: ${{ github.head_ref || github.ref_name }}
+          fetch-tags: true
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Config Git
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"  
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -70,12 +131,34 @@ jobs:
 
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm nx:build:force
+
+      - name: Build packages (force)
+        timeout-minutes: 15
+        run: pnpm build:packages:force
+
+      - name: Type check
+        timeout-minutes: 10
+        run: pnpm type-check
+
+      - name: Lint
+        timeout-minutes: 10
+        run: pnpm lint:force
+
+      - name: Test
+        timeout-minutes: 10
+        run: pnpm test:force
+
+      - run: pnpm rebuild
 
       - name: Create tag and publish
-        run: npx fe-release -V --changelog.skip-changeset --workspaces.change-labels=${{join(github.event.pull_request.labels.*.name,',')}}
+        run: |
+          npx fe-release -V \
+            --workspaces.compare-ref "${{ github.event.pull_request.base.sha }}" \
+            --changesetVersion.skip-changeset \
+            --changesetVersion.mode publish \
+            --github.mode createRelease \
+            --github.ignore-release-paths examples,apps
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN}}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          FE_RELEASE_BRANCH: master

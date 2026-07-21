@@ -151,15 +151,15 @@ brain-toolkit/
 
 ## 📋 Version Release
 
-This project uses [Changesets](https://github.com/changesets/changesets) for version management:
+Automated releases via [@qlover/fe-release](https://www.npmjs.com/package/@qlover/fe-release) 5.x (aligned with fe-base).
+
+Flow: merge a feature PR to `master` with **`preRelease`** → auto-create a `release/*` PR → merge the **`CI-Release`** PR to publish to npm.
+
+See [Project Release](./docs/en/project-release.md).
 
 ```bash
-# Add change record
-pnpm changeset
-
-# Release version
-pnpm changeset version
-pnpm changeset publish
+# Local: bump versions and push a release branch (no PR)
+pnpm release:branch
 ```
 
 ## ❓ FAQ

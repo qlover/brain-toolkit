@@ -151,15 +151,15 @@ brain-toolkit/
 
 ## 📋 版本发布
 
-本项目使用 [Changesets](https://github.com/changesets/changesets) 进行版本管理：
+基于 [@qlover/fe-release](https://www.npmjs.com/package/@qlover/fe-release) 5.x 自动化发布（与 fe-base 对齐）。
+
+流程概要：功能 PR 合并到 `master` 时打上 **`preRelease`** → 自动创建 `release/*` PR → 合并带 **`CI-Release`** 的 Release PR 后发布到 npm。
+
+详见 [项目发布](./docs/zh/project-release.md)。
 
 ```bash
-# 添加变更记录
-pnpm changeset
-
-# 发布版本
-pnpm changeset version
-pnpm changeset publish
+# 本地：升版本并推 release 分支（不创建 PR）
+pnpm release:branch
 ```
 
 ## ❓ 常见问题

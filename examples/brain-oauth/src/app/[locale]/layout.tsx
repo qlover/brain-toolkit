@@ -1,9 +1,11 @@
+import { ThemeProvider } from '@wrksz/themes/next';
 import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { ClientRootProvider } from '@/uikit/components/ClientRootProvider';
 import { IOCProvider } from '@/uikit/components/IOCProvider';
 import { i18nConfig } from '@config/i18n';
+import '@/styles/tailwind-app.css';
 import '@/styles/index.css';
 import { themeConfig } from '@config/theme';
 import type { PageLayoutProps } from '@interfaces/AppPageRouter';
@@ -61,9 +63,18 @@ export default async function RootLayout({
       <body className="font-sans antialiased">
         <IOCProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <ClientRootProvider themeConfig={themeConfig}>
-              {children}
-            </ClientRootProvider>
+            <ThemeProvider
+              themes={themeConfig.supportedThemes as unknown as string[]}
+              attribute={themeConfig.domAttribute}
+              defaultTheme={themeConfig.defaultTheme}
+              enableSystem={themeConfig.enableSystem}
+              enableColorScheme={false}
+              storageKey={themeConfig.storageKey}
+            >
+              <ClientRootProvider themeConfig={themeConfig}>
+                {children}
+              </ClientRootProvider>
+            </ThemeProvider>
           </NextIntlClientProvider>
         </IOCProvider>
       </body>

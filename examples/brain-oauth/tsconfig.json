@@ -19,30 +19,20 @@
     "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "types": ["vitest/globals", "vite/client"],
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@schemas/*": [
-        "./shared/schemas/*"
-      ],
-      "@config/*": [
-        "./shared/config/*"
-      ],
-      "@interfaces/*": [
-        "./shared/interfaces/*"
-      ],
-      "@shared/*": [
-        "./shared/*"
-      ],
-      "@server/*": [
-        "./server/*"
-      ]
+      "@/*": ["./src/*"],
+      "@schemas/*": ["./shared/schemas/*"],
+      "@config/*": ["./shared/config/*"],
+      "@interfaces/*": ["./shared/interfaces/*"],
+      "@shared/*": ["./shared/*"],
+      "@server/*": ["./server/*"],
+      "@locales/*": ["./public/locales/*"]
     }
   },
   "include": [
@@ -53,6 +43,7 @@
     "shared/**/*.ts",
     "tools/**/*.ts",
     "__tests__/**/*.ts",
+    "__tests__/**/*.tsx",
     ".next/dev/types/**/*.ts",
     ".next/types/**/*.ts"
   ],
