@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   type StoreInterface,
   type ResourceSearchResult,
@@ -15,7 +16,7 @@ import {
   type PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
 import { inject, injectable } from '@shared/container';
-import { defaultSearchParams, pamViewModeStorageKey } from '@config/common';
+import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
 import type {
   SearchPAMProject,
@@ -24,6 +25,7 @@ import type {
   PAMProjectCreate,
   PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
+import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { PAMApi } from './appApi/PAMApi';
 import type { ValueOf } from '@qlover/fe-corekit/common';
 import type { LoggerInterface } from '@qlover/logger';
@@ -72,7 +74,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   >;
 
   /**
-   * ????? pam ????
+   * 仅用于创建 pam 时的状态
    */
   protected createStore: AsyncStore<
     AsyncStoreStateInterface<SearchPAMProject>,
@@ -80,7 +82,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   >;
 
   /**
-   * ????? pam ????
+   * 仅用于创建 pam 时的状态
    */
   protected detailStore: AsyncStore<
     AsyncStoreStateInterface<PAMProjectDetail>,
@@ -91,26 +93,18 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     @inject(PAMApi)
     protected readonly pamApi: PAMApi,
     @inject(I.LocalStorage)
-    localStorage: StorageInterface<string, unknown>
+    localStorage: StorageInterface<string, any>,
+    @inject(I.AppConfig)
+    config: SeedSrcConfigInterface
   ) {
     this.searchStore = new AsyncStore({
       /**
-       * corekit-bridge 3.4 persistence:
-       * - `persist`: KeyStorage binds one localStorage key
-       * - `persistKeys`: only these state fields are written / restored
-       * - `initRestore`: hydrate on construct
-       * - `emit` / `success` / ? auto-persist the picked snapshot
+       * corekit-bridge 3.4: KeyStorage + persistKeys.
+       * `initRestore` loads viewMode as soon as the store is created (client).
+       * UI must defer applying it until after mount (see PAMRoot + useMountedClient)
+       * so SSR HTML stays on the default Compact.
        */
-      persist: new KeyStorage<
-        string,
-        Partial<PAMFacadeStateInterface<SearchPAMProject>>
-      >(
-        pamViewModeStorageKey,
-        localStorage as StorageInterface<
-          string,
-          Partial<PAMFacadeStateInterface<SearchPAMProject>>
-        >
-      ),
+      persist: new KeyStorage(config.pamStorageKey, localStorage),
       persistKeys: ['viewMode'],
       initRestore: true,
       defaultState: () => defaultFacadeState()
@@ -146,18 +140,18 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   public pullProjectList(
     params?: PAMSearchParams & {
       /**
-       * ???????????? result ???? items ??
+       * 每次拉取之前是否重置当前 result 中保存的 items 数据
        *
-       * ??????????????????????????? result ?? items ??
+       * 有些时候会需要保留当前数据的基础上再加载，成功后会替换 result 中的 items 数据
        *
        * @default `true`
        */
       resetResult?: boolean;
       /**
-       * ?????? projects ?????
+       * 拉取数据后对 projects 的处理策略
        *
-       * - `'push'` ???????? projects ???, ??????
-       * - `'replace'` ??????? projects ??????, ??????
+       * - `'push'` 每次新数据追加到 projects 状态中, 适合滚动加载
+       * - `'replace'` 每次新数据替换 projects 状态中的数据, 适合分页加载
        *
        * @default `'replace'`
        */
@@ -232,12 +226,12 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
 
   /**
    *
-   * ??????????,????????
+   * 处理创建成功后的逻辑,主要用来重置列表
    *
-   * ??? ????????? 1 ??????????
+   * 新增后 重置分页，重新从第 1 页加载（丢弃旧列表）
    *
-   * FIXME: ?????????, ????,???????
-   * ???? offset + pageSize ?????
+   * FIXME: 数据完成后重置列表, 重新刷新,未来可考虑使用
+   * 未来可用 offset + pageSize 的方式拉取
    *
    * @param response
    */
@@ -286,7 +280,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       .then((response) => {
         this.createStore.success(response);
 
-        // ?? projects ????, ????????
+        // 更新 projects 中的数据, 不用拉取列表数据
         this.searchStore.emit({
           projects: this.searchStore
             .getState()
@@ -328,11 +322,11 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       return;
     }
 
-    // ???? dialog
+    // 同时打开 dialog
     this.openDialog();
 
-    // ????????list ????
-    // ?????? env ??, ?????? await??????????
+    // 先给详细数据设置list 中的数据
+    // 然后后台拉取 env 变量, 这里不要使用 await，不然后阻塞打开弹窗
     this.getProjectDetail(id, target);
   }
 
@@ -345,7 +339,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     return this.pamApi
       .getProjectDetail({ id })
       .then((result) => {
-        // ?????????????????
+        // 为了防止丢失基础数据，改用合并更新
         if (preProject) {
           const newResult = Object.assign({}, preProject, result);
           this.detailStore.success(newResult);
@@ -362,7 +356,6 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   }
 
   public changeViewMode(mode: PAMViewModeType): void {
-    // emit auto-persists `{ viewMode }` via persistKeys
     this.searchStore.emit({
       viewMode: mode
     });
@@ -370,7 +363,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
 
   public async deleteProject(project: SearchPAMProject): Promise<void> {
     await this.pamApi.deleteProject(project.id);
-    // ???? await,??????
+    // 这里不要 await,后台完成即可
     this.reloadProjectListFromFirstPage();
   }
 

@@ -43,4 +43,9 @@ export interface SeedSrcConfigInterface extends SharedConfigInterface {
 
   readonly testLoginEmail: string;
   readonly testLoginPassword: string;
+
+  /**
+   * PAM 状态持久化key 名字
+   */
+  readonly pamStorageKey: string;
 }

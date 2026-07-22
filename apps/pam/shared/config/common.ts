@@ -77,12 +77,6 @@ export const defaultSearchParams = {
 } as const;
 
 /**
- * PAM list view mode (`card` | `compact`) storage key.
- * Used with AsyncStore `persist: new KeyStorage(key, localStorage)` + `persistKeys: ['viewMode']`.
- */
-export const pamViewModeStorageKey = 'pam_view_mode';
-
-/**
  * 地址栏参数key
  */
 export const URLParamsKeys = {

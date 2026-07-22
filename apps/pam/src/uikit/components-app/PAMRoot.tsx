@@ -1,7 +1,9 @@
 'use client';
 
+import { useMountedClient } from '@brain-toolkit/react-kit';
 import { PAMFacade } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
+import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
@@ -16,6 +18,7 @@ import { useStore } from '../hook/useStore';
 
 export function PAMRoot() {
   const tt = usePageI18nMapping<PAMI18nInterface>();
+  const mounted = useMountedClient();
 
   const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
@@ -28,8 +31,11 @@ export function PAMRoot() {
 
   const projects = useStore(pamFacadeStore, (state) => state.projects || []);
   const listLoading = useStore(pamFacadeStore, (state) => state.loading);
-  const viewMode = useStore(pamFacadeStore, (state) => state.viewMode);
+  const persistedViewMode = useStore(pamFacadeStore, (state) => state.viewMode);
   const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
+
+  // Keep SSR + first client paint on Compact; apply persisted mode after mount.
+  const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
 
   return (
     <div
