@@ -340,7 +340,7 @@ importers:
         version: 19.2.3(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
-        version: 5.2.0(vite@7.3.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
+        version: 5.2.0(vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -429,17 +429,17 @@ importers:
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.80.0(react@19.2.4))
       '@qlover/corekit-bridge':
-        specifier: 3.3.0
-        version: 3.3.0(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+        specifier: 3.4.0
+        version: 3.4.0(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit':
-        specifier: 3.3.0
-        version: 3.3.0
+        specifier: 3.4.6
+        version: 3.4.6
       '@qlover/logger':
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 1.2.1
+        version: 1.2.1
       '@qlover/oauth-wrapper':
-        specifier: 0.6.2
-        version: 0.6.2(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+        specifier: 0.6.3
+        version: 0.6.3(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/slice-store-react':
         specifier: ^1.4.2
         version: 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -485,9 +485,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.3
-      lodash:
-        specifier: ^4.17.21
-        version: 4.18.1
+      lodash-es:
+        specifier: ^4.17.22
+        version: 4.17.23
       next:
         specifier: ^16.1.6
         version: 16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -544,14 +544,14 @@ importers:
         specifier: 1.0.2
         version: 1.0.2
       '@qlover/eslint-plugin':
-        specifier: 2.1.0
-        version: 2.1.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3)
+        specifier: 2.1.1
+        version: 2.1.1(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3)
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.0
-      '@types/lodash':
-        specifier: ^4.17.20
-        version: 4.17.20
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
       '@types/ms':
         specifier: ^2.1.0
         version: 2.1.0
@@ -569,7 +569,7 @@ importers:
         version: 19.2.3(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
-        version: 5.2.0(vite@7.3.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
+        version: 5.2.0(vite@6.4.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -678,7 +678,7 @@ importers:
         version: 19.2.2
       antd:
         specifier: ^5.25.3
-        version: 5.28.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
+        version: 5.28.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -2887,6 +2887,17 @@ packages:
       zustand:
         optional: true
 
+  '@qlover/corekit-bridge@3.4.0':
+    resolution: {integrity: sha512-I+rz+9b5eYjAQyqkbsfHKH7oirYTFjxccTEKXexyivta+lZ07kYT+vCa0VAXy8uAw5psnr5JiSar2hA/h28cjg==}
+    peerDependencies:
+      reflect-metadata: '>=0.1.0'
+      zustand: '>=5.0.12'
+    peerDependenciesMeta:
+      reflect-metadata:
+        optional: true
+      zustand:
+        optional: true
+
   '@qlover/env-loader@0.3.3':
     resolution: {integrity: sha512-m5qeZMSKtpsXXNu+zam6UC8ynn0qKhoruOUPoOWqNrFyFi3i5D0k4aL7A6LUv69klwNG8FQiKxBqm8ENjW5ERg==}
 
@@ -2912,6 +2923,14 @@ packages:
       eslint: '>=10.0.0'
       typescript: ~6.0.3
 
+  '@qlover/eslint-plugin@2.1.1':
+    resolution: {integrity: sha512-IlikhiZ8KF5agFteABvO9Ia9WtOo19ps7/cRnaQMBCmJNTlOQkxKvqMYM9Xc+zBpKikt2xQPIRLx/7kOgMW58g==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      '@typescript-eslint/parser': ^8.60.1
+      eslint: '>=10.0.0'
+      typescript: ~6.0.3
+
   '@qlover/fe-corekit@2.4.0':
     resolution: {integrity: sha512-SYNG8rGIJsj60S//NCPmUPo41EEl+Ko/RRkyaeQPv4jp/A6ivdIV+3gaaWNu63//LyviUUhy2p7wPNUHZcZvnA==}
 
@@ -2929,6 +2948,9 @@ packages:
 
   '@qlover/fe-corekit@3.4.4':
     resolution: {integrity: sha512-WzSo3e1cfyhJGwbvP4ZcnlQaPGF+1MrDlt5ZA3WbEWw48khEh75O9D7w4xUnu2Nn3l+gVWYvG43yKqyc2RVURQ==}
+
+  '@qlover/fe-corekit@3.4.6':
+    resolution: {integrity: sha512-IdUAvVF5pVFJ6XOZtlPDDeLa9AMUu8IngnnqOs2bwEs0ZIGgaQ8fl3x21MqgBwCpUbqM7VIbJq9Nvj1QP+Ao/w==}
 
   '@qlover/fe-release@5.1.0':
     resolution: {integrity: sha512-c2La0ZM8c08lbXH1m6z8KthqXKmwL1x8C6WH77UoumBZhkw0M//0Ui8coew/mV9zfKLC0hlqkT0EXNt5EFv80w==}
@@ -2961,8 +2983,8 @@ packages:
     peerDependencies:
       zod: ^3.0.0 || ^4.0.0
 
-  '@qlover/oauth-wrapper@0.6.2':
-    resolution: {integrity: sha512-uyww+HNHkqTyvYLG4k1XHgzQ/inYfdtwhBLOvEDOmtVJePhfU5UIwkG3Rn2d4h6ZUZGcCpbdCJxdcl9gjtzPyw==}
+  '@qlover/oauth-wrapper@0.6.3':
+    resolution: {integrity: sha512-cnUJpnIF6MSLyQNgIwm2rzbUQ+9c7HdOr5N7s+yBudOB3ccrKff2g1ZgksrJQpCha5DLbqCCmd3HZ6OYPrx5Mw==}
     peerDependencies:
       zod: ^3.0.0 || ^4.0.0
 
@@ -8561,14 +8583,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@ant-design/cssinjs-utils@1.1.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@ant-design/cssinjs': 1.24.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@babel/runtime': 7.28.4
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   '@ant-design/cssinjs-utils@1.1.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@ant-design/cssinjs': 1.24.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8587,18 +8601,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      stylis: 4.3.6
-
-  '@ant-design/cssinjs@1.24.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@emotion/hash': 0.8.0
-      '@emotion/unitless': 0.7.5
-      classnames: 2.5.1
-      csstype: 3.2.3
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
       stylis: 4.3.6
 
   '@ant-design/cssinjs@1.24.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
@@ -8630,16 +8632,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  '@ant-design/icons@5.6.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@ant-design/colors': 7.2.1
-      '@ant-design/icons-svg': 4.4.2
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   '@ant-design/icons@5.6.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -9598,7 +9590,7 @@ snapshots:
     dependencies:
       '@ant-design/icons': 6.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@qlover/corekit-bridge': 2.1.1(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
-      '@qlover/fe-corekit': 3.3.0
+      '@qlover/fe-corekit': 3.4.6
       '@qlover/slice-store-react': 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       antd: 5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
@@ -9628,7 +9620,7 @@ snapshots:
   '@brain-toolkit/react-kit@0.2.3(@types/node@20.19.41)(@types/react@19.2.2)(lightningcss@1.32.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(terser@5.44.0)(yaml@2.8.1)':
     dependencies:
       '@qlover/corekit-bridge': 2.1.1(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
-      '@qlover/fe-corekit': 3.3.0
+      '@qlover/fe-corekit': 3.4.6
       '@qlover/slice-store-react': 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
     transitivePeerDependencies:
@@ -11054,6 +11046,32 @@ snapshots:
       - tsx
       - yaml
 
+  '@qlover/corekit-bridge@3.4.0(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
+    dependencies:
+      '@qlover/fe-corekit': 3.4.6
+      '@qlover/logger': 1.2.1
+      '@qlover/slice-store': 1.4.1
+      '@qlover/tailwind-theme': 0.3.0
+      js-cookie: 3.0.5
+      tailwindcss: 3.4.19(yaml@2.8.1)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.44.0)
+    optionalDependencies:
+      reflect-metadata: 0.2.2
+      zustand: 5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
+    transitivePeerDependencies:
+      - '@types/node'
+      - debug
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
   '@qlover/env-loader@0.3.3':
     dependencies:
       dotenv: 16.6.1
@@ -11072,16 +11090,16 @@ snapshots:
       eslint: 9.39.1(jiti@2.6.1)
       typescript: 6.0.3
 
-  '@qlover/eslint-plugin@2.1.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3)':
-    dependencies:
-      '@typescript-eslint/parser': 8.65.0(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3)
-      eslint: 10.7.0(jiti@1.21.7)
-      typescript: 6.0.3
-
   '@qlover/eslint-plugin@2.1.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@2.6.1))(typescript@6.0.3))(eslint@10.7.0(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/parser': 8.65.0(eslint@10.7.0(jiti@2.6.1))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.6.1)
+      typescript: 6.0.3
+
+  '@qlover/eslint-plugin@2.1.1(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/parser': 8.65.0(eslint@10.7.0(jiti@1.21.7))(typescript@6.0.3)
+      eslint: 10.7.0(jiti@1.21.7)
       typescript: 6.0.3
 
   '@qlover/fe-corekit@2.4.0':
@@ -11131,6 +11149,15 @@ snapshots:
       - supports-color
 
   '@qlover/fe-corekit@3.4.4':
+    dependencies:
+      any-signal: 4.2.0
+      axios: 1.16.1
+      p-retry: 7.1.1
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
+  '@qlover/fe-corekit@3.4.6':
     dependencies:
       any-signal: 4.2.0
       axios: 1.16.1
@@ -11212,11 +11239,11 @@ snapshots:
       - yaml
       - zustand
 
-  '@qlover/oauth-wrapper@0.6.2(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
+  '@qlover/oauth-wrapper@0.6.3(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
     dependencies:
       '@qlover/corekit-bridge': 3.3.0(@types/node@20.19.41)(lightningcss@1.32.0)(reflect-metadata@0.2.2)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.3.0
-      '@qlover/logger': 1.2.0
+      '@qlover/logger': 1.2.1
       zod: 4.4.3
     transitivePeerDependencies:
       - '@types/node'
@@ -11294,15 +11321,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@rc-component/color-picker@2.0.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@ant-design/fast-color': 2.0.6
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   '@rc-component/color-picker@2.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@ant-design/fast-color': 2.0.6
@@ -11318,13 +11336,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  '@rc-component/context@1.4.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   '@rc-component/context@1.4.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -11345,14 +11356,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@rc-component/mutate-observer@1.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   '@rc-component/mutate-observer@1.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@babel/runtime': 7.28.4
@@ -11369,14 +11372,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@rc-component/portal@1.1.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   '@rc-component/portal@1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@babel/runtime': 7.28.4
@@ -11391,13 +11386,6 @@ snapshots:
       classnames: 2.5.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  '@rc-component/qrcode@1.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   '@rc-component/qrcode@1.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -11415,16 +11403,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  '@rc-component/tour@1.15.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/portal': 1.1.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   '@rc-component/tour@1.15.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -11446,17 +11424,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  '@rc-component/trigger@2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/portal': 1.1.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   '@rc-component/trigger@2.3.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -12894,7 +12861,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@5.2.0(vite@7.3.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitejs/plugin-react@5.2.0(vite@6.4.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.7)
@@ -12902,11 +12869,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
+      vite: 6.4.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@5.2.0(vite@7.3.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitejs/plugin-react@5.2.0(vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.7)
@@ -12914,7 +12881,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
+      vite: 6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -13194,64 +13161,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      scroll-into-view-if-needed: 3.1.0
-      throttle-debounce: 5.0.2
-    transitivePeerDependencies:
-      - date-fns
-      - luxon
-      - moment
-
-  antd@5.28.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@ant-design/colors': 7.2.1
-      '@ant-design/cssinjs': 1.24.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@ant-design/cssinjs-utils': 1.1.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@ant-design/fast-color': 2.0.6
-      '@ant-design/icons': 5.6.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@ant-design/react-slick': 1.1.2(react@18.3.1)
-      '@babel/runtime': 7.28.4
-      '@rc-component/color-picker': 2.0.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@rc-component/mutate-observer': 1.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@rc-component/qrcode': 1.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@rc-component/tour': 1.15.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      copy-to-clipboard: 3.3.3
-      dayjs: 1.11.19
-      rc-cascader: 3.34.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-checkbox: 3.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-collapse: 3.9.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-dialog: 9.6.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-drawer: 7.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-dropdown: 4.2.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-field-form: 2.7.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-image: 7.12.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-input: 1.8.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-input-number: 9.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-mentions: 2.20.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-notification: 5.6.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-pagination: 5.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-picker: 4.11.3(dayjs@1.11.19)(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-progress: 4.0.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-rate: 2.13.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-segmented: 2.7.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-select: 14.16.8(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-slider: 11.1.9(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-steps: 6.0.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-switch: 4.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-table: 7.54.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-tabs: 15.7.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-textarea: 1.10.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-tooltip: 6.4.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-tree: 5.13.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-tree-select: 5.27.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-upload: 4.11.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
       scroll-into-view-if-needed: 3.1.0
       throttle-debounce: 5.0.2
     transitivePeerDependencies:
@@ -16382,16 +16291,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-cascader@3.34.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-select: 14.16.8(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-tree: 5.13.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-cascader@3.34.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16410,14 +16309,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-checkbox@3.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-checkbox@3.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16434,15 +16325,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-collapse@3.9.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-collapse@3.9.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16462,16 +16344,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-dialog@9.6.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/portal': 1.1.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-dialog@9.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16493,16 +16365,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-drawer@7.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/portal': 1.1.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-drawer@7.3.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16522,15 +16384,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-dropdown@4.2.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-dropdown@4.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16547,14 +16400,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-field-form@2.7.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/async-validator': 5.0.4
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-field-form@2.7.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16574,17 +16419,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-image@7.12.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/portal': 1.1.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-dialog: 9.6.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-image@7.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16607,16 +16441,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-input-number@9.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/mini-decimal': 1.1.0
-      classnames: 2.5.1
-      rc-input: 1.8.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-input-number@9.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16634,14 +16458,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-input@1.8.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-input@1.8.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16662,18 +16478,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-mentions@2.20.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-input: 1.8.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-textarea: 1.10.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-mentions@2.20.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16698,17 +16502,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-menu@9.16.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-overflow: 1.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-menu@9.16.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16728,14 +16521,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-motion@2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-motion@2.9.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16752,15 +16537,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-notification@5.6.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-notification@5.6.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16780,15 +16556,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-overflow@1.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-overflow@1.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16805,14 +16572,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-pagination@5.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-pagination@5.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16832,19 +16591,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    optionalDependencies:
-      dayjs: 1.11.19
-
-  rc-picker@4.11.3(dayjs@1.11.19)(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-overflow: 1.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
     optionalDependencies:
       dayjs: 1.11.19
 
@@ -16869,14 +16615,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-progress@4.0.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-progress@4.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16893,14 +16631,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-rate@2.13.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-rate@2.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -16916,15 +16646,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      resize-observer-polyfill: 1.5.1
-
-  rc-resize-observer@1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
       resize-observer-polyfill: 1.5.1
 
   rc-resize-observer@1.4.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
@@ -16944,15 +16665,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-segmented@2.7.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-segmented@2.7.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -16975,18 +16687,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-select@14.16.8(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-overflow: 1.5.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-virtual-list: 3.19.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-select@14.16.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17007,14 +16707,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-slider@11.1.9(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-slider@11.1.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17031,14 +16723,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-steps@6.0.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-steps@6.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17054,14 +16738,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-switch@4.1.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-switch@4.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -17081,17 +16757,6 @@ snapshots:
       rc-virtual-list: 3.19.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-table@7.54.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/context': 1.4.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-virtual-list: 3.19.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-table@7.54.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -17116,18 +16781,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-tabs@15.7.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-dropdown: 4.2.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-tabs@15.7.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17150,16 +16803,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-textarea@1.10.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-input: 1.8.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-textarea@1.10.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17179,15 +16822,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-tooltip@6.4.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      '@rc-component/trigger': 2.3.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-tooltip@6.4.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17206,16 +16840,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-tree-select@5.27.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-select: 14.16.8(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-tree: 5.13.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-tree-select@5.27.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -17237,16 +16861,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-tree@5.13.1(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-motion: 2.9.5(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-virtual-list: 3.19.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-tree@5.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17265,14 +16879,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-upload@4.11.0(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
-
   rc-upload@4.11.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -17286,13 +16892,6 @@ snapshots:
       '@babel/runtime': 7.28.4
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-is: 18.3.1
-
-  rc-util@5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
       react-is: 18.3.1
 
   rc-util@5.44.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
@@ -17310,15 +16909,6 @@ snapshots:
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  rc-virtual-list@3.19.2(react-dom@19.2.4(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@babel/runtime': 7.28.4
-      classnames: 2.5.1
-      rc-resize-observer: 1.4.3(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      rc-util: 5.44.4(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 19.2.4(react@18.3.1)
 
   rc-virtual-list@3.19.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -17346,11 +16936,6 @@ snapshots:
       loose-envify: 1.4.0
       react: 18.3.1
       scheduler: 0.23.2
-
-  react-dom@19.2.4(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-      scheduler: 0.27.0
 
   react-dom@19.2.4(react@19.2.4):
     dependencies:
@@ -18636,6 +18221,38 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.32.0
       terser: 5.44.0
+
+  vite@6.4.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1):
+    dependencies:
+      esbuild: 0.25.12
+      fdir: 6.5.0(picomatch@4.0.3)
+      picomatch: 4.0.3
+      postcss: 8.5.6
+      rollup: 4.53.5
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@types/node': 20.19.41
+      fsevents: 2.3.3
+      jiti: 1.21.7
+      lightningcss: 1.32.0
+      terser: 5.44.0
+      yaml: 2.8.1
+
+  vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1):
+    dependencies:
+      esbuild: 0.25.12
+      fdir: 6.5.0(picomatch@4.0.3)
+      picomatch: 4.0.3
+      postcss: 8.5.6
+      rollup: 4.53.5
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@types/node': 20.19.41
+      fsevents: 2.3.3
+      jiti: 2.6.1
+      lightningcss: 1.32.0
+      terser: 5.44.0
+      yaml: 2.8.1
 
   vite@6.4.1(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1):
     dependencies:

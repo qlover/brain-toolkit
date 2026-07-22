@@ -2,7 +2,7 @@ import {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
-import { ExecutorError } from '@qlover/fe-corekit';
+import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { inject, injectable } from '@shared/container';
 import {
   API_NOT_AUTHORIZED,

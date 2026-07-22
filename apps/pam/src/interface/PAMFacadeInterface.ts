@@ -11,7 +11,7 @@ import type {
   ResourceSearchResult,
   StoreInterface
 } from '@qlover/corekit-bridge';
-import type { ValueOf } from '@qlover/fe-corekit';
+import type { ValueOf } from '@qlover/fe-corekit/common';
 
 export const PAMViewMode = {
   Card: 'card',

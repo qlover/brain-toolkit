@@ -1,5 +1,5 @@
 // import { useTranslations } from 'next-intl'; // Client-side translation hook
-import { identity as t } from 'lodash';
+import { identity as t } from 'lodash-es';
 import { Link } from '@/i18n/routing'; // i18n-aware Link component
 
 export default function NotFound() {

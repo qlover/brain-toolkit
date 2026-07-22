@@ -2,7 +2,7 @@ import type {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
-import type { ValueOf } from '@qlover/fe-corekit';
+import type { ValueOf } from '@qlover/fe-corekit/common';
 
 export type WhereOperation = '=' | '!=' | '>' | '<' | '>=' | '<=';
 export type Where = [string, WhereOperation, string | number];
@@ -74,8 +74,8 @@ export interface RepoSearchParams<T = unknown> extends ResourceSearchParams {
 /**
  * 仓库搜索接口
  *
- * @template Raw - 仓库数据类型(原始)
- * @template T - 仓库数据类型(返回，如果不指定，则默认使用原始数据)
+ * @template Raw - repository raw row type
+ * @template T - repository mapped return type (defaults to Raw)
  *
  * 该接口主要为了统一调用方法, 为了后续迁移到非 supabase 数据库时的抽象层
  *

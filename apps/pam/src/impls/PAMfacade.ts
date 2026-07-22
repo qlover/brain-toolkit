@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   type StoreInterface,
   type ResourceSearchResult,
@@ -6,8 +7,8 @@ import {
   AsyncStoreStateInterface,
   GatewayResult
 } from '@qlover/corekit-bridge';
-import { ValueOf } from '@qlover/fe-corekit';
-import { cloneDeep, find } from 'lodash';
+import { KeyStorage, type StorageInterface } from '@qlover/fe-corekit/storage';
+import { cloneDeep, find } from 'lodash-es';
 import {
   PAMViewMode,
   PAMViewModeType,
@@ -24,7 +25,9 @@ import type {
   PAMProjectCreate,
   PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
+import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { PAMApi } from './appApi/PAMApi';
+import type { ValueOf } from '@qlover/fe-corekit/common';
 import type { LoggerInterface } from '@qlover/logger';
 
 export const ProjectsStrategy = {
@@ -88,9 +91,24 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
 
   constructor(
     @inject(PAMApi)
-    protected readonly pamApi: PAMApi
+    protected readonly pamApi: PAMApi,
+    @inject(I.LocalStorage)
+    localStorage: StorageInterface<string, any>,
+    @inject(I.AppConfig)
+    config: SeedSrcConfigInterface
   ) {
-    this.searchStore = new AsyncStore({ defaultState: defaultFacadeState });
+    this.searchStore = new AsyncStore({
+      /**
+       * corekit-bridge 3.4: KeyStorage + persistKeys.
+       * `initRestore` loads viewMode as soon as the store is created (client).
+       * UI must defer applying it until after mount (see PAMRoot + useMountedClient)
+       * so SSR HTML stays on the default Compact.
+       */
+      persist: new KeyStorage(config.pamStorageKey, localStorage),
+      persistKeys: ['viewMode'],
+      initRestore: true,
+      defaultState: () => defaultFacadeState()
+    });
     this.createStore = new AsyncStore();
     this.detailStore = new AsyncStore();
   }

@@ -6,7 +6,7 @@ import {
   Squares2X2Icon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import { debounce } from 'lodash';
+import { debounce } from 'lodash-es';
 import { useCallback, useRef } from 'react';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type {
