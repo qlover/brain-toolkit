@@ -483,3 +483,38 @@ export const PAGE_PAM_ENV_DELETE = 'page_pam:envDelete';
  * @localEn Direct environment access
  */
 export const PAGE_PAM_ENV_DIRECT_TITLE = 'page_pam:envDirectTitle';
+
+/**
+ * @description Open repository action
+ * @localZh 打开仓库
+ * @localEn Open repository
+ */
+export const PAGE_PAM_OPEN_REPO = 'page_pam:openRepo';
+
+/**
+ * @description Open deployment / primary URL action
+ * @localZh 打开部署
+ * @localEn Open deployment
+ */
+export const PAGE_PAM_OPEN_DEPLOY = 'page_pam:openDeploy';
+
+/**
+ * @description More actions menu label
+ * @localZh 更多操作
+ * @localEn More actions
+ */
+export const PAGE_PAM_MORE_ACTIONS = 'page_pam:moreActions';
+
+/**
+ * @description Click owner id to copy (title / aria)
+ * @localZh 点击复制用户 ID
+ * @localEn Click to copy user ID
+ */
+export const PAGE_PAM_COPY_OWNER_ID = 'page_pam:copyOwnerId';
+
+/**
+ * @description Owner id copied toast
+ * @localZh 用户 ID 已复制
+ * @localEn User ID copied
+ */
+export const PAGE_PAM_COPY_OWNER_ID_SUCCESS = 'page_pam:copyOwnerIdSuccess';

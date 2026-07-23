@@ -109,7 +109,7 @@ export function ResponsiveModal({
     return (
       <div
         data-testid="renderHeader"
-        className="border-primary-border bg-elevated flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-8 sm:py-4"
+        className="border-primary-border bg-secondary flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-8 sm:py-4"
       >
         <div className="text-brand flex items-center gap-2 text-sm font-bold">
           {title || (
@@ -123,7 +123,7 @@ export function ResponsiveModal({
               type="button"
               aria-label={isFullscreen ? collapseLabel : expandLabel}
               onClick={toggleFullscreen}
-              className="text-tertiary-text hover:bg-secondary hover:text-secondary-text rounded-full p-1 transition-colors"
+              className="text-tertiary-text hover:bg-elevated hover:text-secondary-text rounded-full p-1 transition-colors"
             >
               {isFullscreen ? (
                 <ArrowsPointingInIcon className="h-5 w-5" />
@@ -136,7 +136,7 @@ export function ResponsiveModal({
             type="button"
             aria-label={closeLabel}
             onClick={onClose}
-            className="text-tertiary-text hover:bg-secondary hover:text-secondary-text rounded-full p-1 transition-colors"
+            className="text-tertiary-text hover:bg-elevated hover:text-secondary-text rounded-full p-1 transition-colors"
           >
             <XMarkIcon className="h-5 w-5" />
           </button>
@@ -161,10 +161,10 @@ export function ResponsiveModal({
 
       <div
         className={clsx(
-          'border-primary-border bg-elevated ring-primary-border/60 overflow-hidden shadow-2xl ring-1',
+          'border-primary-border bg-secondary ring-primary-border/60 overflow-hidden shadow-2xl ring-1',
           isFullscreen
             ? 'fixed inset-x-0 bottom-0 top-14 z-200 flex flex-col rounded-t-3xl sm:inset-4 sm:rounded-2xl'
-            : 'relative z-10 flex w-full flex-col rounded-t-3xl sm:max-w-2xl sm:rounded-3xl',
+            : 'relative z-10 flex w-full flex-col rounded-t-3xl sm:max-w-[720px] sm:rounded-3xl',
           className
         )}
       >
@@ -175,7 +175,7 @@ export function ResponsiveModal({
         </div>
 
         {footer && (
-          <div className="border-primary-border bg-secondary shrink-0 border-t px-4 py-4 sm:px-8 sm:py-5">
+          <div className="border-primary-border bg-secondary shrink-0 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-4">
             {footer}
           </div>
         )}

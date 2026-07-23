@@ -11,6 +11,7 @@ import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectCreate } from '@schemas/PAMProjectSchema';
 import { PAMProjectEnvKey } from '@schemas/PAMProjectSchema';
 import { PAMFormEnvironmentVarRow } from './PAMFormEnvironmentVarRow';
+import { pamFormFieldClass, pamFormMonoFieldClass } from './PAMFormFieldStyles';
 
 type FormValues = PAMProjectCreate;
 type PAMFormEnvironmentType = NonNullable<
@@ -57,51 +58,48 @@ export const PAMFormEnvironmentBlock: React.FC<
   return (
     <div
       data-testid="PAMFormEnvironmentBlock"
-      className="env-block border border-primary-border rounded-xl bg-primary-bg relative transition overflow-hidden"
+      className="env-block relative overflow-hidden rounded-[10px] border border-primary-border bg-elevated transition"
     >
       <div className="p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-1 min-w-30">
-            <span className="text-brand text-sm cursor-pointer">
-              <ServerStackIcon className="h-4 w-4" />
-            </span>
+          <div className="flex min-w-30 flex-1 items-center gap-2">
+            <ServerStackIcon className="h-4 w-4 shrink-0 text-brand" />
             <Controller
               name={`${PAMProjectEnvKey}.${index}.name`}
               control={control}
               render={({ field: nameField }) => (
                 <input
-                  data-testid="PAMFormEnvironmentBlock"
+                  data-testid="PAMFormEnvironmentBlockName"
                   {...nameField}
                   placeholder={tt.placeholderEnvName}
-                  className="font-bold border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 w-24 sm:w-36 text-xs sm:text-sm bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand touch-manipulation"
+                  className={clsx(
+                    pamFormMonoFieldClass,
+                    'w-24 py-1.5 font-semibold sm:w-36 sm:text-sm'
+                  )}
                 />
               )}
             />
             <button
               type="button"
               onClick={() => onToggleCollapse(index)}
-              className="touch-manipulation text-tertiary-text hover:text-primary-text transition p-1 cursor-pointer"
+              className="cursor-pointer p-1 text-tertiary-text transition hover:text-primary-text touch-manipulation"
               title={isCollapsed ? tt.collapsed : tt.uncollapsed}
             >
-              <span>
-                <ChevronDownIcon
-                  className={clsx(
-                    'h-4 w-4 transition-transform duration-200',
-                    isCollapsed && '-rotate-90'
-                  )}
-                />
-              </span>
+              <ChevronDownIcon
+                className={clsx(
+                  'h-4 w-4 transition-transform duration-200',
+                  isCollapsed && '-rotate-90'
+                )}
+              />
             </button>
           </div>
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="text-(--fe-color-error) hover:text-(--fe-color-error)/80 text-xs sm:text-sm touch-manipulation flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-(--fe-color-error)/10 transition cursor-pointer"
+            className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10 hover:opacity-80 touch-manipulation sm:text-sm"
           >
-            <span>
-              <TrashIcon className="h-3 w-3 text-xs" />
-            </span>
-            <span className="hidden xs:inline">{tt.envDelete}</span>
+            <TrashIcon className="h-3 w-3" />
+            <span className="hidden sm:inline">{tt.envDelete}</span>
           </button>
         </div>
 
@@ -109,12 +107,12 @@ export const PAMFormEnvironmentBlock: React.FC<
           className={clsx(
             'env-collapse-content mt-3 transition-all duration-300 ease-in-out',
             isCollapsed
-              ? 'max-h-0 opacity-0 overflow-hidden mt-0'
+              ? 'mt-0 max-h-0 overflow-hidden opacity-0'
               : 'max-h-500 opacity-100'
           )}
         >
           <div className="mb-3">
-            <label className="text-[10px] sm:text-xs font-semibold text-secondary-text">
+            <label className="text-[10px] font-semibold text-secondary-text sm:text-xs">
               {tt.envUrlTitle}
             </label>
             <Controller
@@ -122,38 +120,39 @@ export const PAMFormEnvironmentBlock: React.FC<
               control={control}
               render={({ field: urlField }) => (
                 <input
-                  data-testid="PAMFormEnvironmentBlock"
+                  data-testid="PAMFormEnvironmentBlockUrl"
                   {...urlField}
                   type="url"
                   placeholder={tt.placeholderEnvUrl}
-                  className="w-full border border-primary-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm mt-1 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand touch-manipulation"
+                  className={clsx(
+                    pamFormFieldClass,
+                    'mt-1 py-1.5 text-xs sm:text-sm'
+                  )}
                 />
               )}
             />
             {errors.environments?.[index]?.url?.message && (
-              <div className="text-(--fe-color-error) text-xs mt-1">
+              <div className="mt-1 text-xs text-(--fe-color-error)">
                 {errors.environments?.[index]?.url?.message}
               </div>
             )}
           </div>
 
           <div>
-            <label className="text-[10px] sm:text-xs font-semibold text-secondary-text flex items-center gap-2 flex-wrap">
+            <label className="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-secondary-text sm:text-xs">
               <span>{tt.envVarTitle}</span>
               <button
                 type="button"
                 onClick={() => onAddVariable(index)}
-                className="text-brand hover:text-brand-hover text-xs touch-manipulation flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-primary-bg transition cursor-pointer"
+                className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-0.5 text-xs text-brand transition hover:bg-brand/10 hover:text-brand-hover touch-manipulation"
               >
-                <span>
-                  <PlusIcon className="h-4 w-4" />
-                </span>
+                <PlusIcon className="h-4 w-4" />
                 {tt.envVarAdd}
               </button>
             </label>
-            <div className="env-vars-list mt-2 space-y-1.5 max-h-40 overflow-y-auto">
+            <div className="env-vars-list mt-2 max-h-40 space-y-1.5 overflow-y-auto">
               {variables.length === 0 ? (
-                <div className="text-xs text-tertiary-text py-1">
+                <div className="py-1 text-xs text-tertiary-text">
                   {tt.noEnvVar}
                 </div>
               ) : (
