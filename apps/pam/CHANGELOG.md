@@ -1,5 +1,23 @@
 # pam
 
+## 0.3.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 未登录隐藏新建与编辑删除入口 ([592a82a](https://github.com/qlover/brain-toolkit/commit/592a82ad5d53cc6da3274131a804c093fc2e43ea)) ([#91](https://github.com/qlover/brain-toolkit/pull/91))
+
+  按登录态控制工具栏新建、列表/卡片操作与弹窗，访客不再看到 mutate 按钮。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 登录页改为 PAM 品牌文案并展示版本号 ([1877a4f](https://github.com/qlover/brain-toolkit/commit/1877a4fd0433741e19b1309dea4ad670a0e9e248)) ([#91](https://github.com/qlover/brain-toolkit/pull/91))
+
+  禁用尚未支持的手机登录 Tab，登录成功后回到首页。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 0.2.0
 
 ### Minor Changes
