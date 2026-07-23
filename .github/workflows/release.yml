@@ -9,6 +9,7 @@ on:
       - closed
     paths:
       - packages/**
+      - apps/**
 
 concurrency:
   group: release-${{ github.event.pull_request.number || github.run_id }}
