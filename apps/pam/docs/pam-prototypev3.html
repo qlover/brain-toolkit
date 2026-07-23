@@ -1034,21 +1034,57 @@ html[data-theme="pink"] .access-badge.private {
 
 .v-item-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
+.v-item-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  max-width: min(100%, 20rem);
+  padding-top: 0;
+}
+.v-item-right .v-top-envs {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+@media (min-width: 768px) {
+  .v-item-right .v-top-envs {
+    display: inline-flex;
+  }
+  .v-meta .env-sep,
+  .v-meta .envs {
+    display: none;
+  }
+}
+.v-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  color: var(--color-tertiary-text);
+}
+/* desc moved to .v-desc-row */
+
 .v-item-left {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
   min-width: 0;
   flex: 1;
 }
 .v-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -1057,18 +1093,43 @@ html[data-theme="pink"] .access-badge.private {
   border: 1px solid var(--color-primary-border);
   color: var(--color-brand);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 1.35rem;
   font-family: var(--font-display), var(--font-sans);
+}
+@media (min-width: 640px) {
+  .v-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
 }
 .v-id { min-width: 0; }
 .v-name {
   display: block;
-  font-size: 0.95rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-primary-text);
   text-decoration: none;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.35;
+}
+@media (min-width: 640px) {
+  .v-name { font-size: 1.25rem; }
+}
+.v-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.v-name-row .v-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.v-name-row .v-status {
+  flex-shrink: 0;
 }
 .v-name:hover { text-decoration: underline; }
 .v-url {
@@ -1081,15 +1142,41 @@ html[data-theme="pink"] .access-badge.private {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.v-url:hover { color: var(--color-secondary-text); }
-
-.v-item-right {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-  padding-top: 0.15rem;
+.v-url:hover { color: var(--color-secondary-text); text-decoration: underline; }
+.v-desc-row {
+  display: none;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-primary-text);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+@media (min-width: 768px) {
+  .v-desc-row { display: block; }
+}
+.v-links {
+  display: none !important;
+}
+.v-owner-id {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: inherit;
+  cursor: pointer;
+}
+.v-owner-id:hover { color: var(--color-primary-text); }
+.v-owner-full { display: none; }
+.v-owner-short { display: inline; }
+@media (min-width: 1024px) {
+  .v-owner-full { display: inline; }
+  .v-owner-short { display: none; }
+}
+
+/* .v-item-right defined above with top-envs */
 /* Match PAMForm: lock-open = public, lock = private */
 .v-status {
   display: inline-flex;
@@ -1171,24 +1258,18 @@ html[data-theme="pink"] .access-badge.private {
   gap: 0.3rem;
   align-items: center;
 }
-.v-meta .env-chip {
+.v-meta .env-chip,
+.v-top-envs .env-chip {
   font-size: 0.65rem;
   padding: 0.12rem 0.4rem;
   min-height: 0;
   border-radius: 4px;
 }
 
-/* List: hide repo/desc on small screens; keep dense scan */
+/* List: repo lives in .v-links; legacy .v-repo-line/.v-desc unused */
 .v-repo-line,
 .v-desc {
-  display: none;
-}
-@media (min-width: 768px) {
-  .v-repo-line,
-  .v-desc {
-    display: block;
-  }
-  .v-repo-line { width: fit-content; max-width: 100%; }
+  display: none !important;
 }
 
 .v-avatar {
@@ -1205,7 +1286,12 @@ a.v-avatar:hover {
   background: var(--color-page-bg);
 }
 .v-avatar .v-avatar-ico {
-  font-size: 0.85rem;
+  font-size: 1.75rem;
+}
+@media (min-width: 640px) {
+  .v-avatar .v-avatar-ico {
+    font-size: 2rem;
+  }
 }
 
 /* Kebab menu */
@@ -1296,19 +1382,25 @@ a.v-avatar:hover {
 }
 .p-card-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
 .p-card-head-left {
   display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
   flex: 1;
 }
 .p-card-title { min-width: 0; flex: 1; }
-.p-card-title .v-name { font-size: 0.95rem; line-height: 1.2; }
+.p-card-title .v-name {
+  font-size: 1.125rem;
+  line-height: 1.35;
+}
+@media (min-width: 640px) {
+  .p-card-title .v-name { font-size: 1.25rem; }
+}
 .p-card-sub {
   display: flex;
   flex-wrap: wrap;
@@ -1520,7 +1612,7 @@ a.v-avatar:hover {
 
 @media (max-width: 767px) {
   .v-item { padding: 0.85rem 0.85rem; gap: 0.45rem; }
-  .v-avatar { width: 36px; height: 36px; }
+  .v-avatar { width: 48px; height: 48px; }
   .list-panel {
     border-radius: 0;
     border-left: none;
@@ -1647,7 +1739,7 @@ a.v-avatar:hover {
                 class="modal-body flex-1 overflow-y-auto custom-scroll no-scrollbar px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
                 <input type="hidden" id="projectId" value="" />
                 <div class="space-y-3 sm:space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
                         <div class="sm:col-span-2 lg:col-span-2 form-group">
                             <label
                                 class="block text-xs sm:text-sm font-semibold text-[var(--color-secondary-text)] mb-1">
@@ -1791,6 +1883,8 @@ a.v-avatar:hover {
             openRepo: "打开仓库",
             openDeploy: "打开部署",
             moreActions: "更多操作",
+            copyOwnerId: "点击复制用户 ID",
+            copyOwnerIdSuccess: "用户 ID 已复制",
             slug: "Slug",
             owner: "负责人",
             repoLink: "仓库",
@@ -2087,6 +2181,17 @@ a.v-avatar:hover {
             if (id === 'bob') return 'Bob';
             return id;
         }
+        function shortenOwnerId(id) {
+            var value = String(id || '').trim();
+            if (!value || value.length <= 13) return value;
+            return value.slice(0, 8) + '\u2026' + value.slice(-4);
+        }
+        function copyOwnerId(id) {
+            if (!id || !navigator.clipboard) return;
+            navigator.clipboard.writeText(id).then(function () {
+                showToast(I18N.copyOwnerIdSuccess || 'Copied');
+            }).catch(function () {});
+        }
 
         function envChipClass(name) {
             var n = (name || '').toLowerCase();
@@ -2097,7 +2202,7 @@ a.v-avatar:hover {
 
         function renderEnvChips(envs) {
             if (!envs || !envs.length) {
-                return '<span class="text-[10px] sm:text-xs text-[var(--color-tertiary-text)]">' + I18N.noEnv + '</span>';
+                return '';
             }
             return envs.map(function (env) {
                 return '<a href="' + escapeHtml(env.url || '#') + '" target="_blank" rel="noopener" class="env-chip ' +
@@ -2138,7 +2243,14 @@ a.v-avatar:hover {
         // ============================================================
         function setViewMode(mode) {
             viewMode = mode;
-            var compactBtn = document.getElementById('compactViewBtn');
+            var compactBtn = document.addEventListener('click', function (e) {
+            var ownerBtn = e.target && e.target.closest ? e.target.closest('.v-owner-id') : null;
+            if (ownerBtn) {
+                e.preventDefault();
+                copyOwnerId(ownerBtn.getAttribute('data-owner-id'));
+            }
+        });
+            document.getElementById('compactViewBtn');
             var cardBtn = document.getElementById('cardViewBtn');
             if (mode === 'compact') {
                 compactBtn.classList.add('is-active');
@@ -2215,18 +2327,8 @@ a.v-avatar:hover {
             return '<div class="v-avatar" title="' + escapeHtml(proj.name) + '">' + inner + '</div>';
         }
         function renderKebabMenu(proj, isOwner) {
-            var url = primaryUrl(proj);
             var items = [];
-            if (proj.repo_url) {
-                items.push('<a href="' + escapeHtml(proj.repo_url) + '" target="_blank" rel="noopener">' +
-                    I18N.openRepo + '</a>');
-            }
-            if (url) {
-                items.push('<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' +
-                    I18N.openDeploy + '</a>');
-            }
             if (isOwner) {
-                if (items.length) items.push('<div class="sep"></div>');
                 items.push('<button type="button" class="edit-project-btn" data-id="' + proj.id +
                     '">' + I18N.edit + '</button>');
                 items.push('<button type="button" class="delete-project-btn danger" data-id="' + proj.id +
@@ -2254,30 +2356,24 @@ a.v-avatar:hover {
                     ? '<a class="v-url" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(host) + '</a>'
                     : '<span class="v-url">' + escapeHtml(host) + '</span>')
                 : '<span class="v-url">' + escapeHtml(proj.stack || '\u2014') + '</span>';
-            var repoHtml = proj.repo_url
-                ? '<a class="v-repo" href="' + escapeHtml(proj.repo_url) + '" target="_blank" rel="noopener"><i class="' +
-                    getRepoIcon(proj.repo_url) + '"></i><span>' + escapeHtml(repoPath(proj.repo_url)) + '</span></a>'
-                : '';
             var desc = escapeHtml(proj.description || I18N.noDesc);
             return '<div class="v-item">' +
                 '<div class="v-item-top">' +
                   '<div class="v-item-left">' +
                     renderAvatar(proj) +
-                    '<div class="v-id">' + nameHtml + urlHtml + '</div>' +
+                    '<div class="v-id"><div class="v-name-row">' + nameHtml + (isPublic ? '' : '<span class="v-status private" title="' + statusTitle + '"><i class="fas fa-lock"></i><span class="v-status-text">' + statusTitle + '</span></span>') + '</div>' + urlHtml + '</div>' +
                   '</div>' +
                   '<div class="v-item-right">' +
-                    (isPublic ? '' : '<span class="v-status private" title="' + statusTitle + '"><i class="fas fa-lock"></i><span class="v-status-text">' + statusTitle + '</span></span>') +
+                    '<span class="v-top-envs">' + renderEnvChips(envs) + '</span>' +
                     renderKebabMenu(proj, isOwner) +
                   '</div>' +
                 '</div>' +
-                (repoHtml ? '<div class="v-repo-line">' + repoHtml + '</div>' : '') +
-                '<p class="v-desc">' + desc + '</p>' +
+                '<p class="v-desc-row">' + desc + '</p>' +
                 '<div class="v-meta">' +
-                  '<span>' + escapeHtml(ownerLabel(proj.owner_id)) + '</span>' +
+                  '<button type="button" class="v-owner-id" title="' + escapeHtml((I18N.copyOwnerId || '') + ': ' + String(proj.owner_id || '')) + '" data-owner-id="' + escapeHtml(proj.owner_id || '') + '">' +'<span class="v-owner-short">' + escapeHtml(shortenOwnerId(proj.owner_id)) + '</span>' +'<span class="v-owner-full">' + escapeHtml(ownerLabel(proj.owner_id)) + '</span>' +'</button>' +
                   '<span>\u00b7</span>' +
                   '<span>' + escapeHtml(proj.stack || (proj.category || '\u2014')) + '</span>' +
-                  '<span>\u00b7</span>' +
-                  '<span class="envs">' + renderEnvChips(envs) + '</span>' +
+                  (envs.length ? '<span class="env-sep">\u00b7</span><span class="envs">' + renderEnvChips(envs) + '</span>' : '') +
                 '</div>' +
               '</div>';
         }
@@ -2285,47 +2381,24 @@ a.v-avatar:hover {
         function renderCard(proj) {
             var isOwner = canEdit(proj);
             var envs = proj.environments || [];
-            var url = primaryUrl(proj);
-            var host = displayHost(url);
             var isPublic = proj.is_public === 1;
             var accessLabel = isPublic ? I18N.public : I18N.private;
 
             var subBits = [];
             if (proj.category) subBits.push('<span class="p-badge cat">' + escapeHtml(proj.category) + '</span>');
-            subBits.push('<span>' + escapeHtml(ownerLabel(proj.owner_id)) + '</span>');
+            if (proj.owner_id) {
+                subBits.push('<button type="button" class="v-owner-id" title="' + escapeHtml((I18N.copyOwnerId || '') + ': ' + String(proj.owner_id || '')) + '" data-owner-id="' + escapeHtml(proj.owner_id || '') + '">' + escapeHtml(shortenOwnerId(proj.owner_id)) + '</button>');
+            }
             if (!isOwner && !isGuest()) subBits.push('<span class="p-badge">' + I18N.readonly + '</span>');
 
-            // URL: prefer deploy host; fallback to repo path pill
-            var urlBlock = '';
-            if (host && url) {
-                urlBlock = '<a class="p-card-url" href="' + escapeHtml(url) +
-                    '" target="_blank" rel="noopener" title="' + escapeHtml(url) +
-                    '"><i class="fas fa-link"></i><span>' + escapeHtml(host) + '</span></a>';
-            } else if (proj.repo_url) {
-                urlBlock = '<a class="p-card-url" href="' + escapeHtml(proj.repo_url) +
-                    '" target="_blank" rel="noopener" title="' + escapeHtml(proj.repo_url) +
-                    '"><i class="' + getRepoIcon(proj.repo_url) + '"></i><span>' +
-                    escapeHtml(repoPath(proj.repo_url)) + '</span></a>';
-            }
-
             var actionBtns = '';
-            if (proj.repo_url) {
-                actionBtns += '<a class="p-act" href="' + escapeHtml(proj.repo_url) +
-                    '" target="_blank" rel="noopener"><i class="' + getRepoIcon(proj.repo_url) + '"></i>' +
-                    I18N.openRepo + '</a>';
-            }
-            if (url) {
-                actionBtns += '<a class="p-act" href="' + escapeHtml(url) +
-                    '" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i>' +
-                    I18N.openDeploy + '</a>';
-            }
             if (isOwner) {
                 actionBtns +=
                     '<button type="button" class="p-act primary edit-project-btn" data-id="' + proj.id +
                     '"><i class="fas fa-pen"></i>' + I18N.edit + '</button>' +
                     '<button type="button" class="p-act danger delete-project-btn" data-id="' + proj.id +
                     '"><i class="fas fa-trash-alt"></i>' + I18N.del + '</button>';
-            } else if (!isGuest() && !actionBtns) {
+            } else if (!isGuest()) {
                 actionBtns = '<span class="meta">' + I18N.readonly + '</span>';
             }
 
@@ -2343,14 +2416,12 @@ a.v-avatar:hover {
                     '"><i class="fas fa-lock"></i><span class="v-status-text">' + accessLabel + '</span></span>') +
                   '</div>' +
                 '</div>' +
-                '<p class="p-card-stack" title="' + escapeHtml(proj.stack || '') + '">' +
-                  escapeHtml(proj.stack || '\u2014') + '</p>' +
+                (proj.stack ? '<p class="p-card-stack" title="' + escapeHtml(proj.stack) + '">' + escapeHtml(proj.stack) + '</p>' : '') +
                 '<p class="p-card-desc">' + escapeHtml(proj.description || I18N.noDesc) + '</p>' +
-                (urlBlock || '') +
-                '<div class="p-card-envs">' +
+                (envs.length ? ('<div class="p-card-envs">' +
                   '<div class="label">' + I18N.envDirect + '</div>' +
                   '<div class="chips">' + renderEnvChips(envs) + '</div>' +
-                '</div>' +
+                '</div>') : '') +
                 '<div class="p-card-actions">' +
                   '<div class="btns">' + actionBtns + '</div>' +
                 '</div>' +

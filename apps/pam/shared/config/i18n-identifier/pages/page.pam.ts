@@ -504,3 +504,17 @@ export const PAGE_PAM_OPEN_DEPLOY = 'page_pam:openDeploy';
  * @localEn More actions
  */
 export const PAGE_PAM_MORE_ACTIONS = 'page_pam:moreActions';
+
+/**
+ * @description Click owner id to copy (title / aria)
+ * @localZh 点击复制用户 ID
+ * @localEn Click to copy user ID
+ */
+export const PAGE_PAM_COPY_OWNER_ID = 'page_pam:copyOwnerId';
+
+/**
+ * @description Owner id copied toast
+ * @localZh 用户 ID 已复制
+ * @localEn User ID copied
+ */
+export const PAGE_PAM_COPY_OWNER_ID_SUCCESS = 'page_pam:copyOwnerIdSuccess';

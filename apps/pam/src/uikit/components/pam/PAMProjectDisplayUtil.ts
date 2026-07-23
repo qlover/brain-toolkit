@@ -45,3 +45,12 @@ export function getPAMAvatarLetter(name: string): string {
   const trimmed = (name || 'P').trim();
   return trimmed.charAt(0).toUpperCase();
 }
+
+/** Shorten long owner/user ids for dense list rows (e.g. UUID → 308c658e…44f7). */
+export function shortenPAMOwnerId(id: string, head = 8, tail = 4): string {
+  const value = (id || '').trim();
+  if (!value || value.length <= head + tail + 1) {
+    return value;
+  }
+  return `${value.slice(0, head)}…${value.slice(-tail)}`;
+}

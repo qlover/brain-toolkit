@@ -67,7 +67,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
     return (
       <div
         data-testid="PAMProjectList"
-        className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3"
+        className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3"
       >
         {projects.map((project) => (
           <PAMProjectCard

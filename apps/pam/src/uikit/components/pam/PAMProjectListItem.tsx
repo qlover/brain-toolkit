@@ -1,6 +1,7 @@
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -13,7 +14,7 @@ import {
   getPAMAvatarLetter,
   getPAMDisplayHost,
   getPAMPrimaryUrl,
-  getPAMRepoPath
+  shortenPAMOwnerId
 } from './PAMProjectDisplayUtil';
 
 type PAMProjectListModel = SearchPAMProject & {
@@ -28,6 +29,11 @@ interface PAMProjectListItemProps {
   onDelete: (project: PAMProjectListModel) => void;
 }
 
+/**
+ * List row:
+ * 1) larger avatar (→ repo) + title (+ lock) / host | envs + menu
+ * 2–3) description + meta, left-aligned with the avatar
+ */
 export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
@@ -41,50 +47,25 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   );
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
   const host = getPAMDisplayHost(primaryUrl);
-  const repoPath = project.repo_url ? getPAMRepoPath(project.repo_url) : '';
   const avatarLetter = getPAMAvatarLetter(project.name);
   const isPublic = project.is_public === PAMPublicType.public;
 
   const menuItems = useMemo(() => {
-    const items: {
-      key: string;
-      label?: string;
-      danger?: boolean;
-      divider?: boolean;
-    }[] = [];
-    if (project.repo_url) {
-      items.push({ key: 'open-repo', label: tt.openRepo });
+    if (!isOwner) {
+      return [] as {
+        key: string;
+        label?: string;
+        danger?: boolean;
+        divider?: boolean;
+      }[];
     }
-    if (primaryUrl) {
-      items.push({ key: 'open-deploy', label: tt.openDeploy });
-    }
-    if (isOwner) {
-      if (items.length > 0) {
-        items.push({ key: 'owner-sep', divider: true });
-      }
-      items.push({ key: 'edit', label: tt.edit });
-      items.push({ key: 'delete', label: tt.delete, danger: true });
-    }
-    return items;
-  }, [
-    project.repo_url,
-    primaryUrl,
-    isOwner,
-    tt.openRepo,
-    tt.openDeploy,
-    tt.edit,
-    tt.delete
-  ]);
+    return [
+      { key: 'edit', label: tt.edit },
+      { key: 'delete', label: tt.delete, danger: true }
+    ];
+  }, [isOwner, tt.edit, tt.delete]);
 
   const onMenuSelect = (key: string) => {
-    if (key === 'open-repo' && project.repo_url) {
-      window.open(project.repo_url, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    if (key === 'open-deploy' && primaryUrl) {
-      window.open(primaryUrl, '_blank', 'noopener,noreferrer');
-      return;
-    }
     if (key === 'edit') {
       onEdit(project.id);
       return;
@@ -95,23 +76,43 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   };
 
   const avatarClassName = clsx(
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary-border bg-elevated text-sm font-bold text-brand no-underline',
+    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-border bg-elevated text-xl font-bold text-brand no-underline sm:h-14 sm:w-14 sm:text-2xl',
     project.repo_url && 'hover:border-brand hover:bg-primary'
   );
 
   const avatarInner = project.repo_url ? (
-    <PAMIcon repoUrl={project.repo_url} className="h-4 w-4" />
+    <PAMIcon repoUrl={project.repo_url} className="h-8 w-8 sm:h-9 sm:w-9" />
   ) : (
     avatarLetter
   );
 
+  const envChips =
+    envs.length > 0
+      ? envs.map((env) => <PAMEnvLink key={env.id} {...env} compact />)
+      : null;
+
+  const ownerId = project.owner_id || '';
+  const ownerIdShort = shortenPAMOwnerId(ownerId);
+
+  const onCopyOwnerId = useCallback(async () => {
+    if (!ownerId) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(ownerId);
+      toast.success(tt.copyOwnerIdSuccess);
+    } catch {
+      toast.error(tt.errorText);
+    }
+  }, [ownerId, tt.copyOwnerIdSuccess, tt.errorText]);
+
   return (
     <div
       data-testid="PAMProjectListItem"
-      className="flex flex-col gap-2 border-b border-primary-border bg-transparent px-3 py-3.5 transition last:border-b-0 hover:bg-elevated sm:px-4"
+      className="flex flex-col gap-1.5 border-b border-primary-border bg-transparent px-3 py-3.5 transition last:border-b-0 hover:bg-elevated sm:gap-2 sm:px-4"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
           {project.repo_url ? (
             <a
               href={project.repo_url}
@@ -127,33 +128,41 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
               {avatarInner}
             </div>
           )}
-          <div className="min-w-0">
-            <div className="truncate text-[0.95rem] font-semibold tracking-tight text-primary-text">
-              {project.name}
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <div className="truncate text-lg font-semibold leading-snug tracking-tight text-primary-text sm:text-xl">
+                {project.name}
+              </div>
+              <PAMPublicIcon
+                isPublic={isPublic}
+                publicTitle={tt.public}
+                privateTitle={tt.private}
+                className="shrink-0"
+              />
             </div>
             {host ? (
               <a
                 href={primaryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-0.5 block truncate text-sm text-tertiary-text no-underline hover:text-secondary-text"
+                className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text no-underline hover:text-secondary-text hover:underline"
               >
                 {host}
               </a>
             ) : project.stack ? (
-              <span className="mt-0.5 block truncate text-sm text-tertiary-text">
+              <span className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text">
                 {project.stack}
               </span>
             ) : null}
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 pt-0.5 sm:gap-1.5">
-          <PAMPublicIcon
-            isPublic={isPublic}
-            publicTitle={tt.public}
-            privateTitle={tt.private}
-          />
+        <div className="flex max-w-[min(100%,20rem)] shrink-0 flex-wrap items-center justify-end gap-1.5">
+          {envChips ? (
+            <div className="hidden flex-wrap items-center justify-end gap-1 md:flex">
+              {envChips}
+            </div>
+          ) : null}
           {menuItems.length > 0 ? (
             <Dropdown
               items={menuItems}
@@ -166,9 +175,9 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
                 type="button"
                 title={tt.moreActions}
                 aria-label={tt.moreActions}
-                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-secondary-text transition hover:bg-elevated hover:text-primary-text sm:h-6 sm:w-6 md:h-7 md:w-7"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-secondary-text transition hover:bg-elevated hover:text-primary-text"
               >
-                <EllipsisHorizontalIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <EllipsisHorizontalIcon className="h-5 w-5" />
               </button>
             </Dropdown>
           ) : (
@@ -179,39 +188,37 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         </div>
       </div>
 
-      {project.repo_url ? (
-        <a
-          href={project.repo_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden max-w-full w-fit items-center gap-1.5 truncate rounded-md border border-primary-border bg-primary px-2.5 py-1 text-xs text-secondary-text no-underline hover:border-brand hover:text-primary-text md:inline-flex"
-        >
-          <PAMIcon
-            repoUrl={project.repo_url}
-            className="h-3.5 w-3.5 shrink-0"
-          />
-          <span className="truncate">{repoPath}</span>
-        </a>
-      ) : null}
-
       <p className="hidden truncate text-sm text-primary-text md:block">
         {project.description || tt.noDesc}
       </p>
 
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-tertiary-text">
-        {project.owner_id ? <span>{project.owner_id}</span> : null}
-        {project.owner_id && (project.stack || project.category) ? (
-          <span>·</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-tertiary-text">
+        {ownerId ? (
+          <button
+            type="button"
+            title={`${tt.copyOwnerId}: ${ownerId}`}
+            aria-label={tt.copyOwnerId}
+            onClick={onCopyOwnerId}
+            className="font-mono text-tertiary-text transition hover:text-primary-text"
+          >
+            <span className="lg:hidden">{ownerIdShort}</span>
+            <span className="hidden lg:inline">{ownerId}</span>
+          </button>
         ) : null}
-        <span>{project.stack || project.category || '—'}</span>
-        <span>·</span>
-        <span className="inline-flex flex-wrap items-center gap-1">
-          {envs.length > 0 ? (
-            envs.map((env) => <PAMEnvLink key={env.id} {...env} compact />)
-          ) : (
-            <span className="text-tertiary-text">{tt.noEnv}</span>
-          )}
-        </span>
+        {ownerId && (project.stack || project.category) ? <span>·</span> : null}
+        {project.stack || project.category ? (
+          <span>{project.stack || project.category}</span>
+        ) : null}
+        {envChips ? (
+          <>
+            {ownerId || project.stack || project.category ? (
+              <span className="md:hidden">·</span>
+            ) : null}
+            <span className="inline-flex flex-wrap items-center gap-1 md:hidden">
+              {envChips}
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );

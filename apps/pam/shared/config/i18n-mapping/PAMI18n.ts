@@ -92,6 +92,8 @@ export const pamI18n = Object.freeze({
   openRepo: i18nKeys.PAGE_PAM_OPEN_REPO,
   openDeploy: i18nKeys.PAGE_PAM_OPEN_DEPLOY,
   moreActions: i18nKeys.PAGE_PAM_MORE_ACTIONS,
+  copyOwnerId: i18nKeys.PAGE_PAM_COPY_OWNER_ID,
+  copyOwnerIdSuccess: i18nKeys.PAGE_PAM_COPY_OWNER_ID_SUCCESS,
 
   adminTitle: COMMON_ADMIN_TITLE
 });
