@@ -1,13 +1,14 @@
 'use client';
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
+import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { PAMFacade } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
 import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
-import { PAMForm } from '../components/pam/PAMForm';
+import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
@@ -28,6 +29,7 @@ export function PAMRoot() {
   const detailState = useStore(pamFacade.getDetailStore());
   const editProject = detailState.result;
   const isEditMode = Boolean(editProject);
+  const isSubmitting = createState.loading;
 
   const projects = useStore(pamFacadeStore, (state) => state.projects || []);
   const listLoading = useStore(pamFacadeStore, (state) => state.loading);
@@ -37,10 +39,12 @@ export function PAMRoot() {
   // Keep SSR + first client paint on Compact; apply persisted mode after mount.
   const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
 
+  const closeDialog = () => pamFacade.closeDialog();
+
   return (
     <div
       data-testid="PAMRoot"
-      className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 w-full"
+      className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 md:py-8 lg:px-8"
     >
       <PAMToolbar
         tt={tt}
@@ -83,14 +87,46 @@ export function PAMRoot() {
       <ResponsiveModal
         open={openDialog}
         title={isEditMode ? tt.editProjectTitle : tt.createProjectTitle}
-        onClose={() => pamFacade.closeDialog()}
+        onClose={closeDialog}
+        footer={
+          <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+            <button
+              type="button"
+              onClick={closeDialog}
+              disabled={isSubmitting}
+              className="w-full cursor-pointer rounded-[10px] border border-primary-border px-4 py-2.5 text-sm text-secondary-text transition hover:bg-elevated disabled:opacity-50 sm:w-auto sm:px-6 sm:py-3 sm:text-base"
+            >
+              {tt.formCancel}
+            </button>
+            <button
+              type="submit"
+              form={PAM_PROJECT_FORM_ID}
+              disabled={isSubmitting}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-35 sm:px-6 sm:py-3 sm:text-base"
+            >
+              {isSubmitting ? (
+                <>
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                  {tt.formSaveing}
+                </>
+              ) : (
+                <>
+                  <CheckIcon className="h-4 w-4" />
+                  {isEditMode ? tt.formEdit : tt.formSave}
+                </>
+              )}
+            </button>
+          </div>
+        }
       >
         <PAMForm
           tt={tt}
+          formId={PAM_PROJECT_FORM_ID}
+          showActions={false}
           initialData={editProject ?? undefined}
           mode={isEditMode ? 'edit' : 'create'}
-          isSubmitting={createState.loading}
-          onCancel={() => pamFacade.closeDialog()}
+          isSubmitting={isSubmitting}
+          onCancel={closeDialog}
           onSubmit={(data) => {
             if (isEditMode && editProject?.id) {
               pamFacade.updateProject(editProject.id, data as PAMProjectUpdate);

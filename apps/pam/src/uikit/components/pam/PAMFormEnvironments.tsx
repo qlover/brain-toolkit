@@ -1,7 +1,6 @@
 import {
   CloudArrowUpIcon,
   ExclamationCircleIcon,
-  LinkIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
 import React, { useState, useCallback, useEffect } from 'react';
@@ -138,24 +137,20 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
   return (
     <div
       data-testid="PAMFormEnvironments"
-      className="border-t border-primary-border p-4 sm:pt-5"
+      className="border-t border-primary-border pt-4 sm:pt-5"
     >
       {errors.environments?.message && (
-        <div className="bg-(--fe-color-error)/10 border border-(--fe-color-error)/30 text-(--fe-color-error) text-sm rounded-xl px-4 py-3 flex items-center gap-2 mb-3">
-          <span>
-            <ExclamationCircleIcon className="h-4 w-4" />
-          </span>
+        <div className="mb-3 flex items-center gap-2 rounded-[10px] border border-(--fe-color-error)/30 bg-(--fe-color-error)/10 px-4 py-3 text-sm text-(--fe-color-error)">
+          <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
           <span>{errors.environments.message}</span>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <label className="text-sm sm:text-base font-bold text-primary-text flex items-center gap-1.5">
-          <span className="text-brand">
-            <CloudArrowUpIcon className="h-4 w-4" />
-          </span>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <label className="flex items-center gap-1.5 text-sm font-bold text-primary-text sm:text-base">
+          <CloudArrowUpIcon className="h-4 w-4 text-brand" />
           {tt.mulitEnv}
-          <span className="text-[10px] sm:text-xs font-normal text-tertiary-text ml-1">
+          <span className="ml-1 text-[10px] font-normal text-tertiary-text sm:text-xs">
             ({fields.length})
           </span>
         </label>
@@ -163,11 +158,9 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
           type="button"
           data-testid="add-environment-button"
           onClick={handleAddEnvironment}
-          className="text-brand text-xs sm:text-sm hover:text-brand-hover bg-primary-bg hover:bg-primary-bg/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition touch-manipulation flex items-center gap-1.5 cursor-pointer"
+          className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand/10 px-3 py-1.5 text-xs text-brand transition hover:bg-brand/15 hover:text-brand-hover touch-manipulation sm:px-4 sm:py-2 sm:text-sm"
         >
-          <span>
-            <PlusIcon className="h-4 w-4" />
-          </span>
+          <PlusIcon className="h-4 w-4" />
           {tt.envAdd}
         </button>
       </div>
@@ -194,10 +187,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
         })}
       </div>
 
-      <p className="text-[10px] sm:text-xs text-tertiary-text mt-2">
-        <span className="mr-1">
-          <LinkIcon className="h-4 w-4" />
-        </span>
+      <p className="mt-2 text-[10px] text-tertiary-text sm:text-xs">
         {tt.envDirectTitle}
       </p>
     </div>

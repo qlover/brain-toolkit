@@ -21,8 +21,16 @@ import {
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
 import { PAMFormEnvironments } from './PAMFormEnvironments';
+import {
+  pamFormFieldClass,
+  pamFormLabelClass,
+  pamFormSelectClass,
+  pamFormTextareaClass
+} from './PAMFormFieldStyles';
 
 type PAMFormProject = PAMProjectCreate | PAMProjectUpdate;
+
+export const PAM_PROJECT_FORM_ID = 'pam-project-form';
 
 export interface PAMFormProps {
   tt: PAMI18nInterface;
@@ -32,6 +40,10 @@ export interface PAMFormProps {
   isSubmitting?: boolean;
   className?: string;
   mode?: 'create' | 'edit';
+  /** Native form id for external footer submit (`form=` attribute). */
+  formId?: string;
+  /** When true, render cancel/save inside the form (default: false — use Modal footer). */
+  showActions?: boolean;
 }
 
 function generateSlug(name: string): string {
@@ -48,7 +60,9 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   onSubmit,
   isSubmitting = false,
   className = '',
-  mode = 'create'
+  mode = 'create',
+  formId = PAM_PROJECT_FORM_ID,
+  showActions = false
 }) => {
   const zodResolover = useMemo(
     () => (mode === 'create' ? PAMProjectCreateSchema : PAMProjectUpdateSchema),
@@ -103,13 +117,6 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   }, [watchName, setValue, watch]);
 
   const onValidSubmit = (data: PAMFormProject) => {
-    // const newData = clone(data);
-    // if (mode === 'edit' && initialData && 'id' in initialData) {
-    //   Object.assign<PAMFormProject, Partial<PAMProjectUpdate>>(newData, {
-    //     id: initialData.id
-    //   });
-    // }
-
     if (mode === 'edit' && !('id' in data)) {
       console.log(tt.tipFalteError);
       return;
@@ -129,68 +136,74 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     trigger('is_public');
   };
 
-  const lockTitle = is_public === PAMPublicType.public ? tt.public : tt.private;
+  const isPublic = is_public === PAMPublicType.public;
+  const lockTitle = isPublic ? tt.public : tt.private;
+  const busy = isSubmitting || formIsSubmitting;
 
   return (
     <FormProvider {...methods}>
       <form
+        id={formId}
         data-testid="PAMForm"
         onSubmit={handleSubmit(onValidSubmit)}
-        className={`space-y-4 sm:space-y-6 ${className}`}
+        className={clsx(
+          'space-y-4 sm:space-y-5 px-4 sm:px-6 py-4 sm:py-6',
+          className
+        )}
       >
         {mode === 'edit' && (
           <input className="hidden" type="hidden" {...register('id')} />
         )}
 
-        <div className="space-y-3 sm:space-y-4 p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             <div className="sm:col-span-2 lg:col-span-2">
-              <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
+              <label className={pamFormLabelClass}>
                 {tt.labelName}
                 <span className="text-(--fe-color-error)">*</span>
               </label>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-stretch gap-2">
                 <input
                   {...register('name')}
                   type="text"
-                  className="flex-1 border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
+                  className={clsx(pamFormFieldClass, 'min-w-0 flex-1')}
                   placeholder={tt.placeholderName}
                 />
-                <div className="min-w-12">
-                  <button
-                    type="button"
-                    title={lockTitle}
-                    onClick={togglePublic}
-                    className={clsx(
-                      'flex items-center gap-2 px-3 py-2 rounded-xl border border-primary-border hover:bg-primary-bg transition cursor-pointer touch-manipulation',
-                      is_public === PAMPublicType.public
-                        ? 'text-brand'
-                        : 'text-tertiary-text'
-                    )}
-                  >
-                    {is_public === PAMPublicType.public ? (
-                      <LockOpenIcon className="h-4 w-4" />
-                    ) : (
-                      <LockClosedIcon className="h-4 w-4" />
-                    )}
-
-                    <span>{lockTitle}</span>
-                  </button>
-                  <input
-                    type="hidden"
-                    {...register('is_public')}
-                    value={is_public}
-                  />
-                </div>
+                <button
+                  type="button"
+                  title={lockTitle}
+                  aria-label={lockTitle}
+                  onClick={togglePublic}
+                  className={clsx(
+                    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap',
+                    'rounded-[10px] border px-3 text-xs font-semibold transition',
+                    'cursor-pointer touch-manipulation',
+                    isPublic
+                      ? 'border-brand/40 bg-brand/10 text-brand'
+                      : 'border-primary-border bg-secondary text-tertiary-text hover:bg-elevated'
+                  )}
+                >
+                  {isPublic ? (
+                    <LockOpenIcon className="h-3.5 w-3.5" />
+                  ) : (
+                    <LockClosedIcon className="h-3.5 w-3.5" />
+                  )}
+                  <span>{lockTitle}</span>
+                </button>
+                <input
+                  type="hidden"
+                  {...register('is_public')}
+                  value={is_public}
+                />
               </div>
               {errors.name && (
-                <div className="text-(--fe-color-error) text-xs mt-1">
+                <div className="mt-1 text-xs text-(--fe-color-error)">
                   {errors.name.message}
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
+              <label className={pamFormLabelClass}>
                 {tt.labelSlug}
                 <span className="text-(--fe-color-error)">*</span>
               </label>
@@ -198,10 +211,10 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 {...register('slug')}
                 type="text"
                 placeholder={tt.placeholderSlug}
-                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
+                className={clsx(pamFormFieldClass, 'font-mono text-sm')}
               />
               {errors.slug && (
-                <div className="text-(--fe-color-error) text-xs mt-1">
+                <div className="mt-1 text-xs text-(--fe-color-error)">
                   {errors.slug.message}
                 </div>
               )}
@@ -209,33 +222,29 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-              {tt.labelStack}
-            </label>
+            <label className={pamFormLabelClass}>{tt.labelStack}</label>
             <input
               {...register('stack')}
               type="text"
               placeholder={tt.placeholderStack}
-              className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
+              className={pamFormFieldClass}
             />
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-              {tt.labelDesc}
-            </label>
+            <label className={pamFormLabelClass}>{tt.labelDesc}</label>
             <textarea
               {...register('description')}
               rows={2}
-              className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base resize-y min-h-15"
+              className={pamFormTextareaClass}
               placeholder={tt.placeholderDesc}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
-                <span className="mr-1">
+              <label className={pamFormLabelClass}>
+                <span className="mr-1 inline-flex align-middle">
                   <CodeBracketIcon className="h-4 w-4" />
                 </span>
                 {tt.labelRepo}
@@ -244,23 +253,20 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 {...register('repo_url')}
                 type="url"
                 placeholder={tt.placeholderRepo}
-                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
+                className={pamFormFieldClass}
               />
               {errors.repo_url && (
-                <div className="text-(--fe-color-error) text-xs mt-1">
+                <div className="mt-1 text-xs text-(--fe-color-error)">
                   {errors.repo_url.message}
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-secondary-text mb-1">
+              <label className={pamFormLabelClass}>
                 {tt.labelCategory}
                 <span className="text-(--fe-color-error)">*</span>
               </label>
-              <select
-                {...register('category')}
-                className="w-full border border-primary-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 bg-secondary text-primary-text focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base touch-manipulation"
-              >
+              <select {...register('category')} className={pamFormSelectClass}>
                 <option value="">{tt.labelUnCategory}</option>
                 <option value="前端">前端</option>
                 <option value="后端">后端</option>
@@ -270,7 +276,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 <option value="其他">其他</option>
               </select>
               {errors.category && (
-                <div className="text-(--fe-color-error) text-xs mt-1">
+                <div className="mt-1 text-xs text-(--fe-color-error)">
                   {errors.category.message}
                 </div>
               )}
@@ -280,65 +286,35 @@ export const PAMForm: React.FC<PAMFormProps> = ({
 
         <PAMFormEnvironments tt={tt} />
 
-        <div
-          className="
-            flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3
-            py-3 border-t border-primary-border
-            sticky bottom-0 sm:py-2
-            -mx-4 sm:mx-0 px-4 sm:px-0
-            md:relative
-            z-10
-          "
-        >
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSubmitting || formIsSubmitting}
-            className="
-              px-4 sm:px-6 py-2.5 sm:py-3
-              border border-primary-border rounded-xl
-              text-secondary-text hover:bg-primary-bg
-              transition text-sm sm:text-base
-              touch-manipulation w-full sm:w-auto
-              order-2 sm:order-1
-              disabled:opacity-50 cursor-pointer
-            "
-          >
-            {tt.formCancel}
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting || formIsSubmitting}
-            className="
-              px-4 sm:px-6 py-2.5 sm:py-3
-              bg-brand hover:bg-brand-hover active:bg-brand-active
-              text-on-brand rounded-xl
-              shadow-sm font-medium
-              transition text-sm sm:text-base
-              touch-manipulation w-full sm:w-auto
-              order-1 sm:order-2
-              flex items-center justify-center gap-2
-              disabled:opacity-50 disabled:cursor-not-allowed
-              sm:min-w-35 cursor-pointer
-            "
-          >
-            {isSubmitting || formIsSubmitting ? (
-              <>
-                <span>
+        {showActions && (
+          <div className="flex flex-col-reverse gap-2 border-t border-primary-border py-3 sm:flex-row sm:justify-end sm:gap-3 sm:py-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={busy}
+              className="w-full cursor-pointer rounded-[10px] border border-primary-border px-4 py-2.5 text-sm text-secondary-text transition hover:bg-elevated disabled:opacity-50 sm:w-auto sm:px-6 sm:py-3 sm:text-base"
+            >
+              {tt.formCancel}
+            </button>
+            <button
+              type="submit"
+              disabled={busy}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-35 sm:px-6 sm:py-3 sm:text-base"
+            >
+              {busy ? (
+                <>
                   <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                </span>
-                {tt.formSaveing}
-              </>
-            ) : (
-              <>
-                <span>
+                  {tt.formSaveing}
+                </>
+              ) : (
+                <>
                   <CheckIcon className="h-4 w-4" />
-                </span>
-                {mode === 'edit' ? tt.formEdit : tt.formSave}
-              </>
-            )}
-          </button>
-        </div>
+                  {mode === 'edit' ? tt.formEdit : tt.formSave}
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </form>
     </FormProvider>
   );
