@@ -37,6 +37,8 @@ interface PAMToolbarProps {
   categories: string[];
   facadeInterface: PAMFacadeInterface<PAMProjectDetail>;
   onCreate: () => void;
+  /** Hide create CTA when false (e.g. guest). */
+  canCreate?: boolean;
 }
 
 function keywordSelector(state: PAMFacadeStateInterface<PAMProjectDetail>) {
@@ -51,7 +53,8 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   onViewModeChange,
   categories,
   facadeInterface,
-  onCreate
+  onCreate,
+  canCreate = false
 }) => {
   const facadeStore = facadeInterface.getFacadeStore();
   const storeKeyword = useStore(facadeStore, keywordSelector);
@@ -199,16 +202,18 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           </button>
         </div>
 
-        <button
-          type="button"
-          id="addProjectBtn"
-          onClick={onCreate}
-          className="bg-brand flex-1 md:flex-none hover:bg-brand-hover active:bg-brand-active text-on-brand touch-target flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium shadow-md transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
-        >
-          <PlusIcon className="h-4 w-4" />
-          <span className="xs:inline hidden">{tt.addPam}</span>
-          <span className="xs:hidden">{tt.addPamsm}</span>
-        </button>
+        {canCreate ? (
+          <button
+            type="button"
+            id="addProjectBtn"
+            onClick={onCreate}
+            className="bg-brand flex-1 md:flex-none hover:bg-brand-hover active:bg-brand-active text-on-brand touch-target flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium shadow-md transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+          >
+            <PlusIcon className="h-4 w-4" />
+            <span className="xs:inline hidden">{tt.addPam}</span>
+            <span className="xs:hidden">{tt.addPamsm}</span>
+          </button>
+        ) : null}
       </div>
     </div>
   );

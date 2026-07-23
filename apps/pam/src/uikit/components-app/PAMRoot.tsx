@@ -16,10 +16,12 @@ import { ResponsiveModal } from '../components/ResponsiveModal';
 import { usePageI18nMapping } from '../context/PageI18nContext';
 import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
+import { useUserAuth } from '../hook/useUserAuth';
 
 export function PAMRoot() {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
+  const { success: isAuthenticated } = useUserAuth();
 
   const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
@@ -56,7 +58,11 @@ export function PAMRoot() {
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
         categories={[]}
-        onCreate={() => pamFacade.openDialog()}
+        canCreate={isAuthenticated}
+        onCreate={() => {
+          if (!isAuthenticated) return;
+          pamFacade.openDialog();
+        }}
       />
 
       <PAMProjectList
@@ -64,9 +70,14 @@ export function PAMRoot() {
         projects={projects}
         viewMode={viewMode}
         loading={listLoading}
+        isAuthenticated={isAuthenticated}
         isOwner={(data) => !!data.is_owner}
-        onEdit={(id) => pamFacade.triggerEdit(id)}
+        onEdit={(id) => {
+          if (!isAuthenticated) return;
+          pamFacade.triggerEdit(id);
+        }}
         onDelete={(project) => {
+          if (!isAuthenticated) return;
           dialog.confirm({
             okType: 'danger',
             title: tt.deleteProjectTitle,
@@ -85,7 +96,7 @@ export function PAMRoot() {
       />
 
       <ResponsiveModal
-        open={openDialog}
+        open={isAuthenticated && openDialog}
         title={isEditMode ? tt.editProjectTitle : tt.createProjectTitle}
         onClose={closeDialog}
         footer={
