@@ -21,8 +21,12 @@ import { createPortal } from 'react-dom';
 
 export type DropdownItem = {
   key: string;
-  label: ReactNode;
+  label?: ReactNode;
   disabled?: boolean;
+  /** Destructive action styling (e.g. delete). */
+  danger?: boolean;
+  /** Visual separator; not selectable. */
+  divider?: boolean;
 };
 
 export type DropdownPlacement =
@@ -238,6 +242,16 @@ export function Dropdown({
       )}
     >
       {items.map((item) => {
+        if (item.divider) {
+          return (
+            <li
+              data-testid="DropdownMenuDivider"
+              key={item.key}
+              role="separator"
+              className="my-1 border-t border-primary-border"
+            />
+          );
+        }
         const selected = selectedSet.has(item.key);
         return (
           <li data-testid="DropdownMenuItem" key={item.key} role="none">
@@ -252,9 +266,11 @@ export function Dropdown({
                 item.disabled
                   ? 'cursor-not-allowed opacity-50'
                   : 'hover:bg-elevated cursor-pointer',
-                selected
-                  ? 'bg-brand/10 text-brand font-medium'
-                  : 'text-primary-text'
+                item.danger && !item.disabled
+                  ? 'text-red-600 hover:bg-red-500/10'
+                  : selected
+                    ? 'bg-brand/10 text-brand font-medium'
+                    : 'text-primary-text'
               )}
               onClick={() => handleSelect(item.key, item.disabled)}
             >
