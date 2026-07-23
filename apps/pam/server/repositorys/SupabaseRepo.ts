@@ -114,7 +114,7 @@ export class SupabaseRepo<Raw, T = Raw> extends BaseRepository<Raw, T> {
       }
     }
 
-    // ✨ 3. 新增：全文搜索（与上述条件为 AND 关系）
+    // 3b. 全文搜索（与上述条件为 AND 关系）
     if (params.fullTextSearch) {
       const {
         column,
@@ -124,6 +124,17 @@ export class SupabaseRepo<Raw, T = Raw> extends BaseRepository<Raw, T> {
       query = query.textSearch(column, searchQuery, {
         config
       }) as FilterBuilder;
+    }
+
+    // 3c. 多字段 ILIKE 子串（独立 .or()，与 whereOr 为 AND）
+    if (params.ilikeOr?.columns.length && params.ilikeOr.query.trim()) {
+      const orString = this.buildIlikeOrString(
+        params.ilikeOr.columns,
+        params.ilikeOr.query.trim()
+      );
+      if (orString) {
+        query = query.or(orString) as FilterBuilder;
+      }
     }
 
     // 4. 处理分页
@@ -312,6 +323,30 @@ export class SupabaseRepo<Raw, T = Raw> extends BaseRepository<Raw, T> {
       return query.filter(field, supabaseOp, [value]) as FilterBuilder;
     }
     return query.filter(field, supabaseOp, value) as FilterBuilder;
+  }
+
+  /**
+   * Escape ILIKE wildcards and wrap for PostgREST `.or()` filter values.
+   */
+  protected escapeIlikePattern(raw: string): string {
+    const escaped = raw
+      .replace(/\\/g, '\\\\')
+      .replace(/%/g, '\\%')
+      .replace(/_/g, '\\_');
+    const pattern = `%${escaped}%`;
+    // Quote so commas / reserved chars in the pattern do not break `.or()` parsing.
+    return `"${pattern.replace(/"/g, '\\"')}"`;
+  }
+
+  /**
+   * Build `col.ilike."%kw%",...` for PostgREST `.or()`.
+   */
+  protected buildIlikeOrString(columns: string[], query: string): string {
+    const pattern = this.escapeIlikePattern(query);
+    return columns
+      .filter((col) => typeof col === 'string' && col.length > 0)
+      .map((col) => `${col}.ilike.${pattern}`)
+      .join(',');
   }
 
   /**

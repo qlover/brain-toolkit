@@ -89,6 +89,9 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     string
   >;
 
+  /** Latest list request id — stale responses are ignored. */
+  protected listRequestId = 0;
+
   constructor(
     @inject(PAMApi)
     protected readonly pamApi: PAMApi,
@@ -178,9 +181,18 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       resetResult ? undefined : this.searchStore.getState().result
     );
 
+    const requestId = ++this.listRequestId;
+
     return this.pamApi
       .searchProjects(mergedParams)
       .then((response) => {
+        if (requestId !== this.listRequestId) {
+          this.logger.debug(
+            `PAMFacade pullProjectList stale response ignored #${requestId}`
+          );
+          return response;
+        }
+
         const projects = this.withProjectsStrategy(projectsStrategy, response);
 
         this.logger.debug(
@@ -197,6 +209,9 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
         return response;
       })
       .catch((error) => {
+        if (requestId !== this.listRequestId) {
+          return this.getFacadeStore().getState().result!;
+        }
         this.searchStore.failed(error);
         return this.getFacadeStore().getState().result!;
       });
@@ -375,7 +390,8 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
     return this.pullProjectList({
       page: defaultSearchParams.page,
-      resetResult: true,
+      // Keep prior list visible while searching (no empty flash).
+      resetResult: false,
       projectsStrategy: ProjectsStrategy.Replace,
       keyword
     });

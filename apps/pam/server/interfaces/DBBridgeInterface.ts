@@ -69,6 +69,15 @@ export interface RepoSearchParams<T = unknown> extends ResourceSearchParams {
     /** 文本搜索配置（默认 `'english'`） */
     config?: string;
   };
+  /**
+   * Case-insensitive substring match across columns (OR).
+   * Combined with `where` / `whereOr` via AND (separate PostgREST `.or()` calls).
+   */
+  ilikeOr?: {
+    columns: string[];
+    /** Raw user keyword; repo layer escapes ILIKE wildcards */
+    query: string;
+  };
 }
 
 /**
