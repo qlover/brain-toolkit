@@ -141,14 +141,16 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
               />
             </div>
             {host ? (
-              <a
-                href={primaryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text no-underline hover:text-secondary-text hover:underline"
-              >
-                {host}
-              </a>
+              <div className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text ">
+                <a
+                  href={primaryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="no-underline hover:text-secondary-text hover:underline"
+                >
+                  {host}
+                </a>
+              </div>
             ) : project.stack ? (
               <span className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text">
                 {project.stack}
