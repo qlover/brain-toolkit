@@ -50,8 +50,10 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const [providerLogining, setProviderLogining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const phoneLoginEnabled = false;
+
   const tabBaseClass =
-    'flex-1 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer border-b-2 outline-none';
+    'flex-1 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer border-b-2 outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-secondary-text disabled:hover:border-transparent';
   const tabActiveClass = 'border-brand text-primary-text';
   const tabInactiveClass =
     'border-transparent text-secondary-text hover:text-primary-text hover:border-primary-border';
@@ -127,9 +129,14 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </button>
         <button
           type="button"
-          className={`${tabBaseClass} ${tab === 'phone' ? tabActiveClass : tabInactiveClass}`}
-          onClick={() => setTab('phone')}
-          aria-selected={tab === 'phone'}
+          className={`${tabBaseClass} ${tab === 'phone' && phoneLoginEnabled ? tabActiveClass : tabInactiveClass}`}
+          onClick={() => {
+            if (phoneLoginEnabled) setTab('phone');
+          }}
+          disabled={!phoneLoginEnabled}
+          aria-disabled={!phoneLoginEnabled}
+          aria-selected={tab === 'phone' && phoneLoginEnabled}
+          title={phoneLoginEnabled ? undefined : tt.tabPhoneDisabled}
           role="tab"
         >
           {tt.tabPhone}
@@ -168,7 +175,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </>
       )}
 
-      {tab === 'phone' && <PhoneLoginForm tt={tt} />}
+      {phoneLoginEnabled && tab === 'phone' && <PhoneLoginForm tt={tt} />}
     </div>
   );
 }

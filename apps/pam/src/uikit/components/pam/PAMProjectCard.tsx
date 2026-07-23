@@ -19,6 +19,8 @@ interface PAMProjectCardProps {
   tt: PAMI18nInterface;
   project: PAMProjectCardModel;
   isOwner: boolean;
+  /** Guest: hide edit/delete and readonly label. */
+  isAuthenticated?: boolean;
   onEdit: (id: string) => void;
   onDelete: (project: PAMProjectCardModel) => void;
 }
@@ -27,6 +29,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   tt,
   project,
   isOwner,
+  isAuthenticated = false,
   onEdit,
   onDelete
 }) => {
@@ -84,7 +87,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         )
       });
     }
-    if (!isOwner) {
+    if (isAuthenticated && !isOwner) {
       bits.push({
         key: 'ro',
         node: (
@@ -99,6 +102,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
     project.category,
     project.owner_id,
     isOwner,
+    isAuthenticated,
     tt.readonly,
     tt.copyOwnerId,
     tt.copyOwnerIdSuccess,
@@ -177,30 +181,32 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           </div>
         ) : null}
 
-        <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-primary-border pt-2.5">
-          {isOwner ? (
-            <>
-              <button
-                type="button"
-                onClick={() => onEdit(project.id)}
-                className="inline-flex items-center gap-1 rounded-md border border-brand/40 bg-brand/10 px-2 py-1.5 text-xs font-medium text-brand transition hover:bg-brand/20"
-              >
-                <PencilSquareIcon className="h-3 w-3" />
-                {tt.edit}
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(project)}
-                className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
-              >
-                <TrashIcon className="h-3 w-3" />
-                {tt.delete}
-              </button>
-            </>
-          ) : (
-            <span className="text-xs text-tertiary-text">{tt.readonly}</span>
-          )}
-        </div>
+        {isAuthenticated ? (
+          <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-primary-border pt-2.5">
+            {isOwner ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onEdit(project.id)}
+                  className="inline-flex items-center gap-1 rounded-md border border-brand/40 bg-brand/10 px-2 py-1.5 text-xs font-medium text-brand transition hover:bg-brand/20"
+                >
+                  <PencilSquareIcon className="h-3 w-3" />
+                  {tt.edit}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(project)}
+                  className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
+                >
+                  <TrashIcon className="h-3 w-3" />
+                  {tt.delete}
+                </button>
+              </>
+            ) : (
+              <span className="text-xs text-tertiary-text">{tt.readonly}</span>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

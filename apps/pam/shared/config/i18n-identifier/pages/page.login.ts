@@ -1,32 +1,32 @@
 /**
- * @description Login page title
- * @localZh 登录
- * @localEn Sign in
+ * @description Login page title (SEO / document title)
+ * @localZh 登录 · PAM 资产中心
+ * @localEn Sign in · PAM Asset Center
  */
 export const PAGE_LOGIN_TITLE = 'page_login:title';
 /**
  * @description Login page meta description
- * @localZh 登录 Next OAuth，支持 GitHub、Google 等第三方账号登录及邮箱密码登录。
- * @localEn Sign in to Next OAuth with GitHub, Google and other third-party accounts or email/password.
+ * @localZh 登录 PAM 资产中心，管理项目环境、仓库与变量配置。
+ * @localEn Sign in to PAM Asset Center to manage project environments, repos, and variables.
  */
 export const PAGE_LOGIN_DESCRIPTION = 'page_login:description';
 /**
  * @description Login page content
- * @localZh Next OAuth 用户登录
- * @localEn Next OAuth user sign-in
+ * @localZh PAM 用户登录
+ * @localEn PAM user sign-in
  */
 export const PAGE_LOGIN_CONTENT = 'page_login:content';
 /**
  * @description Login page keywords
- * @localZh OAuth 2.0, 第三方登录, GitHub, Google, Supabase, Next OAuth
- * @localEn OAuth 2.0, third-party login, GitHub, Google, Supabase, Next OAuth
+ * @localZh PAM, 资产管理, 环境变量, 多环境, 登录
+ * @localEn PAM, asset management, environment variables, multi-env, sign in
  */
 export const PAGE_LOGIN_KEYWORDS = 'page_login:keywords';
 
 /**
  * @description Login page hero badge
- * @localZh 第三方账号统一登录
- * @localEn Unified third-party sign-in
+ * @localZh 项目资产控制台
+ * @localEn Project asset console
  */
 export const PAGE_LOGIN_BADGE = 'page_login:badge';
 
@@ -56,26 +56,26 @@ export const PAGE_LOGIN_PASSWORD = 'page_login:password';
 export const PAGE_LOGIN_BUTTON = 'page_login:login';
 /**
  * @description Login page hero title
- * @localZh Next OAuth
- * @localEn Next OAuth
+ * @localZh PAM 资产中心
+ * @localEn PAM Asset Center
  */
 export const PAGE_LOGIN_WELCOME = 'page_login:welcome';
 /**
  * @description Login page hero subtitle (left panel)
- * @localZh 基于 Supabase 的统一认证平台，集成 GitHub、Google 等第三方账号登录。第三方应用可通过 OAuth 2.0 对接统一认证；用户凭证由 Supabase Auth 安全管理。
- * @localEn A Supabase-powered authentication platform with GitHub, Google and other third-party sign-in. Third-party apps can integrate via OAuth 2.0; credentials are securely managed by Supabase Auth.
+ * @localZh 统一管理多环境部署、仓库地址与环境变量；公开资产可浏览，登录后可创建与管理自己的项目。
+ * @localEn Manage multi-env deploys, repos, and variables in one place. Browse public assets; sign in to create and manage your own projects.
  */
 export const PAGE_LOGIN_SUBTITLE = 'page_login:subtitle';
 /**
  * @description Login form area subtitle (right panel)
- * @localZh 使用 GitHub、Google 等第三方账号或邮箱密码登录，也可在开发者控制台与 Playground 中调试 OAuth 流程。
- * @localEn Sign in with GitHub, Google or email/password, or debug the OAuth flow in the developer console and Playground.
+ * @localZh 使用邮箱、手机验证码或第三方账号登录。
+ * @localEn Sign in with email, phone OTP, or a third-party account.
  */
 export const PAGE_LOGIN_FORM_SUBTITLE = 'page_login:form__subtitle';
 /**
  * @description Demo deployment note on login page
- * @localZh 当前实例通过 Supabase Auth 支持 GitHub、Google 第三方登录及邮箱密码、手机验证码等多种方式；OAuth 协议面保持不变。
- * @localEn This instance supports GitHub, Google sign-in and email/password, phone OTP via Supabase Auth; the OAuth surface remains unchanged.
+ * @localZh 未登录可浏览公开项目；登录后可新建资产、编辑环境与变量。
+ * @localEn Guests can browse public projects; signed-in users can create assets and edit environments and variables.
  */
 export const PAGE_LOGIN_DEMO_NOTE = 'page_login:demo__note';
 /**
@@ -133,23 +133,35 @@ export const PAGE_LOGIN_EMAIL_REQUIRED = 'page_login:email_required';
  */
 export const PAGE_LOGIN_PASSWORD_REQUIRED = 'page_login:password_required';
 /**
- * @description Login page feature item - OAuth core
- * @localZh 多种登录方式：GitHub、Google 第三方登录 + 邮箱密码 + 手机验证码
- * @localEn Multiple sign-in methods: GitHub, Google + email/password + phone OTP
+ * @description Login page feature item - multi env
+ * @localZh 多环境配置与访问地址直达
+ * @localEn Multi-env configs with direct access URLs
  */
 export const PAGE_LOGIN_FEATURE_AI_PATHS = 'page_login:feature__ai_paths';
 /**
- * @description Login page feature item - Pluggable provider
- * @localZh 基于 Supabase Auth 的统一认证，安全可靠
- * @localEn Supabase Auth-powered unified authentication, secure and reliable
+ * @description Login page feature item - repos
+ * @localZh 仓库、分类与技术栈统一管理
+ * @localEn Unified repos, categories, and stacks
  */
 export const PAGE_LOGIN_FEATURE_SMART = 'page_login:feature__smart';
 /**
- * @description Login page feature item - Developer tools
- * @localZh 登录后管理 OAuth 应用，或在 Playground 站内调试
- * @localEn Manage OAuth apps and debug flows in-app after sign-in
+ * @description Login page feature item - access
+ * @localZh 公开 / 私有权限隔离
+ * @localEn Public / private access isolation
  */
 export const PAGE_LOGIN_TRACKING = 'page_login:tracking';
+/**
+ * @description Login form heading
+ * @localZh 登录
+ * @localEn Sign in
+ */
+export const PAGE_LOGIN_FORM_TITLE = 'page_login:form_title';
+/**
+ * @description Header app name on login page
+ * @localZh PAM
+ * @localEn PAM
+ */
+export const PAGE_LOGIN_APP_NAME = 'page_login:app_name';
 /**
  * @description Login page email input title
  * @localZh 输入邮箱
@@ -201,6 +213,12 @@ export const PAGE_LOGIN_TAB_EMAIL = 'page_login:tab_email';
  * @localEn Phone
  */
 export const PAGE_LOGIN_TAB_PHONE = 'page_login:tab_phone';
+/**
+ * @description Phone login unavailable hint
+ * @localZh 暂不支持
+ * @localEn Not available yet
+ */
+export const PAGE_LOGIN_TAB_PHONE_DISABLED = 'page_login:tab_phone_disabled';
 /**
  * @description Phone login form title
  * @localZh 手机号登录
