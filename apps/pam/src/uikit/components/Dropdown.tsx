@@ -53,6 +53,9 @@ export interface DropdownProps {
 }
 
 const MOBILE_MQ = '(max-width: 767px)';
+const VIEWPORT_PAD = 8;
+const TRIGGER_GAP = 8;
+const MENU_MIN_WIDTH = 10 * 16;
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -68,37 +71,62 @@ function useIsMobile() {
   return isMobile;
 }
 
-function computeMenuStyle(
+/**
+ * AntD-like placement: preferred side, flip when short of space, shift into viewport.
+ */
+function computeMenuPosition(
   trigger: DOMRect,
-  menu: DOMRect,
+  menuWidth: number,
+  menuHeight: number,
   placement: DropdownPlacement
-): CSSProperties {
-  const gap = 8;
-  let top = 0;
-  let left = 0;
-
+): { top: number; left: number } {
   const preferBottom = placement.startsWith('bottom');
   const preferEnd = placement.endsWith('end');
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
 
-  top = preferBottom ? trigger.bottom + gap : trigger.top - menu.height - gap;
-  left = preferEnd ? trigger.right - menu.width : trigger.left;
+  const spaceBelow = vh - trigger.bottom - TRIGGER_GAP - VIEWPORT_PAD;
+  const spaceAbove = trigger.top - TRIGGER_GAP - VIEWPORT_PAD;
+  let placeBottom = preferBottom;
+  if (preferBottom) {
+    if (menuHeight > spaceBelow && spaceAbove > spaceBelow) {
+      placeBottom = false;
+    }
+  } else if (menuHeight > spaceAbove && spaceBelow > spaceAbove) {
+    placeBottom = true;
+  }
 
-  const pad = 8;
-  left = Math.min(Math.max(pad, left), window.innerWidth - menu.width - pad);
-  top = Math.min(Math.max(pad, top), window.innerHeight - menu.height - pad);
+  let top = placeBottom
+    ? trigger.bottom + TRIGGER_GAP
+    : trigger.top - menuHeight - TRIGGER_GAP;
 
-  return {
-    position: 'fixed',
-    top,
-    left,
-    zIndex: 1100,
-    minWidth: Math.max(trigger.width, 10 * 16)
-  };
+  let left = preferEnd ? trigger.right - menuWidth : trigger.left;
+
+  left = Math.min(Math.max(VIEWPORT_PAD, left), vw - menuWidth - VIEWPORT_PAD);
+  top = Math.min(Math.max(VIEWPORT_PAD, top), vh - menuHeight - VIEWPORT_PAD);
+
+  return { top, left };
 }
+
+/** Off-screen + invisible until first successful measure (avoids 0,0 flash). */
+const MEASURE_STYLE: CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  zIndex: 1100,
+  visibility: 'hidden',
+  pointerEvents: 'none'
+};
+
+type MenuCoords = {
+  top: number;
+  left: number;
+  minWidth: number;
+};
 
 /**
  * Responsive dropdown (antd-free).
- * Desktop: floating menu near the trigger.
+ * Desktop: floating menu near the trigger with flip/shift auto-placement.
  * Mobile (`mobileMode="sheet"`): bottom sheet with dimmed backdrop.
  */
 export function Dropdown({
@@ -115,15 +143,10 @@ export function Dropdown({
   const listId = useId();
   const triggerWrapRef = useRef<HTMLSpanElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const coordsRef = useRef<MenuCoords | null>(null);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    zIndex: 1100,
-    visibility: 'hidden'
-  });
+  const [coords, setCoords] = useState<MenuCoords | null>(null);
   const isMobile = useIsMobile();
   const useSheet = isMobile && mobileMode === 'sheet';
 
@@ -134,32 +157,103 @@ export function Dropdown({
   const close = useCallback(() => setOpen(false), []);
   const toggle = useCallback(() => setOpen((v) => !v), []);
 
+  /**
+   * Measure with final minWidth applied, then reveal once.
+   * Skips React updates when top/left/minWidth are unchanged (avoids flash).
+   */
   const updatePosition = useCallback(() => {
-    if (useSheet) return;
-    const trigger = triggerWrapRef.current?.getBoundingClientRect();
-    const menu = menuRef.current?.getBoundingClientRect();
-    if (!trigger || !menu || menu.width === 0) return;
-    setMenuStyle({
-      ...computeMenuStyle(trigger, menu, placement),
-      visibility: 'visible'
-    });
+    if (useSheet) return false;
+    const triggerEl = triggerWrapRef.current;
+    const menuEl = menuRef.current;
+    if (!triggerEl || !menuEl) return false;
+
+    const trigger = triggerEl.getBoundingClientRect();
+    const minWidth = Math.max(trigger.width, MENU_MIN_WIDTH);
+
+    // Lock minWidth before measuring so bottom-end left is stable.
+    menuEl.style.minWidth = `${minWidth}px`;
+    const menuWidth = Math.max(menuEl.offsetWidth, minWidth);
+    const menuHeight = menuEl.offsetHeight;
+    if (menuWidth === 0 || menuHeight === 0) return false;
+
+    const { top, left } = computeMenuPosition(
+      trigger,
+      menuWidth,
+      menuHeight,
+      placement
+    );
+
+    const next: MenuCoords = { top, left, minWidth };
+    const prev = coordsRef.current;
+    const unchanged =
+      prev &&
+      prev.top === next.top &&
+      prev.left === next.left &&
+      prev.minWidth === next.minWidth;
+
+    // Imperative write before paint — keeps DOM correct even if React hasn't committed.
+    menuEl.style.position = 'fixed';
+    menuEl.style.top = `${top}px`;
+    menuEl.style.left = `${left}px`;
+    menuEl.style.zIndex = '1100';
+    menuEl.style.minWidth = `${minWidth}px`;
+    menuEl.style.visibility = 'visible';
+    menuEl.style.pointerEvents = 'auto';
+
+    if (unchanged) return true;
+
+    coordsRef.current = next;
+    setCoords(next);
+    return true;
   }, [placement, useSheet]);
 
   useLayoutEffect(() => {
     if (!open) {
-      setMenuStyle((prev) => ({ ...prev, visibility: 'hidden' }));
+      coordsRef.current = null;
+      setCoords(null);
       return;
     }
-    updatePosition();
+    if (useSheet) return;
+
+    let cancelled = false;
+    let ro: ResizeObserver | null = null;
+    let ignoreRo = true;
+    let retryRaf = 0;
+
+    if (!updatePosition()) {
+      // Portal/layout may not have size yet; retry once before paint via rAF.
+      retryRaf = requestAnimationFrame(() => {
+        if (!cancelled) updatePosition();
+      });
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const menuEl = menuRef.current;
+      if (menuEl) {
+        ro = new ResizeObserver(() => {
+          // observe() often fires once immediately — ignore that to avoid a jump.
+          if (ignoreRo) {
+            ignoreRo = false;
+            return;
+          }
+          if (!cancelled) updatePosition();
+        });
+        ro.observe(menuEl);
+      }
+    }
+
     const onReposition = () => updatePosition();
     window.addEventListener('resize', onReposition);
     window.addEventListener('scroll', onReposition, true);
+
     return () => {
+      cancelled = true;
+      cancelAnimationFrame(retryRaf);
+      ro?.disconnect();
       window.removeEventListener('resize', onReposition);
       window.removeEventListener('scroll', onReposition, true);
     };
-  }, [open, updatePosition]);
-
+  }, [open, updatePosition, useSheet]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: globalThis.KeyboardEvent) => {
@@ -317,9 +411,21 @@ export function Dropdown({
         <div
           ref={menuRef}
           data-testid={`${dataTestId}Menu`}
-          style={menuStyle}
+          style={
+            coords
+              ? {
+                  position: 'fixed',
+                  top: coords.top,
+                  left: coords.left,
+                  zIndex: 1100,
+                  minWidth: coords.minWidth,
+                  visibility: 'visible',
+                  pointerEvents: 'auto'
+                }
+              : MEASURE_STYLE
+          }
           className={clsx(
-            'rounded-lg border border-primary-border bg-primary shadow-lg overflow-hidden',
+            'min-w-[10rem] rounded-lg border border-primary-border bg-primary shadow-lg overflow-hidden',
             menuClassName
           )}
         >
