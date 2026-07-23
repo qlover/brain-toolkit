@@ -1,5 +1,33 @@
 # apps/brain-oauth
 
+## 1.3.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **apps:** 稳定 Dropdown 定位并消除首次展开闪动 ([c8d5514](https://github.com/qlover/brain-toolkit/commit/c8d5514c4282afe7eb7b77fcd11a01ff912ab466)) ([#87](https://github.com/qlover/brain-toolkit/pull/87))
+
+  先按最终 minWidth 测量再显示，并忽略 ResizeObserver 首次回调，避免打开时位置跳动。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### ♻️ Refactors
+
+- **apps:** replace shell antd with lightweight UI primitives ([c4f7c55](https://github.com/qlover/brain-toolkit/commit/c4f7c55a1efaf7b90b204853d52263357870c77e)) ([#85](https://github.com/qlover/brain-toolkit/pull/85))
+
+  Align brain-oauth and pam with fe-base: local Button/Dropdown/Tooltip/Table,
+  antd-free ClientRootProvider, and drop global antd CSS from the app shell.
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **brain-oauth:** streamline ESLint configuration and update project structure ([033e96e](https://github.com/qlover/brain-toolkit/commit/033e96e306aa0dda96060ef0195769fec7191fdd)) ([#84](https://github.com/qlover/brain-toolkit/pull/84))
+  - Removed references to 'examples' in ESLint and release configurations, focusing on 'apps' for better clarity.
+  - Updated ESLint rules to include 'apps/\*_/_.{ts,tsx}' for linting within the apps directory.
+  - Adjusted package.json scripts to exclude 'examples' and ensure proper linting and type-checking processes.
+  - Introduced new files and configurations for the brain-oauth application, including .env.template, .gitignore, and README documentation.
+  - Enhanced project structure by adding necessary configurations for Next.js and Tailwind CSS integration, improving overall maintainability and developer experience.
+
 ## 1.2.1
 
 ### Patch Changes
