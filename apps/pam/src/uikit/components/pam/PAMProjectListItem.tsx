@@ -207,13 +207,13 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
             <span className="hidden lg:inline">{ownerId}</span>
           </button>
         ) : null}
-        {ownerId && (project.stack || project.category) ? <span>·</span> : null}
-        {project.stack || project.category ? (
-          <span>{project.stack || project.category}</span>
-        ) : null}
+        {ownerId && project.category ? <span>·</span> : null}
+        {project.category ? <span>{project.category}</span> : null}
+        {(ownerId || project.category) && project.stack ? <span>·</span> : null}
+        {project.stack ? <span>{project.stack}</span> : null}
         {envChips ? (
           <>
-            {ownerId || project.stack || project.category ? (
+            {ownerId || project.category || project.stack ? (
               <span className="md:hidden">·</span>
             ) : null}
             <span className="inline-flex flex-wrap items-center gap-1 md:hidden">

@@ -19,7 +19,6 @@ import {
   PAMProjectEnvKey,
   SearchPAMProjectFields,
   PAMProjectTableName,
-  PAMPROJECT_TSVECTOR_KEY,
   SearchPAMRawProject,
   PAMProjectRaw,
   SearchPAMProject,
@@ -97,6 +96,7 @@ export class PAMProjectRepo extends BaseRepository<
     params: PAMProjectSearchParams
   ): Promise<ResourceSearchResult<SearchPAMRawProject>> {
     const { page = 1, pageSize = 20, user_id, fields } = params;
+    const keyword = params.keyword?.trim();
 
     const orConditions: FilterTriple<PAMProjectRaw>[] = [
       ['is_public', Operators.eq, 1]
@@ -112,11 +112,18 @@ export class PAMProjectRepo extends BaseRepository<
       page: page,
       pageSize: pageSize,
       sort: params.sort,
-      fullTextSearch: params.keyword
+      // Substring match across project text fields (not FTS / search_vector).
+      ilikeOr: keyword
         ? {
-            column: PAMPROJECT_TSVECTOR_KEY,
-            query: params.keyword,
-            config: 'english'
+            columns: [
+              'name',
+              'slug',
+              'description',
+              'stack',
+              'category',
+              'repo_url'
+            ],
+            query: keyword
           }
         : undefined,
       where: [['is_deleted', Operators.eq, DeleteStatus.UNDELETE]],

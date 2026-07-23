@@ -3,11 +3,19 @@ import {
   ListBulletIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { debounce } from 'lodash-es';
-import { useCallback, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent
+} from 'react';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type {
   PAMViewModeType,
@@ -17,7 +25,8 @@ import type {
 import { useStore } from '@/uikit/hook/useStore';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
-import type { ChangeEvent } from 'react';
+
+const SEARCH_DEBOUNCE_MS = 200;
 
 interface PAMToolbarProps {
   tt: PAMI18nInterface;
@@ -33,6 +42,7 @@ interface PAMToolbarProps {
 function keywordSelector(state: PAMFacadeStateInterface<PAMProjectDetail>) {
   return state.searchParams.keyword || '';
 }
+
 export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   tt,
   categoryValue,
@@ -44,24 +54,67 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   onCreate
 }) => {
   const facadeStore = facadeInterface.getFacadeStore();
-  const searchValue = useStore(facadeStore, keywordSelector);
+  const storeKeyword = useStore(facadeStore, keywordSelector);
+  const [draftKeyword, setDraftKeyword] = useState(storeKeyword);
 
-  const debouncedSearch = useRef(
-    debounce((keyword: string) => {
-      facadeInterface.searchProjectWithKeyword(keyword);
-    }, 500)
-  ).current;
+  // Sync when store keyword changes externally (e.g. reset elsewhere).
+  useEffect(() => {
+    setDraftKeyword(storeKeyword);
+  }, [storeKeyword]);
 
-  const onSearch = useCallback(
+  const runSearch = useCallback(
+    (keyword: string) => {
+      facadeStore.update({
+        searchParams: {
+          ...facadeStore.getState().searchParams,
+          keyword
+        }
+      });
+      void facadeInterface.searchProjectWithKeyword(keyword);
+    },
+    [facadeStore, facadeInterface]
+  );
+
+  const debouncedSearch = useMemo(
+    () => debounce(runSearch, SEARCH_DEBOUNCE_MS),
+    [runSearch]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  const onSearchChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const keyword = e.target.value;
-      facadeStore.update({
-        searchParams: { ...facadeStore.getState().searchParams, keyword }
-      });
+      setDraftKeyword(keyword);
       debouncedSearch(keyword);
     },
-    [facadeStore, debouncedSearch]
+    [debouncedSearch]
   );
+
+  const flushSearch = useCallback(() => {
+    debouncedSearch.flush();
+  }, [debouncedSearch]);
+
+  const onSearchKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        flushSearch();
+      }
+    },
+    [flushSearch]
+  );
+
+  const onClearSearch = useCallback(() => {
+    debouncedSearch.cancel();
+    setDraftKeyword('');
+    runSearch('');
+  }, [debouncedSearch, runSearch]);
+
   return (
     <div
       data-testid="PAMToolbar"
@@ -75,10 +128,21 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           <input
             type="text"
             placeholder={tt.placeholderSearch}
-            value={searchValue}
-            onChange={onSearch}
-            className="bg-secondary touch-target w-full rounded-xl border border-primary-border py-2 pr-4 pl-9 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:py-2.5"
+            value={draftKeyword}
+            onChange={onSearchChange}
+            onKeyDown={onSearchKeyDown}
+            className="bg-secondary touch-target w-full rounded-xl border border-primary-border py-2 pr-9 pl-9 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:py-2.5"
           />
+          {draftKeyword ? (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={onClearSearch}
+              className="text-tertiary-text hover:text-secondary-text absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors"
+            >
+              <XMarkIcon className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
 
         <div className="hidden relative min-w-25">
