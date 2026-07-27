@@ -10,6 +10,8 @@ interface PAMProjectListProps {
   projects: readonly SearchPAMProject[];
   viewMode: 'card' | 'compact';
   isOwner: (project: SearchPAMProject) => boolean;
+  /** When false, hide mutate actions and readonly badges (guest). */
+  isAuthenticated?: boolean;
   onEdit: (id: string) => void;
   onDelete: (project: SearchPAMProject) => void;
   loading?: boolean;
@@ -91,6 +93,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   projects,
   viewMode,
   isOwner,
+  isAuthenticated = false,
   onEdit,
   onDelete,
   loading = false
@@ -119,6 +122,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             key={project.id}
             project={project}
             isOwner={isOwner(project)}
+            isAuthenticated={isAuthenticated}
             onEdit={onEdit}
             onDelete={onDelete}
           />
@@ -138,7 +142,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             tt={tt}
             key={project.id}
             project={project}
-            isOwner={isOwner(project)}
+            isOwner={isAuthenticated && isOwner(project)}
             onEdit={onEdit}
             onDelete={onDelete}
           />

@@ -17,6 +17,7 @@ import {
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import { type PageParamsType } from '@server/render/AppPageRouteParams';
 import { getI18nInterface, getLocale } from '@server/render/pageRouteParams';
+import { version as appVersion } from '../../../../../package.json';
 import type { Metadata } from 'next';
 
 // Generate static params for all supported locales (used for SSG)
@@ -24,12 +25,6 @@ export async function generateStaticParams() {
   // Return one entry for each supported locale
   return i18nConfig.supportedLngs.map((locale) => ({ locale }));
 }
-
-// Allow Next.js to statically generate this page if possible (default behavior)
-// Note: 'auto' is not a valid value in Next.js 15, removed to use default behavior
-
-// Optional: Use revalidate if you want ISR (Incremental Static Regeneration)
-// export const revalidate = 3600; // Rebuild every hour (optional)
 
 // Generate localized SEO metadata per locale (Next.js 15+ best practice)
 export async function generateMetadata({
@@ -39,8 +34,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const resolvedParams = await params;
   const locale = getLocale(resolvedParams);
+  const meta = await getI18nInterface(locale, loginI18n);
 
-  return await getI18nInterface(locale, loginI18n);
+  return {
+    ...meta,
+    title: `${meta.title} · v${appVersion}`
+  };
 }
 
 export default async function LoginPage({ params }: PageParamsProps) {
@@ -58,12 +57,15 @@ export default async function LoginPage({ params }: PageParamsProps) {
     NS_PAGE_LOGIN
   );
 
+  const versionLabel = `v${appVersion}`;
+
   return (
     <PageI18nProvider value={tt}>
       <AppRoutePage
         data-testid="AppRoute-LoginPage"
         tt={{
-          title: tt.title,
+          title: tt.appName,
+          headerSubtitle: versionLabel,
           adminTitle: tt.adminTitle
         }}
         showHeaderNav={false}
@@ -74,8 +76,11 @@ export default async function LoginPage({ params }: PageParamsProps) {
         }}
       >
         <div className="hidden lg:flex bg-secondary lg:w-1/2 flex-col p-12">
-          <span className="border-primary-border text-brand mb-4 inline-flex w-fit items-center rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
-            OAuth 2.0
+          <span className="border-primary-border text-brand mb-4 inline-flex w-fit items-center gap-2 rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+            PAM
+            <span className="text-tertiary-text font-mono font-medium normal-case tracking-normal">
+              {versionLabel}
+            </span>
           </span>
           <p className="text-secondary-text mb-6 text-sm font-medium">
             {tt.badge}
@@ -99,13 +104,16 @@ export default async function LoginPage({ params }: PageParamsProps) {
         <div className="flex w-full items-center justify-center p-8 sm:p-12 lg:w-1/2">
           <div className="w-full max-w-[420px]">
             <div className="mb-8 lg:hidden">
-              <span className="border-primary-border text-brand mb-3 inline-flex items-center rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
-                OAuth 2.0
+              <span className="border-primary-border text-brand mb-3 inline-flex items-center gap-2 rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+                PAM
+                <span className="text-tertiary-text font-mono font-medium normal-case tracking-normal">
+                  {versionLabel}
+                </span>
               </span>
               <p className="text-secondary-text text-sm">{tt.badge}</p>
             </div>
             <h2 className="text-primary-text mb-2 text-2xl font-semibold">
-              {tt.title}
+              {tt.formTitle}
             </h2>
             <p className="text-secondary-text mb-6 text-sm leading-relaxed">
               {tt.formSubtitle}
@@ -135,6 +143,9 @@ export default async function LoginPage({ params }: PageParamsProps) {
               >
                 {tt.linkPlayground}
               </LocaleLink>
+            </p>
+            <p className="text-tertiary-text mt-3 text-center font-mono text-[11px]">
+              {versionLabel}
             </p>
           </div>
         </div>

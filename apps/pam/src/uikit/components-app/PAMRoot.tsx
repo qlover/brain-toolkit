@@ -2,6 +2,7 @@
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
+import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { useEffect, useLayoutEffect } from 'react';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
@@ -21,7 +22,7 @@ import { ResponsiveModal } from '../components/ResponsiveModal';
 import { usePageI18nMapping } from '../context/PageI18nContext';
 import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
-import type { ResourceSearchResult } from '@qlover/corekit-bridge';
+import { useUserAuth } from '../hook/useUserAuth';
 
 export type PAMRootProps = {
   /** First-page public projects from RSC/ISR (auth merge happens client-side). */
@@ -31,6 +32,7 @@ export type PAMRootProps = {
 export function PAMRoot({ initialList = null }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
+  const { success: isAuthenticated } = useUserAuth();
 
   const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
@@ -89,7 +91,11 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
         categories={[]}
-        onCreate={() => pamFacade.openDialog()}
+        canCreate={isAuthenticated}
+        onCreate={() => {
+          if (!isAuthenticated) return;
+          pamFacade.openDialog();
+        }}
       />
 
       <PAMProjectList
@@ -97,9 +103,14 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
         projects={projects}
         viewMode={viewMode}
         loading={listLoading && projects.length === 0}
+        isAuthenticated={isAuthenticated}
         isOwner={(data) => !!data.is_owner}
-        onEdit={(id) => pamFacade.triggerEdit(id)}
+        onEdit={(id) => {
+          if (!isAuthenticated) return;
+          pamFacade.triggerEdit(id);
+        }}
         onDelete={(project) => {
+          if (!isAuthenticated) return;
           dialog.confirm({
             okType: 'danger',
             title: tt.deleteProjectTitle,
@@ -119,7 +130,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
       />
 
       <ResponsiveModal
-        open={openDialog}
+        open={isAuthenticated && openDialog}
         title={isEditMode ? tt.editProjectTitle : tt.createProjectTitle}
         onClose={closeDialog}
         footer={

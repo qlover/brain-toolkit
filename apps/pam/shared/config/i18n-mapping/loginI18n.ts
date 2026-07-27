@@ -24,6 +24,8 @@ export const loginI18n = Object.freeze({
   keywords: i18nKeys.PAGE_LOGIN_KEYWORDS,
 
   // login page
+  appName: i18nKeys.PAGE_LOGIN_APP_NAME,
+  formTitle: i18nKeys.PAGE_LOGIN_FORM_TITLE,
   badge: i18nKeys.PAGE_LOGIN_BADGE,
   welcome: i18nKeys.PAGE_LOGIN_WELCOME,
   subtitle: i18nKeys.PAGE_LOGIN_SUBTITLE,
@@ -55,6 +57,7 @@ export const loginI18n = Object.freeze({
   // login tab switch
   tabEmail: i18nKeys.PAGE_LOGIN_TAB_EMAIL,
   tabPhone: i18nKeys.PAGE_LOGIN_TAB_PHONE,
+  tabPhoneDisabled: i18nKeys.PAGE_LOGIN_TAB_PHONE_DISABLED,
 
   // phone OTP login
   phoneTitle: i18nKeys.PAGE_LOGIN_PHONE_TITLE,
