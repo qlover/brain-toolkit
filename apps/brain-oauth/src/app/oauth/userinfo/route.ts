@@ -61,10 +61,8 @@ export async function GET(req: NextRequest) {
       const user = await IOC(OAuthWrapperController).getUserInfo(accessToken!);
 
       return {
-        sub: String(user.id),
-        email: user.email,
-        email_verified: true,
-        name: user.email
+        ...user,
+        email_verified: true
       };
     },
     {
