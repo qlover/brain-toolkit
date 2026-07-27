@@ -22,15 +22,8 @@ export const ROUTE_LOGIN = '/auth/login' as const;
 export const ROUTE_REGISTER = '/auth/register' as const;
 
 /**
- * Email OTP / Magic Link 登录回调页面
- *
- * 用户点击邮件中的 magic link 后，Supabase 重定向到此页面。
- * 前端 client component 读取 URL hash fragment 中的 tokens 并建立 session。
- *
- * 未来可能增加的回调页面：
- *   - /callback/email-verify-callback  邮箱验证回调
- *   - /callback/register-success       注册成功
- *   - /callback/register-error         注册失败
+ * Email OTP / Magic Link callback page.
+ * Shows loading UI, exchanges PKCE ?code=, then POSTs to /api/callback/email-login.
  */
 export const ROUTE_CALLBACK_EMAIL_LOGIN = '/callback/email-login' as const;
 
@@ -81,6 +74,16 @@ export const OAUTH_MACHINE_ROUTES = [
   ROUTE_CALLBACK_EMAIL_LOGIN
 ] as const;
 
+/**
+ * OAuth endpoints mounted at `src/app/oauth/*` (no `[locale]` segment).
+ * next-intl must not rewrite these to `/zh/oauth/token` etc.
+ */
+export const OAUTH_LOCALE_AGNOSTIC_ROUTES = [
+  ROUTE_OAUTH_TOKEN,
+  ROUTE_OAUTH_REVOKE,
+  ROUTE_OAUTH_USERINFO
+] as const;
+
 /** Routes that are allowed without authentication (public routes). */
 export const AUTH_ROUTES = [
   ROUTE_HOME,
@@ -103,6 +106,16 @@ export const LOGINED_PAGES = [
  */
 export function isOAuthMachinePath(pathname: string): boolean {
   return OAUTH_MACHINE_ROUTES.some(
+    (route) => pathname === route || pathname.endsWith(route)
+  );
+}
+
+/**
+ * Returns true if pathname is a locale-agnostic OAuth endpoint
+ * (`/oauth/token`, `/oauth/revoke`, `/oauth/userinfo`).
+ */
+export function isOAuthLocaleAgnosticPath(pathname: string): boolean {
+  return OAUTH_LOCALE_AGNOSTIC_ROUTES.some(
     (route) => pathname === route || pathname.endsWith(route)
   );
 }
@@ -157,6 +170,15 @@ export function isOAuthRoutePath(pathname: string): boolean {
   return OAUTH_MACHINE_ROUTES.some(
     (route) => pathname === route || pathname.endsWith(route)
   );
+}
+
+/**
+ * Whether the path is an auth callback page under `/callback/*`
+ * (e.g. `/en/callback/email-login`). These pages establish session first,
+ * so bootstrap must not call `/api/user/session` prematurely.
+ */
+export function isAuthCallbackPath(pathname: string): boolean {
+  return /(?:^|\/)callback(?:\/|$)/.test(pathname);
 }
 
 /**

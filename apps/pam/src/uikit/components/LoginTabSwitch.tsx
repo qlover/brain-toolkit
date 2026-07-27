@@ -43,10 +43,14 @@ const providersItems: ProvidersItem[] = Object.values(loginProviders).map(
   })
 );
 
+/**
+ * PAM login entry: phone tab is visible but disabled; email magic-link (OTP)
+ * is the default. Password login remains available via a switch link.
+ */
 export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const userGateway = useIOC(AppUserGateway);
   const [tab, setTab] = useState<LoginTab>('email');
-  const [emailMode, setEmailMode] = useState<EmailMode>('password');
+  const [emailMode, setEmailMode] = useState<EmailMode>('otp');
   const [providerLogining, setProviderLogining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,7 +121,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </div>
       </div>
 
-      <div className="flex border-b border-primary-border mb-6">
+      <div className="flex border-b border-primary-border mb-6" role="tablist">
         <button
           type="button"
           className={`${tabBaseClass} ${tab === 'email' ? tabActiveClass : tabInactiveClass}`}
@@ -143,37 +147,34 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </button>
       </div>
 
-      {tab === 'email' && (
-        <>
-          {emailMode === 'password' ? (
-            <>
-              <LoginForm tt={tt} />
-              <p className="text-center mt-4">
-                <button
-                  type="button"
-                  onClick={() => setEmailMode('otp')}
-                  className="text-brand text-sm hover:underline"
-                >
-                  {tt.switchToOtp}
-                </button>
-              </p>
-            </>
-          ) : (
-            <>
-              <EmailOTPForm tt={tt} />
-              <p className="text-center mt-4">
-                <button
-                  type="button"
-                  onClick={() => setEmailMode('password')}
-                  className="text-brand text-sm hover:underline"
-                >
-                  {tt.switchToPassword}
-                </button>
-              </p>
-            </>
-          )}
-        </>
-      )}
+      {tab === 'email' &&
+        (emailMode === 'otp' ? (
+          <>
+            <EmailOTPForm tt={tt} />
+            <p className="text-center mt-4">
+              <button
+                type="button"
+                onClick={() => setEmailMode('password')}
+                className="text-brand text-sm hover:underline"
+              >
+                {tt.switchToPassword}
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <LoginForm tt={tt} />
+            <p className="text-center mt-4">
+              <button
+                type="button"
+                onClick={() => setEmailMode('otp')}
+                className="text-brand text-sm hover:underline"
+              >
+                {tt.switchToOtp}
+              </button>
+            </p>
+          </>
+        ))}
 
       {phoneLoginEnabled && tab === 'phone' && <PhoneLoginForm tt={tt} />}
     </div>

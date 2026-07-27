@@ -1,4 +1,4 @@
-import { ArrowPathIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
+import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import React from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
@@ -17,33 +17,74 @@ interface PAMProjectListProps {
   loading?: boolean;
 }
 
-function PAMProjectListEmpty({
-  tt,
-  loading
+function PAMProjectListSkeleton({
+  viewMode
 }: {
-  tt: PAMI18nInterface;
-  loading: boolean;
+  viewMode: 'card' | 'compact';
 }) {
+  const items = Array.from({ length: 6 }, (_, i) => i);
+
+  if (viewMode === 'card') {
+    return (
+      <div
+        data-testid="PAMProjectListSkeleton"
+        className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3"
+      >
+        {items.map((key) => (
+          <div
+            data-testid="PAMProjectListSkeleton"
+            key={key}
+            className="animate-pulse rounded-2xl border border-primary-border bg-secondary p-4 sm:p-5"
+          >
+            <div className="mb-4 flex items-start gap-3">
+              <div className="h-12 w-12 shrink-0 rounded-xl bg-elevated sm:h-14 sm:w-14" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-2/3 rounded bg-elevated" />
+                <div className="h-3 w-1/2 rounded bg-elevated" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-full rounded bg-elevated" />
+              <div className="h-3 w-4/5 rounded bg-elevated" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-testid="PAMProjectListSkeleton"
+      className="bg-secondary overflow-hidden rounded-2xl border border-primary-border shadow-sm"
+    >
+      <div className="divide-y divide-primary-border">
+        {items.map((key) => (
+          <div
+            data-testid="PAMProjectListSkeleton"
+            key={key}
+            className="flex animate-pulse items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5"
+          >
+            <div className="h-12 w-12 shrink-0 rounded-xl bg-elevated" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-4 w-1/3 rounded bg-elevated" />
+              <div className="h-3 w-2/3 rounded bg-elevated" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PAMProjectListEmpty({ tt }: { tt: PAMI18nInterface }) {
   return (
     <div
       data-testid="PAMProjectListEmpty"
       className="bg-secondary mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary-border px-4 py-12 sm:py-16"
     >
-      {loading ? (
-        <>
-          <ArrowPathIcon className="h-12 w-12 text-brand mb-3 text-4xl sm:text-5xl animate-spin" />
-          <p className="text-secondary-text text-sm sm:text-base">
-            {tt.loadingText}
-          </p>
-        </>
-      ) : (
-        <>
-          <CloudArrowUpIcon className="h-12 w-12 pam-empty-icon text-tertiary-text mb-3 text-4xl sm:text-5xl" />
-          <p className="text-secondary-text text-sm sm:text-base">
-            {tt.noProject}
-          </p>
-        </>
-      )}
+      <CloudArrowUpIcon className="h-12 w-12 pam-empty-icon text-tertiary-text mb-3 text-4xl sm:text-5xl" />
+      <p className="text-secondary-text text-sm sm:text-base">{tt.noProject}</p>
     </div>
   );
 }
@@ -61,7 +102,11 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   if (projects.length === 0) {
     return (
       <div data-testid="PAMProjectList">
-        <PAMProjectListEmpty tt={tt} loading={loading} />
+        {loading ? (
+          <PAMProjectListSkeleton viewMode={viewMode} />
+        ) : (
+          <PAMProjectListEmpty tt={tt} />
+        )}
       </div>
     );
   }

@@ -12,7 +12,6 @@ import { Dropdown } from '../Dropdown';
 import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
 import {
   getPAMAvatarLetter,
-  getPAMDisplayHost,
   getPAMPrimaryUrl,
   shortenPAMOwnerId
 } from './PAMProjectDisplayUtil';
@@ -46,7 +45,6 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     [project.environments]
   );
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
-  const host = getPAMDisplayHost(primaryUrl);
   const avatarLetter = getPAMAvatarLetter(project.name);
   const isPublic = project.is_public === PAMPublicType.public;
 
@@ -140,15 +138,16 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
                 className="shrink-0"
               />
             </div>
-            {host ? (
+            {primaryUrl ? (
               <div className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text ">
                 <a
                   href={primaryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title={primaryUrl}
                   className="no-underline hover:text-secondary-text hover:underline"
                 >
-                  {host}
+                  {primaryUrl}
                 </a>
               </div>
             ) : project.stack ? (
