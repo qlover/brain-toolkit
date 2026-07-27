@@ -2,12 +2,17 @@
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { PAMFacade } from '@/impls/PAMfacade';
+import { useEffect, useLayoutEffect } from 'react';
+import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
+import { defaultSearchParams } from '@config/common';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
-import type { PAMProjectUpdate } from '@schemas/PAMProjectSchema';
+import type {
+  PAMProjectUpdate,
+  SearchPAMProject
+} from '@schemas/PAMProjectSchema';
 import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
@@ -16,8 +21,14 @@ import { ResponsiveModal } from '../components/ResponsiveModal';
 import { usePageI18nMapping } from '../context/PageI18nContext';
 import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
+import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
-export function PAMRoot() {
+export type PAMRootProps = {
+  /** First-page public projects from RSC/ISR (auth merge happens client-side). */
+  initialList?: ResourceSearchResult<SearchPAMProject> | null;
+};
+
+export function PAMRoot({ initialList = null }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
 
@@ -31,13 +42,35 @@ export function PAMRoot() {
   const isEditMode = Boolean(editProject);
   const isSubmitting = createState.loading;
 
-  const projects = useStore(pamFacadeStore, (state) => state.projects || []);
+  const storeProjects = useStore(
+    pamFacadeStore,
+    (state) => state.projects || []
+  );
   const listLoading = useStore(pamFacadeStore, (state) => state.loading);
   const persistedViewMode = useStore(pamFacadeStore, (state) => state.viewMode);
   const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
 
+  // Prefer store; fall back to RSC props so SSR HTML already has rows.
+  const projects =
+    storeProjects.length > 0 ? storeProjects : (initialList?.items ?? []);
+
   // Keep SSR + first client paint on Compact; apply persisted mode after mount.
   const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
+
+  useLayoutEffect(() => {
+    if (initialList?.items) {
+      pamFacade.hydrateInitialList(initialList);
+    }
+  }, [initialList, pamFacade]);
+
+  // Background refresh picks up private projects / is_owner after session restore.
+  useEffect(() => {
+    void pamFacade.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace
+    });
+  }, [pamFacade]);
 
   const closeDialog = () => pamFacade.closeDialog();
 
@@ -63,7 +96,7 @@ export function PAMRoot() {
         tt={tt}
         projects={projects}
         viewMode={viewMode}
-        loading={listLoading}
+        loading={listLoading && projects.length === 0}
         isOwner={(data) => !!data.is_owner}
         onEdit={(id) => pamFacade.triggerEdit(id)}
         onDelete={(project) => {
@@ -82,6 +115,7 @@ export function PAMRoot() {
         errorText={tt.errorText}
         loadMoreText={tt.loadMoreText}
         infiniteFacade={pamFacadeInfinite}
+        skipInitialLoad
       />
 
       <ResponsiveModal

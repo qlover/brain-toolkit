@@ -13,6 +13,11 @@ interface PAMLoadMoreTriggerProps<T extends SearchPAMProject> {
   loadMoreText?: string;
   /** Hide footer loading when the list is still empty (initial load uses list empty state). */
   hideWhenListEmpty?: boolean;
+  /**
+   * Skip the mount-time first-page fetch when the list was already seeded
+   * (e.g. RSC initialList + PAMRoot background refresh).
+   */
+  skipInitialLoad?: boolean;
 }
 
 export function PAMLoadMoreTrigger<T extends SearchPAMProject>({
@@ -21,7 +26,8 @@ export function PAMLoadMoreTrigger<T extends SearchPAMProject>({
   noMoreText = '— 已全部加载 —',
   errorText = '加载失败，点击重试',
   loadMoreText = '加载更多',
-  hideWhenListEmpty = true
+  hideWhenListEmpty = true,
+  skipInitialLoad = false
 }: PAMLoadMoreTriggerProps<T>) {
   const store = infiniteFacade.getStore();
 
@@ -41,8 +47,9 @@ export function PAMLoadMoreTrigger<T extends SearchPAMProject>({
   });
 
   useEffect(() => {
+    if (skipInitialLoad) return;
     loadMore();
-  }, [loadMore]);
+  }, [loadMore, skipInitialLoad]);
 
   useEffect(() => {
     if (inView && !loading && hasMore) {

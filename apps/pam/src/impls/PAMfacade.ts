@@ -3,6 +3,7 @@ import {
   type StoreInterface,
   type ResourceSearchResult,
   AsyncStore,
+  AsyncStoreStatus,
   createAsyncState,
   AsyncStoreStateInterface,
   GatewayResult
@@ -135,6 +136,33 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     AsyncStoreStateInterface<SearchPAMProject>
   > {
     return this.detailStore.getStore();
+  }
+
+  /**
+   * Seed the list store from SSR/ISR public data before the first client fetch.
+   * Idempotent — skips if the list already has rows or a request is in flight.
+   */
+  public hydrateInitialList(
+    result: ResourceSearchResult<SearchPAMProject>
+  ): void {
+    const state = this.searchStore.getState();
+    if (
+      state.projects.length > 0 ||
+      state.status === AsyncStoreStatus.PENDING ||
+      state.status === AsyncStoreStatus.SUCCESS
+    ) {
+      return;
+    }
+
+    const page = result.page ?? defaultSearchParams.page;
+    this.searchStore.success(result);
+    this.searchStore.emit({
+      searchParams: {
+        ...state.searchParams,
+        page
+      },
+      projects: result.items as SearchPAMProject[]
+    });
   }
 
   /**

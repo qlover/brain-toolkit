@@ -9,7 +9,11 @@ import {
   getLocale,
   type PageParamsType
 } from '@server/render/pageRouteParams';
+import { getPublicProjectsForHome } from '@server/utils/getPublicProjectsForHome';
 import type { Metadata } from 'next';
+
+/** Revalidate public home list periodically (pairs with unstable_cache). */
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   return i18nConfig.supportedLngs.map((locale) => ({ locale }));
@@ -28,7 +32,10 @@ export async function generateMetadata({
 export default async function Home({ params }: PageParamsProps) {
   const resolvedParams = await params!;
   const locale = getLocale(resolvedParams);
-  const tt = await getI18nInterface(locale, pamI18n, pamI18nNamespace);
+  const [tt, initialList] = await Promise.all([
+    getI18nInterface(locale, pamI18n, pamI18nNamespace),
+    getPublicProjectsForHome()
+  ]);
 
   return (
     <PageI18nProvider value={tt}>
@@ -39,7 +46,7 @@ export default async function Home({ params }: PageParamsProps) {
         authButtonShowLogoutLabel
         showHeaderLogo
       >
-        <PAMRoot />
+        <PAMRoot initialList={initialList} />
       </AppRoutePage>
     </PageI18nProvider>
   );
