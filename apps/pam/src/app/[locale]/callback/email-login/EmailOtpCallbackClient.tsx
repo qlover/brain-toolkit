@@ -16,7 +16,7 @@ import type { EmailOtpCallbackI18nInterface } from '@config/i18n-mapping/emailOt
 import { I } from '@config/ioc-identifiter';
 import {
   API_CALLBACK_EMAIL_LOGIN,
-  ROUTE_DEVELOPER_APPS,
+  ROUTE_HOME,
   ROUTE_LOGIN
 } from '@config/route';
 
@@ -90,7 +90,7 @@ export function EmailOtpCallbackClient({ tt }: EmailOtpCallbackClientProps) {
         await userService.refreshUser({ disabledDialogError: true });
 
         if (cancelled) return;
-        router.replace(ROUTE_DEVELOPER_APPS);
+        router.replace(ROUTE_HOME);
       } catch (err) {
         console.error('Email OTP callback error:', err);
         if (!cancelled) setStatus('error');

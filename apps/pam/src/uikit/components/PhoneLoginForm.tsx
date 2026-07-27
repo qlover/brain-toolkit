@@ -14,7 +14,7 @@ import { useReturnTo } from '@/uikit/hook/useReturnTo';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
-import { ROUTE_DEVELOPER_APPS, ROUTE_REGISTER } from '@config/route';
+import { ROUTE_HOME, ROUTE_REGISTER } from '@config/route';
 
 const inputClass =
   'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-xl border bg-bg-container px-4 py-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
@@ -114,7 +114,7 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
     setLoading(true);
     try {
       await userGateway.verifyOtp({ phone: phone.trim(), token: otp.trim() });
-      returnTo(ROUTE_DEVELOPER_APPS);
+      returnTo(ROUTE_HOME);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Phone login failed');
     } finally {

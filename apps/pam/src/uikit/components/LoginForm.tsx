@@ -9,7 +9,7 @@ import { LoginValidator } from '@shared/validators/LoginValidator';
 import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_DEVELOPER_APPS, ROUTE_REGISTER } from '@config/route';
+import { ROUTE_HOME, ROUTE_REGISTER } from '@config/route';
 import type { LoginSchema } from '@schemas/LoginSchema';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { useReturnTo } from '../hook/useReturnTo';
@@ -69,7 +69,7 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
     setLoading(true);
     try {
       await userGateway.verify(payload);
-      returnTo(ROUTE_DEVELOPER_APPS);
+      returnTo(ROUTE_HOME);
       // setSuccess(true);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Login failed');
