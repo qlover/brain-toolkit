@@ -61,6 +61,7 @@ function PAMProjectListSkeleton({
       <div className="divide-y divide-primary-border">
         {items.map((key) => (
           <div
+            data-testid="PAMProjectListSkeleton"
             key={key}
             className="flex animate-pulse items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5"
           >

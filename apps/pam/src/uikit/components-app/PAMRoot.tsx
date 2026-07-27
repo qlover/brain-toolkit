@@ -2,7 +2,6 @@
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
-import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { useEffect, useLayoutEffect } from 'react';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
@@ -23,6 +22,7 @@ import { usePageI18nMapping } from '../context/PageI18nContext';
 import { useIOC } from '../hook/useIOC';
 import { useStore } from '../hook/useStore';
 import { useUserAuth } from '../hook/useUserAuth';
+import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
 export type PAMRootProps = {
   /** First-page public projects from RSC/ISR (auth merge happens client-side). */
