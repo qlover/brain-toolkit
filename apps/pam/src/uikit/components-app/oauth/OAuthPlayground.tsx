@@ -23,7 +23,10 @@ import {
 } from 'react';
 import { Link } from '@/i18n/routing';
 import { AppUserGateway } from '@/impls/AppUserGateway';
-import { readAppApiJson } from '@/uikit/components-app/developer/apps/readAppApiJson';
+import {
+  readAppApiJson,
+  readOAuthMachineJson
+} from '@/uikit/components-app/developer/apps/readAppApiJson';
 import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
@@ -413,7 +416,7 @@ export function OAuthPlayground() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
       });
-      const result = await readAppApiJson(res);
+      const result = await readOAuthMachineJson(res);
       setTokenResponse({ status: res.status, body: result });
     } catch (err) {
       setErrorMessage(
@@ -444,7 +447,7 @@ export function OAuthPlayground() {
       const res = await fetch(ROUTE_OAUTH_USERINFO, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      const result = await readAppApiJson(res);
+      const result = await readOAuthMachineJson(res);
       setUserinfoResponse({ status: res.status, body: result });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Userinfo failed');
