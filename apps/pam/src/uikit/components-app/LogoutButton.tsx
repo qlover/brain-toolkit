@@ -51,9 +51,7 @@ export function LogoutButton(props: { showLabel?: boolean }) {
         <ArrowRightOnRectangleIcon
           className={showLabel ? 'h-4 w-4' : 'h-5 w-5'}
         />
-        {showLabel && (
-          <span className="max-sm:hidden inline">{tt.title}</span>
-        )}
+        {showLabel && <span className="max-sm:hidden inline">{tt.title}</span>}
       </Button>
     </Tooltip>
   );
