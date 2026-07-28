@@ -99,7 +99,7 @@ export const PAMFormEnvironmentBlock: React.FC<
             className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10 hover:opacity-80 touch-manipulation sm:text-sm"
           >
             <TrashIcon className="h-3 w-3" />
-            <span className="hidden sm:inline">{tt.envDelete}</span>
+            <span className="max-sm:hidden inline">{tt.envDelete}</span>
           </button>
         </div>
 

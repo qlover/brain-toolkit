@@ -160,7 +160,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
 
         <div className="flex max-w-[min(100%,20rem)] shrink-0 flex-wrap items-center justify-end gap-1.5">
           {envChips ? (
-            <div className="hidden flex-wrap items-center justify-end gap-1 md:flex">
+            <div className="max-md:hidden flex flex-wrap items-center justify-end gap-1">
               {envChips}
             </div>
           ) : null}
@@ -189,7 +189,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         </div>
       </div>
 
-      <p className="hidden truncate text-sm text-primary-text md:block">
+      <p className="max-md:hidden truncate text-sm text-primary-text block">
         {project.description || tt.noDesc}
       </p>
 
@@ -203,7 +203,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
             className="font-mono text-tertiary-text transition hover:text-primary-text"
           >
             <span className="lg:hidden">{ownerIdShort}</span>
-            <span className="hidden lg:inline">{ownerId}</span>
+            <span className="max-lg:hidden inline">{ownerId}</span>
           </button>
         ) : null}
         {ownerId && project.category ? <span>·</span> : null}

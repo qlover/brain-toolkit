@@ -151,9 +151,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           className
         )}
       >
-        {mode === 'edit' && (
-          <input className="hidden" type="hidden" {...register('id')} />
-        )}
+        {mode === 'edit' && <input type="hidden" {...register('id')} />}
 
         <div className="space-y-3 sm:space-y-4">
           <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">

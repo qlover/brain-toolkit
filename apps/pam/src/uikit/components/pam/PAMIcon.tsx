@@ -69,7 +69,7 @@ export function PAMPublicIcon(props: {
     >
       <LockClosedIcon className="h-3 w-3 sm:h-[13px] sm:w-[13px] md:h-3.5 md:w-3.5" />
       {showLabel ? (
-        <span className="hidden text-[0.65rem] leading-none md:inline">
+        <span className="max-md:hidden text-[0.65rem] leading-none inline">
           {privateTitle}
         </span>
       ) : null}
