@@ -75,7 +75,7 @@ export default async function LoginPage({ params }: PageParamsProps) {
           className: 'text-xs1 bg-primary flex min-h-screen'
         }}
       >
-        <div className="hidden lg:flex bg-secondary lg:w-1/2 flex-col p-12">
+        <div className="max-lg:hidden flex bg-secondary lg:w-1/2 flex-col p-12">
           <span className="border-primary-border text-brand mb-4 inline-flex w-fit items-center gap-2 rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
             PAM
             <span className="text-tertiary-text font-mono font-medium normal-case tracking-normal">
@@ -102,7 +102,7 @@ export default async function LoginPage({ params }: PageParamsProps) {
         </div>
 
         <div className="flex w-full items-center justify-center p-8 sm:p-12 lg:w-1/2">
-          <div className="w-full max-w-[420px]">
+          <div className="w-full max-w-2xl">
             <div className="mb-8 lg:hidden">
               <span className="border-primary-border text-brand mb-3 inline-flex items-center gap-2 rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
                 PAM

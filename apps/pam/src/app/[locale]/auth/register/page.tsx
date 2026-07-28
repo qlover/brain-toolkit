@@ -67,7 +67,7 @@ export default async function LoginPage({ params }: PageParamsProps) {
           className: 'text-xs1 bg-primary flex min-h-screen'
         }}
       >
-        <div className="hidden lg:flex bg-secondary lg:w-1/2 p-12 flex-col">
+        <div className="max-lg:hidden flex bg-secondary lg:w-1/2 p-12 flex-col">
           <h1 className="text-4xl font-bold text-primary-text mb-4">
             {tt.welcome}
           </h1>
@@ -80,7 +80,7 @@ export default async function LoginPage({ params }: PageParamsProps) {
         </div>
 
         <div className="w-full lg:w-1/2 p-8 sm:p-12 flex items-center justify-center">
-          <div className="w-full max-w-[420px]">
+          <div className="w-full max-w-2xl">
             <h2 className="text-2xl font-semibold mb-2 text-primary-text">
               {tt.title}
             </h2>

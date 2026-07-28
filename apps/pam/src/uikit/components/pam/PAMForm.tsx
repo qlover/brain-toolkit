@@ -151,9 +151,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           className
         )}
       >
-        {mode === 'edit' && (
-          <input className="hidden" type="hidden" {...register('id')} />
-        )}
+        {mode === 'edit' && <input type="hidden" {...register('id')} />}
 
         <div className="space-y-3 sm:space-y-4">
           <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
@@ -176,7 +174,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                   onClick={togglePublic}
                   className={clsx(
                     'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap',
-                    'rounded-[10px] border px-3 text-xs font-semibold transition',
+                    'rounded-2xl border px-3 text-xs font-semibold transition',
                     'cursor-pointer touch-manipulation',
                     isPublic
                       ? 'border-brand/40 bg-brand/10 text-brand'
@@ -292,14 +290,14 @@ export const PAMForm: React.FC<PAMFormProps> = ({
               type="button"
               onClick={onCancel}
               disabled={busy}
-              className="w-full cursor-pointer rounded-[10px] border border-primary-border px-4 py-2.5 text-sm text-secondary-text transition hover:bg-elevated disabled:opacity-50 sm:w-auto sm:px-6 sm:py-3 sm:text-base"
+              className="w-full cursor-pointer rounded-2xl border border-primary-border px-4 py-2.5 text-sm text-secondary-text transition hover:bg-elevated disabled:opacity-50 sm:w-auto sm:px-6 sm:py-3 sm:text-base"
             >
               {tt.formCancel}
             </button>
             <button
               type="submit"
               disabled={busy}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-35 sm:px-6 sm:py-3 sm:text-base"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-35 sm:px-6 sm:py-3 sm:text-base"
             >
               {busy ? (
                 <>

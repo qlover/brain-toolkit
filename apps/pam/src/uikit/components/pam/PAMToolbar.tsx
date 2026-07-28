@@ -148,7 +148,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           ) : null}
         </div>
 
-        <div className="hidden relative min-w-25">
+        <div hidden className="relative min-w-25">
           <select
             value={categoryValue}
             onChange={(e) => onCategoryChange(e.target.value)}
@@ -183,7 +183,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             )}
           >
             <Squares2X2Icon className="h-4 w-4" />
-            <span className="xs:inline hidden">{tt.pamViewModeCard}</span>
+            <span className="max-sm:hidden inline">{tt.pamViewModeCard}</span>
           </button>
           <button
             title={tt.pamViewModeList}
@@ -198,7 +198,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             )}
           >
             <ListBulletIcon className="h-4 w-4" />
-            <span className="xs:inline hidden">{tt.pamViewModeList}</span>
+            <span className="max-sm:hidden inline">{tt.pamViewModeList}</span>
           </button>
         </div>
 
@@ -210,8 +210,8 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             className="bg-brand flex-1 md:flex-none hover:bg-brand-hover active:bg-brand-active text-on-brand touch-target flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium shadow-md transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
           >
             <PlusIcon className="h-4 w-4" />
-            <span className="xs:inline hidden">{tt.addPam}</span>
-            <span className="xs:hidden">{tt.addPamsm}</span>
+            <span className="max-sm:hidden inline">{tt.addPam}</span>
+            <span className="sm:hidden">{tt.addPamsm}</span>
           </button>
         ) : null}
       </div>
