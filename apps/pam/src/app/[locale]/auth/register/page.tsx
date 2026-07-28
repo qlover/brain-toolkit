@@ -80,7 +80,7 @@ export default async function LoginPage({ params }: PageParamsProps) {
         </div>
 
         <div className="w-full lg:w-1/2 p-8 sm:p-12 flex items-center justify-center">
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-[420px]">
             <h2 className="text-2xl font-semibold mb-2 text-primary-text">
               {tt.title}
             </h2>

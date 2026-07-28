@@ -102,7 +102,7 @@ export default async function LoginPage({ params }: PageParamsProps) {
         </div>
 
         <div className="flex w-full items-center justify-center p-8 sm:p-12 lg:w-1/2">
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-[420px]">
             <div className="mb-8 lg:hidden">
               <span className="border-primary-border text-brand mb-3 inline-flex items-center gap-2 rounded-full border bg-bg-container px-3 py-1 text-xs font-semibold tracking-wide uppercase">
                 PAM
