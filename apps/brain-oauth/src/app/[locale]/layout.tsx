@@ -10,6 +10,7 @@ import '@/styles/index.css';
 import { themeConfig } from '@config/theme';
 import type { PageLayoutProps } from '@interfaces/AppPageRouter';
 import { getI18nMessages, getLocale } from '@server/render/pageRouteParams';
+import type { Metadata } from 'next';
 
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
@@ -17,26 +18,37 @@ const inter = Inter({
   variable: '--font-inter'
 });
 
+/**
+ * Prefer public/favicon.svg (SVG + prefers-color-scheme) over app/icon.svg so
+ * Next does not rasterize away light/dark fill switching.
+ */
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml'
+      }
+    ]
+  }
+};
+
 export function generateStaticParams() {
   return i18nConfig.supportedLngs.map((locale) => ({ locale }));
 }
 
 /**
- * RootLayout is the root layout for the app
+ * App Router root layout — public / SSG-oriented surfaces under `src/app`.
  *
- * 注意事项:
+ * Auth: page entry for login-required routes is middleware (`LOGINED_PAGES`),
+ * not a layout-level client gate. Client `useUserAuth` is local UI only.
  *
- * 1. Layout 组件建议不要使用类似客户端渲染, 比如 useMountedClient 等这样会导致重渲染时dom节点发生变化,
- * 页面闪烁特别是切换语言时
- *
- * 2. Layout 组件内 IOCProvider 置于顶层, 因为整个项目依赖容器化
- * 在 spa 中项目中，也就是前端渲染时是不需要要区分渲染环境(server 和 client)
- *
- * 3. 除了已有的 provider 外, 尽量使用 ClientRootProvider 包裹所有客户端组件
- *
- * @param children - The children components
- * @param params - The page parameters
- * @returns
+ * Notes:
+ * 1. Avoid client-only mount gates in layout (e.g. useMountedClient) — they
+ *    remount DOM and flicker, especially on locale switch.
+ * 2. Keep IOCProvider at the top; the SPA client does not split server/client IOC.
+ * 3. Wrap client-only hosts with ClientRootProvider; do not blank the whole tree
+ *    with `dynamic(..., { ssr: false })` around page content.
  */
 export default async function RootLayout({
   children,

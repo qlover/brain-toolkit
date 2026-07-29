@@ -102,7 +102,7 @@ export class OAuthUserService
 
     await this.requestLogsRepository.insertWithAuth({
       event_type: 'logout',
-      auth_provider: 'next-oauth',
+      auth_provider: 'pam',
       userAgent: context?.userAgent ?? null,
       ipAddress: context?.ipAddress ?? null,
       user_id: user?.id

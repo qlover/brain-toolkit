@@ -113,8 +113,8 @@ export const COMMON_I18N_KEY_INVALID = 'common:i18n_key_invalid';
 
 /**
  * @description manifest name
- * @localZh 应用名称
- * @localEn Application Name
+ * @localZh PAM 资产中心
+ * @localEn PAM Asset Center
  */
 export const COMMON_MANIFEST_NAME = 'common:manifest__name';
 

@@ -5,6 +5,16 @@ import { isOAuthMachinePath } from '@config/route';
 import { oauthWrapperProxySession } from '@server/utils/OAuthWrapperProxy';
 import { routing } from './i18n/routing';
 
+/**
+ * Middleware main logic
+ *
+ * Auth layering:
+ * 1. Skip OAuth machine endpoints (token/revoke/userinfo)
+ * 2. Page-entry gate for LOGINED_PAGES via oauthWrapperProxySession
+ *
+ * Client `useUserAuth` is not an entry gate — only local UI / user store.
+ * App Router ≈ public/SSG; Pages Router ≈ logged-in CSR consoles.
+ */
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -12,7 +22,7 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // OAuth wrapper auth:
+  // OAuth wrapper auth (LOGINED_PAGES session gate):
   const sessionResponse = await oauthWrapperProxySession(request);
   if (sessionResponse.headers.get('Location')) {
     return sessionResponse;

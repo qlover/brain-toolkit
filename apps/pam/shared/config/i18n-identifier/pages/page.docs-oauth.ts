@@ -7,8 +7,8 @@ export const PAGE_DOCS_OAUTH_TITLE = 'page_docs_oauth:title';
 
 /**
  * @description OAuth docs meta description
- * @localZh Next OAuth 集成指南：第三方登录、OAuth 授权流程与端点说明
- * @localEn Next OAuth integration guide: third-party sign-in, OAuth flows, and endpoints
+ * @localZh PAM 集成指南：第三方登录、OAuth 授权流程与端点说明
+ * @localEn PAM integration guide: third-party sign-in, OAuth flows, and endpoints
  */
 export const PAGE_DOCS_OAUTH_DESCRIPTION = 'page_docs_oauth:description';
 
@@ -28,8 +28,8 @@ export const PAGE_DOCS_OAUTH_KEYWORDS = 'page_docs_oauth:keywords';
 
 /**
  * @description Page intro
- * @localZh 本文说明 Next OAuth 如何集成 GitHub、Google 等第三方登录（基于 Supabase Auth），以及第三方应用如何对接其标准 OAuth 2.0 授权端点。
- * @localEn This document explains how Next OAuth integrates GitHub, Google and other third-party sign-in via Supabase Auth, and how third-party apps connect to its standard OAuth 2.0 authorization endpoints.
+ * @localZh 本文说明 PAM 如何集成 GitHub、Google 等第三方登录（基于 Supabase Auth），以及第三方应用如何对接其标准 OAuth 2.0 授权端点。
+ * @localEn This document explains how PAM integrates GitHub, Google and other third-party sign-in via Supabase Auth, and how third-party apps connect to its standard OAuth 2.0 authorization endpoints.
  */
 export const PAGE_DOCS_OAUTH_INTRO = 'page_docs_oauth:intro';
 
@@ -43,8 +43,8 @@ export const PAGE_DOCS_OAUTH_SECTION_ARCHITECTURE =
 
 /**
  * @description Architecture body
- * @localZh Next OAuth 通过 SupabaseOAuthProvider 接入 Supabase Auth，支持 GitHub、Google 第三方登录及邮箱密码、手机验证码等方式。同时基于 @qlover/oauth-wrapper 提供标准 OAuth 2.0 授权端点（authorize、consent、token、PKCE、userinfo），供第三方应用接入。
- * @localEn Next OAuth connects to Supabase Auth via SupabaseOAuthProvider, supporting GitHub, Google sign-in and email/password, phone OTP. It also provides standard OAuth 2.0 endpoints (authorize, consent, token, PKCE, userinfo) via @qlover/oauth-wrapper for third-party app integration.
+ * @localZh PAM 通过 SupabaseOAuthProvider 接入 Supabase Auth，支持 GitHub、Google 第三方登录及邮箱密码、手机验证码等方式。同时基于 @qlover/oauth-wrapper 提供标准 OAuth 2.0 授权端点（authorize、consent、token、PKCE、userinfo），供第三方应用接入。
+ * @localEn PAM connects to Supabase Auth via SupabaseOAuthProvider, supporting GitHub, Google sign-in and email/password, phone OTP. It also provides standard OAuth 2.0 endpoints (authorize, consent, token, PKCE, userinfo) via @qlover/oauth-wrapper for third-party app integration.
  */
 export const PAGE_DOCS_OAUTH_ARCHITECTURE_BODY =
   'page_docs_oauth:architecture__body';

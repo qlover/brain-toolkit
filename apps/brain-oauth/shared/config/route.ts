@@ -26,6 +26,17 @@ export const ROUTE_REGISTER = '/auth/register' as const;
 export const ROUTE_EMAIL_OTP_CALLBACK = '/auth/email-otp-callback' as const;
 
 /**
+ * Admin console home. Pages Router: `src/pages/[locale]/admin/index.tsx`.
+ * Entry gate: middleware via LOGINED_PAGES (not a page-level client auth wrapper).
+ */
+export const ROUTE_ADMIN = '/admin' as const;
+
+/**
+ * Admin users management. Pages Router: `src/pages/[locale]/admin/users.tsx`.
+ */
+export const ROUTE_ADMIN_USERS = '/admin/users' as const;
+
+/**
  * Current-user request / activity log viewer (requires auth). Pages Router: `src/pages/[locale]/admin/request-logs.tsx`.
  */
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
@@ -85,6 +96,29 @@ export const AUTH_ROUTES = [
 ] as const;
 
 /**
+ * Pages that require a valid session cookie (middleware entry gate).
+ *
+ * Auth layering:
+ * - Middleware ({@link hasSessionPath} + oauthWrapperProxySession) is the only
+ *   page-entry gate; unauthenticated users are redirected to login.
+ * - Client `useUserAuth` is for local UI only (auth buttons, admin visibility).
+ * - Do not wrap these pages in a fullscreen client auth gate.
+ *
+ * Router split: App Router = public / SSG-oriented; Pages Router = logged-in
+ * CSR consoles (admin/*, developer/apps). Keep new console routes listed here.
+ */
+export const LOGINED_PAGES = [
+  ROUTE_ADMIN,
+  ROUTE_ADMIN_USERS,
+  ROUTE_REQUEST_LOGS,
+  ROUTE_DEVELOPER_APPS,
+  ROUTE_OAUTH_PLAYGROUND,
+  // Consent requires an app session; gate here so unauthenticated users
+  // are sent to login with `?redirect=<full authorize URL>` via redirect.
+  ROUTE_OAUTH_AUTHORIZE
+] as const;
+
+/**
  * Returns true if pathname is an OAuth machine endpoint (token, userinfo, etc.).
  */
 export function isOAuthMachinePath(pathname: string): boolean {
@@ -110,4 +144,13 @@ export function isPublicPath(pathname: string): boolean {
     // Use suffix match so /auth/login does not match longer auth paths incorrectly
     return pathname === route || pathname.endsWith(route);
   });
+}
+
+/**
+ * Whether the path requires a logged-in session (middleware page-entry gate).
+ */
+export function hasSessionPath(pathname: string): boolean {
+  return LOGINED_PAGES.some(
+    (route) => pathname === route || pathname.endsWith(route)
+  );
 }

@@ -7,8 +7,8 @@ export const PAGE_OAUTH_PLAYGROUND_TITLE = 'page_oauth_playground:title';
 
 /**
  * @description OAuth playground meta description
- * @localZh 在站内调试 Next OAuth 完整 OAuth 流程（基于 Supabase Auth）
- * @localEn Debug the full OAuth flow in-app with Next OAuth (powered by Supabase Auth)
+ * @localZh 在站内调试 PAM 完整 OAuth 流程（基于 Supabase Auth）
+ * @localEn Debug the full OAuth flow in-app with PAM (powered by Supabase Auth)
  */
 export const PAGE_OAUTH_PLAYGROUND_DESCRIPTION =
   'page_oauth_playground:description';
