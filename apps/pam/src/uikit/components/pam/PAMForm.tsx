@@ -10,14 +10,10 @@ import { clsx } from 'clsx';
 import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import type {
-  PAMProjectCreate,
-  PAMProjectUpdate
-} from '@schemas/PAMProjectSchema';
+import type { PAMProjectCreate } from '@schemas/PAMProjectSchema';
 import {
   PAMProjectCreateSchema,
   PAMProjectEnvKey,
-  PAMProjectUpdateSchema,
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
 import { PAMFormEnvironments } from './PAMFormEnvironments';
@@ -28,18 +24,15 @@ import {
   pamFormTextareaClass
 } from './PAMFormFieldStyles';
 
-type PAMFormProject = PAMProjectCreate | PAMProjectUpdate;
-
 export const PAM_PROJECT_FORM_ID = 'pam-project-form';
 
 export interface PAMFormProps {
   tt: PAMI18nInterface;
-  initialData?: PAMFormProject;
-  onSubmit: (data: PAMFormProject) => Promise<void> | void;
+  initialData?: PAMProjectCreate;
+  onSubmit: (data: PAMProjectCreate) => Promise<void> | void;
   onCancel: () => void;
   isSubmitting?: boolean;
   className?: string;
-  mode?: 'create' | 'edit';
   /** Native form id for external footer submit (`form=` attribute). */
   formId?: string;
   /** When true, render cancel/save inside the form (default: false — use Modal footer). */
@@ -60,19 +53,14 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   onSubmit,
   isSubmitting = false,
   className = '',
-  mode = 'create',
   formId = PAM_PROJECT_FORM_ID,
   showActions = false
 }) => {
-  const zodResolover = useMemo(
-    () => (mode === 'create' ? PAMProjectCreateSchema : PAMProjectUpdateSchema),
-    [mode]
-  );
+  const zodResolverInstance = useMemo(() => PAMProjectCreateSchema, []);
 
-  const methods = useForm<PAMFormProject>({
-    resolver: zodResolver(zodResolover),
+  const methods = useForm<PAMProjectCreate>({
+    resolver: zodResolver(zodResolverInstance),
     defaultValues: {
-      id: mode === 'edit' ? (initialData as PAMProjectUpdate).id : undefined,
       name: initialData?.name,
       slug: initialData?.slug,
       description: initialData?.description,
@@ -116,13 +104,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
     }
   }, [watchName, setValue, watch]);
 
-  const onValidSubmit = (data: PAMFormProject) => {
-    if (mode === 'edit' && !('id' in data)) {
-      console.log(tt.tipFalteError);
-      return;
-    }
-
-    const parsed = zodResolover.safeParse(data);
+  const onValidSubmit = (data: PAMProjectCreate) => {
+    const parsed = zodResolverInstance.safeParse(data);
     if (!parsed.success) {
       console.error(parsed.error);
       return;
@@ -151,8 +134,6 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           className
         )}
       >
-        {mode === 'edit' && <input type="hidden" {...register('id')} />}
-
         <div className="space-y-3 sm:space-y-4">
           <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             <div className="sm:col-span-2 lg:col-span-2">
@@ -282,7 +263,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
           </div>
         </div>
 
-        <PAMFormEnvironments tt={tt} />
+        <PAMFormEnvironments tt={tt} lockedSensitiveIds={new Set()} />
 
         {showActions && (
           <div className="flex flex-col-reverse gap-2 border-t border-primary-border py-3 sm:flex-row sm:justify-end sm:gap-3 sm:py-2">
@@ -307,7 +288,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
               ) : (
                 <>
                   <CheckIcon className="h-4 w-4" />
-                  {mode === 'edit' ? tt.formEdit : tt.formSave}
+                  {tt.formSave}
                 </>
               )}
             </button>

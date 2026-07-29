@@ -9,6 +9,7 @@ import {
   ROUTE_OAUTH_AUTHORIZE,
   ROUTE_DOCS_OAUTH,
   ROUTE_OAUTH_PLAYGROUND,
+  ROUTE_PROJECTS,
   ROUTE_REGISTER,
   ROUTE_REQUEST_LOGS
 } from '@config/route';
@@ -64,6 +65,22 @@ export const routing = defineRouting({
     '/about': {
       en: '/about',
       zh: '/about'
+    },
+    [ROUTE_PROJECTS]: {
+      en: '/projects',
+      zh: '/projects'
+    },
+    '/projects/[projectId]': {
+      en: '/projects/[projectId]',
+      zh: '/projects/[projectId]'
+    },
+    '/projects/[projectId]/general': {
+      en: '/projects/[projectId]/general',
+      zh: '/projects/[projectId]/general'
+    },
+    '/projects/[projectId]/environments': {
+      en: '/projects/[projectId]/environments',
+      zh: '/projects/[projectId]/environments'
     }
   }
 });

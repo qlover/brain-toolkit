@@ -24,7 +24,7 @@ interface PAMProjectListItemProps {
   tt: PAMI18nInterface;
   project: PAMProjectListModel;
   isOwner: boolean;
-  onEdit: (id: string) => void;
+  onOpen: (id: string) => void;
   onDelete: (project: PAMProjectListModel) => void;
 }
 
@@ -37,7 +37,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
   isOwner,
-  onEdit,
+  onOpen,
   onDelete
 }) => {
   const envs = useMemo(
@@ -57,17 +57,10 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         divider?: boolean;
       }[];
     }
-    return [
-      { key: 'edit', label: tt.edit },
-      { key: 'delete', label: tt.delete, danger: true }
-    ];
-  }, [isOwner, tt.edit, tt.delete]);
+    return [{ key: 'delete', label: tt.delete, danger: true }];
+  }, [isOwner, tt.delete]);
 
   const onMenuSelect = (key: string) => {
-    if (key === 'edit') {
-      onEdit(project.id);
-      return;
-    }
     if (key === 'delete') {
       onDelete(project);
     }
@@ -128,9 +121,13 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           )}
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
-              <div className="truncate text-lg font-semibold leading-snug tracking-tight text-primary-text sm:text-xl">
+              <button
+                type="button"
+                onClick={() => onOpen(project.id)}
+                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text transition hover:text-brand sm:text-xl"
+              >
                 {project.name}
-              </div>
+              </button>
               <PAMPublicIcon
                 isPublic={isPublic}
                 publicTitle={tt.public}

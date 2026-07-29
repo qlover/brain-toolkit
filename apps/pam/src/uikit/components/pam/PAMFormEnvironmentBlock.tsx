@@ -5,11 +5,15 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
-import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
+import { useIOC } from '@/uikit/hook/useIOC';
+import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
+import type { PAMEnvFormI18n } from '@config/i18n-mapping/PAMEnvFormI18n';
+import { I } from '@config/ioc-identifiter';
 import type { PAMProjectCreate } from '@schemas/PAMProjectSchema';
 import { PAMProjectEnvKey } from '@schemas/PAMProjectSchema';
+import { PAMFormEnvImportPanel } from './PAMFormEnvImportPanel';
 import { PAMFormEnvironmentVarRow } from './PAMFormEnvironmentVarRow';
 import { pamFormFieldClass, pamFormMonoFieldClass } from './PAMFormFieldStyles';
 
@@ -22,15 +26,18 @@ interface PAMFormEnvironmentBlockProps {
   index: number;
   env: PAMFormEnvironmentType;
   isCollapsed: boolean;
-  tt: PAMI18nInterface;
+  tt: PAMEnvFormI18n;
+  lockedSensitiveIds: ReadonlySet<string>;
   onToggleCollapse: (index: number) => void;
   onRemove: (index: number) => void;
   onAddVariable: (envIndex: number) => void;
+  onImportVariables: (envIndex: number, text: string) => void;
   onUpdateVariable: (
     envIndex: number,
     oldKey: string,
     newKey: string,
-    value: string
+    value: string,
+    sensitive?: boolean
   ) => void;
   onRemoveVariable: (envIndex: number, key: string) => void;
 }
@@ -42,9 +49,11 @@ export const PAMFormEnvironmentBlock: React.FC<
   env,
   isCollapsed,
   tt,
+  lockedSensitiveIds,
   onToggleCollapse,
   onRemove,
   onAddVariable,
+  onImportVariables,
   onUpdateVariable,
   onRemoveVariable
 }) => {
@@ -52,8 +61,37 @@ export const PAMFormEnvironmentBlock: React.FC<
     control,
     formState: { errors }
   } = useFormContext<FormValues>();
+  const [showImport, setShowImport] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogHandler = useIOC(I.DialogHandler);
 
   const variables = env.variables || [];
+
+  const handleImportFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) {
+      return;
+    }
+
+    if (!PAMEnvDotenvParseUtil.isAllowedImportFileName(file.name)) {
+      dialogHandler.warn(tt.envVarImportInvalid);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : '';
+      if (PAMEnvDotenvParseUtil.parse(text).length === 0) {
+        dialogHandler.warn(tt.envVarImportInvalid);
+        return;
+      }
+      onImportVariables(index, text);
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div
@@ -139,17 +177,54 @@ export const PAMFormEnvironmentBlock: React.FC<
           </div>
 
           <div>
-            <label className="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-secondary-text sm:text-xs">
-              <span>{tt.envVarTitle}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-semibold text-secondary-text sm:text-xs">
+                {tt.envVarTitle}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowImport((prev) => !prev)}
+                className={clsx(
+                  'flex cursor-pointer items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold text-secondary-text transition touch-manipulation',
+                  'hover:bg-brand/10 hover:text-brand',
+                  showImport && 'bg-brand/10 text-brand'
+                )}
+              >
+                {tt.envVarImport}
+              </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold text-secondary-text transition hover:bg-brand/10 hover:text-brand touch-manipulation"
+              >
+                {tt.envVarImportFile}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".env,.env.*,.txt,text/plain"
+                className="hidden"
+                onChange={handleImportFileChange}
+              />
               <button
                 type="button"
                 onClick={() => onAddVariable(index)}
-                className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-0.5 text-xs text-brand transition hover:bg-brand/10 hover:text-brand-hover touch-manipulation"
+                className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold text-brand transition hover:bg-brand/10 hover:text-brand-hover touch-manipulation"
               >
                 <PlusIcon className="h-4 w-4" />
                 {tt.envVarAdd}
               </button>
-            </label>
+            </div>
+            {showImport && (
+              <PAMFormEnvImportPanel
+                tt={tt}
+                onCancel={() => setShowImport(false)}
+                onImport={(text) => {
+                  onImportVariables(index, text);
+                  setShowImport(false);
+                }}
+              />
+            )}
             <div className="env-vars-list mt-2 max-h-40 space-y-1.5 overflow-y-auto">
               {variables.length === 0 ? (
                 <div className="py-1 text-xs text-tertiary-text">
@@ -168,6 +243,9 @@ export const PAMFormEnvironmentBlock: React.FC<
                       errors.environments?.[index]?.variables?.[idx]?.value
                     }
                     tt={tt}
+                    sensitiveLocked={
+                      item.id ? lockedSensitiveIds.has(item.id) : false
+                    }
                     onUpdateVariable={onUpdateVariable}
                     onRemoveVariable={onRemoveVariable}
                   />
