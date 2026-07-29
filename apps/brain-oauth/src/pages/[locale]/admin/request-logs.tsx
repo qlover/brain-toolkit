@@ -6,9 +6,7 @@ import dynamic from 'next/dynamic';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo } from 'react';
 import { RequestLogsApi } from '@/impls/appApi/RequestLogsApi';
-import { UserAuthFailed } from '@/uikit/components/UserAuthFailed';
 import { RequestLogsTable } from '@/uikit/components-pages/RequestLogsTable';
-import { WithUserAuth } from '@/uikit/components-pages/WithUserAuth';
 import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -94,24 +92,20 @@ export default function AdminRequestLogsPage({}: AdminRequestLogsProps) {
 
   return (
     <PageI18nProvider value={seoMetadata}>
-      <WithUserAuth failedElement={<UserAuthFailed />}>
-        <AdminLayout seoMetadata={seoMetadata} navItems={defaultNavItems}>
-          <div>
-            <h1 className="text-2xl font-semibold text-primary-text mb-6">
-              {seoMetadata.title}
-            </h1>
-            <p className="text-secondary-text mb-6">
-              {seoMetadata.description}
-            </p>
-            <RequestLogsTable
-              rows={rows}
-              locale={locale}
-              loading={loading}
-              pagination={tablePagination}
-            />
-          </div>
-        </AdminLayout>
-      </WithUserAuth>
+      <AdminLayout seoMetadata={seoMetadata} navItems={defaultNavItems}>
+        <div>
+          <h1 className="text-2xl font-semibold text-primary-text mb-6">
+            {seoMetadata.title}
+          </h1>
+          <p className="text-secondary-text mb-6">{seoMetadata.description}</p>
+          <RequestLogsTable
+            rows={rows}
+            locale={locale}
+            loading={loading}
+            pagination={tablePagination}
+          />
+        </div>
+      </AdminLayout>
     </PageI18nProvider>
   );
 }

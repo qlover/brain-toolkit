@@ -11,8 +11,13 @@ import { routing } from './i18n/routing';
 
 /**
  * 中间件主逻辑
- * 1. 处理国际化路径前缀（使用 next-intl）
- * 2. 检查是否需要登录，若未登录则重定向到登录页
+ *
+ * Auth layering:
+ * 1. Locale prefix (next-intl)
+ * 2. Page-entry gate for LOGINED_PAGES: valid session cookie or redirect login
+ *
+ * Client `useUserAuth` is not an entry gate — only local UI / user store.
+ * App Router ≈ public/SSG; Pages Router ≈ logged-in CSR consoles.
  */
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

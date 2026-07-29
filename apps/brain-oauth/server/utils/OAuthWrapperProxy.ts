@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isPublicPath, ROUTE_LOGIN } from '@config/route';
+import { hasSessionPath, ROUTE_LOGIN } from '@config/route';
 import { ServerConfig } from '@server/ServerConfig';
 import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
 
@@ -19,7 +19,9 @@ export function parseOAuthAppSessionCookie(
 }
 
 /**
- * Next OAuth Wrapper session gate: validates signed session cookie and redirects unauthenticated users.
+ * Next OAuth Wrapper session gate for LOGINED_PAGES.
+ * Validates signed session cookie and redirects unauthenticated users to login.
+ * Client `useUserAuth` is local UI only — not a page-entry gate.
  */
 export async function oauthWrapperProxySession(request: NextRequest) {
   const response = NextResponse.next({
@@ -33,10 +35,14 @@ export async function oauthWrapperProxySession(request: NextRequest) {
 
   const serverConfig = new ServerConfig();
   const pathname = request.nextUrl.pathname;
+  if (!hasSessionPath(pathname)) {
+    return response;
+  }
+
   const raw = request.cookies.get(serverConfig.oauthSessionKey)?.value;
   const session = parseOAuthAppSessionCookie(raw, sessionSecret);
 
-  if (!session && !isPublicPath(pathname)) {
+  if (!session) {
     const url = request.nextUrl.clone();
     const returnPath = `${pathname}${request.nextUrl.search}`;
     url.pathname = ROUTE_LOGIN;
