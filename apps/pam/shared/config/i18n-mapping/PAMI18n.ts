@@ -2,7 +2,7 @@ import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import * as i18nKeys from '../i18n-identifier/pages/page.pam';
 
 /**
- * PAM page i18n interface
+ * PAM home list + create-modal i18n interface
  */
 export type PAMI18nInterface = typeof pamI18n;
 
@@ -12,18 +12,18 @@ export const pamI18n = Object.freeze({
   // Meta
   title: i18nKeys.PAGE_PAM_TITLE,
   subtitle: i18nKeys.PAGE_PAM_SUBTITLE,
+  headerSubtitle: i18nKeys.PAGE_PAM_SUBTITLE,
   description: i18nKeys.PAGE_PAM_DESCRIPTION,
   content: i18nKeys.PAGE_PAM_DESCRIPTION,
   keywords: i18nKeys.PAGE_PAM_KEYWORDS,
 
-  // Common
+  // Common / list toolbar
   placeholderSearch: i18nKeys.PAGE_PAM_PLACEHOLDER_SEARCH,
   allCategory: i18nKeys.PAGE_PAM_ALL_CATEGORY,
   addPam: i18nKeys.PAGE_PAM_ADD_PAM,
   addPamsm: i18nKeys.PAGE_PAM_ADD_PAMSM,
   pamViewModeCard: i18nKeys.PAGE_PAM_VIEW_MODE_CARD,
   pamViewModeList: i18nKeys.PAGE_PAM_VIEW_MODE_LIST,
-  editProjectTitle: i18nKeys.PAGE_PAM_EDIT_PROJECT_TITLE,
   createProjectTitle: i18nKeys.PAGE_PAM_CREATE_PROJECT_TITLE,
   deleteProjectTitle: i18nKeys.PAGE_PAM_DELETE_PROJECT_TITLE,
   deleteProjectContent: i18nKeys.PAGE_PAM_DELETE_PROJECT_CONTENT,
@@ -32,26 +32,20 @@ export const pamI18n = Object.freeze({
   errorText: i18nKeys.PAGE_PAM_ERROR_TEXT,
   loadMoreText: i18nKeys.PAGE_PAM_LOAD_MORE_TEXT,
 
-  // Project
-  noEnvVars: i18nKeys.PAGE_PAM_NO_ENV_VARS,
-  noEnv: i18nKeys.PAGE_PAM_NO_ENV,
+  // List card / item
   public: i18nKeys.PAGE_PAM_PUBLIC,
   private: i18nKeys.PAGE_PAM_PRIVATE,
   readonly: i18nKeys.PAGE_PAM_READONLY,
   delete: i18nKeys.PAGE_PAM_DELETE,
   noDesc: i18nKeys.PAGE_PAM_NO_DESC,
-  noEnvConfig: i18nKeys.PAGE_PAM_NO_ENV_CONFIG,
-  envDemo: i18nKeys.PAGE_PAM_ENV_DEMO,
-  /**
-   * @deprecated
-   */
-  repoUrlTitle: i18nKeys.PAGE_PAM_REPO_URL_TITLE,
-  envCount: i18nKeys.PAGE_PAM_ENV_COUNT,
   noProject: i18nKeys.PAGE_PAM_NO_PROJECT,
-  edit: i18nKeys.PAGE_PAM_EDIT,
+  envDirectTitle: i18nKeys.PAGE_PAM_ENV_DIRECT_TITLE,
+  openRepo: i18nKeys.PAGE_PAM_OPEN_REPO,
+  moreActions: i18nKeys.PAGE_PAM_MORE_ACTIONS,
+  copyOwnerId: i18nKeys.PAGE_PAM_COPY_OWNER_ID,
+  copyOwnerIdSuccess: i18nKeys.PAGE_PAM_COPY_OWNER_ID_SUCCESS,
 
-  // Form
-  tipFalteError: i18nKeys.PAGE_PAM_TIP_FALTE_ERROR,
+  // Create form fields
   labelName: i18nKeys.PAGE_PAM_LABEL_NAME,
   placeholderName: i18nKeys.PAGE_PAM_PLACEHOLDER_NAME,
   labelSlug: i18nKeys.PAGE_PAM_LABEL_SLUG,
@@ -65,12 +59,10 @@ export const pamI18n = Object.freeze({
   labelCategory: i18nKeys.PAGE_PAM_LABEL_CATEGORY,
   labelUnCategory: i18nKeys.PAGE_PAM_LABEL_UNCATEGORY,
   formCancel: i18nKeys.PAGE_PAM_FORM_CANCEL,
-  formEdit: i18nKeys.PAGE_PAM_FORM_EDIT,
   formSave: i18nKeys.PAGE_PAM_FORM_SAVE,
   formSaveing: i18nKeys.PAGE_PAM_FORM_SAVEING,
-  tipEnvVariables: i18nKeys.PAGE_PAM_TIP_ENV_VARIABLES,
-  labelEnvName: i18nKeys.PAGE_PAM_LABEL_ENV_NAME,
-  labelEnvUrl: i18nKeys.PAGE_PAM_LABEL_ENV_URL,
+
+  // Create-modal env section (PAMEnvFormI18n)
   placeholderEnvName: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_NAME,
   placeholderEnvUrl: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_URL,
   collapsed: i18nKeys.PAGE_PAM_COLLAPSED,
@@ -78,22 +70,24 @@ export const pamI18n = Object.freeze({
   envVarAdd: i18nKeys.PAGE_PAM_ENV_VAR_ADD,
   noEnvVar: i18nKeys.PAGE_PAM_NO_ENV_VAR,
   placeholderEnvVar: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_VAR,
-  labelEnvValue: i18nKeys.PAGE_PAM_LABEL_ENV_VALUE,
   placehoderEnvValue: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_VALUE,
+  envVarSensitive: i18nKeys.PAGE_PAM_ENV_VAR_SENSITIVE,
+  envVarSensitiveLocked: i18nKeys.PAGE_PAM_ENV_VAR_SENSITIVE_LOCKED,
+  envVarSensitivePlaceholder: i18nKeys.PAGE_PAM_ENV_VAR_SENSITIVE_PLACEHOLDER,
+  envVarImport: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT,
+  envVarImportFile: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_FILE,
+  envVarImportPlaceholder: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_PLACEHOLDER,
+  envVarImportConfirm: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_CONFIRM,
+  envVarImportCancel: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_CANCEL,
+  envVarImportEmpty: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_EMPTY,
+  envVarImportResult: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_RESULT,
+  envVarImportInvalid: i18nKeys.PAGE_PAM_ENV_VAR_IMPORT_INVALID,
   mulitEnv: i18nKeys.PAGE_PAM_MULIT_ENV,
   envAdd: i18nKeys.PAGE_PAM_ENV_ADD,
   envTip: i18nKeys.PAGE_PAM_ENV_TIP,
-  envVarAddLabel: i18nKeys.PAGE_PAM_ENV_VAR_ADD_LABEL,
   envVarTitle: i18nKeys.PAGE_PAM_ENV_VAR_TITLE,
-  placeholerEnvName: i18nKeys.PAGE_PAM_PLACEHOLDER_ENV_NAME_FORM,
   envUrlTitle: i18nKeys.PAGE_PAM_ENV_URL_TITLE,
   envDelete: i18nKeys.PAGE_PAM_ENV_DELETE,
-  envDirectTitle: i18nKeys.PAGE_PAM_ENV_DIRECT_TITLE,
-  openRepo: i18nKeys.PAGE_PAM_OPEN_REPO,
-  openDeploy: i18nKeys.PAGE_PAM_OPEN_DEPLOY,
-  moreActions: i18nKeys.PAGE_PAM_MORE_ACTIONS,
-  copyOwnerId: i18nKeys.PAGE_PAM_COPY_OWNER_ID,
-  copyOwnerIdSuccess: i18nKeys.PAGE_PAM_COPY_OWNER_ID_SUCCESS,
 
   adminTitle: COMMON_ADMIN_TITLE
 });
