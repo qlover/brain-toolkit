@@ -11,6 +11,14 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   return {
     name: t(COMMON_MANIFEST_NAME),
     start_url: '/',
-    theme_color: '#101E33'
+    theme_color: '#101E33',
+    icons: [
+      {
+        src: '/favicon.svg',
+        type: 'image/svg+xml',
+        sizes: 'any',
+        purpose: 'any'
+      }
+    ]
   };
 }
