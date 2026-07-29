@@ -1,7 +1,7 @@
 /**
  * @description OAuth authorize page title (header brand + meta)
- * @localZh Next OAuth
- * @localEn Next OAuth
+ * @localZh PAM
+ * @localEn PAM
  */
 export const PAGE_OAUTH_AUTHORIZE_TITLE = 'page_oauth_authorize:title';
 
@@ -22,8 +22,8 @@ export const PAGE_OAUTH_AUTHORIZE_CONTENT = 'page_oauth_authorize:content';
 
 /**
  * @description OAuth authorize page keywords
- * @localZh OAuth, 授权, Next OAuth
- * @localEn OAuth, authorization, Next OAuth
+ * @localZh OAuth, 授权, PAM
+ * @localEn OAuth, authorization, PAM
  */
 export const PAGE_OAUTH_AUTHORIZE_KEYWORDS = 'page_oauth_authorize:keywords';
 

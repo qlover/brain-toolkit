@@ -1,4 +1,4 @@
-# Next OAuth Wrapper (`examples/next-oauth-wrapper`)
+# PAM (`apps/pam`)
 
 > 中文: [README.md](./README.md)
 

@@ -1,4 +1,4 @@
-# Next OAuth Wrapper（`examples/next-oauth-wrapper`）
+# PAM（`apps/pam`）
 
 > English: [README.en.md](./README.en.md)
 

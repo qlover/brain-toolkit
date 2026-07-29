@@ -1,7 +1,7 @@
 /**
  * @description Home page title
  * @localZh PAM 资产中心
- * @localEn PAM 资产中心
+ * @localEn PAM Asset Center
  */
 export const PAGE_HOME_TITLE = 'page_home:title';
 
@@ -15,7 +15,7 @@ export const PAGE_HOME_DESCRIPTION = 'page_home:description';
 /**
  * @description Home page keywords
  * @localZh OAuth 2.0, 第三方登录, GitHub, Google, Supabase, PAM 资产中心
- * @localEn OAuth 2.0, third-party login, GitHub, Google, Supabase, PAM 资产中心
+ * @localEn OAuth 2.0, third-party login, GitHub, Google, Supabase, PAM Asset Center
  */
 export const PAGE_HOME_KEYWORDS = 'page_home:keywords';
 
@@ -126,8 +126,8 @@ export const PAGE_HOME_SECTION_ARCH_TITLE = 'page_home:section__arch__title';
 
 /**
  * @description Architecture section body
- * @localZh @qlover/oauth-wrapper 提供通用 OAuth 2.0 协议能力（授权码、PKCE、换票）；next-oauth 通过 SupabaseOAuthProvider 装配 Supabase Auth，实现 GitHub、Google 等第三方登录及邮箱/手机登录，并暴露标准 OAuth 端点供第三方应用接入。
- * @localEn @qlover/oauth-wrapper provides the reusable OAuth 2.0 protocol core (authorization code, PKCE, token exchange); next-oauth wires Supabase Auth via SupabaseOAuthProvider for GitHub, Google and email/phone sign-in, and exposes standard OAuth endpoints for third-party app integration.
+ * @localZh @qlover/oauth-wrapper 提供通用 OAuth 2.0 协议能力（授权码、PKCE、换票）；PAM 通过 SupabaseOAuthProvider 装配 Supabase Auth，实现 GitHub、Google 等第三方登录及邮箱/手机登录，并暴露标准 OAuth 端点供第三方应用接入。
+ * @localEn @qlover/oauth-wrapper provides the reusable OAuth 2.0 protocol core (authorization code, PKCE, token exchange); PAM wires Supabase Auth via SupabaseOAuthProvider for GitHub, Google and email/phone sign-in, and exposes standard OAuth endpoints for third-party app integration.
  */
 export const PAGE_HOME_SECTION_ARCH_BODY = 'page_home:section__arch__body';
 
