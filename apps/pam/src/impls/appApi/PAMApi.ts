@@ -4,8 +4,16 @@ import { API_PAM_CREATE, API_PAM_SEARCH } from '@config/apiRoutes';
 import {
   buildApiPamDetail,
   buildApiPamDetele,
-  buildApiPamEdit
+  buildApiPamEdit,
+  buildApiPamEnvironmentDelete,
+  buildApiPamEnvironments,
+  buildApiPamEnvironmentVariables
 } from '@config/route';
+import type {
+  PAMEnvCreate,
+  PAMEnvReplaceVariables,
+  PAMEnvWriteable
+} from '@schemas/PAMEnvironmentSchema';
 import {
   SearchPAMProject,
   PAMSearchParams,
@@ -34,11 +42,6 @@ export class PAMApi {
         sort: JSON.stringify(params.sort)
       }
     });
-
-    // 使用了 AppApiPlugin 插件会自动处理 AppApiErrorInterface 情况
-    // if (!response.data.success) {
-    //   throw new Error(response.data.message);
-    // }
 
     return response.data.data!;
   }
@@ -81,5 +84,77 @@ export class PAMApi {
 
   public deleteProject(id: string): Promise<void> {
     return this.appApiRequester.post(buildApiPamDetele(id));
+  }
+
+  /**
+   * Lists environments for a project (sensitive values redacted).
+   *
+   * @param projectId - Project id
+   * @returns Redacted environment list
+   */
+  public async listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
+    const response = await this.appApiRequester.get<
+      AppApiSuccessInterface<PAMEnvWriteable[]>,
+      Record<string, never>
+    >(buildApiPamEnvironments(projectId));
+
+    return response.data.data!;
+  }
+
+  /**
+   * Creates an environment under a project.
+   *
+   * @param projectId - Project id
+   * @param data - Name, url, optional variables
+   * @returns Created environment (redacted)
+   */
+  public async createEnvironment(
+    projectId: string,
+    data: PAMEnvCreate
+  ): Promise<PAMEnvWriteable> {
+    const response = await this.appApiRequester.post<
+      AppApiSuccessInterface<PAMEnvWriteable>,
+      PAMEnvCreate
+    >(buildApiPamEnvironments(projectId), data);
+
+    return response.data.data!;
+  }
+
+  /**
+   * Deletes an environment.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async deleteEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<void> {
+    await this.appApiRequester.post(
+      buildApiPamEnvironmentDelete(projectId, envId)
+    );
+  }
+
+  /**
+   * Replaces the full variable list for one environment.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param variables - Full variables list
+   * @returns Updated environment (redacted)
+   */
+  public async setEnvironmentVariables(
+    projectId: string,
+    envId: string,
+    variables: PAMEnvReplaceVariables['variables']
+  ): Promise<PAMEnvWriteable> {
+    const response = await this.appApiRequester.post<
+      AppApiSuccessInterface<PAMEnvWriteable>,
+      PAMEnvReplaceVariables
+    >(buildApiPamEnvironmentVariables(projectId, envId), {
+      variables
+    });
+
+    return response.data.data!;
   }
 }

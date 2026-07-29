@@ -190,3 +190,11 @@ export const API_PAM_ENV_ID_NOT_EXISTS = 'api:pam_env_id_not_exists';
  * @localEn Env var key duplicate
  */
 export const API_PAM_VARIABLE_KEY_DUPLICATE = 'api:pam_variable_key_duplicate';
+
+/**
+ * @description Sensitive variable value is required when creating or replacing
+ * @localZh 敏感变量必须填写值
+ * @localEn Sensitive variable value is required
+ */
+export const API_PAM_VARIABLE_VALUE_REQUIRED =
+  'api:pam_variable_value_required';

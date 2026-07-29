@@ -67,6 +67,11 @@ export class ServerConfig implements SeedServerConfigInterface {
     // FIXME: 下面仅用于测试，真实开发需要去掉
     'base64:ZrNkJ4d7VfrLZPP0/ksjINC5XIRKmrIr1bPd+l+Wi7o=';
 
+  public readonly pamEnvSecretKey: string =
+    process.env.PAM_ENV_SECRET_KEY ??
+    // FIXME: 下面仅用于测试，真实开发需要去掉
+    'base64:ZrNkJ4d7VfrLZPP0/ksjINC5XIRKmrIr1bPd+l+Wi7o=';
+
   public readonly apiCorsAllowedOrigins: readonly string[] = parseCsvEnv(
     process.env.API_CORS_ALLOWED_ORIGINS
   );

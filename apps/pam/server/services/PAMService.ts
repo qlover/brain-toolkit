@@ -3,14 +3,27 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { v4 as uuid } from 'uuid';
 import { inject, injectable } from '@shared/container';
+import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
+import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
+import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_ENV_ID_NOT_EXISTS,
   API_PAM_ENV_NAME_EXISTS,
+  API_PAM_ENV_NOT_FOUND,
+  API_PAM_PROJECT_NOT_FOUND,
   API_PAM_SLUG_EXISTS,
-  API_PAM_VARIABLE_KEY_DUPLICATE
+  API_PAM_VARIABLE_KEY_DUPLICATE,
+  API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
+import type {
+  PAMEnvCreate,
+  PAMEnvReplaceVariables,
+  PAMEnvWriteable,
+  PAMVariable
+} from '@schemas/PAMEnvironmentSchema';
 import {
   SearchPAMProject,
   PAMProjectEnvKey,
@@ -18,12 +31,15 @@ import {
   PAMProjectUpdate,
   PAMProjectCreate
 } from '@schemas/PAMProjectSchema';
+import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type {
   PAMServiceInterface,
   ProjectDetailParams
 } from '@server/interfaces/PAMServiceInterface';
 import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
+import { ServerConfig } from '@server/ServerConfig';
+import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import { OAuthUserService } from './OAuthUserService';
 
 @injectable()
@@ -33,6 +49,127 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(OAuthUserService)
   protected readonly userService!: ServerAuthInterface;
+
+  @inject(ServerConfig)
+  protected readonly serverConfig!: SeedServerConfigInterface;
+
+  protected secretEncryption: PAMEnvSecretEncryption | null = null;
+
+  /**
+   * Lazy AES helper for sensitive env values at rest.
+   *
+   * @returns Shared {@link PAMEnvSecretEncryption} instance
+   */
+  protected getSecretEncryption(): PAMEnvSecretEncryption {
+    if (!this.secretEncryption) {
+      this.secretEncryption = new PAMEnvSecretEncryption(
+        this.serverConfig.pamEnvSecretKey
+      );
+    }
+    return this.secretEncryption;
+  }
+
+  /**
+   * Encrypts sensitive variable values on environments about to be persisted.
+   *
+   * @param environments - Environments after merge / validation
+   * @returns Environments with sensitive values encrypted
+   */
+  protected encryptEnvironmentsForStorage<
+    T extends { variables?: PAMVariable[] }
+  >(environments: T[] | undefined): T[] | undefined {
+    if (!environments) {
+      return environments;
+    }
+
+    const encryption = this.getSecretEncryption();
+    return environments.map(
+      (env: T): T => ({
+        ...env,
+        variables:
+          env.variables === undefined
+            ? env.variables
+            : encryption.encryptSensitiveVariables(
+                PAMEnvVariableNormalizeUtil.normalizeVariables(env.variables)
+              )
+      })
+    );
+  }
+
+  /**
+   * Redacts sensitive values before returning project detail.
+   *
+   * @param detail - Project detail that may include environments
+   * @returns Detail safe for API responses
+   */
+  protected redactProjectDetail(detail: PAMProjectDetail): PAMProjectDetail {
+    const environments = detail[PAMProjectEnvKey];
+    if (!environments) {
+      return detail;
+    }
+
+    return {
+      ...detail,
+      [PAMProjectEnvKey]:
+        PAMEnvVariableRedactUtil.redactEnvironments(environments)
+    };
+  }
+
+  /**
+   * Rejects sensitive variables that still have an empty value after merge.
+   *
+   * @param environments - Environments about to be persisted
+   * @throws ExecutorError when a sensitive value is missing
+   */
+  protected assertSensitiveValuesPresent(
+    environments: { name: string; variables?: PAMVariable[] }[] | undefined
+  ): void {
+    for (const env of environments || []) {
+      for (const variable of env.variables || []) {
+        if (variable.sensitive && variable.value.trim() === '') {
+          throw new ExecutorError(
+            API_PAM_VARIABLE_VALUE_REQUIRED,
+            `Sensitive variable "${variable.key}" in environment "${env.name}" requires a value`
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Merges request environment variables with stored ones.
+   *
+   * @param projectId - Project id
+   * @param requestEnvs - Environments from the update request
+   * @returns Environments with secrets preserved where requested
+   */
+  protected async mergeRequestEnvironments(
+    projectId: string,
+    requestEnvs: NonNullable<PAMProjectUpdate['environments']>
+  ): Promise<NonNullable<PAMProjectUpdate['environments']>> {
+    const existingEnvs =
+      await this.projectRepo.getEnvironmentsByProjectId(projectId);
+    const existingById = new Map(
+      existingEnvs.map((env) => [env.id, env] as const)
+    );
+
+    return requestEnvs.map((env) => {
+      if (env.variables === undefined) {
+        return env;
+      }
+
+      const previous = env.id ? existingById.get(env.id) : undefined;
+      const merged = PAMEnvVariableMergeUtil.mergeVariables(
+        previous?.variables,
+        env.variables
+      );
+
+      return {
+        ...env,
+        variables: merged
+      };
+    });
+  }
 
   /**
    * @override
@@ -70,7 +207,8 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMProjectDetail | null> {
     const { id, withEnvironments } = params;
     if (withEnvironments) {
-      return await this.projectRepo.getProjectWithEnvironments(id);
+      const detail = await this.projectRepo.getProjectWithEnvironments(id);
+      return detail ? this.redactProjectDetail(detail) : null;
     }
 
     return await this.projectRepo.getProjectById(id);
@@ -135,6 +273,28 @@ export class PAMService implements PAMServiceInterface {
   }
 
   /**
+   * Validates environment variable keys are unique within each environment.
+   *
+   * @param environments - Environments from create/update
+   * @throws ExecutorError when keys collide
+   */
+  private validateVariableKeys(
+    environments: { name: string; variables?: PAMVariable[] }[] | undefined
+  ): void {
+    for (const env of environments || []) {
+      if (env.variables && env.variables.length > 0) {
+        const keys = env.variables.map((v) => v.key);
+        if (new Set(keys).size !== keys.length) {
+          throw new ExecutorError(
+            API_PAM_VARIABLE_KEY_DUPLICATE,
+            `Duplicate variable keys in environment "${env.name}"`
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * @override
    */
   public async updateProject(
@@ -154,32 +314,32 @@ export class PAMService implements PAMServiceInterface {
       }
     }
 
+    let nextParams = params;
+
     // --- 环境校验 ---
     if (Array.isArray(params.environments) && params.environments.length > 0) {
       // 获取现有环境（仅需 id 和 name）
       const existingEnvs =
         await this.projectRepo.getEnvIdAndNamesByProjectId(id);
       this.validateEnvironmentNames(existingEnvs, params.environments);
+
+      const mergedEnvironments = await this.mergeRequestEnvironments(
+        id,
+        params.environments
+      );
+      this.validateVariableKeys(mergedEnvironments);
+      this.assertSensitiveValuesPresent(mergedEnvironments);
+      nextParams = {
+        ...params,
+        environments: this.encryptEnvironmentsForStorage(mergedEnvironments)
+      };
     }
 
-    // --- 变量键唯一性校验（可选） ---
-    for (const env of params.environments || []) {
-      if (env.variables && env.variables.length > 0) {
-        const keys = env.variables.map((v) => v.key);
-        if (new Set(keys).size !== keys.length) {
-          throw new ExecutorError(
-            API_PAM_VARIABLE_KEY_DUPLICATE,
-            `Duplicate variable keys in environment "${env.name}"`
-          );
-        }
-      }
-    }
+    const detail = extra?.useRPC
+      ? await this.projectRepo.rpc_updateProject(id, nextParams)
+      : await this.projectRepo.updateProject(id, nextParams);
 
-    if (extra?.useRPC) {
-      return await this.projectRepo.rpc_updateProject(id, params);
-    }
-
-    return await this.projectRepo.updateProject(id, params);
+    return this.redactProjectDetail(detail);
   }
 
   /**
@@ -205,12 +365,23 @@ export class PAMService implements PAMServiceInterface {
         throw new ExecutorError(API_PAM_ENV_NAME_EXISTS, { names });
       }
     }
+
+    this.validateVariableKeys(envs);
+    const normalizedEnvs = envs?.map((env) => ({
+      ...env,
+      variables: PAMEnvVariableNormalizeUtil.normalizeVariables(env.variables)
+    }));
+    this.assertSensitiveValuesPresent(normalizedEnvs);
+
     const user = await this.userService.getUser(true);
 
-    return await this.projectRepo.createProject({
+    const detail = await this.projectRepo.createProject({
       ...params,
+      [PAMProjectEnvKey]: this.encryptEnvironmentsForStorage(normalizedEnvs),
       owner_id: user.id
     });
+
+    return this.redactProjectDetail(detail);
   }
 
   /**
@@ -222,5 +393,171 @@ export class PAMService implements PAMServiceInterface {
     if (!project) throw new Error(API_NOT_AUTHORIZED);
 
     await this.projectRepo.deleteProject(id);
+  }
+
+  /**
+   * Ensures the current user owns the project.
+   *
+   * @param projectId - Project id
+   * @throws When the user is not the owner
+   */
+  protected async assertProjectOwner(projectId: string): Promise<void> {
+    const project = await this.projectRepo.hasAuthProject(projectId);
+    if (!project) {
+      throw new Error(API_NOT_AUTHORIZED);
+    }
+  }
+
+  /**
+   * Assigns ids to variables that omit them.
+   *
+   * @param variables - Variables to prepare for storage
+   * @returns Variables with stable ids
+   */
+  protected ensureVariableIds(variables: PAMVariable[]): PAMVariable[] {
+    return variables.map(
+      (variable: PAMVariable): PAMVariable => ({
+        ...variable,
+        id: variable.id || uuid()
+      })
+    );
+  }
+
+  /**
+   * Redacts sensitive values on a single environment response.
+   *
+   * @param environment - Environment loaded from storage
+   * @returns Environment safe for API responses
+   */
+  protected redactEnvironment(environment: PAMEnvWriteable): PAMEnvWriteable {
+    return {
+      ...environment,
+      variables: PAMEnvVariableRedactUtil.redactVariables(environment.variables)
+    };
+  }
+
+  /**
+   * @override
+   */
+  public async updateProjectBasics(
+    params: Omit<PAMProjectUpdate, 'environments'>
+  ): Promise<PAMProjectDetail> {
+    return this.updateProject({
+      ...params,
+      [PAMProjectEnvKey]: undefined
+    });
+  }
+
+  /**
+   * @override
+   */
+  public async listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
+    const detail = await this.getProjectDetail({
+      id: projectId,
+      withEnvironments: true
+    });
+
+    if (!detail) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    return detail[PAMProjectEnvKey] || [];
+  }
+
+  /**
+   * @override
+   */
+  public async createEnvironment(
+    projectId: string,
+    params: PAMEnvCreate
+  ): Promise<PAMEnvWriteable> {
+    await this.assertProjectOwner(projectId);
+
+    const existingEnvs =
+      await this.projectRepo.getEnvIdAndNamesByProjectId(projectId);
+    this.validateEnvironmentNames(existingEnvs, [{ name: params.name }]);
+
+    const normalizedVariables = this.ensureVariableIds(
+      PAMEnvVariableNormalizeUtil.normalizeVariables(params.variables)
+    );
+    this.validateVariableKeys([
+      { name: params.name, variables: normalizedVariables }
+    ]);
+    this.assertSensitiveValuesPresent([
+      { name: params.name, variables: normalizedVariables }
+    ]);
+
+    const encryptedVariables =
+      this.getSecretEncryption().encryptSensitiveVariables(normalizedVariables);
+
+    const created = await this.projectRepo.createEnvironment(projectId, {
+      name: params.name,
+      url: params.url,
+      variables: encryptedVariables
+    });
+
+    return this.redactEnvironment(created);
+  }
+
+  /**
+   * @override
+   */
+  public async deleteEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<void> {
+    await this.assertProjectOwner(projectId);
+
+    const existing = await this.projectRepo.getEnvironmentById(
+      projectId,
+      envId
+    );
+    if (!existing) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    await this.projectRepo.deleteEnvironment(projectId, envId);
+  }
+
+  /**
+   * @override
+   */
+  public async replaceEnvironmentVariables(
+    projectId: string,
+    envId: string,
+    params: PAMEnvReplaceVariables
+  ): Promise<PAMEnvWriteable> {
+    await this.assertProjectOwner(projectId);
+
+    const existing = await this.projectRepo.getEnvironmentById(
+      projectId,
+      envId
+    );
+    if (!existing) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const merged = this.ensureVariableIds(
+      PAMEnvVariableMergeUtil.mergeVariables(
+        existing.variables,
+        params.variables
+      )
+    );
+
+    this.validateVariableKeys([{ name: existing.name, variables: merged }]);
+    this.assertSensitiveValuesPresent([
+      { name: existing.name, variables: merged }
+    ]);
+
+    const encrypted =
+      this.getSecretEncryption().encryptSensitiveVariables(merged);
+
+    const updated = await this.projectRepo.updateEnvironmentVariables(
+      projectId,
+      envId,
+      encrypted
+    );
+
+    return this.redactEnvironment(updated);
   }
 }

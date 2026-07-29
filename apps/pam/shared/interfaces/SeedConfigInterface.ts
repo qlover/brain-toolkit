@@ -29,6 +29,9 @@ export interface SeedServerConfigInterface extends SharedConfigInterface {
   /** AES-256-GCM key for encrypted provider tokens in DB. */
   readonly encryptionKey: string;
 
+  /** AES-256-GCM key for sensitive PAM environment variable values at rest. */
+  readonly pamEnvSecretKey: string;
+
   /** Allowed CORS origins from `API_CORS_ALLOWED_ORIGINS`; empty disables CORS. */
   readonly apiCorsAllowedOrigins: readonly string[];
 
