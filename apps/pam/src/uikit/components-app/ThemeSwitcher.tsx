@@ -25,7 +25,7 @@ import {
   COMMON_THEME_PINK
 } from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
-import { themeConfig } from '@config/theme';
+import { themeConfig, type SupportedTheme } from '@config/theme';
 import { useIOC } from '../hook/useIOC';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 
@@ -33,7 +33,7 @@ const { supportedThemes, storageKey } = themeConfig;
 const themesList = ['system', ...supportedThemes] as const;
 const iconClassName = 'h-4 w-4';
 
-type ThemeMenuKey = (typeof themesList)[number];
+type ThemeMenuKey = SupportedTheme | 'system';
 
 const colorMap: Record<
   ThemeMenuKey,
@@ -80,14 +80,14 @@ const colorMap: Record<
  * DOM rendering still follows `resolvedTheme` (system → OS dark/light).
  */
 export function ThemeSwitcher() {
-  const { theme: currentTheme, setTheme } = useTheme();
+  const { theme: currentTheme, setTheme } = useTheme<SupportedTheme>();
   const mounted = useMountedClient();
   const cookieStorage = useIOC(I.CookieStorage);
   const t = useWarnTranslations();
 
   const selectedTheme: ThemeMenuKey =
     mounted && currentTheme && currentTheme in colorMap
-      ? (currentTheme as ThemeMenuKey)
+      ? currentTheme
       : 'system';
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export function ThemeSwitcher() {
       placement="bottom-end"
       onSelect={(key) => {
         if (!mounted) return;
-        setTheme(key as ThemeMenuKey);
+        setTheme(key as SupportedTheme | 'system');
       }}
     >
       <Button
