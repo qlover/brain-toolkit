@@ -1,3 +1,4 @@
+import { isAbortError } from '@qlover/fe-corekit/aborter';
 import { toast, type ExternalToast } from 'sonner';
 import type {
   AntdStaticApiInterface,
@@ -25,6 +26,17 @@ export interface DialogHandlerOptions extends NotificationOptions {
 export type DialogConfirmHost = {
   open: (options: DialogHandlerOptions) => void;
 };
+
+function isAbortToastPayload(msg: string, error?: unknown): boolean {
+  if (isAbortError(error)) {
+    return true;
+  }
+  if (error instanceof Error && error.name === 'AbortError') {
+    return true;
+  }
+  const text = (error instanceof Error ? error.message : '') || msg || '';
+  return /operation was aborted|aborted|AbortError/i.test(text);
+}
 
 /**
  * Dialog / toast facade.
@@ -87,6 +99,10 @@ export class DialogHandler
    * @override
    */
   public error(msg: string, options?: NotificationOptions): void {
+    // Abort is expected (Strict Mode / navigation stop); never toast it.
+    if (isAbortToastPayload(msg, options?.error)) {
+      return;
+    }
     toast.error(
       options?.error ? this.formatErrorMessage(options.error) : msg,
       this.toastOptions(options)
