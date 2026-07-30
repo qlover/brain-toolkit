@@ -33,6 +33,8 @@ export type PAMProjectDetailValue = {
   readonly project: PAMProjectDetail | null;
   readonly loading: boolean;
   readonly error: string | null;
+  /** Owner-only mutations; non-owners may view but not save. */
+  readonly canEdit: boolean;
   readonly setProject: Dispatch<SetStateAction<PAMProjectDetail | null>>;
 };
 
@@ -107,15 +109,18 @@ export function PAMProjectDetailShell({
     };
   }, [pamApi, projectId]);
 
+  const canEdit = Boolean(project?.is_owner);
+
   const detailValue = useMemo<PAMProjectDetailValue>(
     () => ({
       projectId,
       project,
       loading,
       error,
+      canEdit,
       setProject
     }),
-    [projectId, project, loading, error]
+    [projectId, project, loading, error, canEdit]
   );
 
   const tabClass = (tab: PAMProjectDetailTabType): string =>
@@ -149,9 +154,16 @@ export function PAMProjectDetailShell({
           ) : error ? (
             <p className="text-sm text-(--fe-color-error)">{error}</p>
           ) : (
-            <h1 className="truncate text-2xl font-bold tracking-tight text-primary-text sm:text-3xl">
-              {project?.name ?? ''}
-            </h1>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h1 className="truncate text-2xl font-bold tracking-tight text-primary-text sm:text-3xl">
+                {project?.name ?? ''}
+              </h1>
+              {!canEdit ? (
+                <span className="inline-flex shrink-0 items-center rounded-full border border-primary-border bg-elevated px-2 py-0.5 text-xs font-semibold text-secondary-text">
+                  {tt.readonly}
+                </span>
+              ) : null}
+            </div>
           )}
 
           <nav

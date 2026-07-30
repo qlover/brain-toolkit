@@ -206,12 +206,23 @@ export class PAMService implements PAMServiceInterface {
     params: ProjectDetailParams
   ): Promise<PAMProjectDetail | null> {
     const { id, withEnvironments } = params;
+    const user = await this.userService.getUser();
+
+    let detail: PAMProjectDetail | null;
     if (withEnvironments) {
-      const detail = await this.projectRepo.getProjectWithEnvironments(id);
-      return detail ? this.redactProjectDetail(detail) : null;
+      const withEnvs = await this.projectRepo.getProjectWithEnvironments(id);
+      detail = withEnvs ? this.redactProjectDetail(withEnvs) : null;
+    } else {
+      detail = await this.projectRepo.getProjectById(id);
     }
 
-    return await this.projectRepo.getProjectById(id);
+    if (!detail) {
+      return null;
+    }
+
+    return Object.assign({}, detail, {
+      is_owner: Boolean(user && user.id === detail.owner_id)
+    });
   }
 
   /**
@@ -339,7 +350,9 @@ export class PAMService implements PAMServiceInterface {
       ? await this.projectRepo.rpc_updateProject(id, nextParams)
       : await this.projectRepo.updateProject(id, nextParams);
 
-    return this.redactProjectDetail(detail);
+    return Object.assign({}, this.redactProjectDetail(detail), {
+      is_owner: true
+    });
   }
 
   /**

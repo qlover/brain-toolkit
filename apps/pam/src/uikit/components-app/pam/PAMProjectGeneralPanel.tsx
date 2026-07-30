@@ -89,6 +89,7 @@ export function PAMProjectGeneralPanel({
     project,
     loading,
     error: loadError,
+    canEdit,
     setProject
   } = usePAMProjectDetail();
 
@@ -123,7 +124,7 @@ export function PAMProjectGeneralPanel({
     field: GeneralFieldKeyType,
     patch: Partial<PAMProjectUpdate>
   ): Promise<void> => {
-    if (!project) {
+    if (!project || !canEdit) {
       return;
     }
     setSavingField(field);
@@ -136,10 +137,8 @@ export function PAMProjectGeneralPanel({
       });
       setProject(saved);
       dialogHandler.success(tt.settingsSave);
-    } catch (error) {
-      dialogHandler.error(
-        error instanceof Error ? error.message : tt.errorText
-      );
+    } catch {
+      // DialogErrorPlugin already toasts API failures.
     } finally {
       setSavingField(null);
     }
@@ -170,6 +169,7 @@ export function PAMProjectGeneralPanel({
 
   const ready = !loading && project != null;
   const publicValue = isPublic === PAMPublicType.public;
+  const fieldReadOnly = !canEdit;
 
   return (
     <div
@@ -214,6 +214,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectName}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'name'}
         saveDisabled={!ready || name.trim() === '' || name === project.name}
         onSave={() => void saveField('name', { name: name.trim() })}
@@ -222,9 +223,13 @@ export function PAMProjectGeneralPanel({
           <input
             type="text"
             value={name}
+            readOnly={fieldReadOnly}
             onChange={(e) => setName(e.target.value)}
             placeholder={tt.placeholderName}
-            className={pamFormFieldClass}
+            className={clsx(
+              pamFormFieldClass,
+              fieldReadOnly && 'cursor-default opacity-80'
+            )}
           />
         ) : (
           <SettingsFieldSkeleton />
@@ -237,6 +242,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectSlug}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'slug'}
         saveDisabled={!ready || slug.trim() === '' || slug === project.slug}
         onSave={() => void saveField('slug', { slug: slug.trim() })}
@@ -245,9 +251,14 @@ export function PAMProjectGeneralPanel({
           <input
             type="text"
             value={slug}
+            readOnly={fieldReadOnly}
             onChange={(e) => setSlug(e.target.value)}
             placeholder={tt.placeholderSlug}
-            className={clsx(pamFormFieldClass, 'font-mono text-sm')}
+            className={clsx(
+              pamFormFieldClass,
+              'font-mono text-sm',
+              fieldReadOnly && 'cursor-default opacity-80'
+            )}
           />
         ) : (
           <SettingsFieldSkeleton />
@@ -260,6 +271,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectVisibility}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'is_public'}
         saveDisabled={!ready || isPublic === project.is_public}
         onSave={() => void saveField('is_public', { is_public: isPublic })}
@@ -267,13 +279,15 @@ export function PAMProjectGeneralPanel({
         {ready ? (
           <button
             type="button"
+            disabled={fieldReadOnly}
             onClick={() =>
               setIsPublic(
                 publicValue ? PAMPublicType.private : PAMPublicType.public
               )
             }
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-2 rounded-[10px] border px-3 py-2 text-sm font-semibold transition touch-manipulation',
+              'inline-flex items-center gap-2 rounded-[10px] border px-3 py-2 text-sm font-semibold transition touch-manipulation',
+              fieldReadOnly ? 'cursor-default opacity-80' : 'cursor-pointer',
               publicValue
                 ? 'border-brand/40 bg-brand/10 text-brand'
                 : 'border-primary-border bg-elevated text-secondary-text hover:text-primary-text'
@@ -297,6 +311,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectCategory}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'category'}
         saveDisabled={!ready || category === (project.category ?? '')}
         onSave={() => void saveField('category', { category })}
@@ -304,8 +319,12 @@ export function PAMProjectGeneralPanel({
         {ready ? (
           <select
             value={category}
+            disabled={fieldReadOnly}
             onChange={(e) => setCategory(e.target.value)}
-            className={pamFormSelectClass}
+            className={clsx(
+              pamFormSelectClass,
+              fieldReadOnly && 'cursor-default opacity-80'
+            )}
           >
             <option value="">{tt.labelUnCategory}</option>
             <option value="前端">前端</option>
@@ -326,6 +345,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectDesc}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'description'}
         saveDisabled={
           !ready || (description || '') === (project.description || '')
@@ -337,10 +357,14 @@ export function PAMProjectGeneralPanel({
         {ready ? (
           <textarea
             value={description}
+            readOnly={fieldReadOnly}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={tt.placeholderDesc}
             rows={4}
-            className={pamFormTextareaClass}
+            className={clsx(
+              pamFormTextareaClass,
+              fieldReadOnly && 'cursor-default opacity-80'
+            )}
           />
         ) : (
           <div className="h-24 w-full animate-pulse rounded-[10px] bg-elevated" />
@@ -353,6 +377,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectStack}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'stack'}
         saveDisabled={!ready || (stack || '') === (project.stack || '')}
         onSave={() => void saveField('stack', { stack: stack || '' })}
@@ -361,9 +386,13 @@ export function PAMProjectGeneralPanel({
           <input
             type="text"
             value={stack}
+            readOnly={fieldReadOnly}
             onChange={(e) => setStack(e.target.value)}
             placeholder={tt.placeholderStack}
-            className={pamFormFieldClass}
+            className={clsx(
+              pamFormFieldClass,
+              fieldReadOnly && 'cursor-default opacity-80'
+            )}
           />
         ) : (
           <SettingsFieldSkeleton />
@@ -376,6 +405,7 @@ export function PAMProjectGeneralPanel({
         description={tt.descProjectRepo}
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
+        showSave={canEdit}
         saving={savingField === 'repo_url'}
         saveDisabled={!ready || (repoUrl || '') === (project.repo_url || '')}
         onSave={() => void saveField('repo_url', { repo_url: repoUrl || '' })}
@@ -384,9 +414,13 @@ export function PAMProjectGeneralPanel({
           <input
             type="url"
             value={repoUrl}
+            readOnly={fieldReadOnly}
             onChange={(e) => setRepoUrl(e.target.value)}
             placeholder={tt.placeholderRepo}
-            className={pamFormFieldClass}
+            className={clsx(
+              pamFormFieldClass,
+              fieldReadOnly && 'cursor-default opacity-80'
+            )}
           />
         ) : (
           <SettingsFieldSkeleton />

@@ -19,6 +19,7 @@ export const pamProjectI18n = Object.freeze({
   backToProjects: i18nKeys.PAGE_PAM_PROJECT_BACK_TO_PROJECTS,
   loadingText: i18nKeys.PAGE_PAM_PROJECT_LOADING_TEXT,
   projectNotFound: i18nKeys.PAGE_PAM_PROJECT_NOT_FOUND,
+  readonly: i18nKeys.PAGE_PAM_PROJECT_READONLY,
 
   adminTitle: COMMON_ADMIN_TITLE
 });

@@ -55,3 +55,10 @@ export const PAGE_PAM_PROJECT_LOADING_TEXT = 'page_pam_project:loadingText';
  * @localEn Project not found or access denied
  */
 export const PAGE_PAM_PROJECT_NOT_FOUND = 'page_pam_project:projectNotFound';
+
+/**
+ * @description Readonly badge for non-owner viewers
+ * @localZh 只读
+ * @localEn Readonly
+ */
+export const PAGE_PAM_PROJECT_READONLY = 'page_pam_project:readonly';

@@ -17,6 +17,7 @@ import React, {
 } from 'react';
 import { v4 as uuid } from 'uuid';
 import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
+import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
@@ -67,6 +68,7 @@ export function PAMProjectEnvironmentsPanel({
   const tt = usePageI18nMapping<PAMEnvironmentsI18nInterface>();
   const pamApi = useIOC(PAMApi);
   const dialogHandler = useIOC(I.DialogHandler);
+  const { canEdit } = usePAMProjectDetail();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [environments, setEnvironments] = useState<PAMEnvWriteable[]>([]);
@@ -127,9 +129,7 @@ export function PAMProjectEnvironmentsPanel({
         if (isAbortError(error)) {
           return;
         }
-        dialogHandler.error(
-          error instanceof Error ? error.message : tt.projectNotFound
-        );
+        // DialogErrorPlugin already toasts API failures.
         setEnvironments([]);
         setLoading(false);
       });
@@ -137,7 +137,7 @@ export function PAMProjectEnvironmentsPanel({
     return () => {
       pamApi.stop(PAMAbortId.listEnvironments(projectId));
     };
-  }, [dialogHandler, pamApi, projectId, tt.projectNotFound]);
+  }, [pamApi, projectId]);
 
   useEffect(() => {
     if (!selectedEnv) {
@@ -154,6 +154,9 @@ export function PAMProjectEnvironmentsPanel({
     environmentId: string,
     variables: PAMVariable[]
   ): Promise<void> => {
+    if (!canEdit) {
+      return;
+    }
     setSaving(true);
     try {
       const updated = await pamApi.setEnvironmentVariables(
@@ -163,16 +166,17 @@ export function PAMProjectEnvironmentsPanel({
       );
       upsertEnvironment(updated);
       dialogHandler.success(tt.envVarsSaved);
-    } catch (error) {
-      dialogHandler.error(
-        error instanceof Error ? error.message : tt.errorText
-      );
+    } catch {
+      // DialogErrorPlugin already toasts API failures.
     } finally {
       setSaving(false);
     }
   };
 
   const onAddVariable = (): void => {
+    if (!canEdit) {
+      return;
+    }
     const hasIncomplete = draftVariables.some((item) => {
       if (item.key.trim() === '') {
         return true;
@@ -306,6 +310,9 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onCreateEnvironment = async (): Promise<void> => {
+    if (!canEdit) {
+      return;
+    }
     const name = newEnvName.trim();
     const url = newEnvUrl.trim();
     if (!name || !url) {
@@ -322,16 +329,17 @@ export function PAMProjectEnvironmentsPanel({
       upsertEnvironment(created);
       setNewEnvName('');
       setNewEnvUrl('');
-    } catch (error) {
-      dialogHandler.error(
-        error instanceof Error ? error.message : tt.errorText
-      );
+    } catch {
+      // DialogErrorPlugin already toasts API failures.
     } finally {
       setSaving(false);
     }
   };
 
   const onDeleteEnvironment = (env: PAMEnvWriteable): void => {
+    if (!canEdit) {
+      return;
+    }
     dialogHandler.confirm({
       okType: 'danger',
       title: tt.envDelete,
@@ -350,10 +358,8 @@ export function PAMProjectEnvironmentsPanel({
             });
             return next;
           });
-        } catch (error) {
-          dialogHandler.error(
-            error instanceof Error ? error.message : tt.errorText
-          );
+        } catch {
+          // DialogErrorPlugin already toasts API failures.
         } finally {
           setSaving(false);
         }
@@ -408,44 +414,48 @@ export function PAMProjectEnvironmentsPanel({
               >
                 {env.name}
               </button>
-              <button
-                type="button"
-                title={tt.envDelete}
-                aria-label={tt.envDelete}
-                onClick={() => onDeleteEnvironment(env)}
-                className="mr-1 shrink-0 rounded p-1 text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10"
-              >
-                <TrashIcon className="h-3.5 w-3.5" />
-              </button>
+              {canEdit ? (
+                <button
+                  type="button"
+                  title={tt.envDelete}
+                  aria-label={tt.envDelete}
+                  onClick={() => onDeleteEnvironment(env)}
+                  className="mr-1 shrink-0 rounded p-1 text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>
 
-        <div className="space-y-2 border-t border-primary-border pt-3">
-          <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
-          <input
-            value={newEnvName}
-            onChange={(event) => setNewEnvName(event.target.value)}
-            placeholder={tt.placeholerEnvName}
-            className={clsx(pamFormMonoFieldClass, 'py-1.5 text-sm')}
-          />
-          <label className={pamFormLabelClass}>{tt.labelEnvUrl}</label>
-          <input
-            value={newEnvUrl}
-            onChange={(event) => setNewEnvUrl(event.target.value)}
-            placeholder={tt.placeholderEnvUrl}
-            className={clsx(pamFormFieldClass, 'py-1.5 text-sm')}
-          />
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void onCreateEnvironment()}
-            className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-brand/10 px-3 py-2 text-xs font-medium text-brand transition hover:bg-brand/15 disabled:opacity-50 sm:text-sm"
-          >
-            <PlusIcon className="h-4 w-4" />
-            {tt.envAdd}
-          </button>
-        </div>
+        {canEdit ? (
+          <div className="space-y-2 border-t border-primary-border pt-3">
+            <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
+            <input
+              value={newEnvName}
+              onChange={(event) => setNewEnvName(event.target.value)}
+              placeholder={tt.placeholerEnvName}
+              className={clsx(pamFormMonoFieldClass, 'py-1.5 text-sm')}
+            />
+            <label className={pamFormLabelClass}>{tt.labelEnvUrl}</label>
+            <input
+              value={newEnvUrl}
+              onChange={(event) => setNewEnvUrl(event.target.value)}
+              placeholder={tt.placeholderEnvUrl}
+              className={clsx(pamFormFieldClass, 'py-1.5 text-sm')}
+            />
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void onCreateEnvironment()}
+              className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-brand/10 px-3 py-2 text-xs font-medium text-brand transition hover:bg-brand/15 disabled:opacity-50 sm:text-sm"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {tt.envAdd}
+            </button>
+          </div>
+        ) : null}
       </aside>
 
       <section className="rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4">
@@ -465,39 +475,43 @@ export function PAMProjectEnvironmentsPanel({
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowImport((prev) => !prev)}
-                  className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
-                >
-                  {tt.envVarImport}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
-                >
-                  {tt.envVarImportFile}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".env,.txt,text/plain"
-                  className="hidden"
-                  onChange={onImportFileChange}
-                />
-                <button
-                  type="button"
-                  onClick={onAddVariable}
-                  className="flex cursor-pointer items-center gap-1 rounded-lg bg-brand/10 px-2.5 py-1.5 text-xs text-brand transition hover:bg-brand/15 sm:text-sm"
-                >
-                  <PlusIcon className="h-3.5 w-3.5" />
-                  {tt.envVarAddLabel}
-                </button>
+                {canEdit ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowImport((prev) => !prev)}
+                      className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
+                    >
+                      {tt.envVarImport}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
+                    >
+                      {tt.envVarImportFile}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".env,.txt,text/plain"
+                      className="hidden"
+                      onChange={onImportFileChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={onAddVariable}
+                      className="flex cursor-pointer items-center gap-1 rounded-lg bg-brand/10 px-2.5 py-1.5 text-xs text-brand transition hover:bg-brand/15 sm:text-sm"
+                    >
+                      <PlusIcon className="h-3.5 w-3.5" />
+                      {tt.envVarAddLabel}
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
 
-            {showImport ? (
+            {canEdit && showImport ? (
               <PAMFormEnvImportPanel
                 tt={tt}
                 onImport={onImportText}
@@ -519,6 +533,7 @@ export function PAMProjectEnvironmentsPanel({
                       envIndex={0}
                       item={item}
                       tt={tt}
+                      readOnly={!canEdit}
                       sensitiveLocked={Boolean(
                         item.id && lockedSensitiveIds.has(item.id)
                       )}
@@ -530,33 +545,35 @@ export function PAMProjectEnvironmentsPanel({
               )}
             </div>
 
-            <div className="flex justify-end border-t border-primary-border pt-3">
-              <button
-                type="button"
-                disabled={saving || !selectedEnvId}
-                onClick={() => {
-                  if (selectedEnvId) {
-                    void persistVariables(selectedEnvId, draftVariables);
-                  }
-                }}
-                className={clsx(
-                  'flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition',
-                  'hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50'
-                )}
-              >
-                {saving ? (
-                  <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                    {tt.formSaveing}
-                  </>
-                ) : (
-                  <>
-                    <CheckIcon className="h-4 w-4" />
-                    {tt.settingsSave}
-                  </>
-                )}
-              </button>
-            </div>
+            {canEdit ? (
+              <div className="flex justify-end border-t border-primary-border pt-3">
+                <button
+                  type="button"
+                  disabled={saving || !selectedEnvId}
+                  onClick={() => {
+                    if (selectedEnvId) {
+                      void persistVariables(selectedEnvId, draftVariables);
+                    }
+                  }}
+                  className={clsx(
+                    'flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition',
+                    'hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50'
+                  )}
+                >
+                  {saving ? (
+                    <>
+                      <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                      {tt.formSaveing}
+                    </>
+                  ) : (
+                    <>
+                      <CheckIcon className="h-4 w-4" />
+                      {tt.settingsSave}
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </section>
