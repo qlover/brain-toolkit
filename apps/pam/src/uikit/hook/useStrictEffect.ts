@@ -1,32 +1,97 @@
-import { useEffect, useRef } from 'react';
+import {
+  useEffect,
+  useId,
+  type DependencyList,
+  type EffectCallback
+} from 'react';
+
+type StrictEffectEntry = {
+  dispose?: () => void;
+  timer?: ReturnType<typeof setTimeout>;
+};
+
+const ENTRIES_KEY = '__brain_pam_useStrictEffect_entries__';
+
+type GlobalWithEntries = typeof globalThis & {
+  [ENTRIES_KEY]?: Map<string, StrictEffectEntry>;
+};
 
 /**
- * In React Strict Mode, ensure that the effect is executed only once when each dependency changes
- * @param effect The effect function to execute
- * @param deps The dependency array
+ * Module-safe store (survives duplicate bundle copies of this hook).
+ * Cleanup is deferred so Strict Mode remount can skip a second effect run.
+ */
+function getEntries(): Map<string, StrictEffectEntry> {
+  const g = globalThis as GlobalWithEntries;
+  if (!g[ENTRIES_KEY]) {
+    g[ENTRIES_KEY] = new Map();
+  }
+  return g[ENTRIES_KEY];
+}
+
+function depsKey(deps?: DependencyList): string {
+  if (deps == null) {
+    return '';
+  }
+  return deps
+    .map((dep) => {
+      if (dep == null) {
+        return String(dep);
+      }
+      const type = typeof dep;
+      if (type === 'string' || type === 'number' || type === 'boolean') {
+        return `${type}:${String(dep)}`;
+      }
+      if (type === 'function') {
+        return 'fn';
+      }
+      // Objects/class instances: identity is handled by React deps; key only needs stability.
+      return 'obj';
+    })
+    .join('|');
+}
+
+/**
+ * Like `useEffect`, but skips the extra run from React Strict Mode remount
+ * when dependencies are unchanged.
  */
 export const useStrictEffect = (
-  effect: () => void | (() => void),
-  deps?: React.DependencyList
-) => {
-  const mountedRef = useRef(false);
-  const depsRef = useRef(deps);
+  effect: EffectCallback,
+  deps?: DependencyList
+): void => {
+  const effectId = useId();
 
   useEffect(() => {
-    // Check if the dependencies have changed
-    const depsChanged =
-      !deps ||
-      !depsRef.current ||
-      deps.some((dep, i) => dep !== depsRef.current![i]);
+    const entries = getEntries();
+    const key = `${effectId}:${depsKey(deps)}`;
+    const existing = entries.get(key);
 
-    // Update the dependency reference
-    depsRef.current = deps;
+    // Already ran for this key (Strict remount): keep first effect alive.
+    if (existing) {
+      if (existing.timer != null) {
+        clearTimeout(existing.timer);
+        existing.timer = undefined;
+      }
 
-    // If it's the first mount or the dependencies have changed, execute the effect
-    if (!mountedRef.current || depsChanged) {
-      mountedRef.current = true;
-      return effect();
+      return () => {
+        existing.timer = setTimeout(() => {
+          existing.dispose?.();
+          entries.delete(key);
+        }, 0);
+      };
     }
+
+    const dispose = effect();
+    const entry: StrictEffectEntry = {
+      dispose: typeof dispose === 'function' ? dispose : undefined
+    };
+    entries.set(key, entry);
+
+    return () => {
+      entry.timer = setTimeout(() => {
+        entry.dispose?.();
+        entries.delete(key);
+      }, 0);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 };
