@@ -6,7 +6,10 @@ import {
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
 import { v4 as uuid } from 'uuid';
-import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
+import { useIOC } from '@/uikit/hook/useIOC';
+import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
+import type { PAMEnvFormI18n } from '@config/i18n-mapping/PAMEnvFormI18n';
+import { I } from '@config/ioc-identifiter';
 import type { PAMProjectCreate } from '@schemas/PAMProjectSchema';
 import { PAMProjectEnvKey } from '@schemas/PAMProjectSchema';
 import { PAMFormEnvironmentBlock } from './PAMFormEnvironmentBlock';
@@ -14,11 +17,23 @@ import { PAMFormEnvironmentBlock } from './PAMFormEnvironmentBlock';
 type FormValues = PAMProjectCreate;
 
 interface PAMFormEnvironmentsProps {
-  tt: PAMI18nInterface;
+  tt: PAMEnvFormI18n;
+  lockedSensitiveIds?: ReadonlySet<string>;
+}
+
+function formatImportResult(
+  template: string,
+  imported: number,
+  skipped: number
+): string {
+  return template
+    .replaceAll('%imported%', String(imported))
+    .replaceAll('%skipped%', String(skipped));
 }
 
 export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
-  tt
+  tt,
+  lockedSensitiveIds = new Set<string>()
 }) => {
   const {
     control,
@@ -31,6 +46,7 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
     name: PAMProjectEnvKey
   });
   const environments = useWatch({ control, name: PAMProjectEnvKey });
+  const dialogHandler = useIOC(I.DialogHandler);
 
   const [collapsedEnvs, setCollapsedEnvs] = useState<Record<number, boolean>>(
     {}
@@ -61,20 +77,29 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
       if (!env) return;
 
       const variables = env.variables || [];
-      const hasIncomplete = variables.some(
-        (item) => item.key.trim() === '' || item.value.trim() === ''
-      );
+      const hasIncomplete = variables.some((item) => {
+        if (item.key.trim() === '') {
+          return true;
+        }
+        if (item.sensitive) {
+          return false;
+        }
+        return item.value.trim() === '';
+      });
       if (hasIncomplete) {
-        alert(tt.envTip);
+        dialogHandler.warn(tt.envTip);
         return;
       }
 
-      const updated = [...variables, { id: uuid(), key: '', value: '' }];
+      const updated = [
+        ...variables,
+        { id: uuid(), key: '', value: '', sensitive: false }
+      ];
       setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);
       setCollapsedEnvs((prev) => ({ ...prev, [envIndex]: false }));
       trigger(`${PAMProjectEnvKey}.${envIndex}.variables`);
     },
-    [environments, setValue, trigger, tt.envTip]
+    [environments, setValue, trigger, tt.envTip, dialogHandler]
   );
 
   const removeVariable = useCallback(
@@ -91,31 +116,88 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
   );
 
   const updateVariable = useCallback(
-    (envIndex: number, oldKey: string, newKey: string, value: string) => {
+    (
+      envIndex: number,
+      oldKey: string,
+      newKey: string,
+      value: string,
+      sensitive?: boolean
+    ) => {
       const envs = environments || [];
       const env = envs[envIndex];
       if (!env) return;
-
-      if (newKey.trim() === '') {
-        removeVariable(envIndex, oldKey);
-        return;
-      }
 
       const variables = env.variables || [];
       const index = variables.findIndex((item) => item.key === oldKey);
       if (index === -1) return;
 
+      // Clearing a filled key deletes the row; empty new rows may still toggle sensitive/value.
+      if (newKey.trim() === '' && oldKey.trim() !== '') {
+        removeVariable(envIndex, oldKey);
+        return;
+      }
+
       const oldItem = variables[index];
+      const nextSensitive =
+        oldItem.id && lockedSensitiveIds.has(oldItem.id)
+          ? oldItem.sensitive === true
+          : (sensitive ?? oldItem.sensitive ?? false);
       const updated = [...variables];
       updated[index] = {
         ...oldItem,
         key: newKey.trim(),
-        value
+        value,
+        sensitive: nextSensitive
       };
       setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);
       trigger(`${PAMProjectEnvKey}.${envIndex}.variables`);
     },
-    [environments, setValue, trigger, removeVariable]
+    [environments, setValue, trigger, removeVariable, lockedSensitiveIds]
+  );
+
+  const importVariables = useCallback(
+    (envIndex: number, text: string) => {
+      const envs = environments || [];
+      const env = envs[envIndex];
+      if (!env) return;
+
+      const parsed = PAMEnvDotenvParseUtil.parse(text);
+      if (parsed.length === 0) {
+        dialogHandler.warn(tt.envVarImportEmpty);
+        return;
+      }
+
+      const variables = env.variables || [];
+      const existingKeys = new Set(
+        variables.map((item) => item.key).filter((key) => key.trim() !== '')
+      );
+      const toAdd = parsed.filter((item) => !existingKeys.has(item.key));
+      const skipped = parsed.length - toAdd.length;
+
+      if (toAdd.length === 0) {
+        dialogHandler.warn(
+          formatImportResult(tt.envVarImportResult, 0, skipped)
+        );
+        return;
+      }
+
+      const updated = [
+        ...variables,
+        ...toAdd.map((item) => ({
+          id: uuid(),
+          key: item.key,
+          value: item.value,
+          sensitive: true
+        }))
+      ];
+      setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);
+      setCollapsedEnvs((prev) => ({ ...prev, [envIndex]: false }));
+      trigger(`${PAMProjectEnvKey}.${envIndex}.variables`);
+      dialogHandler.success(
+        formatImportResult(tt.envVarImportResult, toAdd.length, skipped)
+      );
+    },
+    [environments, setValue, trigger, tt, dialogHandler]
   );
 
   const handleAddEnvironment = (): void => {
@@ -177,9 +259,11 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
               env={env}
               isCollapsed={resolveIsCollapsed(index)}
               tt={tt}
+              lockedSensitiveIds={lockedSensitiveIds}
               onToggleCollapse={toggleCollapse}
               onRemove={remove}
               onAddVariable={addVariable}
+              onImportVariables={importVariables}
               onUpdateVariable={updateVariable}
               onRemoveVariable={removeVariable}
             />

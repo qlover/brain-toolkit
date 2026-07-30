@@ -1,3 +1,8 @@
+import {
+  AborterPlugin,
+  type AborterConfig,
+  type AborterId
+} from '@qlover/fe-corekit/aborter';
 import { LifecycleExecutor } from '@qlover/fe-corekit/executor';
 import {
   RequestAdapterFetch,
@@ -8,7 +13,6 @@ import { injectable } from '@shared/container';
 import type { AppApiResult } from '@interfaces/AppApiInterface';
 import { AppApiPluginOptions } from './AppApiPlugin';
 import type { DialogErrorConfig } from '../DialogErrorPlugin';
-import type { AborterConfig } from '@qlover/fe-corekit/aborter';
 import type { ExecutorContextInterface } from '@qlover/fe-corekit/executor';
 import type {
   RequestAdapterConfig,
@@ -59,6 +63,24 @@ export class AppApiRequester extends RequestExecutor<
   AppApiConfig,
   AppApiRequesterContext
 > {
+  /**
+   * Never aborted. Only satisfies AborterPlugin's DEV check that `signal`
+   * exists on config; the plugin still registers its own controller for
+   * `abortId` / `stop()`.
+   */
+  private static readonly idleSignal = new AbortController().signal;
+
+  private readonly aborterPlugin = new AborterPlugin<AppApiConfig>({
+    pluginName: 'AppApiAborter',
+    getConfig: (parameters) => {
+      const config = parameters as AppApiConfig;
+      if (config?.signal instanceof AbortSignal) {
+        return config;
+      }
+      return { ...config, signal: AppApiRequester.idleSignal };
+    }
+  });
+
   constructor() {
     super(
       new RequestAdapterFetch({
@@ -67,5 +89,23 @@ export class AppApiRequester extends RequestExecutor<
       }),
       new LifecycleExecutor()
     );
+    this.use(this.aborterPlugin);
+  }
+
+  /**
+   * Abort in-flight request(s) by `abortId` (or all if omitted).
+   * Use from effect cleanup: `return () => appApiRequester.stop(abortId)`.
+   */
+  public stop(abortId?: AborterId): void {
+    if (abortId == null) {
+      this.aborterPlugin.abortAll();
+      return;
+    }
+    this.aborterPlugin.abort(abortId);
+  }
+
+  /** Alias of {@link stop}. */
+  public cancelled(abortId?: AborterId): void {
+    this.stop(abortId);
   }
 }

@@ -1,4 +1,9 @@
 import type {
+  PAMEnvCreate,
+  PAMEnvReplaceVariables,
+  PAMEnvWriteable
+} from '@shared/schemas/PAMEnvironmentSchema';
+import type {
   SearchPAMProject,
   PAMProjectDetail,
   PAMProjectCreate,
@@ -83,4 +88,59 @@ export interface PAMServiceInterface {
   createProject(params: PAMProjectCreate): Promise<PAMProjectDetail>;
 
   deleteProject(id: string): Promise<void>;
+
+  /**
+   * Updates project fields without touching environments.
+   *
+   * @param params - Project update payload (environments are ignored)
+   * @returns Updated project detail (environments omitted unless already loaded)
+   */
+  updateProjectBasics(
+    params: Omit<PAMProjectUpdate, 'environments'>
+  ): Promise<PAMProjectDetail>;
+
+  /**
+   * Lists environments for a project with sensitive values redacted.
+   *
+   * @param projectId - Project id
+   * @returns Redacted environment list
+   */
+  listEnvironments(projectId: string): Promise<PAMEnvWriteable[]>;
+
+  /**
+   * Creates an environment under a project.
+   *
+   * @param projectId - Project id
+   * @param params - Name, url, optional variables
+   * @returns Created environment with redacted sensitive values
+   */
+  createEnvironment(
+    projectId: string,
+    params: PAMEnvCreate
+  ): Promise<PAMEnvWriteable>;
+
+  /**
+   * Deletes an environment from a project.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  deleteEnvironment(projectId: string, envId: string): Promise<void>;
+
+  /**
+   * Replaces the full variable list for one environment.
+   *
+   * Sensitive flag is immutable for existing variables; new plaintext secrets
+   * are encrypted before persist.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param params - Full variables payload
+   * @returns Updated environment with redacted sensitive values
+   */
+  replaceEnvironmentVariables(
+    projectId: string,
+    envId: string,
+    params: PAMEnvReplaceVariables
+  ): Promise<PAMEnvWriteable>;
 }

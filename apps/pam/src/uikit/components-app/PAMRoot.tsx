@@ -2,17 +2,16 @@
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { useEffect, useLayoutEffect } from 'react';
+import { useLayoutEffect } from 'react';
+import { useRouter } from '@/i18n/routing';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
+import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { defaultSearchParams } from '@config/common';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
-import type {
-  PAMProjectUpdate,
-  SearchPAMProject
-} from '@schemas/PAMProjectSchema';
+import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
@@ -33,16 +32,15 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
   const { success: isAuthenticated } = useUserAuth();
+  const router = useRouter();
 
   const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
   const pamFacadeInfinite = useIOC(PAMFacadeInfinite);
   const pamFacadeStore = pamFacade.getFacadeStore();
   const createState = useStore(pamFacade.getCreateStore());
-  const detailState = useStore(pamFacade.getDetailStore());
-  const editProject = detailState.result;
-  const isEditMode = Boolean(editProject);
   const isSubmitting = createState.loading;
+  const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
 
   const storeProjects = useStore(
     pamFacadeStore,
@@ -50,7 +48,6 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   );
   const listLoading = useStore(pamFacadeStore, (state) => state.loading);
   const persistedViewMode = useStore(pamFacadeStore, (state) => state.viewMode);
-  const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
 
   // Prefer store; fall back to RSC props so SSR HTML already has rows.
   const projects =
@@ -66,7 +63,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   }, [initialList, pamFacade]);
 
   // Background refresh picks up private projects / is_owner after session restore.
-  useEffect(() => {
+  useStrictEffect(() => {
     void pamFacade.pullProjectList({
       page: defaultSearchParams.page,
       resetResult: false,
@@ -75,6 +72,13 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   }, [pamFacade]);
 
   const closeDialog = () => pamFacade.closeDialog();
+
+  const openProjectGeneral = (id: string): void => {
+    router.push({
+      pathname: '/projects/[projectId]/general',
+      params: { projectId: id }
+    });
+  };
 
   return (
     <div
@@ -105,10 +109,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
         loading={listLoading && projects.length === 0}
         isAuthenticated={isAuthenticated}
         isOwner={(data) => !!data.is_owner}
-        onEdit={(id) => {
-          if (!isAuthenticated) return;
-          pamFacade.triggerEdit(id);
-        }}
+        onOpen={openProjectGeneral}
         onDelete={(project) => {
           if (!isAuthenticated) return;
           dialog.confirm({
@@ -131,7 +132,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
 
       <ResponsiveModal
         open={isAuthenticated && openDialog}
-        title={isEditMode ? tt.editProjectTitle : tt.createProjectTitle}
+        title={tt.createProjectTitle}
         onClose={closeDialog}
         footer={
           <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
@@ -157,7 +158,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
               ) : (
                 <>
                   <CheckIcon className="h-4 w-4" />
-                  {isEditMode ? tt.formEdit : tt.formSave}
+                  {tt.formSave}
                 </>
               )}
             </button>
@@ -168,15 +169,15 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
           tt={tt}
           formId={PAM_PROJECT_FORM_ID}
           showActions={false}
-          initialData={editProject ?? undefined}
-          mode={isEditMode ? 'edit' : 'create'}
           isSubmitting={isSubmitting}
           onCancel={closeDialog}
-          onSubmit={(data) => {
-            if (isEditMode && editProject?.id) {
-              pamFacade.updateProject(editProject.id, data as PAMProjectUpdate);
-            } else {
-              pamFacade.createProject(data);
+          onSubmit={async (data) => {
+            const result = await pamFacade.createProject(data);
+            if (result.data?.id) {
+              router.push({
+                pathname: '/projects/[projectId]/general',
+                params: { projectId: result.data.id }
+              });
             }
           }}
         />

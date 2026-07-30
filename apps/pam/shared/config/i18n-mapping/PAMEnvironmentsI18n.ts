@@ -1,0 +1,65 @@
+import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
+import * as i18nKeys from '../i18n-identifier/pages/page.pam.environments';
+
+/**
+ * PAM project environments page i18n interface
+ */
+export type PAMEnvironmentsI18nInterface = typeof pamEnvironmentsI18n;
+
+export const pamEnvironmentsI18nNamespace = 'page_pam_environments';
+
+export const pamEnvironmentsI18n = Object.freeze({
+  title: i18nKeys.PAGE_PAM_ENVIRONMENTS_TITLE,
+  description: i18nKeys.PAGE_PAM_ENVIRONMENTS_DESCRIPTION,
+  content: i18nKeys.PAGE_PAM_ENVIRONMENTS_DESCRIPTION,
+  keywords: i18nKeys.PAGE_PAM_ENVIRONMENTS_KEYWORDS,
+
+  projectNotFound: i18nKeys.PAGE_PAM_ENVIRONMENTS_PROJECT_NOT_FOUND,
+  errorText: i18nKeys.PAGE_PAM_ENVIRONMENTS_ERROR_TEXT,
+  loadingText: i18nKeys.PAGE_PAM_ENVIRONMENTS_LOADING_TEXT,
+  envVarsSaved: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VARS_SAVED,
+  tipEnvVariables: i18nKeys.PAGE_PAM_ENVIRONMENTS_TIP_ENV_VARIABLES,
+  delete: i18nKeys.PAGE_PAM_ENVIRONMENTS_DELETE,
+  envVarDeleteConfirm: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_DELETE_CONFIRM,
+  envTip: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_TIP,
+  envDelete: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_DELETE,
+  envDeleteConfirm: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_DELETE_CONFIRM,
+  mulitEnv: i18nKeys.PAGE_PAM_ENVIRONMENTS_MULIT_ENV,
+  labelEnvName: i18nKeys.PAGE_PAM_ENVIRONMENTS_LABEL_ENV_NAME,
+  placeholerEnvName: i18nKeys.PAGE_PAM_ENVIRONMENTS_PLACEHOLDER_ENV_NAME_FORM,
+  labelEnvUrl: i18nKeys.PAGE_PAM_ENVIRONMENTS_LABEL_ENV_URL,
+  placeholderEnvUrl: i18nKeys.PAGE_PAM_ENVIRONMENTS_PLACEHOLDER_ENV_URL,
+  envAdd: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_ADD,
+  envSelectHint: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_SELECT_HINT,
+  envVarImport: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT,
+  envVarImportFile: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_FILE,
+  envVarAddLabel: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_ADD_LABEL,
+  envVarTitle: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_TITLE,
+  noEnvVar: i18nKeys.PAGE_PAM_ENVIRONMENTS_NO_ENV_VAR,
+  formSaveing: i18nKeys.PAGE_PAM_ENVIRONMENTS_FORM_SAVEING,
+  settingsSave: i18nKeys.PAGE_PAM_ENVIRONMENTS_SETTINGS_SAVE,
+
+  // PAMEnvFormI18n shared fields
+  placeholderEnvName: i18nKeys.PAGE_PAM_ENVIRONMENTS_PLACEHOLDER_ENV_NAME,
+  collapsed: i18nKeys.PAGE_PAM_ENVIRONMENTS_COLLAPSED,
+  uncollapsed: i18nKeys.PAGE_PAM_ENVIRONMENTS_UNCOLLAPSED,
+  envVarAdd: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_ADD,
+  placeholderEnvVar: i18nKeys.PAGE_PAM_ENVIRONMENTS_PLACEHOLDER_ENV_VAR,
+  placehoderEnvValue: i18nKeys.PAGE_PAM_ENVIRONMENTS_PLACEHOLDER_ENV_VALUE,
+  envUrlTitle: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_URL_TITLE,
+  envDirectTitle: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_DIRECT_TITLE,
+  envVarSensitive: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_SENSITIVE,
+  envVarSensitiveLocked:
+    i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_SENSITIVE_LOCKED,
+  envVarSensitivePlaceholder:
+    i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_SENSITIVE_PLACEHOLDER,
+  envVarImportPlaceholder:
+    i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_PLACEHOLDER,
+  envVarImportConfirm: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_CONFIRM,
+  envVarImportCancel: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_CANCEL,
+  envVarImportEmpty: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_EMPTY,
+  envVarImportResult: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_RESULT,
+  envVarImportInvalid: i18nKeys.PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_INVALID,
+
+  adminTitle: COMMON_ADMIN_TITLE
+});

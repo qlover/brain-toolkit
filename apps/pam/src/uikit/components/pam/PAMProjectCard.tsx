@@ -1,4 +1,4 @@
-import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React, { useMemo } from 'react';
 import { toast } from 'sonner';
@@ -19,9 +19,9 @@ interface PAMProjectCardProps {
   tt: PAMI18nInterface;
   project: PAMProjectCardModel;
   isOwner: boolean;
-  /** Guest: hide edit/delete and readonly label. */
+  /** Guest: hide delete and readonly label. */
   isAuthenticated?: boolean;
-  onEdit: (id: string) => void;
+  onOpen: (id: string) => void;
   onDelete: (project: PAMProjectCardModel) => void;
 }
 
@@ -30,7 +30,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   project,
   isOwner,
   isAuthenticated = false,
-  onEdit,
+  onOpen,
   onDelete
 }) => {
   const envs = project.environments || [];
@@ -133,9 +133,13 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <div className="truncate text-lg font-semibold leading-snug tracking-tight text-primary-text sm:text-xl">
+              <button
+                type="button"
+                onClick={() => onOpen(project.id)}
+                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text transition hover:text-brand sm:text-xl"
+              >
                 {project.name}
-              </div>
+              </button>
               {subBits.length > 0 ? (
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-snug text-tertiary-text">
                   {subBits.map((bit, index) => (
@@ -184,24 +188,14 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         {isAuthenticated ? (
           <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-primary-border pt-2.5">
             {isOwner ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onEdit(project.id)}
-                  className="inline-flex items-center gap-1 rounded-md border border-brand/40 bg-brand/10 px-2 py-1.5 text-xs font-medium text-brand transition hover:bg-brand/20"
-                >
-                  <PencilSquareIcon className="h-3 w-3" />
-                  {tt.edit}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(project)}
-                  className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
-                >
-                  <TrashIcon className="h-3 w-3" />
-                  {tt.delete}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => onDelete(project)}
+                className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
+              >
+                <TrashIcon className="h-3 w-3" />
+                {tt.delete}
+              </button>
             ) : (
               <span className="text-xs text-tertiary-text">{tt.readonly}</span>
             )}

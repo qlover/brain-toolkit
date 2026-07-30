@@ -2,7 +2,7 @@ import type {
   SearchPAMProject,
   PAMSearchParams,
   PAMProjectDetail,
-  PAMProjectUpdate
+  PAMProjectCreate
 } from '@schemas/PAMProjectSchema';
 import type {
   AsyncStoreStateInterface,
@@ -51,7 +51,7 @@ export interface PAMFacadeStateInterface<T extends SearchPAMProject>
   viewMode: PAMViewModeType;
 
   /**
-   * 是否打开 新增/编辑 项目对话框
+   * 是否打开新建项目对话框
    */
   openDialog: boolean;
 }
@@ -78,18 +78,7 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
    * @param data
    */
   createProject(
-    data: SearchPAMProject
-  ): Promise<GatewayResult<PAMProjectDetail>>;
-
-  /**
-   * 更新一个项目，允许传入环境信息
-   *
-   * @param id
-   * @param data
-   */
-  updateProject(
-    id: string,
-    data: PAMProjectUpdate
+    data: PAMProjectCreate
   ): Promise<GatewayResult<PAMProjectDetail>>;
 
   /**

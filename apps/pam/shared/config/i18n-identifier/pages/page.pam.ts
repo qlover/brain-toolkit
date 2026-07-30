@@ -70,13 +70,6 @@ export const PAGE_PAM_VIEW_MODE_CARD = 'page_pam:pamViewModeCard';
 export const PAGE_PAM_VIEW_MODE_LIST = 'page_pam:pamViewModeList';
 
 /**
- * @description Edit project title
- * @localZh 编辑项目
- * @localEn Edit project
- */
-export const PAGE_PAM_EDIT_PROJECT_TITLE = 'page_pam:editProjectTitle';
-
-/**
  * @description Create project title
  * @localZh 新建项目
  * @localEn Create project
@@ -125,21 +118,7 @@ export const PAGE_PAM_ERROR_TEXT = 'page_pam:errorText';
  */
 export const PAGE_PAM_LOAD_MORE_TEXT = 'page_pam:loadMoreText';
 
-// ---------- Project ----------
-/**
- * @description No environment variables
- * @localZh 无环境变量
- * @localEn No environment variables
- */
-export const PAGE_PAM_NO_ENV_VARS = 'page_pam:noEnvVars';
-
-/**
- * @description No environment
- * @localZh 无环境
- * @localEn No environment
- */
-export const PAGE_PAM_NO_ENV = 'page_pam:noEnv';
-
+// ---------- Project list card/item ----------
 /**
  * @description Public visibility
  * @localZh 公开的
@@ -176,34 +155,6 @@ export const PAGE_PAM_DELETE = 'page_pam:delete';
 export const PAGE_PAM_NO_DESC = 'page_pam:noDesc';
 
 /**
- * @description No environment config
- * @localZh 未配置环境
- * @localEn No environment configured
- */
-export const PAGE_PAM_NO_ENV_CONFIG = 'page_pam:noEnvConfig';
-
-/**
- * @description Environment variable example
- * @localZh 环境变量示例
- * @localEn Environment variable example
- */
-export const PAGE_PAM_ENV_DEMO = 'page_pam:envDemo';
-
-/**
- * @description Repository URL title
- * @localZh 仓库
- * @localEn Repository
- */
-export const PAGE_PAM_REPO_URL_TITLE = 'page_pam:repoUrlTitle';
-
-/**
- * @description Environment count with placeholder
- * @localZh [count] 个环境
- * @localEn [count] environments
- */
-export const PAGE_PAM_ENV_COUNT = 'page_pam:envCount';
-
-/**
  * @description No project message
  * @localZh 暂无项目，点击「新增资产」创建
  * @localEn No projects, click "Add asset" to create
@@ -211,20 +162,41 @@ export const PAGE_PAM_ENV_COUNT = 'page_pam:envCount';
 export const PAGE_PAM_NO_PROJECT = 'page_pam:noProject';
 
 /**
- * @description Edit action
- * @localZh 编辑
- * @localEn Edit
+ * @description Direct environment access title
+ * @localZh 环境直达
+ * @localEn Direct environment access
  */
-export const PAGE_PAM_EDIT = 'page_pam:edit';
+export const PAGE_PAM_ENV_DIRECT_TITLE = 'page_pam:envDirectTitle';
 
-// ---------- Form ----------
 /**
- * @description Fatal error tip
- * @localZh 致命错误,修改项目缺少ID
- * @localEn Fatal error, missing ID for project modification
+ * @description Open repository action
+ * @localZh 打开仓库
+ * @localEn Open repository
  */
-export const PAGE_PAM_TIP_FALTE_ERROR = 'page_pam:tipFalteError';
+export const PAGE_PAM_OPEN_REPO = 'page_pam:openRepo';
 
+/**
+ * @description More actions menu label
+ * @localZh 更多操作
+ * @localEn More actions
+ */
+export const PAGE_PAM_MORE_ACTIONS = 'page_pam:moreActions';
+
+/**
+ * @description Click owner id to copy (title / aria)
+ * @localZh 点击复制用户 ID
+ * @localEn Click to copy user ID
+ */
+export const PAGE_PAM_COPY_OWNER_ID = 'page_pam:copyOwnerId';
+
+/**
+ * @description Owner id copied toast
+ * @localZh 用户 ID 已复制
+ * @localEn User ID copied
+ */
+export const PAGE_PAM_COPY_OWNER_ID_SUCCESS = 'page_pam:copyOwnerIdSuccess';
+
+// ---------- Create form ----------
 /**
  * @description Project name label
  * @localZh 项目名称
@@ -317,13 +289,6 @@ export const PAGE_PAM_LABEL_UNCATEGORY = 'page_pam:labelUnCategory';
 export const PAGE_PAM_FORM_CANCEL = 'page_pam:formCancel';
 
 /**
- * @description Edit button text
- * @localZh 保存修改
- * @localEn Save changes
- */
-export const PAGE_PAM_FORM_EDIT = 'page_pam:formEdit';
-
-/**
  * @description Save project button text
  * @localZh 保存项目
  * @localEn Save project
@@ -337,27 +302,7 @@ export const PAGE_PAM_FORM_SAVE = 'page_pam:formSave';
  */
 export const PAGE_PAM_FORM_SAVEING = 'page_pam:formSaveing';
 
-/**
- * @description Tip for environment variables completion
- * @localZh 请先填写完整当前所有环境变量（键和值都不能为空）
- * @localEn Please complete all environment variables (key and value cannot be empty)
- */
-export const PAGE_PAM_TIP_ENV_VARIABLES = 'page_pam:tipEnvVariables';
-
-/**
- * @description Environment variable name label
- * @localZh 变量名
- * @localEn Variable name
- */
-export const PAGE_PAM_LABEL_ENV_NAME = 'page_pam:labelEnvName';
-
-/**
- * @description Environment URL label
- * @localZh 访问地址
- * @localEn Access URL
- */
-export const PAGE_PAM_LABEL_ENV_URL = 'page_pam:labelEnvUrl';
-
+// ---------- Create-modal env section (shared with env UI components) ----------
 /**
  * @description Environment name placeholder
  * @localZh 环境名称
@@ -408,13 +353,6 @@ export const PAGE_PAM_NO_ENV_VAR = 'page_pam:noEnvVar';
 export const PAGE_PAM_PLACEHOLDER_ENV_VAR = 'page_pam:placeholderEnvVar';
 
 /**
- * @description Environment variable value label
- * @localZh 变量值
- * @localEn Variable value
- */
-export const PAGE_PAM_LABEL_ENV_VALUE = 'page_pam:labelEnvValue';
-
-/**
  * @description Environment variable value placeholder
  * @localZh value
  * @localEn value
@@ -443,25 +381,11 @@ export const PAGE_PAM_ENV_ADD = 'page_pam:envAdd';
 export const PAGE_PAM_ENV_TIP = 'page_pam:envTip';
 
 /**
- * @description Add variable label
- * @localZh 添加变量
- * @localEn Add variable
- */
-export const PAGE_PAM_ENV_VAR_ADD_LABEL = 'page_pam:envVarAddLabel';
-
-/**
  * @description Environment variable title
  * @localZh 环境变量
  * @localEn Environment variables
  */
 export const PAGE_PAM_ENV_VAR_TITLE = 'page_pam:envVarTitle';
-
-/**
- * @description Environment name placeholder (same as above but for form)
- * @localZh 环境名称 (如 dev, prod)
- * @localEn Environment name (e.g. dev, prod)
- */
-export const PAGE_PAM_PLACEHOLDER_ENV_NAME_FORM = 'page_pam:placeholerEnvName';
 
 /**
  * @description Environment URL title
@@ -478,43 +402,81 @@ export const PAGE_PAM_ENV_URL_TITLE = 'page_pam:envUrlTitle';
 export const PAGE_PAM_ENV_DELETE = 'page_pam:envDelete';
 
 /**
- * @description Direct environment access title
- * @localZh 环境直达
- * @localEn Direct environment access
+ * @description Sensitive variable checkbox label
+ * @localZh 敏感
+ * @localEn Sensitive
  */
-export const PAGE_PAM_ENV_DIRECT_TITLE = 'page_pam:envDirectTitle';
+export const PAGE_PAM_ENV_VAR_SENSITIVE = 'page_pam:envVarSensitive';
 
 /**
- * @description Open repository action
- * @localZh 打开仓库
- * @localEn Open repository
+ * @description Sensitive flag is locked after first save
+ * @localZh 敏感标记仅在创建时可选，之后不可修改
+ * @localEn Sensitive can only be set on create and cannot be changed later
  */
-export const PAGE_PAM_OPEN_REPO = 'page_pam:openRepo';
+export const PAGE_PAM_ENV_VAR_SENSITIVE_LOCKED =
+  'page_pam:envVarSensitiveLocked';
 
 /**
- * @description Open deployment / primary URL action
- * @localZh 打开部署
- * @localEn Open deployment
+ * @description Placeholder for unchanged sensitive value
+ * @localZh 留空则保持原值
+ * @localEn Leave empty to keep current value
  */
-export const PAGE_PAM_OPEN_DEPLOY = 'page_pam:openDeploy';
+export const PAGE_PAM_ENV_VAR_SENSITIVE_PLACEHOLDER =
+  'page_pam:envVarSensitivePlaceholder';
 
 /**
- * @description More actions menu label
- * @localZh 更多操作
- * @localEn More actions
+ * @description Import dotenv button
+ * @localZh 导入
+ * @localEn Import
  */
-export const PAGE_PAM_MORE_ACTIONS = 'page_pam:moreActions';
+export const PAGE_PAM_ENV_VAR_IMPORT = 'page_pam:envVarImport';
 
 /**
- * @description Click owner id to copy (title / aria)
- * @localZh 点击复制用户 ID
- * @localEn Click to copy user ID
+ * @description Import dotenv file button
+ * @localZh 导入文件
+ * @localEn Import file
  */
-export const PAGE_PAM_COPY_OWNER_ID = 'page_pam:copyOwnerId';
+export const PAGE_PAM_ENV_VAR_IMPORT_FILE = 'page_pam:envVarImportFile';
 
 /**
- * @description Owner id copied toast
- * @localZh 用户 ID 已复制
- * @localEn User ID copied
+ * @description Import dotenv textarea placeholder
+ * @localZh 粘贴 .env 内容，例如 KEY=VALUE
+ * @localEn Paste .env content, e.g. KEY=VALUE
  */
-export const PAGE_PAM_COPY_OWNER_ID_SUCCESS = 'page_pam:copyOwnerIdSuccess';
+export const PAGE_PAM_ENV_VAR_IMPORT_PLACEHOLDER =
+  'page_pam:envVarImportPlaceholder';
+
+/**
+ * @description Confirm import action
+ * @localZh 解析并导入
+ * @localEn Parse and import
+ */
+export const PAGE_PAM_ENV_VAR_IMPORT_CONFIRM = 'page_pam:envVarImportConfirm';
+
+/**
+ * @description Cancel import panel
+ * @localZh 取消
+ * @localEn Cancel
+ */
+export const PAGE_PAM_ENV_VAR_IMPORT_CANCEL = 'page_pam:envVarImportCancel';
+
+/**
+ * @description Import result summary
+ * @localZh 导入 %imported% 条，跳过 %skipped% 条重复
+ * @localEn Imported %imported%, skipped %skipped% duplicates
+ */
+export const PAGE_PAM_ENV_VAR_IMPORT_RESULT = 'page_pam:envVarImportResult';
+
+/**
+ * @description Import found nothing to add
+ * @localZh 未解析到可导入的变量
+ * @localEn No importable variables found
+ */
+export const PAGE_PAM_ENV_VAR_IMPORT_EMPTY = 'page_pam:envVarImportEmpty';
+
+/**
+ * @description Import file type or content is invalid
+ * @localZh 仅支持 .env / .txt，且内容需为 KEY=VALUE
+ * @localEn Only .env / .txt files with KEY=VALUE content are supported
+ */
+export const PAGE_PAM_ENV_VAR_IMPORT_INVALID = 'page_pam:envVarImportInvalid';

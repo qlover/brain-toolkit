@@ -5,7 +5,8 @@ import { inject, injectable } from '@shared/container';
 import {
   PAMEnvWriteable,
   PAMEnvRaw,
-  PAMEnvTableName
+  PAMEnvTableName,
+  PAMVariable
 } from '@shared/schemas/PAMEnvironmentSchema';
 import { Join } from '@shared/type';
 import {
@@ -263,6 +264,144 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Loads environments with variables for merge/write workflows.
+   *
+   * @param projectId - Project id
+   * @returns Environments including JSONB variables
+   */
+  public async getEnvironmentsByProjectId(
+    projectId: string
+  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>[]> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const result = await supabase
+      .from(PAMEnvTableName)
+      .select('id,name,url,variables')
+      .eq('project_id', projectId);
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data || [];
+  }
+
+  /**
+   * Loads a single environment for a project (including variables).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @returns Environment row or null when missing
+   */
+  public async getEnvironmentById(
+    projectId: string,
+    envId: string
+  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const result = await supabase
+      .from(PAMEnvTableName)
+      .select('id,name,url,variables')
+      .eq('project_id', projectId)
+      .eq('id', envId)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'variables'
+    > | null;
+  }
+
+  /**
+   * Inserts a new environment row under a project.
+   *
+   * @param projectId - Project id
+   * @param data - Name, url, variables to persist
+   * @returns Created environment
+   */
+  public async createEnvironment(
+    projectId: string,
+    data: {
+      name: string;
+      url: string;
+      variables?: PAMVariable[];
+    }
+  ): Promise<PAMEnvWriteable> {
+    const supabase = await this.supabaseRepo.getSupabase();
+
+    const result = await supabase
+      .from(PAMEnvTableName)
+      .insert({
+        project_id: projectId,
+        name: data.name,
+        url: data.url,
+        variables: data.variables || []
+      })
+      .select('id,name,url,variables')
+      .single();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as PAMEnvWriteable;
+  }
+
+  /**
+   * Deletes an environment belonging to a project.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async deleteEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<void> {
+    const existing = await this.getEnvironmentById(projectId, envId);
+    if (!existing) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(PAMEnvTableName)
+      .delete()
+      .eq('id', envId)
+      .eq('project_id', projectId);
+
+    this.supabaseRepo.throwIfError(result);
+  }
+
+  /**
+   * Replaces the JSONB variables array for one environment.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param variables - Variables to persist (already encrypted if needed)
+   * @returns Updated environment
+   */
+  public async updateEnvironmentVariables(
+    projectId: string,
+    envId: string,
+    variables: PAMVariable[]
+  ): Promise<PAMEnvWriteable> {
+    const supabase = await this.supabaseRepo.getSupabase();
+    const result = await supabase
+      .from(PAMEnvTableName)
+      .update({ variables })
+      .eq('id', envId)
+      .eq('project_id', projectId)
+      .select('id,name,url,variables')
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    return result.data as PAMEnvWriteable;
+  }
+
+  /**
    * 更新项目基本信息（仅字段）
    */
   private async updateProjectFields(
@@ -352,7 +491,7 @@ export class PAMProjectRepo extends BaseRepository<
         project_id: projectId,
         name: env.name!,
         url: env.url!,
-        variables: env.variables || {}
+        variables: env.variables || []
       }));
       const insertResult = await supabase
         .from(PAMEnvTableName)
@@ -531,7 +670,7 @@ export class PAMProjectRepo extends BaseRepository<
         project_id: project.id,
         name: env.name,
         url: env.url,
-        variables: env.variables || {}
+        variables: env.variables || []
       }));
 
       const envResult = await supabase

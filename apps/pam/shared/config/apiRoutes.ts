@@ -90,6 +90,35 @@ export const API_OAUTH_PLAYGROUND_VALIDATE =
 export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 
 /**
+ * API path: `/api/pam/:projectId/environments`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/route.ts](../../src/app/api/pam/[projectId]/environments/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS = '/api/pam/:projectId/environments' as const;
+
+/**
+ * API path: `/api/pam/:projectId/environments/:envId/delete`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/delete/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/delete/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/delete/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_DELETE =
+  '/api/pam/:projectId/environments/:envId/delete' as const;
+
+/**
+ * API path: `/api/pam/:projectId/environments/:envId/variables`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/variables/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/variables/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/variables/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_VARIABLES =
+  '/api/pam/:projectId/environments/:envId/variables' as const;
+
+/**
  * API path: `/api/pam/create`
  *
  * @see [src/app/api/pam/create/route.ts](../../src/app/api/pam/create/route.ts)
@@ -225,6 +254,9 @@ export type ApiRoutePath =
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
+  | typeof API_PAM_ENVIRONMENTS
+  | typeof API_PAM_ENVIRONMENTS_DELETE
+  | typeof API_PAM_ENVIRONMENTS_VARIABLES
   | typeof API_PAM_CREATE
   | typeof API_PAM_DELETE
   | typeof API_PAM_DETAIL

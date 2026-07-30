@@ -2,7 +2,7 @@ import { MinusCircleIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React from 'react';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
-import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
+import type { PAMEnvFormI18n } from '@config/i18n-mapping/PAMEnvFormI18n';
 import type { PAMVariable } from '@schemas/PAMEnvironmentSchema';
 import { pamFormMonoFieldClass } from './PAMFormFieldStyles';
 import type { FieldError } from 'react-hook-form';
@@ -12,12 +12,14 @@ interface PAMFormEnvironmentVarRowProps {
   item: PAMVariable;
   keyError?: FieldError;
   valueError?: FieldError;
-  tt: PAMI18nInterface;
+  tt: PAMEnvFormI18n;
+  sensitiveLocked: boolean;
   onUpdateVariable: (
     envIndex: number,
     oldKey: string,
     newKey: string,
-    value: string
+    value: string,
+    sensitive?: boolean
   ) => void;
   onRemoveVariable: (envIndex: number, key: string) => void;
 }
@@ -30,11 +32,13 @@ export const PAMFormEnvironmentVarRow: React.FC<
   keyError,
   valueError,
   tt,
+  sensitiveLocked,
   onUpdateVariable,
   onRemoveVariable
 }) => {
   const t = useWarnTranslations();
   const errorMessage = keyError?.message || valueError?.message;
+  const isSensitive = item.sensitive === true;
 
   return (
     <div data-testid="PAMFormEnvironmentVarRow" className="space-y-0.5">
@@ -44,7 +48,13 @@ export const PAMFormEnvironmentVarRow: React.FC<
           placeholder={tt.placeholderEnvVar}
           value={item.key}
           onChange={(e) =>
-            onUpdateVariable(envIndex, item.key, e.target.value, item.value)
+            onUpdateVariable(
+              envIndex,
+              item.key,
+              e.target.value,
+              item.value,
+              isSensitive
+            )
           }
           className={clsx(
             pamFormMonoFieldClass,
@@ -53,11 +63,19 @@ export const PAMFormEnvironmentVarRow: React.FC<
           )}
         />
         <input
-          type="text"
-          placeholder={tt.placehoderEnvValue}
+          type={isSensitive ? 'password' : 'text'}
+          placeholder={
+            isSensitive ? tt.envVarSensitivePlaceholder : tt.placehoderEnvValue
+          }
           value={item.value}
           onChange={(e) =>
-            onUpdateVariable(envIndex, item.key, item.key, e.target.value)
+            onUpdateVariable(
+              envIndex,
+              item.key,
+              item.key,
+              e.target.value,
+              isSensitive
+            )
           }
           className={clsx(
             pamFormMonoFieldClass,
@@ -65,6 +83,30 @@ export const PAMFormEnvironmentVarRow: React.FC<
             valueError && 'border-(--fe-color-error)'
           )}
         />
+        <label
+          className={clsx(
+            'flex shrink-0 items-center gap-1 text-[10px] text-secondary-text sm:text-xs',
+            sensitiveLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+          )}
+          title={sensitiveLocked ? tt.envVarSensitiveLocked : undefined}
+        >
+          <input
+            type="checkbox"
+            checked={isSensitive}
+            disabled={sensitiveLocked}
+            onChange={(e) =>
+              onUpdateVariable(
+                envIndex,
+                item.key,
+                item.key,
+                item.value,
+                e.target.checked
+              )
+            }
+            className="h-3.5 w-3.5 accent-brand disabled:cursor-not-allowed"
+          />
+          <span>{tt.envVarSensitive}</span>
+        </label>
         <button
           type="button"
           onClick={() => onRemoveVariable(envIndex, item.key)}

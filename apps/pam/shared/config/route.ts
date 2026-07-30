@@ -2,7 +2,10 @@ import {
   API_CLIENTS_2,
   API_PAM_DELETE,
   API_PAM_DETAIL,
-  API_PAM_EDIT
+  API_PAM_EDIT,
+  API_PAM_ENVIRONMENTS,
+  API_PAM_ENVIRONMENTS_DELETE,
+  API_PAM_ENVIRONMENTS_VARIABLES
 } from './apiRoutes';
 import { i18nConfig } from './i18n';
 import type { LocaleType } from './i18n';
@@ -44,6 +47,12 @@ export const ROUTE_ADMIN_USERS = '/admin/users' as const;
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
 
 export const ROUTE_HOME = '/' as const;
+
+/**
+ * PAM project detail routes (App Router under `src/app/[locale]/projects/...`).
+ * Nested paths use {@link hasSessionPath} prefix matching via {@link ROUTE_PROJECTS}.
+ */
+export const ROUTE_PROJECTS = '/projects' as const;
 
 /** Developer console app list (PRD default post-login redirect). */
 export const ROUTE_DEVELOPER_APPS = '/developer/apps' as const;
@@ -125,7 +134,13 @@ export const LOGINED_PAGES = [
   ROUTE_OAUTH_PLAYGROUND,
   // Consent requires an app session; gate here so unauthenticated users
   // are sent to login with `?redirect=<full authorize URL>` via redirectToPath.
-  ROUTE_OAUTH_AUTHORIZE
+  ROUTE_OAUTH_AUTHORIZE,
+  /**
+   * Project detail tree: `/projects`, `/projects/:id`, `/projects/:id/general`, …
+   * Exact `endsWith` only covers `/…/projects`; nested segments need
+   * {@link isLoginRequiredProjectsPath}.
+   */
+  ROUTE_PROJECTS
 ] as const;
 
 /**
@@ -190,6 +205,61 @@ export function localePage(route: string, locale: LocaleType): string {
 }
 
 /**
+ * Builds `/projects/:projectId` (no trailing slash).
+ *
+ * @param projectId - Project UUID
+ * @returns Locale-agnostic project detail base path
+ */
+export function projectPath(projectId: string): string {
+  return `${ROUTE_PROJECTS}/${encodeURIComponent(projectId)}`;
+}
+
+/**
+ * Builds `/projects/:projectId/general`.
+ *
+ * @param projectId - Project UUID
+ * @returns Locale-agnostic general tab path
+ */
+export function projectGeneralPath(projectId: string): string {
+  return `${projectPath(projectId)}/general`;
+}
+
+/**
+ * Builds `/projects/:projectId/environments`.
+ *
+ * @param projectId - Project UUID
+ * @returns Locale-agnostic environments tab path
+ */
+export function projectEnvironmentsPath(projectId: string): string {
+  return `${projectPath(projectId)}/environments`;
+}
+
+/**
+ * Whether pathname is under PAM project detail routes
+ * (e.g. `/en/projects/:id/general`).
+ *
+ * Exact `LOGINED_PAGES` suffix matching cannot cover dynamic `:projectId`
+ * segments, so this uses a `/projects/` prefix check after stripping locale.
+ *
+ * @param pathname - Request pathname (may include locale prefix)
+ * @returns True when the path is a project detail route
+ */
+export function isLoginRequiredProjectsPath(pathname: string): boolean {
+  const localeAlt = i18nConfig.supportedLngs.join('|');
+  const withoutLocale = pathname.replace(
+    new RegExp(`^\\/(${localeAlt})(?=\\/|$)`),
+    ''
+  );
+  if (
+    withoutLocale === ROUTE_PROJECTS ||
+    withoutLocale === `${ROUTE_PROJECTS}/`
+  ) {
+    return true;
+  }
+  return withoutLocale.startsWith(`${ROUTE_PROJECTS}/`);
+}
+
+/**
  * 是否是 oauth 认证服务的路由
  * @param pathname
  */
@@ -213,9 +283,14 @@ export function isAuthCallbackPath(pathname: string): boolean {
  * @param pathname
  */
 export function hasSessionPath(pathname: string): boolean {
-  return LOGINED_PAGES.some(
-    (route) => pathname === route || pathname.endsWith(route)
-  );
+  if (
+    LOGINED_PAGES.some(
+      (route) => pathname === route || pathname.endsWith(route)
+    )
+  ) {
+    return true;
+  }
+  return isLoginRequiredProjectsPath(pathname);
 }
 
 /**
@@ -263,6 +338,12 @@ export function redirectToPath(
  *
  * buildApiWithPath('/api/user/:id/detail', { id: '123' })
  * // => /api/user/123/detail
+ *
+ * buildApiWithPath('/api/pam/:projectId/environments/:envId', {
+ *   projectId: 'p',
+ *   envId: 'e'
+ * })
+ * // => /api/pam/p/environments/e
  * ```
  *
  * @param pathname
@@ -273,16 +354,13 @@ export function buildApiWithPath(
   pathname: string,
   vars: Record<string, string>
 ): string {
-  let newPathname = pathname;
+  // Longer keys first so `:projectId` is not partially matched by `:id`.
+  const keys = Object.keys(vars).sort((a, b) => b.length - a.length);
 
-  Object.keys(vars).forEach((key) => {
-    const pathKey = key.startsWith(':') ? key : ':' + key;
-    if (pathname.includes(pathKey)) {
-      newPathname = pathname.replace(pathKey, vars[key]);
-    }
-  });
-
-  return newPathname;
+  return keys.reduce((path, key) => {
+    const pathKey = key.startsWith(':') ? key : `:${key}`;
+    return path.replaceAll(pathKey, vars[key]);
+  }, pathname);
 }
 
 /**
@@ -301,6 +379,45 @@ export function buildApiPamEdit(id: string): string {
 export function buildApiPamDetele(id: string): string {
   return buildApiWithPath(API_PAM_DELETE, { id });
 }
+
+/**
+ * @see {@link API_PAM_ENVIRONMENTS}
+ * @param projectId - Project id
+ * @returns `/api/pam/:projectId/environments`
+ */
+export function buildApiPamEnvironments(projectId: string): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS, { projectId });
+}
+
+/**
+ * @see {@link API_PAM_ENVIRONMENTS_DELETE}
+ * @param projectId - Project id
+ * @param envId - Environment id
+ * @returns `/api/pam/:projectId/environments/:envId/delete`
+ */
+export function buildApiPamEnvironmentDelete(
+  projectId: string,
+  envId: string
+): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS_DELETE, { projectId, envId });
+}
+
+/**
+ * @see {@link API_PAM_ENVIRONMENTS_VARIABLES}
+ * @param projectId - Project id
+ * @param envId - Environment id
+ * @returns `/api/pam/:projectId/environments/:envId/variables`
+ */
+export function buildApiPamEnvironmentVariables(
+  projectId: string,
+  envId: string
+): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS_VARIABLES, {
+    projectId,
+    envId
+  });
+}
+
 export function isAuthGuestOnlyPath(pathname: string): boolean {
   return GUEST_ONLY_AUTH_PAGES.some(
     (route) => pathname === route || pathname.endsWith(route)
