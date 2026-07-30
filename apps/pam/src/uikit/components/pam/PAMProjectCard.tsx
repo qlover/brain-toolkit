@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
+import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
   PAMPublicType,
@@ -134,7 +135,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
             <div className="min-w-0 flex-1">
               <Link
                 href={{
-                  pathname: '/projects/[projectId]/general',
+                  pathname: ROUTE_PROJECT_GENERAL,
                   params: { projectId: project.id }
                 }}
                 className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"

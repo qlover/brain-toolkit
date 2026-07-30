@@ -11,6 +11,7 @@ import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { defaultSearchParams } from '@config/common';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
+import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
@@ -167,7 +168,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
             const result = await pamFacade.createProject(data);
             if (result.data?.id) {
               router.push({
-                pathname: '/projects/[projectId]/general',
+                pathname: ROUTE_PROJECT_GENERAL,
                 params: { projectId: result.data.id }
               });
             }

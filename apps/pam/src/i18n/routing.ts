@@ -9,6 +9,9 @@ import {
   ROUTE_OAUTH_AUTHORIZE,
   ROUTE_DOCS_OAUTH,
   ROUTE_OAUTH_PLAYGROUND,
+  ROUTE_PROJECT_DETAIL,
+  ROUTE_PROJECT_ENVIRONMENTS,
+  ROUTE_PROJECT_GENERAL,
   ROUTE_PROJECTS,
   ROUTE_REGISTER,
   ROUTE_REQUEST_LOGS
@@ -70,17 +73,17 @@ export const routing = defineRouting({
       en: '/projects',
       zh: '/projects'
     },
-    '/projects/[projectId]': {
-      en: '/projects/[projectId]',
-      zh: '/projects/[projectId]'
+    [ROUTE_PROJECT_DETAIL]: {
+      en: ROUTE_PROJECT_DETAIL,
+      zh: ROUTE_PROJECT_DETAIL
     },
-    '/projects/[projectId]/general': {
-      en: '/projects/[projectId]/general',
-      zh: '/projects/[projectId]/general'
+    [ROUTE_PROJECT_GENERAL]: {
+      en: ROUTE_PROJECT_GENERAL,
+      zh: ROUTE_PROJECT_GENERAL
     },
-    '/projects/[projectId]/environments': {
-      en: '/projects/[projectId]/environments',
-      zh: '/projects/[projectId]/environments'
+    [ROUTE_PROJECT_ENVIRONMENTS]: {
+      en: ROUTE_PROJECT_ENVIRONMENTS,
+      zh: ROUTE_PROJECT_ENVIRONMENTS
     }
   }
 });
