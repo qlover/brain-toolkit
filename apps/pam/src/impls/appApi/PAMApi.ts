@@ -24,26 +24,58 @@ import {
 import { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
 import { AppApiRequester } from './AppApiRequester';
 
+/** Abort ids for `pamApi.stop(...)`. Wired internally on each request. */
+export const PAMAbortId = {
+  projectDetail: (projectId: string) => `pam:projectDetail:${projectId}`,
+  listEnvironments: (projectId: string) => `pam:listEnvironments:${projectId}`
+} as const;
+
 @injectable()
 export class PAMApi {
+  /** Concurrent identical search params share one in-flight request. */
+  private readonly searchInflight = new Map<
+    string,
+    Promise<ResourceSearchResult<SearchPAMProject>>
+  >();
+
   constructor(
     @inject(AppApiRequester) private readonly appApiRequester: AppApiRequester
   ) {}
 
+  /**
+   * Abort in-flight request by id from {@link PAMAbortId}.
+   * `return () => pamApi.stop(PAMAbortId.projectDetail(id))`
+   */
+  public stop(abortId: string): void {
+    this.appApiRequester.stop(abortId);
+  }
+
   public async searchProjects(
     params: PAMSearchParams
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
-    const response = await this.appApiRequester.get<
-      AppApiSuccessInterface<ResourceSearchResult<SearchPAMProject>>,
-      PAMSearchParams
-    >(API_PAM_SEARCH, {
-      params: {
-        ...params,
-        sort: JSON.stringify(params.sort)
-      }
-    });
+    const inflightKey = JSON.stringify(params);
+    const pending = this.searchInflight.get(inflightKey);
+    if (pending) {
+      return pending;
+    }
 
-    return response.data.data!;
+    const request = this.appApiRequester
+      .get<
+        AppApiSuccessInterface<ResourceSearchResult<SearchPAMProject>>,
+        PAMSearchParams
+      >(API_PAM_SEARCH, {
+        params: {
+          ...params,
+          sort: JSON.stringify(params.sort)
+        }
+      })
+      .then((response) => response.data.data!)
+      .finally(() => {
+        this.searchInflight.delete(inflightKey);
+      });
+
+    this.searchInflight.set(inflightKey, request);
+    return request;
   }
 
   public async createProject(
@@ -64,7 +96,8 @@ export class PAMApi {
       AppApiSuccessInterface<PAMProjectDetail>,
       { isEnv: 1 | 0 }
     >(buildApiPamDetail(params.id), {
-      params: { isEnv: 1 }
+      params: { isEnv: 1 },
+      abortId: PAMAbortId.projectDetail(params.id)
     });
 
     return response.data.data!;
@@ -96,7 +129,9 @@ export class PAMApi {
     const response = await this.appApiRequester.get<
       AppApiSuccessInterface<PAMEnvWriteable[]>,
       Record<string, never>
-    >(buildApiPamEnvironments(projectId));
+    >(buildApiPamEnvironments(projectId), {
+      abortId: PAMAbortId.listEnvironments(projectId)
+    });
 
     return response.data.data!;
   }
