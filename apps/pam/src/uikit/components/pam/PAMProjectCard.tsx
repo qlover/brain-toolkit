@@ -2,6 +2,7 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React, { useMemo } from 'react';
 import { toast } from 'sonner';
+import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -21,7 +22,6 @@ interface PAMProjectCardProps {
   isOwner: boolean;
   /** Guest: hide delete and readonly label. */
   isAuthenticated?: boolean;
-  onOpen: (id: string) => void;
   onDelete: (project: PAMProjectCardModel) => void;
 }
 
@@ -30,7 +30,6 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   project,
   isOwner,
   isAuthenticated = false,
-  onOpen,
   onDelete
 }) => {
   const envs = project.environments || [];
@@ -133,13 +132,15 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => onOpen(project.id)}
-                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text transition hover:text-brand sm:text-xl"
+              <Link
+                href={{
+                  pathname: '/projects/[projectId]/general',
+                  params: { projectId: project.id }
+                }}
+                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"
               >
                 {project.name}
-              </button>
+              </Link>
               {subBits.length > 0 ? (
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-snug text-tertiary-text">
                   {subBits.map((bit, index) => (

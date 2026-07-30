@@ -73,13 +73,6 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
 
   const closeDialog = () => pamFacade.closeDialog();
 
-  const openProjectGeneral = (id: string): void => {
-    router.push({
-      pathname: '/projects/[projectId]/general',
-      params: { projectId: id }
-    });
-  };
-
   return (
     <div
       data-testid="PAMRoot"
@@ -109,7 +102,6 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
         loading={listLoading && projects.length === 0}
         isAuthenticated={isAuthenticated}
         isOwner={(data) => !!data.is_owner}
-        onOpen={openProjectGeneral}
         onDelete={(project) => {
           if (!isAuthenticated) return;
           dialog.confirm({

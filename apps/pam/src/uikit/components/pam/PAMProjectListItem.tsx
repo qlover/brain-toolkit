@@ -2,6 +2,7 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React, { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
+import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -24,7 +25,6 @@ interface PAMProjectListItemProps {
   tt: PAMI18nInterface;
   project: PAMProjectListModel;
   isOwner: boolean;
-  onOpen: (id: string) => void;
   onDelete: (project: PAMProjectListModel) => void;
 }
 
@@ -37,7 +37,6 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
   isOwner,
-  onOpen,
   onDelete
 }) => {
   const envs = useMemo(
@@ -121,13 +120,15 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           )}
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => onOpen(project.id)}
-                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text transition hover:text-brand sm:text-xl"
+              <Link
+                href={{
+                  pathname: '/projects/[projectId]/general',
+                  params: { projectId: project.id }
+                }}
+                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"
               >
                 {project.name}
-              </button>
+              </Link>
               <PAMPublicIcon
                 isPublic={isPublic}
                 publicTitle={tt.public}
