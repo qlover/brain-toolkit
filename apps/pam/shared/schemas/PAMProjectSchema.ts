@@ -90,6 +90,10 @@ export type SearchPAMProject = SearchPAMRawProject & {
  */
 export type PAMProjectDetail = SearchPAMRawProject & {
   [PAMProjectEnvKey]?: PAMEnvWriteable[];
+  /**
+   * 当前登录用户是否为项目 owner（详情接口附加，与 search 一致）
+   */
+  is_owner?: boolean;
 };
 
 /**

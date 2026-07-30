@@ -14,6 +14,8 @@ interface PAMFormEnvironmentVarRowProps {
   valueError?: FieldError;
   tt: PAMEnvFormI18n;
   sensitiveLocked: boolean;
+  /** Non-owner detail view: inputs disabled, remove hidden. */
+  readOnly?: boolean;
   onUpdateVariable: (
     envIndex: number,
     oldKey: string,
@@ -33,12 +35,14 @@ export const PAMFormEnvironmentVarRow: React.FC<
   valueError,
   tt,
   sensitiveLocked,
+  readOnly = false,
   onUpdateVariable,
   onRemoveVariable
 }) => {
   const t = useWarnTranslations();
   const errorMessage = keyError?.message || valueError?.message;
   const isSensitive = item.sensitive === true;
+  const fieldsDisabled = readOnly || sensitiveLocked;
 
   return (
     <div data-testid="PAMFormEnvironmentVarRow" className="space-y-0.5">
@@ -47,6 +51,8 @@ export const PAMFormEnvironmentVarRow: React.FC<
           type="text"
           placeholder={tt.placeholderEnvVar}
           value={item.key}
+          readOnly={readOnly}
+          disabled={readOnly}
           onChange={(e) =>
             onUpdateVariable(
               envIndex,
@@ -59,7 +65,8 @@ export const PAMFormEnvironmentVarRow: React.FC<
           className={clsx(
             pamFormMonoFieldClass,
             'env-var-key min-w-15 flex-1 py-1.5 text-xs sm:text-sm',
-            keyError && 'border-(--fe-color-error)'
+            keyError && 'border-(--fe-color-error)',
+            readOnly && 'cursor-default opacity-80'
           )}
         />
         <input
@@ -68,6 +75,8 @@ export const PAMFormEnvironmentVarRow: React.FC<
             isSensitive ? tt.envVarSensitivePlaceholder : tt.placehoderEnvValue
           }
           value={item.value}
+          readOnly={readOnly}
+          disabled={readOnly}
           onChange={(e) =>
             onUpdateVariable(
               envIndex,
@@ -80,20 +89,21 @@ export const PAMFormEnvironmentVarRow: React.FC<
           className={clsx(
             pamFormMonoFieldClass,
             'env-var-value min-w-20 flex-[1.5] py-1.5 text-xs sm:text-sm',
-            valueError && 'border-(--fe-color-error)'
+            valueError && 'border-(--fe-color-error)',
+            readOnly && 'cursor-default opacity-80'
           )}
         />
         <label
           className={clsx(
             'flex shrink-0 items-center gap-1 text-[10px] text-secondary-text sm:text-xs',
-            sensitiveLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+            fieldsDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
           )}
           title={sensitiveLocked ? tt.envVarSensitiveLocked : undefined}
         >
           <input
             type="checkbox"
             checked={isSensitive}
-            disabled={sensitiveLocked}
+            disabled={fieldsDisabled}
             onChange={(e) =>
               onUpdateVariable(
                 envIndex,
@@ -107,14 +117,16 @@ export const PAMFormEnvironmentVarRow: React.FC<
           />
           <span>{tt.envVarSensitive}</span>
         </label>
-        <button
-          type="button"
-          onClick={() => onRemoveVariable(envIndex, item.key)}
-          className="shrink-0 cursor-pointer rounded-lg p-1 text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10 hover:opacity-80 touch-manipulation"
-          aria-label={tt.envDelete}
-        >
-          <MinusCircleIcon className="h-4 w-4" />
-        </button>
+        {!readOnly ? (
+          <button
+            type="button"
+            onClick={() => onRemoveVariable(envIndex, item.key)}
+            className="shrink-0 cursor-pointer rounded-lg p-1 text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10 hover:opacity-80 touch-manipulation"
+            aria-label={tt.envDelete}
+          >
+            <MinusCircleIcon className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
       {errorMessage && (
         <div className="col-span-full mt-0.5 text-xs text-(--fe-color-error)">
