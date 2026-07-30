@@ -16,7 +16,11 @@ import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
-import { ROUTE_HOME } from '@config/route';
+import {
+  ROUTE_HOME,
+  ROUTE_PROJECT_ENVIRONMENTS,
+  ROUTE_PROJECT_GENERAL
+} from '@config/route';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 import { Loading } from '../../components/Loading';
 import { usePageI18nMapping } from '../../context/PageI18nContext';
@@ -172,7 +176,7 @@ export function PAMProjectDetailShell({
           >
             <Link
               href={{
-                pathname: '/projects/[projectId]/general',
+                pathname: ROUTE_PROJECT_GENERAL,
                 params: { projectId }
               }}
               className={tabClass('general')}
@@ -181,7 +185,7 @@ export function PAMProjectDetailShell({
             </Link>
             <Link
               href={{
-                pathname: '/projects/[projectId]/environments',
+                pathname: ROUTE_PROJECT_ENVIRONMENTS,
                 params: { projectId }
               }}
               className={tabClass('environments')}

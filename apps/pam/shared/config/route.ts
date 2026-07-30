@@ -54,6 +54,16 @@ export const ROUTE_HOME = '/' as const;
  */
 export const ROUTE_PROJECTS = '/projects' as const;
 
+/** next-intl pathname template: `/projects/[projectId]` */
+export const ROUTE_PROJECT_DETAIL = '/projects/[projectId]' as const;
+
+/** next-intl pathname template: `/projects/[projectId]/general` */
+export const ROUTE_PROJECT_GENERAL = '/projects/[projectId]/general' as const;
+
+/** next-intl pathname template: `/projects/[projectId]/environments` */
+export const ROUTE_PROJECT_ENVIRONMENTS =
+  '/projects/[projectId]/environments' as const;
+
 /** Developer console app list (PRD default post-login redirect). */
 export const ROUTE_DEVELOPER_APPS = '/developer/apps' as const;
 
@@ -211,7 +221,10 @@ export function localePage(route: string, locale: LocaleType): string {
  * @returns Locale-agnostic project detail base path
  */
 export function projectPath(projectId: string): string {
-  return `${ROUTE_PROJECTS}/${encodeURIComponent(projectId)}`;
+  return ROUTE_PROJECT_DETAIL.replace(
+    '[projectId]',
+    encodeURIComponent(projectId)
+  );
 }
 
 /**
@@ -221,7 +234,10 @@ export function projectPath(projectId: string): string {
  * @returns Locale-agnostic general tab path
  */
 export function projectGeneralPath(projectId: string): string {
-  return `${projectPath(projectId)}/general`;
+  return ROUTE_PROJECT_GENERAL.replace(
+    '[projectId]',
+    encodeURIComponent(projectId)
+  );
 }
 
 /**
@@ -231,7 +247,10 @@ export function projectGeneralPath(projectId: string): string {
  * @returns Locale-agnostic environments tab path
  */
 export function projectEnvironmentsPath(projectId: string): string {
-  return `${projectPath(projectId)}/environments`;
+  return ROUTE_PROJECT_ENVIRONMENTS.replace(
+    '[projectId]',
+    encodeURIComponent(projectId)
+  );
 }
 
 /**
