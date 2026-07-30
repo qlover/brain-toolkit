@@ -6,6 +6,7 @@ import {
   PlusIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
+import { isAbortError } from '@qlover/fe-corekit/aborter';
 import { clsx } from 'clsx';
 import React, {
   useCallback,
@@ -15,8 +16,9 @@ import React, {
   useState
 } from 'react';
 import { v4 as uuid } from 'uuid';
-import { PAMApi } from '@/impls/appApi/PAMApi';
+import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
 import type { PAMEnvironmentsI18nInterface } from '@config/i18n-mapping/PAMEnvironmentsI18n';
 import { I } from '@config/ioc-identifiter';
@@ -106,30 +108,36 @@ export function PAMProjectEnvironmentsPanel({
     setSelectedEnvId(env.id);
   }, []);
 
-  const loadEnvironments = useCallback(async (): Promise<void> => {
+  useStrictEffect(() => {
     setLoading(true);
-    try {
-      const list = await pamApi.listEnvironments(projectId);
-      setEnvironments(list);
-      setSelectedEnvId((prev) => {
-        if (prev && list.some((env) => env.id === prev)) {
-          return prev;
-        }
-        return list[0]?.id ?? null;
-      });
-    } catch (error) {
-      dialogHandler.error(
-        error instanceof Error ? error.message : tt.projectNotFound
-      );
-      setEnvironments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [dialogHandler, pamApi, projectId, tt.projectNotFound]);
 
-  useEffect(() => {
-    void loadEnvironments();
-  }, [loadEnvironments]);
+    void pamApi
+      .listEnvironments(projectId)
+      .then((list) => {
+        setEnvironments(list);
+        setSelectedEnvId((prev) => {
+          if (prev && list.some((env) => env.id === prev)) {
+            return prev;
+          }
+          return list[0]?.id ?? null;
+        });
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (isAbortError(error)) {
+          return;
+        }
+        dialogHandler.error(
+          error instanceof Error ? error.message : tt.projectNotFound
+        );
+        setEnvironments([]);
+        setLoading(false);
+      });
+
+    return () => {
+      pamApi.stop(PAMAbortId.listEnvironments(projectId));
+    };
+  }, [dialogHandler, pamApi, projectId, tt.projectNotFound]);
 
   useEffect(() => {
     if (!selectedEnv) {

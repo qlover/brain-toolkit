@@ -2,11 +2,12 @@
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { useEffect, useLayoutEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
+import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { defaultSearchParams } from '@config/common';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
@@ -62,7 +63,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   }, [initialList, pamFacade]);
 
   // Background refresh picks up private projects / is_owner after session restore.
-  useEffect(() => {
+  useStrictEffect(() => {
     void pamFacade.pullProjectList({
       page: defaultSearchParams.page,
       resetResult: false,

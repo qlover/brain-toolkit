@@ -6,8 +6,9 @@ import {
   LockOpenIcon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
+import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
 import { I } from '@config/ioc-identifiter';
@@ -46,12 +47,33 @@ function SettingsFieldSkeleton(): React.ReactElement {
   );
 }
 
+function applyDetailToFields(
+  detail: PAMProjectDetail,
+  setters: {
+    setName: (v: string) => void;
+    setSlug: (v: string) => void;
+    setIsPublic: (v: 0 | 1) => void;
+    setCategory: (v: string) => void;
+    setDescription: (v: string) => void;
+    setStack: (v: string) => void;
+    setRepoUrl: (v: string) => void;
+  }
+): void {
+  setters.setName(detail.name ?? '');
+  setters.setSlug(detail.slug ?? '');
+  setters.setIsPublic(detail.is_public ?? PAMPublicType.private);
+  setters.setCategory(detail.category ?? '');
+  setters.setDescription(detail.description ?? '');
+  setters.setStack(detail.stack ?? '');
+  setters.setRepoUrl(detail.repo_url ?? '');
+}
+
 /**
  * Project general tab — Vercel-style one-card-per-field settings.
  *
  * Significance: Atomic updates for safer edits than a whole-form save.
- * Core idea: Each attribute is a card with description and its own Save.
- * Main function: Load project; patch one field at a time via updateProject.
+ * Core idea: Reuse Shell-loaded project; each card saves one field.
+ * Main function: Patch one field at a time via updateProject.
  * Main purpose: Clear general settings UX on the detail page.
  *
  * @example
@@ -63,10 +85,13 @@ export function PAMProjectGeneralPanel({
   const tt = usePageI18nMapping<PAMGeneralI18nInterface>();
   const pamApi = useIOC(PAMApi);
   const dialogHandler = useIOC(I.DialogHandler);
+  const {
+    project,
+    loading,
+    error: loadError,
+    setProject
+  } = usePAMProjectDetail();
 
-  const [project, setProject] = useState<PAMProjectDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [savingField, setSavingField] = useState<GeneralFieldKeyType | null>(
     null
   );
@@ -79,37 +104,20 @@ export function PAMProjectGeneralPanel({
   const [stack, setStack] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
 
-  const syncLocal = useCallback((detail: PAMProjectDetail): void => {
-    setProject(detail);
-    setName(detail.name ?? '');
-    setSlug(detail.slug ?? '');
-    setIsPublic(detail.is_public ?? PAMPublicType.private);
-    setCategory(detail.category ?? '');
-    setDescription(detail.description ?? '');
-    setStack(detail.stack ?? '');
-    setRepoUrl(detail.repo_url ?? '');
-  }, []);
-
-  const loadDetail = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      const detail = await pamApi.getProjectDetail({ id: projectId });
-      syncLocal(detail);
-    } catch (error) {
-      dialogHandler.error(
-        error instanceof Error ? error.message : tt.projectNotFound
-      );
-      setProject(null);
-      setLoadFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [dialogHandler, pamApi, projectId, syncLocal, tt.projectNotFound]);
-
   useEffect(() => {
-    void loadDetail();
-  }, [loadDetail]);
+    if (!project || project.id !== projectId) {
+      return;
+    }
+    applyDetailToFields(project, {
+      setName,
+      setSlug,
+      setIsPublic,
+      setCategory,
+      setDescription,
+      setStack,
+      setRepoUrl
+    });
+  }, [project, projectId]);
 
   const saveField = async (
     field: GeneralFieldKeyType,
@@ -126,7 +134,7 @@ export function PAMProjectGeneralPanel({
         ...patch,
         id: projectId
       });
-      syncLocal(saved);
+      setProject(saved);
       dialogHandler.success(tt.settingsSave);
     } catch (error) {
       dialogHandler.error(
@@ -149,7 +157,7 @@ export function PAMProjectGeneralPanel({
     }
   };
 
-  if (loadFailed && !project) {
+  if (loadError && !project) {
     return (
       <div
         data-testid="PAMProjectGeneralPanel"
