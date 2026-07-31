@@ -72,11 +72,4 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
 
     return [query, meta];
   }
-
-  /**
-   * @override
-   */
-  public override async search(params: PAMSearchParams<Raw>) {
-    return super.search(params);
-  }
 }

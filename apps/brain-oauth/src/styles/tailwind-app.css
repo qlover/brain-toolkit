@@ -5,6 +5,7 @@
 @import './generated/theme.css';
 
 @source '../../shared/config/component.ts';
+@source '../../node_modules/@qlover/next-kit/dist';
 @source '../app';
 @source '../uikit/components';
 @source '../uikit/components-app';

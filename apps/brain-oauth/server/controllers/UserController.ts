@@ -1,22 +1,23 @@
-import { ExecutorError, Base64Serializer } from '@qlover/fe-corekit';
+import { ExecutorError } from '@qlover/fe-corekit';
+import { Base64Serializer } from '@qlover/fe-corekit/serializer';
+import {
+  LoginValidator,
+  SearchParamsValidator,
+  StringEncryptor,
+  type LoginSchema,
+  type UserSchema,
+  type ValidatorInterface
+} from '@qlover/next-kit/common';
+import { RequestLogsRepository } from '@qlover/next-kit/server';
 import {
   SignOtpResult,
   signWithPhoneOtpSchema,
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
-import { StringEncryptor } from '@shared/StringEncryptor';
-import { LoginValidator } from '@shared/validators/LoginValidator';
-import { SearchParamsValidator } from '@shared/validators/SearchParamsValidator';
-import type { ValidatorInterface } from '@shared/validators/ValidatorInterface';
-import { type LoginSchema } from '@schemas/LoginSchema';
-import type { RequestLogRow } from '@schemas/RequestLogSchema';
-import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { OAuthUserService } from '@server/services/OAuthUserService';
-import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
 import type {
   UserLoginContext,
   UserServiceInterface
@@ -25,6 +26,7 @@ import type {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
+import type { RequestLogRow } from '@qlover/next-kit/common';
 
 @injectable()
 export class UserController {
@@ -36,7 +38,7 @@ export class UserController {
     protected searchParamsValidator: ValidatorInterface<ResourceSearchParams>,
     @inject(OAuthUserService) protected userService: UserServiceInterface,
     @inject(RequestLogsRepository)
-    protected requestLogsRepository: RequestLogsRepositoryInterface,
+    protected requestLogsRepository: RequestLogsRepository,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer) base64Serializer: Base64Serializer
   ) {
@@ -116,7 +118,7 @@ export class UserController {
   ): Promise<ResourceSearchResult<RequestLogRow>> {
     const criteria = await this.searchParamsValidator.getThrow(query);
 
-    return await this.requestLogsRepository.searchForCurrentUser(criteria);
+    return await this.requestLogsRepository.search(criteria);
   }
 
   public signWithOtp(body: unknown): Promise<SignOtpResult> {

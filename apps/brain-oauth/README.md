@@ -176,7 +176,7 @@ cp .env.template .env   # Windows 下手动复制亦可
 - 若 OAuth 相关表 **未启用 RLS**（或已对 `anon` / 服务端角色开放读写策略），配置 **`SUPABASE_URL` + `SUPABASE_ANON_KEY`** 即可；**不必**配置 `SUPABASE_SERVICE_ROLE_KEY`。
 - 仓库自带 `002-oauth-clients.sql` 末尾包含 `enable row level security`（默认无公开 policy）。仅在这种 **已启用 RLS 且不允许 anon 直写** 的部署下，才需要 **service role**，或改为自行添加合适的 RLS policy 而继续用 anon。
 
-`OAuthWrapperRepository` 通过 `shared/supabase/admin.ts` 的 `createAdminClient()` 连接数据库：优先 `SUPABASE_SERVICE_ROLE_KEY`，未配置时回退 `SUPABASE_ANON_KEY`。
+`OAuthWrapperRepository` 通过 `shared/supabase/server.ts` 的 `createAdminClient()` 连接数据库：优先 `SUPABASE_SERVICE_ROLE_KEY`，未配置时回退 `SUPABASE_ANON_KEY`。
 
 ### 3. 启动
 

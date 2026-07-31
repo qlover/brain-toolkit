@@ -1,6 +1,14 @@
-import { useMemo } from 'react';
-import { TranslateI18nUtil } from '@/impls/TranslateI18nUtil';
-import { useWarnTranslations } from './useWarnTranslations';
+import {
+  useI18nMapping as useKitI18nMapping,
+  type TranslateI18nOptions
+} from '@qlover/next-kit/client';
+import { logger } from '@/impls/globals';
+import { i18nWarnMissingTranslation } from '@config/common';
+
+const defaultOptions: TranslateI18nOptions = {
+  warnMissing: i18nWarnMissingTranslation,
+  logger
+};
 
 /**
  * 将 i18n-identifier 的映射对象直接翻译成 i18n-mapping 对象
@@ -30,14 +38,11 @@ import { useWarnTranslations } from './useWarnTranslations';
  * @returns The i18n interface
  */
 export function useI18nMapping<T extends Record<string, string>>(
-  i18nInterface: T
+  i18nInterface: T,
+  options?: TranslateI18nOptions
 ): T {
-  const t = useWarnTranslations();
-
-  const i18n = useMemo(
-    () => TranslateI18nUtil.translate(i18nInterface, t),
-    [i18nInterface, t]
-  );
-
-  return i18n;
+  return useKitI18nMapping(i18nInterface, {
+    ...defaultOptions,
+    ...options
+  });
 }

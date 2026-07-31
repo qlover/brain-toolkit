@@ -1,5 +1,9 @@
 import { ExecutorError, type EncryptorInterface } from '@qlover/fe-corekit';
 import {
+  PasswordEncrypt,
+  RequestLogsRepository
+} from '@qlover/next-kit/server';
+import {
   SignOtpResult,
   SignWithOtpSchema,
   VerifyOtpParams
@@ -12,13 +16,8 @@ import {
   API_USER_NOT_FOUND
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
-import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import { PasswordEncrypt } from '../utils/PasswordEncrypt';
-import type { RequestLogsRepositoryInterface } from '../interfaces/RequestLogsRepositoryInterface';
-import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 import type {
   UserLoginContext,
   UserLoginParams,
@@ -26,6 +25,8 @@ import type {
   UserServiceRegisterParams
 } from '../interfaces/UserServiceInterface';
 import type { LoggerInterface } from '@qlover/logger';
+import type { UserSchema } from '@qlover/next-kit/common';
+import type { ServerAuthInterface } from '@qlover/next-kit/server';
 
 @injectable()
 export class OAuthUserService
@@ -41,7 +42,7 @@ export class OAuthUserService
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
     @inject(RequestLogsRepository)
-    protected requestLogsRepository: RequestLogsRepositoryInterface,
+    protected requestLogsRepository: RequestLogsRepository,
     @inject(I.OAuthWrapperProviderInterface)
     protected oauthProvider: OAuthWrapperProviderInterface
   ) {}
@@ -66,16 +67,12 @@ export class OAuthUserService
 
     this.logger.info('OAuth wrapper login success', { email: params.email });
 
-    await this.requestLogsRepository.insertEvent({
-      event_category: 'auth',
+    await this.requestLogsRepository.insertWithAuth({
       event_type: 'login',
-      success: true,
-      payload: {
-        auth_provider: 'oauth-wrapper',
-        user_agent: params.loginContext?.userAgent ?? null,
-        ip_address: params.loginContext?.ipAddress ?? null,
-        login_method: 'password'
-      }
+      auth_provider: 'oauth-wrapper',
+      userAgent: params.loginContext?.userAgent ?? null,
+      ipAddress: params.loginContext?.ipAddress ?? null,
+      login_method: 'password'
     });
 
     const user = await this.oauthProvider.getUserSchema();
@@ -95,16 +92,12 @@ export class OAuthUserService
   public async logout(context?: UserLoginContext): Promise<void> {
     const user = await this.oauthProvider.getUserSchema();
 
-    await this.requestLogsRepository.insertEvent({
-      event_category: 'auth',
+    await this.requestLogsRepository.insertWithAuth({
       event_type: 'logout',
-      success: true,
-      payload: {
-        auth_provider: 'next-oauth',
-        user_agent: context?.userAgent ?? null,
-        ip_address: context?.ipAddress ?? null,
-        user_id: user?.id ?? null
-      }
+      auth_provider: 'brain-oauth',
+      userAgent: context?.userAgent ?? null,
+      ipAddress: context?.ipAddress ?? null,
+      user_id: user?.id
     });
 
     await this.clear();

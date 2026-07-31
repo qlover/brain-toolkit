@@ -1,14 +1,13 @@
-import type { DialogHandler } from '@/impls/DialogHandler';
 import type { I18nService } from '@/impls/I18nService';
 import type { RouterService } from '@/impls/RouterService';
 import type { UserService } from '@/impls/UserService';
-import type { ZustandCounterService } from '@/impls/ZustandCounterService';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import type { SupabaseBridge } from '@server/repositorys/SupabaseBridge';
 import type * as CorekitBridge from '@qlover/corekit-bridge';
 import type * as FeCorekit from '@qlover/fe-corekit';
 import type { LoggerInterface } from '@qlover/logger';
+import type { DialogHandler } from '@qlover/next-kit/client';
+import type { ServerContextInterface } from '@qlover/next-kit/server';
 
 /**
  * IOC identifier
@@ -24,23 +23,17 @@ export const IOCIdentifier = Object.freeze({
   UserServiceInterface: 'UserServiceInterface',
   RouterServiceInterface: 'RouterServiceInterface',
   I18nServiceInterface: 'I18nServiceInterface',
-  ZustandCounterServiceInterface: 'ZustandCounterServiceInterface',
-  /**
-   * 数据库桥接接
-   * 你可以实现不同的例如
-   * - Vercel Postgres
-   * - supabase
-   * - mysql
-   * - postgresql
-   * - mongodb
-   * - redis
-   * - sqllite
-   */
-  DBBridgeInterface: 'DBBridgeInterface',
   /**
    * OAuth 包装服务提供接口
    */
-  OAuthWrapperProviderInterface: 'OAuthWrapperProviderInterface'
+  OAuthWrapperProviderInterface: 'OAuthWrapperProviderInterface',
+
+  /**
+   * 服务器状态接口, 其实和 config 类型，不过仅仅用于保存当次会话的配置状态
+   *
+   * 比如当次请求的 locale 等
+   */
+  ServerContextInterface: 'ServerContextInterface'
 });
 
 export const I = IOCIdentifier;
@@ -71,13 +64,12 @@ export interface IOCIdentifierMap {
   [IOCIdentifier.UserServiceInterface]: UserService;
   [IOCIdentifier.RouterServiceInterface]: RouterService;
   [IOCIdentifier.I18nServiceInterface]: I18nService;
-  [IOCIdentifier.ZustandCounterServiceInterface]: ZustandCounterService;
   [IOCIdentifier.DialogHandler]: DialogHandler;
 }
 
 export interface IOCIdentifierMapServer {
   [IOCIdentifier.Logger]: LoggerInterface;
   [IOCIdentifier.AppConfig]: SeedServerConfigInterface;
-  [IOCIdentifier.DBBridgeInterface]: SupabaseBridge;
   [IOCIdentifier.OAuthWrapperProviderInterface]: OAuthWrapperProviderInterface;
+  [IOCIdentifier.ServerContextInterface]: ServerContextInterface;
 }

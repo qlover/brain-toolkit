@@ -1,6 +1,6 @@
 import { inject } from '@shared/container';
-import type { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
 import { AppApiRequester } from './AppApiRequester';
+import type { NextKitApiSuccess } from '@qlover/next-kit/common';
 import type {
   OAuthClientListItem,
   OAuthClientDetail,
@@ -20,9 +20,7 @@ export class OAuthClientsApi {
    */
   public async list(): Promise<OAuthClientListItem[]> {
     const response = await this.appApiRequester.get('/api/clients');
-    const envelope = response.data as AppApiSuccessInterface<
-      OAuthClientListItem[]
-    >;
+    const envelope = response.data as NextKitApiSuccess<OAuthClientListItem[]>;
     return envelope.data ?? [];
   }
 
@@ -31,7 +29,7 @@ export class OAuthClientsApi {
    */
   public async get(clientId: string): Promise<OAuthClientDetail> {
     const response = await this.appApiRequester.get(`/api/clients/${clientId}`);
-    const envelope = response.data as AppApiSuccessInterface<OAuthClientDetail>;
+    const envelope = response.data as NextKitApiSuccess<OAuthClientDetail>;
     return envelope.data!;
   }
 
@@ -43,7 +41,7 @@ export class OAuthClientsApi {
   ): Promise<OAuthClientCreateResponse> {
     const response = await this.appApiRequester.post('/api/clients', input);
     const envelope =
-      response.data as AppApiSuccessInterface<OAuthClientCreateResponse>;
+      response.data as NextKitApiSuccess<OAuthClientCreateResponse>;
     return envelope.data!;
   }
 
@@ -58,7 +56,7 @@ export class OAuthClientsApi {
       `/api/clients/${clientId}`,
       input
     );
-    const envelope = response.data as AppApiSuccessInterface<OAuthClientDetail>;
+    const envelope = response.data as NextKitApiSuccess<OAuthClientDetail>;
     return envelope.data!;
   }
 
@@ -79,7 +77,7 @@ export class OAuthClientsApi {
       `/api/clients/${clientId}/rotate-secret`
     );
     const envelope =
-      response.data as AppApiSuccessInterface<OAuthClientSecretRotateResponse>;
+      response.data as NextKitApiSuccess<OAuthClientSecretRotateResponse>;
     return envelope.data!;
   }
 }

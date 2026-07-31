@@ -1,5 +1,5 @@
 import { ExecutorError, isRequestAdapterResponse } from '@qlover/fe-corekit';
-import type { AppApiErrorInterface } from '@interfaces/AppApiInterface';
+import { isNextKitApiError } from '@qlover/next-kit/common';
 import type { AppApiConfig } from './AppApiRequester';
 import type {
   ExecutorContextInterface,
@@ -18,17 +18,6 @@ export class AppApiPlugin
 
   constructor(protected logger: LoggerInterface) {}
 
-  public isAppApiErrorInterface(value: unknown): value is AppApiErrorInterface {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      'success' in value &&
-      value.success === false &&
-      'id' in value &&
-      typeof value.id === 'string'
-    );
-  }
-
   /**
    * @override
    */
@@ -38,7 +27,7 @@ export class AppApiPlugin
 
     // Important: 当响应数据失败则抛出错误
     if (isRequestAdapterResponse(response)) {
-      if (this.isAppApiErrorInterface(response.data)) {
+      if (isNextKitApiError(response.data)) {
         throw new ExecutorError(
           response.data.message || response.data.id,
           response
@@ -73,7 +62,7 @@ export class AppApiPlugin
 
         const json = await this.getResponseJson(response as Response);
 
-        if (this.isAppApiErrorInterface(json)) {
+        if (isNextKitApiError(json)) {
           return new ExecutorError(json.id, json);
         }
       }

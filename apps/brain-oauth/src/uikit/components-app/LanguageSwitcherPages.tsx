@@ -2,11 +2,10 @@
 
 import { LanguageIcon } from '@heroicons/react/24/outline';
 import { LocaleRouter } from '@qlover/corekit-bridge/url-helper';
+import { Button, Dropdown } from '@qlover/next-kit/client';
 import { useRouter } from 'next/router';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
-import { Button } from '@/uikit/components/Button';
-import { Dropdown } from '@/uikit/components/Dropdown';
 import { localeQueryParam, useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
