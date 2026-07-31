@@ -1,4 +1,5 @@
 import { SupabaseRepo, type RepoSearchParams } from '@qlover/next-kit/server';
+import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
 /**
  * Multi-column ILIKE OR search params (free-text keyword across several columns).
@@ -49,6 +50,18 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
       .filter((col) => typeof col === 'string' && col.length > 0)
       .map((col) => `${col}.ilike.${pattern}`)
       .join(',');
+  }
+
+  /**
+   * Widen public `search` so callers can pass `ilikeOr` (handled in
+   * {@link getSearchBuilder}). Parent typing only knows `RepoSearchParams`.
+   *
+   * @override
+   */
+  public search(
+    params: PAMSearchParams<Raw>
+  ): Promise<ResourceSearchResult<T>> {
+    return super.search(params);
   }
 
   /**

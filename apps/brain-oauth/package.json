@@ -28,7 +28,7 @@
     "@brain-toolkit/antd-theme-override": "^0.0.3",
     "@brain-toolkit/react-kit": "^0.2.2",
     "@heroicons/react": "^2.2.0",
-    "@qlover/corekit-bridge": "3.3.0",
+    "@qlover/corekit-bridge": "3.4.0",
     "@qlover/fe-corekit": "3.4.6",
     "@qlover/logger": "1.2.0",
     "@qlover/next-kit": "^1.0.0",
