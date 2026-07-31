@@ -3,13 +3,12 @@ import {
   ResourceSearchResult,
   ResourceSortClause
 } from '@qlover/corekit-bridge';
+import { splitI18nKey, type LocalesSchema } from '@qlover/next-kit/common';
 import { omit } from 'lodash-es';
 import { revalidateTag } from 'next/cache';
 import { inject, injectable } from '@shared/container';
 import type { LocaleType } from '@config/i18n';
 import { i18nConfig } from '@config/i18n';
-import { splitI18nKey } from '@schemas/i18nKeyScheam';
-import type { LocalesSchema } from '@schemas/LocalesSchema';
 import {
   LocalesRepository,
   UpsertResult

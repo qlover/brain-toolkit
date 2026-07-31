@@ -1,4 +1,5 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
+import { NextKitApiSuccess } from '@qlover/next-kit/common';
 import { inject, injectable } from '@shared/container';
 import { API_PAM_CREATE, API_PAM_SEARCH } from '@config/apiRoutes';
 import {
@@ -21,7 +22,6 @@ import {
   PAMProjectCreate,
   PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
-import { AppApiSuccessInterface } from '@interfaces/AppApiInterface';
 import { AppApiRequester } from './AppApiRequester';
 
 /** Abort ids for `pamApi.stop(...)`. Wired internally on each request. */
@@ -61,7 +61,7 @@ export class PAMApi {
 
     const request = this.appApiRequester
       .get<
-        AppApiSuccessInterface<ResourceSearchResult<SearchPAMProject>>,
+        NextKitApiSuccess<ResourceSearchResult<SearchPAMProject>>,
         PAMSearchParams
       >(API_PAM_SEARCH, {
         params: {
@@ -82,7 +82,7 @@ export class PAMApi {
     data: PAMProjectCreate
   ): Promise<PAMProjectDetail> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectDetail>,
+      NextKitApiSuccess<PAMProjectDetail>,
       PAMProjectCreate
     >(API_PAM_CREATE, data);
 
@@ -93,7 +93,7 @@ export class PAMApi {
     id: string;
   }): Promise<PAMProjectDetail> {
     const response = await this.appApiRequester.get<
-      AppApiSuccessInterface<PAMProjectDetail>,
+      NextKitApiSuccess<PAMProjectDetail>,
       { isEnv: 1 | 0 }
     >(buildApiPamDetail(params.id), {
       params: { isEnv: 1 },
@@ -108,7 +108,7 @@ export class PAMApi {
     data: PAMProjectUpdate
   ): Promise<PAMProjectDetail> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMProjectDetail>,
+      NextKitApiSuccess<PAMProjectDetail>,
       PAMProjectUpdate
     >(buildApiPamEdit(id), data);
 
@@ -127,7 +127,7 @@ export class PAMApi {
    */
   public async listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
     const response = await this.appApiRequester.get<
-      AppApiSuccessInterface<PAMEnvWriteable[]>,
+      NextKitApiSuccess<PAMEnvWriteable[]>,
       Record<string, never>
     >(buildApiPamEnvironments(projectId), {
       abortId: PAMAbortId.listEnvironments(projectId)
@@ -148,7 +148,7 @@ export class PAMApi {
     data: PAMEnvCreate
   ): Promise<PAMEnvWriteable> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMEnvWriteable>,
+      NextKitApiSuccess<PAMEnvWriteable>,
       PAMEnvCreate
     >(buildApiPamEnvironments(projectId), data);
 
@@ -184,7 +184,7 @@ export class PAMApi {
     variables: PAMEnvReplaceVariables['variables']
   ): Promise<PAMEnvWriteable> {
     const response = await this.appApiRequester.post<
-      AppApiSuccessInterface<PAMEnvWriteable>,
+      NextKitApiSuccess<PAMEnvWriteable>,
       PAMEnvReplaceVariables
     >(buildApiPamEnvironmentVariables(projectId, envId), {
       variables

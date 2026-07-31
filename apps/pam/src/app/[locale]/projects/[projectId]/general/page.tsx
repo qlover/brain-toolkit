@@ -1,5 +1,5 @@
+import { PageI18nProvider } from '@qlover/next-kit/client';
 import { PAMProjectGeneralPanel } from '@/uikit/components-app/pam/PAMProjectGeneralPanel';
-import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import {
   pamGeneralI18n,
   pamGeneralI18nNamespace

@@ -1,11 +1,8 @@
-import type { DialogHandler } from '@/impls/DialogHandler';
 import type { I18nService } from '@/impls/I18nService';
 import type { RouterService } from '@/impls/RouterService';
 import type { UserService } from '@/impls/UserService';
-import type { ZustandCounterService } from '@/impls/ZustandCounterService';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import type { ServerContextInterface } from '@server/interfaces/ServerContextInterface';
 import type * as CorekitBridge from '@qlover/corekit-bridge';
 import type { JSONSerializer } from '@qlover/fe-corekit/serializer';
 import type {
@@ -13,6 +10,8 @@ import type {
   StorageInterface
 } from '@qlover/fe-corekit/storage';
 import type { LoggerInterface } from '@qlover/logger';
+import type { DialogHandler } from '@qlover/next-kit/client';
+import type { ServerContextInterface } from '@qlover/next-kit/server';
 
 /**
  * IOC identifier
@@ -28,7 +27,6 @@ export const IOCIdentifier = Object.freeze({
   UserServiceInterface: 'UserServiceInterface',
   RouterServiceInterface: 'RouterServiceInterface',
   I18nServiceInterface: 'I18nServiceInterface',
-  ZustandCounterServiceInterface: 'ZustandCounterServiceInterface',
   /**
    * OAuth 包装服务提供接口
    */
@@ -70,7 +68,6 @@ export interface IOCIdentifierMap {
   [IOCIdentifier.UserServiceInterface]: UserService;
   [IOCIdentifier.RouterServiceInterface]: RouterService;
   [IOCIdentifier.I18nServiceInterface]: I18nService;
-  [IOCIdentifier.ZustandCounterServiceInterface]: ZustandCounterService;
   [IOCIdentifier.DialogHandler]: DialogHandler;
 }
 

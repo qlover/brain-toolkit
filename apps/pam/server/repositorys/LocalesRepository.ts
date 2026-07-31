@@ -3,10 +3,12 @@ import {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
+import { localesSchema, type LocalesSchema } from '@qlover/next-kit/common';
+import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
-import { localesSchema, type LocalesSchema } from '@schemas/LocalesSchema';
-import { Datetime } from '@server/utils/Datetime';
-import { SupabaseRepo } from './SupabaseRepo';
+import { createAdminClient, createServerClient } from '@shared/supabase/server';
+import { I } from '@config/ioc-identifiter';
+import type { LoggerInterface } from '@qlover/logger';
 
 export interface UpsertChunkResult {
   success: boolean;
@@ -31,8 +33,12 @@ const TABLE = 'next_app_locales';
 export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   protected safeFields = Object.keys(localesSchema.shape);
 
-  constructor(@inject(Datetime) protected datetime: Datetime) {
-    super(TABLE);
+  constructor(@inject(I.Logger) logger: LoggerInterface) {
+    super(TABLE, {
+      logger,
+      getUserClient: createServerClient,
+      getAdminClient: createAdminClient
+    });
   }
 
   public async getAll(): Promise<LocalesSchema[]> {

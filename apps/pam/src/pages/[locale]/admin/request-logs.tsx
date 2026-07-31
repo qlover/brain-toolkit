@@ -2,16 +2,18 @@ import {
   ResourceSearch,
   type ResourceSearchParams
 } from '@qlover/corekit-bridge';
+import {
+  PageI18nProvider,
+  useStore,
+  useStrictEffect
+} from '@qlover/next-kit/client';
 import dynamic from 'next/dynamic';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo } from 'react';
 import { RequestLogsApi } from '@/impls/appApi/RequestLogsApi';
 import { RequestLogsTable } from '@/uikit/components-pages/RequestLogsTable';
-import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
-import { useStore } from '@/uikit/hook/useStore';
-import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { defaultNavItems } from '@config/adminNavs';
 import { defaultSearchParams } from '@config/common';
 import { i18nConfig } from '@config/i18n';

@@ -1,6 +1,6 @@
+import { PageI18nProvider } from '@qlover/next-kit/client';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { PAMProjectDetailShell } from '@/uikit/components-app/pam/PAMProjectDetailShell';
-import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
 import {
   pamProjectI18n,
