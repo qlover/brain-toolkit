@@ -1,5 +1,77 @@
 # apps/brain-oauth
 
+## 2.0.0
+
+### Major Changes
+
+#### ✨ Features
+
+- **pam:** Implement runWithOAuthJson for standardized OAuth responses ([eaa47a2](https://github.com/qlover/brain-toolkit/commit/eaa47a234eefcff74053239bc8a82c9ee83d4256)) ([#94](https://github.com/qlover/brain-toolkit/pull/94))
+
+  Added runWithOAuthJson method to handle OAuth token, userinfo, and revoke endpoints, returning flat RFC JSON without the { success, data } envelope. Updated relevant routes to utilize this new method for improved compatibility with standard OAuth clients like Supabase.
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### 🐞 Bug Fixes
+
+- **pam,brain-oauth:** 修复 next-kit 迁移后的类型与构建错误 ([ceb595a](https://github.com/qlover/brain-toolkit/commit/ceb595a495437c886956738be796d132d95c8322)) ([#100](https://github.com/qlover/brain-toolkit/pull/100))
+
+  放开 PAMSupabaseRepo.search 以支持 ilikeOr；transpile next-kit 并统一 corekit-bridge 版本，避免 ESM 目录导入失败。
+
+- **pam,brain-oauth:** 修复 Pages SSG 时 next-intl Context 不一致 ([97cae46](https://github.com/qlover/brain-toolkit/commit/97cae46f938c5e4003e2c47b588a7b7b64425d89)) ([#100](https://github.com/qlover/brain-toolkit/pull/100))
+
+  i18n hook 改回 app 内调用 next-intl，只复用 kit 的 TranslateI18nUtil，避免预渲染 /about 等页时空 Error。
+
+- **pam,brain-oauth:** 中间件进页门禁并修复 Pages 主题闪烁 ([a5bdd08](https://github.com/qlover/brain-toolkit/commit/a5bdd08b95389b00abe5e6766e052b2a1b1bae0a)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
+
+  以 LOGINED_PAGES 为唯一进页鉴权，去掉 WithUserAuth 全屏门；Pages 补 favicon 与主题初始化脚本，主题菜单按偏好选中并同步 brain-oauth。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **brain-oauth:** 恢复 Brain logo，避免误用 pam favicon ([0078403](https://github.com/qlover/brain-toolkit/commit/00784037a47797c0ae5e4c6be2eaf0cf27849284)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
+
+  Pages favicon 改回 brain-oauth 自有脑形 logo，并恢复 public/logo.svg。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **brain-oauth:** Pages favicon 改用 Brain logo ([0677dea](https://github.com/qlover/brain-toolkit/commit/0677deafa906592572e95a963304ecd0d9f0df60)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **brain-oauth:** App Router 使用 Brain logo 作为站点图标 ([428b557](https://github.com/qlover/brain-toolkit/commit/428b5577c0f09610e74731ef37187d5a377091ee)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
+
+  首页走 App Router，需 src/app/icon.svg；仅改 Pages \_document 无法更新标签页图标。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **brain-oauth:** favicon 随系统亮暗在黑白间切换 ([23cdd76](https://github.com/qlover/brain-toolkit/commit/23cdd76d5f53484d74a2f57f5ae64e0b814a58fc)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
+
+  使用 SVG prefers-color-scheme；去掉会栅格化的 app/icon.svg，改为 metadata 引用 public/favicon.svg。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam,brain-oauth:** ThemeSwitcher 使用 SupportedTheme 泛型 ([b1d3029](https://github.com/qlover/brain-toolkit/commit/b1d3029e15a7b0f473db17ae498d9a57565a8199)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
+
+  useTheme 默认不含 pink，导致 setTheme 类型报错。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam,brain-oauth:** 恢复误改样式并同步去掉裸 hidden ([cc20228](https://github.com/qlover/brain-toolkit/commit/cc20228ab5b593c0596e87e11364cbcce25ecb08)) ([#95](https://github.com/qlover/brain-toolkit/pull/95))
+
+  还原登录表单 max-w-[420px] 与 PAMForm 圆角；brain-oauth 仅替换 hidden 写法。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### ♻️ Refactors
+
+- **brain-oauth:** 迁移至 @qlover/next-kit 并清理无用代码 ([f55d54c](https://github.com/qlover/brain-toolkit/commit/f55d54c310fd2dc3534ad767c7e0d103b3f5c485)) ([#100](https://github.com/qlover/brain-toolkit/pull/100))
+
+  与 pam 对齐复用 next-kit，删除应用内重复模块及未接线的死代码。
+
+- **oauth:** Simplify user info response structure ([d49b7f1](https://github.com/qlover/brain-toolkit/commit/d49b7f169a1d95fbf4e1e6d62820af2a2867e5dc)) ([#94](https://github.com/qlover/brain-toolkit/pull/94))
+
+  Updated the user info response in the GET method to directly spread the user object, while ensuring the email_verified field is set to true. This change streamlines the response format for better compatibility with OAuth clients.
+
 ## 1.3.0
 
 ### Minor Changes
