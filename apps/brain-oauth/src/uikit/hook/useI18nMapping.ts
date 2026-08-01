@@ -1,19 +1,15 @@
 import {
-  useI18nMapping as useKitI18nMapping,
+  TranslateI18nUtil,
   type TranslateI18nOptions
-} from '@qlover/next-kit/client';
-import { logger } from '@/impls/globals';
-import { i18nWarnMissingTranslation } from '@config/common';
-
-const defaultOptions: TranslateI18nOptions = {
-  warnMissing: i18nWarnMissingTranslation,
-  logger
-};
+} from '@qlover/next-kit/common';
+import { useMemo } from 'react';
+import { useWarnTranslations } from './useWarnTranslations';
 
 /**
  * 将 i18n-identifier 的映射对象直接翻译成 i18n-mapping 对象
  *
- * 无法频繁手动使用翻译
+ * Uses app-local `useTranslations` (via {@link useWarnTranslations}) so Pages
+ * Router SSG shares the same next-intl Context as `_app`.
  *
  * @example
  * ```ts
@@ -35,14 +31,17 @@ const defaultOptions: TranslateI18nOptions = {
  * ```
  *
  * @param i18nInterface - The i18n interface to get
+ * @param options - Optional translation options override
  * @returns The i18n interface
  */
 export function useI18nMapping<T extends Record<string, string>>(
   i18nInterface: T,
   options?: TranslateI18nOptions
 ): T {
-  return useKitI18nMapping(i18nInterface, {
-    ...defaultOptions,
-    ...options
-  });
+  const t = useWarnTranslations(options);
+
+  return useMemo(
+    () => TranslateI18nUtil.translate(i18nInterface, t),
+    [i18nInterface, t]
+  );
 }
