@@ -1,5 +1,14 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { DeleteStatus } from '@qlover/next-kit/common';
+import {
+  BaseRepository,
+  FilterTriple,
+  Operators,
+  RepoInsertGetParams,
+  RepoInsertParams,
+  RepoSearchParams
+} from '@qlover/next-kit/server';
 import { isEmpty } from 'lodash-es';
 import { inject, injectable } from '@shared/container';
 import {
@@ -15,7 +24,6 @@ import {
   API_PAM_PROJECT_NOT_FOUND
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
-import { DeleteStatus } from '@schemas/common';
 import {
   PAMProjectEnvKey,
   SearchPAMProjectFields,
@@ -28,15 +36,7 @@ import {
   PAMProjectUpdate,
   PAMProjectCreate
 } from '@schemas/PAMProjectSchema';
-import {
-  FilterTriple,
-  Operators,
-  RepoInsertGetParams,
-  RepoInsertParams,
-  RepoSearchParams
-} from '@server/interfaces/DBBridgeInterface';
-import { BaseRepository } from './BaseRepository';
-import { SupabaseRepo } from './SupabaseRepo';
+import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
 interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
@@ -63,8 +63,8 @@ export class PAMProjectRepo extends BaseRepository<
   protected logger!: LoggerInterface;
 
   constructor(
-    @inject(SupabaseRepo)
-    protected supabaseRepo: SupabaseRepo<PAMProjectRaw>
+    @inject(PAMSupabaseRepo)
+    protected supabaseRepo: PAMSupabaseRepo<PAMProjectRaw>
   ) {
     super(PAMProjectTableName);
   }

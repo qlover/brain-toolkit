@@ -2,8 +2,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { LocaleType } from '@config/i18n';
 import { i18nConfig } from '@config/i18n';
 import { API_LOCALES_JSON } from '@config/route';
-import { LocalesController } from '@server/controllers/LocalesController';
-import type { LocalesControllerJsonQuery } from '@server/interfaces/LocalesControllerInterface';
+import {
+  LocalesController,
+  type LocalesControllerJsonQuery
+} from '@server/controllers/LocalesController';
 import { NextApiServer } from '@server/NextApiServer';
 
 // Use literal value instead of imported config to ensure static analysis

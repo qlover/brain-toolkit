@@ -1,8 +1,8 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { useStore } from '@qlover/next-kit/client';
 import React, { useCallback, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import type { InfiniteFacadeInterface } from '@/interface/InfiniteFacadeInterface';
-import { useStore } from '@/uikit/hook/useStore';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 
 interface PAMLoadMoreTriggerProps<T extends SearchPAMProject> {

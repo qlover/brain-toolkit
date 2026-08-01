@@ -1,3 +1,4 @@
+import { PageI18nProvider } from '@qlover/next-kit/client';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { Suspense } from 'react';
@@ -5,7 +6,6 @@ import { FeatureItem } from '@/uikit/components/FeatureItem';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import { LoginTabSwitch } from '@/uikit/components/LoginTabSwitch';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
-import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { loginI18n, NS_PAGE_LOGIN } from '@config/i18n-mapping/loginI18n';

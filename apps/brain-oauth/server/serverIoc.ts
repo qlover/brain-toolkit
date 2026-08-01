@@ -4,11 +4,13 @@ import {
   type IOCContainerInterface,
   type IOCRegisterInterface
 } from '@qlover/corekit-bridge/ioc';
+import { RequestLogsRepository, SupabaseRepo } from '@qlover/next-kit/server';
+import { createAdminClient, createServerClient } from '@shared/supabase/server';
 import type { IOCIdentifierMapServer } from '@config/ioc-identifiter';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { BrainUserOAuthProvider } from './providers/BrainUserOAuthProvider';
-import { SupabaseBridge } from './repositorys/SupabaseBridge';
+import { ServerContext } from './utils/ServerContext';
 import type { LoggerInterface } from '@qlover/logger';
 
 type ServerIocOptions = {
@@ -48,8 +50,22 @@ const ServerIocRegister: IOCRegisterInterface<
 
     ioc.bind(I.Logger, logger);
     ioc.bind(I.AppConfig, serverConfig);
+    ioc.bind(I.ServerContextInterface, ioc.get(ServerContext));
 
-    ioc.bind(I.DBBridgeInterface, ioc.get(SupabaseBridge));
+    const supabaseDeps = {
+      logger,
+      getUserClient: createServerClient,
+      getAdminClient: createAdminClient
+    };
+
+    ioc.bind(SupabaseRepo, new SupabaseRepo('', supabaseDeps));
+    ioc.bind(
+      RequestLogsRepository,
+      new RequestLogsRepository({
+        ...supabaseDeps,
+        serverContext: ioc.get(I.ServerContextInterface)
+      })
+    );
 
     ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(BrainUserOAuthProvider));
   }

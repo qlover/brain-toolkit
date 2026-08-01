@@ -1,9 +1,9 @@
+import { PageI18nProvider } from '@qlover/next-kit/client';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { FeatureItem } from '@/uikit/components/FeatureItem';
 import { RegisterForm } from '@/uikit/components/RegisterForm';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
-import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { register18n } from '@config/i18n-mapping/register18n';

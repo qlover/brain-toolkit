@@ -1,6 +1,6 @@
+import { DeleteStatus } from '@qlover/next-kit/common';
 import { z } from 'zod';
 import { V_REQUIRED } from '@config/i18n-identifier/common/validators';
-import { DeleteStatus } from './common';
 import { PAMEnvWriteableSchema } from './PAMEnvironmentSchema';
 import type { PAMEnvWriteable } from './PAMEnvironmentSchema';
 import type { ResourceSearchParams } from '@qlover/corekit-bridge';

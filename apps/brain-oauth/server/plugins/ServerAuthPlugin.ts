@@ -1,10 +1,13 @@
+import type { BrainOAuthServerIocMap } from '@server/BootstrapServer';
+import { OAuthUserService } from '@server/services/OAuthUserService';
 import type {
   BootstrapServerContext,
   BootstrapServerPlugin
-} from '@server/interfaces/ServerInterface';
-import { OAuthUserService } from '@server/services/OAuthUserService';
+} from '@qlover/next-kit/server';
 
-export class ServerAuthPlugin implements BootstrapServerPlugin {
+export class ServerAuthPlugin
+  implements BootstrapServerPlugin<BrainOAuthServerIocMap>
+{
   public readonly pluginName = 'ServerAuthPlugin';
 
   /**
@@ -12,7 +15,7 @@ export class ServerAuthPlugin implements BootstrapServerPlugin {
    */
   public async onBefore({
     parameters: { IOC }
-  }: BootstrapServerContext): Promise<void> {
+  }: BootstrapServerContext<BrainOAuthServerIocMap>): Promise<void> {
     await IOC(OAuthUserService).throwIfNotAuth();
   }
 }

@@ -1,6 +1,6 @@
+import { PageI18nProvider } from '@qlover/next-kit/client';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { PAMRoot } from '@/uikit/components-app/PAMRoot';
-import { PageI18nProvider } from '@/uikit/context/PageI18nContext';
 import { i18nConfig } from '@config/i18n';
 import { pamI18n, pamI18nNamespace } from '@config/i18n-mapping/PAMI18n';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';

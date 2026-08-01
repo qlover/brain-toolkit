@@ -1,131 +1,82 @@
-import pLimit from 'p-limit';
+/* eslint-disable unused-imports/no-unused-vars */
+import {
+  ResourceSearchParams,
+  ResourceSearchResult
+} from '@qlover/corekit-bridge';
+import { localesSchema, type LocalesSchema } from '@qlover/next-kit/common';
+import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
-import { localesSchema, type LocalesSchema } from '@schemas/LocalesSchema';
-import type { PaginationResult } from '@schemas/SearchResultSchema';
-import type {
-  BridgeOrderBy,
-  DBBridgeInterface
-} from '@server/interfaces/DBBridgeInterface';
-import { DBTablePaginationParams } from '@server/interfaces/DBTableInterface';
-import { Datetime } from '@server/utils/Datetime';
-import { SupabaseBridge } from './SupabaseBridge';
-import type {
-  LocalesRepositoryInterface,
-  UpsertResult
-} from '../interfaces/LocalesRepositoryInterface';
+import { createAdminClient, createServerClient } from '@shared/supabase/server';
+import { I } from '@config/ioc-identifiter';
+import type { LoggerInterface } from '@qlover/logger';
 
+export interface UpsertChunkResult {
+  success: boolean;
+  chunkIndex: number;
+  inputData: Partial<LocalesSchema>[];
+  returnedData?: LocalesSchema[];
+  affectedCount?: number;
+  error?: string;
+}
+
+export interface UpsertResult {
+  totalCount: number;
+  successCount: number;
+  failureCount: number;
+  successChunks: UpsertChunkResult[];
+  failureChunks: UpsertChunkResult[];
+  allReturnedData: LocalesSchema[];
+}
+
+const TABLE = 'next_app_locales';
+
+/**
+ * `useApiLocales` is `false` in `@config/common`, so this repository is not
+ * exercised at runtime; methods are stubbed to match the kit's `SupabaseRepo`
+ * shape until DB-backed locale editing is needed.
+ */
 @injectable()
-export class LocalesRepository implements LocalesRepositoryInterface {
-  public readonly repoName = 'next_app_locales';
-
+export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   protected safeFields = Object.keys(localesSchema.shape);
 
-  constructor(
-    @inject(SupabaseBridge) protected dbBridge: DBBridgeInterface,
-    @inject(Datetime) protected datetime: Datetime
-  ) {}
+  constructor(@inject(I.Logger) logger: LoggerInterface) {
+    super(TABLE, {
+      logger,
+      getUserClient: createServerClient,
+      getAdminClient: createAdminClient
+    });
+  }
 
   public async getAll(): Promise<LocalesSchema[]> {
-    const result = await this.dbBridge.get({
-      table: this.repoName,
-      fields: this.safeFields
-    });
-    return (result.data as LocalesSchema[]) || [];
+    throw new Error('LocalesRepository.getAll Method not implemented.');
   }
 
-  /**
-   * @override
-   */
-  public async getLocales(
-    localeName: string,
-    orderBy?: BridgeOrderBy
-  ): Promise<LocalesSchema[]> {
-    const result = await this.dbBridge.get({
-      table: this.repoName,
-      fields: this.safeFields,
-      orderBy
-    });
-
-    const data = result.data as LocalesSchema[];
-    return data && data.length > 0 ? data : [];
+  public async getLocales(localeName: string): Promise<LocalesSchema[]> {
+    throw new Error('LocalesRepository.getLocales Method not implemented.');
   }
 
-  /**
-   * @override
-   */
   public async add(params: LocalesSchema): Promise<LocalesSchema[] | null> {
-    const now = this.datetime.timestampz();
-    const data = {
-      ...params,
-      created_at: now,
-      updated_at: now
-    };
-
-    const result = await this.dbBridge.add({
-      table: this.repoName,
-      fields: this.safeFields,
-      data
-    });
-
-    return (result.data as LocalesSchema[]) || null;
+    throw new Error('LocalesRepository.add Method not implemented.');
   }
 
-  /**
-   * @override
-   */
   public async updateById(
     id: number,
     params: Partial<Omit<LocalesSchema, 'id' | 'created_at'>>
   ): Promise<void> {
-    if (!id || typeof id !== 'number') {
-      throw new Error(
-        'ID is required and must be a number for updateById operation'
-      );
-    }
-
-    const data = {
-      ...params,
-      updated_at: this.datetime.timestampz()
-    };
-
-    await this.dbBridge.update({
-      table: this.repoName,
-      fields: this.safeFields,
-      data,
-      where: [['id', '=', id]]
-    });
+    throw new Error('LocalesRepository.updateById Method not implemented.');
   }
 
-  /**
-   * @override
-   */
   public async pagination<T = LocalesSchema>(
-    params: DBTablePaginationParams
-  ): Promise<PaginationResult<T>> {
-    const result = await this.dbBridge.pagination({
-      table: this.repoName,
-      fields: this.safeFields,
-      page: params.page,
-      pageSize: params.pageSize,
-      orderBy: params.orderBy
-    });
-
-    return {
-      items: (result.data || []) as T[],
-      total: result.count || 0,
-      page: params.page,
-      pageSize: params.pageSize
-    };
+    params: ResourceSearchParams
+  ): Promise<ResourceSearchResult<T>> {
+    throw new Error('LocalesRepository.pagination Method not implemented.');
   }
 
   /**
-   * batch upsert data, support chunk processing and concurrency control
-   * @override
-   * @param data - data to upsert
-   * @param options - options
-   * @param options.chunkSize - chunk size, default 100
-   * @param options.concurrency - concurrency, default 3
-   * @returns UpsertResult - contains success/failure details with returned data
+   * 批量 upsert，支持分片与并发控制。
+   * @param data - 待 upsert 数据
+   * @param options.chunkSize - 分片大小，默认 100
+   * @param options.concurrency - 并发数，默认 3
    */
   public async upsert(
     data: Partial<LocalesSchema>[],
@@ -134,79 +85,6 @@ export class LocalesRepository implements LocalesRepositoryInterface {
       concurrency?: number;
     }
   ): Promise<UpsertResult> {
-    const { chunkSize = 100, concurrency = 3 } = options || {};
-
-    // Initialize result
-    const result: UpsertResult = {
-      totalCount: data.length,
-      successCount: 0,
-      failureCount: 0,
-      successChunks: [],
-      failureChunks: [],
-      allReturnedData: []
-    };
-
-    if (data.length === 0) {
-      return result;
-    }
-
-    const now = this.datetime.timestampz();
-
-    // Add timestamps to all data
-    const dataWithTimestamp = data.map((item) => ({
-      ...item,
-      created_at: item.created_at || now,
-      updated_at: now
-    }));
-
-    // Split data into chunks
-    const chunks: Partial<LocalesSchema>[][] = [];
-    for (let i = 0; i < dataWithTimestamp.length; i += chunkSize) {
-      chunks.push(dataWithTimestamp.slice(i, i + chunkSize));
-    }
-
-    // Use p-limit to control concurrency
-    const limit = pLimit(concurrency);
-
-    // Execute upsert for each chunk and collect results
-    const tasks = chunks.map((chunk, index) =>
-      limit(async () => {
-        try {
-          const response = await this.dbBridge.upsert({
-            table: this.repoName,
-            fields: this.safeFields,
-            data: chunk
-          });
-
-          // Extract returned data from database
-          const returnedData = (response.data as LocalesSchema[]) || [];
-          const affectedCount = response.count || returnedData.length;
-
-          // Success
-          result.successCount += affectedCount;
-          result.allReturnedData.push(...returnedData);
-          result.successChunks.push({
-            success: true,
-            chunkIndex: index,
-            inputData: chunk,
-            returnedData: returnedData,
-            affectedCount: affectedCount
-          });
-        } catch (error) {
-          // Failure
-          result.failureCount += chunk.length;
-          result.failureChunks.push({
-            success: false,
-            chunkIndex: index,
-            inputData: chunk,
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
-      })
-    );
-
-    await Promise.all(tasks);
-
-    return result;
+    throw new Error('LocalesRepository.updateById Method not implemented.');
   }
 }

@@ -2,6 +2,11 @@
 
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { isAbortError } from '@qlover/fe-corekit/aborter';
+import {
+  Loading,
+  useStrictEffect,
+  usePageI18nMapping
+} from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, {
   createContext,
@@ -14,7 +19,6 @@ import React, {
 import { Link, usePathname } from '@/i18n/routing';
 import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { useIOC } from '@/uikit/hook/useIOC';
-import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
 import {
   ROUTE_HOME,
@@ -22,8 +26,6 @@ import {
   ROUTE_PROJECT_GENERAL
 } from '@config/route';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
-import { Loading } from '../../components/Loading';
-import { usePageI18nMapping } from '../../context/PageI18nContext';
 
 export type PAMProjectDetailTabType = 'general' | 'environments';
 

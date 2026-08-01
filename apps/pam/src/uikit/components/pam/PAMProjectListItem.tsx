@@ -1,4 +1,5 @@
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import { Dropdown } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -10,7 +11,6 @@ import {
   PAMPublicType,
   type SearchPAMProject
 } from '@schemas/PAMProjectSchema';
-import { Dropdown } from '../Dropdown';
 import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
 import {
   getPAMAvatarLetter,
@@ -52,7 +52,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     if (!isOwner) {
       return [] as {
         key: string;
-        label?: string;
+        label: string;
         danger?: boolean;
         divider?: boolean;
       }[];

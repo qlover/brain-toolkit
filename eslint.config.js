@@ -17,12 +17,15 @@ export default tseslint.config([
       '**/ts-build/**',
       '**/node_modules/**',
       '**/.nx/**',
+      '**/.next/**',
       '**/.cache/**',
       '**/coverage/**',
       '**/*.d.ts',
       'vitest.setup.js',
       // apps use their own eslint.config; covered via pnpm -r run lint
-      'apps'
+      'apps',
+      // local leftover example build dirs (not workspace packages)
+      'examples'
     ]
   },
 

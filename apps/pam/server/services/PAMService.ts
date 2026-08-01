@@ -36,11 +36,11 @@ import type {
   PAMServiceInterface,
   ProjectDetailParams
 } from '@server/interfaces/PAMServiceInterface';
-import type { ServerAuthInterface } from '@server/interfaces/ServerAuthInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import { OAuthUserService } from './OAuthUserService';
+import type { ServerAuthInterface } from '@qlover/next-kit/server';
 
 @injectable()
 export class PAMService implements PAMServiceInterface {

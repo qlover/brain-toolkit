@@ -4,10 +4,15 @@ import {
   type IOCContainerInterface,
   type IOCRegisterInterface
 } from '@qlover/corekit-bridge/ioc';
+import { SearchParamsValidator } from '@qlover/next-kit/common';
+import { RequestLogsRepository, SupabaseRepo } from '@qlover/next-kit/server';
+import { createAdminClient, createServerClient } from '@shared/supabase/server';
+import { defaultSearchParams } from '@config/common';
 import type { IOCIdentifierMapServer } from '@config/ioc-identifiter';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { SupabaseOAuthProvider } from './providers/SupabaseOAuthProvider';
+import { PAMSupabaseRepo } from './repositorys/PAMSupabaseRepo';
 import { ServerContext } from './utils/ServerContext';
 import type { LoggerInterface } from '@qlover/logger';
 
@@ -50,7 +55,35 @@ const ServerIocRegister: IOCRegisterInterface<
     ioc.bind(I.AppConfig, serverConfig);
     ioc.bind(I.ServerContextInterface, ioc.get(ServerContext));
 
-    // ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(BrainUserOAuthProvider));
+    const supabaseDeps = {
+      logger,
+      getUserClient: createServerClient,
+      getAdminClient: createAdminClient
+    };
+
+    ioc.bind(SupabaseRepo, new SupabaseRepo('', supabaseDeps));
+    ioc.bind(PAMSupabaseRepo, new PAMSupabaseRepo('', supabaseDeps));
+    ioc.bind(
+      RequestLogsRepository,
+      new RequestLogsRepository({
+        ...supabaseDeps,
+        serverContext: ioc.get(I.ServerContextInterface)
+      })
+    );
+
     ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(SupabaseOAuthProvider));
+
+    // pam uses a smaller default page size (10) than the kit default (20).
+    // Kit's constructor param type is `typeof defaultSearchParams` (a literal
+    // `pageSize: 20` type), so a structurally-compatible override needs an
+    // `unknown` round-trip to bypass the literal mismatch.
+    ioc.bind(
+      SearchParamsValidator,
+      new SearchParamsValidator(
+        defaultSearchParams as unknown as ConstructorParameters<
+          typeof SearchParamsValidator
+        >[0]
+      )
+    );
   }
 };

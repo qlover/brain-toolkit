@@ -2,12 +2,16 @@
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
+import {
+  useStore,
+  useStrictEffect,
+  usePageI18nMapping
+} from '@qlover/next-kit/client';
 import { useLayoutEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
-import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { defaultSearchParams } from '@config/common';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
@@ -18,9 +22,7 @@ import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
-import { usePageI18nMapping } from '../context/PageI18nContext';
 import { useIOC } from '../hook/useIOC';
-import { useStore } from '../hook/useStore';
 import { useUserAuth } from '../hook/useUserAuth';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 

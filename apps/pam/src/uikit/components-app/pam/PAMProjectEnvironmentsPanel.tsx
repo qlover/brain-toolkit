@@ -7,6 +7,11 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import { isAbortError } from '@qlover/fe-corekit/aborter';
+import {
+  Loading,
+  useStrictEffect,
+  usePageI18nMapping
+} from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, {
   useCallback,
@@ -19,7 +24,6 @@ import { v4 as uuid } from 'uuid';
 import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
-import { useStrictEffect } from '@/uikit/hook/useStrictEffect';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
 import type { PAMEnvironmentsI18nInterface } from '@config/i18n-mapping/PAMEnvironmentsI18n';
 import { I } from '@config/ioc-identifiter';
@@ -27,7 +31,6 @@ import type {
   PAMEnvWriteable,
   PAMVariable
 } from '@schemas/PAMEnvironmentSchema';
-import { Loading } from '../../components/Loading';
 import { PAMFormEnvImportPanel } from '../../components/pam/PAMFormEnvImportPanel';
 import { PAMFormEnvironmentVarRow } from '../../components/pam/PAMFormEnvironmentVarRow';
 import {
@@ -35,7 +38,6 @@ import {
   pamFormLabelClass,
   pamFormMonoFieldClass
 } from '../../components/pam/PAMFormFieldStyles';
-import { usePageI18nMapping } from '../../context/PageI18nContext';
 
 export type PAMProjectEnvironmentsPanelProps = {
   readonly projectId: string;

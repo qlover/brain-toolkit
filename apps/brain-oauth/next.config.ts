@@ -31,7 +31,13 @@ const localIp = getLocalIpAddress();
 const nextConfig: NextConfig = {
   // reactStrictMode: false,
   // pages 路由需要
-  transpilePackages: ['@qlover/fe-corekit', '@qlover/corekit-bridge'],
+  // Bundle kit + bridge ESM packages so Node does not hit
+  // ERR_UNSUPPORTED_DIR_IMPORT on corekit-bridge's `export * from "./bootstrap"`.
+  transpilePackages: [
+    '@qlover/fe-corekit',
+    '@qlover/corekit-bridge',
+    '@qlover/next-kit'
+  ],
   /** Avoid bundling Node HTTP proxy stack into Route handlers (CJS + native deps). */
   serverExternalPackages: ['node-fetch', 'https-proxy-agent'],
   env: {

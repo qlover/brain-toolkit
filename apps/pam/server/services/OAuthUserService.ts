@@ -1,5 +1,15 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import {
+  LoginWithProviderCallbackSchema,
+  type UserSchema
+} from '@qlover/next-kit/common';
+import {
+  PasswordEncrypt,
+  RequestLogsRepository,
+  SupabaseRepo,
+  type ServerAuthInterface
+} from '@qlover/next-kit/server';
+import {
   SignOtpResult,
   SignWithOtpSchema,
   VerifyOtpParams
@@ -12,19 +22,14 @@ import { API_CALLBACK_PROVIDER_LOGIN } from '@config/apiRoutes';
 import { LoginProviderType } from '@config/common';
 import {
   API_NOT_AUTHORIZED,
+  API_OAUTH_INVALID_REQUEST,
   API_USER_NOT_FOUND
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
-import { LoginWithProviderCallbackSchema } from '@schemas/LoginSchema';
-import type { UserSchema } from '@schemas/UserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import { SupabaseRepo } from '@server/repositorys/SupabaseRepo';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
-import { RequestLogsRepository } from '../repositorys/RequestLogsRepository';
-import { PasswordEncrypt } from '../utils/PasswordEncrypt';
-import type { ServerAuthInterface } from '../interfaces/ServerAuthInterface';
 import type {
   UserLoginContext,
   UserLoginParams,
@@ -239,6 +244,12 @@ export class OAuthUserService
   public async loginWithProviderCallback(
     query: LoginWithProviderCallbackSchema
   ): Promise<ResultHandlerContext> {
+    // `code` is absent when the provider redirects back with an OAuth error
+    // instead of an authorization code (see `LoginWithProviderCallbackSchema`).
+    if (!query.code) {
+      throw new ExecutorError(API_OAUTH_INVALID_REQUEST);
+    }
+
     const supabase = await this.supabaseRepo.getSupabase();
 
     const result = await supabase.auth.exchangeCodeForSession(query.code);

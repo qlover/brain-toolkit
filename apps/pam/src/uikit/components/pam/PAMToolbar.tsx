@@ -6,6 +6,7 @@ import {
   Squares2X2Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
+import { useStore } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { debounce } from 'lodash-es';
 import {
@@ -22,7 +23,6 @@ import type {
   PAMFacadeInterface,
   PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
-import { useStore } from '@/uikit/hook/useStore';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 

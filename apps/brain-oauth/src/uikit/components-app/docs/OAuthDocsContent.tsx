@@ -5,9 +5,9 @@ import {
   CubeTransparentIcon,
   RocketLaunchIcon
 } from '@heroicons/react/24/outline';
+import { usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
-import { usePageI18nMapping } from '@/uikit/context/PageI18nContext';
 import type { OAuthDocsI18nInterface } from '@config/i18n-mapping/oauthDocsI18n';
 import {
   API_OAUTH_VERIFY,

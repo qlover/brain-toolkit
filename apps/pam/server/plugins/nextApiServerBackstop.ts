@@ -1,6 +1,7 @@
-import type { BootstrapServerPlugin } from '@server/interfaces/BootstrapServerInterface';
+import type { PamServerIocMap } from '@server/BootstrapServer';
+import type { BootstrapServerPlugin } from '@qlover/next-kit/server';
 
-export const nextApiServerBackstop: BootstrapServerPlugin = {
+export const nextApiServerBackstop: BootstrapServerPlugin<PamServerIocMap> = {
   pluginName: 'NextApiServerBackstop',
   onBefore({ parameters: { logger, root, IOC } }) {
     logger.log(`Request id: ${root.uuid} Start`);

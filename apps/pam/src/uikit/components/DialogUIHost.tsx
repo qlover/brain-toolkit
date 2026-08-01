@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
-import type { DialogHandlerOptions } from '@/impls/DialogHandler';
 import {
   DeveloperConfirmDialog,
   type DeveloperConfirmOptions
 } from '@/uikit/components-app/developer/DeveloperConfirmDialog';
 import { I } from '@config/ioc-identifiter';
 import { useIOC } from '../hook/useIOC';
+import type { DialogHandlerOptions } from '@qlover/next-kit/client';
 
 /**
  * Bridges imperative {@link DialogHandler} confirm/toast to React UI.

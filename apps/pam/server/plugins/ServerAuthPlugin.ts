@@ -1,8 +1,8 @@
+import { OAuthUserService } from '@server/services/OAuthUserService';
 import type {
   BootstrapServerContext,
   BootstrapServerPlugin
-} from '@server/interfaces/BootstrapServerInterface';
-import { OAuthUserService } from '@server/services/OAuthUserService';
+} from '@qlover/next-kit/server';
 
 export class ServerAuthPlugin implements BootstrapServerPlugin {
   public readonly pluginName = 'ServerAuthPlugin';

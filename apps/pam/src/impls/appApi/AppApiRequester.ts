@@ -10,7 +10,6 @@ import {
 } from '@qlover/fe-corekit/request';
 import type { RequestEncryptPluginProps } from '@/impls/RequestEncryptPlugin';
 import { injectable } from '@shared/container';
-import type { AppApiResult } from '@interfaces/AppApiInterface';
 import { AppApiPluginOptions } from './AppApiPlugin';
 import type { DialogErrorConfig } from '../DialogErrorPlugin';
 import type { ExecutorContextInterface } from '@qlover/fe-corekit/executor';
@@ -18,6 +17,7 @@ import type {
   RequestAdapterConfig,
   RequestAdapterResponse
 } from '@qlover/fe-corekit/request';
+import type { NextKitApiResult } from '@qlover/next-kit/common';
 
 export interface RequestTransactionInterface<Request, Response> {
   request: Request;
@@ -45,7 +45,7 @@ export interface AppApiRequesterContext
 export type AppApiResponse<
   Request = unknown,
   Response = unknown
-> = RequestAdapterResponse<Request, AppApiResult<Response>>;
+> = RequestAdapterResponse<Request, NextKitApiResult<Response>>;
 
 /**
  * UserApi common transaction

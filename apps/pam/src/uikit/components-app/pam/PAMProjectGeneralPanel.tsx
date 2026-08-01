@@ -5,6 +5,7 @@ import {
   LockClosedIcon,
   LockOpenIcon
 } from '@heroicons/react/24/outline';
+import { usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
@@ -23,7 +24,6 @@ import {
   pamFormTextareaClass
 } from '../../components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '../../components/pam/PAMSettingsCard';
-import { usePageI18nMapping } from '../../context/PageI18nContext';
 
 export type PAMProjectGeneralPanelProps = {
   readonly projectId: string;

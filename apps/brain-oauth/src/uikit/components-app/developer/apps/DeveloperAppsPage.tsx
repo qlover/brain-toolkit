@@ -18,7 +18,6 @@ import {
   useState,
   type FormEvent
 } from 'react';
-import type { DialogHandler } from '@/impls/DialogHandler';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import {
   DeveloperConfirmDialog,
@@ -49,6 +48,7 @@ import {
   type OAuthCredentials
 } from './OAuthClientCredentialsModal';
 import { readAppApiJson } from './readAppApiJson';
+import type { DialogHandler } from '@qlover/next-kit/client';
 import type {
   OAuthClientListItem,
   OAuthClientCreate,
