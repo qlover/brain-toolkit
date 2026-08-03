@@ -19,9 +19,47 @@ BAD LINE
 `);
 
     expect(parsed).toEqual([
-      { key: 'API_KEY', value: 'secret#1' },
-      { key: 'FOO', value: 'bar' },
-      { key: 'DUPLICATE', value: 'one' }
+      {
+        key: 'API_KEY',
+        value: 'secret#1',
+        sensitive: false,
+        comments: ['# comment']
+      },
+      {
+        key: 'FOO',
+        value: 'bar',
+        sensitive: false,
+        comments: ['# trailing']
+      },
+      { key: 'DUPLICATE', value: 'one', sensitive: false }
+    ]);
+  });
+
+  it('marks the next key after # pam:sensitive', () => {
+    const parsed = PAMEnvDotenvParseUtil.parse(`
+# pam:sensitive
+TOKEN=secret
+NORMAL=1
+`);
+    expect(parsed).toEqual([
+      { key: 'TOKEN', value: 'secret', sensitive: true },
+      { key: 'NORMAL', value: '1', sensitive: false }
+    ]);
+  });
+
+  it('keeps sensitive when comments sit between marker and key', () => {
+    const parsed = PAMEnvDotenvParseUtil.parse(`
+# pam:sensitive
+# DB password
+TOKEN=secret # prod only
+`);
+    expect(parsed).toEqual([
+      {
+        key: 'TOKEN',
+        value: 'secret',
+        sensitive: true,
+        comments: ['# DB password', '# prod only']
+      }
     ]);
   });
 
@@ -102,6 +140,43 @@ describe('PAMEnvVariableMergeUtil', () => {
       },
       { key: 'PLAIN', value: 'plain2', sensitive: false },
       { key: 'NEW', value: 'fresh', sensitive: true }
+    ]);
+  });
+
+  it('preserves comments from incoming or previous', () => {
+    const merged = PAMEnvVariableMergeUtil.mergeVariables(
+      [
+        {
+          key: 'A',
+          value: '1',
+          sensitive: false,
+          comments: ['# old note']
+        }
+      ],
+      [
+        { key: 'A', value: '2', sensitive: false },
+        {
+          key: 'B',
+          value: '3',
+          sensitive: false,
+          comments: ['# new note']
+        }
+      ]
+    );
+
+    expect(merged).toEqual([
+      {
+        key: 'A',
+        value: '2',
+        sensitive: false,
+        comments: ['# old note']
+      },
+      {
+        key: 'B',
+        value: '3',
+        sensitive: false,
+        comments: ['# new note']
+      }
     ]);
   });
 

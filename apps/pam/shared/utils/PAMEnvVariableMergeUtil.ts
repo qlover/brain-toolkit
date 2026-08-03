@@ -56,11 +56,16 @@ export class PAMEnvVariableMergeUtil {
         value = previous.value;
       }
 
+      const comments =
+        PAMEnvVariableNormalizeUtil.normalizeComments(variable.comments) ??
+        previous?.comments;
+
       return {
         id: variable.id ?? previous?.id,
         key: variable.key,
         value,
-        sensitive
+        sensitive,
+        ...(comments !== undefined && comments.length > 0 ? { comments } : {})
       };
     });
   }

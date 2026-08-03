@@ -128,6 +128,19 @@ export const PAMFormEnvironmentVarRow: React.FC<
           </button>
         ) : null}
       </div>
+      {item.comments && item.comments.length > 0 ? (
+        <div className="space-y-0.5 pl-0.5 font-mono text-[10px] leading-snug text-secondary-text sm:text-xs">
+          {item.comments.map((line, index) => (
+            <p
+              data-testid="PAMFormEnvironmentVarRow"
+              key={`${item.key}-comment-${index}`}
+              className="whitespace-pre-wrap"
+            >
+              {line === '' ? '\u00a0' : line}
+            </p>
+          ))}
+        </div>
+      ) : null}
       {errorMessage && (
         <div className="col-span-full mt-0.5 text-xs text-(--fe-color-error)">
           {t(errorMessage)}

@@ -4,7 +4,7 @@ import type { PAMVariable } from '@schemas/PAMEnvironmentSchema';
  * Normalizes environment variable payloads from JSONB / API shapes.
  *
  * Significance: Historical rows may store `{}` while the form uses arrays.
- * Core idea: Always work with `{ id?, key, value, sensitive }[]`.
+ * Core idea: Always work with `{ id?, key, value, sensitive, comments? }[]`.
  * Main function: Convert unknown JSONB into a typed variable array.
  * Main purpose: Stable input for redact/merge logic.
  *
@@ -25,11 +25,15 @@ export class PAMEnvVariableNormalizeUtil {
           item && typeof item === 'object'
             ? (item as Record<string, unknown>)
             : {};
+        const comments = this.normalizeComments(
+          record.comments ?? record.comment
+        );
         return {
           id: typeof record.id === 'string' ? record.id : undefined,
           key: typeof record.key === 'string' ? record.key : '',
           value: typeof record.value === 'string' ? record.value : '',
-          sensitive: record.sensitive === true
+          sensitive: record.sensitive === true,
+          ...(comments !== undefined ? { comments } : {})
         };
       });
     }
@@ -45,5 +49,21 @@ export class PAMEnvVariableNormalizeUtil {
     }
 
     return [];
+  }
+
+  /**
+   * Accepts `string[]` (preferred) or legacy single `string`.
+   */
+  public static normalizeComments(raw: unknown): string[] | undefined {
+    if (Array.isArray(raw)) {
+      const lines = raw.filter(
+        (line: unknown): line is string => typeof line === 'string'
+      );
+      return lines.length > 0 ? lines : undefined;
+    }
+    if (typeof raw === 'string' && raw !== '') {
+      return [raw];
+    }
+    return undefined;
   }
 }
