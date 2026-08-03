@@ -1,4 +1,4 @@
-# @brain-toolkit/pamenv
+# pamenv
 
 ## 1.0.0
 

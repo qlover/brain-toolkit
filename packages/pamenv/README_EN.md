@@ -1,11 +1,17 @@
-# pamenv (`@brain-toolkit/pamenv`)
+# pamenv
 
 Pull PAM environments into the working directory and push local edits back.
 
 ## Install
 
 ```bash
-pnpm --filter @brain-toolkit/pamenv build
+npm install -g pamenv
+# or
+npx pamenv --help
+
+# monorepo
+pnpm --filter pamenv build
+pnpm pamenv --help
 ```
 
 ## Commands

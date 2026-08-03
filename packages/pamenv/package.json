@@ -1,5 +1,5 @@
 {
-  "name": "@brain-toolkit/pamenv",
+  "name": "pamenv",
   "version": "1.0.0",
   "type": "module",
   "private": false,
@@ -35,7 +35,7 @@
     "url": "git+https://github.com/qlover/brain-toolkit.git",
     "directory": "packages/pamenv"
   },
-  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "homepage": "https://pam.qlover.top/docs/cli",
   "keywords": [
     "brain toolkit",
     "pam",

@@ -2,6 +2,7 @@
 
 import {
   BeakerIcon,
+  CommandLineIcon,
   CubeTransparentIcon,
   RocketLaunchIcon
 } from '@heroicons/react/24/outline';
@@ -13,6 +14,7 @@ import {
   API_OAUTH_VERIFY,
   API_REFERENCE,
   ROUTE_DEVELOPER_APPS,
+  ROUTE_DOCS_CLI,
   ROUTE_OAUTH_AUTHORIZE,
   ROUTE_OAUTH_PLAYGROUND,
   ROUTE_OAUTH_TOKEN,
@@ -123,6 +125,10 @@ export function OAuthDocsContent() {
           <Link href={ROUTE_OAUTH_PLAYGROUND} className={linkButtonClass}>
             <BeakerIcon className="h-4 w-4" />
             {tt.linkPlayground}
+          </Link>
+          <Link href={ROUTE_DOCS_CLI} className={linkButtonClass}>
+            <CommandLineIcon className="h-4 w-4" />
+            {tt.linkCli}
           </Link>
           <a
             href={API_REFERENCE}
