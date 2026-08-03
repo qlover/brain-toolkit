@@ -1,5 +1,15 @@
 # pam
 
+## 2.1.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 新增 pamenv CLI 使用文档页 ([f55f1b5](https://github.com/qlover/brain-toolkit/commit/f55f1b5e71c3f7b747aa2352323f4468a7e2b9b9)) ([#104](https://github.com/qlover/brain-toolkit/pull/104))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 2.0.0
 
 ### Major Changes
