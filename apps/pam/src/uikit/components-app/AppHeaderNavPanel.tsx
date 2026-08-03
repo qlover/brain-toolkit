@@ -4,17 +4,23 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Button } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
-import { ROUTE_DEVELOPER_APPS, ROUTE_DOCS_OAUTH } from '@config/route';
+import {
+  ROUTE_DEVELOPER_APPS,
+  ROUTE_DOCS_CLI,
+  ROUTE_DOCS_OAUTH
+} from '@config/route';
 import type { ReactNode } from 'react';
 
 export interface AppHeaderNavTT {
   navDocs: string;
+  navCli: string;
   navAbout: string;
   navDeveloper: string;
 }
 
 type HeaderNavHref =
   | typeof ROUTE_DOCS_OAUTH
+  | typeof ROUTE_DOCS_CLI
   | '/about'
   | typeof ROUTE_DEVELOPER_APPS;
 
@@ -65,6 +71,13 @@ export function AppHeaderNavPanel({
           title={tt.navDocs}
         >
           {tt.navDocs}
+        </NavLink>
+        <NavLink
+          href={ROUTE_DOCS_CLI}
+          className={desktopNavLinkClassName}
+          title={tt.navCli}
+        >
+          {tt.navCli}
         </NavLink>
         <NavLink
           href="/about"
@@ -119,6 +132,13 @@ export function AppHeaderNavPanel({
             title={tt.navDocs}
           >
             {tt.navDocs}
+          </NavLink>
+          <NavLink
+            href={ROUTE_DOCS_CLI}
+            className={navLinkClassName}
+            title={tt.navCli}
+          >
+            {tt.navCli}
           </NavLink>
           <NavLink
             href="/about"

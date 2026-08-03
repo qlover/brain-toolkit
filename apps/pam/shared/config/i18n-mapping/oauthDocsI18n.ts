@@ -46,5 +46,6 @@ export const oauthDocsI18n = Object.freeze({
   linkPlayground: i18nKeys.PAGE_DOCS_OAUTH_LINK_PLAYGROUND,
   linkApi: i18nKeys.PAGE_DOCS_OAUTH_LINK_API,
   linkDeveloper: i18nKeys.PAGE_DOCS_OAUTH_LINK_DEVELOPER,
+  linkCli: i18nKeys.PAGE_DOCS_OAUTH_LINK_CLI,
   adminTitle: COMMON_ADMIN_TITLE
 });

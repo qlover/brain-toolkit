@@ -9,6 +9,7 @@ import {
   ROUTE_LOGIN,
   ROUTE_OAUTH_AUTHORIZE,
   ROUTE_DOCS_OAUTH,
+  ROUTE_DOCS_CLI,
   ROUTE_OAUTH_PLAYGROUND,
   ROUTE_PROJECT_DETAIL,
   ROUTE_PROJECT_ENVIRONMENTS,
@@ -65,6 +66,10 @@ export const routing = defineRouting({
     [ROUTE_DOCS_OAUTH]: {
       en: '/docs/oauth',
       zh: '/docs/oauth'
+    },
+    [ROUTE_DOCS_CLI]: {
+      en: '/docs/cli',
+      zh: '/docs/cli'
     },
     '/about': {
       en: '/about',

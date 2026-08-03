@@ -293,3 +293,10 @@ export const PAGE_DOCS_OAUTH_LINK_API = 'page_docs_oauth:link__api';
  * @localEn Manage OAuth apps
  */
 export const PAGE_DOCS_OAUTH_LINK_DEVELOPER = 'page_docs_oauth:link__developer';
+
+/**
+ * @description Link to pamenv CLI docs
+ * @localZh pamenv CLI 指南
+ * @localEn pamenv CLI guide
+ */
+export const PAGE_DOCS_OAUTH_LINK_CLI = 'page_docs_oauth:link__cli';
