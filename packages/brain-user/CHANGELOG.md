@@ -24,8 +24,6 @@
 
   Document userly JWT exchange, data model types, API methods, and usage examples in Chinese and English README.
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 ## 0.2.3
 
 ### Patch Changes

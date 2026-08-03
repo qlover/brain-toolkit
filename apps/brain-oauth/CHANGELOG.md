@@ -10,8 +10,6 @@
 
   Added runWithOAuthJson method to handle OAuth token, userinfo, and revoke endpoints, returning flat RFC JSON without the { success, data } envelope. Updated relevant routes to utilize this new method for improved compatibility with standard OAuth clients like Supabase.
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 #### 🐞 Bug Fixes
 
 - **pam,brain-oauth:** 修复 next-kit 迁移后的类型与构建错误 ([ceb595a](https://github.com/qlover/brain-toolkit/commit/ceb595a495437c886956738be796d132d95c8322)) ([#100](https://github.com/qlover/brain-toolkit/pull/100))
@@ -26,41 +24,27 @@
 
   以 LOGINED_PAGES 为唯一进页鉴权，去掉 WithUserAuth 全屏门；Pages 补 favicon 与主题初始化脚本，主题菜单按偏好选中并同步 brain-oauth。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **brain-oauth:** 恢复 Brain logo，避免误用 pam favicon ([0078403](https://github.com/qlover/brain-toolkit/commit/00784037a47797c0ae5e4c6be2eaf0cf27849284)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   Pages favicon 改回 brain-oauth 自有脑形 logo，并恢复 public/logo.svg。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **brain-oauth:** Pages favicon 改用 Brain logo ([0677dea](https://github.com/qlover/brain-toolkit/commit/0677deafa906592572e95a963304ecd0d9f0df60)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **brain-oauth:** App Router 使用 Brain logo 作为站点图标 ([428b557](https://github.com/qlover/brain-toolkit/commit/428b5577c0f09610e74731ef37187d5a377091ee)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   首页走 App Router，需 src/app/icon.svg；仅改 Pages \_document 无法更新标签页图标。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **brain-oauth:** favicon 随系统亮暗在黑白间切换 ([23cdd76](https://github.com/qlover/brain-toolkit/commit/23cdd76d5f53484d74a2f57f5ae64e0b814a58fc)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   使用 SVG prefers-color-scheme；去掉会栅格化的 app/icon.svg，改为 metadata 引用 public/favicon.svg。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam,brain-oauth:** ThemeSwitcher 使用 SupportedTheme 泛型 ([b1d3029](https://github.com/qlover/brain-toolkit/commit/b1d3029e15a7b0f473db17ae498d9a57565a8199)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   useTheme 默认不含 pink，导致 setTheme 类型报错。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam,brain-oauth:** 恢复误改样式并同步去掉裸 hidden ([cc20228](https://github.com/qlover/brain-toolkit/commit/cc20228ab5b593c0596e87e11364cbcce25ecb08)) ([#95](https://github.com/qlover/brain-toolkit/pull/95))
 
   还原登录表单 max-w-[420px] 与 PAMForm 圆角；brain-oauth 仅替换 hidden 写法。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 #### ♻️ Refactors
 
@@ -82,16 +66,12 @@
 
   先按最终 minWidth 测量再显示，并忽略 ResizeObserver 首次回调，避免打开时位置跳动。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 #### ♻️ Refactors
 
 - **apps:** replace shell antd with lightweight UI primitives ([c4f7c55](https://github.com/qlover/brain-toolkit/commit/c4f7c55a1efaf7b90b204853d52263357870c77e)) ([#85](https://github.com/qlover/brain-toolkit/pull/85))
 
   Align brain-oauth and pam with fe-base: local Button/Dropdown/Tooltip/Table,
   antd-free ClientRootProvider, and drop global antd CSS from the app shell.
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **brain-oauth:** streamline ESLint configuration and update project structure ([033e96e](https://github.com/qlover/brain-toolkit/commit/033e96e306aa0dda96060ef0195769fec7191fdd)) ([#84](https://github.com/qlover/brain-toolkit/pull/84))
   - Removed references to 'examples' in ESLint and release configurations, focusing on 'apps' for better clarity.

@@ -8,8 +8,6 @@
 
 - **pam:** 新增 pamenv CLI 使用文档页 ([f55f1b5](https://github.com/qlover/brain-toolkit/commit/f55f1b5e71c3f7b747aa2352323f4468a7e2b9b9)) ([#104](https://github.com/qlover/brain-toolkit/pull/104))
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 ## 2.0.0
 
 ### Major Changes
@@ -18,15 +16,9 @@
 
 - **pam:** 支持 CLI 鉴权、浏览器授权、环境导出与可吊销 Token ([90d73bc](https://github.com/qlover/brain-toolkit/commit/90d73bc62ca693f133e343cd001a76af098946a7)) ([#102](https://github.com/qlover/brain-toolkit/pull/102))
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 环境变量 comments 原样导入展示与草稿导入 ([688a1d3](https://github.com/qlover/brain-toolkit/commit/688a1d3b9807f5f7accc6a725ea2268152e57721)) ([#102](https://github.com/qlover/brain-toolkit/pull/102))
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 优化环境变量注释展示 UI ([855171b](https://github.com/qlover/brain-toolkit/commit/855171bf59cb4a9359ac4f2f9fadbd56014b4eda)) ([#102](https://github.com/qlover/brain-toolkit/pull/102))
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 ## 1.0.0
 
@@ -38,31 +30,21 @@
 
   支持敏感变量脱敏/合并落库加密，补齐环境 CRUD 与变量保存接口，并修复 buildApiWithPath 多参数覆盖问题。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 项目 general/environments 详情页并去掉列表编辑入口 ([85521b9](https://github.com/qlover/brain-toolkit/commit/85521b911ecb0993eb7d24d731cb1c2efbf4734c)) ([#97](https://github.com/qlover/brain-toolkit/pull/97))
 
   新增详情壳与分字段保存/环境变量管理页，创建弹窗保留导入能力，列表点击进入 general。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** AppApi 接入 AborterPlugin，补充 stop 与 PAMAbortId ([38bad45](https://github.com/qlover/brain-toolkit/commit/38bad458e6f557b2982861940d420e15b816ade7)) ([#97](https://github.com/qlover/brain-toolkit/pull/97))
 
   为详情/环境读取接入 abortId，并对并发 searchProjects 做 inflight 去重。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 默认邮箱 OTP 登录并跳转首页 ([1d736d8](https://github.com/qlover/brain-toolkit/commit/1d736d8c7c9798a786ab9bbed1f35fd02883e685)) ([#93](https://github.com/qlover/brain-toolkit/pull/93))
 
   禁用手机号 Tab 点击，登录成功后统一回首页而非 developer 页面。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 首页预取公开列表并优化列表展示 ([088ef3b](https://github.com/qlover/brain-toolkit/commit/088ef3b23cbfee2487cd22c46bee8dfe64967b14)) ([#93](https://github.com/qlover/brain-toolkit/pull/93))
 
   通过 RSC/ISR 预取首屏公开项目消除 loading 闪烁，列表标题下方改为显示完整 URL。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 #### 🐞 Bug Fixes
 
@@ -79,60 +61,40 @@
   next-intl 的 usePathname 返回模板路径，切换语言时一并传入
   useParams，避免地址变成 /projects/[projectId]/general。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 非 owner 详情只读，并去掉 API 错误二次 toast ([620e83a](https://github.com/qlover/brain-toolkit/commit/620e83a6e29eff30c130b49836a2a0fa1d4ce6c2)) ([#98](https://github.com/qlover/brain-toolkit/pull/98))
 
   详情接口返回 is_owner；General/Environments 按 canEdit 禁用编辑；
   业务 catch 不再重复弹 DialogErrorPlugin 已处理的错误。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 加固 useStrictEffect 以兼容 Strict Mode 二次挂载 ([ebfb6ee](https://github.com/qlover/brain-toolkit/commit/ebfb6ee62ed0601e4982968993d2a6a6f2fe3d31)) ([#97](https://github.com/qlover/brain-toolkit/pull/97))
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** 忽略 AbortError，避免取消请求弹 toast 或刷错误日志 ([a193c83](https://github.com/qlover/brain-toolkit/commit/a193c83ccb06cfd6f1e5d91797cda1ad95d09bf4)) ([#97](https://github.com/qlover/brain-toolkit/pull/97))
 
   Strict Mode 重挂与页面切换触发的取消视为预期行为。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam,brain-oauth:** 中间件进页门禁并修复 Pages 主题闪烁 ([a5bdd08](https://github.com/qlover/brain-toolkit/commit/a5bdd08b95389b00abe5e6766e052b2a1b1bae0a)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   以 LOGINED_PAGES 为唯一进页鉴权，去掉 WithUserAuth 全屏门；Pages 补 favicon 与主题初始化脚本，主题菜单按偏好选中并同步 brain-oauth。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam,brain-oauth:** ThemeSwitcher 使用 SupportedTheme 泛型 ([b1d3029](https://github.com/qlover/brain-toolkit/commit/b1d3029e15a7b0f473db17ae498d9a57565a8199)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   useTheme 默认不含 pink，导致 setTheme 类型报错。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 将 Next OAuth 模板文案替换为 PAM 品牌 ([2f31e57](https://github.com/qlover/brain-toolkit/commit/2f31e57db54bc83a2804125283c9c47602b769af)) ([#96](https://github.com/qlover/brain-toolkit/pull/96))
 
   更新首页/文档/授权/Playground 等 i18n 标识、manifest 名称与登出日志 auth_provider。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** 避免裸 hidden 类被浏览器扩展覆盖显示 ([e30e743](https://github.com/qlover/brain-toolkit/commit/e30e74364f028dcb510a8aeb9be90d26a6bc0e85)) ([#95](https://github.com/qlover/brain-toolkit/pull/95))
 
   将 hidden + 响应式显示改为 max-\*:hidden，条件显隐改用 HTML hidden，避免 DeepL 等扩展注入的 .hidden 压过 Tailwind utilities。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam,brain-oauth:** 恢复误改样式并同步去掉裸 hidden ([cc20228](https://github.com/qlover/brain-toolkit/commit/cc20228ab5b593c0596e87e11364cbcce25ecb08)) ([#95](https://github.com/qlover/brain-toolkit/pull/95))
 
   还原登录表单 max-w-[420px] 与 PAMForm 圆角；brain-oauth 仅替换 hidden 写法。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** OAuth token/userinfo/revoke 返回扁平 RFC JSON ([02855a3](https://github.com/qlover/brain-toolkit/commit/02855a3307c165bf3b1562a2784f9a9e5ee811e9)) ([#94](https://github.com/qlover/brain-toolkit/pull/94))
 
   兼容 Supabase 等标准 OAuth 客户端，不再使用 { success, data } 信封。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **web:** 更新 OAuth 授权流程以强制登录 ([7c991fa](https://github.com/qlover/brain-toolkit/commit/7c991fa7790c4d8d485a8abda3abe8c2afa96df7)) ([#94](https://github.com/qlover/brain-toolkit/pull/94))
 
@@ -141,8 +103,6 @@
 - **pam:** 修复 OAuth token 被加 locale 及 refresh token 存储错误 ([773edfc](https://github.com/qlover/brain-toolkit/commit/773edfce0106a032c908669c3313680686f47e76)) ([#93](https://github.com/qlover/brain-toolkit/pull/93))
 
   跳过 /oauth/token 等机器端点的 i18n 重写，并将 provider_session_token 改为存储 Supabase refresh token，避免 PKCE 换票 invalid_grant。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 #### ♻️ Refactors
 
@@ -158,31 +118,21 @@
 
   用带 locale 的 Link 替换 button + onOpen，悬停/新开页都能保留语言前缀。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 项目详情路径统一为 route.ts 常量 ([f270c51](https://github.com/qlover/brain-toolkit/commit/f270c517cb6b8a3d6207ebec32c709467c71d388)) ([#99](https://github.com/qlover/brain-toolkit/pull/99))
 
   抽出 ROUTE*PROJECT*\* 模板，供 next-intl pathnames 与 Link/跳转复用。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** 按列表/项目壳/general/environments 拆分 i18n ([1cd92d1](https://github.com/qlover/brain-toolkit/commit/1cd92d13076583f33855911fde803179c0ce1fa1)) ([#97](https://github.com/qlover/brain-toolkit/pull/97))
 
   将原 page_pam 文案拆到对应页面命名空间，并为共用 env 表单抽离 PAMEnvFormI18n 结构类型。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 详情由 Shell 统一拉取，General 复用 context ([7e20409](https://github.com/qlover/brain-toolkit/commit/7e20409e9747018250588f41ea96209ddfd3d3c8)) ([#97](https://github.com/qlover/brain-toolkit/pull/97))
 
   去掉 General 二次 getProjectDetail；列表与环境挂载改用 useStrictEffect + stop。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 同步 next-oauth 邮箱登录 PKCE 流程 ([332f9ff](https://github.com/qlover/brain-toolkit/commit/332f9fffd74843606c21d87c29924995473b8fb7)) ([#93](https://github.com/qlover/brain-toolkit/pull/93))
 
   将 magic link 从 hash token 改为服务端 PKCE 换 session，并规范化 SITE_URL 与回调页 bootstrap 时机。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 ## 0.3.0
 
@@ -194,13 +144,9 @@
 
   按登录态控制工具栏新建、列表/卡片操作与弹窗，访客不再看到 mutate 按钮。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 登录页改为 PAM 品牌文案并展示版本号 ([1877a4f](https://github.com/qlover/brain-toolkit/commit/1877a4fd0433741e19b1309dea4ad670a0e9e248)) ([#91](https://github.com/qlover/brain-toolkit/pull/91))
 
   禁用尚未支持的手机登录 Tab，登录成功后回到首页。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 ## 0.2.0
 
@@ -212,25 +158,17 @@
 
   将 FTS 改为项目文本字段 ILIKE，缩短防抖并避免搜索闪空；列表同时展示分类与技术栈。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 将列表与卡片 UI 对齐 v3 原型 ([3b657a0](https://github.com/qlover/brain-toolkit/commit/3b657a0446e600ddc15f393bbeb470690aa10308)) ([#87](https://github.com/qlover/brain-toolkit/pull/87))
 
   仅私有显示锁、文字操作菜单（分组与删除红色）、环境 chip 原型配色，以及锁与环境入口的响应式尺寸。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** 优化列表与卡片布局密度与交互 ([124d07e](https://github.com/qlover/brain-toolkit/commit/124d07ee49dbd39fed60585b7f98eaad55582e4f)) ([#87](https://github.com/qlover/brain-toolkit/pull/87))
 
   大屏列表三行排布并加大标题；去掉多余打开仓库/部署入口；userId 可省略复制；卡片收紧空状态与 logo 内边距，并同步 v3 原型。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 对齐新建编辑弹窗表单到 v3 原型 ([d38820d](https://github.com/qlover/brain-toolkit/commit/d38820dae538d147c36fa2653151e0dab7c5d5a1)) ([#87](https://github.com/qlover/brain-toolkit/pull/87))
 
   统一 field 样式与可见性切换，操作栏移入 Modal footer，并修正 secondary/elevated 背景层次。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** Integrate sonner for toast notifications and enhance dialog handling ([ddc54fc](https://github.com/qlover/brain-toolkit/commit/ddc54fcf9933c18be114110c73e18dfc6e87f808)) ([#84](https://github.com/qlover/brain-toolkit/pull/84))
   - Removed deprecated '@ant-design/icons' in favor of '@heroicons/react' for a more modern icon set.
@@ -426,13 +364,9 @@
 
   先按最终 minWidth 测量再显示，并忽略 ResizeObserver 首次回调，避免打开时位置跳动。
 
-  Co-authored-by: Cursor <cursoragent@cursor.com>
-
 - **pam:** 修正列表项 host 链接截断布局 ([d66b0c7](https://github.com/qlover/brain-toolkit/commit/d66b0c726aeab950d21e36918dff1cbdd148753a)) ([#87](https://github.com/qlover/brain-toolkit/pull/87))
 
   将 truncate 放到外层容器，避免 a 标签自身影响省略显示。
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** Correct package name and version in package.json; update changelog header ([c9d43d4](https://github.com/qlover/brain-toolkit/commit/c9d43d4c4b2fda92a70d8b846bf4d0ac206f433a)) ([#82](https://github.com/qlover/brain-toolkit/pull/82))
 
@@ -462,8 +396,6 @@
 
   Align brain-oauth and pam with fe-base: local Button/Dropdown/Tooltip/Table,
   antd-free ClientRootProvider, and drop global antd CSS from the app shell.
-
-  Co-authored-by: Cursor <cursoragent@cursor.com>
 
 - **pam:** code structure for improved readability and maintainability ([12a375a](https://github.com/qlover/brain-toolkit/commit/12a375a97113121ec047ebf63658acc89bb4cd99)) ([#64](https://github.com/qlover/brain-toolkit/pull/64))
 
