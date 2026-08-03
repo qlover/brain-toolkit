@@ -1,13 +1,18 @@
-# pamenv (`@brain-toolkit/pamenv`)
+# pamenv
 
 本地多环境 env 同步工具：从 PAM `pull` 到当前目录，本地改完再 `push` 回去。
 
 ## 安装
 
 ```bash
-pnpm --filter @brain-toolkit/pamenv build
-pnpm --filter @brain-toolkit/pamenv link --global
-# 或在 monorepo 根目录：pnpm exec pam --help
+npm install -g pamenv
+# 或
+npx pamenv --help
+
+# monorepo
+pnpm --filter pamenv build
+pnpm --filter pamenv link --global
+pnpm pamenv --help
 ```
 
 ## 常用命令
