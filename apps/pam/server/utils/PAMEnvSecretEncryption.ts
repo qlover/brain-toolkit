@@ -136,4 +136,23 @@ export class PAMEnvSecretEncryption
       };
     });
   }
+
+  /**
+   * Decrypts sensitive ciphertext values for owner-only export.
+   * Non-sensitive and non-encrypted values are left unchanged.
+   *
+   * @param variables - Variables loaded from storage
+   * @returns Variables with plaintext values
+   */
+  public decryptSensitiveVariables(variables: PAMVariable[]): PAMVariable[] {
+    return variables.map((variable: PAMVariable): PAMVariable => {
+      if (!variable.sensitive || !this.isEncrypted(variable.value)) {
+        return variable;
+      }
+      return {
+        ...variable,
+        value: this.decrypt(variable.value)
+      };
+    });
+  }
 }

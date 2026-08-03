@@ -4,6 +4,7 @@ import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import {
   ROUTE_CALLBACK_EMAIL_LOGIN,
+  ROUTE_PAMENV_DEVICE,
   ROUTE_DEVELOPER_APPS,
   ROUTE_LOGIN,
   ROUTE_OAUTH_AUTHORIZE,
@@ -68,6 +69,10 @@ export const routing = defineRouting({
     '/about': {
       en: '/about',
       zh: '/about'
+    },
+    [ROUTE_PAMENV_DEVICE]: {
+      en: '/pamenv/device',
+      zh: '/pamenv/device'
     },
     [ROUTE_PROJECTS]: {
       en: '/projects',

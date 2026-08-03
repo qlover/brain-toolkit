@@ -15,6 +15,7 @@ import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface'
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
+import { PamCliTokenService } from '@server/services/PamCliTokenService';
 import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
 import type { LoggerInterface } from '@qlover/logger';
 import type {
@@ -88,10 +89,14 @@ export class SupabaseOAuthProvider
     oauthRepo: OAuthWrapperRepositoryInterface,
     @inject(PasswordEncrypt)
     protected encryptor: EncryptorInterface<string, string>,
-    @inject(SupabaseRepo) protected supabaseRepo: SupabaseRepo<unknown>
+    @inject(SupabaseRepo) protected supabaseRepo: SupabaseRepo<unknown>,
+    @inject(PamCliTokenService)
+    cliTokenService: PamCliTokenService
   ) {
     super(
-      new OAuthSessionService(config),
+      new OAuthSessionService(config, (token) =>
+        cliTokenService.verifyToken(token)
+      ),
       new TokenEncryption(config.encryptionKey),
       oauthRepo
     );

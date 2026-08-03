@@ -143,4 +143,29 @@ export interface PAMServiceInterface {
     envId: string,
     params: PAMEnvReplaceVariables
   ): Promise<PAMEnvWriteable>;
+
+  /**
+   * Owner-only export of one environment as decrypted dotenv text.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  exportEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<{
+    projectId: string;
+    projectSlug: string;
+    environmentId: string;
+    environmentName: string;
+    content: string;
+    sensitiveKeys: string[];
+    /** Decrypted variables including raw `comments` lines (preferred by CLI). */
+    variables: Array<{
+      key: string;
+      value: string;
+      sensitive: boolean;
+      comments?: string[];
+    }>;
+  }>;
 }

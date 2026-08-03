@@ -170,6 +170,8 @@ cp .env.template .env   # Windows 下手动复制亦可
 
 1. `makes/sql/001-base-tables.sql` — 基础表（`request_logs` 等，可按需启用 RLS）
 2. `makes/sql/002-oauth-clients.sql` — OAuth 客户端、授权码、refresh token、用户凭证（表前缀 `n_oauth_wrapper__*`）
+3. `makes/sql/003-pam-base.sql` / `004-update_project_with_environments.sql` — PAM 项目与环境
+4. `makes/sql/005-pam-cli-tokens.sql` — CLI Token `jti` 登记与吊销（`n_pam_cli_tokens`）
 
 **RLS 与密钥：**
 

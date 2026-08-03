@@ -170,4 +170,32 @@ export class PAMController {
       parsed
     );
   }
+
+  /**
+   * Owner-only decrypted dotenv export for CLI.
+   *
+   * @param projectId - Project id path param
+   * @param envId - Environment id path param
+   */
+  public exportEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<{
+    projectId: string;
+    projectSlug: string;
+    environmentId: string;
+    environmentName: string;
+    content: string;
+    sensitiveKeys: string[];
+    variables: Array<{
+      key: string;
+      value: string;
+      sensitive: boolean;
+      comments?: string[];
+    }>;
+  }> {
+    const projectUuid = uuidSchema.parse(projectId);
+    const envUuid = uuidSchema.parse(envId);
+    return this.pamService.exportEnvironment(projectUuid, envUuid);
+  }
 }

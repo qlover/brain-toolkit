@@ -5,6 +5,7 @@ import {
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { v4 as uuid } from 'uuid';
 import { inject, injectable } from '@shared/container';
+import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
@@ -415,9 +416,24 @@ export class PAMService implements PAMServiceInterface {
    * @throws When the user is not the owner
    */
   protected async assertProjectOwner(projectId: string): Promise<void> {
-    const project = await this.projectRepo.hasAuthProject(projectId);
-    if (!project) {
-      throw new Error(API_NOT_AUTHORIZED);
+    const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    // Prefer explicit owner check (works for CLI bearer tokens without
+    // a Supabase Auth session). Falls back to RLS session check.
+    const owned = await this.projectRepo.isProjectOwnedByUser(
+      projectId,
+      user.id
+    );
+    if (owned) {
+      return;
+    }
+
+    const hasAuth = await this.projectRepo.hasAuthProject(projectId);
+    if (!hasAuth) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
     }
   }
 
@@ -542,7 +558,8 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMEnvWriteable> {
     await this.assertProjectOwner(projectId);
 
-    const existing = await this.projectRepo.getEnvironmentById(
+    // Admin read/write: CLI bearer auth has no Supabase RLS session.
+    const existing = await this.projectRepo.getEnvironmentByIdAdmin(
       projectId,
       envId
     );
@@ -565,12 +582,76 @@ export class PAMService implements PAMServiceInterface {
     const encrypted =
       this.getSecretEncryption().encryptSensitiveVariables(merged);
 
-    const updated = await this.projectRepo.updateEnvironmentVariables(
+    const updated = await this.projectRepo.updateEnvironmentVariablesAdmin(
       projectId,
       envId,
       encrypted
     );
 
     return this.redactEnvironment(updated);
+  }
+
+  /**
+   * @override
+   */
+  public async exportEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<{
+    projectId: string;
+    projectSlug: string;
+    environmentId: string;
+    environmentName: string;
+    content: string;
+    sensitiveKeys: string[];
+    variables: Array<{
+      key: string;
+      value: string;
+      sensitive: boolean;
+      comments?: string[];
+    }>;
+  }> {
+    const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const owned = await this.projectRepo.getOwnedEnvironmentForExport(
+      projectId,
+      envId,
+      user.id
+    );
+
+    if (!owned) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const normalized = PAMEnvVariableNormalizeUtil.normalizeVariables(
+      owned.environment.variables
+    );
+    const sensitiveKeys = normalized
+      .filter((variable) => variable.sensitive === true)
+      .map((variable) => variable.key);
+    const decrypted =
+      this.getSecretEncryption().decryptSensitiveVariables(normalized);
+    const content = PAMEnvDotenvSerializeUtil.serialize(decrypted);
+    const variables = decrypted.map((variable) => ({
+      key: variable.key,
+      value: variable.value,
+      sensitive: variable.sensitive === true,
+      ...(variable.comments && variable.comments.length > 0
+        ? { comments: [...variable.comments] }
+        : {})
+    }));
+
+    return {
+      projectId,
+      projectSlug: owned.projectSlug,
+      environmentId: owned.environment.id,
+      environmentName: owned.environment.name,
+      content,
+      sensitiveKeys,
+      variables
+    };
   }
 }

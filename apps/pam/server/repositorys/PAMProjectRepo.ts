@@ -285,6 +285,85 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Owner check via admin client (no Supabase Auth session required).
+   *
+   * @param projectId - Project id
+   * @param ownerId - User id
+   */
+  public async isProjectOwnedByUser(
+    projectId: string,
+    ownerId: string
+  ): Promise<boolean> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id')
+      .eq('id', projectId)
+      .eq('owner_id', ownerId)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+    return !isEmpty(result.data);
+  }
+
+  /**
+   * Loads a single environment with admin client (CLI / owner-checked paths).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async getEnvironmentByIdAdmin(
+    projectId: string,
+    envId: string
+  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .select('id,name,url,variables')
+      .eq('project_id', projectId)
+      .eq('id', envId)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'variables'
+    > | null;
+  }
+
+  /**
+   * Updates environment variables with admin client.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param variables - Variables to persist
+   */
+  public async updateEnvironmentVariablesAdmin(
+    projectId: string,
+    envId: string,
+    variables: PAMVariable[]
+  ): Promise<PAMEnvWriteable> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .update({ variables })
+      .eq('id', envId)
+      .eq('project_id', projectId)
+      .select('id,name,url,variables')
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    return result.data as PAMEnvWriteable;
+  }
+
+  /**
    * Loads a single environment for a project (including variables).
    *
    * @param projectId - Project id
@@ -310,6 +389,59 @@ export class PAMProjectRepo extends BaseRepository<
       PAMEnvRaw,
       'id' | 'name' | 'url' | 'variables'
     > | null;
+  }
+
+  /**
+   * Loads an environment for CLI export using the admin client.
+   * Enforces ownership in the query (bypasses cookie-based RLS).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param ownerId - Authenticated owner user id
+   * @returns Project slug + environment row, or null when missing / not owned
+   */
+  public async getOwnedEnvironmentForExport(
+    projectId: string,
+    envId: string,
+    ownerId: string
+  ): Promise<{
+    projectSlug: string;
+    environment: Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>;
+  } | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+
+    const projectResult = await admin
+      .from(this.getRepoName())
+      .select('id,slug')
+      .eq('id', projectId)
+      .eq('owner_id', ownerId)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(projectResult);
+    if (!projectResult.data) {
+      return null;
+    }
+
+    const envResult = await admin
+      .from(PAMEnvTableName)
+      .select('id,name,url,variables')
+      .eq('project_id', projectId)
+      .eq('id', envId)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(envResult);
+    if (!envResult.data) {
+      return null;
+    }
+
+    return {
+      projectSlug: (projectResult.data as { slug: string }).slug,
+      environment: envResult.data as Pick<
+        PAMEnvRaw,
+        'id' | 'name' | 'url' | 'variables'
+      >
+    };
   }
 
   /**
