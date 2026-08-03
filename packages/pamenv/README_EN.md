@@ -1,16 +1,16 @@
-# pamenv
+# pamenv-cli
 
-Pull PAM environments into the working directory and push local edits back.
+Pull PAM environments into the working directory and push local edits back. The installed command is `pamenv`.
 
 ## Install
 
 ```bash
-npm install -g pamenv
+npm install -g pamenv-cli
 # or
 npx pamenv --help
 
 # monorepo
-pnpm --filter pamenv build
+pnpm --filter pamenv-cli build
 pnpm pamenv --help
 ```
 

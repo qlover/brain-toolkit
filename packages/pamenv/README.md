@@ -1,17 +1,17 @@
-# pamenv
+# pamenv-cli
 
-本地多环境 env 同步工具：从 PAM `pull` 到当前目录，本地改完再 `push` 回去。
+本地多环境 env 同步工具：从 PAM `pull` 到当前目录，本地改完再 `push` 回去。安装后命令名为 `pamenv`。
 
 ## 安装
 
 ```bash
-npm install -g pamenv
+npm install -g pamenv-cli
 # 或
 npx pamenv --help
 
 # monorepo
-pnpm --filter pamenv build
-pnpm --filter pamenv link --global
+pnpm --filter pamenv-cli build
+pnpm --filter pamenv-cli link --global
 pnpm pamenv --help
 ```
 

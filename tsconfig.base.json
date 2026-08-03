@@ -41,8 +41,8 @@
       "@brain-toolkit/ts2locales/*": ["./packages/ts2locales/src/*"],
       "@brain-toolkit/brain-user": ["./packages/brain-user/src"],
       "@brain-toolkit/brain-user/*": ["./packages/brain-user/src/*"],
-      "pamenv": ["./packages/pamenv/src"],
-      "pamenv/*": ["./packages/pamenv/src/*"]
+      "pamenv-cli": ["./packages/pamenv/src"],
+      "pamenv-cli/*": ["./packages/pamenv/src/*"]
     }
   },
   "ts-node": {
