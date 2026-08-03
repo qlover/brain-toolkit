@@ -31,7 +31,8 @@
     "type-check": "tsc --build --force && pnpm -r --filter \"./apps/**\" run type-check",
     "release:branch": "npx fe-release -V -s master --changesetVersion.ignore-non-updated-packages --github.skip-create-release-pr",
     "dev:pam": "pnpm --filter @brain-toolkit/pam dev",
-    "dev:brain-oauth": "pnpm --filter @brain-toolkit/brain-oauth dev"
+    "dev:brain-oauth": "pnpm --filter @brain-toolkit/brain-oauth dev",
+    "pamenv": "pnpm --filter @brain-toolkit/pamenv exec node ./dist/cli.js"
   },
   "keywords": [
     "brain-toolkit",
