@@ -5,6 +5,7 @@ import {
   API_PAM_EDIT,
   API_PAM_ENVIRONMENTS,
   API_PAM_ENVIRONMENTS_DELETE,
+  API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_VARIABLES
 } from './apiRoutes';
 import { i18nConfig } from './i18n';
@@ -47,6 +48,13 @@ export const ROUTE_ADMIN_USERS = '/admin/users' as const;
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
 
 export const ROUTE_HOME = '/' as const;
+
+/**
+ * PAM CLI device authorization page (browser approve for `pam login`).
+ */
+export const ROUTE_PAMENV_DEVICE = '/pamenv/device' as const;
+/** @deprecated Use {@link ROUTE_PAMENV_DEVICE} */
+export const ROUTE_CLI_DEVICE = ROUTE_PAMENV_DEVICE;
 
 /**
  * PAM project detail routes (App Router under `src/app/[locale]/projects/...`).
@@ -145,6 +153,8 @@ export const LOGINED_PAGES = [
   // Consent requires an app session; gate here so unauthenticated users
   // are sent to login with `?redirect=<full authorize URL>` via redirectToPath.
   ROUTE_OAUTH_AUTHORIZE,
+  // pamenv browser login approve page.
+  ROUTE_PAMENV_DEVICE,
   /**
    * Project detail tree: `/projects`, `/projects/:id`, `/projects/:id/general`, …
    * Exact `endsWith` only covers `/…/projects`; nested segments need
@@ -432,6 +442,22 @@ export function buildApiPamEnvironmentVariables(
   envId: string
 ): string {
   return buildApiWithPath(API_PAM_ENVIRONMENTS_VARIABLES, {
+    projectId,
+    envId
+  });
+}
+
+/**
+ * @see {@link API_PAM_ENVIRONMENTS_EXPORT}
+ * @param projectId - Project id
+ * @param envId - Environment id
+ * @returns `/api/pam/:projectId/environments/:envId/export`
+ */
+export function buildApiPamEnvironmentExport(
+  projectId: string,
+  envId: string
+): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS_EXPORT, {
     projectId,
     envId
   });

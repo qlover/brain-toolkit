@@ -86,4 +86,10 @@ export class ServerConfig implements SeedServerConfigInterface {
 
   public readonly oauthSessionKey: string =
     process.env.OAUTH_SESSION_KEY ?? 'pam_session';
+
+  /**
+   * CLI bearer TTL. Override with `PAM_CLI_TOKEN_EXPIRES_IN` (e.g. `21d`).
+   */
+  public readonly pamCliTokenExpiresIn: StringValue = (process.env
+    .PAM_CLI_TOKEN_EXPIRES_IN ?? '30d') as StringValue;
 }

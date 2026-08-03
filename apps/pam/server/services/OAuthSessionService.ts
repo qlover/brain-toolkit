@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { hasSessionPath, redirectToPath } from '@config/route';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
@@ -10,6 +10,10 @@ import type {
   OAuthSessionPayload
 } from '@qlover/oauth-wrapper';
 import type { NextRequest } from 'next/server';
+
+export type PamCliBearerVerifierType = (
+  token: string
+) => Promise<OAuthSessionPayload | null>;
 
 /**
  * 该文件用于页面访问权限控制
@@ -28,7 +32,11 @@ export class OAuthSessionService
   protected secure: boolean;
   protected sessionSecret: string;
   protected sessionKey: string;
-  constructor(config: SeedServerConfigInterface) {
+
+  constructor(
+    config: SeedServerConfigInterface,
+    protected readonly verifyCliBearer?: PamCliBearerVerifierType
+  ) {
     if (!config.sessionSecret || !config.oauthSessionKey) {
       throw new Error(
         'Session secret or session key is not set, You can set process.env.SESSION_SECRET and process.env.OAUTH_SESSION_KEY to fix this error'
@@ -122,11 +130,38 @@ export class OAuthSessionService
     const cookieStore = await cookies();
     const raw = cookieStore.get(this.sessionKey)?.value;
 
-    if (!raw) {
+    if (raw) {
+      const fromCookie = this.parseJWT(raw, this.sessionSecret);
+      if (fromCookie) {
+        return fromCookie;
+      }
+    }
+
+    return this.getSessionFromAuthorizationHeader();
+  }
+
+  /**
+   * Resolves a PAM CLI bearer token from `Authorization: Bearer ...`.
+   *
+   * @returns Session-compatible payload or null
+   */
+  protected async getSessionFromAuthorizationHeader(): Promise<OAuthSessionPayload | null> {
+    const headerStore = await headers();
+    const authorization = headerStore.get('authorization');
+    if (!authorization?.toLowerCase().startsWith('bearer ')) {
       return null;
     }
 
-    return this.parseJWT(raw, this.sessionSecret);
+    const token = authorization.slice('bearer '.length).trim();
+    if (!token) {
+      return null;
+    }
+
+    if (!this.verifyCliBearer) {
+      return null;
+    }
+
+    return this.verifyCliBearer(token);
   }
 
   /**

@@ -33,4 +33,14 @@ describe('PAMEnvSecretEncryption', () => {
     expect(encryption.decrypt(result[1]!.value)).toBe('fresh');
     expect(result[2]?.value).toBe(existingCipher);
   });
+
+  it('decrypts sensitive ciphertext values for export', () => {
+    const encrypted = encryption.encryptSensitiveVariables([
+      { key: 'PLAIN', value: 'visible', sensitive: false },
+      { key: 'SECRET', value: 'hidden', sensitive: true }
+    ]);
+    const decrypted = encryption.decryptSensitiveVariables(encrypted);
+    expect(decrypted[0]?.value).toBe('visible');
+    expect(decrypted[1]?.value).toBe('hidden');
+  });
 });

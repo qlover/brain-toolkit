@@ -1,0 +1,60 @@
+{
+  "name": "@brain-toolkit/pamenv",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "description": "CLI for PAM multi-environment env pull and push",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "pamenv": "./dist/cli.js"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --build",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/pamenv"
+  },
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
+  "keywords": [
+    "brain toolkit",
+    "pam",
+    "pamenv",
+    "dotenv"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.5.2",
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

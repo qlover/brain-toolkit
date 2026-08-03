@@ -14,7 +14,9 @@ export const PAMVariableSchema = z
      * Sensitive variables may send an empty value on update to keep the stored secret.
      */
     value: z.string(),
-    sensitive: z.boolean().optional()
+    sensitive: z.boolean().optional(),
+    /** Raw dotenv comment lines (including `#`), stored as-is in JSONB. */
+    comments: z.array(z.string()).optional()
   })
   .superRefine((variable, ctx) => {
     if (!variable.sensitive && variable.value.trim() === '') {

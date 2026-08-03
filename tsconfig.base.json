@@ -40,7 +40,9 @@
       "@brain-toolkit/ts2locales": ["./packages/ts2locales/src"],
       "@brain-toolkit/ts2locales/*": ["./packages/ts2locales/src/*"],
       "@brain-toolkit/brain-user": ["./packages/brain-user/src"],
-      "@brain-toolkit/brain-user/*": ["./packages/brain-user/src/*"]
+      "@brain-toolkit/brain-user/*": ["./packages/brain-user/src/*"],
+      "@brain-toolkit/pamenv": ["./packages/pamenv/src"],
+      "@brain-toolkit/pamenv/*": ["./packages/pamenv/src/*"]
     }
   },
   "ts-node": {

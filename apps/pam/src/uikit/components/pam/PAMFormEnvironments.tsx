@@ -187,7 +187,10 @@ export const PAMFormEnvironments: React.FC<PAMFormEnvironmentsProps> = ({
           id: uuid(),
           key: item.key,
           value: item.value,
-          sensitive: true
+          sensitive: true,
+          ...(item.comments !== undefined && item.comments.length > 0
+            ? { comments: [...item.comments] }
+            : {})
         }))
       ];
       setValue(`${PAMProjectEnvKey}.${envIndex}.variables`, updated);

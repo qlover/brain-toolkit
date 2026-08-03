@@ -40,6 +40,14 @@ export interface SeedServerConfigInterface extends SharedConfigInterface {
 
   /** OAuth session key. */
   readonly oauthSessionKey: string;
+
+  /**
+   * PAM CLI bearer JWT lifetime (revocable via jti; re-login when expired).
+   *
+   * @example '30d'
+   * @example '21d'
+   */
+  readonly pamCliTokenExpiresIn: StringValue;
 }
 export interface SeedSrcConfigInterface extends SharedConfigInterface {
   readonly stringEncryptorKey: string;

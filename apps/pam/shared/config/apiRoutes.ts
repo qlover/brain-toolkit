@@ -109,6 +109,16 @@ export const API_PAM_ENVIRONMENTS_DELETE =
   '/api/pam/:projectId/environments/:envId/delete' as const;
 
 /**
+ * API path: `/api/pam/:projectId/environments/:envId/export`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/export/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/export/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/export/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_EXPORT =
+  '/api/pam/:projectId/environments/:envId/export' as const;
+
+/**
  * API path: `/api/pam/:projectId/environments/:envId/variables`
  *
  * @see [src/app/api/pam/[projectId]/environments/[envId]/variables/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/variables/route.ts)
@@ -117,6 +127,52 @@ export const API_PAM_ENVIRONMENTS_DELETE =
  */
 export const API_PAM_ENVIRONMENTS_VARIABLES =
   '/api/pam/:projectId/environments/:envId/variables' as const;
+
+/**
+ * API path: `/api/pam/cli/device/approve`
+ *
+ * @see [src/app/api/pam/cli/device/approve/route.ts](../../src/app/api/pam/cli/device/approve/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/device/approve/route.ts`
+ */
+export const API_PAM_CLI_DEVICE_APPROVE =
+  '/api/pam/cli/device/approve' as const;
+
+/**
+ * API path: `/api/pam/cli/device/code`
+ *
+ * @see [src/app/api/pam/cli/device/code/route.ts](../../src/app/api/pam/cli/device/code/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/device/code/route.ts`
+ */
+export const API_PAM_CLI_DEVICE_CODE = '/api/pam/cli/device/code' as const;
+
+/**
+ * API path: `/api/pam/cli/device/token`
+ *
+ * @see [src/app/api/pam/cli/device/token/route.ts](../../src/app/api/pam/cli/device/token/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/device/token/route.ts`
+ */
+export const API_PAM_CLI_DEVICE_TOKEN = '/api/pam/cli/device/token' as const;
+
+/**
+ * API path: `/api/pam/cli/logout`
+ *
+ * @see [src/app/api/pam/cli/logout/route.ts](../../src/app/api/pam/cli/logout/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/logout/route.ts`
+ */
+export const API_PAM_CLI_LOGOUT = '/api/pam/cli/logout' as const;
+
+/**
+ * API path: `/api/pam/cli/token`
+ *
+ * @see [src/app/api/pam/cli/token/route.ts](../../src/app/api/pam/cli/token/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/token/route.ts`
+ */
+export const API_PAM_CLI_TOKEN = '/api/pam/cli/token' as const;
 
 /**
  * API path: `/api/pam/create`
@@ -256,7 +312,13 @@ export type ApiRoutePath =
   | typeof API_OAUTH_VERIFY
   | typeof API_PAM_ENVIRONMENTS
   | typeof API_PAM_ENVIRONMENTS_DELETE
+  | typeof API_PAM_ENVIRONMENTS_EXPORT
   | typeof API_PAM_ENVIRONMENTS_VARIABLES
+  | typeof API_PAM_CLI_DEVICE_APPROVE
+  | typeof API_PAM_CLI_DEVICE_CODE
+  | typeof API_PAM_CLI_DEVICE_TOKEN
+  | typeof API_PAM_CLI_LOGOUT
+  | typeof API_PAM_CLI_TOKEN
   | typeof API_PAM_CREATE
   | typeof API_PAM_DELETE
   | typeof API_PAM_DETAIL

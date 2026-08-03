@@ -241,8 +241,8 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   /**
-   * Client-side parse + overwrite existing keys, then persist via setEnvironmentVariables.
-   * (Server import API appends and skips duplicates; panel needs overwrite.)
+   * Client-side parse into draft only. User must click Save to persist.
+   * New keys default to sensitive (editable until first save); existing keys keep theirs.
    */
   const onImportText = (text: string): void => {
     if (!selectedEnvId) {
@@ -264,7 +264,10 @@ export function PAMProjectEnvironmentsPanel({
         byKey.set(item.key, {
           ...existing,
           value: item.value,
-          sensitive: existing.sensitive === true
+          sensitive: existing.sensitive === true,
+          ...(item.comments !== undefined && item.comments.length > 0
+            ? { comments: [...item.comments] }
+            : {})
         });
         overwritten += 1;
       } else {
@@ -272,7 +275,10 @@ export function PAMProjectEnvironmentsPanel({
           id: uuid(),
           key: item.key,
           value: item.value,
-          sensitive: true
+          sensitive: true,
+          ...(item.comments !== undefined && item.comments.length > 0
+            ? { comments: [...item.comments] }
+            : {})
         });
         imported += 1;
       }
@@ -284,7 +290,6 @@ export function PAMProjectEnvironmentsPanel({
     dialogHandler.success(
       formatImportResult(tt.envVarImportResult, imported + overwritten, 0)
     );
-    void persistVariables(selectedEnvId, next);
   };
 
   const onImportFileChange = (
@@ -528,7 +533,7 @@ export function PAMProjectEnvironmentsPanel({
               {draftVariables.length === 0 ? (
                 <p className="text-sm text-tertiary-text">{tt.noEnvVar}</p>
               ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   {draftVariables.map((item) => (
                     <PAMFormEnvironmentVarRow
                       key={item.id ?? item.key}

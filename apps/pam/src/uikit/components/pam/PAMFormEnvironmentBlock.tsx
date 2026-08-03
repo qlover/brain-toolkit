@@ -225,7 +225,7 @@ export const PAMFormEnvironmentBlock: React.FC<
                 }}
               />
             )}
-            <div className="env-vars-list mt-2 max-h-40 space-y-1.5 overflow-y-auto">
+            <div className="env-vars-list mt-2 max-h-72 space-y-2 overflow-y-auto">
               {variables.length === 0 ? (
                 <div className="py-1 text-xs text-tertiary-text">
                   {tt.noEnvVar}
