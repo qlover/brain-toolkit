@@ -20,6 +20,10 @@ export const pamProjectI18n = Object.freeze({
   loadingText: i18nKeys.PAGE_PAM_PROJECT_LOADING_TEXT,
   projectNotFound: i18nKeys.PAGE_PAM_PROJECT_NOT_FOUND,
   readonly: i18nKeys.PAGE_PAM_PROJECT_READONLY,
+  fork: i18nKeys.PAGE_PAM_PROJECT_FORK,
+  forking: i18nKeys.PAGE_PAM_PROJECT_FORKING,
+  forkSuccess: i18nKeys.PAGE_PAM_PROJECT_FORK_SUCCESS,
+  forkFailed: i18nKeys.PAGE_PAM_PROJECT_FORK_FAILED,
 
   adminTitle: COMMON_ADMIN_TITLE
 });

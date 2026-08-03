@@ -7,6 +7,7 @@ import type {
   SearchPAMProject,
   PAMProjectDetail,
   PAMProjectCreate,
+  PAMProjectFork,
   PAMProjectUpdate
 } from '@shared/schemas/PAMProjectSchema';
 import type {
@@ -84,8 +85,29 @@ export interface PAMServiceInterface {
 
   /**
    * 创建一个新的 PAM 项目
+   *
+   * @param params - Create payload
+   * @param options - Persistence options
+   * @param options.allowEmptySensitive - When true, sensitive placeholders
+   *   may be stored with empty values (used by fork)
    */
-  createProject(params: PAMProjectCreate): Promise<PAMProjectDetail>;
+  createProject(
+    params: PAMProjectCreate,
+    options?: { allowEmptySensitive?: boolean }
+  ): Promise<PAMProjectDetail>;
+
+  /**
+   * Forks a readable project into a private copy owned by the current user.
+   * Sensitive variable values are cleared; keys and non-sensitive values copy.
+   *
+   * @param sourceId - Source project id
+   * @param options - Optional slug / name overrides
+   * @returns New project detail (redacted)
+   */
+  forkProject(
+    sourceId: string,
+    options?: PAMProjectFork
+  ): Promise<PAMProjectDetail>;
 
   deleteProject(id: string): Promise<void>;
 

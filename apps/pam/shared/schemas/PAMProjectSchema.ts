@@ -142,6 +142,17 @@ export type PAMProjectCreate = z.infer<typeof PAMProjectCreateSchema>;
 export type PAMProjectUpdate = z.infer<typeof PAMProjectUpdateSchema>;
 
 /**
+ * Body for `POST /api/pam/fork/:id`.
+ * Omitted fields fall back to server defaults (`{slug}-fork`, `{name} (fork)`).
+ */
+export const PAMProjectForkSchema = z.object({
+  slug: z.string().trim().min(1, { message: V_REQUIRED }).optional(),
+  name: z.string().trim().min(1, { message: V_REQUIRED }).optional()
+});
+
+export type PAMProjectFork = z.infer<typeof PAMProjectForkSchema>;
+
+/**
  * 搜索参数
  *
  * FIXME: 目前 controller 使用 SearchParamsValidator 直接校验

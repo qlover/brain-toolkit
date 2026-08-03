@@ -62,3 +62,31 @@ export const PAGE_PAM_PROJECT_NOT_FOUND = 'page_pam_project:projectNotFound';
  * @localEn Readonly
  */
 export const PAGE_PAM_PROJECT_READONLY = 'page_pam_project:readonly';
+
+/**
+ * @description Fork project action button
+ * @localZh Fork
+ * @localEn Fork
+ */
+export const PAGE_PAM_PROJECT_FORK = 'page_pam_project:fork';
+
+/**
+ * @description Fork in progress
+ * @localZh 正在 Fork...
+ * @localEn Forking...
+ */
+export const PAGE_PAM_PROJECT_FORKING = 'page_pam_project:forking';
+
+/**
+ * @description Fork succeeded toast
+ * @localZh 已创建项目副本（敏感变量已清空）
+ * @localEn Project forked (sensitive values cleared)
+ */
+export const PAGE_PAM_PROJECT_FORK_SUCCESS = 'page_pam_project:forkSuccess';
+
+/**
+ * @description Fork failed toast
+ * @localZh Fork 失败，请稍后重试
+ * @localEn Fork failed. Please try again.
+ */
+export const PAGE_PAM_PROJECT_FORK_FAILED = 'page_pam_project:forkFailed';
