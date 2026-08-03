@@ -1,5 +1,23 @@
 # pam
 
+## 2.0.0
+
+### Major Changes
+
+#### ✨ Features
+
+- **pam:** 支持 CLI 鉴权、浏览器授权、环境导出与可吊销 Token ([90d73bc](https://github.com/qlover/brain-toolkit/commit/90d73bc62ca693f133e343cd001a76af098946a7)) ([#102](https://github.com/qlover/brain-toolkit/pull/102))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 环境变量 comments 原样导入展示与草稿导入 ([688a1d3](https://github.com/qlover/brain-toolkit/commit/688a1d3b9807f5f7accc6a725ea2268152e57721)) ([#102](https://github.com/qlover/brain-toolkit/pull/102))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 优化环境变量注释展示 UI ([855171b](https://github.com/qlover/brain-toolkit/commit/855171bf59cb4a9359ac4f2f9fadbd56014b4eda)) ([#102](https://github.com/qlover/brain-toolkit/pull/102))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 1.0.0
 
 ### Major Changes

@@ -1,6 +1,6 @@
 {
   "name": "@brain-toolkit/pam",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "cross-env APP_ENV=localhost next dev --port 3400",
