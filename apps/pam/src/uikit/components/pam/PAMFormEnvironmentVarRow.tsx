@@ -26,6 +26,37 @@ interface PAMFormEnvironmentVarRowProps {
   onRemoveVariable: (envIndex: number, key: string) => void;
 }
 
+/**
+ * Strips a leading `#` for display; storage still keeps raw dotenv lines.
+ */
+function toDisplayCommentLine(line: string): string {
+  const trimmed = line.trimStart();
+  if (trimmed.startsWith('#')) {
+    return trimmed.replace(/^#\s?/, '');
+  }
+  return line;
+}
+
+/**
+ * Drops leading/trailing blank comment lines for cleaner UI.
+ */
+function visibleCommentLines(
+  comments: readonly string[] | undefined
+): readonly string[] {
+  if (!comments || comments.length === 0) {
+    return [];
+  }
+  let start = 0;
+  let end = comments.length;
+  while (start < end && comments[start]!.trim() === '') {
+    start += 1;
+  }
+  while (end > start && comments[end - 1]!.trim() === '') {
+    end -= 1;
+  }
+  return comments.slice(start, end);
+}
+
 export const PAMFormEnvironmentVarRow: React.FC<
   PAMFormEnvironmentVarRowProps
 > = ({
@@ -43,9 +74,37 @@ export const PAMFormEnvironmentVarRow: React.FC<
   const errorMessage = keyError?.message || valueError?.message;
   const isSensitive = item.sensitive === true;
   const fieldsDisabled = readOnly || sensitiveLocked;
+  const commentLines = visibleCommentLines(item.comments);
 
   return (
-    <div data-testid="PAMFormEnvironmentVarRow" className="space-y-0.5">
+    <div data-testid="PAMFormEnvironmentVarRow" className="space-y-1">
+      {commentLines.length > 0 ? (
+        <div
+          data-testid="PAMFormEnvironmentVarComments"
+          title={commentLines.join('\n')}
+          className="max-h-24 overflow-y-auto rounded-md border-l-2 border-brand/35 bg-secondary/70 px-2.5 py-1.5"
+        >
+          <div className="space-y-0.5 text-[11px] leading-relaxed text-secondary-text sm:text-xs">
+            {commentLines.map((line, index) => {
+              const display = toDisplayCommentLine(line);
+              const isBlank = display.trim() === '';
+              return (
+                <p
+                  data-testid="PAMFormEnvironmentVarRow"
+                  key={`${item.key}-comment-${index}`}
+                  className={clsx(
+                    'whitespace-pre-wrap break-words',
+                    isBlank && 'h-2'
+                  )}
+                >
+                  {isBlank ? null : display}
+                </p>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className="env-var-row flex flex-wrap items-center gap-1.5 sm:flex-nowrap sm:gap-2">
         <input
           type="text"
@@ -128,19 +187,6 @@ export const PAMFormEnvironmentVarRow: React.FC<
           </button>
         ) : null}
       </div>
-      {item.comments && item.comments.length > 0 ? (
-        <div className="space-y-0.5 pl-0.5 font-mono text-[10px] leading-snug text-secondary-text sm:text-xs">
-          {item.comments.map((line, index) => (
-            <p
-              data-testid="PAMFormEnvironmentVarRow"
-              key={`${item.key}-comment-${index}`}
-              className="whitespace-pre-wrap"
-            >
-              {line === '' ? '\u00a0' : line}
-            </p>
-          ))}
-        </div>
-      ) : null}
       {errorMessage && (
         <div className="col-span-full mt-0.5 text-xs text-(--fe-color-error)">
           {t(errorMessage)}

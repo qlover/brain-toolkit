@@ -533,7 +533,7 @@ export function PAMProjectEnvironmentsPanel({
               {draftVariables.length === 0 ? (
                 <p className="text-sm text-tertiary-text">{tt.noEnvVar}</p>
               ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   {draftVariables.map((item) => (
                     <PAMFormEnvironmentVarRow
                       key={item.id ?? item.key}
