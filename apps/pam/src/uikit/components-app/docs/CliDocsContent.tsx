@@ -51,12 +51,12 @@ function DocSection({
 const linkButtonClass =
   'inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary-border bg-primary text-primary-text text-sm font-medium hover:bg-elevated transition';
 
-const INSTALL_SNIPPET = `npm install -g pamenv
+const INSTALL_SNIPPET = `npm install -g pamenv-cli
 # or
 npx pamenv --help
 
 # monorepo
-pnpm --filter pamenv build
+pnpm --filter pamenv-cli build
 pnpm pamenv --help`;
 
 const COMMANDS_SNIPPET = `pamenv login
