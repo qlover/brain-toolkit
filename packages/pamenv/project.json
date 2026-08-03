@@ -1,5 +1,5 @@
 {
-  "name": "pamenv",
+  "name": "pamenv-cli",
   "sourceRoot": "packages/pamenv/src",
   "projectType": "library",
   "targets": {

@@ -1,5 +1,5 @@
 {
-  "name": "pamenv",
+  "name": "pamenv-cli",
   "version": "1.1.0",
   "type": "module",
   "private": false,
@@ -40,6 +40,7 @@
     "brain toolkit",
     "pam",
     "pamenv",
+    "pamenv-cli",
     "dotenv"
   ],
   "author": "qlover",
