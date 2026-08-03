@@ -1,5 +1,23 @@
 # pam
 
+## 2.2.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 新增 pamenv CLI 使用文档页 ([f55f1b5](https://github.com/qlover/brain-toolkit/commit/f55f1b5e71c3f7b747aa2352323f4468a7e2b9b9)) ([#104](https://github.com/qlover/brain-toolkit/pull/104))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### 📝 Documentation
+
+- **pam:** 更新 CLI 文档页安装包名为 pamenv-cli ([7b3f206](https://github.com/qlover/brain-toolkit/commit/7b3f206e99d76e09ef80743185e3e2b8c90ba5e9)) ([#106](https://github.com/qlover/brain-toolkit/pull/106))
+
+  安装示例改为 pamenv-cli，命令示例仍保持 pamenv。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 2.1.0
 
 ### Minor Changes
