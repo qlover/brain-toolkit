@@ -24,6 +24,8 @@ pnpm pamenv login
 pnpm pamenv projects
 pnpm pamenv init                       # 交互创建项目（扫描 cwd）
 pnpm pamenv init -o ./packages/app     # 指定工作目录
+pnpm pamenv fork <slug|id>             # Fork 可读项目（敏感值清空）
+pnpm pamenv fork <slug|id> -y          # 使用默认 slug/name，跳过确认
 pnpm pamenv pull <slug|id>             # → ./.env.<环境名>
 pnpm pamenv pull <slug|id> -e staging
 pnpm pamenv pull <slug|id> -e staging -f   # 仅跳过「覆盖本地」冲突确认
@@ -85,6 +87,20 @@ pamenv push <slug> -e local
 ```text
 login → init（建项目 + 可选空 env）→ 编辑 .env.* → push → 之后 pull / push 往返
 ```
+
+---
+
+## `pamenv fork`
+
+Fork 可读项目（自己的或公开的）为私有副本，**敏感变量值会清空**，结构与非敏感值会复制。
+
+```bash
+pamenv fork <slug|id>
+pamenv fork <slug|id> --slug my-app-fork --name "My App (fork)"
+pamenv fork <slug|id> -y   # 默认 {slug}-fork / {name} (fork)，跳过确认
+```
+
+成功后提示用 `pamenv push <new-slug> -e <env>` 填入密钥。
 
 ---
 

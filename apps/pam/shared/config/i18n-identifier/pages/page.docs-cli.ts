@@ -90,6 +90,20 @@ export const PAGE_DOCS_CLI_SECTION_INIT = 'page_docs_cli:section__init';
 export const PAGE_DOCS_CLI_INIT_BODY = 'page_docs_cli:init__body';
 
 /**
+ * @description Fork section title
+ * @localZh Fork 项目
+ * @localEn Fork project
+ */
+export const PAGE_DOCS_CLI_SECTION_FORK = 'page_docs_cli:section__fork';
+
+/**
+ * @description Fork body
+ * @localZh `pamenv fork <slug|id>` 将可读项目（自己的或公开的）复制为私有项目。敏感变量值会被清空，环境结构与非敏感值会保留。可交互确认 slug/name，或用 `--slug` / `--name` / `-y`。成功后用 `pamenv push <新slug> -e <env>` 填入密钥。
+ * @localEn `pamenv fork <slug|id>` copies a readable project (yours or public) into a private project. Sensitive values are cleared; env structure and non-sensitive values are kept. Confirm slug/name interactively, or pass `--slug` / `--name` / `-y`. Then fill secrets with `pamenv push <new-slug> -e <env>`.
+ */
+export const PAGE_DOCS_CLI_FORK_BODY = 'page_docs_cli:fork__body';
+
+/**
  * @description Sync section title
  * @localZh Pull / Push 同步
  * @localEn Pull / Push sync

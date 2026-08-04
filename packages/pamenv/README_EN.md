@@ -23,6 +23,8 @@ pamenv login
 pamenv projects
 pamenv init                       # interactive create (scans cwd)
 pamenv init -o ./packages/app
+pamenv fork <slug|id>             # fork readable project (secrets cleared)
+pamenv fork <slug|id> -y
 pamenv pull <slug|id> -e staging
 pamenv pull <slug|id> -e staging -f
 pamenv push <slug|id> -e staging
@@ -83,6 +85,20 @@ pamenv push <slug> -e local
 ```text
 login → init → edit .env.* → push → pull / push thereafter
 ```
+
+---
+
+## `pamenv fork`
+
+Fork a readable project (yours or public) into a private copy. **Sensitive values are cleared**; structure and non-sensitive values are copied.
+
+```bash
+pamenv fork <slug|id>
+pamenv fork <slug|id> --slug my-app-fork --name "My App (fork)"
+pamenv fork <slug|id> -y
+```
+
+Then fill secrets with `pamenv push <new-slug> -e <env>`.
 
 ---
 
