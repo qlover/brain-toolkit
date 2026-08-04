@@ -15,6 +15,7 @@ export type {
   PamCliCreateProjectInputType,
   PamCliEnvironmentSummaryType,
   PamCliExportResultType,
+  PamCliForkProjectInputType,
   PamCliLocalEnvOptionsType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,

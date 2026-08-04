@@ -90,6 +90,14 @@ export type PamCliCreateProjectInputType = {
 };
 
 /**
+ * Optional overrides for `POST /api/pam/fork/:id`.
+ */
+export type PamCliForkProjectInputType = {
+  readonly slug?: string;
+  readonly name?: string;
+};
+
+/**
  * Environment detail from list API (variables may be redacted).
  */
 export type PamCliRemoteEnvironmentType = {

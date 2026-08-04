@@ -7,6 +7,7 @@ import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInte
 import type {
   PamCliCreateProjectInputType,
   PamCliExportResultType,
+  PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliVariableInputType
@@ -184,6 +185,33 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     );
 
     return created;
+  }
+
+  /**
+   * @override
+   */
+  public async forkProject(
+    sourceProjectId: string,
+    options?: PamCliForkProjectInputType
+  ): Promise<PamCliProjectType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+    const body: PamCliForkProjectInputType = {
+      ...(options?.slug?.trim() ? { slug: options.slug.trim() } : {}),
+      ...(options?.name?.trim() ? { name: options.name.trim() } : {})
+    };
+
+    return this.requestJson<PamCliProjectType>(
+      `${baseUrl}/api/pam/fork/${sourceProjectId}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      }
+    );
   }
 
   /**
