@@ -1,5 +1,49 @@
 # pam
 
+## 2.3.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 支持 Fork 项目并剥离敏感变量 ([f6fa207](https://github.com/qlover/brain-toolkit/commit/f6fa2070dffdd3900f11a9aa190470389139798e)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  允许登录用户从可读项目派生私有副本，复制环境结构但不复制敏感值。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### 🐞 Bug Fixes
+
+- **pam:** 移除 fork 测试中无效的 is_deleted 字段 ([d2e0c88](https://github.com/qlover/brain-toolkit/commit/d2e0c8895265e8b5d4033c51b80029b73706862c)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  PAMProjectDetail 不含 is_deleted，对齐类型以通过 tsc。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 防止环境变量注释过长导致横向滚动 ([6ba47bf](https://github.com/qlover/brain-toolkit/commit/6ba47bf227c95d96f663e7af1d87a40987c250c3)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  长无断注释在导入后撑开布局，限制容器宽度并强制换行。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 软删后释放 slug 供复用 ([b31ce59](https://github.com/qlover/brain-toolkit/commit/b31ce597652b28dd7120f061c4e057f058dc4d03)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  将全表 UNIQUE 改为仅未删除行唯一，并补充迁移脚本。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### 📝 Documentation
+
+- 补充 pamenv init 与 Web CLI 文档 ([fd387c4](https://github.com/qlover/brain-toolkit/commit/fd387c4ca321c562967ddd2a118c8d231a9007a1)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  说明扫描默认值、环境规则、slug 软删复用及典型流程。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- 补充 pamenv fork 与 Web CLI 文档 ([8f58563](https://github.com/qlover/brain-toolkit/commit/8f585631f0a3ed29e5d0b3312449b5549d9fbd08)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 2.2.0
 
 ### Minor Changes
