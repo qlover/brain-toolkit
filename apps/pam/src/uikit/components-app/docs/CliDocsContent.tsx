@@ -61,6 +61,8 @@ pnpm pamenv --help`;
 
 const COMMANDS_SNIPPET = `pamenv login
 pamenv projects
+pamenv init
+pamenv init -o ./packages/app
 pamenv pull <slug|id>
 pamenv pull <slug|id> -e staging
 pamenv pull <slug|id> -e staging -f
@@ -69,6 +71,12 @@ pamenv push <slug|id> -e staging -y
 pamenv push <slug|id> -e staging -f
 pamenv push <slug|id> -e staging --show-values
 pamenv logout`;
+
+const INIT_SNIPPET = `pamenv login
+cd your-project
+pamenv init
+# then upload variables
+pamenv push <slug> -e local`;
 
 const SENSITIVE_SNIPPET = `# DB password
 # pam:sensitive
@@ -119,6 +127,11 @@ pamenv logout`}</CodeBlock>
       <DocSection id="commands" title={tt.sectionCommands}>
         <p className={proseClass}>{tt.commandsBody}</p>
         <CodeBlock>{COMMANDS_SNIPPET}</CodeBlock>
+      </DocSection>
+
+      <DocSection id="init" title={tt.sectionInit}>
+        <p className={proseClass}>{tt.initBody}</p>
+        <CodeBlock>{INIT_SNIPPET}</CodeBlock>
       </DocSection>
 
       <DocSection id="sync" title={tt.sectionSync}>

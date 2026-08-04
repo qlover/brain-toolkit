@@ -17,6 +17,8 @@ export const cliDocsI18n = Object.freeze({
   loginBody: i18nKeys.PAGE_DOCS_CLI_LOGIN_BODY,
   sectionCommands: i18nKeys.PAGE_DOCS_CLI_SECTION_COMMANDS,
   commandsBody: i18nKeys.PAGE_DOCS_CLI_COMMANDS_BODY,
+  sectionInit: i18nKeys.PAGE_DOCS_CLI_SECTION_INIT,
+  initBody: i18nKeys.PAGE_DOCS_CLI_INIT_BODY,
   sectionSync: i18nKeys.PAGE_DOCS_CLI_SECTION_SYNC,
   syncBody: i18nKeys.PAGE_DOCS_CLI_SYNC_BODY,
   sectionSensitive: i18nKeys.PAGE_DOCS_CLI_SECTION_SENSITIVE,
