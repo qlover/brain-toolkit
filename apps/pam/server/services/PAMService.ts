@@ -9,6 +9,7 @@ import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUt
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
+import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_ENV_ID_NOT_EXISTS,
@@ -34,7 +35,6 @@ import {
   PAMPublicType,
   type PAMProjectFork
 } from '@schemas/PAMProjectSchema';
-import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type {
   PAMServiceInterface,

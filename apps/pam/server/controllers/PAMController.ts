@@ -113,9 +113,7 @@ export class PAMController {
       body = {};
     }
 
-    const parsed = isEmpty(body)
-      ? {}
-      : PAMProjectForkSchema.parse(body ?? {});
+    const parsed = isEmpty(body) ? {} : PAMProjectForkSchema.parse(body ?? {});
 
     return this.pamService.forkProject(id, parsed);
   }

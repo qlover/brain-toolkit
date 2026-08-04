@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import {
   PAMProjectEnvKey,
   PAMPublicType,
   type PAMProjectDetail
 } from '@schemas/PAMProjectSchema';
-import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 
 const sourceDetail = (): PAMProjectDetail => ({
   id: '11111111-1111-1111-1111-111111111111',
@@ -15,7 +15,6 @@ const sourceDetail = (): PAMProjectDetail => ({
   stack: 'next',
   repo_url: 'https://example.com/repo',
   is_public: PAMPublicType.public,
-  is_deleted: 0 as never,
   owner_id: '22222222-2222-2222-2222-222222222222',
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',

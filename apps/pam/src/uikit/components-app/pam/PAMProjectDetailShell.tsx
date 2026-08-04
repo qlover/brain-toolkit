@@ -18,8 +18,8 @@ import React, {
 } from 'react';
 import { Link, usePathname } from '@/i18n/routing';
 import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
-import { useIOC } from '@/uikit/hook/useIOC';
 import { PAMProjectForkButton } from '@/uikit/components-app/pam/PAMProjectForkButton';
+import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
 import {
   ROUTE_HOME,

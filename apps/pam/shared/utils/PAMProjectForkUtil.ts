@@ -1,4 +1,7 @@
-import type { PAMEnvWriteable, PAMVariable } from '@schemas/PAMEnvironmentSchema';
+import type {
+  PAMEnvWriteable,
+  PAMVariable
+} from '@schemas/PAMEnvironmentSchema';
 import {
   PAMProjectEnvKey,
   PAMPublicType,
