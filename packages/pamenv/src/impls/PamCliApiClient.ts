@@ -5,6 +5,7 @@ import type {
 } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
+  PamCliCreateProjectInputType,
   PamCliExportResultType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
@@ -159,6 +160,30 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     });
 
     return result.items || [];
+  }
+
+  /**
+   * @override
+   */
+  public async createProject(
+    payload: PamCliCreateProjectInputType
+  ): Promise<PamCliProjectType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+
+    const created = await this.requestJson<PamCliProjectType>(
+      `${baseUrl}/api/pam/create`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    return created;
   }
 
   /**

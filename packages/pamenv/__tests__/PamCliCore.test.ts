@@ -6,6 +6,7 @@ import { PamCliDotenvUtil } from '../src/impls/PamCliDotenvUtil';
 import { PamCliEnvDiffUtil } from '../src/impls/PamCliEnvDiffUtil';
 import { PamCliEnvironmentSelectUtil } from '../src/impls/PamCliEnvironmentSelectUtil';
 import { PamCliLocalEnvFileUtil } from '../src/impls/PamCliLocalEnvFileUtil';
+import { PamCliLocalProjectScanUtil } from '../src/impls/PamCliLocalProjectScanUtil';
 import { PamCliPrivateFsUtil } from '../src/impls/PamCliPrivateFsUtil';
 import { PamCliProjectResolveUtil } from '../src/impls/PamCliProjectResolveUtil';
 import {
@@ -244,6 +245,96 @@ describe('PamCliProjectResolveUtil', () => {
       )
     ).toBe(true);
     expect(PamCliProjectResolveUtil.isLikelyProjectId('alpha-app')).toBe(false);
+  });
+
+  it('matches exact slug only', () => {
+    const projects: PamCliProjectType[] = [
+      { id: '1', slug: 'demo-app', name: 'Demo' },
+      { id: '2', slug: 'demo', name: 'Short' }
+    ];
+    expect(PamCliProjectResolveUtil.findExactSlug(projects, 'demo')?.id).toBe(
+      '2'
+    );
+    expect(
+      PamCliProjectResolveUtil.findExactSlug(projects, 'demo-app')?.id
+    ).toBe('1');
+    expect(PamCliProjectResolveUtil.findExactSlug(projects, 'de')).toBe(
+      undefined
+    );
+  });
+});
+
+describe('PamCliLocalProjectScanUtil', () => {
+  it('normalizes package names into slugs', () => {
+    expect(PamCliLocalProjectScanUtil.toSlug('@scope/My App')).toBe(
+      'scope-my-app'
+    );
+    expect(PamCliLocalProjectScanUtil.toSlug('Foo_Bar')).toBe('foo-bar');
+  });
+
+  it('maps dotenv filenames to env names', () => {
+    expect(PamCliLocalProjectScanUtil.envNameFromFileName('.env')).toBe(
+      'local'
+    );
+    expect(PamCliLocalProjectScanUtil.envNameFromFileName('.env.local')).toBe(
+      'local'
+    );
+    expect(PamCliLocalProjectScanUtil.envNameFromFileName('.env.staging')).toBe(
+      'staging'
+    );
+    expect(PamCliLocalProjectScanUtil.envNameFromFileName('notes.txt')).toBe(
+      null
+    );
+  });
+
+  it('dedupes local from .env and .env.local', () => {
+    expect(
+      PamCliLocalProjectScanUtil.uniqueEnvNames([
+        { fileName: '.env', envName: 'local' },
+        { fileName: '.env.local', envName: 'local' },
+        { fileName: '.env.prod', envName: 'prod' }
+      ])
+    ).toEqual(['local', 'prod']);
+  });
+
+  it('normalizes git remotes to https', () => {
+    expect(
+      PamCliLocalProjectScanUtil.normalizeGitRemoteUrl(
+        'git@github.com:qlover/brain-toolkit.git'
+      )
+    ).toBe('https://github.com/qlover/brain-toolkit');
+    expect(
+      PamCliLocalProjectScanUtil.normalizeGitRemoteUrl(
+        'https://github.com/qlover/brain-toolkit.git'
+      )
+    ).toBe('https://github.com/qlover/brain-toolkit');
+  });
+
+  it('accepts http(s) homepage urls only', () => {
+    expect(
+      PamCliLocalProjectScanUtil.normalizeHomepageUrl(
+        'https://example.com/app'
+      )
+    ).toBe('https://example.com/app');
+    expect(PamCliLocalProjectScanUtil.normalizeHomepageUrl('not-a-url')).toBe(
+      ''
+    );
+    expect(PamCliLocalProjectScanUtil.isValidEnvUrl('http://localhost')).toBe(
+      true
+    );
+  });
+
+  it('extracts repo name from git remote urls', () => {
+    expect(
+      PamCliLocalProjectScanUtil.repoNameFromRemoteUrl(
+        'git@github.com:qlover/brain-toolkit.git'
+      )
+    ).toBe('brain-toolkit');
+    expect(
+      PamCliLocalProjectScanUtil.repoNameFromRemoteUrl(
+        'https://github.com/qlover/pam.git'
+      )
+    ).toBe('pam');
   });
 });
 

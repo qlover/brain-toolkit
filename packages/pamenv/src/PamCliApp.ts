@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { InitCommand } from './commands/InitCommand';
 import { LoginCommand } from './commands/LoginCommand';
 import { ProjectsCommand } from './commands/ProjectsCommand';
 import { PullCommand } from './commands/PullCommand';
@@ -86,6 +87,18 @@ export class PamCliApp {
       .argument('[keyword]', 'Optional search keyword')
       .action(async (keyword?: string) => {
         await new ProjectsCommand(this.apiClient).run(keyword);
+      });
+
+    program
+      .command('init')
+      .description(
+        'Interactively create a PAM project from the current directory'
+      )
+      .option('-o, --out <dir>', 'Working directory (default: cwd)')
+      .action(async (options: { out?: string }) => {
+        await new InitCommand(this.apiClient).run({
+          outDir: options.out
+        });
       });
 
     program

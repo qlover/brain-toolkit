@@ -49,6 +49,24 @@ export class PamCliProjectResolveUtil {
   }
 
   /**
+   * Finds a project by exact slug only (no substring match).
+   *
+   * @param projects - Candidate projects
+   * @param slug - Exact slug
+   * @returns Matching project or undefined
+   */
+  public static findExactSlug(
+    projects: readonly PamCliProjectType[],
+    slug: string
+  ): PamCliProjectType | undefined {
+    const trimmed = slug.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    return projects.find((item) => item.slug === trimmed);
+  }
+
+  /**
    * Resolves a project via search, with uuid fallback to a full list.
    *
    * @param apiClient - Authenticated PAM API client
