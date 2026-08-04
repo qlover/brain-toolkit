@@ -1,5 +1,33 @@
 # pamenv-cli
 
+## 1.3.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** 新增交互式 init 创建项目 ([91d2611](https://github.com/qlover/brain-toolkit/commit/91d2611ef31ba96f7516811866c35d7f913b41f4)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  扫描 package.json/git/.env 提供默认值，确认后创建项目与环境。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pamenv:** 新增 fork 命令以复刻 Web 端 fork 流程 ([421fd03](https://github.com/qlover/brain-toolkit/commit/421fd03920950dd58afe48ef1b689cded4d17bb9)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### 📝 Documentation
+
+- 补充 pamenv init 与 Web CLI 文档 ([fd387c4](https://github.com/qlover/brain-toolkit/commit/fd387c4ca321c562967ddd2a118c8d231a9007a1)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  说明扫描默认值、环境规则、slug 软删复用及典型流程。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- 补充 pamenv fork 与 Web CLI 文档 ([8f58563](https://github.com/qlover/brain-toolkit/commit/8f585631f0a3ed29e5d0b3312449b5549d9fbd08)) ([#108](https://github.com/qlover/brain-toolkit/pull/108))
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 1.2.0
 
 ### Minor Changes
