@@ -9,6 +9,7 @@ import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUt
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
+import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_ENV_ID_NOT_EXISTS,
@@ -30,7 +31,9 @@ import {
   PAMProjectEnvKey,
   PAMProjectDetail,
   PAMProjectUpdate,
-  PAMProjectCreate
+  PAMProjectCreate,
+  PAMPublicType,
+  type PAMProjectFork
 } from '@schemas/PAMProjectSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type {
@@ -360,7 +363,8 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async createProject(
-    params: PAMProjectCreate
+    params: PAMProjectCreate,
+    options?: { allowEmptySensitive?: boolean }
   ): Promise<PAMProjectDetail> {
     const { slug, [PAMProjectEnvKey]: envs } = params;
     // slug 不能重复
@@ -385,7 +389,9 @@ export class PAMService implements PAMServiceInterface {
       ...env,
       variables: PAMEnvVariableNormalizeUtil.normalizeVariables(env.variables)
     }));
-    this.assertSensitiveValuesPresent(normalizedEnvs);
+    if (!options?.allowEmptySensitive) {
+      this.assertSensitiveValuesPresent(normalizedEnvs);
+    }
 
     const user = await this.userService.getUser(true);
 
@@ -396,6 +402,64 @@ export class PAMService implements PAMServiceInterface {
     });
 
     return this.redactProjectDetail(detail);
+  }
+
+  /**
+   * @override
+   */
+  public async forkProject(
+    sourceId: string,
+    options?: PAMProjectFork
+  ): Promise<PAMProjectDetail> {
+    const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const source = await this.projectRepo.getProjectWithEnvironments(sourceId);
+    if (!source) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const canRead =
+      source.is_public === PAMPublicType.public || source.owner_id === user.id;
+    if (!canRead) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const preferredSlug =
+      options?.slug?.trim() || PAMProjectForkUtil.defaultSlug(source.slug);
+    const slug = await this.resolveAvailableForkSlug(preferredSlug);
+    const name =
+      options?.name?.trim() || PAMProjectForkUtil.defaultName(source.name);
+
+    const createPayload = PAMProjectForkUtil.buildCreatePayload(source, {
+      slug,
+      name
+    });
+
+    return this.createProject(createPayload, { allowEmptySensitive: true });
+  }
+
+  /**
+   * Picks the first unused slug from fork candidates.
+   *
+   * @param preferredSlug - Preferred slug
+   * @returns Available slug
+   * @throws When every candidate is taken
+   */
+  protected async resolveAvailableForkSlug(
+    preferredSlug: string
+  ): Promise<string> {
+    const candidates = PAMProjectForkUtil.slugCandidates(preferredSlug);
+    for (const candidate of candidates) {
+      const exists = await this.projectRepo.hasProjectWithSlug(candidate);
+      if (!exists) {
+        return candidate;
+      }
+    }
+
+    throw new ExecutorError(API_PAM_SLUG_EXISTS, { slug: preferredSlug });
   }
 
   /**

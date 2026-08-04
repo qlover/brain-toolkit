@@ -211,6 +211,15 @@ export const API_PAM_DETAIL = '/api/pam/detail/:id' as const;
 export const API_PAM_EDIT = '/api/pam/edit/:id' as const;
 
 /**
+ * API path: `/api/pam/fork/:id`
+ *
+ * @see [src/app/api/pam/fork/[id]/route.ts](../../src/app/api/pam/fork/[id]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/fork/[id]/route.ts`
+ */
+export const API_PAM_FORK = '/api/pam/fork/:id' as const;
+
+/**
  * API path: `/api/pam/search`
  *
  * @see [src/app/api/pam/search/route.ts](../../src/app/api/pam/search/route.ts)
@@ -323,6 +332,7 @@ export type ApiRoutePath =
   | typeof API_PAM_DELETE
   | typeof API_PAM_DETAIL
   | typeof API_PAM_EDIT
+  | typeof API_PAM_FORK
   | typeof API_PAM_SEARCH
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN

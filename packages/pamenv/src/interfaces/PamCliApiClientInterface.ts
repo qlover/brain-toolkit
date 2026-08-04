@@ -1,5 +1,7 @@
 import type {
+  PamCliCreateProjectInputType,
   PamCliExportResultType,
+  PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliVariableInputType
@@ -71,6 +73,24 @@ export interface PamCliApiClientInterface {
    * @param keyword - Optional search keyword / slug fragment
    */
   listProjects(keyword?: string): Promise<PamCliProjectType[]>;
+
+  /**
+   * Creates a new PAM project (optionally with environments).
+   *
+   * @param payload - Create body matching PAM create schema
+   */
+  createProject(payload: PamCliCreateProjectInputType): Promise<PamCliProjectType>;
+
+  /**
+   * Forks a readable project into a private owned copy (sensitive values cleared).
+   *
+   * @param sourceProjectId - Source project uuid
+   * @param options - Optional slug / name overrides
+   */
+  forkProject(
+    sourceProjectId: string,
+    options?: PamCliForkProjectInputType
+  ): Promise<PamCliProjectType>;
 
   /**
    * Lists environments for a project (variables redacted; sensitive flags kept).

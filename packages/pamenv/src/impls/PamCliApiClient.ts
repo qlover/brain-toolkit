@@ -5,7 +5,9 @@ import type {
 } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
+  PamCliCreateProjectInputType,
   PamCliExportResultType,
+  PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliVariableInputType
@@ -159,6 +161,57 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     });
 
     return result.items || [];
+  }
+
+  /**
+   * @override
+   */
+  public async createProject(
+    payload: PamCliCreateProjectInputType
+  ): Promise<PamCliProjectType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+
+    const created = await this.requestJson<PamCliProjectType>(
+      `${baseUrl}/api/pam/create`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    return created;
+  }
+
+  /**
+   * @override
+   */
+  public async forkProject(
+    sourceProjectId: string,
+    options?: PamCliForkProjectInputType
+  ): Promise<PamCliProjectType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+    const body: PamCliForkProjectInputType = {
+      ...(options?.slug?.trim() ? { slug: options.slug.trim() } : {}),
+      ...(options?.name?.trim() ? { name: options.name.trim() } : {})
+    };
+
+    return this.requestJson<PamCliProjectType>(
+      `${baseUrl}/api/pam/fork/${sourceProjectId}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      }
+    );
   }
 
   /**

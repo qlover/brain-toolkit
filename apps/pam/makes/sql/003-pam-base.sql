@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS pam_projects CASCADE;
 CREATE TABLE pam_projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    slug TEXT UNIQUE NOT NULL,
+    slug TEXT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     stack TEXT,
@@ -43,6 +43,10 @@ CREATE INDEX idx_pam_projects_owner_id ON pam_projects(owner_id);
 CREATE INDEX idx_pam_projects_visibility ON pam_projects(is_public);
 CREATE INDEX idx_pam_projects_category ON pam_projects(category);
 CREATE INDEX idx_pam_projects_slug ON pam_projects(slug);
+-- Active projects only: soft-deleted rows release the slug for reuse.
+CREATE UNIQUE INDEX idx_pam_projects_slug_active
+  ON pam_projects (slug)
+  WHERE is_deleted = 0;
 CREATE INDEX idx_pam_environments_project_id ON pam_environments(project_id);
 
 -- ============================================================

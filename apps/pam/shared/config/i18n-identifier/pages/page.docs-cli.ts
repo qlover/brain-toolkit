@@ -7,8 +7,8 @@ export const PAGE_DOCS_CLI_TITLE = 'page_docs_cli:title';
 
 /**
  * @description CLI docs meta description
- * @localZh 用 pamenv 在本地拉取与回写 PAM 多环境变量
- * @localEn Pull and push PAM multi-environment variables with pamenv
+ * @localZh 用 pamenv 初始化项目并在本地拉取与回写 PAM 多环境变量
+ * @localEn Initialize projects and pull/push PAM multi-environment variables with pamenv
  */
 export const PAGE_DOCS_CLI_DESCRIPTION = 'page_docs_cli:description';
 
@@ -21,15 +21,15 @@ export const PAGE_DOCS_CLI_CONTENT = 'page_docs_cli:content';
 
 /**
  * @description CLI docs keywords
- * @localZh pamenv, CLI, dotenv, pull, push, 环境变量
- * @localEn pamenv, CLI, dotenv, pull, push, environment variables
+ * @localZh pamenv, CLI, dotenv, init, pull, push, 环境变量
+ * @localEn pamenv, CLI, dotenv, init, pull, push, environment variables
  */
 export const PAGE_DOCS_CLI_KEYWORDS = 'page_docs_cli:keywords';
 
 /**
  * @description Page intro
- * @localZh pamenv 把 PAM 项目里的环境变量同步到当前目录的 `.env.<环境名>`，本地改完后再 push 回去。适合本地开发与 CI 之外的手工同步。
- * @localEn pamenv syncs PAM project environments into `.env.<environment>` in your working directory, then pushes local edits back. It is meant for local development and manual sync outside CI.
+ * @localZh pamenv 可从当前目录交互式创建 PAM 项目（init），并把环境变量同步到 `.env.<环境名>`，本地改完后再 push 回去。适合本地开发与手工同步。
+ * @localEn pamenv can interactively create a PAM project from your working directory (init), sync environments into `.env.<environment>`, then push local edits back. It is meant for local development and manual sync.
  */
 export const PAGE_DOCS_CLI_INTRO = 'page_docs_cli:intro';
 
@@ -70,10 +70,38 @@ export const PAGE_DOCS_CLI_SECTION_COMMANDS = 'page_docs_cli:section__commands';
 
 /**
  * @description Commands body
- * @localZh 本地文件名为 `.env.<环境名>`。未传 `-e` 时使用环境列表中的第一个环境。
- * @localEn Local files are named `.env.<environment>`. Without `-e`, the first environment in the list is used.
+ * @localZh 本地文件名为 `.env.<环境名>`（如环境 local 对应 `.env.local`）。未传 `-e` 时使用环境列表中的第一个环境。新建项目请用 `pamenv init`。
+ * @localEn Local files are named `.env.<environment>` (e.g. env `local` → `.env.local`). Without `-e`, the first environment in the list is used. Use `pamenv init` to create a new project.
  */
 export const PAGE_DOCS_CLI_COMMANDS_BODY = 'page_docs_cli:commands__body';
+
+/**
+ * @description Init section title
+ * @localZh Init 创建项目
+ * @localEn Init (create project)
+ */
+export const PAGE_DOCS_CLI_SECTION_INIT = 'page_docs_cli:section__init';
+
+/**
+ * @description Init body
+ * @localZh 登录后在项目目录运行 `pamenv init`（可用 `-o` 指定目录）。CLI 扫描 package.json（name / description / homepage）与 git origin；无 package 时用仓库名作为默认 project name。你先确认 name，再确认由 name 转换的 slug（转不出则无默认）。有 `.env` / `.env.local` / `.env.xxx` 时多选环境并确认 env name 与 url（url 默认优先 homepage）；`.env` 与 `.env.local` 合并为 local。无 env 文件时不创建环境。init 只创建空环境，变量请随后 `pamenv push <slug> -e <env>`。slug 在未删除项目间全局唯一；软删后可复用。已存在且属于你则提示改用 push。
+ * @localEn After login, run `pamenv init` in the project directory (`-o` sets the cwd). The CLI scans package.json (name / description / homepage) and git origin; without a package it uses the repo name as the default project name. You confirm name first, then the slug derived from that name (no default if conversion is empty). When `.env` / `.env.local` / `.env.xxx` exist, multi-select environments and confirm each env name and url (url defaults to homepage when valid); `.env` and `.env.local` merge into `local`. With no env files, no environments are created. init creates empty envs only — upload with `pamenv push <slug> -e <env>`. Slugs are globally unique among non-deleted projects and reusable after soft-delete. If the slug already exists and you own it, use push instead.
+ */
+export const PAGE_DOCS_CLI_INIT_BODY = 'page_docs_cli:init__body';
+
+/**
+ * @description Fork section title
+ * @localZh Fork 项目
+ * @localEn Fork project
+ */
+export const PAGE_DOCS_CLI_SECTION_FORK = 'page_docs_cli:section__fork';
+
+/**
+ * @description Fork body
+ * @localZh `pamenv fork <slug|id>` 将可读项目（自己的或公开的）复制为私有项目。敏感变量值会被清空，环境结构与非敏感值会保留。可交互确认 slug/name，或用 `--slug` / `--name` / `-y`。成功后用 `pamenv push <新slug> -e <env>` 填入密钥。
+ * @localEn `pamenv fork <slug|id>` copies a readable project (yours or public) into a private project. Sensitive values are cleared; env structure and non-sensitive values are kept. Confirm slug/name interactively, or pass `--slug` / `--name` / `-y`. Then fill secrets with `pamenv push <new-slug> -e <env>`.
+ */
+export const PAGE_DOCS_CLI_FORK_BODY = 'page_docs_cli:fork__body';
 
 /**
  * @description Sync section title
@@ -113,8 +141,8 @@ export const PAGE_DOCS_CLI_SECTION_NOTES = 'page_docs_cli:section__notes';
 
 /**
  * @description Notes body
- * @localZh 导出解密仅项目 owner 可用。本地 `~/.pam/config.json`、`~/.pam/sync/...` 与写出的 `.env.<env>` 在 POSIX 上按 0600 落盘。旧版无 `jti` 的 Token 会失效，需重新 `pamenv login`。
- * @localEn Decrypted export is owner-only. Local `~/.pam/config.json`, `~/.pam/sync/...`, and written `.env.<env>` files use mode 0600 on POSIX. Legacy tokens without `jti` are rejected; run `pamenv login` again.
+ * @localZh 导出解密与 push 仅项目 owner 可用。本地 `~/.pam/config.json`、`~/.pam/sync/...` 与写出的 `.env.<env>` 在 POSIX 上按 0600 落盘。改 CLI 源码后需先 build 再执行。旧版无 `jti` 的 Token 会失效，需重新 `pamenv login`。
+ * @localEn Decrypted export and push are owner-only. Local `~/.pam/config.json`, `~/.pam/sync/...`, and written `.env.<env>` files use mode 0600 on POSIX. Rebuild the CLI after source changes before running. Legacy tokens without `jti` are rejected; run `pamenv login` again.
  */
 export const PAGE_DOCS_CLI_NOTES_BODY = 'page_docs_cli:notes__body';
 

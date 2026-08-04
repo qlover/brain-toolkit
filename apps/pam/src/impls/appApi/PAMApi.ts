@@ -8,7 +8,8 @@ import {
   buildApiPamEdit,
   buildApiPamEnvironmentDelete,
   buildApiPamEnvironments,
-  buildApiPamEnvironmentVariables
+  buildApiPamEnvironmentVariables,
+  buildApiPamFork
 } from '@config/route';
 import type {
   PAMEnvCreate,
@@ -20,6 +21,7 @@ import {
   PAMSearchParams,
   PAMProjectDetail,
   PAMProjectCreate,
+  PAMProjectFork,
   PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import { AppApiRequester } from './AppApiRequester';
@@ -85,6 +87,25 @@ export class PAMApi {
       NextKitApiSuccess<PAMProjectDetail>,
       PAMProjectCreate
     >(API_PAM_CREATE, data);
+
+    return response.data.data!;
+  }
+
+  /**
+   * Forks a readable project into a private owned copy.
+   *
+   * @param sourceId - Source project id
+   * @param data - Optional slug / name overrides
+   * @returns Newly created project detail
+   */
+  public async forkProject(
+    sourceId: string,
+    data?: PAMProjectFork
+  ): Promise<PAMProjectDetail> {
+    const response = await this.appApiRequester.post<
+      NextKitApiSuccess<PAMProjectDetail>,
+      PAMProjectFork | Record<string, never>
+    >(buildApiPamFork(sourceId), data ?? {});
 
     return response.data.data!;
   }

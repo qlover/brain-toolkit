@@ -11,10 +11,18 @@ export type {
 } from './interfaces/PamCliApiClientInterface';
 export type {
   PamCliConfigFileType,
+  PamCliCreateEnvironmentInputType,
+  PamCliCreateProjectInputType,
   PamCliEnvironmentSummaryType,
   PamCliExportResultType,
+  PamCliForkProjectInputType,
   PamCliLocalEnvOptionsType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliVariableInputType
 } from './interfaces/PamCliTypes';
+export { PamCliLocalProjectScanUtil } from './impls/PamCliLocalProjectScanUtil';
+export type {
+  PamCliDetectedEnvFileType,
+  PamCliLocalProjectScanType
+} from './impls/PamCliLocalProjectScanUtil';

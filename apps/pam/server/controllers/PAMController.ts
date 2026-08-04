@@ -12,6 +12,7 @@ import {
 import {
   PAMProjectCreateSchema,
   PAMProjectDetail,
+  PAMProjectForkSchema,
   PAMProjectUpdateSchema,
   SearchPAMProject
 } from '@schemas/PAMProjectSchema';
@@ -91,6 +92,30 @@ export class PAMController {
     const parsed = PAMProjectCreateSchema.parse(body);
 
     return this.pamService.createProject(parsed);
+  }
+
+  /**
+   * Forks a readable project into a private owned copy.
+   *
+   * @param sourceId - Source project id path param
+   * @param request - Optional `{ slug?, name? }` body (empty body allowed)
+   * @returns Newly created project detail
+   */
+  public async forkProject(
+    sourceId: string,
+    request: NextRequest
+  ): Promise<PAMProjectDetail> {
+    const id = uuidSchema.parse(sourceId);
+    let body: unknown = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+
+    const parsed = isEmpty(body) ? {} : PAMProjectForkSchema.parse(body ?? {});
+
+    return this.pamService.forkProject(id, parsed);
   }
 
   public deleteProject(id: string): unknown {

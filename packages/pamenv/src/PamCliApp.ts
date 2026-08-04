@@ -1,4 +1,6 @@
 import { Command } from 'commander';
+import { ForkCommand } from './commands/ForkCommand';
+import { InitCommand } from './commands/InitCommand';
 import { LoginCommand } from './commands/LoginCommand';
 import { ProjectsCommand } from './commands/ProjectsCommand';
 import { PullCommand } from './commands/PullCommand';
@@ -87,6 +89,40 @@ export class PamCliApp {
       .action(async (keyword?: string) => {
         await new ProjectsCommand(this.apiClient).run(keyword);
       });
+
+    program
+      .command('init')
+      .description(
+        'Interactively create a PAM project from the current directory'
+      )
+      .option('-o, --out <dir>', 'Working directory (default: cwd)')
+      .action(async (options: { out?: string }) => {
+        await new InitCommand(this.apiClient).run({
+          outDir: options.out
+        });
+      });
+
+    program
+      .command('fork')
+      .description(
+        'Fork a readable PAM project (sensitive values cleared)'
+      )
+      .argument('<slug|id>', 'Source project slug or project id')
+      .option('--slug <slug>', 'Slug for the forked project')
+      .option('--name <name>', 'Display name for the forked project')
+      .option('-y, --yes', 'Use defaults / flags without confirmation')
+      .action(
+        async (
+          projectRef: string,
+          options: { slug?: string; name?: string; yes?: boolean }
+        ) => {
+          await new ForkCommand(this.apiClient).run(projectRef, {
+            slug: options.slug,
+            name: options.name,
+            yes: options.yes
+          });
+        }
+      );
 
     program
       .command('pull')

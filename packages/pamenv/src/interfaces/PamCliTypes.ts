@@ -67,6 +67,37 @@ export type PamCliVariableInputType = {
 };
 
 /**
+ * Environment payload when creating a project from the CLI.
+ */
+export type PamCliCreateEnvironmentInputType = {
+  readonly name: string;
+  readonly url: string;
+  readonly variables?: readonly PamCliVariableInputType[];
+};
+
+/**
+ * Body for `POST /api/pam/create`.
+ */
+export type PamCliCreateProjectInputType = {
+  readonly slug: string;
+  readonly name: string;
+  readonly category: string;
+  readonly is_public: 0 | 1;
+  readonly description?: string;
+  readonly stack?: string;
+  readonly repo_url?: string;
+  readonly environments?: readonly PamCliCreateEnvironmentInputType[];
+};
+
+/**
+ * Optional overrides for `POST /api/pam/fork/:id`.
+ */
+export type PamCliForkProjectInputType = {
+  readonly slug?: string;
+  readonly name?: string;
+};
+
+/**
  * Environment detail from list API (variables may be redacted).
  */
 export type PamCliRemoteEnvironmentType = {

@@ -77,23 +77,26 @@ export const PAMFormEnvironmentVarRow: React.FC<
   const commentLines = visibleCommentLines(item.comments);
 
   return (
-    <div data-testid="PAMFormEnvironmentVarRow" className="space-y-1">
+    <div
+      data-testid="PAMFormEnvironmentVarRow"
+      className="min-w-0 max-w-full space-y-1"
+    >
       {commentLines.length > 0 ? (
         <div
           data-testid="PAMFormEnvironmentVarComments"
           title={commentLines.join('\n')}
-          className="max-h-24 overflow-y-auto rounded-md border-l-2 border-brand/35 bg-secondary/70 px-2.5 py-1.5"
+          className="max-h-24 min-w-0 max-w-full overflow-x-hidden overflow-y-auto rounded-md border-l-2 border-brand/35 bg-secondary/70 px-2.5 py-1.5"
         >
-          <div className="space-y-0.5 text-[11px] leading-relaxed text-secondary-text sm:text-xs">
+          <div className="min-w-0 space-y-0.5 text-[11px] leading-relaxed text-secondary-text sm:text-xs">
             {commentLines.map((line, index) => {
               const display = toDisplayCommentLine(line);
               const isBlank = display.trim() === '';
               return (
                 <p
-                  data-testid="PAMFormEnvironmentVarRow"
+                  data-testid="PAMFormEnvironmentVarCommentLine"
                   key={`${item.key}-comment-${index}`}
                   className={clsx(
-                    'whitespace-pre-wrap break-words',
+                    'max-w-full wrap-break-word break-all whitespace-pre-wrap',
                     isBlank && 'h-2'
                   )}
                 >
