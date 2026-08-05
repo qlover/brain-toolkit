@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@wrksz/themes';
+import { ClientThemeProvider } from '@wrksz/themes/client';
 import { NextIntlClientProvider } from 'next-intl';
 import '@/styles/tailwind-pages.css';
 import '@/styles/pages.css';
@@ -14,9 +14,12 @@ import type { PagesRouterProps } from '@interfaces/PagesRouter';
  * Entry auth is middleware (LOGINED_PAGES); this shell only provides IOC,
  * i18n, theme, and client bootstrap.
  *
- * Use `ThemeProvider` from `@wrksz/themes` (not `/client`) so the anti-FOUC
- * inline script runs before paint — App→Pages navigations otherwise flash
- * default theme then restore `fe_theme` from storage.
+ * Use `ClientThemeProvider` (no inline script): anti-FOUC already runs in
+ * `_document` via `getPagesThemeInitScript`. `@wrksz/themes` ThemeProvider
+ * embeds `themeScript.toString()` which mismatches SSR vs client bundles.
+ *
+ * `timeZone` is required on Pages — without it next-intl reports
+ * ENVIRONMENT_FALLBACK during BootstrapsProvider SSR (PAM should add this too).
  */
 export default function App({
   Component,
@@ -27,8 +30,12 @@ export default function App({
 
   return (
     <IOCProvider>
-      <NextIntlClientProvider locale={locale} messages={pageProps.messages}>
-        <ThemeProvider
+      <NextIntlClientProvider
+        locale={locale}
+        messages={pageProps.messages}
+        timeZone="Asia/Shanghai"
+      >
+        <ClientThemeProvider
           themes={themeConfig.supportedThemes as unknown as string[]}
           attribute={themeConfig.domAttribute}
           defaultTheme={themeConfig.defaultTheme}
@@ -40,7 +47,7 @@ export default function App({
           <ClientRootProvider>
             <Component {...pageProps} />
           </ClientRootProvider>
-        </ThemeProvider>
+        </ClientThemeProvider>
       </NextIntlClientProvider>
     </IOCProvider>
   );

@@ -74,7 +74,11 @@ export default async function RootLayout({
     >
       <body className="font-sans antialiased">
         <IOCProvider>
-          <NextIntlClientProvider locale={locale} messages={messages}>
+          <NextIntlClientProvider
+            locale={locale}
+            messages={messages}
+            timeZone="Asia/Shanghai"
+          >
             <ThemeProvider
               themes={themeConfig.supportedThemes as unknown as string[]}
               attribute={themeConfig.domAttribute}
