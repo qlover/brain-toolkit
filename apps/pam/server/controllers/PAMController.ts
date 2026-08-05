@@ -48,12 +48,10 @@ export class PAMController {
     pamId: string,
     request: NextRequest
   ): Promise<PAMProjectDetail | null> {
-    const id = uuidSchema.parse(pamId);
-
     const withEnvironments = request.nextUrl.searchParams.get('isEnv') === '1';
 
     return this.pamService.getProjectDetail({
-      id,
+      id: pamId,
       withEnvironments
     });
   }
@@ -105,7 +103,6 @@ export class PAMController {
     sourceId: string,
     request: NextRequest
   ): Promise<PAMProjectDetail> {
-    const id = uuidSchema.parse(sourceId);
     let body: unknown = {};
     try {
       body = await request.json();
@@ -115,7 +112,7 @@ export class PAMController {
 
     const parsed = isEmpty(body) ? {} : PAMProjectForkSchema.parse(body ?? {});
 
-    return this.pamService.forkProject(id, parsed);
+    return this.pamService.forkProject(sourceId, parsed);
   }
 
   public deleteProject(id: string): unknown {

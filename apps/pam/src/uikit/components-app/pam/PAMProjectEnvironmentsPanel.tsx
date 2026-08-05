@@ -65,12 +65,12 @@ function formatImportResult(
  * <PAMProjectEnvironmentsPanel projectId={projectId} />
  */
 export function PAMProjectEnvironmentsPanel({
-  projectId
+  projectId: _routeProjectId
 }: PAMProjectEnvironmentsPanelProps) {
   const tt = usePageI18nMapping<PAMEnvironmentsI18nInterface>();
   const pamApi = useIOC(PAMApi);
   const dialogHandler = useIOC(I.DialogHandler);
-  const { canEdit } = usePAMProjectDetail();
+  const { projectId, canEdit } = usePAMProjectDetail();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [environments, setEnvironments] = useState<PAMEnvWriteable[]>([]);
@@ -113,6 +113,11 @@ export function PAMProjectEnvironmentsPanel({
   }, []);
 
   useStrictEffect(() => {
+    if (!projectId) {
+      setLoading(true);
+      return;
+    }
+
     setLoading(true);
 
     void pamApi

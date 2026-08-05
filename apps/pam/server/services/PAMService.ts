@@ -3,6 +3,7 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { uuidSchema } from '@qlover/next-kit/common';
 import { v4 as uuid } from 'uuid';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
@@ -209,15 +210,21 @@ export class PAMService implements PAMServiceInterface {
   public async getProjectDetail(
     params: ProjectDetailParams
   ): Promise<PAMProjectDetail | null> {
-    const { id, withEnvironments } = params;
+    const { id: idOrSlug, withEnvironments } = params;
     const user = await this.userService.getUser();
+
+    const resolvedId = await this.resolveProjectId(idOrSlug);
+    if (!resolvedId) {
+      return null;
+    }
 
     let detail: PAMProjectDetail | null;
     if (withEnvironments) {
-      const withEnvs = await this.projectRepo.getProjectWithEnvironments(id);
+      const withEnvs =
+        await this.projectRepo.getProjectWithEnvironments(resolvedId);
       detail = withEnvs ? this.redactProjectDetail(withEnvs) : null;
     } else {
-      detail = await this.projectRepo.getProjectById(id);
+      detail = await this.projectRepo.getProjectById(resolvedId);
     }
 
     if (!detail) {
@@ -227,6 +234,20 @@ export class PAMService implements PAMServiceInterface {
     return Object.assign({}, detail, {
       is_owner: Boolean(user && user.id === detail.owner_id)
     });
+  }
+
+  /**
+   * Resolves a project UUID from a path/API id-or-slug segment.
+   */
+  protected async resolveProjectId(idOrSlug: string): Promise<string | null> {
+    const asUuid = uuidSchema.safeParse(idOrSlug);
+    if (asUuid.success) {
+      const byId = await this.projectRepo.getProjectById(asUuid.data);
+      return byId?.id ?? null;
+    }
+
+    const bySlug = await this.projectRepo.getProjectWithSlug(idOrSlug);
+    return bySlug?.id ?? null;
   }
 
   /**
@@ -416,14 +437,21 @@ export class PAMService implements PAMServiceInterface {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    const source = await this.projectRepo.getProjectWithEnvironments(sourceId);
+    const resolvedId = await this.resolveProjectId(sourceId);
+    if (!resolvedId) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const source =
+      await this.projectRepo.getProjectWithEnvironments(resolvedId);
     if (!source) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    const canRead =
-      source.is_public === PAMPublicType.public || source.owner_id === user.id;
-    if (!canRead) {
+    if (source.owner_id === user.id) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    if (source.is_public !== PAMPublicType.public) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
@@ -566,8 +594,9 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMEnvWriteable> {
     await this.assertProjectOwner(projectId);
 
+    // Admin read/write: CLI bearer auth has no Supabase RLS session.
     const existingEnvs =
-      await this.projectRepo.getEnvIdAndNamesByProjectId(projectId);
+      await this.projectRepo.getEnvIdAndNamesByProjectIdAdmin(projectId);
     this.validateEnvironmentNames(existingEnvs, [{ name: params.name }]);
 
     const normalizedVariables = this.ensureVariableIds(
@@ -583,7 +612,7 @@ export class PAMService implements PAMServiceInterface {
     const encryptedVariables =
       this.getSecretEncryption().encryptSensitiveVariables(normalizedVariables);
 
-    const created = await this.projectRepo.createEnvironment(projectId, {
+    const created = await this.projectRepo.createEnvironmentAdmin(projectId, {
       name: params.name,
       url: params.url,
       variables: encryptedVariables
@@ -601,15 +630,8 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<void> {
     await this.assertProjectOwner(projectId);
 
-    const existing = await this.projectRepo.getEnvironmentById(
-      projectId,
-      envId
-    );
-    if (!existing) {
-      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
-    }
-
-    await this.projectRepo.deleteEnvironment(projectId, envId);
+    // Admin read/write: CLI bearer auth has no Supabase RLS session.
+    await this.projectRepo.deleteEnvironmentAdmin(projectId, envId);
   }
 
   /**

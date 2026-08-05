@@ -24,6 +24,9 @@ export const pamProjectI18n = Object.freeze({
   forking: i18nKeys.PAGE_PAM_PROJECT_FORKING,
   forkSuccess: i18nKeys.PAGE_PAM_PROJECT_FORK_SUCCESS,
   forkFailed: i18nKeys.PAGE_PAM_PROJECT_FORK_FAILED,
+  delete: i18nKeys.PAGE_PAM_PROJECT_DELETE,
+  deleteTitle: i18nKeys.PAGE_PAM_PROJECT_DELETE_TITLE,
+  deleteContent: i18nKeys.PAGE_PAM_PROJECT_DELETE_CONTENT,
 
   adminTitle: COMMON_ADMIN_TITLE
 });

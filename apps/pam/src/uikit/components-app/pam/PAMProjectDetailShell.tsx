@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { isAbortError } from '@qlover/fe-corekit/aborter';
 import {
   Loading,
@@ -11,31 +11,39 @@ import { clsx } from 'clsx';
 import React, {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type Dispatch,
   type SetStateAction
 } from 'react';
-import { Link, usePathname } from '@/i18n/routing';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
+import { PAMFacade } from '@/impls/PAMfacade';
 import { PAMProjectForkButton } from '@/uikit/components-app/pam/PAMProjectForkButton';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
+import { I } from '@config/ioc-identifiter';
 import {
   ROUTE_HOME,
   ROUTE_PROJECT_ENVIRONMENTS,
   ROUTE_PROJECT_GENERAL
 } from '@config/route';
-import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
+import {
+  PAMPublicType,
+  type PAMProjectDetail
+} from '@schemas/PAMProjectSchema';
 
 export type PAMProjectDetailTabType = 'general' | 'environments';
 
 export type PAMProjectDetailShellProps = {
+  /** URL segment: preferred slug; legacy UUID still accepted. */
   readonly projectId: string;
   readonly children: React.ReactNode;
 };
 
 export type PAMProjectDetailValue = {
+  /** Resolved project UUID for API calls (empty while loading). */
   readonly projectId: string;
   readonly project: PAMProjectDetail | null;
   readonly loading: boolean;
@@ -48,6 +56,13 @@ export type PAMProjectDetailValue = {
 const PAMProjectDetailContext = createContext<PAMProjectDetailValue | null>(
   null
 );
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function looksLikeUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
 
 /**
  * Read project detail loaded by {@link PAMProjectDetailShell}.
@@ -68,22 +83,21 @@ export function usePAMProjectDetail(): PAMProjectDetailValue {
  * Core idea: Load project detail once here; tab panels reuse via context.
  * Main function: Header + tab bar + child panel slot.
  * Main purpose: One getProjectDetail for the whole detail tree.
- *
- * @example
- * <PAMProjectDetailShell projectId={id}>
- *   <PAMProjectGeneralPanel projectId={id} />
- * </PAMProjectDetailShell>
  */
 export function PAMProjectDetailShell({
-  projectId,
+  projectId: routeKey,
   children
 }: PAMProjectDetailShellProps) {
   const tt = usePageI18nMapping<PAMProjectI18nInterface>();
   const pathname = usePathname();
+  const router = useRouter();
   const pamApi = useIOC(PAMApi);
+  const pamFacade = useIOC(PAMFacade);
+  const dialog = useIOC(I.DialogHandler);
   const [project, setProject] = useState<PAMProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const activeTab: PAMProjectDetailTabType = useMemo(() => {
     if (pathname.includes('/environments')) {
@@ -97,7 +111,7 @@ export function PAMProjectDetailShell({
     setError(null);
 
     void pamApi
-      .getProjectDetail({ id: projectId })
+      .getProjectDetail({ id: routeKey })
       .then((detail) => {
         setProject(detail);
         setLoading(false);
@@ -112,22 +126,63 @@ export function PAMProjectDetailShell({
       });
 
     return () => {
-      pamApi.stop(PAMAbortId.projectDetail(projectId));
+      pamApi.stop(PAMAbortId.projectDetail(routeKey));
     };
-  }, [pamApi, projectId]);
+  }, [pamApi, routeKey, tt.projectNotFound]);
+
+  // Legacy UUID URLs → replace with slug while keeping the current tab.
+  useEffect(() => {
+    if (!project?.slug || !looksLikeUuid(routeKey)) {
+      return;
+    }
+    if (routeKey === project.slug) {
+      return;
+    }
+    router.replace({
+      pathname:
+        activeTab === 'environments'
+          ? ROUTE_PROJECT_ENVIRONMENTS
+          : ROUTE_PROJECT_GENERAL,
+      params: { projectId: project.slug }
+    });
+  }, [project, routeKey, activeTab, router]);
 
   const canEdit = Boolean(project?.is_owner);
+  const canFork =
+    Boolean(project) && !canEdit && project?.is_public === PAMPublicType.public;
+  const routeSlug = project?.slug || routeKey;
+  const resolvedProjectId = project?.id ?? '';
+
+  const onDelete = (): void => {
+    if (!project || !canEdit || deleting) {
+      return;
+    }
+    dialog.confirm({
+      okType: 'danger',
+      title: tt.deleteTitle,
+      content: tt.deleteContent.replace('[name]', project.name),
+      onOk: async () => {
+        setDeleting(true);
+        try {
+          await pamFacade.deleteProject(project);
+          router.push(ROUTE_HOME);
+        } finally {
+          setDeleting(false);
+        }
+      }
+    });
+  };
 
   const detailValue = useMemo<PAMProjectDetailValue>(
     () => ({
-      projectId,
+      projectId: resolvedProjectId,
       project,
       loading,
       error,
       canEdit,
       setProject
     }),
-    [projectId, project, loading, error, canEdit]
+    [resolvedProjectId, project, loading, error, canEdit]
   );
 
   const tabClass = (tab: PAMProjectDetailTabType): string =>
@@ -170,7 +225,21 @@ export function PAMProjectDetailShell({
                   {tt.readonly}
                 </span>
               ) : null}
-              <PAMProjectForkButton projectId={projectId} tt={tt} />
+              {canFork && project ? (
+                <PAMProjectForkButton projectId={project.id} tt={tt} />
+              ) : null}
+              {canEdit ? (
+                <button
+                  type="button"
+                  data-testid="PAMProjectDeleteButton"
+                  disabled={deleting}
+                  onClick={onDelete}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/5 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                  {tt.delete}
+                </button>
+              ) : null}
             </div>
           )}
 
@@ -181,7 +250,7 @@ export function PAMProjectDetailShell({
             <Link
               href={{
                 pathname: ROUTE_PROJECT_GENERAL,
-                params: { projectId }
+                params: { projectId: routeSlug }
               }}
               className={tabClass('general')}
             >
@@ -190,7 +259,7 @@ export function PAMProjectDetailShell({
             <Link
               href={{
                 pathname: ROUTE_PROJECT_ENVIRONMENTS,
-                params: { projectId }
+                params: { projectId: routeSlug }
               }}
               className={tabClass('environments')}
             >
