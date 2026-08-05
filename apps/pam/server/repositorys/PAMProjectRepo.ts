@@ -478,6 +478,60 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Inserts an environment with admin client (CLI / owner-checked paths).
+   * Callers must assert project ownership in the service layer first.
+   *
+   * @param projectId - Project id
+   * @param data - Name, url, variables to persist
+   * @returns Created environment
+   */
+  public async createEnvironmentAdmin(
+    projectId: string,
+    data: {
+      name: string;
+      url: string;
+      variables?: PAMVariable[];
+    }
+  ): Promise<PAMEnvWriteable> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+
+    const result = await admin
+      .from(PAMEnvTableName)
+      .insert({
+        project_id: projectId,
+        name: data.name,
+        url: data.url,
+        variables: data.variables || []
+      })
+      .select('id,name,url,variables')
+      .single();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as PAMEnvWriteable;
+  }
+
+  /**
+   * Lists env id/name pairs with admin client (CLI duplicate checks).
+   *
+   * @param projectId - Project id
+   */
+  public async getEnvIdAndNamesByProjectIdAdmin(
+    projectId: string
+  ): Promise<Pick<PAMEnvRaw, 'id' | 'name'>[]> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+
+    const result = await admin
+      .from(PAMEnvTableName)
+      .select('id,name')
+      .eq('project_id', projectId);
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data || [];
+  }
+
+  /**
    * Deletes an environment belonging to a project.
    *
    * @param projectId - Project id
@@ -494,6 +548,31 @@ export class PAMProjectRepo extends BaseRepository<
 
     const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase
+      .from(PAMEnvTableName)
+      .delete()
+      .eq('id', envId)
+      .eq('project_id', projectId);
+
+    this.supabaseRepo.throwIfError(result);
+  }
+
+  /**
+   * Deletes an environment with admin client (CLI / owner-checked paths).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async deleteEnvironmentAdmin(
+    projectId: string,
+    envId: string
+  ): Promise<void> {
+    const existing = await this.getEnvironmentByIdAdmin(projectId, envId);
+    if (!existing) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
       .from(PAMEnvTableName)
       .delete()
       .eq('id', envId)

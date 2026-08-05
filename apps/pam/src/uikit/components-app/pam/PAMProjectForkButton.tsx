@@ -51,7 +51,7 @@ export function PAMProjectForkButton({
       toast.success(tt.forkSuccess);
       router.push({
         pathname: ROUTE_PROJECT_GENERAL,
-        params: { projectId: created.id }
+        params: { projectId: created.slug }
       });
     } catch {
       toast.error(tt.forkFailed);

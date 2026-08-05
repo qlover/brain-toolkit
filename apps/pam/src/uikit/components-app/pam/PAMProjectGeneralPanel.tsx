@@ -8,11 +8,13 @@ import {
 import { usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from '@/i18n/routing';
 import { PAMApi } from '@/impls/appApi/PAMApi';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
 import { I } from '@config/ioc-identifiter';
+import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import {
   PAMPublicType,
   type PAMProjectDetail,
@@ -80,13 +82,15 @@ function applyDetailToFields(
  * <PAMProjectGeneralPanel projectId={projectId} />
  */
 export function PAMProjectGeneralPanel({
-  projectId
+  projectId: _routeProjectId
 }: PAMProjectGeneralPanelProps) {
   const tt = usePageI18nMapping<PAMGeneralI18nInterface>();
+  const router = useRouter();
   const pamApi = useIOC(PAMApi);
   const dialogHandler = useIOC(I.DialogHandler);
   const {
     project,
+    projectId,
     loading,
     error: loadError,
     canEdit,
@@ -106,7 +110,7 @@ export function PAMProjectGeneralPanel({
   const [repoUrl, setRepoUrl] = useState('');
 
   useEffect(() => {
-    if (!project || project.id !== projectId) {
+    if (!project) {
       return;
     }
     applyDetailToFields(project, {
@@ -118,15 +122,16 @@ export function PAMProjectGeneralPanel({
       setStack,
       setRepoUrl
     });
-  }, [project, projectId]);
+  }, [project]);
 
   const saveField = async (
     field: GeneralFieldKeyType,
     patch: Partial<PAMProjectUpdate>
   ): Promise<void> => {
-    if (!project || !canEdit) {
+    if (!project || !canEdit || !projectId) {
       return;
     }
+    const previousSlug = project.slug;
     setSavingField(field);
     try {
       const { environments: _environments, ...basics } = project;
@@ -137,6 +142,12 @@ export function PAMProjectGeneralPanel({
       });
       setProject(saved);
       dialogHandler.success(tt.settingsSave);
+      if (field === 'slug' && saved.slug && saved.slug !== previousSlug) {
+        router.replace({
+          pathname: ROUTE_PROJECT_GENERAL,
+          params: { projectId: saved.slug }
+        });
+      }
     } catch {
       // DialogErrorPlugin already toasts API failures.
     } finally {

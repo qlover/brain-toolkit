@@ -33,10 +33,12 @@ pnpm pamenv push <slug|id> -e staging      # diff + 同步冲突检测后回写
 pnpm pamenv push <slug|id> -e staging -y   # 跳过普通确认（不含冲突覆盖）
 pnpm pamenv push <slug|id> -e staging -f   # 仅跳过同步冲突覆盖确认（不等于 -y）
 pnpm pamenv push <slug|id> -e staging --show-values  # review 显示非敏感明文
+pnpm pamenv remove <slug|id> -e local   # 删除远端环境（两次确认）
+pnpm pamenv remove <slug|id> -e local -y
 pnpm pamenv logout
 ```
 
-本地文件：`.env.<环境名>`（例如环境 `local` → `.env.local`）。未传 `-e` 时用环境列表**第一个**。
+本地文件：`.env.<环境名>`（例如环境 `local` → `.env.local`）。未传 `-e` 时用环境列表**第一个**（`remove` 除外，必须传 `-e`）。
 
 ---
 
@@ -109,7 +111,11 @@ pamenv fork <slug|id> -y   # 默认 {slug}-fork / {name} (fork)，跳过确认
 `pull` 会尽量保留本地注释；语义内容不同时交互选择覆盖/取消。  
 `push` 用 `~/.pam/sync` 基线做三方比较（可发现 Web 端修改）：仅远端变更会提示先 pull；双方都改则冲突交互。
 
-**Flags：** `-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记）。两者互不隐含。  
+若 `-e` 指定的环境不存在，会先收集 URL 并走完本地校验/确认，**全部通过后再创建环境并写入变量**（不会先建空环境）。`-y` 时若能解析到默认 URL 则延后创建，否则报错。
+
+`pamenv remove <slug> -e <env>` 删除远端环境（仅 owner），默认两次确认；`-y` 跳过确认。成功后清除对应 `~/.pam/sync` 基线，不删除本地 `.env.*` 文件。
+
+**Flags：** `-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记、创建缺失环境、remove 确认）。两者互不隐含。  
 **Diff：** 默认全部打码为 `*****`；`--show-values` 仅明文显示非敏感（含名称启发式，如 `*_SECRET` / `*_TOKEN`）。
 
 敏感标记：`# pam:sensitive`（可紧挨变量上方，中间可夹注释）。变量上方注释与行尾注释会随文件保留。

@@ -171,7 +171,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
             if (result.data?.id) {
               router.push({
                 pathname: ROUTE_PROJECT_GENERAL,
-                params: { projectId: result.data.id }
+                params: { projectId: result.data.slug }
               });
             }
           }}

@@ -136,7 +136,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
               <Link
                 href={{
                   pathname: ROUTE_PROJECT_GENERAL,
-                  params: { projectId: project.id }
+                  params: { projectId: project.slug }
                 }}
                 className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"
               >

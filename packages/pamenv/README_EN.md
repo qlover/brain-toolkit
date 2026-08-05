@@ -31,10 +31,12 @@ pamenv push <slug|id> -e staging
 pamenv push <slug|id> -e staging -y
 pamenv push <slug|id> -e staging -f
 pamenv push <slug|id> -e staging --show-values
+pamenv remove <slug|id> -e local   # delete remote env (two confirms)
+pamenv remove <slug|id> -e local -y
 pamenv logout
 ```
 
-Local files are `.env.<environment>` (e.g. env `local` → `.env.local`). Without `-e`, the first environment in the list is used.
+Local files are `.env.<environment>` (e.g. env `local` → `.env.local`). Without `-e`, the first environment in the list is used (`remove` always requires `-e`).
 
 ---
 
@@ -105,6 +107,10 @@ Then fill secrets with `pamenv push <new-slug> -e <env>`.
 ## Pull / Push
 
 `-f` only skips conflict overwrite prompts. `-y` skips ordinary confirms (not conflict overwrite). Diff review masks all values by default; `--show-values` shows non-sensitive plaintext.
+
+If `-e` names an environment that does not exist, the CLI collects a URL and runs local validation/confirmation first, then **creates the environment and uploads variables together** (no empty env is created early). With `-y`, it defers create when a default URL is available; otherwise it errors.
+
+`pamenv remove <slug> -e <env>` deletes a remote environment (owner only) with two confirmation prompts (`-y` skips them). It clears the matching `~/.pam/sync` baseline and does not delete local `.env.*` files.
 
 Mark secrets with `# pam:sensitive` above the key. Header and inline comments are preserved.
 

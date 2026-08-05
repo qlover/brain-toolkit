@@ -60,16 +60,19 @@ export const ROUTE_CLI_DEVICE = ROUTE_PAMENV_DEVICE;
 /**
  * PAM project detail routes (App Router under `src/app/[locale]/projects/...`).
  * Nested paths use {@link hasSessionPath} prefix matching via {@link ROUTE_PROJECTS}.
+ *
+ * Dynamic segment is still named `[projectId]` in the App Router folder, but the
+ * URL value is the project **slug** (UUID still accepted and redirected to slug).
  */
 export const ROUTE_PROJECTS = '/projects' as const;
 
-/** next-intl pathname template: `/projects/[projectId]` */
+/** next-intl pathname template — segment value is slug (legacy UUID ok). */
 export const ROUTE_PROJECT_DETAIL = '/projects/[projectId]' as const;
 
-/** next-intl pathname template: `/projects/[projectId]/general` */
+/** next-intl pathname template — segment value is slug (legacy UUID ok). */
 export const ROUTE_PROJECT_GENERAL = '/projects/[projectId]/general' as const;
 
-/** next-intl pathname template: `/projects/[projectId]/environments` */
+/** next-intl pathname template — segment value is slug (legacy UUID ok). */
 export const ROUTE_PROJECT_ENVIRONMENTS =
   '/projects/[projectId]/environments' as const;
 
@@ -230,41 +233,35 @@ export function localePage(route: string, locale: LocaleType): string {
 }
 
 /**
- * Builds `/projects/:projectId` (no trailing slash).
+ * Builds `/projects/:slug` (no trailing slash).
  *
- * @param projectId - Project UUID
+ * @param slug - Project slug (or legacy UUID for redirects)
  * @returns Locale-agnostic project detail base path
  */
-export function projectPath(projectId: string): string {
-  return ROUTE_PROJECT_DETAIL.replace(
-    '[projectId]',
-    encodeURIComponent(projectId)
-  );
+export function projectPath(slug: string): string {
+  return ROUTE_PROJECT_DETAIL.replace('[projectId]', encodeURIComponent(slug));
 }
 
 /**
- * Builds `/projects/:projectId/general`.
+ * Builds `/projects/:slug/general`.
  *
- * @param projectId - Project UUID
+ * @param slug - Project slug (or legacy UUID for redirects)
  * @returns Locale-agnostic general tab path
  */
-export function projectGeneralPath(projectId: string): string {
-  return ROUTE_PROJECT_GENERAL.replace(
-    '[projectId]',
-    encodeURIComponent(projectId)
-  );
+export function projectGeneralPath(slug: string): string {
+  return ROUTE_PROJECT_GENERAL.replace('[projectId]', encodeURIComponent(slug));
 }
 
 /**
- * Builds `/projects/:projectId/environments`.
+ * Builds `/projects/:slug/environments`.
  *
- * @param projectId - Project UUID
+ * @param slug - Project slug (or legacy UUID for redirects)
  * @returns Locale-agnostic environments tab path
  */
-export function projectEnvironmentsPath(projectId: string): string {
+export function projectEnvironmentsPath(slug: string): string {
   return ROUTE_PROJECT_ENVIRONMENTS.replace(
     '[projectId]',
-    encodeURIComponent(projectId)
+    encodeURIComponent(slug)
   );
 }
 

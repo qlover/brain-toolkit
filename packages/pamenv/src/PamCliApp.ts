@@ -5,6 +5,7 @@ import { LoginCommand } from './commands/LoginCommand';
 import { ProjectsCommand } from './commands/ProjectsCommand';
 import { PullCommand } from './commands/PullCommand';
 import { PushCommand } from './commands/PushCommand';
+import { RemoveCommand } from './commands/RemoveCommand';
 import { PamCliApiClient } from './impls/PamCliApiClient';
 import { PamCliAuthStore } from './impls/PamCliAuthStore';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
@@ -189,6 +190,24 @@ export class PamCliApp {
             yes: options.yes,
             force: options.force,
             showValues: options.showValues
+          });
+        }
+      );
+
+    program
+      .command('remove')
+      .description('Delete a PAM environment from a project (owner only)')
+      .argument('<slug|id>', 'Project slug or project id')
+      .requiredOption('-e, --env <name>', 'Environment name to delete')
+      .option('-y, --yes', 'Skip confirmation prompts')
+      .action(
+        async (
+          projectRef: string,
+          options: { env?: string; yes?: boolean }
+        ) => {
+          await new RemoveCommand(this.apiClient).run(projectRef, {
+            envName: options.env,
+            yes: options.yes
           });
         }
       );

@@ -90,3 +90,24 @@ export const PAGE_PAM_PROJECT_FORK_SUCCESS = 'page_pam_project:forkSuccess';
  * @localEn Fork failed. Please try again.
  */
 export const PAGE_PAM_PROJECT_FORK_FAILED = 'page_pam_project:forkFailed';
+
+/**
+ * @description Delete project action on detail page
+ * @localZh 删除
+ * @localEn Delete
+ */
+export const PAGE_PAM_PROJECT_DELETE = 'page_pam_project:delete';
+
+/**
+ * @description Delete project confirm title
+ * @localZh 删除项目
+ * @localEn Delete project
+ */
+export const PAGE_PAM_PROJECT_DELETE_TITLE = 'page_pam_project:deleteTitle';
+
+/**
+ * @description Delete project confirm body; `[name]` is replaced
+ * @localZh 确定删除项目「[name]」吗？此操作不可恢复。
+ * @localEn Delete project "[name]"? This cannot be undone.
+ */
+export const PAGE_PAM_PROJECT_DELETE_CONTENT = 'page_pam_project:deleteContent';

@@ -100,4 +100,17 @@ export class PamCliSyncStore {
   public async clearAll(): Promise<void> {
     await rm(PamCliConfig.getSyncRoot(), { recursive: true, force: true });
   }
+
+  /**
+   * Removes one env snapshot after `pamenv remove` (best-effort).
+   *
+   * @param projectId - Project uuid
+   * @param envName - Environment name
+   */
+  public async clearSnapshot(
+    projectId: string,
+    envName: string
+  ): Promise<void> {
+    await rm(this.getSnapshotPath(projectId, envName), { force: true });
+  }
 }

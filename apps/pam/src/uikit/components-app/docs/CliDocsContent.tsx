@@ -72,6 +72,8 @@ pamenv push <slug|id> -e staging
 pamenv push <slug|id> -e staging -y
 pamenv push <slug|id> -e staging -f
 pamenv push <slug|id> -e staging --show-values
+pamenv remove <slug|id> -e local
+pamenv remove <slug|id> -e local -y
 pamenv logout`;
 
 const INIT_SNIPPET = `pamenv login

@@ -319,9 +319,30 @@ describe('PamCliLocalProjectScanUtil', () => {
     expect(PamCliLocalProjectScanUtil.normalizeHomepageUrl('not-a-url')).toBe(
       ''
     );
-    expect(PamCliLocalProjectScanUtil.isValidEnvUrl('http://localhost')).toBe(
+    expect(      PamCliLocalProjectScanUtil.isValidEnvUrl('http://localhost')).toBe(
       true
     );
+  });
+
+  it('defaults env url from homepage then git origin', () => {
+    expect(
+      PamCliLocalProjectScanUtil.defaultEnvUrl({
+        homepageUrl: 'https://example.com/app',
+        repoUrl: 'https://github.com/qlover/brain-toolkit'
+      })
+    ).toBe('https://example.com/app');
+    expect(
+      PamCliLocalProjectScanUtil.defaultEnvUrl({
+        homepageUrl: '',
+        repoUrl: 'https://github.com/qlover/brain-toolkit'
+      })
+    ).toBe('https://github.com/qlover/brain-toolkit');
+    expect(
+      PamCliLocalProjectScanUtil.defaultEnvUrl({
+        homepageUrl: '',
+        repoUrl: ''
+      })
+    ).toBe('');
   });
 
   it('extracts repo name from git remote urls', () => {

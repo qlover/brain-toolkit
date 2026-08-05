@@ -307,7 +307,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     });
   }
 
-  public async deleteProject(project: SearchPAMProject): Promise<void> {
+  public async deleteProject(project: { id: string }): Promise<void> {
     await this.pamApi.deleteProject(project.id);
     // 这里不要 await,后台完成即可
     this.reloadProjectListFromFirstPage();

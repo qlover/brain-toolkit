@@ -83,6 +83,7 @@
     "jsdom": "^26.1.0",
     "nx": "20.6.4",
     "prettier": "^3.5.3",
+    "pamenv-cli": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rimraf": "^5.0.5",

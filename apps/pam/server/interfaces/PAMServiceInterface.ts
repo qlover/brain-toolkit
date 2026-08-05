@@ -27,7 +27,7 @@ export interface ProjectFilter {
 
 export interface ProjectDetailParams {
   /**
-   * project_id
+   * Project UUID or slug (detail lookup accepts both).
    */
   id: string;
 
