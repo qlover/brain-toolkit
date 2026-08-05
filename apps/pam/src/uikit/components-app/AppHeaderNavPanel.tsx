@@ -7,11 +7,13 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ROUTE_DEVELOPER_APPS,
   ROUTE_DOCS_CLI,
-  ROUTE_DOCS_OAUTH
+  ROUTE_DOCS_OAUTH,
+  ROUTE_PROJECTS
 } from '@config/route';
 import type { ReactNode } from 'react';
 
 export interface AppHeaderNavTT {
+  navProjects: string;
   navDocs: string;
   navCli: string;
   navAbout: string;
@@ -19,6 +21,7 @@ export interface AppHeaderNavTT {
 }
 
 type HeaderNavHref =
+  | typeof ROUTE_PROJECTS
   | typeof ROUTE_DOCS_OAUTH
   | typeof ROUTE_DOCS_CLI
   | '/about'
@@ -65,6 +68,13 @@ export function AppHeaderNavPanel({
         className="max-md:hidden flex items-center gap-6 ml-6 lg:ml-8"
         aria-label="Main"
       >
+        <NavLink
+          href={ROUTE_PROJECTS}
+          className={desktopNavLinkClassName}
+          title={tt.navProjects}
+        >
+          {tt.navProjects}
+        </NavLink>
         <NavLink
           href={ROUTE_DOCS_OAUTH}
           className={desktopNavLinkClassName}
@@ -126,6 +136,13 @@ export function AppHeaderNavPanel({
           aria-label="Main mobile"
           onClick={closeMenu}
         >
+          <NavLink
+            href={ROUTE_PROJECTS}
+            className={navLinkClassName}
+            title={tt.navProjects}
+          >
+            {tt.navProjects}
+          </NavLink>
           <NavLink
             href={ROUTE_DOCS_OAUTH}
             className={navLinkClassName}

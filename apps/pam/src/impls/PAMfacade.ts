@@ -84,6 +84,12 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   /** Latest list request id — stale responses are ignored. */
   protected listRequestId = 0;
 
+  /**
+   * Home-list scope key: `'anon'` or logged-in user id.
+   * Not persisted — session memory only for `ensureHomeProjectList`.
+   */
+  protected homeListOwnerKey: string | null = null;
+
   constructor(
     @inject(PAMApi)
     protected readonly pamApi: PAMApi,
@@ -125,6 +131,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   /**
    * Seed the list store from SSR/ISR public data before the first client fetch.
    * Idempotent — skips if the list already has rows or a request is in flight.
+   * Marks scope as `'anon'` when still unset so guests can skip a redundant pull.
    */
   public hydrateInitialList(
     result: ResourceSearchResult<SearchPAMProject>
@@ -147,6 +154,49 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       },
       projects: result.items as SearchPAMProject[]
     });
+    if (this.homeListOwnerKey === null) {
+      this.homeListOwnerKey = 'anon';
+    }
+  }
+
+  /**
+   * Home-page entry: hydrate SSR public list, then pull only when the in-memory
+   * list is missing or scoped to a different auth owner (`anon` vs user id).
+   * Create/delete keep using {@link reloadProjectListFromFirstPage} and do not
+   * clear `homeListOwnerKey` (token-scoped refresh stays valid for that session).
+   */
+  public async ensureHomeProjectList(options?: {
+    readonly initialList?: ResourceSearchResult<SearchPAMProject> | null;
+    /** Logged-in user id; null/undefined/empty => guest (`anon`). */
+    readonly userId?: string | null;
+  }): Promise<void> {
+    const initialList = options?.initialList;
+    if (initialList?.items?.length) {
+      this.hydrateInitialList(initialList);
+    }
+
+    const ownerKey = options?.userId?.trim() || 'anon';
+    const state = this.searchStore.getState();
+    if (state.projects.length > 0 && this.homeListOwnerKey === ownerKey) {
+      this.logger.debug(
+        `PAMFacade ensureHomeProjectList skip ownerKey=${ownerKey} count=${state.projects.length}`
+      );
+      return;
+    }
+
+    this.logger.debug(
+      `PAMFacade ensureHomeProjectList pull ownerKey=${ownerKey} prev=${this.homeListOwnerKey}`
+    );
+
+    await this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace
+    });
+
+    if (this.searchStore.getState().status === AsyncStoreStatus.SUCCESS) {
+      this.homeListOwnerKey = ownerKey;
+    }
   }
 
   /**

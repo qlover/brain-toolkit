@@ -132,6 +132,8 @@ export const OAUTH_LOCALE_AGNOSTIC_ROUTES = [
 /** Routes that are allowed without authentication (public routes). */
 export const AUTH_ROUTES = [
   ROUTE_HOME,
+  /** Public project list (detail tree still gated via {@link isLoginRequiredProjectsPath}). */
+  ROUTE_PROJECTS,
   ROUTE_LOGIN,
   ROUTE_REGISTER,
   ROUTE_CALLBACK_EMAIL_LOGIN,
@@ -162,14 +164,14 @@ export const LOGINED_PAGES = [
   // are sent to login with `?redirect=<full authorize URL>` via redirectToPath.
   ROUTE_OAUTH_AUTHORIZE,
   // pamenv browser login approve page.
-  ROUTE_PAMENV_DEVICE,
-  /**
-   * Project detail tree: `/projects`, `/projects/:id`, `/projects/:id/general`, …
-   * Exact `endsWith` only covers `/…/projects`; nested segments need
-   * {@link isLoginRequiredProjectsPath}.
-   */
-  ROUTE_PROJECTS
+  ROUTE_PAMENV_DEVICE
 ] as const;
+
+/**
+ * Project detail tree (`/projects/:id`, …) is gated by
+ * {@link isLoginRequiredProjectsPath}. Exact `/projects` list is public
+ * ({@link AUTH_ROUTES}).
+ */
 
 /**
  * Returns true if pathname is an OAuth machine endpoint (token, userinfo, etc.).
@@ -205,6 +207,17 @@ export function isPublicPath(pathname: string): boolean {
       return (
         localeSegment != null &&
         i18nConfig.supportedLngs.includes(localeSegment[1] as 'en' | 'zh')
+      );
+    }
+    if (route === ROUTE_PROJECTS) {
+      const localeAlt = i18nConfig.supportedLngs.join('|');
+      const withoutLocale = pathname.replace(
+        new RegExp(`^\\/(${localeAlt})(?=\\/|$)`),
+        ''
+      );
+      return (
+        withoutLocale === ROUTE_PROJECTS ||
+        withoutLocale === `${ROUTE_PROJECTS}/`
       );
     }
     // Use suffix match so /auth/login does not match longer auth paths incorrectly
@@ -266,11 +279,10 @@ export function projectEnvironmentsPath(slug: string): string {
 }
 
 /**
- * Whether pathname is under PAM project detail routes
+ * Whether pathname is under PAM project **detail** routes
  * (e.g. `/en/projects/:id/general`).
  *
- * Exact `LOGINED_PAGES` suffix matching cannot cover dynamic `:projectId`
- * segments, so this uses a `/projects/` prefix check after stripping locale.
+ * Exact `/projects` (public list) is excluded; nested segments require login.
  *
  * @param pathname - Request pathname (may include locale prefix)
  * @returns True when the path is a project detail route
@@ -281,12 +293,6 @@ export function isLoginRequiredProjectsPath(pathname: string): boolean {
     new RegExp(`^\\/(${localeAlt})(?=\\/|$)`),
     ''
   );
-  if (
-    withoutLocale === ROUTE_PROJECTS ||
-    withoutLocale === `${ROUTE_PROJECTS}/`
-  ) {
-    return true;
-  }
   return withoutLocale.startsWith(`${ROUTE_PROJECTS}/`);
 }
 

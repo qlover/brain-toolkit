@@ -25,9 +25,9 @@ import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
 import { I } from '@config/ioc-identifiter';
 import {
-  ROUTE_HOME,
   ROUTE_PROJECT_ENVIRONMENTS,
-  ROUTE_PROJECT_GENERAL
+  ROUTE_PROJECT_GENERAL,
+  ROUTE_PROJECTS
 } from '@config/route';
 import {
   PAMPublicType,
@@ -165,7 +165,7 @@ export function PAMProjectDetailShell({
         setDeleting(true);
         try {
           await pamFacade.deleteProject(project);
-          router.push(ROUTE_HOME);
+          router.push(ROUTE_PROJECTS);
         } finally {
           setDeleting(false);
         }
@@ -201,7 +201,7 @@ export function PAMProjectDetailShell({
       >
         <div className="mb-4 flex flex-col gap-3 sm:mb-6">
           <Link
-            href={ROUTE_HOME}
+            href={ROUTE_PROJECTS}
             className="inline-flex w-fit items-center gap-1.5 text-sm text-secondary-text transition hover:text-brand"
           >
             <ArrowLeftIcon className="h-4 w-4" />
