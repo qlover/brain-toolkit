@@ -1,5 +1,5 @@
 /**
- * @description Home page title
+ * @description Home page title (brand)
  * @localZh PAM 资产中心
  * @localEn PAM Asset Center
  */
@@ -7,15 +7,15 @@ export const PAGE_HOME_TITLE = 'page_home:title';
 
 /**
  * @description Home page meta description
- * @localZh 集成 GitHub、Google 等第三方账号的统一认证登录平台
- * @localEn Unified authentication platform with GitHub, Google and other third-party sign-in
+ * @localZh 多环境配置与环境变量管理平台，支持 CLI 同步与 OAuth 接入
+ * @localEn Multi-environment config and secrets platform with CLI sync and OAuth
  */
 export const PAGE_HOME_DESCRIPTION = 'page_home:description';
 
 /**
  * @description Home page keywords
- * @localZh OAuth 2.0, 第三方登录, GitHub, Google, Supabase, PAM 资产中心
- * @localEn OAuth 2.0, third-party login, GitHub, Google, Supabase, PAM Asset Center
+ * @localZh 环境变量, 配置中心, pamenv, OAuth, PAM
+ * @localEn environment variables, config center, pamenv, OAuth, PAM
  */
 export const PAGE_HOME_KEYWORDS = 'page_home:keywords';
 
@@ -34,46 +34,172 @@ export const PAGE_HOME_NAV_DOCS = 'page_home:nav__docs';
 export const PAGE_HOME_NAV_ABOUT = 'page_home:nav__about';
 
 /**
- * @description Hero badge label
- * @localZh 第三方账号统一登录
- * @localEn Unified third-party sign-in
+ * @description Hero eyebrow label
+ * @localZh 配置 · 环境 · CLI
+ * @localEn Config · envs · CLI
  */
 export const PAGE_HOME_HERO_BADGE = 'page_home:hero__badge';
 
 /**
- * @description Hero title line 1
- * @localZh GitHub、Google 等
- * @localEn GitHub, Google and more
+ * @description Hero supporting title
+ * @localZh 统一管理项目环境变量
+ * @localEn Manage project env vars in one place
  */
 export const PAGE_HOME_HERO_TITLE1 = 'page_home:hero__title1';
 
 /**
- * @description Hero title line 2
- * @localZh 一键登录你的应用
- * @localEn sign in to your apps
+ * @description Hero title line 2 (optional emphasis)
+ * @localZh 多环境隔离，CLI 一键同步
+ * @localEn Isolated environments, sync with pamenv
  */
 export const PAGE_HOME_HERO_TITLE2 = 'page_home:hero__title2';
 
 /**
  * @description Hero description
- * @localZh 基于 Supabase 的统一认证平台，集成 GitHub、Google 等第三方账号登录，同时提供标准 OAuth 2.0 授权能力（授权码 + PKCE、refresh_token、userinfo）。用户可通过多种登录方式快速访问，第三方应用也可对接 OAuth 实现统一认证。
- * @localEn A Supabase-powered authentication platform that integrates GitHub, Google and other third-party sign-in methods, while providing standard OAuth 2.0 authorization (authorization code + PKCE, refresh_token, userinfo). Users can sign in via multiple providers, and third-party apps can integrate via OAuth for unified authentication.
+ * @localZh 在浏览器中管理公开与私有项目，按环境隔离变量；用 pamenv CLI 拉取与推送，并通过标准 OAuth 接入第三方应用。
+ * @localEn Manage public and private projects in the browser, isolate variables by environment, sync with the pamenv CLI, and integrate apps via standard OAuth.
  */
 export const PAGE_HOME_HERO_DESC = 'page_home:hero__desc';
 
 /**
- * @description Hero primary CTA
- * @localZh 开始使用
- * @localEn Get started
+ * @description Hero primary CTA — open project list
+ * @localZh 进入项目
+ * @localEn Browse projects
  */
 export const PAGE_HOME_HERO_START = 'page_home:hero__start';
 
 /**
- * @description Hero secondary CTA
+ * @description Hero secondary CTA — docs
  * @localZh 阅读文档
  * @localEn Read docs
  */
 export const PAGE_HOME_HERO_DOCS = 'page_home:hero__docs';
+
+/**
+ * @description Hero login CTA for guests
+ * @localZh 登录
+ * @localEn Sign in
+ */
+export const PAGE_HOME_HERO_LOGIN = 'page_home:hero__login';
+
+/**
+ * @description Link label — CLI docs
+ * @localZh CLI 指南
+ * @localEn CLI guide
+ */
+export const PAGE_HOME_LINK_CLI = 'page_home:link__cli';
+
+/**
+ * @description Link label — OAuth docs
+ * @localZh OAuth 文档
+ * @localEn OAuth docs
+ */
+export const PAGE_HOME_LINK_OAUTH = 'page_home:link__oauth';
+
+/**
+ * @description Product preview panel caption
+ * @localZh 示意：项目与环境
+ * @localEn Preview: projects & envs
+ */
+export const PAGE_HOME_PREVIEW_CAPTION = 'page_home:preview__caption';
+
+/**
+ * @description Mock project name in hero preview
+ * @localZh 示例应用
+ * @localEn Sample app
+ */
+export const PAGE_HOME_PREVIEW_PROJECT = 'page_home:preview__project';
+
+/**
+ * @description Mock env labels (comma-separated for display)
+ * @localZh local, staging, production
+ * @localEn local, staging, production
+ */
+export const PAGE_HOME_PREVIEW_ENVS = 'page_home:preview__envs';
+
+/**
+ * @description Mock variable key shown in preview
+ * @localZh DATABASE_URL
+ * @localEn DATABASE_URL
+ */
+export const PAGE_HOME_PREVIEW_VAR = 'page_home:preview__var';
+
+/**
+ * @description How-it-works section title
+ * @localZh 怎么用
+ * @localEn How it works
+ */
+export const PAGE_HOME_STEPS_TITLE = 'page_home:steps__title';
+
+/**
+ * @description How-it-works step 1 title
+ * @localZh 创建或 Fork 项目
+ * @localEn Create or fork a project
+ */
+export const PAGE_HOME_STEP1_TITLE = 'page_home:step1__title';
+
+/**
+ * @description How-it-works step 1 body
+ * @localZh 在浏览器里建项目，或 Fork 公开项目作为起点。
+ * @localEn Create a project in the browser, or fork a public one to start.
+ */
+export const PAGE_HOME_STEP1_BODY = 'page_home:step1__body';
+
+/**
+ * @description How-it-works step 2 title
+ * @localZh 按环境配置变量
+ * @localEn Configure variables per env
+ */
+export const PAGE_HOME_STEP2_TITLE = 'page_home:step2__title';
+
+/**
+ * @description How-it-works step 2 body
+ * @localZh local / staging / production 隔离管理，敏感值受控可见。
+ * @localEn Isolate local, staging, and production; sensitive values stay controlled.
+ */
+export const PAGE_HOME_STEP2_BODY = 'page_home:step2__body';
+
+/**
+ * @description How-it-works step 3 title
+ * @localZh CLI 同步到本地
+ * @localEn Sync with the CLI
+ */
+export const PAGE_HOME_STEP3_TITLE = 'page_home:step3__title';
+
+/**
+ * @description How-it-works step 3 body
+ * @localZh 用 pamenv pull / push 在仓库与 PAM 之间同步环境文件。
+ * @localEn Use pamenv pull / push to sync env files between your repo and PAM.
+ */
+export const PAGE_HOME_STEP3_BODY = 'page_home:step3__body';
+
+/**
+ * @description CLI section title
+ * @localZh 快速开始 CLI
+ * @localEn Quick start with CLI
+ */
+export const PAGE_HOME_CLI_TITLE = 'page_home:cli__title';
+
+/**
+ * @description CLI section supporting line
+ * @localZh 安装后登录，即可拉取项目环境。
+ * @localEn Install, sign in, then pull project environments.
+ */
+export const PAGE_HOME_CLI_BODY = 'page_home:cli__body';
+
+/**
+ * @description Featured public projects section title
+ * @localZh 公开项目
+ * @localEn Public projects
+ */
+export const PAGE_HOME_FEATURED_TITLE = 'page_home:featured__title';
+
+/**
+ * @description Featured section view-all link
+ * @localZh 查看全部
+ * @localEn View all
+ */
+export const PAGE_HOME_FEATURED_VIEW_ALL = 'page_home:featured__viewAll';
 
 /**
  * @description Feature 1 label
@@ -168,21 +294,21 @@ export const PAGE_HOME_CTA_TITLE = 'page_home:cta__title';
 
 /**
  * @description CTA section description
- * @localZh 创建你的第一个 OAuth 应用，只需几分钟。
- * @localEn Create your first OAuth app in minutes.
+ * @localZh 创建你的第一个项目，或用 pamenv 同步本地环境。
+ * @localEn Create your first project, or sync local envs with pamenv.
  */
 export const PAGE_HOME_CTA_DESC = 'page_home:cta__desc';
 
 /**
  * @description CTA button label
- * @localZh 前往控制台
- * @localEn Go to console
+ * @localZh 进入项目
+ * @localEn Browse projects
  */
 export const PAGE_HOME_CTA_BUTTON = 'page_home:cta__button';
 
 /**
  * @description Footer tagline
- * @localZh 统一认证登录平台
- * @localEn Unified authentication platform
+ * @localZh 多环境配置与资产中心
+ * @localEn Multi-env config and asset center
  */
 export const PAGE_HOME_FOOTER_TAGLINE = 'page_home:footer__tagline';

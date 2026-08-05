@@ -163,6 +163,13 @@ export const COMMON_AUTH_NAV_REQUEST_LOGS = 'common:authNav_requestLogs';
 export const COMMON_HEADER_NAV_DOCS = 'common:header_nav__docs';
 
 /**
+ * @description App header nav - Projects list
+ * @localZh 项目
+ * @localEn Projects
+ */
+export const COMMON_HEADER_NAV_PROJECTS = 'common:header_nav__projects';
+
+/**
  * @description App header nav - CLI docs
  * @localZh CLI
  * @localEn CLI
