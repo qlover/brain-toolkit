@@ -1,32 +1,20 @@
 import { z } from 'zod';
-import {
-  V_PAM_ENV_VAR_KEY_REQUIRED,
-  V_PAM_ENV_VAR_VALUE_REQUIRED
-} from '@config/i18n-identifier/common/validators';
+import { V_PAM_ENV_VAR_KEY_REQUIRED } from '@config/i18n-identifier/common/validators';
 
 export const PAMEnvTableName = 'pam_environments' as const;
 
-export const PAMVariableSchema = z
-  .object({
-    id: z.uuid().optional(),
-    key: z.string().trim().min(1, V_PAM_ENV_VAR_KEY_REQUIRED),
-    /**
-     * Sensitive variables may send an empty value on update to keep the stored secret.
-     */
-    value: z.string(),
-    sensitive: z.boolean().optional(),
-    /** Raw dotenv comment lines (including `#`), stored as-is in JSONB. */
-    comments: z.array(z.string()).optional()
-  })
-  .superRefine((variable, ctx) => {
-    if (!variable.sensitive && variable.value.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: V_PAM_ENV_VAR_VALUE_REQUIRED,
-        path: ['value']
-      });
-    }
-  });
+export const PAMVariableSchema = z.object({
+  id: z.uuid().optional(),
+  key: z.string().trim().min(1, V_PAM_ENV_VAR_KEY_REQUIRED),
+  /**
+   * Empty string is allowed (dotenv `KEY=`). Sensitive empties on update
+   * mean "keep stored secret" and are merged server-side before persist.
+   */
+  value: z.string(),
+  sensitive: z.boolean().optional(),
+  /** Raw dotenv comment lines (including `#`), stored as-is in JSONB. */
+  comments: z.array(z.string()).optional()
+});
 export type PAMVariable = z.infer<typeof PAMVariableSchema>;
 
 export const PAMEnvRawSchema = z.object({
