@@ -1,15 +1,25 @@
 ---
-description: 
-globs: 
-alwaysApply: false
+description: Git commit message standards for this repository
+alwaysApply: true
 ---
-这个文档目前cursor还不支持自定义说明, 未来可能支持
 
-This document currently cursor does not support custom descriptions, which may be supported in the future.
+# Git Commit Standards
 
-## Git Commit Standards
+## No Cursor co-author trailer
 
-All commit messages must be in English
+**Never** add this footer (or any Cursor co-author trailer) to commits:
+
+```
+Co-authored-by: Cursor <cursoragent@cursor.com>
+```
+
+If a tool injects it automatically, strip it before finishing (amend / rewrite) so the published commit message has no `Co-authored-by: Cursor` line.
+
+Do not add other AI co-author trailers unless the user explicitly asks.
+
+## Language
+
+Match this repository’s recent commit style: **Chinese** subject/body is preferred (see `git log`). Keep conventional-commit `type(scope):` prefixes.
 
 ### Format
 
@@ -23,9 +33,9 @@ footer?
 
 ### Length Limits
 
-- Subject line: Maximum 50 characters
-- Body line: Maximum 72 characters per line
-- Total commit message: Should not exceed 500 characters
+- Subject line: concise (aim ≤ 72 chars; keep readable)
+- Body: wrap around 72 chars when practical
+- Total commit message: keep focused; avoid noise
 
 ### Types
 
@@ -40,19 +50,19 @@ footer?
 
 ### Rules
 
-- Subject: Must be concise (max 50 chars), present tense, no period
-- Scope (Optional): Component name (e.g., auth, api)
-- Body (Optional): Wrap text at 72 chars, use bullet points for multiple items
-- Footer (Optional): Breaking changes, issues
+- Subject: present tense / imperative feel, no trailing period
+- Scope (optional): package or area (e.g. `pam`, `pamenv`)
+- Body (optional): why and notable impact; bullets OK for multiple items
+- Footer (optional): breaking changes, issue refs — **not** Cursor co-author
 
 ### Examples
 
 ```
-feat(auth): implement google oauth login
-fix(api): fix session timeout issue
-docs: add installation steps
+feat(pam): 详情改用 slug，并支持删除与 CLI 环境管理
+
+详情 URL 使用 slug；owner 可删除项目。
 ```
 
-### notes
-
-如果可以将修改的文件列表列在 Footer 中
+```
+fix(pamenv): 修复 delete 成功却误报 API failed
+```
