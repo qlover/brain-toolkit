@@ -27,9 +27,14 @@ const FEATURED_LIMIT = 4;
 
 export type HomeLandingProps = {
   featuredProjects?: readonly SearchPAMProject[];
+  /** PAM app version from package.json (e.g. `2.3.0`). */
+  appVersion?: string;
 };
 
-export function HomeLanding({ featuredProjects = [] }: HomeLandingProps) {
+export function HomeLanding({
+  featuredProjects = [],
+  appVersion
+}: HomeLandingProps) {
   const tt = usePageI18nMapping<HomeI18nInterface>();
   const { success: isAuthenticated, loading: authLoading } = useUserAuth();
   const previewEnvs = tt.previewEnvs.split(',').map((s) => s.trim());
@@ -286,6 +291,22 @@ export function HomeLanding({ featuredProjects = [] }: HomeLandingProps) {
           </div>
         </section>
       ) : null}
+
+      <footer
+        data-testid="HomeLandingFooter"
+        className="relative mt-auto border-t border-primary-border"
+      >
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-secondary-text sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <p>
+            © {new Date().getFullYear()} {tt.title}
+            <span className="text-tertiary-text"> · </span>
+            {tt.footerTagline}
+          </p>
+          <p className="font-mono text-xs text-tertiary-text">
+            PAM{appVersion ? ` v${appVersion}` : ''}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

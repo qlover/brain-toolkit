@@ -34,5 +34,6 @@ export const homeI18n = Object.freeze({
   cliBody: i18nKeys.PAGE_HOME_CLI_BODY,
   featuredTitle: i18nKeys.PAGE_HOME_FEATURED_TITLE,
   featuredViewAll: i18nKeys.PAGE_HOME_FEATURED_VIEW_ALL,
+  footerTagline: i18nKeys.PAGE_HOME_FOOTER_TAGLINE,
   adminTitle: COMMON_ADMIN_TITLE
 });

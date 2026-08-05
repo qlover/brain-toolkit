@@ -10,6 +10,7 @@ import {
   type PageParamsType
 } from '@server/render/pageRouteParams';
 import { getPublicProjectsForHome } from '@server/utils/getPublicProjectsForHome';
+import { version as appVersion } from '../../../package.json';
 import type { Metadata } from 'next';
 
 /** Featured public projects on the landing page (pairs with unstable_cache). */
@@ -47,7 +48,10 @@ export default async function Home({ params }: PageParamsProps) {
         showHeaderLogo
         mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
-        <HomeLanding featuredProjects={initialList?.items ?? []} />
+        <HomeLanding
+          featuredProjects={initialList?.items ?? []}
+          appVersion={appVersion}
+        />
       </AppRoutePage>
     </PageI18nProvider>
   );
