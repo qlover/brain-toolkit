@@ -1,5 +1,15 @@
 # pamenv-cli
 
+## 1.4.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** 新增 remove，push 延后创建缺失环境 ([ec49038](https://github.com/qlover/brain-toolkit/commit/ec490389cc6a37d57ac1a36f6f4eac64f2bf0e67)) ([#110](https://github.com/qlover/brain-toolkit/pull/110))
+
+  缺失 -e 环境时先完成校验与确认，再一并创建并写入变量；新增 remove 两次确认删除；void 成功响应不再误报失败；补充 defaultEnvUrl 与文档。
+
 ## 1.3.0
 
 ### Minor Changes

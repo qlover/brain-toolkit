@@ -1,8 +1,8 @@
 {
   "name": "@brain-toolkit/pam",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
-  "homepage":"https://pam.qlover.top",
+  "homepage": "https://pam.qlover.top",
   "scripts": {
     "dev": "cross-env APP_ENV=localhost next dev --hostname pam.localhost --port 3400",
     "dev:localhost": "cross-env APP_ENV=localhost next dev --port 3400",

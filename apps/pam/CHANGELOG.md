@@ -1,5 +1,35 @@
 # pam
 
+## 2.4.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 拆分 / 落地页与公开 /projects 列表 ([d026c5f](https://github.com/qlover/brain-toolkit/commit/d026c5f3d3f9d37db93f85012fc9c05a7c366339)) ([#111](https://github.com/qlover/brain-toolkit/pull/111))
+
+  将项目列表迁到 /projects，首页改为介绍落地（示意、用法、CLI、公开项目预览），详情返回指向列表。
+
+- **pam:** 落地页增加版本与版权 footer ([a855340](https://github.com/qlover/brain-toolkit/commit/a8553402be54d9a6a917919276119f646ff7b8ac)) ([#111](https://github.com/qlover/brain-toolkit/pull/111))
+
+- **pam:** 详情改用 slug，并支持删除与 CLI 环境管理 ([f768065](https://github.com/qlover/brain-toolkit/commit/f7680651b7333766bc8f4b79d20403eb36ffe6ca)) ([#110](https://github.com/qlover/brain-toolkit/pull/110))
+
+  详情 URL 使用 slug（UUID 仍兼容跳转）；owner 可删除项目；fork 仅限他人公开项目。create/delete environment 走 admin 客户端，避免 CLI bearer 无 Supabase RLS session。
+
+- **pamenv:** 新增 remove，push 延后创建缺失环境 ([ec49038](https://github.com/qlover/brain-toolkit/commit/ec490389cc6a37d57ac1a36f6f4eac64f2bf0e67)) ([#110](https://github.com/qlover/brain-toolkit/pull/110))
+
+  缺失 -e 环境时先完成校验与确认，再一并创建并写入变量；新增 remove 两次确认删除；void 成功响应不再误报失败；补充 defaultEnvUrl 与文档。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 鉴权就绪后再 ensure 首页项目列表 ([e4a11da](https://github.com/qlover/brain-toolkit/commit/e4a11da3250032394ecf1195af574820b20631d8)) ([#111](https://github.com/qlover/brain-toolkit/pull/111))
+
+  避免游客先拉再登录重拉，以及从详情返回时重复拉取。
+
+- **pam:** 允许非敏感环境变量为空字符串 ([57bd9a0](https://github.com/qlover/brain-toolkit/commit/57bd9a0509594e5cf97fd2c89653e2167533935e)) ([#110](https://github.com/qlover/brain-toolkit/pull/110))
+
+  与 dotenv 的 KEY= 语义对齐，避免 pamenv push 因空值被 zod 拒绝。
+
 ## 2.3.0
 
 ### Minor Changes
