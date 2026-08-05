@@ -98,8 +98,8 @@ export const PAGE_DOCS_CLI_SECTION_FORK = 'page_docs_cli:section__fork';
 
 /**
  * @description Fork body
- * @localZh `pamenv fork <slug|id>` 将可读项目（自己的或公开的）复制为私有项目。敏感变量值会被清空，环境结构与非敏感值会保留。可交互确认 slug/name，或用 `--slug` / `--name` / `-y`。成功后用 `pamenv push <新slug> -e <env>` 填入密钥。
- * @localEn `pamenv fork <slug|id>` copies a readable project (yours or public) into a private project. Sensitive values are cleared; env structure and non-sensitive values are kept. Confirm slug/name interactively, or pass `--slug` / `--name` / `-y`. Then fill secrets with `pamenv push <new-slug> -e <env>`.
+ * @localZh `pamenv fork <slug|id>` 将他人公开项目复制为私有项目。不能 fork 自己的项目。敏感变量值会被清空，环境结构与非敏感值会保留。可交互确认 slug/name，或用 `--slug` / `--name` / `-y`。成功后用 `pamenv push <新slug> -e <env>` 填入密钥。
+ * @localEn `pamenv fork <slug|id>` copies someone else's public project into a private project. Forking your own projects is not allowed. Sensitive values are cleared; env structure and non-sensitive values are kept. Confirm slug/name interactively, or pass `--slug` / `--name` / `-y`. Then fill secrets with `pamenv push <new-slug> -e <env>`.
  */
 export const PAGE_DOCS_CLI_FORK_BODY = 'page_docs_cli:fork__body';
 
@@ -112,8 +112,8 @@ export const PAGE_DOCS_CLI_SECTION_SYNC = 'page_docs_cli:section__sync';
 
 /**
  * @description Sync body
- * @localZh `pull` 以远端为准写入本地，并尽量保留本地注释；语义冲突时可选择覆盖或中止。`push` 用 `~/.pam/sync` 基线做三方比较：仅远端变更时提示先 pull；双方都改则冲突交互。`-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记等），二者互不隐含。Diff 默认将值打码为 `*****`；`--show-values` 仅明文显示非敏感值。
- * @localEn `pull` writes remote values into the local file and preserves local comments when possible; on semantic conflicts you can overwrite or abort. `push` uses `~/.pam/sync` baselines for a three-way compare: remote-only changes ask you to pull first; both sides changed triggers a conflict prompt. `-f` only skips conflict overwrite confirms; `-y` skips ordinary confirms (missing baseline, final push, new-key sensitivity), and neither implies the other. Diff review masks values as `*****` by default; `--show-values` shows non-sensitive plaintext only.
+ * @localZh `pull` 以远端为准写入本地，并尽量保留本地注释；语义冲突时可选择覆盖或中止。`push` 用 `~/.pam/sync` 基线做三方比较：仅远端变更时提示先 pull；双方都改则冲突交互。`-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记等），二者互不隐含。Diff 默认将值打码为 `*****`；`--show-values` 仅明文显示非敏感值。`pamenv remove <slug> -e <env>` 删除远端环境（两次确认，`-y` 可跳过），并清除对应 sync 基线，不删本地 `.env.*`。
+ * @localEn `pull` writes remote values into the local file and preserves local comments when possible; on semantic conflicts you can overwrite or abort. `push` uses `~/.pam/sync` baselines for a three-way compare: remote-only changes ask you to pull first; both sides changed triggers a conflict prompt. `-f` only skips conflict overwrite confirms; `-y` skips ordinary confirms (missing baseline, final push, new-key sensitivity), and neither implies the other. Diff review masks values as `*****` by default; `--show-values` shows non-sensitive plaintext only. `pamenv remove <slug> -e <env>` deletes a remote environment (two confirms, skip with `-y`), clears the matching sync baseline, and does not delete local `.env.*` files.
  */
 export const PAGE_DOCS_CLI_SYNC_BODY = 'page_docs_cli:sync__body';
 

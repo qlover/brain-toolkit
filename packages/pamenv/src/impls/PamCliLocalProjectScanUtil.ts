@@ -118,6 +118,22 @@ export class PamCliLocalProjectScanUtil {
   }
 
   /**
+   * Default environment URL for interactive prompts.
+   * Prefers `package.json` homepage, then a normalized git origin when http(s).
+   *
+   * @param scan - Local scan result (or homepage/repo fields)
+   * @returns Valid http(s) URL, or empty when neither source works
+   */
+  public static defaultEnvUrl(
+    scan: Pick<PamCliLocalProjectScanType, 'homepageUrl' | 'repoUrl'>
+  ): string {
+    if (scan.homepageUrl) {
+      return scan.homepageUrl;
+    }
+    return this.normalizeHomepageUrl(scan.repoUrl);
+  }
+
+  /**
    * Converts git remote URLs to https form when possible.
    *
    * @param remoteUrl - Raw `git remote get-url` output

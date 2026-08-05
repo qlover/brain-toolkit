@@ -262,9 +262,10 @@ export class InitCommand {
         }
       });
 
+      const defaultEnvUrl = PamCliLocalProjectScanUtil.defaultEnvUrl(scan);
       const envUrl = await input({
         message: '  env url',
-        ...(scan.homepageUrl ? { default: scan.homepageUrl } : {}),
+        ...(defaultEnvUrl ? { default: defaultEnvUrl } : {}),
         validate: (value: string): true | string => {
           if (!PamCliLocalProjectScanUtil.isValidEnvUrl(value)) {
             return 'A valid http(s) URL is required';

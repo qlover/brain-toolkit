@@ -5,6 +5,7 @@ import type {
 } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
+  PamCliCreateEnvironmentInputType,
   PamCliCreateProjectInputType,
   PamCliExportResultType,
   PamCliForkProjectInputType,
@@ -239,6 +240,33 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   /**
    * @override
    */
+  public async createEnvironment(
+    projectId: string,
+    payload: PamCliCreateEnvironmentInputType
+  ): Promise<PamCliRemoteEnvironmentType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+
+    return this.requestJson<PamCliRemoteEnvironmentType>(
+      `${baseUrl}/api/pam/${projectId}/environments`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: payload.name,
+          url: payload.url,
+          ...(payload.variables ? { variables: payload.variables } : {})
+        })
+      }
+    );
+  }
+
+  /**
+   * @override
+   */
   public async exportEnvironment(
     projectId: string,
     envId: string
@@ -277,6 +305,29 @@ export class PamCliApiClient implements PamCliApiClientInterface {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ variables })
+      }
+    );
+  }
+
+  /**
+   * @override
+   */
+  public async deleteEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<void> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+
+    await this.requestJson<unknown>(
+      `${baseUrl}/api/pam/${projectId}/environments/${envId}/delete`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
       }
     );
   }
@@ -330,7 +381,8 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       );
     }
 
-    if (!response.ok || !body.success || body.data === undefined) {
+    // Void endpoints (e.g. delete) return `{ success: true }` without `data`.
+    if (!response.ok || body.success !== true) {
       throw new Error(
         body.message ||
           body.id ||
@@ -338,6 +390,6 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       );
     }
 
-    return body.data;
+    return body.data as T;
   }
 }

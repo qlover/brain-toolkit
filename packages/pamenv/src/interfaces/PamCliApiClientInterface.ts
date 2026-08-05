@@ -1,4 +1,5 @@
 import type {
+  PamCliCreateEnvironmentInputType,
   PamCliCreateProjectInputType,
   PamCliExportResultType,
   PamCliForkProjectInputType,
@@ -100,6 +101,17 @@ export interface PamCliApiClientInterface {
   listEnvironments(projectId: string): Promise<PamCliRemoteEnvironmentType[]>;
 
   /**
+   * Creates one environment on an owned project.
+   *
+   * @param projectId - Project uuid
+   * @param payload - Name, url, and optional variables
+   */
+  createEnvironment(
+    projectId: string,
+    payload: PamCliCreateEnvironmentInputType
+  ): Promise<PamCliRemoteEnvironmentType>;
+
+  /**
    * Exports one environment as decrypted dotenv text (owner only).
    *
    * @param projectId - Project uuid
@@ -122,6 +134,14 @@ export interface PamCliApiClientInterface {
     envId: string,
     variables: readonly PamCliVariableInputType[]
   ): Promise<void>;
+
+  /**
+   * Deletes one environment from an owned project.
+   *
+   * @param projectId - Project uuid
+   * @param envId - Environment uuid
+   */
+  deleteEnvironment(projectId: string, envId: string): Promise<void>;
 
   /**
    * Revokes the current CLI bearer token on the server (best-effort).
