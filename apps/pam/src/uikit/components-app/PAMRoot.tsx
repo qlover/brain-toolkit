@@ -7,12 +7,10 @@ import {
   useStrictEffect,
   usePageI18nMapping
 } from '@qlover/next-kit/client';
-import { useLayoutEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
-import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
+import { PAMFacade } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
-import { defaultSearchParams } from '@config/common';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
@@ -34,7 +32,11 @@ export type PAMRootProps = {
 export function PAMRoot({ initialList = null }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
-  const { success: isAuthenticated } = useUserAuth();
+  const {
+    success: isAuthenticated,
+    loading: authLoading,
+    user
+  } = useUserAuth();
   const router = useRouter();
 
   const dialog = useIOC(I.DialogHandler);
@@ -59,20 +61,16 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   // Keep SSR + first client paint on Compact; apply persisted mode after mount.
   const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
 
-  useLayoutEffect(() => {
-    if (initialList?.items) {
-      pamFacade.hydrateInitialList(initialList);
-    }
-  }, [initialList, pamFacade]);
-
-  // Background refresh picks up private projects / is_owner after session restore.
+  // Wait for session restore so we do not pull as guest then again as user.
   useStrictEffect(() => {
-    void pamFacade.pullProjectList({
-      page: defaultSearchParams.page,
-      resetResult: false,
-      projectsStrategy: ProjectsStrategy.Replace
+    if (authLoading) {
+      return;
+    }
+    void pamFacade.ensureHomeProjectList({
+      initialList,
+      userId: user?.id ?? null
     });
-  }, [pamFacade]);
+  }, [pamFacade, initialList, authLoading, user?.id]);
 
   const closeDialog = () => pamFacade.closeDialog();
 
