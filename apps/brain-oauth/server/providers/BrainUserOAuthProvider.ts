@@ -27,6 +27,38 @@ import type {
 
 type BrainLoginLike = Record<string, unknown>;
 
+/**
+ * Next.js patches global `fetch` and can drop the body when given a `Request`
+ * object (empty POST → Brain API "email/password required"). Unwrap to
+ * `fetch(url, init)` like backend-benchmark does.
+ */
+async function nextSafeFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  if (input instanceof Request) {
+    const method = input.method.toUpperCase();
+    const hasBody = method !== 'GET' && method !== 'HEAD';
+    const body = hasBody ? await input.clone().arrayBuffer() : undefined;
+    return fetch(input.url, {
+      method: input.method,
+      headers: input.headers,
+      body,
+      redirect: input.redirect,
+      integrity: input.integrity,
+      keepalive: input.keepalive,
+      signal: input.signal,
+      referrer: input.referrer,
+      referrerPolicy: input.referrerPolicy,
+      credentials: input.credentials,
+      mode: input.mode,
+      cache: input.cache
+    });
+  }
+
+  return fetch(input, init);
+}
+
 function extractBrainSessionToken(data: unknown): string | null {
   if (!data || typeof data !== 'object') {
     return null;
@@ -97,7 +129,10 @@ export class BrainUserOAuthProvider
   ) {
     const tokenEncryption = new TokenEncryption(config.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
-    const options = createBrainUserOptions({ logger });
+    const options = createBrainUserOptions({
+      logger,
+      fetcher: nextSafeFetch
+    });
     this.gateway = new BrainUserGateway(options.requestAdapter, logger);
     this.tokenEncryption = tokenEncryption;
   }
