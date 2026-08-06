@@ -201,6 +201,13 @@ export class BrainOAuthLoginService {
     locale?: string;
     returnTo?: string;
   }): Promise<LoginProviderResult> {
+    if (this.config.env !== 'localhost') {
+      throw new ExecutorError(
+        API_OAUTH_INVALID_REQUEST,
+        'Brain PKCE login is only available in local environment (APP_ENV=localhost)'
+      );
+    }
+
     this.assertConfigured();
 
     const { codeVerifier, codeChallenge } = createPkcePair();

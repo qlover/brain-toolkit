@@ -404,9 +404,9 @@ export const PAGE_LOGIN_WITH_BRAIN_TOOLTIP = 'page_login:with_brain_tooltip';
 export const PAGE_LOGIN_WITH_BRAIN_PKCE = 'page_login:with_brain_pkce';
 
 /**
- * @description Tooltip for Brain PKCE login button
- * @localZh PAM 作为 OAuth 客户端，使用授权码 + PKCE 直连 brain-oauth（适合本地联调）。
- * @localEn PAM acts as an OAuth client and uses authorization code + PKCE against brain-oauth (best for local integration).
+ * @description Tooltip for Brain PKCE login button (local APP_ENV only)
+ * @localZh PAM 作为 OAuth 客户端直连 brain-oauth（授权码 + PKCE）。仅本地环境可用；线上尚未支持跨域请求 Brain API。
+ * @localEn PAM acts as an OAuth client against brain-oauth (authorization code + PKCE). Local only; production does not yet support cross-origin Brain API requests.
  */
 export const PAGE_LOGIN_WITH_BRAIN_PKCE_TOOLTIP =
   'page_login:with_brain_pkce_tooltip';

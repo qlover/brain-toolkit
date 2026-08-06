@@ -11,6 +11,8 @@ import { PhoneLoginForm } from '@/uikit/components/PhoneLoginForm';
 import type { LoginProviderType } from '@config/common';
 import { URLParamsKeys, loginProviders } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
+import { I } from '@config/ioc-identifiter';
+import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { useIOC } from '../hook/useIOC';
 
 type LoginTab = 'email' | 'phone';
@@ -56,11 +58,12 @@ function ProviderButtonRow({
 }
 
 /**
- * PAM login entry: Brain (Supabase SSO, disabled locally), Brain PKCE,
+ * PAM login entry: Brain (Supabase SSO, disabled), Brain PKCE (local only),
  * GitHub/Google, email.
  */
 export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const userGateway = useIOC(AppUserGateway);
+  const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
   const locale = useLocale();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<LoginTab>('email');
@@ -74,6 +77,11 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
    * public URL). Localhost-only brain-oauth cannot complete that hop — use PKCE.
    */
   const brainSupabaseEnabled = false;
+  /**
+   * Brain PKCE talks to brain-oauth / Brain API cross-origin; production has no
+   * CORS path yet — only enable when APP_ENV=localhost.
+   */
+  const brainPkceEnabled = appConfig.env === 'localhost';
   const googleEnabled = false;
 
   const tabBaseClass =
@@ -127,6 +135,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   }, [userGateway, locale, searchParams]);
 
   const brainDisabled = !brainSupabaseEnabled || providerLogining;
+  const brainPkceDisabled = !brainPkceEnabled || providerLogining;
   const googleDisabled = !googleEnabled || providerLogining;
 
   return (
@@ -157,11 +166,14 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </button>
       </ProviderButtonRow>
 
-      <ProviderButtonRow title={tt.providerBrainPkceTooltip}>
+      <ProviderButtonRow
+        title={tt.providerBrainPkceTooltip}
+        disabled={brainPkceDisabled}
+      >
         <button
           type="button"
           data-testid="LoginWithBrainPkce"
-          disabled={providerLogining}
+          disabled={brainPkceDisabled}
           onClick={onLoginWithBrainPkce}
           aria-label={tt.providerBrainPkce}
           className={providerButtonClass}
