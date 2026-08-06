@@ -15,6 +15,15 @@
 export const API_CALLBACK_EMAIL_LOGIN = '/api/callback/email-login' as const;
 
 /**
+ * API path: `/api/callback/brain-oauth`
+ *
+ * @see [src/app/api/callback/brain-oauth/route.ts](../../src/app/api/callback/brain-oauth/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/callback/brain-oauth/route.ts`
+ */
+export const API_CALLBACK_BRAIN_OAUTH = '/api/callback/brain-oauth' as const;
+
+/**
  * API path: `/api/callback/provider-login`
  *
  * @see [src/app/api/callback/provider-login/route.ts](../../src/app/api/callback/provider-login/route.ts)
@@ -256,6 +265,15 @@ export const API_USER_LOGIN = '/api/user/login' as const;
 export const API_USER_LOGIN_PROVIDER = '/api/user/login/provider' as const;
 
 /**
+ * API path: `/api/user/login/brain`
+ *
+ * @see [src/app/api/user/login/brain/route.ts](../../src/app/api/user/login/brain/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/user/login/brain/route.ts`
+ */
+export const API_USER_LOGIN_BRAIN = '/api/user/login/brain' as const;
+
+/**
  * API path: `/api/user/logout`
  *
  * @see [src/app/api/user/logout/route.ts](../../src/app/api/user/logout/route.ts)
@@ -311,6 +329,7 @@ export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
   | typeof API_CALLBACK_EMAIL_LOGIN
+  | typeof API_CALLBACK_BRAIN_OAUTH
   | typeof API_CALLBACK_PROVIDER_LOGIN
   | typeof API_CLIENTS
   | typeof API_CLIENTS_2
@@ -337,6 +356,7 @@ export type ApiRoutePath =
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGIN_PROVIDER
+  | typeof API_USER_LOGIN_BRAIN
   | typeof API_USER_LOGOUT
   | typeof API_USER_OTP_LOGIN
   | typeof API_USER_OTP_VERIFY

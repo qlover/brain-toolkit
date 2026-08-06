@@ -92,4 +92,29 @@ export class ServerConfig implements SeedServerConfigInterface {
    */
   public readonly pamCliTokenExpiresIn: StringValue = (process.env
     .PAM_CLI_TOKEN_EXPIRES_IN ?? '30d') as StringValue;
+
+  public readonly brainOAuthSiteUrl: string = (
+    process.env.BRAIN_OAUTH_SITE_URL ?? ''
+  )
+    .trim()
+    .replace(/\/+$/, '');
+
+  public readonly brainOAuthClientId: string = (
+    process.env.BRAIN_OAUTH_CLIENT_ID ?? ''
+  ).trim();
+
+  public readonly brainOAuthClientSecret: string = (
+    process.env.BRAIN_OAUTH_CLIENT_SECRET ?? ''
+  ).trim();
+
+  public readonly brainOAuthRedirectUri: string = (
+    process.env.BRAIN_OAUTH_REDIRECT_URI ?? ''
+  ).trim();
+
+  public readonly brainOAuthScopes: string =
+    (process.env.BRAIN_OAUTH_SCOPES ?? '').trim() || 'openid profile email';
+
+  public readonly brainOAuthLocale: string = (
+    process.env.BRAIN_OAUTH_LOCALE ?? ''
+  ).trim();
 }

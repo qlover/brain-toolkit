@@ -375,3 +375,17 @@ export const PAGE_LOGIN_SWITCH_TO_PASSWORD = 'page_login:switch_to_password';
  * @localEn Sign in with GitHub
  */
 export const PAGE_LOGIN_WITH_GITHUB = 'page_login:with_github';
+
+/**
+ * @description Brain account SSO via Supabase custom provider (`custom:brain`) — temporarily disabled
+ * @localZh Brain 账号登录（已禁用）
+ * @localEn Sign in with Brain account (disabled)
+ */
+export const PAGE_LOGIN_WITH_BRAIN = 'page_login:with_brain';
+
+/**
+ * @description Brain OAuth PKCE login (PAM as client of brain-oauth)
+ * @localZh Brain PKCE 登录
+ * @localEn Sign in with Brain (PKCE)
+ */
+export const PAGE_LOGIN_WITH_BRAIN_PKCE = 'page_login:with_brain_pkce';

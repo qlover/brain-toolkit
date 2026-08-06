@@ -48,6 +48,19 @@ export interface SeedServerConfigInterface extends SharedConfigInterface {
    * @example '21d'
    */
   readonly pamCliTokenExpiresIn: StringValue;
+
+  /** Brain OAuth AS base URL (e.g. http://localhost:3122). Empty = Brain PKCE login disabled. */
+  readonly brainOAuthSiteUrl: string;
+  /** OAuth client_id registered on Brain OAuth. */
+  readonly brainOAuthClientId: string;
+  /** Optional client_secret for confidential clients; public PKCE clients leave empty. */
+  readonly brainOAuthClientSecret: string;
+  /** Exact redirect_uri registered on Brain OAuth; empty = `{SITE_URL}/api/callback/brain-oauth`. */
+  readonly brainOAuthRedirectUri: string;
+  /** Space-separated scopes; default `openid profile email`. */
+  readonly brainOAuthScopes: string;
+  /** Optional fixed authorize locale (`en`|`zh`); empty uses request locale. */
+  readonly brainOAuthLocale: string;
 }
 export interface SeedSrcConfigInterface extends SharedConfigInterface {
   readonly stringEncryptorKey: string;
