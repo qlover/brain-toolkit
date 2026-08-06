@@ -38,7 +38,7 @@
     "@qlover/fe-corekit": "3.4.6",
     "@qlover/logger": "1.2.1",
     "@qlover/next-kit": "^1.0.0",
-    "@qlover/oauth-wrapper": "0.6.3",
+    "@qlover/oauth-wrapper": "0.7.0",
     "@qlover/slice-store-react": "^1.4.2",
     "@qlover/tailwind-theme": "^0.3.0",
     "@scalar/nextjs-api-reference": "^0.9.24",
