@@ -2,8 +2,8 @@ import {
   apiCorsPreflightResponse,
   buildApiCorsHeaders
 } from '@qlover/next-kit/server';
-import { isEmpty } from 'lodash';
 import { OAuthWrapperError } from '@qlover/oauth-wrapper';
+import { isEmpty } from 'lodash';
 import { ROUTE_OAUTH_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
