@@ -1,11 +1,11 @@
 'use client';
 
-import { useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useState, type ComponentType, type SVGProps } from 'react';
+import { useLocale } from 'next-intl';
+import { useCallback, useState, type ReactNode } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import { EmailOTPForm } from '@/uikit/components/EmailOTPForm';
-import { GithubIcon, GoogleIcon } from '@/uikit/components/icons';
+import { BrainIcon, GithubIcon, GoogleIcon } from '@/uikit/components/icons';
 import { LoginForm } from '@/uikit/components/LoginForm';
 import { PhoneLoginForm } from '@/uikit/components/PhoneLoginForm';
 import type { LoginProviderType } from '@config/common';
@@ -15,35 +15,9 @@ import { useIOC } from '../hook/useIOC';
 
 type LoginTab = 'email' | 'phone';
 type EmailMode = 'password' | 'otp';
-type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
-type ProvidersItem = {
-  key: LoginProviderType;
-  provider: LoginProviderType;
-  titleI18nMapKey: keyof LoginI18nInterface;
-  disabled: boolean;
-  Icon: IconComponent;
-};
-
-const providersIcons: Record<
-  typeof loginProviders.GitHub | typeof loginProviders.Google,
-  IconComponent
-> = {
-  [loginProviders.GitHub]: GithubIcon,
-  [loginProviders.Google]: GoogleIcon
-};
-
-/** GitHub / Google only — Brain SSO buttons are dedicated. */
-const providersItems: ProvidersItem[] = [
-  loginProviders.GitHub,
-  loginProviders.Google
-].map((provider) => ({
-  key: provider,
-  disabled: provider === loginProviders.Google,
-  provider,
-  titleI18nMapKey: ('provider' + provider) as keyof LoginI18nInterface,
-  Icon: providersIcons[provider]
-}));
+const providerButtonClass =
+  'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24292e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2c3137] focus:outline-none focus:ring-2 focus:ring-[#24292e] focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
 function resolveReturnTo(
   searchParams: URLSearchParams | null | undefined
@@ -60,9 +34,30 @@ function resolveReturnTo(
   return '/';
 }
 
+/** Full-width shell: keeps buttons aligned; carries title + disabled cursor. */
+function ProviderButtonRow({
+  title,
+  disabled,
+  children
+}: {
+  title: string;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      data-testid="ProviderButtonRow"
+      className={`mb-6 w-full ${disabled ? 'cursor-not-allowed' : ''}`}
+      title={title}
+    >
+      {children}
+    </div>
+  );
+}
+
 /**
- * PAM login entry: Brain PKCE (direct brain-oauth), GitHub/Google, email.
- * Supabase `custom:brain` is temporarily disabled (localhost Brain AS).
+ * PAM login entry: Brain (Supabase SSO, disabled locally), Brain PKCE,
+ * GitHub/Google, email.
  */
 export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const userGateway = useIOC(AppUserGateway);
@@ -74,8 +69,12 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const [error, setError] = useState<string | null>(null);
 
   const phoneLoginEnabled = false;
-  /** Supabase custom:brain — disabled while Brain only reachable on localhost. */
+  /**
+   * Supabase `custom:brain` needs a Brain AS reachable from Supabase (usually
+   * public URL). Localhost-only brain-oauth cannot complete that hop — use PKCE.
+   */
   const brainSupabaseEnabled = false;
+  const googleEnabled = false;
 
   const tabBaseClass =
     'flex-1 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer border-b-2 outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-secondary-text disabled:hover:border-transparent';
@@ -120,10 +119,15 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
       .catch((err) => {
         setProviderLogining(false);
         setError(
-          err instanceof Error ? err.message : 'Failed to start Brain PKCE login'
+          err instanceof Error
+            ? err.message
+            : 'Failed to start Brain PKCE login'
         );
       });
   }, [userGateway, locale, searchParams]);
+
+  const brainDisabled = !brainSupabaseEnabled || providerLogining;
+  const googleDisabled = !googleEnabled || providerLogining;
 
   return (
     <div data-testid="LoginTabSwitch" className="w-full">
@@ -136,43 +140,67 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </div>
       )}
 
-      <button
-        type="button"
-        data-testid="LoginWithBrainPkce"
-        disabled={providerLogining}
-        onClick={onLoginWithBrainPkce}
-        title={tt.providerBrainPkce}
-        className="mb-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-brand/40 bg-brand/10 px-4 py-3 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-brand/15 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+      <ProviderButtonRow
+        title={tt.providerBrainTooltip}
+        disabled={brainDisabled}
       >
-        <span>{tt.providerBrainPkce}</span>
-      </button>
+        <button
+          type="button"
+          data-testid="LoginWithBrain"
+          disabled={brainDisabled}
+          onClick={() => onLoginWithProvider(loginProviders.Brain)}
+          aria-label={tt.providerBrain}
+          className={providerButtonClass}
+        >
+          <BrainIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerBrain}</span>
+        </button>
+      </ProviderButtonRow>
 
-      <button
-        type="button"
-        data-testid="LoginWithBrain"
-        disabled={!brainSupabaseEnabled || providerLogining}
-        onClick={() => onLoginWithProvider(loginProviders.Brain)}
-        title={tt.providerBrain}
-        className="mb-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary-border bg-elevated px-4 py-3 text-sm font-semibold text-secondary-text shadow-sm transition-colors hover:bg-elevated/80 focus:outline-none focus:ring-2 focus:ring-primary-border focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      <ProviderButtonRow title={tt.providerBrainPkceTooltip}>
+        <button
+          type="button"
+          data-testid="LoginWithBrainPkce"
+          disabled={providerLogining}
+          onClick={onLoginWithBrainPkce}
+          aria-label={tt.providerBrainPkce}
+          className={providerButtonClass}
+        >
+          <BrainIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerBrainPkce}</span>
+        </button>
+      </ProviderButtonRow>
+
+      <ProviderButtonRow title={tt.providerGitHub}>
+        <button
+          type="button"
+          data-testid="LoginWithGitHub"
+          disabled={providerLogining}
+          onClick={() => onLoginWithProvider(loginProviders.GitHub)}
+          aria-label={tt.providerGitHub}
+          className={providerButtonClass}
+        >
+          <GithubIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerGitHub}</span>
+        </button>
+      </ProviderButtonRow>
+
+      <ProviderButtonRow
+        title={tt.providerGoogleTooltip}
+        disabled={googleDisabled}
       >
-        <span>{tt.providerBrain}</span>
-      </button>
-
-      {providersItems.map(
-        ({ key, disabled, provider, titleI18nMapKey, Icon }) => (
-          <button
-            data-testid={'LoginWith' + key}
-            key={key}
-            disabled={disabled || providerLogining}
-            onClick={() => onLoginWithProvider(provider)}
-            title={tt[titleI18nMapKey]}
-            className="mb-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24292e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2c3137] focus:outline-none focus:ring-2 focus:ring-[#24292e] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <Icon className="h-5 w-5" />
-            <span>{tt[titleI18nMapKey]}</span>
-          </button>
-        )
-      )}
+        <button
+          type="button"
+          data-testid="LoginWithGoogle"
+          disabled={googleDisabled}
+          onClick={() => onLoginWithProvider(loginProviders.Google)}
+          aria-label={tt.providerGoogle}
+          className={providerButtonClass}
+        >
+          <GoogleIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerGoogle}</span>
+        </button>
+      </ProviderButtonRow>
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">

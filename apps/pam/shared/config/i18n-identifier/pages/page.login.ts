@@ -109,6 +109,12 @@ export const PAGE_LOGIN_CONTINUE_WITH = 'page_login:continue_with';
  */
 export const PAGE_LOGIN_WITH_GOOGLE = 'page_login:with_google';
 /**
+ * @description Tooltip for Google login when disabled
+ * @localZh Google 登录暂未开通，请改用 GitHub、Brain(PKCE) 或邮箱。
+ * @localEn Google sign-in is not enabled yet. Use GitHub, Brain (PKCE), or email instead.
+ */
+export const PAGE_LOGIN_WITH_GOOGLE_TOOLTIP = 'page_login:with_google_tooltip';
+/**
  * @description Login page no account text
  * @localZh 还没有账号？
  * @localEn Don't have an account?
@@ -215,8 +221,8 @@ export const PAGE_LOGIN_TAB_EMAIL = 'page_login:tab_email';
 export const PAGE_LOGIN_TAB_PHONE = 'page_login:tab_phone';
 /**
  * @description Phone login unavailable hint
- * @localZh 暂不支持
- * @localEn Not available yet
+ * @localZh 手机登录暂未开通，请使用邮箱验证码或第三方账号登录。
+ * @localEn Phone sign-in is not available yet. Use email code or a third-party account.
  */
 export const PAGE_LOGIN_TAB_PHONE_DISABLED = 'page_login:tab_phone_disabled';
 /**
@@ -377,15 +383,30 @@ export const PAGE_LOGIN_SWITCH_TO_PASSWORD = 'page_login:switch_to_password';
 export const PAGE_LOGIN_WITH_GITHUB = 'page_login:with_github';
 
 /**
- * @description Brain account SSO via Supabase custom provider (`custom:brain`) — temporarily disabled
- * @localZh Brain 账号登录（已禁用）
- * @localEn Sign in with Brain account (disabled)
+ * @description Brain account SSO via Supabase custom provider (`custom:brain`)
+ * @localZh 使用 Brain 登录
+ * @localEn Sign in with Brain
  */
 export const PAGE_LOGIN_WITH_BRAIN = 'page_login:with_brain';
 
 /**
+ * @description Tooltip for Supabase Brain SSO button (currently disabled locally)
+ * @localZh 通过 Supabase 的 custom:brain 跳转 Brain 登录。本地 Brain 授权站仅 localhost 可达时不可用，请改用 Brain(PKCE)。
+ * @localEn Signs in via Supabase custom:brain. Disabled when Brain AS is only reachable on localhost — use Brain (PKCE) instead.
+ */
+export const PAGE_LOGIN_WITH_BRAIN_TOOLTIP = 'page_login:with_brain_tooltip';
+
+/**
  * @description Brain OAuth PKCE login (PAM as client of brain-oauth)
- * @localZh Brain PKCE 登录
+ * @localZh 使用 Brain(PKCE) 登录
  * @localEn Sign in with Brain (PKCE)
  */
 export const PAGE_LOGIN_WITH_BRAIN_PKCE = 'page_login:with_brain_pkce';
+
+/**
+ * @description Tooltip for Brain PKCE login button
+ * @localZh PAM 作为 OAuth 客户端，使用授权码 + PKCE 直连 brain-oauth（适合本地联调）。
+ * @localEn PAM acts as an OAuth client and uses authorization code + PKCE against brain-oauth (best for local integration).
+ */
+export const PAGE_LOGIN_WITH_BRAIN_PKCE_TOOLTIP =
+  'page_login:with_brain_pkce_tooltip';
