@@ -9,6 +9,7 @@
 drop table if exists public.brain_oauth_authorization_codes cascade;
 drop table if exists public.brain_oauth_refresh_tokens cascade;
 drop table if exists public.brain_oauth_user_credentials cascade;
+drop table if exists public.brain_oauth_user_links cascade;
 drop table if exists public.brain_oauth_clients cascade;
 
 drop table if exists public.oauth_authorization_codes cascade;
@@ -31,7 +32,7 @@ create table public.brain_oauth_clients (
   grant_types text[] not null default '{authorization_code,refresh_token}',
   scopes text[] not null default '{openid,profile,email}',
   confidential boolean not null default true,
-  owner_user_id integer not null,
+  owner_user_id text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -49,7 +50,7 @@ alter table public.brain_oauth_clients enable row level security;
 create table public.brain_oauth_authorization_codes (
   code text primary key,
   client_id text not null references public.brain_oauth_clients (client_id) on delete cascade,
-  user_id integer not null,
+  user_id text not null,
   redirect_uri text not null,
   scope text,
   code_challenge text,
@@ -76,7 +77,7 @@ create table public.brain_oauth_refresh_tokens (
   id serial primary key,
   refresh_token text not null unique,
   client_id text not null references public.brain_oauth_clients (client_id) on delete cascade,
-  user_id integer not null,
+  user_id text not null,
   expires_at timestamptz not null,
   revoked boolean not null default false,
   created_at timestamptz not null default now()
@@ -89,16 +90,41 @@ comment on column public.brain_oauth_refresh_tokens.refresh_token is 'Encrypted 
 alter table public.brain_oauth_refresh_tokens enable row level security;
 
 -- ---------------------------------------------------------------------------
--- brain_oauth_user_credentials — long-lived Brain tokens per Brain user_id
+-- brain_oauth_user_credentials — long-lived Brain tokens keyed by auth.users.id
 -- ---------------------------------------------------------------------------
 
 create table public.brain_oauth_user_credentials (
-  user_id integer primary key,
+  user_id text primary key,
   provider_refresh_token text,
   provider_session_token text,
   updated_at timestamptz not null default now()
 );
 
-comment on column public.brain_oauth_user_credentials.brain_refresh_token is 'Encrypted Brain refresh_token for long-lived user credentials.';
+comment on column public.brain_oauth_user_credentials.user_id is
+  'Local auth.users.id (UUID text), not Brain API id.';
+comment on column public.brain_oauth_user_credentials.provider_refresh_token is
+  'Encrypted Brain refresh_token for long-lived user credentials.';
 
 alter table public.brain_oauth_user_credentials enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- brain_oauth_user_links — external IdP id ↔ auth.users.id (+ optional extra)
+-- ---------------------------------------------------------------------------
+
+create table public.brain_oauth_user_links (
+  auth_user_id uuid primary key references auth.users (id) on delete cascade,
+  provider text not null default 'brain',
+  external_user_id text not null,
+  extra jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (provider, external_user_id)
+);
+
+create index idx_brain_oauth_user_links_external
+  on public.brain_oauth_user_links (provider, external_user_id);
+
+comment on table public.brain_oauth_user_links is
+  'Maps upstream IdP user ids to local auth.users ids; optional extra profile JSON.';
+
+alter table public.brain_oauth_user_links enable row level security;

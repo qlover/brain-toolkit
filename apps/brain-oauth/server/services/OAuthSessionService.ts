@@ -4,9 +4,11 @@ import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { parseOAuthAppSessionCookie } from '@server/utils/OAuthWrapperProxy';
+import type { UserSchema } from '@qlover/next-kit/common';
 import type {
   OAuthSessionInterface,
-  OAuthSessionPayload
+  OAuthSessionPayload,
+  WithUserSession
 } from '@qlover/oauth-wrapper';
 
 /**
@@ -14,7 +16,7 @@ import type {
  */
 @injectable()
 export class OAuthSessionService
-  implements OAuthSessionInterface<OAuthSessionPayload>
+  implements OAuthSessionInterface<OAuthSessionPayload, UserSchema>
 {
   constructor(
     @inject(I.AppConfig) protected config: SeedServerConfigInterface
@@ -23,7 +25,9 @@ export class OAuthSessionService
   /**
    * @override
    */
-  public async setSession(payload: OAuthSessionPayload): Promise<void> {
+  public async setSession(
+    payload: WithUserSession<OAuthSessionPayload, UserSchema>
+  ): Promise<void> {
     const secret = this.requireSecret();
     const token = jwt.sign(payload, secret, { expiresIn: '7d' });
     const cookieStore = await cookies();

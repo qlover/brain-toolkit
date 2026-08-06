@@ -9,10 +9,6 @@ import {
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import { usePageI18nMapping } from '@qlover/next-kit/client';
-import {
-  generatePkceVerifier,
-  computePkceS256Challenge
-} from '@qlover/oauth-wrapper/core';
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import {
@@ -22,6 +18,10 @@ import {
   useState,
   type ReactNode
 } from 'react';
+import {
+  generatePkceVerifier,
+  computePkceS256Challenge
+} from '@qlover/oauth-wrapper/core';
 import { Link } from '@/i18n/routing';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import {

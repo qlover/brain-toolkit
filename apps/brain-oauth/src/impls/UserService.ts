@@ -4,8 +4,8 @@ import {
   type UserCredential,
   type UserSchema
 } from '@qlover/next-kit/common';
-import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { isObject, isString } from 'lodash';
+import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { API_REFRESH_USER_INFO_FAILED } from '@config/i18n-identifier/api';
 import type {

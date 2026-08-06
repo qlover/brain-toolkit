@@ -2,8 +2,8 @@ import {
   apiCorsPreflightResponse,
   buildApiCorsHeaders
 } from '@qlover/next-kit/server';
-import { OAuthWrapperError } from '@qlover/oauth-wrapper';
 import { isEmpty } from 'lodash';
+import { OAuthWrapperError } from '@qlover/oauth-wrapper';
 import { ROUTE_OAUTH_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -61,8 +61,10 @@ export async function GET(req: NextRequest) {
       const user = await IOC(OAuthWrapperController).getUserInfo(accessToken!);
 
       return {
-        ...user,
-        email_verified: true
+        sub: String(user.id),
+        email: user.email,
+        email_verified: true,
+        name: user.email
       };
     },
     {

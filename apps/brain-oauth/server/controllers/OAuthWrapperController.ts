@@ -7,10 +7,7 @@ import {
   type UserSchema,
   type ValidatorInterface
 } from '@qlover/next-kit/common';
-import {
-  OAuthTokenResponse,
-  OAuthUserInfoResponse
-} from '@qlover/oauth-wrapper';
+import { OAuthTokenResponse } from '@qlover/oauth-wrapper';
 import { injectable, inject } from '@shared/container';
 import { API_OAUTH_WRAPPER_AUTH_FAILED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
@@ -102,9 +99,7 @@ export class OAuthWrapperController {
     return await this.oauthProvider.revokeToken(fields);
   }
 
-  public async getUserInfo(
-    accessToken: string
-  ): Promise<OAuthUserInfoResponse> {
+  public async getUserInfo(accessToken: string): Promise<UserSchema> {
     return await this.oauthProvider.getUserInfoWithAccessToken(accessToken);
   }
 

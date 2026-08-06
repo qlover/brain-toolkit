@@ -1,5 +1,10 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
-import { verifyClientSecret, hashClientSecret } from '@qlover/oauth-wrapper';
+import {
+  verifyClientSecret,
+  hashClientSecret,
+  generateOAuthClientId,
+  generateOAuthClientSecret
+} from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import type {
   OAuthClientRow,
@@ -21,6 +26,49 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     @inject(SupabaseRepo)
     protected supabaseBridge: SupabaseRepo<unknown>
   ) {}
+
+  /**
+   * oauth-wrapper compares owner ids with `!==`. PG `integer` columns come
+   * back as numbers from Supabase JS while session ids are always strings —
+   * normalize so delete/update/get ownership checks work.
+   */
+  protected normalizeUserId(value: unknown): string {
+    return String(value ?? '').trim();
+  }
+
+  protected normalizeClientRow(row: OAuthClientRow): OAuthClientRow {
+    return {
+      ...row,
+      owner_user_id: this.normalizeUserId(row.owner_user_id)
+    };
+  }
+
+  protected normalizeAuthCodeRow(
+    row: OAuthAuthorizationCodeRow
+  ): OAuthAuthorizationCodeRow {
+    return {
+      ...row,
+      user_id: this.normalizeUserId(row.user_id)
+    };
+  }
+
+  protected normalizeCredentialsRow(
+    row: OAuthUserCredentialsRow
+  ): OAuthUserCredentialsRow {
+    return {
+      ...row,
+      user_id: this.normalizeUserId(row.user_id)
+    };
+  }
+
+  protected normalizeRefreshTokenRow(
+    row: OAuthRefreshTokenRow
+  ): OAuthRefreshTokenRow {
+    return {
+      ...row,
+      user_id: this.normalizeUserId(row.user_id)
+    };
+  }
   /**
    * @override
    */
@@ -67,7 +115,9 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       throw new Error(error.message);
     }
 
-    return (data as OAuthAuthorizationCodeRow | null) ?? null;
+    return data
+      ? this.normalizeAuthCodeRow(data as OAuthAuthorizationCodeRow)
+      : null;
   }
 
   /**
@@ -86,7 +136,9 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     if (error) {
       throw new Error(error.message);
     }
-    return (data as OAuthUserCredentialsRow | null) ?? null;
+    return data
+      ? this.normalizeCredentialsRow(data as OAuthUserCredentialsRow)
+      : null;
   }
 
   /**
@@ -132,7 +184,9 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     if (error) {
       throw new Error(error.message);
     }
-    return (data as OAuthRefreshTokenRow | null) ?? null;
+    return data
+      ? this.normalizeRefreshTokenRow(data as OAuthRefreshTokenRow)
+      : null;
   }
 
   /**
@@ -190,7 +244,9 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       throw new Error(error.message);
     }
 
-    return (data as OAuthRefreshTokenRow | null) ?? null;
+    return data
+      ? this.normalizeRefreshTokenRow(data as OAuthRefreshTokenRow)
+      : null;
   }
 
   /**
@@ -261,7 +317,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       throw new Error(error.message);
     }
 
-    return (data as OAuthClientRow | null) ?? null;
+    return data ? this.normalizeClientRow(data as OAuthClientRow) : null;
   }
 
   /**
@@ -296,15 +352,13 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     const supabase = await this.supabaseBridge.getAdminSupabase();
 
     const confidential = input.confidential ?? true;
-    const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
+    const clientId = generateOAuthClientId();
 
     let clientSecret: string | undefined;
     let clientSecretHash: string | null = null;
 
     if (confidential) {
-      clientSecret =
-        Math.random().toString(36).substring(2, 20) +
-        Math.random().toString(36).substring(2, 20);
+      clientSecret = generateOAuthClientSecret();
       clientSecretHash = await hashClientSecret(clientSecret);
     }
 
@@ -329,7 +383,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
 
     return {
-      client: data as OAuthClientRow,
+      client: this.normalizeClientRow(data as OAuthClientRow),
       clientSecret
     };
   }
@@ -365,7 +419,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       throw new Error('Client not found or access denied');
     }
 
-    return this.mapToDetail(data as OAuthClientRow);
+    return this.mapToDetail(this.normalizeClientRow(data as OAuthClientRow));
   }
 
   /**
@@ -383,9 +437,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     const supabase = await this.supabaseBridge.getAdminSupabase();
 
     // Generate new secret
-    const clientSecret =
-      Math.random().toString(36).substring(2, 20) +
-      Math.random().toString(36).substring(2, 20);
+    const clientSecret = generateOAuthClientSecret();
     const clientSecretHash = await hashClientSecret(clientSecret);
 
     const { error } = await supabase
