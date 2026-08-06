@@ -1,60 +1,88 @@
 'use client';
 
-import {
-  useCallback,
-  useState,
-  type ComponentType,
-  type SVGProps
-} from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
+import { useCallback, useState, type ReactNode } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import { EmailOTPForm } from '@/uikit/components/EmailOTPForm';
-import { GithubIcon, GoogleIcon } from '@/uikit/components/icons';
+import { BrainIcon, GithubIcon, GoogleIcon } from '@/uikit/components/icons';
 import { LoginForm } from '@/uikit/components/LoginForm';
 import { PhoneLoginForm } from '@/uikit/components/PhoneLoginForm';
 import type { LoginProviderType } from '@config/common';
-import { loginProviders } from '@config/common';
+import { URLParamsKeys, loginProviders } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
+import { I } from '@config/ioc-identifiter';
+import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { useIOC } from '../hook/useIOC';
 
 type LoginTab = 'email' | 'phone';
 type EmailMode = 'password' | 'otp';
-type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
-type ProvidersItem = {
-  key: LoginProviderType;
-  provider: LoginProviderType;
-  titleI18nMapKey: keyof LoginI18nInterface;
-  disabled: boolean;
-  Icon: IconComponent;
-};
+const providerButtonClass =
+  'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24292e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2c3137] focus:outline-none focus:ring-2 focus:ring-[#24292e] focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
-const providersIcons: Record<LoginProviderType, IconComponent> = {
-  [loginProviders.GitHub]: GithubIcon,
-  [loginProviders.Google]: GoogleIcon
-};
+function resolveReturnTo(
+  searchParams: URLSearchParams | null | undefined
+): string {
+  if (!searchParams) {
+    return '/';
+  }
+  for (const key of URLParamsKeys.returnTo) {
+    const value = searchParams.get(key);
+    if (value?.startsWith('/') && !value.startsWith('//')) {
+      return value;
+    }
+  }
+  return '/';
+}
 
-const providersItems: ProvidersItem[] = Object.values(loginProviders).map(
-  (provider) => ({
-    key: provider,
-    disabled: provider === loginProviders.Google,
-    provider: provider,
-    titleI18nMapKey: ('provider' + provider) as keyof LoginI18nInterface,
-    Icon: providersIcons[provider]
-  })
-);
+/** Full-width shell: keeps buttons aligned; carries title + disabled cursor. */
+function ProviderButtonRow({
+  title,
+  disabled,
+  children
+}: {
+  title: string;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      data-testid="ProviderButtonRow"
+      className={`mb-6 w-full ${disabled ? 'cursor-not-allowed' : ''}`}
+      title={title}
+    >
+      {children}
+    </div>
+  );
+}
 
 /**
- * PAM login entry: phone tab is visible but disabled; email magic-link (OTP)
- * is the default. Password login remains available via a switch link.
+ * PAM login entry: Brain (Supabase SSO, disabled), Brain PKCE (local only),
+ * GitHub/Google, email.
  */
 export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const userGateway = useIOC(AppUserGateway);
+  const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
+  const locale = useLocale();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<LoginTab>('email');
   const [emailMode, setEmailMode] = useState<EmailMode>('otp');
   const [providerLogining, setProviderLogining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const phoneLoginEnabled = false;
+  /**
+   * Supabase `custom:brain` needs a Brain AS reachable from Supabase (usually
+   * public URL). Localhost-only brain-oauth cannot complete that hop — use PKCE.
+   */
+  const brainSupabaseEnabled = false;
+  /**
+   * Brain PKCE talks to brain-oauth / Brain API cross-origin; production has no
+   * CORS path yet — only enable when APP_ENV=localhost.
+   */
+  const brainPkceEnabled = appConfig.env === 'localhost';
+  const googleEnabled = false;
 
   const tabBaseClass =
     'flex-1 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer border-b-2 outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-secondary-text disabled:hover:border-transparent';
@@ -65,11 +93,11 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const onLoginWithProvider = useCallback(
     (provider: LoginProviderType) => {
       setProviderLogining(true);
+      setError(null);
       userGateway
         .loginWithProvider({ provider })
         .then((result) => {
           if (result.providerUrl) {
-            console.log('providerUrl', result);
             window.location.assign(result.providerUrl);
           }
         })
@@ -83,6 +111,33 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
     [userGateway]
   );
 
+  const onLoginWithBrainPkce = useCallback(() => {
+    setProviderLogining(true);
+    setError(null);
+    userGateway
+      .loginWithBrainPkce({
+        locale,
+        returnTo: resolveReturnTo(searchParams)
+      })
+      .then((result) => {
+        if (result.providerUrl) {
+          window.location.assign(result.providerUrl);
+        }
+      })
+      .catch((err) => {
+        setProviderLogining(false);
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to start Brain PKCE login'
+        );
+      });
+  }, [userGateway, locale, searchParams]);
+
+  const brainDisabled = !brainSupabaseEnabled || providerLogining;
+  const brainPkceDisabled = !brainPkceEnabled || providerLogining;
+  const googleDisabled = !googleEnabled || providerLogining;
+
   return (
     <div data-testid="LoginTabSwitch" className="w-full">
       {error && (
@@ -94,21 +149,70 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </div>
       )}
 
-      {providersItems.map(
-        ({ key, disabled, provider, titleI18nMapKey, Icon }) => (
-          <button
-            data-testid={'LoginWith' + key}
-            key={key}
-            disabled={disabled || providerLogining}
-            onClick={() => onLoginWithProvider(provider)}
-            title={tt[titleI18nMapKey]}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24292e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2c3137] focus:outline-none focus:ring-2 focus:ring-[#24292e] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 mb-6"
-          >
-            <Icon className="h-5 w-5" />
-            <span>{tt[titleI18nMapKey]}</span>
-          </button>
-        )
-      )}
+      <ProviderButtonRow
+        title={tt.providerBrainTooltip}
+        disabled={brainDisabled}
+      >
+        <button
+          type="button"
+          data-testid="LoginWithBrain"
+          disabled={brainDisabled}
+          onClick={() => onLoginWithProvider(loginProviders.Brain)}
+          aria-label={tt.providerBrain}
+          className={providerButtonClass}
+        >
+          <BrainIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerBrain}</span>
+        </button>
+      </ProviderButtonRow>
+
+      <ProviderButtonRow
+        title={tt.providerBrainPkceTooltip}
+        disabled={brainPkceDisabled}
+      >
+        <button
+          type="button"
+          data-testid="LoginWithBrainPkce"
+          disabled={brainPkceDisabled}
+          onClick={onLoginWithBrainPkce}
+          aria-label={tt.providerBrainPkce}
+          className={providerButtonClass}
+        >
+          <BrainIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerBrainPkce}</span>
+        </button>
+      </ProviderButtonRow>
+
+      <ProviderButtonRow title={tt.providerGitHub}>
+        <button
+          type="button"
+          data-testid="LoginWithGitHub"
+          disabled={providerLogining}
+          onClick={() => onLoginWithProvider(loginProviders.GitHub)}
+          aria-label={tt.providerGitHub}
+          className={providerButtonClass}
+        >
+          <GithubIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerGitHub}</span>
+        </button>
+      </ProviderButtonRow>
+
+      <ProviderButtonRow
+        title={tt.providerGoogleTooltip}
+        disabled={googleDisabled}
+      >
+        <button
+          type="button"
+          data-testid="LoginWithGoogle"
+          disabled={googleDisabled}
+          onClick={() => onLoginWithProvider(loginProviders.Google)}
+          aria-label={tt.providerGoogle}
+          className={providerButtonClass}
+        >
+          <GoogleIcon className="h-5 w-5 shrink-0" />
+          <span>{tt.providerGoogle}</span>
+        </button>
+      </ProviderButtonRow>
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
@@ -121,7 +225,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </div>
       </div>
 
-      <div className="flex border-b border-primary-border mb-6" role="tablist">
+      <div className="mb-6 flex border-b border-primary-border" role="tablist">
         <button
           type="button"
           className={`${tabBaseClass} ${tab === 'email' ? tabActiveClass : tabInactiveClass}`}
@@ -151,7 +255,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         (emailMode === 'otp' ? (
           <>
             <EmailOTPForm tt={tt} />
-            <p className="text-center mt-4">
+            <p className="mt-4 text-center">
               <button
                 type="button"
                 onClick={() => setEmailMode('password')}
@@ -164,7 +268,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         ) : (
           <>
             <LoginForm tt={tt} />
-            <p className="text-center mt-4">
+            <p className="mt-4 text-center">
               <button
                 type="button"
                 onClick={() => setEmailMode('otp')}

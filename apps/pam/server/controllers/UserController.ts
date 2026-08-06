@@ -5,7 +5,6 @@ import {
   SearchParamsValidator,
   StringEncryptor,
   loginWithProviderCallbackSchema,
-  loginWithProviderSchema,
   type LoginSchema,
   type RequestLogRow,
   type UserSchema,
@@ -18,9 +17,12 @@ import {
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import { ServerConfig } from '@server/ServerConfig';
+import { BrainOAuthLoginService } from '@server/services/BrainOAuthLoginService';
+import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
 import type {
@@ -41,6 +43,8 @@ export class UserController {
     @inject(SearchParamsValidator)
     protected searchParamsValidator: ValidatorInterface<ResourceSearchParams>,
     @inject(OAuthUserService) protected userService: UserServiceInterface,
+    @inject(BrainOAuthLoginService)
+    protected brainOAuthLoginService: BrainOAuthLoginService,
     @inject(RequestLogsRepository)
     protected requestLogsRepository: RequestLogsRepository,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
@@ -167,5 +171,29 @@ export class UserController {
     const params = loginWithProviderCallbackSchema.parse(_query);
 
     return this.userService.loginWithProviderCallback(params);
+  }
+
+  /** Start Brain OAuth authorize (PKCE). */
+  public loginWithBrainPkce(query: {
+    locale?: string;
+    returnTo?: string;
+  }): Promise<LoginProviderResult> {
+    return this.brainOAuthLoginService.startLogin({
+      locale: typeof query.locale === 'string' ? query.locale : undefined,
+      returnTo: typeof query.returnTo === 'string' ? query.returnTo : undefined
+    });
+  }
+
+  /** Brain OAuth authorization-code callback. */
+  public loginWithBrainPkceCallback(
+    query: Record<string, string>
+  ): Promise<BrainOAuthCallbackSuccess> {
+    return this.brainOAuthLoginService.handleCallback({
+      code: query.code,
+      state: query.state,
+      error: query.error,
+      error_description: query.error_description,
+      origin: query.origin
+    });
   }
 }

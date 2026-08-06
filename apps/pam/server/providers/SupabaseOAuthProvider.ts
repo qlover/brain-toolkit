@@ -163,8 +163,23 @@ export class SupabaseOAuthProvider
     WithUserSession<SupabaseSession, UserSchema>
   > {
     const payload = await this.oauthSession.getSession();
-    const refreshToken = payload?.providerRefreshToken?.trim();
+    if (!payload) {
+      throw new Error('No app session');
+    }
+
+    const refreshToken = payload.providerRefreshToken?.trim();
+
+    // Brain OAuth PKCE (and similar): cookie carries embedded `user`, no Supabase
+    // refresh token. Do not call supabase.auth.refreshSession.
     if (!refreshToken) {
+      const embedded = payload.user as UserSchema | undefined;
+      if (embedded?.id) {
+        return {
+          user: embedded,
+          userId: String(payload.userId || embedded.id),
+          providerRefreshToken: ''
+        };
+      }
       throw new Error('No refresh token in app session');
     }
 

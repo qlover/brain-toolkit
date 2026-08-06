@@ -168,8 +168,12 @@ cp .env.template .env   # Windows 下手动复制亦可
 
 在 Supabase SQL Editor（或等价环境）按顺序执行：
 
-1. `makes/sql/001-base-tables.sql` — 基础表（`request_logs` 等，可按需启用 RLS）
-2. `makes/sql/002-oauth-clients.sql` — OAuth 客户端、授权码、refresh token、用户凭证（表前缀 `brain_oauth_*`）
+1. `makes/sql/001-base-tables.sql` — 基础表（`request_logs` 等）
+2. `makes/sql/002-oauth-clients.sql` — OAuth 全表（含 `brain_oauth_user_links`；**会 drop 重建**，仅适合新库/可清空的开发库）
+3. 已有旧库（integer id、缺 links）：再执行一次 `makes/sql/003-migrate-existing.sql`
+4. 旧数据仍是 Brain id 归属时：先跑 `makes/scripts/migrate-brain-user-ids.ts` 建 link，再执行一遍 `003-migrate-existing.sql`（remap 段）
+
+登录成功后会在 `auth.users` upsert 本地用户，session / `owner_user_id` 使用 **auth.users.id（UUID）**。上游 id 存在 `brain_oauth_user_links.external_user_id`（及 `app_metadata.external_user_id`）；可选资料在 `links.extra` / `user_metadata.extra`。移植 fe-base next-oauth 时改 [`shared/config/oauthLocalUser.ts`](shared/config/oauthLocalUser.ts) 的 `provider` / `linksTable` 即可。
 
 **RLS 与密钥：**
 

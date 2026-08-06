@@ -61,4 +61,10 @@ export interface UserServiceGatewayInterface
   loginWithProvider(params: {
     provider: LoginProviderType;
   }): Promise<LoginProviderResult>;
+
+  /** Start Brain OAuth authorize (PKCE). */
+  loginWithBrainPkce(params?: {
+    locale?: string;
+    returnTo?: string;
+  }): Promise<LoginProviderResult>;
 }

@@ -91,5 +91,11 @@ export const loginI18n = Object.freeze({
 
   // 这里的i18nkey 名与 config/common 中的 loginProviders value一致
   providerGoogle: i18nKeys.PAGE_LOGIN_WITH_GOOGLE,
-  providerGitHub: i18nKeys.PAGE_LOGIN_WITH_GITHUB
+  providerGoogleTooltip: i18nKeys.PAGE_LOGIN_WITH_GOOGLE_TOOLTIP,
+  providerGitHub: i18nKeys.PAGE_LOGIN_WITH_GITHUB,
+
+  providerBrain: i18nKeys.PAGE_LOGIN_WITH_BRAIN,
+  providerBrainTooltip: i18nKeys.PAGE_LOGIN_WITH_BRAIN_TOOLTIP,
+  providerBrainPkce: i18nKeys.PAGE_LOGIN_WITH_BRAIN_PKCE,
+  providerBrainPkceTooltip: i18nKeys.PAGE_LOGIN_WITH_BRAIN_PKCE_TOOLTIP
 });

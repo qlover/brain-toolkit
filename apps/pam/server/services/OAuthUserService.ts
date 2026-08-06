@@ -19,7 +19,11 @@ import { isEmpty } from 'lodash-es';
 import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
 import { API_CALLBACK_PROVIDER_LOGIN } from '@config/apiRoutes';
-import { LoginProviderType } from '@config/common';
+import {
+  LoginProviderType,
+  loginProviders,
+  resolveSupabaseOAuthProvider
+} from '@config/common';
 import {
   API_NOT_AUTHORIZED,
   API_OAUTH_INVALID_REQUEST,
@@ -211,20 +215,26 @@ export class OAuthUserService
   }: {
     provider: LoginProviderType;
   }): Promise<LoginProviderResult> {
+    if (provider === loginProviders.Brain) {
+      throw new ExecutorError(
+        API_OAUTH_INVALID_REQUEST,
+        'Supabase Brain SSO (custom:brain) is temporarily disabled; use Brain PKCE login'
+      );
+    }
+
     const supabase = await this.supabaseRepo.getSupabase();
 
-    // FIXME: toLocaleLowerCase 不够严谨
-    const supabsaeProvider = provider.toLocaleLowerCase() as Provider;
+    const supabaseProvider = resolveSupabaseOAuthProvider(provider);
     const redirectTo = this.config.siteUrl + API_CALLBACK_PROVIDER_LOGIN;
 
     this.logger.debug(
-      'loginwithProvider:',
-      supabsaeProvider,
+      'loginWithProvider:',
+      supabaseProvider,
       'redirectTo:',
       redirectTo
     );
     const result = await supabase.auth.signInWithOAuth({
-      provider: supabsaeProvider,
+      provider: supabaseProvider as Provider,
       options: {
         redirectTo
       }

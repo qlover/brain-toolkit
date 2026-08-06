@@ -97,7 +97,21 @@ export const URLParamsKeys = {
 export const localeQueryParam = 'locale' as const;
 
 export const loginProviders = {
+  Brain: 'Brain',
   GitHub: 'GitHub',
   Google: 'Google'
 } as const;
 export type LoginProviderType = ValueOf<typeof loginProviders>;
+
+/**
+ * Maps UI provider names to Supabase Auth `signInWithOAuth` provider ids.
+ * Brain (`custom:brain`) is temporarily disabled in UI/service; prefer Brain PKCE.
+ */
+export function resolveSupabaseOAuthProvider(
+  provider: LoginProviderType
+): string {
+  if (provider === loginProviders.Brain) {
+    return 'custom:brain';
+  }
+  return provider.toLowerCase();
+}

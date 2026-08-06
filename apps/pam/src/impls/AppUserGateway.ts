@@ -240,4 +240,23 @@ export class AppUserGateway implements UserServiceGatewayInterface {
 
     return response.data.data! as LoginProviderResult;
   }
+
+  /*
+* @override
+ Start Brain OAuth authorize (PKCE); returns redirect URL. * Start Brain OAuth authorize (PKCE); returns redirect URL. */
+  public async loginWithBrainPkce(params?: {
+    locale?: string;
+    returnTo?: string;
+  }): Promise<LoginProviderResult> {
+    const response = await this.client.request<
+      NextKitApiResult<LoginProviderResult>,
+      { locale?: string; returnTo?: string }
+    >({
+      url: apiRoutes.API_USER_LOGIN_BRAIN,
+      method: HttpMethods.GET,
+      params: params
+    });
+
+    return response.data.data! as LoginProviderResult;
+  }
 }

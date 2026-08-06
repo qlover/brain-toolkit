@@ -1,5 +1,6 @@
 'use client';
 
+import { useMountedClient } from '@brain-toolkit/react-kit';
 import { LanguageIcon } from '@heroicons/react/24/outline';
 import { LocaleRouter } from '@qlover/corekit-bridge/url-helper';
 import { Button, Dropdown } from '@qlover/next-kit/client';
@@ -15,6 +16,7 @@ import type { LocaleType } from '@config/i18n';
  */
 export function LanguageSwitcherPages() {
   const router = useRouter();
+  const mounted = useMountedClient();
   const currentLocale = useLocale() as LocaleType;
   const [isPending, setIsPending] = useState(false);
 
@@ -71,7 +73,9 @@ export function LanguageSwitcherPages() {
       <Button
         variant="header"
         data-testid="LanguageSwitcher"
-        disabled={isPending || !router.isReady}
+        // Gate on `mounted`, not `router.isReady`: isReady is often false on
+        // SSG HTML and true on the first client render → disabled="" vs undefined.
+        disabled={isPending || !mounted}
         aria-label={currentLocaleLabel}
       >
         <LanguageIcon className="h-4 w-4 shrink-0" aria-hidden />

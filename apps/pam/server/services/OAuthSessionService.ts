@@ -102,17 +102,42 @@ export class OAuthSessionService
   }
 
   /**
-   * @override
+   * Build session cookie fields for attaching to a {@link NextResponse}
+   * (e.g. OAuth redirects). Prefer this over `cookies().set` + redirect —
+   * Next may drop the cookie jar on a freshly constructed redirect response.
    */
-  public async setSession(payload: OAuthSessionPayload): Promise<void> {
-    const token = jwt.sign(payload, this.sessionSecret, { expiresIn: '7d' });
-    const cookieStore = await cookies();
-    cookieStore.set(this.sessionKey, token, {
+  public buildSessionCookie(payload: OAuthSessionPayload): {
+    name: string;
+    value: string;
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'lax';
+    path: string;
+    maxAge: number;
+  } {
+    return {
+      name: this.sessionKey,
+      value: this.generateJWT(payload),
       httpOnly: true,
       secure: this.secure,
       sameSite: 'lax',
       path: '/',
       maxAge: 60 * 60 * 24 * 7
+    };
+  }
+
+  /**
+   * @override
+   */
+  public async setSession(payload: OAuthSessionPayload): Promise<void> {
+    const cookie = this.buildSessionCookie(payload);
+    const cookieStore = await cookies();
+    cookieStore.set(cookie.name, cookie.value, {
+      httpOnly: cookie.httpOnly,
+      secure: cookie.secure,
+      sameSite: cookie.sameSite,
+      path: cookie.path,
+      maxAge: cookie.maxAge
     });
   }
 

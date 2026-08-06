@@ -19,13 +19,19 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages,
+    timeZone: 'Asia/Shanghai',
     // 将 MISSING_MESSAGE 错误转换为警告
     onError: (error) => {
-      if (error.message.includes('MISSING_MESSAGE')) {
-        console.warn(`[i18n] Missing translation: ${error.message}`);
-        return error.message; // 返回 key 作为 fallback 文本
+      if (
+        error.code === 'MISSING_MESSAGE' ||
+        error.code === 'ENVIRONMENT_FALLBACK' ||
+        error.message.includes('MISSING_MESSAGE') ||
+        error.message.includes('ENVIRONMENT_FALLBACK')
+      ) {
+        console.warn(`[i18n] ${error.code ?? 'warn'}: ${error.message}`);
+        return;
       }
-      throw error; // 其他错误仍然抛出
+      throw error;
     }
   };
 });

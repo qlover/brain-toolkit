@@ -1,8 +1,26 @@
 import jwt from 'jsonwebtoken';
 import { NextResponse, type NextRequest } from 'next/server';
+import { useLocaleRoutes } from '@config/common';
+import { i18nConfig } from '@config/i18n';
 import { hasSessionPath, ROUTE_LOGIN } from '@config/route';
 import { ServerConfig } from '@server/ServerConfig';
 import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
+
+function loginPathnameForRequest(pathname: string): string {
+  if (!useLocaleRoutes) {
+    return ROUTE_LOGIN;
+  }
+
+  const first = pathname.split('/').filter(Boolean)[0];
+  if (
+    first &&
+    (i18nConfig.supportedLngs as readonly string[]).includes(first)
+  ) {
+    return `/${first}${ROUTE_LOGIN}`;
+  }
+
+  return `/${i18nConfig.fallbackLng}${ROUTE_LOGIN}`;
+}
 
 export function parseOAuthAppSessionCookie(
   raw: string | undefined,
@@ -45,7 +63,7 @@ export async function oauthWrapperProxySession(request: NextRequest) {
   if (!session) {
     const url = request.nextUrl.clone();
     const returnPath = `${pathname}${request.nextUrl.search}`;
-    url.pathname = ROUTE_LOGIN;
+    url.pathname = loginPathnameForRequest(pathname);
     url.search = `redirect=${encodeURIComponent(returnPath)}`;
     return NextResponse.redirect(url);
   }
