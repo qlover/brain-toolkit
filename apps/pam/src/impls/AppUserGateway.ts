@@ -241,7 +241,9 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     return response.data.data! as LoginProviderResult;
   }
 
-  /** Start Brain OAuth authorize (PKCE); returns redirect URL. */
+  /*
+* @override
+ Start Brain OAuth authorize (PKCE); returns redirect URL. * Start Brain OAuth authorize (PKCE); returns redirect URL. */
   public async loginWithBrainPkce(params?: {
     locale?: string;
     returnTo?: string;

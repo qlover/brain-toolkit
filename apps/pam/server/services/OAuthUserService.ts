@@ -19,7 +19,11 @@ import { isEmpty } from 'lodash-es';
 import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
 import { API_CALLBACK_PROVIDER_LOGIN } from '@config/apiRoutes';
-import { LoginProviderType, loginProviders, resolveSupabaseOAuthProvider } from '@config/common';
+import {
+  LoginProviderType,
+  loginProviders,
+  resolveSupabaseOAuthProvider
+} from '@config/common';
 import {
   API_NOT_AUTHORIZED,
   API_OAUTH_INVALID_REQUEST,

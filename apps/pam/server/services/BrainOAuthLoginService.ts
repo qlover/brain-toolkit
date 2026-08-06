@@ -14,12 +14,24 @@ import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface'
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { UserLoginContext } from '@server/interfaces/UserServiceInterface';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
-import { ResultHandlerContext } from '@server/utils/NextApiHandler';
 import type { LoggerInterface } from '@qlover/logger';
 import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
 
 const PKCE_COOKIE = 'pam_brain_oauth_pkce';
 const PKCE_COOKIE_MAX_AGE_SEC = 60 * 10;
+
+export type BrainOAuthCallbackSuccess = {
+  redirectUrl: string;
+  sessionCookie: {
+    name: string;
+    value: string;
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'lax';
+    path: string;
+    maxAge: number;
+  };
+};
 
 type PkceCookiePayload = {
   state: string;
@@ -29,6 +41,7 @@ type PkceCookiePayload = {
 
 type BrainTokenResponse = {
   access_token?: string;
+  refresh_token?: string;
   error?: string;
   error_description?: string;
 };
@@ -37,6 +50,7 @@ type BrainUserInfo = {
   sub?: string;
   email?: string;
   preferred_username?: string;
+  name?: string;
 };
 
 /** App session JWT payload: includes embedded user (same pattern as Supabase path). */
@@ -83,6 +97,8 @@ function mapBrainUserToSchema(info: BrainUserInfo): UserSchema {
     );
   }
 
+  // Keep pam_session JWT tiny: browsers drop cookies ≳4KB. Do NOT embed the
+  // Brain access_token (itself a large JWT) into credential_token.
   return userSchema.parse({
     id,
     email,
@@ -116,7 +132,10 @@ export class BrainOAuthLoginService {
     const base = this.config.siteUrl.endsWith('/')
       ? this.config.siteUrl
       : `${this.config.siteUrl}/`;
-    return new URL(API_CALLBACK_BRAIN_OAUTH.replace(/^\//, ''), base).toString();
+    return new URL(
+      API_CALLBACK_BRAIN_OAUTH.replace(/^\//, ''),
+      base
+    ).toString();
   }
 
   public isConfigured(): boolean {
@@ -187,8 +206,7 @@ export class BrainOAuthLoginService {
     const { codeVerifier, codeChallenge } = createPkcePair();
     const state = base64Url(randomBytes(16));
     const returnTo = sanitizeReturnTo(input.returnTo);
-    const locale =
-      input.locale?.trim() || this.config.brainOAuthLocale || 'zh';
+    const locale = input.locale?.trim() || this.config.brainOAuthLocale || 'zh';
     const redirectUri = this.resolveRedirectUri();
 
     await this.writePkceCookie({ state, codeVerifier, returnTo });
@@ -225,7 +243,7 @@ export class BrainOAuthLoginService {
       origin?: string;
     },
     loginContext?: UserLoginContext
-  ): Promise<ResultHandlerContext> {
+  ): Promise<BrainOAuthCallbackSuccess> {
     this.assertConfigured();
 
     if (query.error) {
@@ -254,18 +272,22 @@ export class BrainOAuthLoginService {
     }
 
     const token = await this.exchangeCode(query.code.trim(), pkce.codeVerifier);
-    const userInfo = await this.fetchUserInfo(token.access_token!);
+    const accessToken = token.access_token!;
+    const userInfo = await this.fetchUserInfo(accessToken);
     const user = mapBrainUserToSchema(userInfo);
 
-    const sessionService = this.createSessionService();
-    const payload: PamSessionPayload = {
+    const sessionPayload: PamSessionPayload = {
       userId: user.id,
-      // Brain PKCE has no Supabase refresh token; getUserSchema uses embedded `user`.
+      // Empty on purpose: SupabaseOAuthProvider.refreshUser treats missing
+      // refresh token + embedded `user` as a Brain PKCE / non-Supabase session.
       providerRefreshToken: '',
       user
     };
-    await sessionService.setSession(payload);
 
+    const sessionService = this.createSessionService();
+    const sessionCookie = sessionService.buildSessionCookie(sessionPayload);
+    // Dual-write: cookie jar (JSON handlers) + explicit Set-Cookie on redirect.
+    await sessionService.setSession(sessionPayload);
     await this.clearPkceCookie();
 
     await this.requestLogsRepository.insertWithAuth({
@@ -284,7 +306,8 @@ export class BrainOAuthLoginService {
       redirectUrl: new URL(
         pkce.returnTo,
         siteUrl.endsWith('/') ? siteUrl : `${siteUrl}/`
-      ).toString()
+      ).toString(),
+      sessionCookie
     };
   }
 

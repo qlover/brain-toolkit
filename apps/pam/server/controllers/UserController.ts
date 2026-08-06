@@ -17,13 +17,14 @@ import {
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { BrainOAuthLoginService } from '@server/services/BrainOAuthLoginService';
+import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
-import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import type {
   UserLoginContext,
   UserServiceInterface
@@ -186,7 +187,7 @@ export class UserController {
   /** Brain OAuth authorization-code callback. */
   public loginWithBrainPkceCallback(
     query: Record<string, string>
-  ): Promise<ResultHandlerContext> {
+  ): Promise<BrainOAuthCallbackSuccess> {
     return this.brainOAuthLoginService.handleCallback({
       code: query.code,
       state: query.state,
