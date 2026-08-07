@@ -65,7 +65,7 @@ export function AppHeaderNavPanel({
     <>
       <nav
         data-testid="AppHeaderNav"
-        className="max-md:hidden flex items-center gap-6 ml-6 lg:ml-8"
+        className="max-md:hidden flex items-center gap-3 md:gap-4 ml-3 lg:ml-6"
         aria-label="Main"
       >
         <NavLink

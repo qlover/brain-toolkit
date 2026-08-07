@@ -20,6 +20,12 @@ export const pamI18n = Object.freeze({
   // Common / list toolbar
   placeholderSearch: i18nKeys.PAGE_PAM_PLACEHOLDER_SEARCH,
   allCategory: i18nKeys.PAGE_PAM_ALL_CATEGORY,
+  noSearchMatch: i18nKeys.PAGE_PAM_NO_SEARCH_MATCH,
+  searchResultSummary: i18nKeys.PAGE_PAM_SEARCH_RESULT_SUMMARY,
+  categoryFilterSummary: i18nKeys.PAGE_PAM_CATEGORY_FILTER_SUMMARY,
+  clearFilters: i18nKeys.PAGE_PAM_CLEAR_FILTERS,
+  categoryCustom: i18nKeys.PAGE_PAM_CATEGORY_CUSTOM,
+  categoryCustomPlaceholder: i18nKeys.PAGE_PAM_CATEGORY_CUSTOM_PLACEHOLDER,
   addPam: i18nKeys.PAGE_PAM_ADD_PAM,
   addPamsm: i18nKeys.PAGE_PAM_ADD_PAMSM,
   pamViewModeCard: i18nKeys.PAGE_PAM_VIEW_MODE_CARD,

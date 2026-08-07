@@ -44,9 +44,29 @@ interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
    * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
    */
   user_id?: string;
+  /** Structured filters from ResourceSearchParams (e.g. `{ category }`). */
+  filters?: unknown;
 }
 
 type EnvField = keyof PAMEnvWriteable;
+
+/**
+ * Reads `category` from ResourceSearchParams.filters (object or ignored).
+ *
+ * @param filters - Parsed search filters from query string
+ * @returns Trimmed category or undefined when not filtering
+ */
+function resolveCategoryFilter(filters: unknown): string | undefined {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return undefined;
+  }
+  const category = (filters as { category?: unknown }).category;
+  if (typeof category !== 'string') {
+    return undefined;
+  }
+  const trimmed = category.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
 type JoinEnvFieldsResult<T extends '*' | readonly EnvField[]> = T extends '*'
   ? `${typeof PAMProjectEnvKey}: ${typeof PAMEnvTableName}(*)`
@@ -98,6 +118,7 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<ResourceSearchResult<SearchPAMRawProject>> {
     const { page = 1, pageSize = 20, user_id, fields } = params;
     const keyword = params.keyword?.trim();
+    const categoryFilter = resolveCategoryFilter(params.filters);
 
     const orConditions: FilterTriple<PAMProjectRaw>[] = [
       ['is_public', Operators.eq, 1]
@@ -105,6 +126,13 @@ export class PAMProjectRepo extends BaseRepository<
 
     if (user_id) {
       orConditions.push(['owner_id', Operators.eq, user_id]);
+    }
+
+    const where: FilterTriple<PAMProjectRaw>[] = [
+      ['is_deleted', Operators.eq, DeleteStatus.UNDELETE]
+    ];
+    if (categoryFilter) {
+      where.push(['category', Operators.eq, categoryFilter]);
     }
 
     return await this.supabaseRepo.search({
@@ -127,7 +155,7 @@ export class PAMProjectRepo extends BaseRepository<
             query: keyword
           }
         : undefined,
-      where: [['is_deleted', Operators.eq, DeleteStatus.UNDELETE]],
+      where,
       whereOr: orConditions
     });
   }

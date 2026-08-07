@@ -1,6 +1,6 @@
 {
   "name": "pamenv-cli",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "type": "module",
   "private": false,
   "description": "CLI for PAM multi-environment env pull and push",

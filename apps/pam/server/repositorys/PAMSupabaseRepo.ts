@@ -78,12 +78,28 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
    * Widen public `search` so callers can pass `ilikeOr` (handled in
    * {@link getSearchBuilder}). Parent typing only knows `RepoSearchParams`.
    *
+   * Also normalizes `total`/`hasMore` when PostgREST returns rows but a null
+   * exact count (common with `.or()` + embedded joins), which otherwise shows
+   * “0 results” while the list is non-empty.
+   *
    * @override
    */
-  public search(
+  public async search(
     params: PAMSearchParams<Raw>
   ): Promise<ResourceSearchResult<T>> {
-    return super.search(params);
+    const result = await super.search(params);
+    const loaded = result.items?.length ?? 0;
+    const apiTotal = result.total ?? 0;
+    if (loaded === 0 || apiTotal >= loaded) {
+      return result;
+    }
+
+    const pageSize = params.pageSize ?? result.pageSize ?? loaded;
+    return {
+      ...result,
+      total: Math.max(apiTotal, loaded),
+      hasMore: result.hasMore || loaded >= pageSize
+    };
   }
 
   /**

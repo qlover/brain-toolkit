@@ -86,4 +86,11 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
    * @param keyword
    */
   searchProjectWithKeyword(keyword: string): Promise<ResourceSearchResult<T>>;
+
+  /**
+   * Filter list by exact category (empty string clears filter).
+   *
+   * @param category - Category value or empty for all
+   */
+  searchProjectWithCategory(category: string): Promise<ResourceSearchResult<T>>;
 }

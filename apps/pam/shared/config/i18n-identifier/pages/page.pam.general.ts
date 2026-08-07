@@ -110,6 +110,22 @@ export const PAGE_PAM_GENERAL_LABEL_UNCATEGORY =
   'page_pam_general:labelUnCategory';
 
 /**
+ * @description Custom category option in settings select
+ * @localZh 自定义…
+ * @localEn Custom…
+ */
+export const PAGE_PAM_GENERAL_CATEGORY_CUSTOM =
+  'page_pam_general:categoryCustom';
+
+/**
+ * @description Placeholder for custom category input
+ * @localZh 输入自定义分类
+ * @localEn Enter a custom category
+ */
+export const PAGE_PAM_GENERAL_CATEGORY_CUSTOM_PLACEHOLDER =
+  'page_pam_general:categoryCustomPlaceholder';
+
+/**
  * @description Public visibility
  * @localZh 公开的
  * @localEn Public

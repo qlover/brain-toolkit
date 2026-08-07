@@ -1,10 +1,10 @@
 import {
-  ChevronDownIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   Squares2X2Icon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { useStore } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
@@ -24,9 +24,10 @@ import type {
   PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
+import { mergePamCategories } from '@config/pamCategories';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 
-const SEARCH_DEBOUNCE_MS = 200;
+const SEARCH_DEBOUNCE_MS = 350;
 
 interface PAMToolbarProps {
   tt: PAMI18nInterface;
@@ -39,6 +40,8 @@ interface PAMToolbarProps {
   onCreate: () => void;
   /** Hide create CTA when false (e.g. guest). */
   canCreate?: boolean;
+  /** True while a list request is in flight. */
+  searching?: boolean;
 }
 
 function keywordSelector(state: PAMFacadeStateInterface<PAMProjectDetail>) {
@@ -54,13 +57,18 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   categories,
   facadeInterface,
   onCreate,
-  canCreate = false
+  canCreate = false,
+  searching = false
 }) => {
   const facadeStore = facadeInterface.getFacadeStore();
   const storeKeyword = useStore(facadeStore, keywordSelector);
   const [draftKeyword, setDraftKeyword] = useState(storeKeyword);
 
-  // Sync when store keyword changes externally (e.g. reset elsewhere).
+  const chipCategories = useMemo(
+    () => mergePamCategories(categories),
+    [categories]
+  );
+
   useEffect(() => {
     setDraftKeyword(storeKeyword);
   }, [storeKeyword]);
@@ -118,103 +126,145 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
     runSearch('');
   }, [debouncedSearch, runSearch]);
 
+  const chipClass = (active: boolean) =>
+    clsx(
+      'shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors sm:px-3 sm:py-1 sm:text-sm',
+      active
+        ? 'border-brand bg-brand/10 text-brand'
+        : 'border-primary-border bg-elevated text-secondary-text hover:text-primary-text'
+    );
+
   return (
-    <div
-      data-testid="PAMToolbar"
-      className="bg-secondary mb-5 flex flex-col gap-3 rounded-2xl border border-primary-border p-3 shadow-sm sm:flex-row sm:justify-between sm:p-4 md:mb-6"
-    >
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <div className="relative min-w-35 max-w-full flex-1 sm:max-w-xs">
-          <span className="text-tertiary-text absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-            <MagnifyingGlassIcon className="h-4 w-4" />
-          </span>
-          <input
-            type="text"
-            placeholder={tt.placeholderSearch}
-            value={draftKeyword}
-            onChange={onSearchChange}
-            onKeyDown={onSearchKeyDown}
-            className="bg-secondary touch-target w-full rounded-xl border border-primary-border py-2 pr-9 pl-9 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:py-2.5"
-          />
-          {draftKeyword ? (
+    <>
+      <div
+        data-testid="PAMToolbar"
+        className="bg-secondary mb-3 flex flex-col gap-2 rounded-xl border border-primary-border p-2 shadow-sm sm:mb-5 sm:gap-3 sm:rounded-2xl sm:p-4 md:mb-6"
+      >
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="relative min-w-0 flex-1 sm:max-w-xs">
+            <span className="text-tertiary-text absolute top-1/2 left-2.5 -translate-y-1/2 sm:left-3">
+              {searching ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <MagnifyingGlassIcon className="h-4 w-4" />
+              )}
+            </span>
+            <input
+              type="text"
+              placeholder={tt.placeholderSearch}
+              value={draftKeyword}
+              onChange={onSearchChange}
+              onKeyDown={onSearchKeyDown}
+              className="bg-secondary h-9 w-full rounded-lg border border-primary-border py-1.5 pr-8 pl-8 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:h-auto sm:rounded-xl sm:py-2.5 sm:pr-9 sm:pl-9"
+            />
+            {draftKeyword ? (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={onClearSearch}
+                className="text-tertiary-text hover:text-secondary-text absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-1 transition-colors sm:right-2"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="bg-primary flex shrink-0 items-center gap-0.5 rounded-lg p-0.5 sm:gap-1 sm:rounded-xl sm:p-1">
             <button
               type="button"
-              aria-label="Clear search"
-              onClick={onClearSearch}
-              className="text-tertiary-text hover:text-secondary-text absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors"
+              title={tt.pamViewModeCard}
+              onClick={() => onViewModeChange(PAMViewMode.Card)}
+              className={clsx(
+                'inline-flex h-8 w-8 items-center justify-center rounded-md transition-all sm:h-auto sm:w-auto sm:gap-2 sm:rounded-lg sm:px-4 sm:py-1.5 sm:text-sm',
+                {
+                  'bg-elevated text-brand shadow-sm': viewMode === 'card',
+                  'text-secondary-text hover:bg-elevated/50':
+                    viewMode !== 'card'
+                }
+              )}
             >
-              <XMarkIcon className="h-4 w-4" />
+              <Squares2X2Icon className="h-4 w-4" />
+              <span className="hidden font-medium sm:inline">
+                {tt.pamViewModeCard}
+              </span>
+            </button>
+            <button
+              type="button"
+              title={tt.pamViewModeList}
+              onClick={() => onViewModeChange(PAMViewMode.Compact)}
+              className={clsx(
+                'inline-flex h-8 w-8 items-center justify-center rounded-md transition-all sm:h-auto sm:w-auto sm:gap-2 sm:rounded-lg sm:px-4 sm:py-1.5 sm:text-sm',
+                {
+                  'bg-elevated text-brand shadow-sm': viewMode === 'compact',
+                  'text-secondary-text hover:bg-elevated/50':
+                    viewMode !== 'compact'
+                }
+              )}
+            >
+              <ListBulletIcon className="h-4 w-4" />
+              <span className="hidden font-medium sm:inline">
+                {tt.pamViewModeList}
+              </span>
+            </button>
+          </div>
+
+          {canCreate ? (
+            <button
+              type="button"
+              id="addProjectBtn"
+              title={tt.addPam}
+              onClick={onCreate}
+              className="bg-brand hover:bg-brand-hover active:bg-brand-active text-on-brand hidden shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium shadow-md transition sm:inline-flex"
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>{tt.addPam}</span>
             </button>
           ) : null}
         </div>
 
-        <div hidden className="relative min-w-25">
-          <select
-            value={categoryValue}
-            onChange={(e) => onCategoryChange(e.target.value)}
-            className="bg-secondary touch-target w-full cursor-pointer appearance-none rounded-xl border border-primary-border px-3 py-2 pr-7 text-sm text-primary-text focus:ring-2 focus:ring-brand focus:outline-none sm:px-4 sm:py-2.5 sm:pr-8"
-          >
-            <option value="">{tt.allCategory}</option>
-            {categories.map((cat) => (
-              <option
-                data-testid="PAMToolbarCategoryItem"
-                key={cat}
-                value={cat}
-              >
-                {cat}
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon className="h-2.5 w-2.5 text-tertiary-text pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 sm:right-3 sm:h-3 sm:w-3" />
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <div className="flex-1 md:flex-none bg-primary flex shrink-0 items-center gap-1 rounded-xl p-1">
-          <button
-            title={tt.pamViewModeCard}
-            onClick={() => onViewModeChange(PAMViewMode.Card)}
-            className={clsx(
-              'touch-target-sm h-full flex items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 md:text-sm',
-              {
-                'bg-elevated text-brand shadow-sm': viewMode === 'card',
-                'text-secondary-text hover:bg-elevated/50': viewMode !== 'card'
-              }
-            )}
-          >
-            <Squares2X2Icon className="h-4 w-4" />
-            <span className="max-sm:hidden inline">{tt.pamViewModeCard}</span>
-          </button>
-          <button
-            title={tt.pamViewModeList}
-            onClick={() => onViewModeChange(PAMViewMode.Compact)}
-            className={clsx(
-              'touch-target-sm h-full flex items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-medium transition-all sm:gap-2 sm:px-4 sm:py-1.5 md:text-md',
-              {
-                'bg-elevated text-brand shadow-sm': viewMode === 'compact',
-                'text-secondary-text hover:bg-elevated/50':
-                  viewMode !== 'compact'
-              }
-            )}
-          >
-            <ListBulletIcon className="h-4 w-4" />
-            <span className="max-sm:hidden inline">{tt.pamViewModeList}</span>
-          </button>
-        </div>
-
-        {canCreate ? (
+        <div
+          data-testid="PAMToolbarCategoryChips"
+          className="-mx-2 flex items-center gap-1.5 overflow-x-auto px-2 pb-0.5 scrollbar-none sm:mx-0 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0"
+          role="group"
+          aria-label={tt.labelCategory}
+        >
           <button
             type="button"
-            id="addProjectBtn"
-            onClick={onCreate}
-            className="bg-brand flex-1 md:flex-none hover:bg-brand-hover active:bg-brand-active text-on-brand touch-target flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium shadow-md transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+            data-testid="PAMToolbarCategoryAll"
+            onClick={() => onCategoryChange('')}
+            className={chipClass(categoryValue === '')}
           >
-            <PlusIcon className="h-4 w-4" />
-            <span className="max-sm:hidden inline">{tt.addPam}</span>
-            <span className="sm:hidden">{tt.addPamsm}</span>
+            {tt.allCategory}
           </button>
-        ) : null}
+          {chipCategories.map((cat) => (
+            <button
+              type="button"
+              data-testid="PAMToolbarCategoryItem"
+              key={cat}
+              onClick={() => onCategoryChange(cat)}
+              className={chipClass(categoryValue === cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {canCreate ? (
+        <button
+          type="button"
+          id="fabCreateBtn"
+          title={tt.addPam}
+          aria-label={tt.addPam}
+          onClick={onCreate}
+          className="bg-brand hover:bg-brand-hover active:bg-brand-active text-on-brand fixed right-4 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition sm:hidden"
+          style={{
+            bottom: 'max(1.25rem, env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <PlusIcon className="h-6 w-6" />
+        </button>
+      ) : null}
+    </>
   );
 };

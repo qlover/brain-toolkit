@@ -1,4 +1,5 @@
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
+import { clsx } from 'clsx';
 import React from 'react';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
@@ -14,6 +15,14 @@ interface PAMProjectListProps {
   isAuthenticated?: boolean;
   onDelete: (project: SearchPAMProject) => void;
   loading?: boolean;
+  /** Dim list while a search/filter request is in flight. */
+  searching?: boolean;
+  /** Empty copy when keyword or category filter is active. */
+  emptyFiltered?: boolean;
+  /** Keyword used to highlight project titles. */
+  highlightKeyword?: string;
+  /** Active category filter used to highlight category chips. */
+  highlightCategory?: string;
 }
 
 function PAMProjectListSkeleton({
@@ -76,14 +85,22 @@ function PAMProjectListSkeleton({
   );
 }
 
-function PAMProjectListEmpty({ tt }: { tt: PAMI18nInterface }) {
+function PAMProjectListEmpty({
+  tt,
+  filtered
+}: {
+  tt: PAMI18nInterface;
+  filtered?: boolean;
+}) {
   return (
     <div
       data-testid="PAMProjectListEmpty"
       className="bg-secondary mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary-border px-4 py-12 sm:py-16"
     >
       <CloudArrowUpIcon className="h-12 w-12 pam-empty-icon text-tertiary-text mb-3 text-4xl sm:text-5xl" />
-      <p className="text-secondary-text text-sm sm:text-base">{tt.noProject}</p>
+      <p className="text-secondary-text text-sm sm:text-base">
+        {filtered ? tt.noSearchMatch : tt.noProject}
+      </p>
     </div>
   );
 }
@@ -95,7 +112,11 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   isOwner,
   isAuthenticated = false,
   onDelete,
-  loading = false
+  loading = false,
+  searching = false,
+  emptyFiltered = false,
+  highlightKeyword = '',
+  highlightCategory = ''
 }) => {
   if (projects.length === 0) {
     return (
@@ -103,17 +124,24 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
         {loading ? (
           <PAMProjectListSkeleton viewMode={viewMode} />
         ) : (
-          <PAMProjectListEmpty tt={tt} />
+          <PAMProjectListEmpty tt={tt} filtered={emptyFiltered} />
         )}
       </div>
     );
   }
 
+  const listClassName = clsx(
+    searching && 'pointer-events-none opacity-55 transition-opacity'
+  );
+
   if (viewMode === 'card') {
     return (
       <div
         data-testid="PAMProjectList"
-        className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3"
+        className={clsx(
+          'grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3',
+          listClassName
+        )}
       >
         {projects.map((project) => (
           <PAMProjectCard
@@ -123,6 +151,8 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             isOwner={isOwner(project)}
             isAuthenticated={isAuthenticated}
             onDelete={onDelete}
+            highlightKeyword={highlightKeyword}
+            highlightCategory={highlightCategory}
           />
         ))}
       </div>
@@ -132,7 +162,10 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   return (
     <div
       data-testid="PAMProjectList"
-      className="bg-secondary overflow-hidden rounded-2xl border border-primary-border shadow-sm"
+      className={clsx(
+        'bg-secondary overflow-hidden rounded-2xl border border-primary-border shadow-sm',
+        listClassName
+      )}
     >
       <div className="divide-y divide-primary-border">
         {projects.map((project) => (
@@ -142,6 +175,8 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             project={project}
             isOwner={isAuthenticated && isOwner(project)}
             onDelete={onDelete}
+            highlightKeyword={highlightKeyword}
+            highlightCategory={highlightCategory}
           />
         ))}
       </div>

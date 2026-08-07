@@ -20,9 +20,9 @@ import {
   type PAMProjectDetail,
   type PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
+import { PAMCategoryField } from '../../components/pam/PAMCategoryField';
 import {
   pamFormFieldClass,
-  pamFormSelectClass,
   pamFormTextareaClass
 } from '../../components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '../../components/pam/PAMSettingsCard';
@@ -328,23 +328,16 @@ export function PAMProjectGeneralPanel({
         onSave={() => void saveField('category', { category })}
       >
         {ready ? (
-          <select
+          <PAMCategoryField
             value={category}
             disabled={fieldReadOnly}
-            onChange={(e) => setCategory(e.target.value)}
-            className={clsx(
-              pamFormSelectClass,
-              fieldReadOnly && 'cursor-default opacity-80'
-            )}
-          >
-            <option value="">{tt.labelUnCategory}</option>
-            <option value="前端">前端</option>
-            <option value="后端">后端</option>
-            <option value="工具">工具</option>
-            <option value="文档">文档</option>
-            <option value="基础设施">基础设施</option>
-            <option value="其他">其他</option>
-          </select>
+            onChange={setCategory}
+            labels={{
+              labelUnCategory: tt.labelUnCategory,
+              categoryCustom: tt.categoryCustom,
+              categoryCustomPlaceholder: tt.categoryCustomPlaceholder
+            }}
+          />
         ) : (
           <SettingsFieldSkeleton />
         )}
