@@ -1,5 +1,48 @@
 # pam
 
+## 2.5.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 列表搜索分类筛选与移动端工具栏收紧 ([61a06e3](https://github.com/qlover/brain-toolkit/commit/61a06e390c8b0d07e111c8931ee6701a2b3d8b2d)) ([#115](https://github.com/qlover/brain-toolkit/pull/115))
+
+  支持预设/自定义分类过滤、关键词高亮与搜索反馈；
+  移动端隐藏标题文案、分类横滑，新增改为 FAB。
+
+- **pamenv,pam:** 本地 CLI 隔离、API 错误 i18n 与 create_source ([3b93564](https://github.com/qlover/brain-toolkit/commit/3b93564206632da970426a37704642640b59f8f0)) ([#114](https://github.com/qlover/brain-toolkit/pull/114))
+
+  支持 pamenv --local/--url/--domain 与 cwd .pam 隔离；结构化 PamCliApiError
+  与 locale 缓存；将基础设施错误归一为 api:server\_\_error；CLI 建项走 admin
+  客户端规避 RLS；pam_projects.create_source 记录创建来源（0=web，1=cli，2=fork）。
+
+- **pam:** device 登录回传 locale，并完善 CLI locales API ([253a641](https://github.com/qlover/brain-toolkit/commit/253a641626ce395d9d6783a30f9f5735afde06dc)) ([#114](https://github.com/qlover/brain-toolkit/pull/114))
+
+  浏览器 approve 带上当前页面语言，poll token 回传给 CLI；locales/json 在静态模式下正确返回 api 命名空间。
+
+- **pam:** 增加 Brain PKCE 登录并暂时禁用 custom:brain ([73b4360](https://github.com/qlover/brain-toolkit/commit/73b4360346a0148ff1c1b6f748b713cab2d896c6)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  本地 brain-oauth 无法被云端 Supabase 回调时，用授权码+PKCE 直连建会话.
+
+- **pam:** 登录页 Brain 按钮文案、图标与禁用提示 ([a4b7596](https://github.com/qlover/brain-toolkit/commit/a4b75965e05d0bd1a47cdaf97d79167c5f19cff5)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  对齐 GitHub 文案风格，补充 Brain/PKCE/Google/手机禁用说明，并使用 brain-oauth logo。
+
+- **pam:** 非本地环境禁用 Brain PKCE 登录 ([5135cb6](https://github.com/qlover/brain-toolkit/commit/5135cb6f682b4be22e18f01a8d81926e87811cad)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  线上暂无跨域请求 Brain API 方案，仅 APP_ENV=localhost 可用。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 修复 Brain PKCE 回调会话与 cookie 写入 ([1ec94ea](https://github.com/qlover/brain-toolkit/commit/1ec94eaa073ba745168bd2fbd008b34d1c578bcd)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  回调在 redirect 响应上设置 pam_session，并避免过大 token 导致 cookie 被丢弃。
+
+- **pam:** 修复 Pages 退出跳转与主题 hydration ([8eced4f](https://github.com/qlover/brain-toolkit/commit/8eced4f2d46253caeb3e6aa38a2541c6d1da9307)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  挂载 AppBridgePages，并用 ClientThemeProvider + timeZone 避免 Pages 控制台闪烁和退出失败。
+
 ## 2.4.0
 
 ### Minor Changes

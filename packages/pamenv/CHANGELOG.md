@@ -1,5 +1,21 @@
 # pamenv-cli
 
+## 1.5.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv,pam:** 本地 CLI 隔离、API 错误 i18n 与 create_source ([3b93564](https://github.com/qlover/brain-toolkit/commit/3b93564206632da970426a37704642640b59f8f0)) ([#114](https://github.com/qlover/brain-toolkit/pull/114))
+
+  支持 pamenv --local/--url/--domain 与 cwd .pam 隔离；结构化 PamCliApiError
+  与 locale 缓存；将基础设施错误归一为 api:server\_\_error；CLI 建项走 admin
+  客户端规避 RLS；pam_projects.create_source 记录创建来源（0=web，1=cli，2=fork）。
+
+- **pamenv:** 独立 CLI i18n、浏览器语言同步，并压缩构建产物 ([5223b03](https://github.com/qlover/brain-toolkit/commit/5223b03b894c10e15f5fd8bd3f1f693ac303c9bb)) ([#114](https://github.com/qlover/brain-toolkit/pull/114))
+
+  ts2locales 生成 dist/locales，运行时动态加载；常量 key 驱动交互文案；仅 pull api 错误文案。构建开启 minify、关闭 sourcemap，cli.js 体积约减半。
+
 ## 1.4.0
 
 ### Minor Changes
