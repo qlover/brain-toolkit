@@ -22,9 +22,10 @@ export type PamCliRemoveOptionsType = {
  * await new RemoveCommand(api).run('my-app', { envName: 'local' });
  */
 export class RemoveCommand {
-  protected readonly syncStore = new PamCliSyncStore();
-
-  constructor(protected readonly apiClient: PamCliApiClientInterface) {}
+  constructor(
+    protected readonly apiClient: PamCliApiClientInterface,
+    protected readonly syncStore: PamCliSyncStore = new PamCliSyncStore()
+  ) {}
 
   /**
    * @param projectRef - Project slug or project id

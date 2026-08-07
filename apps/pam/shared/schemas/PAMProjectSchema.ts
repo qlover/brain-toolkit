@@ -10,6 +10,19 @@ export const PAMPublicType = {
   private: 0
 } as const;
 
+/**
+ * How a project row was created.
+ * 0 = web/browser, 1 = CLI (pamenv), 2 = fork
+ */
+export const PAMCreateSourceType = {
+  web: 0,
+  cli: 1,
+  fork: 2
+} as const;
+
+export type PAMCreateSource =
+  (typeof PAMCreateSourceType)[keyof typeof PAMCreateSourceType];
+
 export const PAMProjectTableName = 'pam_projects' as const;
 export const PAMProjectEnvKey = 'environments' as const;
 
@@ -51,6 +64,10 @@ export const PAMProjectRawSchema = z.object({
    * 0: private, 1: public
    */
   is_public: z.enum(PAMPublicType),
+  /**
+   * 0: web, 1: cli, 2: fork (server-set; not accepted on create/update body)
+   */
+  create_source: z.enum(PAMCreateSourceType),
   /**
    * 是否已删除
    */
@@ -104,7 +121,8 @@ export const PAMProjectCreateSchema = PAMProjectRawSchema.omit({
   is_deleted: true,
   created_at: true,
   updated_at: true,
-  owner_id: true
+  owner_id: true,
+  create_source: true
 }).extend({
   [PAMProjectEnvKey]: z
     .array(
@@ -122,7 +140,8 @@ export const PAMProjectUpdateSchema = PAMProjectRawSchema.omit({
   is_deleted: true,
   created_at: true,
   updated_at: true,
-  owner_id: true
+  owner_id: true,
+  create_source: true
 }).extend({
   [PAMProjectEnvKey]: z
     .array(

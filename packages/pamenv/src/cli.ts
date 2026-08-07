@@ -1,11 +1,11 @@
 import { PamCliApp } from './PamCliApp';
 
 async function main(): Promise<void> {
+  const app = new PamCliApp();
   try {
-    await new PamCliApp().run(process.argv);
+    await app.run(process.argv);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(message);
+    console.error(await app.formatCliError(error));
     process.exitCode = 1;
   }
 }

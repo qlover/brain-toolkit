@@ -198,3 +198,24 @@ export const API_PAM_VARIABLE_KEY_DUPLICATE = 'api:pam_variable_key_duplicate';
  */
 export const API_PAM_VARIABLE_VALUE_REQUIRED =
   'api:pam_variable_value_required';
+
+/**
+ * @description Password hashing / encrypt failed during register or reset
+ * @localZh 密码加密失败
+ * @localEn Failed to encrypt password
+ */
+export const API_ENCRYPT_PASSWORD_FAILED = 'api:encrypt_password_failed';
+
+/**
+ * @description OTP sign-in requires phone or email
+ * @localZh OTP 登录需要有效的手机号或邮箱
+ * @localEn OTP sign requires a valid phone or email
+ */
+export const API_OTP_SIGN_INVALID = 'api:otp_sign_invalid';
+
+/**
+ * @description OTP verify requires phone/email and token
+ * @localZh OTP 校验需要手机号/邮箱以及验证码
+ * @localEn OTP verification requires a valid phone/email and token
+ */
+export const API_OTP_VERIFY_INVALID = 'api:otp_verify_invalid';

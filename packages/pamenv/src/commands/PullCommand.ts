@@ -26,9 +26,10 @@ import { PamCliSyncStore } from '../impls/PamCliSyncStore';
  * await new PullCommand(api).run('my-app', { envName: 'staging' });
  */
 export class PullCommand {
-  protected readonly syncStore = new PamCliSyncStore();
-
-  constructor(protected readonly apiClient: PamCliApiClientInterface) {}
+  constructor(
+    protected readonly apiClient: PamCliApiClientInterface,
+    protected readonly syncStore: PamCliSyncStore = new PamCliSyncStore()
+  ) {}
 
   /**
    * @param projectRef - Project slug or project id

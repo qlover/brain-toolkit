@@ -1,7 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { input } from '@inquirer/prompts';
+import { PamCliConfig } from '../config/PamCliConfig';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
+import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
   PamCliLocalEnvOptionsType,
   PamCliProjectType,
@@ -56,9 +58,11 @@ type PamCliPushEnvTargetType =
  * await new PushCommand(api).run('my-app', { envName: 'staging' });
  */
 export class PushCommand {
-  protected readonly syncStore = new PamCliSyncStore();
-
-  constructor(protected readonly apiClient: PamCliApiClientInterface) {}
+  constructor(
+    protected readonly apiClient: PamCliApiClientInterface,
+    protected readonly syncStore: PamCliSyncStore = new PamCliSyncStore(),
+    protected readonly authStore?: PamCliAuthStoreInterface
+  ) {}
 
   /**
    * @param projectRef - Project slug or project id
@@ -273,6 +277,28 @@ export class PushCommand {
     console.log(
       `Pushed ${target} → ${project.slug}/${targetEnv.name} (${localVars.length} vars)`
     );
+    await this.printProjectDetailHint(project.slug);
+  }
+
+  /**
+   * Prints a browser URL for the project general page when auth store is available.
+   *
+   * @param slug - Project slug
+   */
+  protected async printProjectDetailHint(slug: string): Promise<void> {
+    if (!this.authStore) {
+      return;
+    }
+    const [baseUrl, locale] = await Promise.all([
+      this.authStore.getBaseUrl(),
+      this.authStore.getLocale()
+    ]);
+    const detailUrl = PamCliConfig.buildProjectGeneralUrl(
+      baseUrl,
+      locale,
+      slug
+    );
+    console.log(`You can also open ${detailUrl} to view project details.`);
   }
 
   /**

@@ -1,11 +1,18 @@
 /**
- * Persisted CLI configuration under `~/.pam/config.json`.
+ * Supported pamenv CLI locales (matches PAM `i18nConfig.supportedLngs`).
+ */
+export type PamCliLocaleType = 'en' | 'zh';
+
+/**
+ * Persisted CLI configuration under `~/.pam/config.json` (or cwd `.pam` with `--local`).
  */
 export type PamCliConfigFileType = {
   readonly baseUrl: string;
   readonly token: string | null;
   readonly email: string | null;
   readonly updatedAt: string;
+  /** CLI UI / error message locale. */
+  readonly locale: PamCliLocaleType;
 };
 
 /**

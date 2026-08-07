@@ -21,6 +21,9 @@ pnpm pamenv --help
 
 ```bash
 pnpm pamenv login
+pnpm pamenv --domain pam.localhost:3400 login          # 指定本地 PAM（裸主机 → http）
+pnpm pamenv --local --domain pam.localhost:3400 login  # 凭证写入 cwd/.pam（与 ~/.pam 隔离）
+pnpm pamenv --local projects
 pnpm pamenv projects
 pnpm pamenv init                       # 交互创建项目（扫描 cwd）
 pnpm pamenv init -o ./packages/app     # 指定工作目录
@@ -36,7 +39,36 @@ pnpm pamenv push <slug|id> -e staging --show-values  # review 显示非敏感明
 pnpm pamenv remove <slug|id> -e local   # 删除远端环境（两次确认）
 pnpm pamenv remove <slug|id> -e local -y
 pnpm pamenv logout
+pnpm pamenv --local logout             # 清理 cwd/.pam 下的 token/sync
 ```
+
+### 全局参数（本地联调）
+
+| 参数 | 含义 |
+| --- | --- |
+| `--url <url>` | 本进程覆盖 PAM origin（如 `http://pam.localhost:3400`） |
+| `--domain <host>` | 同 `--url`，可写裸主机；`localhost` / 私网默认 `http`，其余 `https` |
+| `--local` | 配置与 sync 使用 **当前目录**（或命令 `-o`）下的 `.pam/`，**不**回落 `~/.pam` 的 token |
+
+请勿同时传 `--url` 与 `--domain`。项目若使用 `--local`，建议把 `.pam/` 加入 `.gitignore`（内含 token）。
+
+### 持久配置与文案
+
+```bash
+pamenv --local config set domain pam.localhost:3400
+pamenv --local config set locale zh          # 自动 pull `/api/locales/json`
+pamenv --local config list
+pamenv --local locales pull                 # 强制刷新文案缓存
+```
+
+| key | 作用 |
+| --- | --- |
+| `domain` / `url` | 持久化 `baseUrl` |
+| `locale` | `en` \| `zh`；错误 `id` 会译成对应语言 |
+
+文案缓存：`{pamRoot}/locales/{locale}.json`。API 失败时优先显示译文，并附带 `id` / `requestId`。
+
+API 失败时 CLI 会打印可读文案（若已缓存 locale），并附带稳定错误码 `id`（即 PAM 业务 i18n key，如 `api:not_authorized`）与 `requestId`，便于对照服务端日志。
 
 本地文件：`.env.<环境名>`（例如环境 `local` → `.env.local`）。未传 `-e` 时用环境列表**第一个**（`remove` 除外，必须传 `-e`）。
 

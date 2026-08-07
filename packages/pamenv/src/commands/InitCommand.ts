@@ -1,6 +1,8 @@
 import { resolve } from 'node:path';
 import { checkbox, confirm, input, select } from '@inquirer/prompts';
+import { PamCliConfig } from '../config/PamCliConfig';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
+import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
   PamCliCreateEnvironmentInputType,
   PamCliCreateProjectInputType,
@@ -28,7 +30,10 @@ const CATEGORY_FRONTEND = '前端' as const;
  * await new InitCommand(api).run({ outDir: process.cwd() });
  */
 export class InitCommand {
-  constructor(protected readonly apiClient: PamCliApiClientInterface) {}
+  constructor(
+    protected readonly apiClient: PamCliApiClientInterface,
+    protected readonly authStore?: PamCliAuthStoreInterface
+  ) {}
 
   /**
    * Runs the interactive init flow.
@@ -118,6 +123,7 @@ export class InitCommand {
 
     const created = await this.apiClient.createProject(payload);
     console.log(`Created project "${created.slug}" (${created.id}).`);
+    await this.printProjectDetailHint(created.slug);
     if (environments.length === 0) {
       console.log(
         'No environments were created. Add them in the PAM UI, or re-run init after adding .env files.'
@@ -131,6 +137,27 @@ export class InitCommand {
       console.log(`  pamenv push ${created.slug} -e ${env.name}`);
       console.log(`    (reads ${fileName} in the project directory)`);
     }
+  }
+
+  /**
+   * Prints a browser URL for the project general page when auth store is available.
+   *
+   * @param slug - Project slug
+   */
+  protected async printProjectDetailHint(slug: string): Promise<void> {
+    if (!this.authStore) {
+      return;
+    }
+    const [baseUrl, locale] = await Promise.all([
+      this.authStore.getBaseUrl(),
+      this.authStore.getLocale()
+    ]);
+    const detailUrl = PamCliConfig.buildProjectGeneralUrl(
+      baseUrl,
+      locale,
+      slug
+    );
+    console.log(`You can also open ${detailUrl} to view project details.`);
   }
 
   protected printScanSummary(scan: PamCliLocalProjectScanType): void {

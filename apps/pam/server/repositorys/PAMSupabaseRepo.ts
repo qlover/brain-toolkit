@@ -1,5 +1,8 @@
+import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SupabaseRepo, type RepoSearchParams } from '@qlover/next-kit/server';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
+import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
+import { toStableApiExecutorError } from '@server/utils/normalizeApiExecutorError';
 
 /**
  * Multi-column ILIKE OR search params (free-text keyword across several columns).
@@ -28,6 +31,25 @@ type SearchBuilderResult<Raw, T> = Awaited<
  * thin layer on top of kit's protected `getSearchBuilder`.
  */
 export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
+  /**
+   * Remaps kit infrastructure error ids (`SupabasePGRSTError`, …) to
+   * {@link API_SERVER_ERROR} before they bubble to the API envelope.
+   *
+   * @override
+   */
+  public override throwIfError(
+    ...args: Parameters<SupabaseRepo<Raw, T>['throwIfError']>
+  ): void {
+    try {
+      super.throwIfError(...args);
+    } catch (error) {
+      if (error instanceof ExecutorError) {
+        throw toStableApiExecutorError(error);
+      }
+      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
+    }
+  }
+
   /**
    * Escape ILIKE wildcards and wrap for PostgREST `.or()` filter values.
    */

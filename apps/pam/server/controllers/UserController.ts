@@ -17,6 +17,11 @@ import {
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import {
+  API_ENCRYPT_PASSWORD_FAILED,
+  API_OTP_SIGN_INVALID,
+  API_OTP_VERIFY_INVALID
+} from '@config/i18n-identifier/api';
 import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
@@ -68,7 +73,7 @@ export class UserController {
       }
     } catch {
       throw new ExecutorError(
-        'encrypt_password_failed',
+        API_ENCRYPT_PASSWORD_FAILED,
         'Encrypt password failed'
       );
     }
@@ -90,7 +95,7 @@ export class UserController {
       }
     } catch {
       throw new ExecutorError(
-        'encrypt_password_failed',
+        API_ENCRYPT_PASSWORD_FAILED,
         'Encrypt password failed'
       );
     }
@@ -140,7 +145,7 @@ export class UserController {
       return this.userService.signWithOtp(emailResult.data);
     }
 
-    throw new Error('OTP sign requires a valid phone or email!');
+    throw new ExecutorError(API_OTP_SIGN_INVALID);
   }
 
   public verifyOtp(body: unknown): Promise<SignOtpResult> {
@@ -154,7 +159,7 @@ export class UserController {
       return this.userService.signWithOtp(emailResult.data);
     }
 
-    throw new Error('OTP verification requires a valid phone/email and token!');
+    throw new ExecutorError(API_OTP_VERIFY_INVALID);
   }
 
   public loginWithProvider(_query: unknown): Promise<LoginProviderResult> {

@@ -8,7 +8,8 @@ import type {
   PAMProjectDetail,
   PAMProjectCreate,
   PAMProjectFork,
-  PAMProjectUpdate
+  PAMProjectUpdate,
+  PAMCreateSource
 } from '@shared/schemas/PAMProjectSchema';
 import type {
   ResourceSearchParams,
@@ -93,7 +94,10 @@ export interface PAMServiceInterface {
    */
   createProject(
     params: PAMProjectCreate,
-    options?: { allowEmptySensitive?: boolean }
+    options?: {
+      allowEmptySensitive?: boolean;
+      createSource?: PAMCreateSource;
+    }
   ): Promise<PAMProjectDetail>;
 
   /**

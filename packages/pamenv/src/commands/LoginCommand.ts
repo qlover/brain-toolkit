@@ -33,12 +33,15 @@ export class LoginCommand {
     readonly browser?: boolean;
   }): Promise<void> {
     const current = await this.authStore.getConfig();
-    const baseUrl =
+    console.log(`Using config: ${this.authStore.getActiveConfigPath()}`);
+
+    const baseUrl = PamCliConfig.normalizeOrigin(
       options?.url?.trim() ||
-      (await input({
-        message: 'PAM base URL',
-        default: current.baseUrl || PamCliConfig.DEFAULT_BASE_URL
-      }));
+        (await input({
+          message: 'PAM base URL',
+          default: current.baseUrl || PamCliConfig.DEFAULT_BASE_URL
+        }))
+    );
 
     await this.authStore.setBaseUrl(baseUrl);
 
@@ -147,7 +150,7 @@ export class LoginCommand {
     await this.authStore.setToken(token, email);
     console.log(`Logged in as ${email}`);
     console.log(`Token expires at ${expiresAt}`);
-    console.log(`Config saved to ${PamCliConfig.getConfigPath()}`);
+    console.log(`Config saved to ${this.authStore.getActiveConfigPath()}`);
   }
 
   protected async openBrowser(url: string): Promise<void> {
