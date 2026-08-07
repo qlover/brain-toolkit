@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { API_NOT_AUTHORIZED, API_SERVER_ERROR } from '@config/i18n-identifier/api';
+import { describe, expect, it } from 'vitest';
+import {
+  API_NOT_AUTHORIZED,
+  API_SERVER_ERROR
+} from '@config/i18n-identifier/api';
 import { V_REQUIRED } from '@config/i18n-identifier/common/validators';
 import {
   isStableApiErrorId,

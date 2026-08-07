@@ -4,6 +4,7 @@ import {
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { uuidSchema } from '@qlover/next-kit/common';
+import { headers } from 'next/headers';
 import { v4 as uuid } from 'uuid';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
@@ -49,7 +50,6 @@ import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import { OAuthUserService } from './OAuthUserService';
 import { PamCliTokenService } from './PamCliTokenService';
 import type { ServerAuthInterface } from '@qlover/next-kit/server';
-import { headers } from 'next/headers';
 
 @injectable()
 export class PAMService implements PAMServiceInterface {

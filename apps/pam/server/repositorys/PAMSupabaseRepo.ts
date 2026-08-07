@@ -1,8 +1,8 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SupabaseRepo, type RepoSearchParams } from '@qlover/next-kit/server';
-import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
 import { toStableApiExecutorError } from '@server/utils/normalizeApiExecutorError';
+import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
 /**
  * Multi-column ILIKE OR search params (free-text keyword across several columns).

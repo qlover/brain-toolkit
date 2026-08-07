@@ -31,6 +31,14 @@ export const revalidate = 60; // Cache time in seconds (matches i18nConfig.local
  *         schema:
  *           type: string
  *         description: Optional sort order for locale entries.
+ *       - in: query
+ *         name: namespaces
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: >
+ *           Optional comma-separated namespaces to include
+ *           (e.g. `api,common`). Omitting returns all keys.
  *     responses:
  *       200:
  *         description: Locale key-value map or empty object.

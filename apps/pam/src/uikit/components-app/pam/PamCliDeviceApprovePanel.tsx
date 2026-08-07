@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import { useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 
 type ApproveStateType = 'idle' | 'loading' | 'success' | 'error';
@@ -16,6 +17,7 @@ type ApproveStateType = 'idle' | 'loading' | 'success' | 'error';
  */
 export function PamCliDeviceApprovePanel() {
   const searchParams = useSearchParams();
+  const locale = useLocale();
   const initialCode = useMemo(
     () => (searchParams?.get('user_code') || '').toUpperCase(),
     [searchParams]
@@ -39,10 +41,11 @@ export function PamCliDeviceApprovePanel() {
     setMessage('');
 
     try {
+      const approveLocale = locale === 'zh' ? 'zh' : 'en';
       const response = await fetch('/api/pam/cli/device/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_code: code }),
+        body: JSON.stringify({ user_code: code, locale: approveLocale }),
         credentials: 'include'
       });
       const body = (await response.json()) as {
@@ -65,7 +68,7 @@ export function PamCliDeviceApprovePanel() {
       setState('error');
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [userCode]);
+  }, [locale, userCode]);
 
   return (
     <div
