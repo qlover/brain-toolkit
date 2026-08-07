@@ -1,5 +1,45 @@
 # apps/brain-oauth
 
+## 2.1.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv,pam:** 本地 CLI 隔离、API 错误 i18n 与 create_source ([3b93564](https://github.com/qlover/brain-toolkit/commit/3b93564206632da970426a37704642640b59f8f0)) ([#114](https://github.com/qlover/brain-toolkit/pull/114))
+
+  支持 pamenv --local/--url/--domain 与 cwd .pam 隔离；结构化 PamCliApiError
+  与 locale 缓存；将基础设施错误归一为 api:server\_\_error；CLI 建项走 admin
+  客户端规避 RLS；pam_projects.create_source 记录创建来源（0=web，1=cli，2=fork）。
+
+- **brain-oauth:** add timeZone support and improve error handling ([ae09ff2](https://github.com/qlover/brain-toolkit/commit/ae09ff20deacef4004b38c85998343c488cf3bbf)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+  - Added timeZone="Asia/Shanghai" to NextIntlClientProvider in layout and \_app components.
+  - Enhanced error handling in request.ts to log specific error codes for missing messages and environment fallbacks.
+  - Updated ThemeProvider to ClientThemeProvider to prevent FOUC issues.
+  - Modified BootstrapsProvider to include pathname during startup.
+  - Adjusted LanguageSwitcherPages to disable button based on mounted state instead of router readiness.
+
+- **brain-oauth:** 接入本地身份映射与 oauth-wrapper 0.7 API ([987ba86](https://github.com/qlover/brain-toolkit/commit/987ba86962637036a922e616c8c08e4befac6f1c)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  将上游 IdP 用户落到 auth.users + links，并适配 IdentityStore / providerRefreshToken 等新契约。
+
+#### 🐞 Bug Fixes
+
+- **brain-oauth:** 修复 Next.js 下 Brain 登录 POST body 丢失 ([39d0240](https://github.com/qlover/brain-toolkit/commit/39d02400bff532d013af4d0721f5fa76866c8828)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  fe-corekit 的 fetch(Request) 在 Next 服务端会丢 body，导致 Brain API
+  返回字段必填并被误判为 too_frequently。改为 unwrap 成 fetch(url, init)。
+
+- **brain-oauth:** Pages 控制台退出后正确回到登录页 ([fd11dd3](https://github.com/qlover/brain-toolkit/commit/fd11dd3733b794107f4d8b9f3c82380be638b8fb)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  挂载 AppBridgePages，使 RouterService.gotoLogin 在 Pages 路由下可硬跳转。
+
+#### ♻️ Refactors
+
+- **brain-oauth:** 登录页暂时仅保留密码登录 ([adba00d](https://github.com/qlover/brain-toolkit/commit/adba00dc3ee133d879a4522aca31a3d78f859890)) ([#113](https://github.com/qlover/brain-toolkit/pull/113))
+
+  服务端 OTP 仍为 stub，先从 UI 隐藏手机/邮箱验证码入口，避免无效操作。
+
 ## 2.0.0
 
 ### Major Changes

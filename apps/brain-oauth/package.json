@@ -1,6 +1,6 @@
 {
   "name": "@brain-toolkit/brain-oauth",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "private": true,
   "description": "基于 Next.js 的 OAuth 2.0 授权服务器（授权码 + PKCE），对接 Brain User 并支持本地身份映射",
   "scripts": {
