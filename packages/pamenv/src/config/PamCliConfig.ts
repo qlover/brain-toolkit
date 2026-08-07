@@ -12,7 +12,6 @@
 export class PamCliConfig {
   public static readonly CONFIG_FILE_NAME = 'config.json' as const;
   public static readonly SYNC_DIR_NAME = 'sync' as const;
-  public static readonly LOCALES_DIR_NAME = 'locales' as const;
   public static readonly PAM_DIR_NAME = '.pam' as const;
   public static readonly DEFAULT_BASE_URL = 'https://pam.qlover.top' as const;
   public static readonly DEFAULT_LOCALE = 'en' as const;
@@ -87,37 +86,6 @@ export class PamCliConfig {
   ): string {
     const safeEnv = envName.trim().replace(/[^a-zA-Z0-9._-]+/g, '_');
     return `${this.getLocalSyncRoot(cwd)}/${projectId}/${safeEnv}.json`;
-  }
-
-  /**
-   * @returns Absolute path to `~/.pam/locales`
-   */
-  public static getLocalesRoot(): string {
-    return `${this.getHomeRoot()}/${this.LOCALES_DIR_NAME}`;
-  }
-
-  /**
-   * @param cwd - Working directory
-   * @returns Absolute path to `{cwd}/.pam/locales`
-   */
-  public static getLocalLocalesRoot(cwd: string): string {
-    return `${this.getLocalRoot(cwd)}/${this.LOCALES_DIR_NAME}`;
-  }
-
-  /**
-   * @param locale - Locale code
-   * @returns Absolute cached locale JSON under home
-   */
-  public static getLocaleCachePath(locale: string): string {
-    return `${this.getLocalesRoot()}/${locale}.json`;
-  }
-
-  /**
-   * @param cwd - Working directory
-   * @param locale - Locale code
-   */
-  public static getLocalLocaleCachePath(cwd: string, locale: string): string {
-    return `${this.getLocalLocalesRoot(cwd)}/${locale}.json`;
   }
 
   /**

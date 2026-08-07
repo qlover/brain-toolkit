@@ -19,12 +19,15 @@ export type {
   PamCliEnvironmentSummaryType,
   PamCliExportResultType,
   PamCliForkProjectInputType,
+  PamCliLocaleSourceType,
   PamCliLocaleType,
   PamCliLocalEnvOptionsType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliVariableInputType
 } from './interfaces/PamCliTypes';
+export { PamCliI18n } from './i18n/PamCliI18n';
+export * from './i18n/identifier/pamenv_cli';
 export { PamCliLocalProjectScanUtil } from './impls/PamCliLocalProjectScanUtil';
 export type {
   PamCliDetectedEnvFileType,

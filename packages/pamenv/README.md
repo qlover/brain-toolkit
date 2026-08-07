@@ -56,19 +56,24 @@ pnpm pamenv --local logout             # 清理 cwd/.pam 下的 token/sync
 
 ```bash
 pamenv --local config set domain pam.localhost:3400
-pamenv --local config set locale zh          # 自动 pull `/api/locales/json`
+pamenv --local config set locale zh          # 锁定语言，并 pull `api` 命名空间
 pamenv --local config list
-pamenv --local locales pull                 # 强制刷新文案缓存
+pamenv --local locales pull                 # 强制刷新 API 错误文案缓存
 ```
 
 | key | 作用 |
 | --- | --- |
 | `domain` / `url` | 持久化 `baseUrl` |
-| `locale` | `en` \| `zh`；错误 `id` 会译成对应语言 |
+| `locale` | `en` \| `zh`；`config set locale` 会**锁定**，之后浏览器登录不再改语言 |
 
-文案缓存：`{pamRoot}/locales/{locale}.json`。API 失败时优先显示译文，并附带 `id` / `requestId`。
+**两套文案来源：**
 
-API 失败时 CLI 会打印可读文案（若已缓存 locale），并附带稳定错误码 `id`（即 PAM 业务 i18n key，如 `api:not_authorized`）与 `requestId`，便于对照服务端日志。
+1. **CLI 交互**（prompt / 状态行）：`src/i18n/identifier` + ts2locales → `dist/locales`，运行时动态加载；代码用常量（如 `PAMENV_CLI_LOGIN_WAITING`）。改文案后 `pnpm build` / `pnpm gen:locales`。
+2. **API 错误**（`api:*`）：从 PAM `/api/locales/json?namespaces=api` pull 到 `config.localeMessages`。`common` 暂不拉取。
+
+浏览器 device 登录（`/[locale]/pamenv/device`）会把页面语言回传 CLI；若未锁定则写入 `locale` 并 pull `api` 文案。
+
+API 失败时 CLI 会打印可读文案（若已缓存），并附带稳定错误码 `id`（如 `api:not_authorized`）与 `requestId`。
 
 本地文件：`.env.<环境名>`（例如环境 `local` → `.env.local`）。未传 `-e` 时用环境列表**第一个**（`remove` 除外，必须传 `-e`）。
 

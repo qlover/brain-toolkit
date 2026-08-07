@@ -1,5 +1,15 @@
 import { access, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_CANCELLED,
+  PAMENV_CLI_LOCAL_FILE,
+  PAMENV_CLI_NOT_OWNER_EXPORT,
+  PAMENV_CLI_PULLED,
+  PAMENV_CLI_PULL_CONFLICT,
+  PAMENV_CLI_PULL_OVERWRITE_PROMPT,
+  PAMENV_CLI_PULL_UP_TO_DATE
+} from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type {
   PamCliExportResultType,
@@ -46,7 +56,7 @@ export class PullCommand {
 
     if (!project.is_owner) {
       throw new Error(
-        `You are not the owner of project "${project.slug}". Export requires ownership.`
+        PamCliI18n.t(PAMENV_CLI_NOT_OWNER_EXPORT, { slug: project.slug })
       );
     }
 
@@ -80,18 +90,18 @@ export class PullCommand {
           remoteVars,
           sensitiveKeys
         );
-        console.log(`Pull conflict: local file differs from remote`);
-        console.log(`Local file: ${target}`);
+        console.log(PamCliI18n.t(PAMENV_CLI_PULL_CONFLICT));
+        console.log(PamCliI18n.t(PAMENV_CLI_LOCAL_FILE, { path: target }));
         console.log(PamCliEnvDiffUtil.formatReview(diff, {
           showValues: options.showValues === true
         }));
 
         if (!options.force) {
           const overwrite = await PamCliSyncConflictUtil.askOverwriteOrAbort(
-            'Overwrite local file with remote values (remote comments win when present)?'
+            PamCliI18n.t(PAMENV_CLI_PULL_OVERWRITE_PROMPT)
           );
           if (!overwrite) {
-            console.log('Cancelled.');
+            console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
             return;
           }
         }
@@ -114,7 +124,11 @@ export class PullCommand {
           remoteMap
         );
         console.log(
-          `Already up to date: ${project.slug}/${env.name} (${target})`
+          PamCliI18n.t(PAMENV_CLI_PULL_UP_TO_DATE, {
+            slug: project.slug,
+            env: env.name,
+            path: target
+          })
         );
         return;
       }
@@ -128,7 +142,11 @@ export class PullCommand {
       remoteMap
     );
     console.log(
-      `Pulled ${project.slug}/${exported.environmentName} → ${target}`
+      PamCliI18n.t(PAMENV_CLI_PULLED, {
+        slug: project.slug,
+        env: exported.environmentName,
+        path: target
+      })
     );
   }
 

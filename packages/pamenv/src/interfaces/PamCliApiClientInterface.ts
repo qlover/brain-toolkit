@@ -26,6 +26,8 @@ export type PamCliDevicePollResultType =
       readonly token: string;
       readonly expiresAt: string;
       readonly email: string;
+      /** Browser page locale when present. */
+      readonly locale?: 'en' | 'zh';
     };
 
 /**

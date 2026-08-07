@@ -1,13 +1,18 @@
-import { readFile } from 'node:fs/promises';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type { PamCliLocaleType } from '../interfaces/PamCliTypes';
-import { PamCliPrivateFsUtil } from './PamCliPrivateFsUtil';
+
+/**
+ * Namespaces cached for CLI API error translation.
+ * Matches PAM `/api/locales/json?namespaces=…`.
+ */
+export const PAMENV_LOCALE_NAMESPACES = ['api'] as const;
 
 /**
  * Loads and caches PAM locale JSON for translating API `id` keys in the CLI.
  *
  * Significance: Turns `api:not_authorized` into localized human text.
- * Core idea: Fetch `{baseUrl}/api/locales/json?locale=` and cache under `.pam/locales`.
+ * Core idea: Fetch `{baseUrl}/api/locales/json?locale=&namespaces=api`
+ * and store under `config.json` → `localeMessages`.
  * Main function: ensureLoaded / pull / t(id).
  * Main purpose: Readable CLI errors when locale is configured.
  *
@@ -23,7 +28,7 @@ export class PamCliLocaleCatalog {
   constructor(protected readonly authStore: PamCliAuthStoreInterface) {}
 
   /**
-   * Loads cache from disk, or fetches once when missing.
+   * Loads messages from config, or fetches once when missing / empty.
    */
   public async ensureLoaded(): Promise<void> {
     const locale = await this.authStore.getLocale();
@@ -31,9 +36,13 @@ export class PamCliLocaleCatalog {
       return;
     }
 
-    const fromDisk = await this.readCache(locale);
-    if (fromDisk) {
-      this.messages = fromDisk;
+    const config = await this.authStore.getConfig();
+    if (
+      config.locale === locale &&
+      config.localeMessages &&
+      Object.keys(config.localeMessages).length > 0
+    ) {
+      this.messages = { ...config.localeMessages };
       this.loadedLocale = locale;
       return;
     }
@@ -47,14 +56,19 @@ export class PamCliLocaleCatalog {
   }
 
   /**
-   * Force-refresh locale JSON from the active PAM base URL.
+   * Force-refresh locale JSON from the active PAM base URL into config.json.
+   * Only keeps `api:` keys.
    *
    * @returns Number of keys written
    */
   public async pull(): Promise<number> {
     const locale = await this.authStore.getLocale();
     const baseUrl = await this.authStore.getBaseUrl();
-    const url = `${baseUrl}/api/locales/json?locale=${encodeURIComponent(locale)}`;
+    const namespaces = PAMENV_LOCALE_NAMESPACES.join(',');
+    const url =
+      `${baseUrl}/api/locales/json` +
+      `?locale=${encodeURIComponent(locale)}` +
+      `&namespaces=${encodeURIComponent(namespaces)}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(
@@ -67,24 +81,19 @@ export class PamCliLocaleCatalog {
       throw new Error(`Invalid locales payload from ${url}`);
     }
 
-    const messages: Record<string, string> = {};
-    for (const [key, value] of Object.entries(
-      body as Record<string, unknown>
-    )) {
-      if (typeof value === 'string') {
-        messages[key] = value;
-      }
+    const messages = this.filterCliNamespaces(body as Record<string, unknown>);
+    const count = Object.keys(messages).length;
+    if (count === 0) {
+      throw new Error(
+        `PAM returned no api locale keys from ${url}. Is PAM running with generated public/locales?`
+      );
     }
 
-    const path = this.authStore.getLocaleCachePath(locale);
-    await PamCliPrivateFsUtil.writePrivateFile(
-      path,
-      `${JSON.stringify(messages, null, 2)}\n`
-    );
-
+    await this.authStore.setLocaleMessages(messages);
+    await this.removeLegacyLocalesDir();
     this.messages = messages;
     this.loadedLocale = locale;
-    return Object.keys(messages).length;
+    return count;
   }
 
   /**
@@ -95,31 +104,45 @@ export class PamCliLocaleCatalog {
     if (!id || !this.messages) {
       return undefined;
     }
-    const direct = this.messages[id];
-    if (direct) {
-      return direct;
-    }
-    return undefined;
+    return this.messages[id];
   }
 
-  protected async readCache(
-    locale: PamCliLocaleType
-  ): Promise<Record<string, string> | null> {
-    try {
-      const raw = await readFile(
-        this.authStore.getLocaleCachePath(locale),
-        'utf8'
-      );
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const messages: Record<string, string> = {};
-      for (const [key, value] of Object.entries(parsed)) {
-        if (typeof value === 'string') {
-          messages[key] = value;
-        }
+  /**
+   * Keeps only CLI-relevant namespaces (`api:…`).
+   *
+   * @param body - Raw locale map from PAM
+   */
+  protected filterCliNamespaces(
+    body: Record<string, unknown>
+  ): Record<string, string> {
+    const messages: Record<string, string> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (typeof value !== 'string') {
+        continue;
       }
-      return messages;
+      const keep = PAMENV_LOCALE_NAMESPACES.some((ns) =>
+        key.startsWith(`${ns}:`)
+      );
+      if (keep) {
+        messages[key] = value;
+      }
+    }
+    return messages;
+  }
+
+  /**
+   * Best-effort cleanup of the former `{pamRoot}/locales` directory.
+   */
+  protected async removeLegacyLocalesDir(): Promise<void> {
+    try {
+      const { rm } = await import('node:fs/promises');
+      const { join } = await import('node:path');
+      await rm(join(this.authStore.getActivePamRoot(), 'locales'), {
+        recursive: true,
+        force: true
+      });
     } catch {
-      return null;
+      // ignore
     }
   }
 }

@@ -2,6 +2,31 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { input } from '@inquirer/prompts';
 import { PamCliConfig } from '../config/PamCliConfig';
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_CANCELLED,
+  PAMENV_CLI_CREATED_ENVIRONMENT,
+  PAMENV_CLI_ENV_URL_REQUIRED,
+  PAMENV_CLI_LOCAL_FILE,
+  PAMENV_CLI_NOT_OWNER_PUSH,
+  PAMENV_CLI_OPEN_PROJECT_DETAIL,
+  PAMENV_CLI_PROMPT_ENV_URL,
+  PAMENV_CLI_PUSHED_DETAIL,
+  PAMENV_CLI_PUSH_ALREADY_SYNC,
+  PAMENV_CLI_PUSH_CONFIRM,
+  PAMENV_CLI_PUSH_CONFIRM_CREATE,
+  PAMENV_CLI_PUSH_CONFIRM_CREATE_LARGE,
+  PAMENV_CLI_PUSH_CONFIRM_LARGE,
+  PAMENV_CLI_PUSH_CONFLICT,
+  PAMENV_CLI_PUSH_CONFLICT_KEYS,
+  PAMENV_CLI_PUSH_LARGE_WARNING,
+  PAMENV_CLI_PUSH_NO_BASELINE,
+  PAMENV_CLI_PUSH_NO_BASELINE_CREATE,
+  PAMENV_CLI_PUSH_OVERWRITE_REMOTE,
+  PAMENV_CLI_PUSH_REMOTE_ONLY,
+  PAMENV_CLI_PUSH_REVIEW,
+  PAMENV_CLI_WILL_CREATE_ENV
+} from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
@@ -79,7 +104,7 @@ export class PushCommand {
 
     if (!project.is_owner) {
       throw new Error(
-        `You are not the owner of project "${project.slug}". Push requires ownership.`
+        PamCliI18n.t(PAMENV_CLI_NOT_OWNER_PUSH, { slug: project.slug })
       );
     }
 
@@ -131,13 +156,21 @@ export class PushCommand {
         targetEnv.name,
         localMap
       );
-      console.log(`Already in sync: ${project.slug}/${targetEnv.name}`);
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_PUSH_ALREADY_SYNC, {
+          slug: project.slug,
+          env: targetEnv.name
+        })
+      );
       return;
     }
 
     if (kind === PamCliSyncConflictKind.RemoteOnly) {
       console.log(
-        `Remote changed since last sync. Run \`pamenv pull ${project.slug} -e ${targetEnv.name}\` first.`
+        PamCliI18n.t(PAMENV_CLI_PUSH_REMOTE_ONLY, {
+          slug: project.slug,
+          env: targetEnv.name
+        })
       );
       return;
     }
@@ -148,18 +181,20 @@ export class PushCommand {
         localMap,
         remoteMap
       );
-      console.log(
-        `Push conflict: both local and remote changed since last sync.`
-      );
+      console.log(PamCliI18n.t(PAMENV_CLI_PUSH_CONFLICT));
       if (keys.length > 0) {
-        console.log(`Conflicting keys: ${keys.join(', ')}`);
+        console.log(
+          PamCliI18n.t(PAMENV_CLI_PUSH_CONFLICT_KEYS, {
+            keys: keys.join(', ')
+          })
+        );
       }
       if (!options.force) {
         const overwrite = await PamCliSyncConflictUtil.askOverwriteOrAbort(
-          'Overwrite remote with local values anyway?'
+          PamCliI18n.t(PAMENV_CLI_PUSH_OVERWRITE_REMOTE)
         );
         if (!overwrite) {
-          console.log('Cancelled.');
+          console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
           return;
         }
       }
@@ -168,11 +203,14 @@ export class PushCommand {
     if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
       const ok = await PamCliConfirmUtil.ask(
         targetEnv.mode === 'create'
-          ? `No sync baseline found. Create ${project.slug}/${targetEnv.name} and push local variables?`
-          : 'No sync baseline found (never pulled/pushed here). Push local over remote anyway?'
+          ? PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE_CREATE, {
+              slug: project.slug,
+              env: targetEnv.name
+            })
+          : PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE)
       );
       if (!ok) {
-        console.log('Cancelled.');
+        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
         return;
       }
     }
@@ -213,13 +251,22 @@ export class PushCommand {
     );
     const reviewOptions = { showValues: options.showValues === true };
 
-    console.log(`Push review: ${project.slug}/${targetEnv.name}`);
-    console.log(`Local file: ${target}`);
+    console.log(
+      PamCliI18n.t(PAMENV_CLI_PUSH_REVIEW, {
+        slug: project.slug,
+        env: targetEnv.name
+      })
+    );
+    console.log(PamCliI18n.t(PAMENV_CLI_LOCAL_FILE, { path: target }));
     console.log(PamCliEnvDiffUtil.formatReview(diff, reviewOptions));
 
     if (diff.isLargeKeyChange) {
       console.log(
-        `Warning: large variable name changes (added ${diff.addedKeyCount}, removed ${diff.removedKeyCount}; remote had ${diff.remoteKeyCount} keys).`
+        PamCliI18n.t(PAMENV_CLI_PUSH_LARGE_WARNING, {
+          added: diff.addedKeyCount,
+          removed: diff.removedKeyCount,
+          remote: diff.remoteKeyCount
+        })
       );
     }
 
@@ -227,14 +274,25 @@ export class PushCommand {
       const message =
         targetEnv.mode === 'create'
           ? diff.isLargeKeyChange
-            ? `Large changes detected. Create ${project.slug}/${targetEnv.name} and push these variables anyway?`
-            : `Create ${project.slug}/${targetEnv.name} and push ${localVars.length} variable(s)?`
+            ? PamCliI18n.t(PAMENV_CLI_PUSH_CONFIRM_CREATE_LARGE, {
+                slug: project.slug,
+                env: targetEnv.name
+              })
+            : PamCliI18n.t(PAMENV_CLI_PUSH_CONFIRM_CREATE, {
+                slug: project.slug,
+                env: targetEnv.name,
+                count: localVars.length
+              })
           : diff.isLargeKeyChange
-            ? 'Large changes detected. Push these variables to PAM anyway?'
-            : `Push ${localVars.length} variable(s) to ${project.slug}/${targetEnv.name}?`;
+            ? PamCliI18n.t(PAMENV_CLI_PUSH_CONFIRM_LARGE)
+            : PamCliI18n.t(PAMENV_CLI_PUSH_CONFIRM, {
+                slug: project.slug,
+                env: targetEnv.name,
+                count: localVars.length
+              });
       const ok = await PamCliConfirmUtil.ask(message);
       if (!ok) {
-        console.log('Cancelled.');
+        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
         return;
       }
     }
@@ -259,7 +317,12 @@ export class PushCommand {
         url: targetEnv.url,
         variables: payload
       });
-      console.log(`Created environment ${project.slug}/${created.name}`);
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_CREATED_ENVIRONMENT, {
+          slug: project.slug,
+          name: created.name
+        })
+      );
     } else {
       await this.apiClient.replaceEnvironmentVariables(
         project.id,
@@ -275,7 +338,12 @@ export class PushCommand {
       PamCliDotenvUtil.toValueMap(localVars)
     );
     console.log(
-      `Pushed ${target} → ${project.slug}/${targetEnv.name} (${localVars.length} vars)`
+      PamCliI18n.t(PAMENV_CLI_PUSHED_DETAIL, {
+        path: target,
+        slug: project.slug,
+        env: targetEnv.name,
+        count: localVars.length
+      })
     );
     await this.printProjectDetailHint(project.slug);
   }
@@ -298,7 +366,9 @@ export class PushCommand {
       locale,
       slug
     );
-    console.log(`You can also open ${detailUrl} to view project details.`);
+    console.log(
+      PamCliI18n.t(PAMENV_CLI_OPEN_PROJECT_DETAIL, { url: detailUrl })
+    );
   }
 
   /**
@@ -374,14 +444,19 @@ export class PushCommand {
         );
       }
       url = defaultUrl;
-      console.log(`Will create environment "${envName}" with url: ${url}`);
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_WILL_CREATE_ENV, {
+          name: envName,
+          url
+        })
+      );
     } else {
       const rawUrl = await input({
-        message: 'env url',
+        message: PamCliI18n.t(PAMENV_CLI_PROMPT_ENV_URL),
         ...(defaultUrl ? { default: defaultUrl } : {}),
         validate: (value: string): true | string => {
           if (!PamCliLocalProjectScanUtil.isValidEnvUrl(value)) {
-            return 'A valid http(s) URL is required';
+            return PamCliI18n.t(PAMENV_CLI_ENV_URL_REQUIRED);
           }
           return true;
         }

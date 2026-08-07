@@ -15,6 +15,7 @@ import { PamCliApiError } from './impls/PamCliApiError';
 import { PamCliAuthStore } from './impls/PamCliAuthStore';
 import { PamCliLocaleCatalog } from './impls/PamCliLocaleCatalog';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
+import { PamCliI18n } from './i18n/PamCliI18n';
 import { name, version } from '../package.json';
 
 type PamCliGlobalOptionsType = {
@@ -59,6 +60,7 @@ export class PamCliApp {
         domain: leaf.domain || root.domain,
         local: Boolean(leaf.local || root.local)
       });
+      await PamCliI18n.syncFromStore(this.authStore);
     });
 
     this.registerLogin(program);
@@ -255,7 +257,11 @@ export class PamCliApp {
         const url =
           options.url?.trim() ||
           this.resolveHostOverride(undefined, options.domain);
-        await new LoginCommand(this.authStore, this.apiClient).run({
+        await new LoginCommand(
+          this.authStore,
+          this.apiClient,
+          this.localeCatalog
+        ).run({
           url,
           email: options.email,
           browser: options.password ? false : options.browser,
@@ -337,11 +343,13 @@ export class PamCliApp {
   protected registerLocales(program: Command): void {
     const locales = program
       .command('locales')
-      .description('Manage cached PAM locale files for CLI error messages');
+      .description('Manage PAM locale messages cached in config.json');
 
     const pull = locales
       .command('pull')
-      .description('Download locale JSON from the configured PAM baseUrl')
+      .description(
+        'Download api/common locale messages into config.json localeMessages'
+      )
       .action(async () => {
         await new LocalesCommand(this.authStore, this.localeCatalog).pull();
       });

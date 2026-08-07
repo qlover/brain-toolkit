@@ -98,6 +98,7 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       token: string;
       expiresAt: string;
       user: { email?: string };
+      locale?: 'en' | 'zh';
     }>;
     try {
       body = (await response.json()) as typeof body;
@@ -110,11 +111,16 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     }
 
     if (body.success && body.data) {
+      const locale =
+        body.data.locale === 'zh' || body.data.locale === 'en'
+          ? body.data.locale
+          : undefined;
       return {
         status: 'approved',
         token: body.data.token,
         expiresAt: body.data.expiresAt,
-        email: body.data.user?.email || 'unknown'
+        email: body.data.user?.email || 'unknown',
+        ...(locale ? { locale } : {})
       };
     }
 

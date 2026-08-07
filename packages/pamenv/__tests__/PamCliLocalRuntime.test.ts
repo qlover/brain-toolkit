@@ -154,7 +154,7 @@ describe('PamCliApiError', () => {
 });
 
 describe('PamCliAuthStore locale', () => {
-  it('persists locale in local config', async () => {
+  it('persists locale and localeMessages in local config', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'pamenv-locale-'));
     try {
       const store = new PamCliAuthStore({
@@ -163,8 +163,34 @@ describe('PamCliAuthStore locale', () => {
       });
       await store.setLocale('zh');
       expect(await store.getLocale()).toBe('zh');
+      await store.setLocaleMessages({ 'api:not_authorized': '未授权' });
       const cfg = await store.getConfig();
       expect(cfg.locale).toBe('zh');
+      expect(cfg.localeMessages['api:not_authorized']).toBe('未授权');
+      expect(cfg.localePulledAt).toBeTruthy();
+
+      await store.setLocale('en');
+      const cleared = await store.getConfig();
+      expect(cleared.locale).toBe('en');
+      expect(cleared.localeMessages).toEqual({});
+      expect(cleared.localePulledAt).toBeNull();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('locks locale when set with locked: true', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'pamenv-locale-lock-'));
+    try {
+      const store = new PamCliAuthStore({
+        preferLocal: true,
+        workingDir: dir
+      });
+      await store.setLocale('zh', { locked: true, source: 'manual' });
+      const cfg = await store.getConfig();
+      expect(cfg.locale).toBe('zh');
+      expect(cfg.localeLocked).toBe(true);
+      expect(cfg.localeSource).toBe('manual');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

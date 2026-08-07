@@ -27,8 +27,9 @@
   ],
   "scripts": {
     "build": "tsup",
+    "gen:locales": "node ./tools/generateLocales.mjs",
     "type-check": "tsc --build",
-    "test": "vitest run --config vitest.config.ts"
+    "test": "pnpm gen:locales && vitest run --config vitest.config.ts"
   },
   "repository": {
     "type": "git",
@@ -53,6 +54,7 @@
     "commander": "^15.0.0"
   },
   "devDependencies": {
+    "@brain-toolkit/ts2locales": "workspace:*",
     "@types/node": "^22.9.0"
   },
   "engines": {
