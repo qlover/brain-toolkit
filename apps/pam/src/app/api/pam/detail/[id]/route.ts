@@ -62,6 +62,7 @@ import type { NextRequest } from 'next/server';
  *         - slug
  *         - name
  *         - is_public
+ *         - create_source
  *         - owner_id
  *         - created_at
  *         - updated_at
@@ -96,6 +97,10 @@ import type { NextRequest } from 'next/server';
  *           type: integer
  *           enum: [0, 1]
  *           description: "0-私有，1-公开"
+ *         create_source:
+ *           type: integer
+ *           enum: [0, 1, 2]
+ *           description: "0-web，1-cli，2-fork"
  *         owner_id:
  *           type: string
  *           format: uuid
@@ -165,6 +170,10 @@ import type { NextRequest } from 'next/server';
  *       is_public:
  *         type: integer
  *         enum: [0, 1]
+ *       create_source:
+ *         type: integer
+ *         enum: [0, 1, 2]
+ *         description: "0-web，1-cli，2-fork"
  *       owner_id:
  *         type: string
  *         format: uuid

@@ -1,5 +1,9 @@
 import { readFile, rm } from 'node:fs/promises';
 import { PamCliConfig } from '../config/PamCliConfig';
+import {
+  createPamCliRuntimeContext,
+  type PamCliRuntimeContextType
+} from '../config/PamCliRuntimeContext';
 import { PamCliPrivateFsUtil } from './PamCliPrivateFsUtil';
 
 /**
@@ -15,7 +19,7 @@ export type PamCliSyncSnapshotType = {
 };
 
 /**
- * Disk store for pamenv sync baselines under `~/.pam/sync`.
+ * Disk store for pamenv sync baselines under `~/.pam/sync` or local `.pam/sync`.
  *
  * Significance: Remembers the last successful pull/push for conflict checks.
  * Core idea: One JSON snapshot per project id + environment name (`0600`).
@@ -23,16 +27,45 @@ export type PamCliSyncSnapshotType = {
  * Main purpose: Detect remote-only and divergent edits on `pamenv push`.
  *
  * @example
- * const store = new PamCliSyncStore();
+ * const store = new PamCliSyncStore({ preferLocal: true, workingDir: process.cwd() });
  * await store.writeSnapshot(snapshot);
  */
 export class PamCliSyncStore {
+  protected runtime: PamCliRuntimeContextType;
+
+  constructor(runtime?: Partial<PamCliRuntimeContextType>) {
+    this.runtime = createPamCliRuntimeContext(runtime);
+  }
+
+  /**
+   * @param workingDir - Directory used when `--local` is active
+   */
+  public setWorkingDir(workingDir: string): void {
+    this.runtime = {
+      ...this.runtime,
+      workingDir
+    };
+  }
+
   /**
    * @param projectId - Project uuid
    * @param envName - Environment name
    */
   public getSnapshotPath(projectId: string, envName: string): string {
+    if (this.runtime.preferLocal) {
+      return PamCliConfig.getLocalSyncSnapshotPath(
+        this.runtime.workingDir,
+        projectId,
+        envName
+      );
+    }
     return PamCliConfig.getSyncSnapshotPath(projectId, envName);
+  }
+
+  protected getSyncRoot(): string {
+    return this.runtime.preferLocal
+      ? PamCliConfig.getLocalSyncRoot(this.runtime.workingDir)
+      : PamCliConfig.getSyncRoot();
   }
 
   /**
@@ -95,10 +128,10 @@ export class PamCliSyncStore {
   }
 
   /**
-   * Removes all sync baselines under `~/.pam/sync` (used by `pamenv logout`).
+   * Removes all sync baselines under the active sync root (used by logout).
    */
   public async clearAll(): Promise<void> {
-    await rm(PamCliConfig.getSyncRoot(), { recursive: true, force: true });
+    await rm(this.getSyncRoot(), { recursive: true, force: true });
   }
 
   /**

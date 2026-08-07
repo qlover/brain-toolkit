@@ -4,6 +4,7 @@ import {
 } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { uuidSchema } from '@qlover/next-kit/common';
+import { headers } from 'next/headers';
 import { v4 as uuid } from 'uuid';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
@@ -34,6 +35,8 @@ import {
   PAMProjectUpdate,
   PAMProjectCreate,
   PAMPublicType,
+  PAMCreateSourceType,
+  type PAMCreateSource,
   type PAMProjectFork
 } from '@schemas/PAMProjectSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
@@ -45,6 +48,7 @@ import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import { OAuthUserService } from './OAuthUserService';
+import { PamCliTokenService } from './PamCliTokenService';
 import type { ServerAuthInterface } from '@qlover/next-kit/server';
 
 @injectable()
@@ -57,6 +61,9 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(ServerConfig)
   protected readonly serverConfig!: SeedServerConfigInterface;
+
+  @inject(PamCliTokenService)
+  protected readonly cliTokenService!: PamCliTokenService;
 
   protected secretEncryption: PAMEnvSecretEncryption | null = null;
 
@@ -340,11 +347,13 @@ export class PAMService implements PAMServiceInterface {
     const { id } = params;
     // 权限校验
     const project = await this.projectRepo.hasAuthProject(id);
-    if (!project) throw new Error(API_NOT_AUTHORIZED);
+    if (!project) throw new ExecutorError(API_NOT_AUTHORIZED);
 
     // --- 补充 slug 唯一性校验 ---
     if (params.slug) {
-      const existing = await this.projectRepo.getProjectWithSlug(params.slug);
+      const existing = await this.projectRepo.getProjectWithSlugAdmin(
+        params.slug
+      );
       if (existing && existing.id !== id) {
         throw new ExecutorError(API_PAM_SLUG_EXISTS, { slug: params.slug });
       }
@@ -385,7 +394,10 @@ export class PAMService implements PAMServiceInterface {
    */
   public async createProject(
     params: PAMProjectCreate,
-    options?: { allowEmptySensitive?: boolean }
+    options?: {
+      allowEmptySensitive?: boolean;
+      createSource?: PAMCreateSource;
+    }
   ): Promise<PAMProjectDetail> {
     const { slug, [PAMProjectEnvKey]: envs } = params;
     // slug 不能重复
@@ -415,14 +427,44 @@ export class PAMService implements PAMServiceInterface {
     }
 
     const user = await this.userService.getUser(true);
+    const create_source = await this.resolveCreateSource(options?.createSource);
 
-    const detail = await this.projectRepo.createProject({
+    // Admin write: CLI bearer auth has no Supabase RLS session (auth.uid()).
+    // Ownership is enforced by setting owner_id from the authenticated user.
+    const detail = await this.projectRepo.createProjectAdmin({
       ...params,
       [PAMProjectEnvKey]: this.encryptEnvironmentsForStorage(normalizedEnvs),
-      owner_id: user.id
+      owner_id: user.id,
+      create_source
     });
 
     return this.redactProjectDetail(detail);
+  }
+
+  /**
+   * Resolves create_source: explicit override, else CLI bearer → 1, else web → 0.
+   *
+   * @param explicit - Optional caller-forced source (e.g. fork → 2)
+   */
+  protected async resolveCreateSource(
+    explicit?: PAMCreateSource
+  ): Promise<PAMCreateSource> {
+    if (explicit !== undefined) {
+      return explicit;
+    }
+
+    const authorization = (await headers()).get('authorization');
+    if (!authorization?.toLowerCase().startsWith('bearer ')) {
+      return PAMCreateSourceType.web;
+    }
+
+    const token = authorization.slice('bearer '.length).trim();
+    if (!token) {
+      return PAMCreateSourceType.web;
+    }
+
+    const session = await this.cliTokenService.verifyToken(token);
+    return session?.userId ? PAMCreateSourceType.cli : PAMCreateSourceType.web;
   }
 
   /**
@@ -466,7 +508,10 @@ export class PAMService implements PAMServiceInterface {
       name
     });
 
-    return this.createProject(createPayload, { allowEmptySensitive: true });
+    return this.createProject(createPayload, {
+      allowEmptySensitive: true,
+      createSource: PAMCreateSourceType.fork
+    });
   }
 
   /**
@@ -496,7 +541,7 @@ export class PAMService implements PAMServiceInterface {
   public async deleteProject(id: string): Promise<void> {
     // 权限校验
     const project = await this.projectRepo.hasAuthProject(id);
-    if (!project) throw new Error(API_NOT_AUTHORIZED);
+    if (!project) throw new ExecutorError(API_NOT_AUTHORIZED);
 
     await this.projectRepo.deleteProject(id);
   }

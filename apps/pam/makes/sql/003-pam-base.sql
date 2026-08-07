@@ -18,6 +18,7 @@ CREATE TABLE pam_projects (
     category TEXT,
     is_public INT NOT NULL DEFAULT 0 CHECK (is_public IN (0, 1)),
     is_deleted INT NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+    create_source INT NOT NULL DEFAULT 0 CHECK (create_source IN (0, 1, 2)),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

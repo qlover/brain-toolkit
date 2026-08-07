@@ -173,7 +173,12 @@ export class PamCliController {
     );
 
     try {
-      PamCliDeviceCodeStore.approve(parsed.user_code, user, tokenResponse);
+      PamCliDeviceCodeStore.approve(
+        parsed.user_code,
+        user,
+        tokenResponse,
+        parsed.locale
+      );
     } catch {
       throw new ExecutorError(
         API_OAUTH_WRAPPER_AUTH_FAILED,

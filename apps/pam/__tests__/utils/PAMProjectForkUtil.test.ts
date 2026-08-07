@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import {
+  PAMCreateSourceType,
   PAMProjectEnvKey,
   PAMPublicType,
   type PAMProjectDetail
@@ -15,6 +16,7 @@ const sourceDetail = (): PAMProjectDetail => ({
   stack: 'next',
   repo_url: 'https://example.com/repo',
   is_public: PAMPublicType.public,
+  create_source: PAMCreateSourceType.web,
   owner_id: '22222222-2222-2222-2222-222222222222',
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',

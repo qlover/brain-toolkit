@@ -21,6 +21,8 @@ export type PamCliDeviceCodeRecordType = {
   status: PamCliDeviceStatusType;
   user?: UserSchema;
   tokenResponse?: PamCliTokenResponse;
+  /** Browser locale captured at approve time. */
+  locale?: 'en' | 'zh';
 };
 
 type GlobalDeviceStoreType = {
@@ -119,11 +121,13 @@ export class PamCliDeviceCodeStore {
    * @param userCode - User code from the approve page
    * @param user - Authenticated browser user
    * @param tokenResponse - Issued CLI token payload
+   * @param locale - Optional browser UI locale to return on poll
    */
   public static approve(
     userCode: string,
     user: UserSchema,
-    tokenResponse: PamCliTokenResponse
+    tokenResponse: PamCliTokenResponse,
+    locale?: 'en' | 'zh'
   ): PamCliDeviceCodeRecordType {
     const record = this.getByUserCode(userCode);
     if (!record) {
@@ -135,7 +139,10 @@ export class PamCliDeviceCodeStore {
 
     record.status = PamCliDeviceStatus.Approved;
     record.user = user;
-    record.tokenResponse = tokenResponse;
+    record.locale = locale;
+    record.tokenResponse = locale
+      ? { ...tokenResponse, locale }
+      : tokenResponse;
     return record;
   }
 

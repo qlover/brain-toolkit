@@ -823,7 +823,9 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   public async hasProjectWithSlug(slug: string): Promise<boolean> {
-    const result = await this.getProjectWithSlug(slug);
+    // Global uniqueness must bypass RLS so CLI (no auth.uid) and private
+    // projects owned by others are still detected.
+    const result = await this.getProjectWithSlugAdmin(slug);
     return !isEmpty(result);
   }
 
@@ -841,6 +843,27 @@ export class PAMProjectRepo extends BaseRepository<
     this.supabaseRepo.throwIfError(result);
 
     return result.data as PAMProjectDetail;
+  }
+
+  /**
+   * Slug lookup with admin client (global uniqueness / CLI).
+   *
+   * @param slug - Project slug
+   */
+  public async getProjectWithSlugAdmin(
+    slug: string
+  ): Promise<Pick<PAMProjectDetail, 'id' | 'slug'> | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id,slug')
+      .eq('slug', slug)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as Pick<PAMProjectDetail, 'id' | 'slug'> | null;
   }
 
   /**
@@ -897,6 +920,71 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     // 3. 组装返回（符合 PAMProjectWithEnvironmentsSchema）
+    return {
+      ...project,
+      [PAMProjectEnvKey]: createdEnvs
+    } as never;
+  }
+
+  /**
+   * Creates a project (+ envs) with admin client.
+   * Callers must set `owner_id` from an authenticated user (cookie or CLI).
+   * Needed because CLI bearer auth has no Supabase RLS session (`auth.uid()`).
+   *
+   * @param params - Project create payload including owner_id
+   */
+  public async createProjectAdmin(
+    params: PAMProjectCreate & {
+      owner_id: string;
+      create_source: PAMProjectRaw['create_source'];
+    }
+  ): Promise<PAMProjectDetail> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const { [PAMProjectEnvKey]: envs, ...projectData } = params;
+
+    const projectResult = await admin
+      .from(this.getRepoName())
+      .insert(projectData as PAMProjectRaw)
+      .select(SearchPAMProjectFields.join(','))
+      .single();
+
+    this.supabaseRepo.throwIfError(projectResult);
+
+    // Dynamic `.select(fields.join(','))` widens PostgREST typings to GenericStringError.
+    const project = projectResult.data as unknown as SearchPAMRawProject;
+
+    this.logger.info(
+      `[PAMProjectRepo] create project (admin) ${projectData.name} success`,
+      projectData
+    );
+
+    let createdEnvs: PAMEnvWriteable[] = [];
+
+    this.logger.debug(
+      '[PAMProjectRepo] create envs (admin) length:',
+      envs?.length
+    );
+
+    if (Array.isArray(envs) && envs.length > 0) {
+      const envsToInsert = envs.map((env) => ({
+        project_id: project.id,
+        name: env.name,
+        url: env.url,
+        variables: env.variables || []
+      }));
+
+      const envResult = await admin
+        .from(PAMEnvTableName)
+        .insert(envsToInsert)
+        .select('*');
+
+      this.supabaseRepo.throwIfError(envResult);
+
+      if (envResult.data) {
+        createdEnvs = envResult.data;
+      }
+    }
+
     return {
       ...project,
       [PAMProjectEnvKey]: createdEnvs

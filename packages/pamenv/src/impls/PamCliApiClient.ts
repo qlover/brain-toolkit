@@ -13,19 +13,22 @@ import type {
   PamCliRemoteEnvironmentType,
   PamCliVariableInputType
 } from '../interfaces/PamCliTypes';
+import { PamCliConfig } from '../config/PamCliConfig';
+import { PamCliApiError } from './PamCliApiError';
 
 type ApiEnvelopeType<T> = {
   readonly success: boolean;
   readonly data?: T;
   readonly message?: string;
   readonly id?: string;
+  readonly requestId?: string;
 };
 
 /**
  * Fetch-based PAM API client for the CLI.
  *
  * Significance: Talks to PAM over HTTP with Bearer CLI tokens.
- * Core idea: JSON envelope `{ success, data }` matching NextKit APIs.
+ * Core idea: JSON envelope `{ success, id, data }` matching NextKit APIs.
  * Main function: Token create, device login, project search, env export.
  * Main purpose: Drive authenticated pull/push from the terminal.
  *
@@ -48,7 +51,7 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       token: string;
       expiresAt: string;
       user: { email?: string };
-    }>(`${this.normalizeBaseUrl(baseUrl)}/api/pam/cli/token`, {
+    }>(`${PamCliConfig.normalizeOrigin(baseUrl)}/api/pam/cli/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -66,7 +69,7 @@ export class PamCliApiClient implements PamCliApiClientInterface {
    */
   public async createDeviceCode(baseUrl: string): Promise<PamCliDeviceCodeType> {
     return this.requestJson<PamCliDeviceCodeType>(
-      `${this.normalizeBaseUrl(baseUrl)}/api/pam/cli/device/code`,
+      `${PamCliConfig.normalizeOrigin(baseUrl)}/api/pam/cli/device/code`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,7 +86,7 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     deviceCode: string
   ): Promise<PamCliDevicePollResultType> {
     const response = await fetch(
-      `${this.normalizeBaseUrl(baseUrl)}/api/pam/cli/device/token`,
+      `${PamCliConfig.normalizeOrigin(baseUrl)}/api/pam/cli/device/token`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,21 +98,29 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       token: string;
       expiresAt: string;
       user: { email?: string };
+      locale?: 'en' | 'zh';
     }>;
     try {
       body = (await response.json()) as typeof body;
     } catch {
-      throw new Error(
-        `PAM API returned non-JSON (HTTP ${response.status}) while polling device token`
-      );
+      throw new PamCliApiError({
+        id: 'pamenv:non_json_response',
+        message: `PAM API returned non-JSON (HTTP ${response.status}) while polling device token`,
+        httpStatus: response.status
+      });
     }
 
     if (body.success && body.data) {
+      const locale =
+        body.data.locale === 'zh' || body.data.locale === 'en'
+          ? body.data.locale
+          : undefined;
       return {
         status: 'approved',
         token: body.data.token,
         expiresAt: body.data.expiresAt,
-        email: body.data.user?.email || 'unknown'
+        email: body.data.user?.email || 'unknown',
+        ...(locale ? { locale } : {})
       };
     }
 
@@ -124,8 +135,6 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       return { status: 'expired' };
     }
 
-    // Some stacks wrap ExecutorError ids with prefixes — treat unknown soft
-    // failures while still pending as pending when message matches.
     if (
       body.message?.includes('authorization_pending') ||
       id.endsWith('authorization_pending')
@@ -133,9 +142,13 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       return { status: 'pending' };
     }
 
-    throw new Error(
-      body.message || body.id || `Device token poll failed (HTTP ${response.status})`
-    );
+    throw new PamCliApiError({
+      id: body.id || 'pamenv:device_poll_failed',
+      message: body.message,
+      requestId: body.requestId,
+      data: body.data,
+      httpStatus: response.status
+    });
   }
 
   /**
@@ -358,36 +371,36 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   protected async requireToken(): Promise<string> {
     const token = await this.authStore.getToken();
     if (!token) {
-      throw new Error('Not logged in. Run `pamenv login` first.');
+      throw new PamCliApiError({
+        id: 'pamenv:not_logged_in',
+        message: 'Not logged in. Run `pamenv login` first.',
+        httpStatus: 401
+      });
     }
     return token;
   }
 
-  protected normalizeBaseUrl(baseUrl: string): string {
-    return baseUrl.trim().replace(/\/+$/, '');
-  }
-
-  protected async requestJson<T>(
-    url: string,
-    init: RequestInit
-  ): Promise<T> {
+  protected async requestJson<T>(url: string, init: RequestInit): Promise<T> {
     const response = await fetch(url, init);
     let body: ApiEnvelopeType<T>;
     try {
       body = (await response.json()) as ApiEnvelopeType<T>;
     } catch {
-      throw new Error(
-        `PAM API returned non-JSON (HTTP ${response.status}) for ${url}`
-      );
+      throw new PamCliApiError({
+        id: 'pamenv:non_json_response',
+        message: `PAM API returned non-JSON (HTTP ${response.status}) for ${url}`,
+        httpStatus: response.status
+      });
     }
 
-    // Void endpoints (e.g. delete) return `{ success: true }` without `data`.
     if (!response.ok || body.success !== true) {
-      throw new Error(
-        body.message ||
-          body.id ||
-          `PAM API failed (HTTP ${response.status}) for ${url}`
-      );
+      throw new PamCliApiError({
+        id: body.id || 'pamenv:api_failed',
+        message: body.message,
+        requestId: body.requestId,
+        data: body.data,
+        httpStatus: response.status
+      });
     }
 
     return body.data as T;

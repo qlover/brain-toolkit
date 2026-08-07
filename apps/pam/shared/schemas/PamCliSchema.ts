@@ -11,6 +11,13 @@ export const PamCliTokenRequestSchema = z.object({
 export type PamCliTokenRequest = z.infer<typeof PamCliTokenRequestSchema>;
 
 /**
+ * CLI / PAM UI locales accepted on device approve and token responses.
+ */
+export const PamCliLocaleSchema = z.enum(['en', 'zh']);
+
+export type PamCliLocale = z.infer<typeof PamCliLocaleSchema>;
+
+/**
  * Successful CLI token response data.
  */
 export const PamCliTokenResponseSchema = z.object({
@@ -19,7 +26,9 @@ export const PamCliTokenResponseSchema = z.object({
   user: z.object({
     id: z.string(),
     email: z.string().optional()
-  })
+  }),
+  /** Browser page locale when issued via device approve. */
+  locale: PamCliLocaleSchema.optional()
 });
 
 export type PamCliTokenResponse = z.infer<typeof PamCliTokenResponseSchema>;
@@ -52,7 +61,9 @@ export type PamCliDeviceTokenRequest = z.infer<
  * Body for `POST /api/pam/cli/device/approve` (browser session).
  */
 export const PamCliDeviceApproveRequestSchema = z.object({
-  user_code: z.string().trim().min(1)
+  user_code: z.string().trim().min(1),
+  /** Current browser UI locale (`/[locale]/pamenv/device`). */
+  locale: PamCliLocaleSchema.optional()
 });
 
 export type PamCliDeviceApproveRequest = z.infer<

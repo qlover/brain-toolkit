@@ -58,3 +58,4 @@ rollup.config-*.*js
 .nx/workspace-data
 
 **/ts-build
+**/.pam/

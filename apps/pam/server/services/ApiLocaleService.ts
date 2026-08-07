@@ -7,6 +7,7 @@ import { splitI18nKey, type LocalesSchema } from '@qlover/next-kit/common';
 import { omit } from 'lodash-es';
 import { revalidateTag } from 'next/cache';
 import { inject, injectable } from '@shared/container';
+import { useApiLocales } from '@config/common';
 import type { LocaleType } from '@config/i18n';
 import { i18nConfig } from '@config/i18n';
 import {
@@ -33,15 +34,43 @@ export class ApiLocaleService {
     localeName: string,
     _orderBy?: ResourceSortClause
   ): Promise<Record<string, string>> {
-    const locales = await this.localesRepository.getLocales(localeName);
-    return locales.reduce(
-      (acc, locale) => {
-        // @ts-expect-error localeName is valid
-        acc[locale.value] = locale[localeName];
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+    // App uses static ts2locales JSON (`useApiLocales=false`); DB repo is stubbed.
+    if (!useApiLocales) {
+      return this.loadStaticLocaleJson(localeName);
+    }
+
+    try {
+      const locales = await this.localesRepository.getLocales(localeName);
+      const fromDb = locales.reduce(
+        (acc, locale) => {
+          // @ts-expect-error localeName is valid
+          acc[locale.value] = locale[localeName];
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      if (Object.keys(fromDb).length > 0) {
+        return fromDb;
+      }
+    } catch {
+      // Fall through to static files.
+    }
+
+    return this.loadStaticLocaleJson(localeName);
+  }
+
+  /**
+   * Loads generated locale JSON from `public/locales`.
+   *
+   * @param localeName - Locale code
+   */
+  protected async loadStaticLocaleJson(
+    localeName: string
+  ): Promise<Record<string, string>> {
+    if (localeName === 'zh') {
+      return (await import('@locales/zh.json')).default;
+    }
+    return (await import('@locales/en.json')).default;
   }
 
   public async getLocales(

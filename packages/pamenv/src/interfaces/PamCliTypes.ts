@@ -1,11 +1,32 @@
 /**
- * Persisted CLI configuration under `~/.pam/config.json`.
+ * Supported pamenv CLI locales (matches PAM `i18nConfig.supportedLngs`).
+ */
+export type PamCliLocaleType = 'en' | 'zh';
+
+/** How the active locale was last chosen. */
+export type PamCliLocaleSourceType = 'manual' | 'browser' | 'default';
+
+/**
+ * Persisted CLI configuration under `~/.pam/config.json` (or cwd `.pam` with `--local`).
  */
 export type PamCliConfigFileType = {
   readonly baseUrl: string;
   readonly token: string | null;
   readonly email: string | null;
   readonly updatedAt: string;
+  /** CLI UI / error message locale. */
+  readonly locale: PamCliLocaleType;
+  /**
+   * When true, browser device login must not overwrite {@link locale}.
+   * Set by `config set locale`.
+   */
+  readonly localeLocked: boolean;
+  /** Last writer of {@link locale}. */
+  readonly localeSource: PamCliLocaleSourceType;
+  /** Cached `api:` messages for the active locale. */
+  readonly localeMessages: Readonly<Record<string, string>>;
+  /** ISO time when {@link localeMessages} was last pulled. */
+  readonly localePulledAt: string | null;
 };
 
 /**
