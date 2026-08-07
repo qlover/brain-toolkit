@@ -10,6 +10,11 @@ import {
   PAMPublicType,
   type SearchPAMProject
 } from '@schemas/PAMProjectSchema';
+import {
+  highlightText,
+  isCategoryHighlightActive,
+  PAM_CATEGORY_HIGHLIGHT_CLASS
+} from './PAMHighlightUtil';
 import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
 import { getPAMAvatarLetter, shortenPAMOwnerId } from './PAMProjectDisplayUtil';
 
@@ -24,6 +29,8 @@ interface PAMProjectCardProps {
   /** Guest: hide delete and readonly label. */
   isAuthenticated?: boolean;
   onDelete: (project: PAMProjectCardModel) => void;
+  highlightKeyword?: string;
+  highlightCategory?: string;
 }
 
 export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
@@ -31,13 +38,23 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   project,
   isOwner,
   isAuthenticated = false,
-  onDelete
+  onDelete,
+  highlightKeyword = '',
+  highlightCategory = ''
 }) => {
   const envs = project.environments || [];
   const isPublic = project.is_public === PAMPublicType.public;
   const avatarLetter = getPAMAvatarLetter(project.name);
   const stack = (project.stack || '').trim();
   const hasEnvs = envs.length > 0;
+  const categoryActive = isCategoryHighlightActive(
+    project.category,
+    highlightCategory
+  );
+  const titleNode = useMemo(
+    () => highlightText(project.name, highlightKeyword),
+    [project.name, highlightKeyword]
+  );
 
   const avatarClassName = clsx(
     'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-border bg-elevated text-xl font-bold text-brand no-underline sm:h-14 sm:w-14 sm:text-2xl',
@@ -56,7 +73,14 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
       bits.push({
         key: 'cat',
         node: (
-          <span className="inline-flex items-center rounded-full border border-brand/35 bg-brand/10 px-1.5 py-0.5 text-[0.62rem] font-semibold text-brand">
+          <span
+            className={clsx(
+              'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold',
+              categoryActive
+                ? PAM_CATEGORY_HIGHLIGHT_CLASS
+                : 'border-brand/35 bg-brand/10 text-brand'
+            )}
+          >
             {project.category}
           </span>
         )
@@ -100,6 +124,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
     return bits;
   }, [
     project.category,
+    categoryActive,
     project.owner_id,
     isOwner,
     isAuthenticated,
@@ -140,7 +165,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 }}
                 className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"
               >
-                {project.name}
+                {titleNode}
               </Link>
               {subBits.length > 0 ? (
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-snug text-tertiary-text">

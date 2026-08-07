@@ -1,14 +1,21 @@
 'use client';
 
 import { useMountedClient } from '@brain-toolkit/react-kit';
-import { ArrowPathIcon, CheckIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
+import { AsyncStoreStatus } from '@qlover/corekit-bridge';
 import {
   useStore,
   useStrictEffect,
   usePageI18nMapping
 } from '@qlover/next-kit/client';
+import { clsx } from 'clsx';
+import { useMemo } from 'react';
 import { useRouter } from '@/i18n/routing';
-import { PAMFacade } from '@/impls/PAMfacade';
+import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
@@ -28,6 +35,14 @@ export type PAMRootProps = {
   /** First-page public projects from RSC/ISR (auth merge happens client-side). */
   initialList?: ResourceSearchResult<SearchPAMProject> | null;
 };
+
+function categoryFromFilters(filters: unknown): string {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return '';
+  }
+  const category = (filters as { category?: unknown }).category;
+  return typeof category === 'string' ? category.trim() : '';
+}
 
 export function PAMRoot({ initialList = null }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
@@ -53,13 +68,46 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
   );
   const listLoading = useStore(pamFacadeStore, (state) => state.loading);
   const persistedViewMode = useStore(pamFacadeStore, (state) => state.viewMode);
+  const searchKeyword = useStore(
+    pamFacadeStore,
+    (state) => state.searchParams.keyword?.trim() || ''
+  );
+  const searchFilters = useStore(
+    pamFacadeStore,
+    (state) => state.searchParams.filters
+  );
+  const resultTotal = useStore(pamFacadeStore, (state) => {
+    const apiTotal = state.result?.total;
+    const loaded = state.projects?.length ?? 0;
+    // Keyword/join search can return items while PostgREST count is null→0.
+    if (typeof apiTotal === 'number' && apiTotal > 0) {
+      return apiTotal;
+    }
+    return loaded;
+  });
 
-  // Prefer store; fall back to RSC props so SSR HTML already has rows.
-  const projects =
-    storeProjects.length > 0 ? storeProjects : (initialList?.items ?? []);
+  const listStatus = useStore(pamFacadeStore, (state) => state.status);
+  const categoryValue = categoryFromFilters(searchFilters);
+
+  // DRAFT = never fetched; after first pull (PENDING/SUCCESS/FAILED) trust store
+  // even when `projects` is empty, so empty search does not fall back to SSR list.
+  const listTouched = listStatus !== AsyncStoreStatus.DRAFT;
+
+  const projects = listTouched ? storeProjects : (initialList?.items ?? []);
+
+  const knownCategories = useMemo(
+    () =>
+      projects
+        .map((project) => project.category)
+        .filter((value): value is string => !!value?.trim()),
+    [projects]
+  );
 
   // Keep SSR + first client paint on Compact; apply persisted mode after mount.
   const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
+
+  const hasActiveFilter = searchKeyword.length > 0 || categoryValue.length > 0;
+  const searchingWithRows = listLoading && projects.length > 0;
 
   // Wait for session restore so we do not pull as guest then again as user.
   useStrictEffect(() => {
@@ -74,33 +122,96 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
 
   const closeDialog = () => pamFacade.closeDialog();
 
+  const clearFilters = () => {
+    void pamFacade.pullProjectList({
+      page: 1,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace,
+      keyword: '',
+      filters: undefined
+    });
+  };
+
+  const summaryText = (() => {
+    const parts: string[] = [];
+    if (searchKeyword) {
+      parts.push(
+        tt.searchResultSummary
+          .replace('%keyword%', searchKeyword)
+          .replace('%count%', String(resultTotal))
+      );
+    }
+    if (categoryValue) {
+      parts.push(
+        tt.categoryFilterSummary
+          .replace('%category%', categoryValue)
+          .replace('%count%', String(resultTotal))
+      );
+    }
+    if (parts.length === 0) {
+      return '';
+    }
+    // Both active: avoid duplicating count — keep keyword line + category only label.
+    if (searchKeyword && categoryValue) {
+      return `${tt.searchResultSummary
+        .replace('%keyword%', searchKeyword)
+        .replace('%count%', String(resultTotal))} · ${categoryValue}`;
+    }
+    return parts[0] ?? '';
+  })();
+
   return (
     <div
       data-testid="PAMRoot"
-      className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 md:py-8 lg:px-8"
+      className={clsx(
+        'mx-auto w-full max-w-7xl px-3 py-3 sm:px-6 sm:py-4 md:py-8 lg:px-8',
+        isAuthenticated && 'max-sm:pb-20'
+      )}
     >
       <PAMToolbar
         tt={tt}
         facadeInterface={pamFacade}
-        categoryValue={''}
-        onCategoryChange={() => {
-          throw new Error('Function not implemented.');
+        categoryValue={categoryValue}
+        onCategoryChange={(value) => {
+          void pamFacade.searchProjectWithCategory(value);
         }}
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
-        categories={[]}
+        categories={knownCategories}
         canCreate={isAuthenticated}
+        searching={listLoading}
         onCreate={() => {
           if (!isAuthenticated) return;
           pamFacade.openDialog();
         }}
       />
 
+      {hasActiveFilter ? (
+        <div
+          data-testid="PAMSearchSummary"
+          className="mb-2 flex flex-wrap items-center justify-between gap-1.5 text-xs text-secondary-text sm:mb-4 sm:gap-2 sm:text-sm"
+        >
+          <p className="min-w-0 truncate">{summaryText}</p>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg px-1.5 py-0.5 text-brand transition hover:bg-brand/10 sm:px-2 sm:py-1"
+          >
+            <XMarkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            {tt.clearFilters}
+          </button>
+        </div>
+      ) : null}
+
       <PAMProjectList
         tt={tt}
         projects={projects}
         viewMode={viewMode}
         loading={listLoading && projects.length === 0}
+        searching={searchingWithRows}
+        emptyFiltered={hasActiveFilter}
+        highlightKeyword={searchKeyword}
+        highlightCategory={categoryValue}
         isAuthenticated={isAuthenticated}
         isOwner={(data) => !!data.is_owner}
         onDelete={(project) => {

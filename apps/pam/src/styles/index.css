@@ -6,3 +6,36 @@
 button {
   cursor: pointer;
 }
+
+/**
+ * Search highlight — tied to `data-theme` (not Tailwind `dark:`), so light mode
+ * never inherits pale/white text on a soft wash.
+ */
+.pam-highlight-text {
+  border-radius: 0.2em;
+  padding: 0 0.15em;
+  font-weight: 600;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background-color: #fef3c7;
+  color: #292524;
+}
+
+[data-theme='dark'] .pam-highlight-text,
+[data-theme='pink'] .pam-highlight-text {
+  background-color: rgb(251 191 36 / 0.28);
+  color: #fef3c7;
+}
+
+.pam-highlight-category {
+  border-color: #fcd34d !important;
+  background-color: #fffbeb !important;
+  color: #78350f !important;
+}
+
+[data-theme='dark'] .pam-highlight-category,
+[data-theme='pink'] .pam-highlight-category {
+  border-color: rgb(251 191 36 / 0.4) !important;
+  background-color: rgb(251 191 36 / 0.22) !important;
+  color: #fde68a !important;
+}

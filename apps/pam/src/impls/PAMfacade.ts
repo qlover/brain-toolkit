@@ -377,4 +377,33 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       keyword
     });
   }
+
+  /**
+   * @override
+   */
+  public async searchProjectWithCategory(
+    category: string
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    const trimmed = category.trim();
+    const prevFilters = this.searchStore.getState().searchParams.filters;
+    const nextFilters: Record<string, unknown> =
+      prevFilters &&
+      typeof prevFilters === 'object' &&
+      !Array.isArray(prevFilters)
+        ? { ...(prevFilters as Record<string, unknown>) }
+        : {};
+
+    if (trimmed) {
+      nextFilters.category = trimmed;
+    } else {
+      delete nextFilters.category;
+    }
+
+    return this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace,
+      filters: Object.keys(nextFilters).length > 0 ? nextFilters : undefined
+    });
+  }
 }

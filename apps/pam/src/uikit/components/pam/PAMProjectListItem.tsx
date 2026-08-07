@@ -11,6 +11,11 @@ import {
   PAMPublicType,
   type SearchPAMProject
 } from '@schemas/PAMProjectSchema';
+import {
+  highlightText,
+  isCategoryHighlightActive,
+  PAM_CATEGORY_HIGHLIGHT_CLASS
+} from './PAMHighlightUtil';
 import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
 import {
   getPAMAvatarLetter,
@@ -27,6 +32,8 @@ interface PAMProjectListItemProps {
   project: PAMProjectListModel;
   isOwner: boolean;
   onDelete: (project: PAMProjectListModel) => void;
+  highlightKeyword?: string;
+  highlightCategory?: string;
 }
 
 /**
@@ -38,7 +45,9 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
   isOwner,
-  onDelete
+  onDelete,
+  highlightKeyword = '',
+  highlightCategory = ''
 }) => {
   const envs = useMemo(
     () => project.environments || [],
@@ -47,6 +56,14 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
   const avatarLetter = getPAMAvatarLetter(project.name);
   const isPublic = project.is_public === PAMPublicType.public;
+  const categoryActive = isCategoryHighlightActive(
+    project.category,
+    highlightCategory
+  );
+  const titleNode = useMemo(
+    () => highlightText(project.name, highlightKeyword),
+    [project.name, highlightKeyword]
+  );
 
   const menuItems = useMemo(() => {
     if (!isOwner) {
@@ -128,7 +145,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
                 }}
                 className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"
               >
-                {project.name}
+                {titleNode}
               </Link>
               <PAMPublicIcon
                 isPublic={isPublic}
@@ -206,7 +223,19 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           </button>
         ) : null}
         {ownerId && project.category ? <span>·</span> : null}
-        {project.category ? <span>{project.category}</span> : null}
+        {project.category ? (
+          <span
+            className={clsx(
+              categoryActive &&
+                clsx(
+                  'rounded-full px-1.5 py-0.5 font-semibold',
+                  PAM_CATEGORY_HIGHLIGHT_CLASS
+                )
+            )}
+          >
+            {project.category}
+          </span>
+        ) : null}
         {(ownerId || project.category) && project.stack ? <span>·</span> : null}
         {project.stack ? <span>{project.stack}</span> : null}
         {envChips ? (

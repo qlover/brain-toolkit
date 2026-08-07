@@ -162,6 +162,50 @@ export const PAGE_PAM_NO_DESC = 'page_pam:noDesc';
 export const PAGE_PAM_NO_PROJECT = 'page_pam:noProject';
 
 /**
+ * @description Empty state when keyword/category filter has no matches
+ * @localZh 没有匹配的项目，试试其他关键词或分类
+ * @localEn No matching projects. Try another keyword or category.
+ */
+export const PAGE_PAM_NO_SEARCH_MATCH = 'page_pam:noSearchMatch';
+
+/**
+ * @description Active search summary; use %keyword% and %count%
+ * @localZh 搜索 “%keyword%” · %count% 项
+ * @localEn Search “%keyword%” · %count%
+ */
+export const PAGE_PAM_SEARCH_RESULT_SUMMARY = 'page_pam:searchResultSummary';
+
+/**
+ * @description Active category filter summary; use %category% and %count%
+ * @localZh 分类 “%category%” · %count% 项
+ * @localEn Category “%category%” · %count%
+ */
+export const PAGE_PAM_CATEGORY_FILTER_SUMMARY =
+  'page_pam:categoryFilterSummary';
+
+/**
+ * @description Clear search / filter action
+ * @localZh 清除
+ * @localEn Clear
+ */
+export const PAGE_PAM_CLEAR_FILTERS = 'page_pam:clearFilters';
+
+/**
+ * @description Custom category option in create/edit selects
+ * @localZh 自定义…
+ * @localEn Custom…
+ */
+export const PAGE_PAM_CATEGORY_CUSTOM = 'page_pam:categoryCustom';
+
+/**
+ * @description Placeholder for custom category input
+ * @localZh 输入自定义分类
+ * @localEn Enter a custom category
+ */
+export const PAGE_PAM_CATEGORY_CUSTOM_PLACEHOLDER =
+  'page_pam:categoryCustomPlaceholder';
+
+/**
  * @description Direct environment access title
  * @localZh 环境直达
  * @localEn Direct environment access

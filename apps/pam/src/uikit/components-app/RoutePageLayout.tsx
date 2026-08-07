@@ -78,7 +78,7 @@ export function RoutePageLayout({
                   <span
                     data-testid="base-header-app-name"
                     className={clsx(
-                      'text-base sm:text-lg font-semibold truncate max-w-34 min-[380px]:max-w-40 sm:max-w-none',
+                      'hidden sm:inline text-base sm:text-lg font-semibold truncate sm:max-w-none',
                       headerTitleClassName ?? 'text-primary-text'
                     )}
                   >
@@ -87,7 +87,7 @@ export function RoutePageLayout({
                 </LocaleLink>
               )}
               {headerSubtitle && (
-                <span className="max-sm:hidden inline text-sm text-secondary-text border-l border-primary-border pl-3 shrink-0">
+                <span className="max-lg:hidden inline text-sm text-secondary-text border-l border-primary-border pl-3 shrink-0">
                   {headerSubtitle}
                 </span>
               )}

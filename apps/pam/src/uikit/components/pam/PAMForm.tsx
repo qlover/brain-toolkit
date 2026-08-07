@@ -16,11 +16,11 @@ import {
   PAMProjectEnvKey,
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
+import { PAMCategoryField } from './PAMCategoryField';
 import { PAMFormEnvironments } from './PAMFormEnvironments';
 import {
   pamFormFieldClass,
   pamFormLabelClass,
-  pamFormSelectClass,
   pamFormTextareaClass
 } from './PAMFormFieldStyles';
 
@@ -245,15 +245,17 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 {tt.labelCategory}
                 <span className="text-(--fe-color-error)">*</span>
               </label>
-              <select {...register('category')} className={pamFormSelectClass}>
-                <option value="">{tt.labelUnCategory}</option>
-                <option value="前端">前端</option>
-                <option value="后端">后端</option>
-                <option value="工具">工具</option>
-                <option value="文档">文档</option>
-                <option value="基础设施">基础设施</option>
-                <option value="其他">其他</option>
-              </select>
+              <PAMCategoryField
+                value={watch('category') ?? ''}
+                onChange={(next) => {
+                  setValue('category', next, { shouldValidate: true });
+                }}
+                labels={{
+                  labelUnCategory: tt.labelUnCategory,
+                  categoryCustom: tt.categoryCustom,
+                  categoryCustomPlaceholder: tt.categoryCustomPlaceholder
+                }}
+              />
               {errors.category && (
                 <div className="mt-1 text-xs text-(--fe-color-error)">
                   {errors.category.message}

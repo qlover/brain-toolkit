@@ -26,6 +26,9 @@ export const pamGeneralI18n = Object.freeze({
   placeholderRepo: i18nKeys.PAGE_PAM_GENERAL_PLACEHOLDER_REPO,
   labelCategory: i18nKeys.PAGE_PAM_GENERAL_LABEL_CATEGORY,
   labelUnCategory: i18nKeys.PAGE_PAM_GENERAL_LABEL_UNCATEGORY,
+  categoryCustom: i18nKeys.PAGE_PAM_GENERAL_CATEGORY_CUSTOM,
+  categoryCustomPlaceholder:
+    i18nKeys.PAGE_PAM_GENERAL_CATEGORY_CUSTOM_PLACEHOLDER,
   public: i18nKeys.PAGE_PAM_GENERAL_PUBLIC,
   private: i18nKeys.PAGE_PAM_GENERAL_PRIVATE,
 
