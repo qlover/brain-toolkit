@@ -108,6 +108,7 @@ export function PAMProjectGeneralPanel({
   const [description, setDescription] = useState('');
   const [stack, setStack] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (!project) {
@@ -123,6 +124,25 @@ export function PAMProjectGeneralPanel({
       setRepoUrl
     });
   }, [project]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void pamApi
+      .listCategories()
+      .then((list) => {
+        if (!cancelled) {
+          setCategories(list);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCategories([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pamApi]);
 
   const saveField = async (
     field: GeneralFieldKeyType,
@@ -142,6 +162,12 @@ export function PAMProjectGeneralPanel({
       });
       setProject(saved);
       dialogHandler.success(tt.settingsSave);
+      if (field === 'category') {
+        void pamApi
+          .listCategories()
+          .then(setCategories)
+          .catch(() => undefined);
+      }
       if (field === 'slug' && saved.slug && saved.slug !== previousSlug) {
         router.replace({
           pathname: ROUTE_PROJECT_GENERAL,
@@ -332,6 +358,7 @@ export function PAMProjectGeneralPanel({
             value={category}
             disabled={fieldReadOnly}
             onChange={setCategory}
+            extras={categories}
             labels={{
               labelUnCategory: tt.labelUnCategory,
               categoryCustom: tt.categoryCustom,

@@ -37,6 +37,8 @@ export interface PAMFormProps {
   formId?: string;
   /** When true, render cancel/save inside the form (default: false — use Modal footer). */
   showActions?: boolean;
+  /** Categories from API for the select options. */
+  categories?: readonly string[];
 }
 
 function generateSlug(name: string): string {
@@ -54,7 +56,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   isSubmitting = false,
   className = '',
   formId = PAM_PROJECT_FORM_ID,
-  showActions = false
+  showActions = false,
+  categories
 }) => {
   const zodResolverInstance = useMemo(() => PAMProjectCreateSchema, []);
 
@@ -250,6 +253,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
                 onChange={(next) => {
                   setValue('category', next, { shouldValidate: true });
                 }}
+                extras={categories}
                 labels={{
                   labelUnCategory: tt.labelUnCategory,
                   categoryCustom: tt.categoryCustom,

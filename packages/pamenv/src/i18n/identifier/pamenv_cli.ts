@@ -301,6 +301,28 @@ export const PAMENV_CLI_PROMPT_DESCRIPTION = 'pamenv_cli:prompt_description';
 export const PAMENV_CLI_PROMPT_CATEGORY = 'pamenv_cli:prompt_category';
 
 /**
+ * @description 自定义分类…
+ * @localZh 自定义分类…
+ * @localEn Custom category…
+ */
+export const PAMENV_CLI_CATEGORY_CUSTOM = 'pamenv_cli:category_custom';
+
+/**
+ * @description 输入分类名称
+ * @localZh 输入分类名称
+ * @localEn Category name
+ */
+export const PAMENV_CLI_PROMPT_CATEGORY_CUSTOM =
+  'pamenv_cli:prompt_category_custom';
+
+/**
+ * @description 分类不能为空
+ * @localZh 分类不能为空
+ * @localEn Category is required
+ */
+export const PAMENV_CLI_CATEGORY_REQUIRED = 'pamenv_cli:category_required';
+
+/**
  * @description 仓库地址
  * @localZh 仓库地址
  * @localEn repository url

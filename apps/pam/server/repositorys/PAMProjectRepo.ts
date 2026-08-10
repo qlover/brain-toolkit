@@ -313,6 +313,44 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Distinct non-empty categories from visible projects (public + owned).
+   *
+   * Uses the same search/RLS path as project list (not admin client) so API
+   * routes and ISR share one working code path. Paginates with a hard cap.
+   *
+   * @param userId - Optional authenticated user id
+   */
+  public async listDistinctCategories(userId?: string): Promise<string[]> {
+    const unique = new Set<string>();
+    const pageSize = 100;
+    const maxPages = 20;
+
+    // Same searchProjects path as the home list (proven RLS + joins).
+    for (let page = 1; page <= maxPages; page += 1) {
+      const result = await this.searchProjects({
+        page,
+        pageSize,
+        user_id: userId
+      });
+
+      for (const item of result.items || []) {
+        const value =
+          typeof item.category === 'string' ? item.category.trim() : '';
+        if (value.length > 0) {
+          unique.add(value);
+        }
+      }
+
+      const count = result.items?.length ?? 0;
+      if (count < pageSize) {
+        break;
+      }
+    }
+
+    return Array.from(unique).sort((a, b) => a.localeCompare(b, 'zh'));
+  }
+
+  /**
    * Owner check via admin client (no Supabase Auth session required).
    *
    * @param projectId - Project id

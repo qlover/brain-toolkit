@@ -118,9 +118,9 @@ export const PAGE_PAM_GENERAL_CATEGORY_CUSTOM =
   'page_pam_general:categoryCustom';
 
 /**
- * @description Placeholder for custom category input
- * @localZh 输入自定义分类
- * @localEn Enter a custom category
+ * @description Placeholder for category text input (type or pick suggestion)
+ * @localZh 输入分类，或从下方选择
+ * @localEn Type a category, or pick below
  */
 export const PAGE_PAM_GENERAL_CATEGORY_CUSTOM_PLACEHOLDER =
   'page_pam_general:categoryCustomPlaceholder';

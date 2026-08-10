@@ -180,6 +180,24 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   /**
    * @override
    */
+  public async listCategories(): Promise<string[]> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+    const result = await this.requestJson<string[]>(
+      `${baseUrl}/api/pam/categories`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return Array.isArray(result) ? result : [];
+  }
+
+  /**
+   * @override
+   */
   public async createProject(
     payload: PamCliCreateProjectInputType
   ): Promise<PamCliProjectType> {

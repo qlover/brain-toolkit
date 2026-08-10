@@ -13,13 +13,13 @@ import {
   usePageI18nMapping
 } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
-import { useMemo } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { I } from '@config/ioc-identifiter';
+import { mergePamCategories } from '@config/pamCategories';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
@@ -34,6 +34,8 @@ import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 export type PAMRootProps = {
   /** First-page public projects from RSC/ISR (auth merge happens client-side). */
   initialList?: ResourceSearchResult<SearchPAMProject> | null;
+  /** Public categories from RSC/ISR (avoids waiting on `/api/pam/categories`). */
+  initialCategories?: readonly string[] | null;
 };
 
 function categoryFromFilters(filters: unknown): string {
@@ -44,7 +46,10 @@ function categoryFromFilters(filters: unknown): string {
   return typeof category === 'string' ? category.trim() : '';
 }
 
-export function PAMRoot({ initialList = null }: PAMRootProps) {
+export function PAMRoot({
+  initialList = null,
+  initialCategories = null
+}: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
   const {
@@ -88,6 +93,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
 
   const listStatus = useStore(pamFacadeStore, (state) => state.status);
   const categoryValue = categoryFromFilters(searchFilters);
+  const storeCategories = useStore(pamFacadeStore, (state) => state.categories);
 
   // DRAFT = never fetched; after first pull (PENDING/SUCCESS/FAILED) trust store
   // even when `projects` is empty, so empty search does not fall back to SSR list.
@@ -95,13 +101,14 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
 
   const projects = listTouched ? storeProjects : (initialList?.items ?? []);
 
-  const knownCategories = useMemo(
-    () =>
-      projects
-        .map((project) => project.category)
-        .filter((value): value is string => !!value?.trim()),
-    [projects]
-  );
+  // Chips = API/ISR categories ∪ categories already on the visible list
+  // (avoids SSR showing 2 then jumping when list has a 3rd label).
+  const categories = mergePamCategories([
+    ...(storeCategories.length > 0
+      ? storeCategories
+      : (initialCategories ?? [])),
+    ...projects.map((project) => project.category ?? '')
+  ]);
 
   // Keep SSR + first client paint on Compact; apply persisted mode after mount.
   const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
@@ -111,6 +118,12 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
 
   // Wait for session restore so we do not pull as guest then again as user.
   useStrictEffect(() => {
+    if (initialCategories?.length) {
+      pamFacade.hydrateCategories(initialCategories);
+    }
+  }, [pamFacade, initialCategories]);
+
+  useStrictEffect(() => {
     if (authLoading) {
       return;
     }
@@ -118,6 +131,11 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
       initialList,
       userId: user?.id ?? null
     });
+    // Guests keep ISR categories (avoids pending API flicker). Logged-in
+    // users soft-refresh so private-project categories can appear.
+    if (user?.id) {
+      void pamFacade.pullCategories();
+    }
   }, [pamFacade, initialList, authLoading, user?.id]);
 
   const closeDialog = () => pamFacade.closeDialog();
@@ -177,7 +195,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
         }}
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
-        categories={knownCategories}
+        categories={categories}
         canCreate={isAuthenticated}
         searching={listLoading}
         onCreate={() => {
@@ -274,6 +292,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
           formId={PAM_PROJECT_FORM_ID}
           showActions={false}
           isSubmitting={isSubmitting}
+          categories={categories}
           onCancel={closeDialog}
           onSubmit={async (data) => {
             const result = await pamFacade.createProject(data);
@@ -282,6 +301,7 @@ export function PAMRoot({ initialList = null }: PAMRootProps) {
                 pathname: ROUTE_PROJECT_GENERAL,
                 params: { projectId: result.data.slug }
               });
+              void pamFacade.pullCategories();
             }
           }}
         />

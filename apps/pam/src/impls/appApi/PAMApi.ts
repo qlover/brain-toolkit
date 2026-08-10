@@ -1,7 +1,11 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { NextKitApiSuccess } from '@qlover/next-kit/common';
 import { inject, injectable } from '@shared/container';
-import { API_PAM_CREATE, API_PAM_SEARCH } from '@config/apiRoutes';
+import {
+  API_PAM_CATEGORIES,
+  API_PAM_CREATE,
+  API_PAM_SEARCH
+} from '@config/apiRoutes';
 import {
   buildApiPamDetail,
   buildApiPamDetele,
@@ -50,6 +54,18 @@ export class PAMApi {
    */
   public stop(abortId: string): void {
     this.appApiRequester.stop(abortId);
+  }
+
+  /**
+   * Distinct categories from projects the caller can see (public + owned).
+   */
+  public async listCategories(): Promise<string[]> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<string[]>,
+      Record<string, never>
+    >(API_PAM_CATEGORIES);
+
+    return response.data.data ?? [];
   }
 
   public async searchProjects(

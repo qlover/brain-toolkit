@@ -198,9 +198,9 @@ export const PAGE_PAM_CLEAR_FILTERS = 'page_pam:clearFilters';
 export const PAGE_PAM_CATEGORY_CUSTOM = 'page_pam:categoryCustom';
 
 /**
- * @description Placeholder for custom category input
- * @localZh 输入自定义分类
- * @localEn Enter a custom category
+ * @description Placeholder for category text input (type or pick suggestion)
+ * @localZh 输入分类，或从下方选择
+ * @localEn Type a category, or pick below
  */
 export const PAGE_PAM_CATEGORY_CUSTOM_PLACEHOLDER =
   'page_pam:categoryCustomPlaceholder';

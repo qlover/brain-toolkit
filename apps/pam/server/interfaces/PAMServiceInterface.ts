@@ -57,6 +57,11 @@ export interface PAMServiceInterface {
   ): Promise<ResourceSearchResult<SearchPAMProject>>;
 
   /**
+   * Lists distinct project categories visible to the caller (public + owned).
+   */
+  listCategories(): Promise<string[]>;
+
+  /**
    * 获取一个 pam 项目, 同时会带上 enverionments
    *
    * 当传递 withEnvironments 参数时，会返回带 environments 的项目详情

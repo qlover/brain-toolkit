@@ -214,6 +214,14 @@ export class PAMService implements PAMServiceInterface {
   /**
    * @override
    */
+  public async listCategories(): Promise<string[]> {
+    const user = await this.userService.getUser();
+    return this.projectRepo.listDistinctCategories(user?.id);
+  }
+
+  /**
+   * @override
+   */
   public async getProjectDetail(
     params: ProjectDetailParams
   ): Promise<PAMProjectDetail | null> {
