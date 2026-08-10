@@ -78,6 +78,11 @@ export interface PamCliApiClientInterface {
   listProjects(keyword?: string): Promise<PamCliProjectType[]>;
 
   /**
+   * Lists distinct categories from visible PAM projects.
+   */
+  listCategories(): Promise<string[]>;
+
+  /**
    * Creates a new PAM project (optionally with environments).
    *
    * @param payload - Create body matching PAM create schema

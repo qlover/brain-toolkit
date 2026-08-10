@@ -5,6 +5,8 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_ABOUT_TO_CREATE,
   PAMENV_CLI_CANCELLED,
+  PAMENV_CLI_CATEGORY_CUSTOM,
+  PAMENV_CLI_CATEGORY_REQUIRED,
   PAMENV_CLI_CONFIGURE_ENV_FROM,
   PAMENV_CLI_CREATED_PROJECT,
   PAMENV_CLI_CREATE_CONFIRM,
@@ -22,6 +24,7 @@ import {
   PAMENV_CLI_PROJECT_EXISTS_PUSH_HINT,
   PAMENV_CLI_PROJECT_NAME_REQUIRED,
   PAMENV_CLI_PROMPT_CATEGORY,
+  PAMENV_CLI_PROMPT_CATEGORY_CUSTOM,
   PAMENV_CLI_PROMPT_DESCRIPTION,
   PAMENV_CLI_PROMPT_ENVS_TO_CREATE,
   PAMENV_CLI_PROMPT_ENV_NAME,
@@ -58,8 +61,7 @@ import {
 } from '../impls/PamCliLocalProjectScanUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
 
-const CATEGORY_BACKEND = '后端' as const;
-const CATEGORY_FRONTEND = '前端' as const;
+const CATEGORY_CUSTOM_VALUE = '__custom__' as const;
 
 /**
  * `pamenv init` — interactive project bootstrap from the working directory.
@@ -119,14 +121,7 @@ export class InitCommand {
       default: scan.description || ''
     });
 
-    const category = await select({
-      message: PamCliI18n.t(PAMENV_CLI_PROMPT_CATEGORY),
-      default: CATEGORY_BACKEND,
-      choices: [
-        { name: CATEGORY_BACKEND, value: CATEGORY_BACKEND },
-        { name: CATEGORY_FRONTEND, value: CATEGORY_FRONTEND }
-      ]
-    });
+    const category = await this.promptCategory();
 
     const repoUrl = await input({
       message: PamCliI18n.t(PAMENV_CLI_PROMPT_REPO_URL),
@@ -262,6 +257,56 @@ export class InitCommand {
     });
 
     return PamCliLocalProjectScanUtil.toSlug(slugInput);
+  }
+
+  /**
+   * Picks a category from API list, or prompts for a custom value.
+   */
+  protected async promptCategory(): Promise<string> {
+    let known: string[] = [];
+    try {
+      known = await this.apiClient.listCategories();
+    } catch {
+      known = [];
+    }
+
+    if (known.length === 0) {
+      return input({
+        message: PamCliI18n.t(PAMENV_CLI_PROMPT_CATEGORY_CUSTOM),
+        validate: (value: string): true | string => {
+          if (!value.trim()) {
+            return PamCliI18n.t(PAMENV_CLI_CATEGORY_REQUIRED);
+          }
+          return true;
+        }
+      }).then((value) => value.trim());
+    }
+
+    const selected = await select({
+      message: PamCliI18n.t(PAMENV_CLI_PROMPT_CATEGORY),
+      default: known[0],
+      choices: [
+        ...known.map((item) => ({ name: item, value: item })),
+        {
+          name: PamCliI18n.t(PAMENV_CLI_CATEGORY_CUSTOM),
+          value: CATEGORY_CUSTOM_VALUE
+        }
+      ]
+    });
+
+    if (selected !== CATEGORY_CUSTOM_VALUE) {
+      return selected;
+    }
+
+    return input({
+      message: PamCliI18n.t(PAMENV_CLI_PROMPT_CATEGORY_CUSTOM),
+      validate: (value: string): true | string => {
+        if (!value.trim()) {
+          return PamCliI18n.t(PAMENV_CLI_CATEGORY_REQUIRED);
+        }
+        return true;
+      }
+    }).then((value) => value.trim());
   }
 
   protected async findExistingBySlug(
