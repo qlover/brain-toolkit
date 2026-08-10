@@ -138,6 +138,15 @@ export const API_PAM_ENVIRONMENTS_VARIABLES =
   '/api/pam/:projectId/environments/:envId/variables' as const;
 
 /**
+ * API path: `/api/pam/categories`
+ *
+ * @see [src/app/api/pam/categories/route.ts](../../src/app/api/pam/categories/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/categories/route.ts`
+ */
+export const API_PAM_CATEGORIES = '/api/pam/categories' as const;
+
+/**
  * API path: `/api/pam/cli/device/approve`
  *
  * @see [src/app/api/pam/cli/device/approve/route.ts](../../src/app/api/pam/cli/device/approve/route.ts)
@@ -342,6 +351,7 @@ export type ApiRoutePath =
   | typeof API_PAM_ENVIRONMENTS_DELETE
   | typeof API_PAM_ENVIRONMENTS_EXPORT
   | typeof API_PAM_ENVIRONMENTS_VARIABLES
+  | typeof API_PAM_CATEGORIES
   | typeof API_PAM_CLI_DEVICE_APPROVE
   | typeof API_PAM_CLI_DEVICE_CODE
   | typeof API_PAM_CLI_DEVICE_TOKEN

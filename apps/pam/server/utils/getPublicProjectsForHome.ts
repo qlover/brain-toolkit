@@ -56,3 +56,31 @@ export async function getPublicProjectsForHome(): Promise<ResourceSearchResult<S
     return null;
   }
 }
+
+/**
+ * Fetch distinct public project categories for ISR (no session).
+ */
+async function fetchPublicCategoriesForHome(): Promise<string[]> {
+  const server = new BootstrapServer('pam-home-public-categories');
+  const repo = server.getIOC(PAMProjectRepo);
+  return repo.listDistinctCategories();
+}
+
+const getCachedPublicCategoriesForHome = unstable_cache(
+  fetchPublicCategoriesForHome,
+  ['pam-home-public-categories'],
+  { revalidate: HOME_PUBLIC_LIST_REVALIDATE_SECONDS }
+);
+
+/**
+ * Best-effort public categories for SSR/ISR. Empty array on failure.
+ */
+export async function getPublicCategoriesForHome(): Promise<string[]> {
+  try {
+    const result = await getCachedPublicCategoriesForHome();
+    return JSON.parse(JSON.stringify(result)) as string[];
+  } catch (error) {
+    console.error('[getPublicCategoriesForHome] failed:', error);
+    return [];
+  }
+}

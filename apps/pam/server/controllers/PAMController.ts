@@ -44,6 +44,13 @@ export class PAMController {
     return result;
   }
 
+  /**
+   * Distinct categories from projects the caller can see.
+   */
+  public listCategories(): Promise<string[]> {
+    return this.pamService.listCategories();
+  }
+
   public getPamDetail(
     pamId: string,
     request: NextRequest
