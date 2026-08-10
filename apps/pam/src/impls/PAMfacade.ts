@@ -59,7 +59,8 @@ function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
     },
     projects: [],
     viewMode: PAMViewMode.Compact,
-    openDialog: false
+    openDialog: false,
+    categories: []
   });
 }
 
@@ -405,5 +406,37 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       projectsStrategy: ProjectsStrategy.Replace,
       filters: Object.keys(nextFilters).length > 0 ? nextFilters : undefined
     });
+  }
+
+  /**
+   * Seeds categories from RSC/ISR without clearing a fresher API result.
+   *
+   * @override
+   * @param categories - Public categories from the server
+   */
+  public hydrateCategories(categories: readonly string[]): void {
+    if (!categories.length) {
+      return;
+    }
+    const current = this.searchStore.getState().categories;
+    if (current.length > 0) {
+      return;
+    }
+    this.searchStore.emit({ categories: [...categories] });
+  }
+
+  /**
+   * @override
+   */
+  public async pullCategories(): Promise<string[]> {
+    try {
+      const categories = await this.pamApi.listCategories();
+      this.searchStore.emit({ categories });
+      return categories;
+    } catch (error) {
+      this.logger.warn('pullCategories failed', error);
+      // Keep ISR/hydrated categories on failure; do not wipe to [].
+      return this.searchStore.getState().categories;
+    }
   }
 }

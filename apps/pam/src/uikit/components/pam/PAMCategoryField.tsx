@@ -2,8 +2,8 @@
 
 import { clsx } from 'clsx';
 import { useMemo, type ChangeEvent } from 'react';
-import { mergePamCategories, PAM_CATEGORY_CUSTOM } from '@config/pamCategories';
-import { pamFormFieldClass, pamFormSelectClass } from './PAMFormFieldStyles';
+import { mergePamCategories } from '@config/pamCategories';
+import { pamFormFieldClass } from './PAMFormFieldStyles';
 
 export interface PAMCategoryFieldLabels {
   readonly labelUnCategory: string;
@@ -17,14 +17,19 @@ export interface PAMCategoryFieldProps {
   readonly labels: PAMCategoryFieldLabels;
   readonly disabled?: boolean;
   readonly extras?: readonly string[];
-  readonly selectClassName?: string;
   readonly inputClassName?: string;
-  readonly selectTestId?: string;
   readonly inputTestId?: string;
+  /** @deprecated Select UI removed; kept for call-site compatibility. */
+  readonly selectClassName?: string;
+  /** @deprecated Select UI removed; kept for call-site compatibility. */
+  readonly selectTestId?: string;
 }
 
 /**
- * Preset + custom single category control for create/edit forms.
+ * Free-text category field with optional suggestion chips.
+ *
+ * Plain text input (no native datalist — browsers draw a select-like caret).
+ * Empty value means uncategorized.
  */
 export function PAMCategoryField({
   value,
@@ -32,61 +37,59 @@ export function PAMCategoryField({
   labels,
   disabled = false,
   extras,
-  selectClassName,
   inputClassName,
-  selectTestId = 'PAMCategoryFieldSelect',
   inputTestId = 'PAMCategoryFieldCustom'
 }: PAMCategoryFieldProps) {
   const options = useMemo(() => mergePamCategories(extras), [extras]);
-  const trimmed = value.trim();
-  const isKnownOption = trimmed === '' || options.includes(trimmed);
-  const selectValue = isKnownOption ? value : PAM_CATEGORY_CUSTOM;
-  const showCustomInput = selectValue === PAM_CATEGORY_CUSTOM;
 
-  const onSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const next = event.target.value;
-    if (next === PAM_CATEGORY_CUSTOM) {
-      onChange(isKnownOption ? '' : value);
-      return;
-    }
-    onChange(next);
+  const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value);
   };
 
   return (
     <div data-testid="PAMCategoryField" className="flex flex-col gap-2">
-      <select
-        data-testid={selectTestId}
-        value={selectValue}
+      <input
+        data-testid={inputTestId}
+        type="text"
+        value={value}
         disabled={disabled}
-        onChange={onSelectChange}
+        placeholder={labels.categoryCustomPlaceholder}
+        aria-label={labels.labelUnCategory}
+        autoComplete="off"
+        onChange={onInputChange}
         className={clsx(
-          pamFormSelectClass,
+          pamFormFieldClass,
           disabled && 'cursor-default opacity-80',
-          selectClassName
+          inputClassName
         )}
-      >
-        <option value="">{labels.labelUnCategory}</option>
-        {options.map((cat) => (
-          <option data-testid="PAMCategoryField" key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-        <option value={PAM_CATEGORY_CUSTOM}>{labels.categoryCustom}</option>
-      </select>
-      {showCustomInput ? (
-        <input
-          data-testid={inputTestId}
-          type="text"
-          value={isKnownOption ? '' : value}
-          disabled={disabled}
-          placeholder={labels.categoryCustomPlaceholder}
-          onChange={(event) => onChange(event.target.value)}
-          className={clsx(
-            pamFormFieldClass,
-            disabled && 'cursor-default opacity-80',
-            inputClassName
-          )}
-        />
+      />
+      {options.length > 0 ? (
+        <div
+          data-testid="PAMCategoryFieldSuggestions"
+          className="flex flex-wrap gap-1.5"
+        >
+          {options.map((cat) => {
+            const active = value.trim() === cat;
+            return (
+              <button
+                data-testid="PAMCategoryField"
+                key={cat}
+                type="button"
+                disabled={disabled}
+                onClick={() => onChange(active ? '' : cat)}
+                className={clsx(
+                  'rounded-md border px-2 py-0.5 text-xs transition',
+                  active
+                    ? 'border-brand bg-brand/10 text-brand'
+                    : 'border-primary-border text-secondary-text hover:border-brand/40 hover:text-primary-text',
+                  disabled && 'cursor-default opacity-80'
+                )}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
       ) : null}
     </div>
   );

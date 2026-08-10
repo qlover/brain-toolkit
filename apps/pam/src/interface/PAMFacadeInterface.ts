@@ -54,6 +54,11 @@ export interface PAMFacadeStateInterface<T extends SearchPAMProject>
    * 是否打开新建项目对话框
    */
   openDialog: boolean;
+
+  /**
+   * Categories from `GET /api/pam/categories` (visible projects only).
+   */
+  categories: string[];
 }
 
 /**
@@ -93,4 +98,16 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
    * @param category - Category value or empty for all
    */
   searchProjectWithCategory(category: string): Promise<ResourceSearchResult<T>>;
+
+  /**
+   * Loads distinct categories for filters / create form.
+   */
+  pullCategories(): Promise<string[]>;
+
+  /**
+   * Seeds categories from RSC/ISR without waiting on the API.
+   *
+   * @param categories - Public categories from the server
+   */
+  hydrateCategories(categories: readonly string[]): void;
 }
