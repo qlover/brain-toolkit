@@ -1,3 +1,4 @@
+import { API_CLIENTS_2, API_CLIENTS_ROTATE_SECRET } from './apiRoutes';
 import { i18nConfig } from './i18n';
 
 export * from './apiRoutes';
@@ -152,5 +153,21 @@ export function isPublicPath(pathname: string): boolean {
 export function hasSessionPath(pathname: string): boolean {
   return LOGINED_PAGES.some(
     (route) => pathname === route || pathname.endsWith(route)
+  );
+}
+
+export function apiClientDetail<T extends string>(
+  clientId: T
+): `/api/clients/${T}` {
+  return API_CLIENTS_2.replace(
+    ':clientId',
+    encodeURIComponent(clientId)
+  ) as `/api/clients/${T}`;
+}
+
+export function apiClientRotateSecret(clientId: string): string {
+  return API_CLIENTS_ROTATE_SECRET.replace(
+    ':clientId',
+    encodeURIComponent(clientId)
   );
 }
