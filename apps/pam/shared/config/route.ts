@@ -1,5 +1,6 @@
 import {
   API_CLIENTS_2,
+  API_CLIENTS_ROTATE_SECRET,
   API_PAM_DELETE,
   API_PAM_DETAIL,
   API_PAM_EDIT,
@@ -235,7 +236,7 @@ export function apiClientDetail<T extends string>(
 }
 
 export function apiClientRotateSecret(clientId: string): string {
-  return apiClientDetail(clientId).replace(
+  return API_CLIENTS_ROTATE_SECRET.replace(
     ':clientId',
     encodeURIComponent(clientId)
   );

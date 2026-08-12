@@ -1,5 +1,5 @@
-import { OAuthClientUpdateSchema } from '@qlover/oauth-wrapper';
 import { NextResponse } from 'next/server';
+import { OAuthClientUpdateWithLogoSchema } from '@config/oauthClientLogoSchema';
 import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
@@ -96,7 +96,7 @@ export async function PUT(req: NextRequest, context: ClientIdRouteContext) {
     .use(new ServerAuthPlugin())
     .runWithJson(async ({ parameters: { IOC } }) => {
       const body = await req.json();
-      const validated = OAuthClientUpdateSchema.parse(body);
+      const validated = OAuthClientUpdateWithLogoSchema.parse(body);
       const controller = IOC(OAuthClientsController);
       return controller.update(clientId, validated);
     });
