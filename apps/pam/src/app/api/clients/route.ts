@@ -1,5 +1,5 @@
-import { OAuthClientCreateSchema } from '@qlover/oauth-wrapper';
 import { API_CLIENTS } from '@config/apiRoutes';
+import { OAuthClientCreateWithLogoSchema } from '@config/oauthClientLogoSchema';
 import { OAuthClientsController } from '@server/controllers/OAuthClientsController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     .use(new ServerAuthPlugin())
     .runWithJson(async ({ parameters: { IOC } }) => {
       const body = await req.json();
-      const validated = OAuthClientCreateSchema.parse(body);
+      const validated = OAuthClientCreateWithLogoSchema.parse(body);
       const controller = IOC(OAuthClientsController);
       return controller.create(validated);
     });

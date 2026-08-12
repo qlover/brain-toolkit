@@ -1,6 +1,7 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { verifyClientSecret, hashClientSecret } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import { normalizeLogoUri } from '@config/oauthClientLogoSchema';
 import type {
   OAuthClientRow,
   OAuthClientListItem,
@@ -14,6 +15,10 @@ import type {
   OAuthRefreshTokenRow,
   OAuthUserCredentialsRow
 } from '@qlover/oauth-wrapper';
+
+type OAuthClientWriteInput = (OAuthClientCreate | OAuthClientUpdate) & {
+  logo_uri?: string;
+};
 
 @injectable()
 export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
@@ -301,6 +306,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
 
     const confidential = input.confidential ?? true;
     const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
+    const logoUri = normalizeLogoUri((input as OAuthClientWriteInput).logo_uri);
 
     let clientSecret: string | undefined;
     let clientSecretHash: string | null = null;
@@ -319,6 +325,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
         client_secret_hash: clientSecretHash,
         client_name: input.client_name,
         client_uri: input.client_uri || null,
+        logo_uri: logoUri,
         redirect_uris: input.redirect_uris,
         grant_types: ['authorization_code', 'refresh_token'],
         scopes: ['openid', 'profile', 'email'],
@@ -347,12 +354,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     input: OAuthClientUpdate
   ): Promise<OAuthClientDetail> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
+    const logoUri = normalizeLogoUri((input as OAuthClientWriteInput).logo_uri);
 
     const { data, error } = await supabase
       .from('n_oauth_wrapper__clients')
       .update({
         client_name: input.client_name,
         client_uri: input.client_uri || null,
+        logo_uri: logoUri,
         redirect_uris: input.redirect_uris,
         updated_at: new Date().toISOString()
       })
