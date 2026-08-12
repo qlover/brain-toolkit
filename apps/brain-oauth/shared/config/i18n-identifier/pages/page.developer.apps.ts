@@ -139,6 +139,28 @@ export const DEVELOPER_APPS_CLIENT_URI_LABEL =
   'developer_apps:client_uri_label';
 
 /**
+ * @description Logo URI form label
+ * @localZh Logo 图片 URL (可选)
+ * @localEn Logo image URL (Optional)
+ */
+export const DEVELOPER_APPS_LOGO_URI_LABEL = 'developer_apps:logo_uri_label';
+
+/**
+ * @description Logo URI form hint
+ * @localZh 填写可公开访问的图片地址，将显示在授权页与应用列表
+ * @localEn Public image URL shown on the consent screen and app list
+ */
+export const DEVELOPER_APPS_LOGO_URI_HINT = 'developer_apps:logo_uri_hint';
+
+/**
+ * @description Logo URI invalid message
+ * @localZh 请输入有效的图片 URL
+ * @localEn Please enter a valid image URL
+ */
+export const DEVELOPER_APPS_LOGO_URI_INVALID =
+  'developer_apps:logo_uri_invalid';
+
+/**
  * @description Cancel button text
  * @localZh 取消
  * @localEn Cancel

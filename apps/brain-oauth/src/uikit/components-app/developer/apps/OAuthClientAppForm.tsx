@@ -1,12 +1,13 @@
 'use client';
 
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { oauthInputClass, oauthLabelClass } from '@config/component';
-import type { FormEvent, ReactNode } from 'react';
 
 export type OAuthClientFormValues = {
   client_name: string;
   redirect_uris: string;
   client_uri: string;
+  logo_uri: string;
   /** `true` = confidential; `false` = public (PKCE, no secret). Immutable after create. */
   confidential: boolean;
 };
@@ -15,6 +16,7 @@ export const emptyOAuthClientFormValues: OAuthClientFormValues = {
   client_name: '',
   redirect_uris: '',
   client_uri: '',
+  logo_uri: '',
   confidential: true
 };
 
@@ -27,11 +29,38 @@ export interface OAuthClientAppFormLabels {
   redirectUrisPlaceholder: string;
   redirectUrisHint: string;
   clientUriLabel: string;
+  logoUriLabel: string;
+  logoUriHint: string;
+  logoUriInvalid: string;
   clientTypeLabel: string;
   clientTypeConfidential: string;
   clientTypePublic: string;
   clientTypeHint: string;
   clientTypeLockedHint?: string;
+}
+
+function LogoPreview({ src, alt }: { src: string; alt: string }) {
+  const [broken, setBroken] = useState(false);
+  if (!src || broken) {
+    return (
+      <div
+        data-testid="OAuthClientAppFormLogoPlaceholder"
+        className="flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-primary-border bg-secondary text-xs text-secondary-text"
+      >
+        —
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- external logo URL from developer input
+    <img
+      data-testid="OAuthClientAppFormLogoPreview"
+      src={src}
+      alt={alt}
+      className="h-12 w-12 rounded-xl border border-primary-border object-cover bg-secondary"
+      onError={() => setBroken(true)}
+    />
+  );
 }
 
 export function OAuthClientAppForm(props: {
@@ -55,6 +84,8 @@ export function OAuthClientAppForm(props: {
     footer,
     lockClientType = false
   } = props;
+
+  const logoPreviewSrc = values.logo_uri.trim();
 
   return (
     <form
@@ -189,6 +220,44 @@ export function OAuthClientAppForm(props: {
             {fieldErrors.client_uri}
           </p>
         )}
+      </div>
+
+      <div>
+        <label htmlFor={`${formId}-logo_uri`} className={oauthLabelClass}>
+          {labels.logoUriLabel}
+        </label>
+        <div className="mt-1 flex items-start gap-3">
+          <LogoPreview
+            key={logoPreviewSrc}
+            src={logoPreviewSrc}
+            alt={values.client_name || 'App logo'}
+          />
+          <div className="min-w-0 flex-1">
+            <input
+              id={`${formId}-logo_uri`}
+              name="logo_uri"
+              type="url"
+              value={values.logo_uri}
+              onChange={(e) => onChange({ logo_uri: e.target.value })}
+              placeholder="https://your-app.com/logo.png"
+              className={oauthInputClass}
+              aria-invalid={!!fieldErrors.logo_uri}
+              aria-describedby={`${formId}-logo_uri-hint`}
+            />
+            {fieldErrors.logo_uri ? (
+              <p className="text-red-500 mt-1 text-sm" role="alert">
+                {fieldErrors.logo_uri}
+              </p>
+            ) : (
+              <p
+                id={`${formId}-logo_uri-hint`}
+                className="text-xs text-secondary-text mt-1"
+              >
+                {labels.logoUriHint}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {footer ?? null}

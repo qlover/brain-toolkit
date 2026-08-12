@@ -34,6 +34,9 @@ export const developerAppsI18n = Object.freeze({
     developerAppsKeys.DEVELOPER_APPS_REDIRECT_URIS_PLACEHOLDER,
   redirectUrisHint: developerAppsKeys.DEVELOPER_APPS_REDIRECT_URIS_HINT,
   clientUriLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_URI_LABEL,
+  logoUriLabel: developerAppsKeys.DEVELOPER_APPS_LOGO_URI_LABEL,
+  logoUriHint: developerAppsKeys.DEVELOPER_APPS_LOGO_URI_HINT,
+  logoUriInvalid: developerAppsKeys.DEVELOPER_APPS_LOGO_URI_INVALID,
 
   // buttons
   cancelButton: commonKeys.COMMON_CANCEL,

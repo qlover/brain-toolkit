@@ -37,7 +37,12 @@ import {
 } from '@config/component';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_OAUTH_PLAYGROUND } from '@config/route';
+import {
+  API_CLIENTS,
+  apiClientDetail,
+  apiClientRotateSecret,
+  ROUTE_OAUTH_PLAYGROUND
+} from '@config/route';
 import {
   OAuthClientAppForm,
   emptyOAuthClientFormValues,
@@ -63,6 +68,41 @@ function parseRedirectUris(raw: string): string[] {
     .split('\n')
     .map((uri) => uri.trim())
     .filter((uri) => uri.length > 0);
+}
+
+function AppListLogo({
+  name,
+  logoUri
+}: {
+  name: string;
+  logoUri?: string | null;
+}) {
+  const [broken, setBroken] = useState(false);
+  const initial = (name.trim().charAt(0) || '?').toUpperCase();
+  const src = logoUri?.trim();
+
+  if (!src || broken) {
+    return (
+      <div
+        data-testid="DeveloperAppsPageLogoFallback"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-border bg-secondary text-sm font-semibold text-brand"
+        aria-hidden
+      >
+        {initial}
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- external logo URL from developer input
+    <img
+      data-testid="DeveloperAppsPageLogo"
+      src={src}
+      alt=""
+      className="h-12 w-12 shrink-0 rounded-xl border border-primary-border object-cover bg-secondary"
+      onError={() => setBroken(true)}
+    />
+  );
 }
 
 export interface DeveloperAppsPageProps {
@@ -116,6 +156,11 @@ export function DeveloperAppsPageComponent({
         'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).',
       clientUriLabel:
         tt.clientUriLabel || 'Application Homepage URL (Optional)',
+      logoUriLabel: tt.logoUriLabel || 'Logo image URL (Optional)',
+      logoUriHint:
+        tt.logoUriHint ||
+        'Public image URL shown on the consent screen and app list',
+      logoUriInvalid: tt.logoUriInvalid || 'Please enter a valid image URL',
       clientTypeLabel: tt.clientTypeLabel || 'Client type',
       clientTypeConfidential:
         tt.clientTypeConfidential || 'Confidential (client_secret)',
@@ -149,13 +194,21 @@ export function DeveloperAppsPageComponent({
     if (parseRedirectUris(values.redirect_uris).length === 0) {
       errors.redirect_uris = formLabels.appNameRequired;
     }
+    const logoUri = values.logo_uri.trim();
+    if (logoUri) {
+      try {
+        new URL(logoUri);
+      } catch {
+        errors.logo_uri = formLabels.logoUriInvalid;
+      }
+    }
     return Object.keys(errors).length > 0 ? errors : null;
   };
 
   const loadApps = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/clients', { credentials: 'include' });
+      const response = await fetch(API_CLIENTS, { credentials: 'include' });
       if (!response.ok) {
         throw new Error('Failed to load applications');
       }
@@ -169,7 +222,7 @@ export function DeveloperAppsPageComponent({
     } finally {
       setLoading(false);
     }
-  }, [tt.toastError, dialogHandler]);
+  }, [dialogHandler, tt.toastError]);
 
   useEffect(() => {
     void loadApps();
@@ -224,14 +277,16 @@ export function DeveloperAppsPageComponent({
 
     try {
       const redirectUris = parseRedirectUris(createValues.redirect_uris);
-      const payload: OAuthClientCreate = {
+      const logoUri = createValues.logo_uri.trim();
+      const payload = {
         client_name: createValues.client_name.trim(),
         client_uri: createValues.client_uri.trim() || undefined,
+        logo_uri: logoUri || undefined,
         redirect_uris: redirectUris,
         confidential: createValues.confidential
-      };
+      } satisfies OAuthClientCreate & { logo_uri?: string };
 
-      const response = await fetch('/api/clients', {
+      const response = await fetch(API_CLIENTS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -248,6 +303,7 @@ export function DeveloperAppsPageComponent({
         client_id: data.client_id,
         client_name: data.client_name,
         client_uri: data.client_uri,
+        logo_uri: logoUri || null,
         redirect_uris: data.redirect_uris,
         confidential: data.confidential,
         created_at: data.created_at,
@@ -284,21 +340,20 @@ export function DeveloperAppsPageComponent({
 
     try {
       const redirectUris = parseRedirectUris(editValues.redirect_uris);
-      const payload: OAuthClientUpdate = {
+      const logoUri = editValues.logo_uri.trim();
+      const payload = {
         client_name: editValues.client_name.trim(),
         client_uri: editValues.client_uri.trim() || undefined,
+        logo_uri: logoUri || '',
         redirect_uris: redirectUris
-      };
+      } satisfies OAuthClientUpdate & { logo_uri?: string };
 
-      const response = await fetch(
-        `/api/clients/${encodeURIComponent(editingApp.client_id)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(payload)
-        }
-      );
+      const response = await fetch(apiClientDetail(editingApp.client_id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update application');
@@ -313,6 +368,7 @@ export function DeveloperAppsPageComponent({
                 ...app,
                 client_name: updatedApp.client_name,
                 client_uri: updatedApp.client_uri,
+                logo_uri: (updatedApp.logo_uri ?? logoUri) || null,
                 redirect_uris: updatedApp.redirect_uris,
                 updated_at: updatedApp.updated_at
               }
@@ -337,7 +393,7 @@ export function DeveloperAppsPageComponent({
 
   const handleRotateSecret = (clientId: string, confidential = true) => {
     if (!confidential) {
-      dialogHandler.warning(
+      dialogHandler.warn(
         tt.publicClientNote ||
           'Public clients do not have a client_secret to rotate.'
       );
@@ -353,10 +409,10 @@ export function DeveloperAppsPageComponent({
       variant: 'default',
       onConfirm: async () => {
         try {
-          const response = await fetch(
-            `/api/clients/${encodeURIComponent(clientId)}/rotate-secret`,
-            { method: 'POST', credentials: 'include' }
-          );
+          const response = await fetch(apiClientRotateSecret(clientId), {
+            method: 'POST',
+            credentials: 'include'
+          });
 
           if (!response.ok) {
             throw new Error('Failed to rotate secret');
@@ -391,13 +447,10 @@ export function DeveloperAppsPageComponent({
       variant: 'danger',
       onConfirm: async () => {
         try {
-          const response = await fetch(
-            `/api/clients/${encodeURIComponent(clientId)}`,
-            {
-              method: 'DELETE',
-              credentials: 'include'
-            }
-          );
+          const response = await fetch(apiClientDetail(clientId), {
+            method: 'DELETE',
+            credentials: 'include'
+          });
 
           if (!response.ok && response.status !== 204) {
             throw new Error('Failed to delete application');
@@ -421,13 +474,14 @@ export function DeveloperAppsPageComponent({
     void (async () => {
       try {
         const detail = await readAppApiJson<OAuthClientDetail>(
-          await fetch(`/api/clients/${encodeURIComponent(app.client_id)}`, {
+          await fetch(apiClientDetail(app.client_id), {
             credentials: 'include'
           })
         );
         setEditValues({
           client_name: detail.client_name,
           client_uri: detail.client_uri || '',
+          logo_uri: detail.logo_uri || '',
           redirect_uris: detail.redirect_uris.join('\n'),
           confidential: detail.confidential
         });
@@ -435,6 +489,7 @@ export function DeveloperAppsPageComponent({
         setEditValues({
           client_name: app.client_name,
           client_uri: app.client_uri || '',
+          logo_uri: app.logo_uri || '',
           redirect_uris: app.redirect_uris.join('\n'),
           confidential: app.confidential ?? true
         });
@@ -489,7 +544,7 @@ export function DeveloperAppsPageComponent({
             <div className="p-5 sm:p-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-secondary-text">
-                  <ArrowPathIcon className="h-8 w-8 text-brand animate-spin" />
+                  <ArrowPathIcon className="h-8 w-8 text-2xl text-brand animate-spin" />
                   <span className="text-sm">
                     {tt.loading || 'Loading applications'}
                   </span>
@@ -518,51 +573,71 @@ export function DeveloperAppsPageComponent({
                       )}
                     >
                       <div className="flex flex-wrap justify-between items-start gap-4">
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h2 className="text-lg font-semibold text-primary-text">
-                              {app.client_name}
-                            </h2>
-                            <span
-                              className={clsx(
-                                'text-xs px-2 py-0.5 rounded-full font-medium',
-                                app.confidential
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                  : 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
-                              )}
-                            >
-                              {app.confidential
-                                ? tt.statusConfidential || 'Confidential'
-                                : tt.statusPublic || 'Public'}
-                            </span>
+                        <div className="flex min-w-0 flex-1 gap-3">
+                          <AppListLogo
+                            name={app.client_name}
+                            logoUri={app.logo_uri}
+                          />
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h2 className="text-lg font-semibold text-primary-text">
+                                {app.client_name}
+                              </h2>
+                              <span
+                                className={clsx(
+                                  'text-xs px-2 py-0.5 rounded-full font-medium',
+                                  app.confidential
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                    : 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
+                                )}
+                              >
+                                {app.confidential
+                                  ? tt.statusConfidential || 'Confidential'
+                                  : tt.statusPublic || 'Public'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
+                              <code className="text-sm bg-secondary text-primary-text px-2 py-1 rounded-lg font-mono border border-primary-border/40 break-all">
+                                {tt.clientIdLabel || 'Client ID'}:{' '}
+                                {app.client_id}
+                              </code>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleCopyClientId(app.client_id)
+                                }
+                                className={oauthGhostActionClass}
+                                aria-label={
+                                  tt.copyClientIdSuccess || 'Copy Client ID'
+                                }
+                              >
+                                <ClipboardDocumentIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                            {app.client_uri ? (
+                              <p className="text-sm text-secondary-text break-all">
+                                {tt.clientUriLabel || 'Homepage'}:{' '}
+                                <a
+                                  href={app.client_uri}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-brand hover:underline"
+                                >
+                                  {app.client_uri}
+                                </a>
+                              </p>
+                            ) : null}
+                            <p className="text-sm text-secondary-text break-words">
+                              {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
+                              <code className="bg-secondary text-primary-text px-1.5 py-0.5 rounded text-xs font-mono">
+                                {app.redirect_uris.join(', ')}
+                              </code>
+                            </p>
+                            <p className="text-xs text-secondary-text">
+                              {tt.createdAtLabel || 'Created at'}{' '}
+                              {new Date(app.created_at).toLocaleDateString()}
+                            </p>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap min-w-0">
-                            <code className="text-sm bg-secondary text-primary-text px-2 py-1 rounded-lg font-mono border border-primary-border/40 break-all">
-                              {tt.clientIdLabel || 'Client ID'}: {app.client_id}
-                            </code>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleCopyClientId(app.client_id)
-                              }
-                              className={oauthGhostActionClass}
-                              aria-label={
-                                tt.copyClientIdSuccess || 'Copy Client ID'
-                              }
-                            >
-                              <ClipboardDocumentIcon className="h-4 w-4" />
-                            </button>
-                          </div>
-                          <p className="text-sm text-secondary-text break-words">
-                            {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
-                            <code className="bg-secondary text-primary-text px-1.5 py-0.5 rounded text-xs font-mono">
-                              {app.redirect_uris.join(', ')}
-                            </code>
-                          </p>
-                          <p className="text-xs text-secondary-text">
-                            {tt.createdAtLabel || 'Created at'}{' '}
-                            {new Date(app.created_at).toLocaleDateString()}
-                          </p>
                         </div>
                         <div className="flex flex-wrap gap-1 shrink-0">
                           <button
