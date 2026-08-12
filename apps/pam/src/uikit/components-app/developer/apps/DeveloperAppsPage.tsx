@@ -15,6 +15,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent
 } from 'react';
@@ -28,12 +29,9 @@ import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
 import {
   oauthCardClass,
-  oauthDangerButtonClass,
   oauthElevatedPanelClass,
-  oauthGhostActionClass,
   oauthPrimaryButtonClass,
-  oauthSecondaryButtonClass,
-  oauthWarningButtonClass
+  oauthSecondaryButtonClass
 } from '@config/component';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
 import { I } from '@config/ioc-identifiter';
@@ -80,12 +78,18 @@ function AppListLogo({
   const [broken, setBroken] = useState(false);
   const initial = (name.trim().charAt(0) || '?').toUpperCase();
   const src = logoUri?.trim();
+  const boxClass =
+    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary-border bg-secondary text-sm font-semibold text-brand sm:h-9 sm:w-9';
+
+  useEffect(() => {
+    setBroken(false);
+  }, [src]);
 
   if (!src || broken) {
     return (
       <div
         data-testid="DeveloperAppsPageLogoFallback"
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-border bg-secondary text-sm font-semibold text-brand"
+        className={boxClass}
         aria-hidden
       >
         {initial}
@@ -99,7 +103,7 @@ function AppListLogo({
       data-testid="DeveloperAppsPageLogo"
       src={src}
       alt=""
-      className="h-12 w-12 shrink-0 rounded-xl border border-primary-border object-cover bg-secondary"
+      className="h-8 w-8 shrink-0 rounded-lg border border-primary-border object-cover bg-secondary sm:h-9 sm:w-9"
       onError={() => setBroken(true)}
     />
   );
@@ -123,6 +127,9 @@ export function DeveloperAppsPageComponent({
   const [loading, setLoading] = useState(initialApps.length === 0);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editDetailLoading, setEditDetailLoading] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
   const [editingApp, setEditingApp] = useState<OAuthClientListItem | null>(
     null
   );
@@ -142,12 +149,15 @@ export function DeveloperAppsPageComponent({
   const [editFieldErrors, setEditFieldErrors] = useState<
     Partial<Record<keyof OAuthClientFormValues, string>>
   >({});
+  const editLoadSeqRef = useRef(0);
 
   const formLabels = useMemo(
     () => ({
       appNameLabel: tt.appNameLabel || 'Application Name',
       appNameRequired: tt.appNameRequired || 'Please enter application name',
       redirectUrisLabel: tt.redirectUrisLabel || 'Redirect URIs (one per line)',
+      redirectUrisRequired:
+        tt.redirectUrisRequired || 'Please enter at least one redirect URI',
       redirectUrisPlaceholder:
         tt.redirectUrisPlaceholder ||
         'https://your-app.com/callback\nhttps://localhost:3000/callback',
@@ -192,7 +202,7 @@ export function DeveloperAppsPageComponent({
       errors.client_name = formLabels.appNameRequired;
     }
     if (parseRedirectUris(values.redirect_uris).length === 0) {
-      errors.redirect_uris = formLabels.appNameRequired;
+      errors.redirect_uris = formLabels.redirectUrisRequired;
     }
     const logoUri = values.logo_uri.trim();
     if (logoUri) {
@@ -268,12 +278,14 @@ export function DeveloperAppsPageComponent({
 
   const handleCreateApp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (createSubmitting) return;
     const validationErrors = validateFormValues(createValues);
     if (validationErrors) {
       setCreateFieldErrors(validationErrors);
       return;
     }
     setCreateFieldErrors({});
+    setCreateSubmitting(true);
 
     try {
       const redirectUris = parseRedirectUris(createValues.redirect_uris);
@@ -324,12 +336,14 @@ export function DeveloperAppsPageComponent({
       dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
   const handleEditApp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!editingApp) return;
+    if (!editingApp || editSubmitting || editDetailLoading) return;
 
     const validationErrors = validateFormValues(editValues);
     if (validationErrors) {
@@ -337,6 +351,7 @@ export function DeveloperAppsPageComponent({
       return;
     }
     setEditFieldErrors({});
+    setEditSubmitting(true);
 
     try {
       const redirectUris = parseRedirectUris(editValues.redirect_uris);
@@ -388,6 +403,8 @@ export function DeveloperAppsPageComponent({
       dialogHandler.error(
         tt.toastError || 'Operation failed, please try again later'
       );
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -457,6 +474,13 @@ export function DeveloperAppsPageComponent({
           }
 
           setApps((prev) => prev.filter((app) => app.client_id !== clientId));
+          if (editingApp?.client_id === clientId) {
+            editLoadSeqRef.current += 1;
+            setEditModalVisible(false);
+            setEditingApp(null);
+            setEditDetailLoading(false);
+            resetEditForm();
+          }
           dialogHandler.success(tt.toastDeleteSuccess || 'Application deleted');
         } catch (error) {
           console.error('Delete app error:', error);
@@ -470,14 +494,30 @@ export function DeveloperAppsPageComponent({
   };
 
   const openEditModal = (app: OAuthClientListItem) => {
+    const loadSeq = ++editLoadSeqRef.current;
     setEditingApp(app);
+    setEditFieldErrors({});
+    setEditSubmitting(false);
+    setEditDetailLoading(true);
+    setEditValues({
+      client_name: app.client_name,
+      client_uri: app.client_uri || '',
+      logo_uri: app.logo_uri || '',
+      redirect_uris: app.redirect_uris.join('\n'),
+      confidential: app.confidential ?? true
+    });
+    setEditModalVisible(true);
+
     void (async () => {
       try {
-        const detail = await readAppApiJson<OAuthClientDetail>(
-          await fetch(apiClientDetail(app.client_id), {
-            credentials: 'include'
-          })
-        );
+        const detailResponse = await fetch(apiClientDetail(app.client_id), {
+          credentials: 'include'
+        });
+        if (!detailResponse.ok) {
+          throw new Error('Failed to load application detail');
+        }
+        const detail = await readAppApiJson<OAuthClientDetail>(detailResponse);
+        if (loadSeq !== editLoadSeqRef.current) return;
         setEditValues({
           client_name: detail.client_name,
           client_uri: detail.client_uri || '',
@@ -485,22 +525,38 @@ export function DeveloperAppsPageComponent({
           redirect_uris: detail.redirect_uris.join('\n'),
           confidential: detail.confidential
         });
-      } catch {
-        setEditValues({
-          client_name: app.client_name,
-          client_uri: app.client_uri || '',
-          logo_uri: app.logo_uri || '',
-          redirect_uris: app.redirect_uris.join('\n'),
-          confidential: app.confidential ?? true
-        });
+      } catch (error) {
+        if (loadSeq !== editLoadSeqRef.current) return;
+        console.error('Load edit detail error:', error);
+        dialogHandler.error(
+          tt.toastError || 'Operation failed, please try again later'
+        );
+      } finally {
+        if (loadSeq === editLoadSeqRef.current) {
+          setEditDetailLoading(false);
+        }
       }
     })();
-    setEditFieldErrors({});
-    setEditModalVisible(true);
+  };
+
+  const closeCreateModal = () => {
+    if (createSubmitting) return;
+    setCreateModalVisible(false);
+    resetCreateForm();
+  };
+
+  const closeEditModal = () => {
+    if (editSubmitting) return;
+    editLoadSeqRef.current += 1;
+    setEditModalVisible(false);
+    setEditingApp(null);
+    setEditDetailLoading(false);
+    resetEditForm();
   };
 
   const openCreateModal = () => {
     resetCreateForm();
+    setCreateSubmitting(false);
     setCreateModalVisible(true);
   };
 
@@ -510,7 +566,7 @@ export function DeveloperAppsPageComponent({
         <div className="max-w-5xl mx-auto w-full px-4 py-8 sm:py-10">
           <div className={oauthCardClass} data-testid="DeveloperAppsPage">
             <div className="p-6 sm:p-8 border-b border-primary-border">
-              <div className="flex flex-wrap justify-between items-start gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wide text-secondary-text mb-1">
                     {tt.consoleSubtitle || 'Developer Console'}
@@ -519,19 +575,25 @@ export function DeveloperAppsPageComponent({
                     {tt.title || 'My OAuth Applications'}
                   </h1>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <LocaleLink
                     href={ROUTE_OAUTH_PLAYGROUND}
                     locale={locale}
                     title={tt.playgroundLink || 'OAuth playground'}
-                    className={oauthSecondaryButtonClass}
+                    className={clsx(
+                      oauthSecondaryButtonClass,
+                      'w-full justify-center sm:w-auto'
+                    )}
                   >
                     <BeakerIcon className="h-4 w-4" />
                     {tt.playgroundLink || 'OAuth playground'}
                   </LocaleLink>
                   <button
                     type="button"
-                    className={oauthPrimaryButtonClass}
+                    className={clsx(
+                      oauthPrimaryButtonClass,
+                      'w-full justify-center sm:w-auto'
+                    )}
                     onClick={openCreateModal}
                   >
                     <PlusIcon className="h-4 w-4" />
@@ -562,98 +624,54 @@ export function DeveloperAppsPageComponent({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {apps.map((app) => (
                     <article
                       data-testid="DeveloperAppsPageComponent"
                       key={app.client_id}
                       className={clsx(
                         oauthElevatedPanelClass,
-                        'p-5 transition-colors hover:border-brand/30'
+                        'space-y-3 p-3 transition-colors hover:border-brand/30 sm:p-5'
                       )}
                     >
-                      <div className="flex flex-wrap justify-between items-start gap-4">
-                        <div className="flex min-w-0 flex-1 gap-3">
-                          <AppListLogo
-                            name={app.client_name}
-                            logoUri={app.logo_uri}
-                          />
-                          <div className="min-w-0 flex-1 space-y-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h2 className="text-lg font-semibold text-primary-text">
-                                {app.client_name}
-                              </h2>
-                              <span
-                                className={clsx(
-                                  'text-xs px-2 py-0.5 rounded-full font-medium',
-                                  app.confidential
-                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                    : 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
-                                )}
-                              >
-                                {app.confidential
-                                  ? tt.statusConfidential || 'Confidential'
-                                  : tt.statusPublic || 'Public'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap min-w-0">
-                              <code className="text-sm bg-secondary text-primary-text px-2 py-1 rounded-lg font-mono border border-primary-border/40 break-all">
-                                {tt.clientIdLabel || 'Client ID'}:{' '}
-                                {app.client_id}
-                              </code>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  void handleCopyClientId(app.client_id)
-                                }
-                                className={oauthGhostActionClass}
-                                aria-label={
-                                  tt.copyClientIdSuccess || 'Copy Client ID'
-                                }
-                              >
-                                <ClipboardDocumentIcon className="h-4 w-4" />
-                              </button>
-                            </div>
-                            {app.client_uri ? (
-                              <p className="text-sm text-secondary-text break-all">
-                                {tt.clientUriLabel || 'Homepage'}:{' '}
-                                <a
-                                  href={app.client_uri}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-brand hover:underline"
-                                >
-                                  {app.client_uri}
-                                </a>
-                              </p>
-                            ) : null}
-                            <p className="text-sm text-secondary-text break-words">
-                              {tt.redirectUrisLabel || 'Redirect URIs'}:{' '}
-                              <code className="bg-secondary text-primary-text px-1.5 py-0.5 rounded text-xs font-mono">
-                                {app.redirect_uris.join(', ')}
-                              </code>
-                            </p>
-                            <p className="text-xs text-secondary-text">
-                              {tt.createdAtLabel || 'Created at'}{' '}
-                              {new Date(app.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-2 sm:gap-2.5">
+                        <AppListLogo
+                          name={app.client_name}
+                          logoUri={app.logo_uri}
+                        />
+                        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+                          <h2 className="truncate text-xl font-semibold leading-tight text-primary-text sm:text-2xl">
+                            {app.client_name}
+                          </h2>
+                          <span
+                            className={clsx(
+                              'hidden shrink-0 items-center rounded-full px-1.5 py-px text-[10px] font-semibold leading-4 sm:inline-flex',
+                              app.confidential
+                                ? 'bg-[#1d4ed8] text-[#ffffff]'
+                                : 'bg-[#6d28d9] text-[#ffffff]'
+                            )}
+                          >
+                            {app.confidential
+                              ? tt.statusConfidential || 'Confidential'
+                              : tt.statusPublic || 'Public'}
+                          </span>
                         </div>
-                        <div className="flex flex-wrap gap-1 shrink-0">
+                        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
                           <button
                             type="button"
-                            className={oauthGhostActionClass}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#7c3aed] bg-[#7c3aed] text-[#ffffff] transition hover:bg-[#6d28d9] sm:h-8 sm:w-auto sm:gap-1 sm:rounded-lg sm:px-2 sm:py-1 sm:text-xs sm:font-semibold"
                             onClick={() => openEditModal(app)}
+                            title={tt.editButton || 'Edit'}
+                            aria-label={tt.editButton || 'Edit'}
                           >
-                            <PencilSquareIcon className="h-4 w-4" />
-                            {tt.editButton || 'Edit'}
+                            <PencilSquareIcon className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">
+                              {tt.editButton || 'Edit'}
+                            </span>
                           </button>
                           <button
                             type="button"
-                            className={clsx(
-                              oauthGhostActionClass,
-                              'text-amber-700 dark:text-amber-300 hover:bg-amber-500/10'
-                            )}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#d97706] bg-[#d97706] text-[#ffffff] transition hover:bg-[#b45309] disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-auto sm:gap-1 sm:rounded-lg sm:px-2 sm:py-1 sm:text-xs sm:font-semibold"
                             onClick={() =>
                               handleRotateSecret(
                                 app.client_id,
@@ -664,25 +682,109 @@ export function DeveloperAppsPageComponent({
                             title={
                               !app.confidential
                                 ? tt.publicClientNote
-                                : undefined
+                                : tt.rotateSecretButton || 'Rotate Secret'
+                            }
+                            aria-label={
+                              tt.rotateSecretButton || 'Rotate Secret'
                             }
                           >
-                            <KeyIcon className="h-4 w-4" />
-                            {tt.rotateSecretButton || 'Rotate Secret'}
+                            <KeyIcon className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">
+                              {tt.rotateSecretButton || 'Rotate Secret'}
+                            </span>
                           </button>
                           <button
                             type="button"
-                            className={clsx(
-                              oauthGhostActionClass,
-                              'text-red-600 dark:text-red-400 hover:bg-red-500/10'
-                            )}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#dc2626] bg-[#dc2626] text-[#ffffff] transition hover:bg-[#b91c1c] sm:h-8 sm:w-auto sm:gap-1 sm:rounded-lg sm:px-2 sm:py-1 sm:text-xs sm:font-semibold"
                             onClick={() => handleDeleteApp(app.client_id)}
+                            title={tt.deleteButton || 'Delete'}
+                            aria-label={tt.deleteButton || 'Delete'}
                           >
-                            <TrashIcon className="h-4 w-4" />
-                            {tt.deleteButton || 'Delete'}
+                            <TrashIcon className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">
+                              {tt.deleteButton || 'Delete'}
+                            </span>
                           </button>
                         </div>
                       </div>
+                      <span
+                        className={clsx(
+                          'inline-flex w-fit items-center rounded-full px-1.5 py-px text-[10px] font-semibold leading-4 sm:hidden',
+                          app.confidential
+                            ? 'bg-[#1d4ed8] text-[#ffffff]'
+                            : 'bg-[#6d28d9] text-[#ffffff]'
+                        )}
+                      >
+                        {app.confidential
+                          ? tt.statusConfidential || 'Confidential'
+                          : tt.statusPublic || 'Public'}
+                      </span>
+
+                      <dl className="space-y-2.5 border-t border-primary-border/60 pt-3 text-sm">
+                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+                          <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:pt-1 sm:uppercase sm:tracking-wide">
+                            {tt.clientIdLabel || 'Client ID'}
+                          </dt>
+                          <dd className="flex min-w-0 flex-1 items-center gap-2">
+                            <code className="min-w-0 flex-1 break-all rounded-lg border border-primary-border/40 bg-secondary px-2 py-1.5 font-mono text-xs text-primary-text sm:break-normal sm:overflow-x-auto sm:whitespace-nowrap sm:text-sm">
+                              {app.client_id}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void handleCopyClientId(app.client_id)
+                              }
+                              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary-border text-brand transition hover:bg-brand/10"
+                              aria-label={
+                                tt.copyClientIdSuccess || 'Copy Client ID'
+                              }
+                            >
+                              <ClipboardDocumentIcon className="h-4 w-4" />
+                            </button>
+                          </dd>
+                        </div>
+                        {app.client_uri ? (
+                          <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+                            <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:pt-0.5 sm:uppercase sm:tracking-wide">
+                              {tt.clientUriLabel || 'Homepage'}
+                            </dt>
+                            <dd className="min-w-0 flex-1">
+                              <a
+                                href={app.client_uri}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="break-all text-brand hover:underline sm:break-normal sm:block sm:overflow-x-auto sm:whitespace-nowrap"
+                              >
+                                {app.client_uri}
+                              </a>
+                            </dd>
+                          </div>
+                        ) : null}
+                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+                          <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:pt-1 sm:uppercase sm:tracking-wide">
+                            {tt.redirectUrisLabel || 'Redirect URIs'}
+                          </dt>
+                          <dd className="min-w-0 flex-1 space-y-1.5">
+                            {app.redirect_uris.map((uri) => (
+                              <code
+                                data-testid="DeveloperAppsPageComponent"
+                                key={uri}
+                                className="block break-all rounded-lg border border-primary-border/40 bg-secondary px-2 py-1.5 font-mono text-xs text-primary-text sm:break-normal sm:overflow-x-auto sm:whitespace-nowrap"
+                              >
+                                {uri}
+                              </code>
+                            ))}
+                          </dd>
+                        </div>
+                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                          <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:uppercase sm:tracking-wide">
+                            {tt.createdAtLabel || 'Created at'}
+                          </dt>
+                          <dd className="text-secondary-text">
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </dd>
+                        </div>
+                      </dl>
                     </article>
                   ))}
                 </div>
@@ -718,29 +820,37 @@ export function DeveloperAppsPageComponent({
       <DeveloperOverlayModal
         open={createModalVisible}
         title={tt.createModalTitle || 'Create OAuth Application'}
-        onClose={() => {
-          setCreateModalVisible(false);
-          resetCreateForm();
-        }}
+        onClose={closeCreateModal}
+        closeOnBackdrop={!createSubmitting}
         maxWidthClass="max-w-xl"
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-2 sm:justify-end">
             <button
               type="button"
-              className={oauthSecondaryButtonClass}
-              onClick={() => {
-                setCreateModalVisible(false);
-                resetCreateForm();
-              }}
+              className={clsx(
+                oauthSecondaryButtonClass,
+                'min-w-0 flex-1 justify-center sm:flex-none'
+              )}
+              onClick={closeCreateModal}
+              disabled={createSubmitting}
             >
               {tt.cancelButton || 'Cancel'}
             </button>
             <button
               type="submit"
               form="create-oauth-client"
-              className={oauthPrimaryButtonClass}
+              className={clsx(
+                oauthPrimaryButtonClass,
+                'min-w-0 flex-1 justify-center sm:flex-none'
+              )}
+              disabled={createSubmitting}
             >
-              {tt.createSubmitButton || 'Create Application'}
+              {createSubmitting ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : null}
+              {createSubmitting
+                ? tt.saving || 'Saving...'
+                : tt.createSubmitButton || 'Create Application'}
             </button>
           </div>
         }
@@ -750,6 +860,7 @@ export function DeveloperAppsPageComponent({
           values={createValues}
           fieldErrors={createFieldErrors}
           labels={formLabels}
+          disabled={createSubmitting}
           onChange={(patch) => {
             setCreateValues((prev) => ({ ...prev, ...patch }));
             setCreateFieldErrors((prev) => {
@@ -770,92 +881,116 @@ export function DeveloperAppsPageComponent({
       <DeveloperOverlayModal
         open={editModalVisible}
         title={tt.editModalTitle || 'Edit Application'}
-        onClose={() => {
-          setEditModalVisible(false);
-          setEditingApp(null);
-          resetEditForm();
-        }}
+        onClose={closeEditModal}
+        closeOnBackdrop={!editSubmitting && !editDetailLoading}
         maxWidthClass="max-w-xl"
         footer={
-          <div className="flex flex-wrap gap-3 justify-between items-center">
-            <div className="flex flex-wrap gap-2">
-              {editingApp && (
-                <>
-                  <button
-                    type="button"
-                    className={oauthWarningButtonClass}
-                    onClick={() =>
-                      void handleRotateSecret(
-                        editingApp.client_id,
-                        editValues.confidential
-                      )
-                    }
-                    disabled={!editValues.confidential}
-                  >
-                    <KeyIcon className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            {editingApp ? (
+              <div className="flex shrink-0 gap-1.5">
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d97706]/50 bg-[#d97706]/10 text-[#d97706] transition hover:bg-[#d97706]/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:gap-1.5 sm:px-2.5"
+                  onClick={() =>
+                    void handleRotateSecret(
+                      editingApp.client_id,
+                      editValues.confidential
+                    )
+                  }
+                  disabled={
+                    !editValues.confidential ||
+                    editDetailLoading ||
+                    editSubmitting
+                  }
+                  title={tt.rotateSecretButton || 'Rotate Secret'}
+                  aria-label={tt.rotateSecretButton || 'Rotate Secret'}
+                >
+                  <KeyIcon className="h-4 w-4" />
+                  <span className="hidden text-xs font-medium sm:inline">
                     {tt.rotateSecretButton || 'Rotate Secret'}
-                  </button>
-                  <button
-                    type="button"
-                    className={oauthDangerButtonClass}
-                    onClick={() => {
-                      const clientId = editingApp.client_id;
-                      setEditModalVisible(false);
-                      setEditingApp(null);
-                      resetEditForm();
-                      handleDeleteApp(clientId);
-                    }}
-                  >
-                    <TrashIcon className="h-4 w-4" />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-(--fe-color-error)/40 bg-(--fe-color-error)/10 text-(--fe-color-error) transition hover:bg-(--fe-color-error)/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:gap-1.5 sm:px-2.5"
+                  onClick={() => handleDeleteApp(editingApp.client_id)}
+                  disabled={editDetailLoading || editSubmitting}
+                  title={tt.deleteButton || 'Delete'}
+                  aria-label={tt.deleteButton || 'Delete'}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  <span className="hidden text-xs font-medium sm:inline">
                     {tt.deleteButton || 'Delete'}
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="flex gap-3">
+                  </span>
+                </button>
+              </div>
+            ) : null}
+            <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
               <button
                 type="button"
-                className={oauthSecondaryButtonClass}
-                onClick={() => {
-                  setEditModalVisible(false);
-                  setEditingApp(null);
-                  resetEditForm();
-                }}
+                className={clsx(
+                  oauthSecondaryButtonClass,
+                  'h-9 min-w-0 flex-1 justify-center px-3 sm:flex-none'
+                )}
+                onClick={closeEditModal}
+                disabled={editSubmitting}
               >
                 {tt.cancelButton || 'Cancel'}
               </button>
               <button
                 type="submit"
                 form="edit-oauth-client"
-                className={oauthPrimaryButtonClass}
+                className={clsx(
+                  oauthPrimaryButtonClass,
+                  'h-9 min-w-0 flex-1 justify-center px-3 sm:flex-none'
+                )}
+                disabled={editDetailLoading || editSubmitting}
               >
-                {tt.saveSubmitButton || 'Save Changes'}
+                {editSubmitting || editDetailLoading ? (
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                ) : null}
+                {editSubmitting
+                  ? tt.saving || 'Saving...'
+                  : editDetailLoading
+                    ? tt.loading || 'Loading...'
+                    : tt.saveSubmitButton || 'Save Changes'}
               </button>
             </div>
           </div>
         }
       >
-        <OAuthClientAppForm
-          formId="edit-oauth-client"
-          values={editValues}
-          fieldErrors={editFieldErrors}
-          labels={formLabels}
-          lockClientType
-          onChange={(patch) => {
-            setEditValues((prev) => ({ ...prev, ...patch }));
-            setEditFieldErrors((prev) => {
-              const next = { ...prev };
-              for (const key of Object.keys(
-                patch
-              ) as (keyof OAuthClientFormValues)[]) {
-                delete next[key];
-              }
-              return next;
-            });
-          }}
-          onSubmit={handleEditApp}
-          footer={null}
-        />
+        {editDetailLoading ? (
+          <div
+            data-testid="DeveloperAppsEditLoading"
+            className="flex flex-col items-center justify-center gap-3 py-10 text-secondary-text"
+          >
+            <ArrowPathIcon className="h-8 w-8 animate-spin text-brand" />
+            <span className="text-sm">{tt.loading || 'Loading...'}</span>
+          </div>
+        ) : (
+          <OAuthClientAppForm
+            formId="edit-oauth-client"
+            values={editValues}
+            fieldErrors={editFieldErrors}
+            labels={formLabels}
+            lockClientType
+            disabled={editSubmitting}
+            onChange={(patch) => {
+              setEditValues((prev) => ({ ...prev, ...patch }));
+              setEditFieldErrors((prev) => {
+                const next = { ...prev };
+                for (const key of Object.keys(
+                  patch
+                ) as (keyof OAuthClientFormValues)[]) {
+                  delete next[key];
+                }
+                return next;
+              });
+            }}
+            onSubmit={handleEditApp}
+            footer={null}
+          />
+        )}
       </DeveloperOverlayModal>
     </>
   );

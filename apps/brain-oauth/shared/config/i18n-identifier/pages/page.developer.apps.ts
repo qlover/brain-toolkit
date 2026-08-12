@@ -1,24 +1,19 @@
 /**
- * Brain OAuth — developer console page identifiers (`developer_apps` namespace).
- * Brain users register OAuth 2.0 clients for third-party app integration.
- */
-
-/**
- * @description Brain OAuth developer console — my applications page title
+ * @description Developer apps page title
  * @localZh 我的 OAuth 应用
  * @localEn My OAuth Applications
  */
 export const DEVELOPER_APPS_TITLE = 'developer_apps:title';
 
 /**
- * @description Brain OAuth developer console description
+ * @description Developer apps page description
  * @localZh 管理您的 OAuth 2.0 应用，创建和管理客户端凭证
  * @localEn Manage your OAuth 2.0 applications, create and manage client credentials
  */
 export const DEVELOPER_APPS_DESCRIPTION = 'developer_apps:description';
 
 /**
- * @description Brain OAuth developer console keywords
+ * @description Developer apps page keywords
  * @localZh OAuth, 开发者, 应用管理, 客户端
  * @localEn OAuth, developer, application management, client
  */
@@ -113,6 +108,14 @@ export const DEVELOPER_APPS_APP_NAME_LABEL = 'developer_apps:app_name_label';
  */
 export const DEVELOPER_APPS_APP_NAME_REQUIRED =
   'developer_apps:app_name_required';
+
+/**
+ * @description Redirect URIs required validation message
+ * @localZh 请至少填写一个重定向 URI
+ * @localEn Please enter at least one redirect URI
+ */
+export const DEVELOPER_APPS_REDIRECT_URIS_REQUIRED =
+  'developer_apps:redirect_uris_required';
 
 /**
  * @description Redirect URIs textarea placeholder
@@ -262,7 +265,7 @@ export const DEVELOPER_APPS_TOAST_ERROR = 'developer_apps:toast_error';
 export const DEVELOPER_APPS_EMPTY_STATE = 'developer_apps:empty_state';
 
 /**
- * @description Brain OAuth developer console — subtitle in page header
+ * @description Developer console subtitle in page header
  * @localZh 开发者控制台
  * @localEn Developer Console
  */
@@ -322,6 +325,13 @@ export const DEVELOPER_APPS_COPY_SECRET_SUCCESS =
  * @localEn Loading applications…
  */
 export const DEVELOPER_APPS_LOADING = 'developer_apps:loading';
+
+/**
+ * @description Saving create/edit form
+ * @localZh 保存中...
+ * @localEn Saving...
+ */
+export const DEVELOPER_APPS_SAVING = 'developer_apps:saving';
 
 /**
  * @description Link to OAuth flow playground

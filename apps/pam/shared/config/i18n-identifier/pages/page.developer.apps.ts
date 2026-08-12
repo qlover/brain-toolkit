@@ -110,6 +110,14 @@ export const DEVELOPER_APPS_APP_NAME_REQUIRED =
   'developer_apps:app_name_required';
 
 /**
+ * @description Redirect URIs required validation message
+ * @localZh 请至少填写一个重定向 URI
+ * @localEn Please enter at least one redirect URI
+ */
+export const DEVELOPER_APPS_REDIRECT_URIS_REQUIRED =
+  'developer_apps:redirect_uris_required';
+
+/**
  * @description Redirect URIs textarea placeholder
  * @localZh https://your-app.com/callback\nhttps://localhost:3000/callback
  * @localEn https://your-app.com/callback\nhttps://localhost:3000/callback
@@ -317,6 +325,13 @@ export const DEVELOPER_APPS_COPY_SECRET_SUCCESS =
  * @localEn Loading applications…
  */
 export const DEVELOPER_APPS_LOADING = 'developer_apps:loading';
+
+/**
+ * @description Saving create/edit form
+ * @localZh 保存中...
+ * @localEn Saving...
+ */
+export const DEVELOPER_APPS_SAVING = 'developer_apps:saving';
 
 /**
  * @description Link to OAuth flow playground

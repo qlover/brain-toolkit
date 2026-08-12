@@ -25,7 +25,7 @@ export function DeveloperOverlayModal(props: {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && closeOnBackdrop) onClose();
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -33,44 +33,48 @@ export function DeveloperOverlayModal(props: {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [open, onClose, closeOnBackdrop]);
 
   if (!open) return null;
 
   return (
     <div
       data-testid="DeveloperOverlayModal"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/45 dark:bg-black/70 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/45 backdrop-blur-[2px] dark:bg-black/70"
         aria-label="Close"
         tabIndex={-1}
         onClick={closeOnBackdrop ? onClose : undefined}
       />
       <div
         className={clsx(
-          'relative w-full bg-primary rounded-2xl shadow-xl border border-primary-border overflow-hidden',
+          'relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-primary-border bg-primary shadow-xl sm:max-h-[85vh] sm:rounded-2xl',
           maxWidthClass
         )}
       >
-        <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-primary-border bg-elevated/50">
-          <h2 className="text-lg font-semibold text-primary-text">{title}</h2>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-primary-border bg-elevated/50 px-4 py-3 sm:px-6 sm:py-4">
+          <h2 className="text-base font-semibold text-primary-text sm:text-lg">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-secondary-text hover:text-primary-text text-2xl leading-none px-2 py-1 rounded-lg hover:bg-elevated transition"
+            className="rounded-lg px-2 py-1 text-2xl leading-none text-secondary-text transition hover:bg-elevated hover:text-primary-text"
             aria-label="Close"
           >
             ×
           </button>
         </div>
-        <div className="px-5 sm:px-6 py-5 text-primary-text">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-primary-text sm:px-6 sm:py-5">
+          {children}
+        </div>
         {footer != null && (
-          <div className="px-5 sm:px-6 py-4 border-t border-primary-border bg-elevated/30">
+          <div className="shrink-0 border-t border-primary-border bg-elevated/30 px-4 py-3 sm:px-6 sm:py-4">
             {footer}
           </div>
         )}
