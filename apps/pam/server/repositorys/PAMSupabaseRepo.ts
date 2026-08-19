@@ -15,6 +15,11 @@ export interface IlikeOrParams {
 export type PAMSearchParams<Raw> = RepoSearchParams<Raw> & {
   table?: string;
   ilikeOr?: IlikeOrParams;
+  /**
+   * Exact `count=exact` is expensive with `.or()` + env joins.
+   * Default `planned` keeps hasMore usable without a full table count.
+   */
+  exactCount?: boolean;
 };
 
 /** Mirrors kit's protected (unexported) `getSearchBuilder` return tuple. */
@@ -108,8 +113,59 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
   protected async getSearchBuilder(
     params: PAMSearchParams<Raw>
   ): Promise<SearchBuilderResult<Raw, T>> {
-    const { ilikeOr, ...rest } = params;
-    const [query, meta] = await super.getSearchBuilder(rest);
+    const { ilikeOr, exactCount = false, ...rest } = params;
+    const client = this.getAdminSupabase();
+    let selector = '*';
+    if (rest.fields) {
+      if (Array.isArray(rest.fields)) {
+        selector = rest.fields.join(',');
+      }
+      if (typeof rest.fields === 'string') {
+        selector = rest.fields;
+      }
+    }
+
+    let query = client.from(rest.table ?? this.getRepoName()).select(selector, {
+      count: exactCount ? 'exact' : 'planned',
+      head: false
+    });
+
+    if (rest.where && rest.where.length) {
+      for (const cond of rest.where) {
+        query = this.applyFilter(query, cond);
+      }
+    }
+    if (rest.whereOr && rest.whereOr.length) {
+      const orString = this.buildOrString(rest.whereOr);
+      query = query.or(orString);
+    }
+
+    const sortClauses = this.ensureStableSort(rest.sort);
+    if (sortClauses.length) {
+      for (const sort of sortClauses) {
+        const field = sort.orderBy;
+        let ascending = true;
+        let nullsFirst: boolean | undefined;
+        if (typeof sort.order === 'string') {
+          ascending = sort.order === 'asc';
+        } else if (sort.order && typeof sort.order === 'object') {
+          const orderObj = sort.order as {
+            direction?: string;
+            nulls?: string;
+          };
+          if (orderObj.direction) {
+            ascending = orderObj.direction === 'asc';
+          }
+          if (orderObj.nulls) {
+            nullsFirst = orderObj.nulls === 'first';
+          }
+        }
+        query = query.order(field, {
+          ascending,
+          nullsFirst
+        });
+      }
+    }
 
     if (ilikeOr?.columns.length && ilikeOr.query.trim()) {
       const orString = this.buildIlikeOrString(
@@ -117,10 +173,27 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
         ilikeOr.query.trim()
       );
       if (orString) {
-        return [query.or(orString), meta] as SearchBuilderResult<Raw, T>;
+        query = query.or(orString);
       }
     }
 
-    return [query, meta];
+    const pageSize = rest.pageSize || 20;
+    let offset = rest.offset;
+    if (offset === undefined && rest.page !== undefined) {
+      offset = (rest.page - 1) * pageSize;
+    }
+    if (offset !== undefined) {
+      query = query.range(offset, offset + pageSize - 1);
+    } else if (rest.pageSize) {
+      query = query.range(0, pageSize - 1);
+    }
+
+    return [
+      query,
+      {
+        offset,
+        pageSize
+      }
+    ] as SearchBuilderResult<Raw, T>;
   }
 }

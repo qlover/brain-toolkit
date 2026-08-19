@@ -131,8 +131,7 @@ export function PAMRoot({
       initialList,
       userId: user?.id ?? null
     });
-    // Guests keep ISR categories (avoids pending API flicker). Logged-in
-    // users soft-refresh so private-project categories can appear.
+    // Soft-refresh so private-project categories appear after login.
     if (user?.id) {
       void pamFacade.pullCategories();
     }

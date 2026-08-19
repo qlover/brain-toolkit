@@ -19,6 +19,11 @@ export interface OAuthWrapperProviderInterface
   getUserSchema(session?: OAuthSessionPayload): Promise<UserSchema | null>;
 
   /**
+   * Reads `user` embedded in the app session cookie only (no upstream refresh).
+   */
+  getEmbeddedUser(): Promise<UserSchema | null>;
+
+  /**
    * /oauth/authorize 页面是否需要登录
    *
    * - 如果是包装某个 旧登录接口一版需要返回 true

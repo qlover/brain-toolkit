@@ -136,6 +136,13 @@ export class OAuthUserService
   /**
    * @override
    */
+  public async getSessionUser(): Promise<UserSchema | null> {
+    return this.oauthProvider.getEmbeddedUser();
+  }
+
+  /**
+   * @override
+   */
   public async getUser(): Promise<UserSchema>;
   /**
    * @override

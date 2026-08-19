@@ -8,6 +8,11 @@ import {
 } from '@qlover/next-kit/server';
 import { RequestLogsRepository } from '@qlover/next-kit/server';
 import { type NextRequest, NextResponse } from 'next/server';
+import {
+  API_PAM_CATEGORIES,
+  API_PAM_SEARCH,
+  API_USER_SESSION
+} from '@config/apiRoutes';
 import { I } from '@config/ioc-identifiter';
 import { oauthI18nIdToRfc } from '@config/oauthErrors';
 import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
@@ -96,11 +101,39 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
     envelope: NextKitApiResult<Result>,
     request?: NextRequest
   ): void {
-    if (request) {
-      this.IOC(RequestLogsRepository).insertWithApiResult(envelope, {
-        request
-      });
+    if (!request) {
+      return;
     }
+
+    // High-frequency home APIs — skip DB write so the JSON can return first.
+    const path = request.nextUrl.pathname;
+    if (
+      path === API_USER_SESSION ||
+      path === API_PAM_SEARCH ||
+      path === API_PAM_CATEGORIES
+    ) {
+      return;
+    }
+
+    void this.IOC(RequestLogsRepository).insertWithApiResult(envelope, {
+      request
+    });
+  }
+
+  /**
+   * @override
+   */
+  public override async runWithJson<Result>(
+    task?: RunWithTask<Result>,
+    init?: RunWithInit
+  ): Promise<NextResponse> {
+    const started = performance.now();
+    const response = await super.runWithJson(task, init);
+    response.headers.set(
+      'Server-Timing',
+      `app;dur=${Math.round(performance.now() - started)}`
+    );
+    return response;
   }
 
   /**

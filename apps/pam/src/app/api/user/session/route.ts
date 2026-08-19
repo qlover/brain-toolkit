@@ -68,6 +68,11 @@ import type { NextRequest } from 'next/server';
  */
 export async function GET(req: NextRequest) {
   return await new NextApiServer(API_USER_SESSION, req).runWithJson(
-    async ({ parameters: { IOC } }) => IOC(UserController).refresh()
+    async ({ parameters: { IOC } }) => IOC(UserController).getSession(),
+    {
+      successHeaders: {
+        'Cache-Control': 'private, no-store'
+      }
+    }
   );
 }
