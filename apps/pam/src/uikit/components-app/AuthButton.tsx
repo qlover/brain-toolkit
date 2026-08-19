@@ -1,14 +1,23 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AuthButtonUI } from './AuthButtonUI';
 import { useUserAuth } from '../hook/useUserAuth';
+
+const skeleton = (
+  <div
+    data-testid="AuthButton"
+    className="h-8 w-10 sm:h-9 sm:w-16 animate-pulse rounded-lg bg-elevated border border-primary-border/60"
+    aria-hidden
+  />
+);
 
 /**
  * Header auth control: local UI only (login / logout).
  *
- * Page entry is gated by middleware; this reads the client user store from
- * bootstrap (`restoreUserService`) and shows a compact skeleton while loading
- * so the rest of the page is never blocked.
+ * Renders a skeleton on both the server pass and the first client render
+ * (before hydration completes) to avoid hydration mismatches. Once the
+ * component mounts the real auth state is shown.
  */
 export function AuthButton(props: {
   loginOnly?: boolean;
@@ -17,14 +26,15 @@ export function AuthButton(props: {
   const { loginOnly = false, showLogoutLabel = false } = props;
   const { success, loading } = useUserAuth();
 
-  if (loading) {
-    return (
-      <div
-        data-testid="AuthButton"
-        className="h-8 w-10 sm:h-9 sm:w-16 animate-pulse rounded-lg bg-elevated border border-primary-border/60"
-        aria-hidden
-      />
-    );
+  // Keep the skeleton until after hydration so the first client render
+  // matches the server-rendered HTML exactly.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || loading) {
+    return skeleton;
   }
 
   return (

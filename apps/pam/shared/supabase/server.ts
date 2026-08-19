@@ -41,15 +41,27 @@ export async function createServerClient() {
 /**
  * Service-role Supabase client for OAuth server operations (bypasses RLS).
  * Never import from client bundles.
+ *
+ * Cached on `globalThis` so TLS / HTTP keep-alive to Supabase is reused
+ * across API requests (creating a client per request re-handshakes ~200–400ms
+ * from CN to hosted Supabase).
  */
 export function createAdminClient() {
+  const cache = globalThis as typeof globalThis & {
+    __pamAdminSupabase?: ReturnType<typeof createSupabaseClient>;
+  };
+  if (cache.__pamAdminSupabase) {
+    return cache.__pamAdminSupabase;
+  }
+
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
     throw new Error(
       'SUPABASE_SERVICE_ROLE_KEY is required for OAuth operations'
     );
   }
-  return createSupabaseClient(SUPABASE_URL!, serviceKey, {
+  cache.__pamAdminSupabase = createSupabaseClient(SUPABASE_URL!, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false }
   });
+  return cache.__pamAdminSupabase;
 }

@@ -301,6 +301,19 @@ export class SupabaseOAuthProvider
   /**
    * @override
    */
+  public async getEmbeddedUser(): Promise<UserSchema | null> {
+    const payload = await this.oauthSession.getSession();
+    if (!payload?.user) {
+      return null;
+    }
+
+    const user = payload.user as UserSchema;
+    return user.id ? user : null;
+  }
+
+  /**
+   * @override
+   */
   public async getUserSchema(
     session?: SupabaseSession
   ): Promise<UserSchema | null> {

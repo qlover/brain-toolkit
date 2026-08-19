@@ -118,8 +118,16 @@ export class UserController {
     return await this.userService.refresh();
   }
 
+  /**
+   * Cookie-only session for bootstrap (no Supabase refresh, no tokens in JSON).
+   */
+  public async getSession(): Promise<UserSchema | null> {
+    const user = await this.userService.getSessionUser();
+    return user ? { ...user, credential_token: '' } : null;
+  }
+
   public async getUser(): Promise<UserSchema | null> {
-    return await this.userService.refresh();
+    return await this.userService.getUser();
   }
 
   /**

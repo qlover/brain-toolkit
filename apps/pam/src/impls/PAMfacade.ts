@@ -185,6 +185,15 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       return;
     }
 
+    // Guests already have the ISR first page — skip a 3s+ `/api/pam/search`.
+    if (ownerKey === 'anon' && (initialList?.items?.length ?? 0) > 0) {
+      this.homeListOwnerKey = ownerKey;
+      this.logger.debug(
+        `PAMFacade ensureHomeProjectList use ISR ownerKey=anon count=${initialList?.items?.length}`
+      );
+      return;
+    }
+
     this.logger.debug(
       `PAMFacade ensureHomeProjectList pull ownerKey=${ownerKey} prev=${this.homeListOwnerKey}`
     );

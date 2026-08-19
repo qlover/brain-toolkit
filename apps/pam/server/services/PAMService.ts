@@ -48,8 +48,8 @@ import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import { OAuthUserService } from './OAuthUserService';
+import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';
-import type { ServerAuthInterface } from '@qlover/next-kit/server';
 
 @injectable()
 export class PAMService implements PAMServiceInterface {
@@ -57,13 +57,16 @@ export class PAMService implements PAMServiceInterface {
   protected readonly projectRepo!: PAMProjectRepo;
 
   @inject(OAuthUserService)
-  protected readonly userService!: ServerAuthInterface;
+  protected readonly userService!: OAuthUserService;
 
   @inject(ServerConfig)
   protected readonly serverConfig!: SeedServerConfigInterface;
 
   @inject(PamCliTokenService)
   protected readonly cliTokenService!: PamCliTokenService;
+
+  @inject(PAMCategoryCacheService)
+  protected readonly categoryCache!: PAMCategoryCacheService;
 
   protected secretEncryption: PAMEnvSecretEncryption | null = null;
 
@@ -189,7 +192,7 @@ export class PAMService implements PAMServiceInterface {
   public async searchProjects(
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
-    const user = await this.userService.getUser();
+    const user = await this.userService.getSessionUser();
 
     const result = await this.projectRepo.searchProjects({
       ...params,
@@ -215,8 +218,16 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async listCategories(): Promise<string[]> {
-    const user = await this.userService.getUser();
-    return this.projectRepo.listDistinctCategories(user?.id);
+    const user = await this.userService.getSessionUser();
+    const userId = user?.id;
+    const cached = await this.categoryCache.get(userId);
+    if (cached) {
+      return cached;
+    }
+
+    const categories = await this.projectRepo.listDistinctCategories(userId);
+    await this.categoryCache.set(userId, categories);
+    return categories;
   }
 
   /**
@@ -392,6 +403,8 @@ export class PAMService implements PAMServiceInterface {
       ? await this.projectRepo.rpc_updateProject(id, nextParams)
       : await this.projectRepo.updateProject(id, nextParams);
 
+    await this.categoryCache.invalidateAll();
+
     return Object.assign({}, this.redactProjectDetail(detail), {
       is_owner: true
     });
@@ -435,6 +448,9 @@ export class PAMService implements PAMServiceInterface {
     }
 
     const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
     const create_source = await this.resolveCreateSource(options?.createSource);
 
     // Admin write: CLI bearer auth has no Supabase RLS session (auth.uid()).
@@ -445,6 +461,8 @@ export class PAMService implements PAMServiceInterface {
       owner_id: user.id,
       create_source
     });
+
+    await this.categoryCache.invalidateAll();
 
     return this.redactProjectDetail(detail);
   }
@@ -552,6 +570,7 @@ export class PAMService implements PAMServiceInterface {
     if (!project) throw new ExecutorError(API_NOT_AUTHORIZED);
 
     await this.projectRepo.deleteProject(id);
+    await this.categoryCache.invalidateAll();
   }
 
   /**

@@ -34,6 +34,13 @@ export interface UserServiceInterface {
 
   refresh(): Promise<UserSchema>;
 
+  /**
+   * Lightweight session read for `GET /api/user/session` (cookie only).
+   */
+  getSessionUser(): Promise<UserSchema | null>;
+
+  getUser(throwError?: boolean): Promise<UserSchema | null>;
+
   signWithOtp(body: SignWithOtpSchema): Promise<SignOtpResult>;
   loginWithProvider(params: {
     provider: LoginProviderType;
