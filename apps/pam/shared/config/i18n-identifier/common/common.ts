@@ -13,6 +13,13 @@ export const COMMON_SAVE = 'common:save';
 export const COMMON_CANCEL = 'common:cancel';
 
 /**
+ * @description Confirm / OK button in dialogs
+ * @localZh 确定
+ * @localEn OK
+ */
+export const COMMON_OK = 'common:ok';
+
+/**
  * @description Create
  * @localZh 创建
  * @localEn Create

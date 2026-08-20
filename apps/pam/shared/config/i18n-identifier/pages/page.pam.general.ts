@@ -245,3 +245,40 @@ export const PAGE_PAM_GENERAL_DESC_PROJECT_STACK =
  */
 export const PAGE_PAM_GENERAL_DESC_PROJECT_REPO =
   'page_pam_general:descProjectRepo';
+
+/**
+ * @description Danger zone section title
+ * @localZh 危险区域
+ * @localEn Danger zone
+ */
+export const PAGE_PAM_GENERAL_DELETE_ZONE_TITLE =
+  'page_pam_general:deleteZoneTitle';
+
+/**
+ * @description Danger zone section description
+ * @localZh 永久删除此项目及其环境变量，此操作不可恢复。
+ * @localEn Permanently delete this project and its environments. This cannot be undone.
+ */
+export const PAGE_PAM_GENERAL_DELETE_ZONE_DESC =
+  'page_pam_general:deleteZoneDesc';
+
+/**
+ * @description Delete project button in danger zone
+ * @localZh 删除项目
+ * @localEn Delete project
+ */
+export const PAGE_PAM_GENERAL_DELETE_PROJECT = 'page_pam_general:deleteProject';
+
+/**
+ * @description Delete project confirm title
+ * @localZh 删除项目
+ * @localEn Delete project
+ */
+export const PAGE_PAM_GENERAL_DELETE_TITLE = 'page_pam_general:deleteTitle';
+
+/**
+ * @description Delete project confirm body; `[name]` is replaced
+ * @localZh 确定删除项目「[name]」吗？此操作不可恢复。
+ * @localEn Delete project "[name]"? This cannot be undone.
+ */
+export const PAGE_PAM_GENERAL_DELETE_CONTENT = 'page_pam_general:deleteContent';

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { isAbortError } from '@qlover/fe-corekit/aborter';
 import {
   Loading,
@@ -10,6 +10,7 @@ import {
 import { clsx } from 'clsx';
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -50,6 +51,9 @@ export type PAMProjectDetailValue = {
   readonly error: string | null;
   /** Owner-only mutations; non-owners may view but not save. */
   readonly canEdit: boolean;
+  readonly deleting: boolean;
+  /** Opens the delete confirmation dialog (owner only). */
+  readonly requestDeleteProject: () => void;
   readonly setProject: Dispatch<SetStateAction<PAMProjectDetail | null>>;
 };
 
@@ -153,7 +157,7 @@ export function PAMProjectDetailShell({
   const routeSlug = project?.slug || routeKey;
   const resolvedProjectId = project?.id ?? '';
 
-  const onDelete = (): void => {
+  const onDelete = useCallback((): void => {
     if (!project || !canEdit || deleting) {
       return;
     }
@@ -171,7 +175,16 @@ export function PAMProjectDetailShell({
         }
       }
     });
-  };
+  }, [
+    project,
+    canEdit,
+    deleting,
+    dialog,
+    tt.deleteTitle,
+    tt.deleteContent,
+    pamFacade,
+    router
+  ]);
 
   const detailValue = useMemo<PAMProjectDetailValue>(
     () => ({
@@ -180,9 +193,11 @@ export function PAMProjectDetailShell({
       loading,
       error,
       canEdit,
+      deleting,
+      requestDeleteProject: onDelete,
       setProject
     }),
-    [resolvedProjectId, project, loading, error, canEdit]
+    [resolvedProjectId, project, loading, error, canEdit, deleting, onDelete]
   );
 
   const tabClass = (tab: PAMProjectDetailTabType): string =>
@@ -227,18 +242,6 @@ export function PAMProjectDetailShell({
               ) : null}
               {canFork && project ? (
                 <PAMProjectForkButton projectId={project.id} tt={tt} />
-              ) : null}
-              {canEdit ? (
-                <button
-                  type="button"
-                  data-testid="PAMProjectDeleteButton"
-                  disabled={deleting}
-                  onClick={onDelete}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/5 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <TrashIcon className="h-3.5 w-3.5" />
-                  {tt.delete}
-                </button>
               ) : null}
             </div>
           )}

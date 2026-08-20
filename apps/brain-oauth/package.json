@@ -32,7 +32,7 @@
     "@qlover/corekit-bridge": "3.4.0",
     "@qlover/fe-corekit": "3.4.6",
     "@qlover/logger": "1.2.0",
-    "@qlover/next-kit": "^1.0.0",
+    "@qlover/next-kit": "^1.1.0",
     "@qlover/tailwind-theme": "^0.3.0",
     "@qlover/slice-store-react": "^1.4.2",
     "@qlover/oauth-wrapper": "0.7.0",
