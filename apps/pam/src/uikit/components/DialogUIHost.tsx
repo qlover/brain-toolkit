@@ -6,8 +6,13 @@ import {
   DeveloperConfirmDialog,
   type DeveloperConfirmOptions
 } from '@/uikit/components-app/developer/DeveloperConfirmDialog';
+import {
+  COMMON_CANCEL,
+  COMMON_OK
+} from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
 import { useIOC } from '../hook/useIOC';
+import { useWarnTranslations } from '../hook/useWarnTranslations';
 import type { DialogHandlerOptions } from '@qlover/next-kit/client';
 
 /**
@@ -15,6 +20,7 @@ import type { DialogHandlerOptions } from '@qlover/next-kit/client';
  */
 export function DialogUIHost() {
   const dialogHandler = useIOC(I.DialogHandler);
+  const t = useWarnTranslations();
   const [confirmOptions, setConfirmOptions] =
     useState<DeveloperConfirmOptions | null>(null);
 
@@ -24,8 +30,8 @@ export function DialogUIHost() {
         setConfirmOptions({
           title: String(options.title ?? ''),
           content: options.content,
-          okText: options.okText ?? 'OK',
-          cancelText: options.cancelText ?? 'Cancel',
+          okText: options.okText ?? t(COMMON_OK),
+          cancelText: options.cancelText ?? t(COMMON_CANCEL),
           variant: options.okType === 'danger' ? 'danger' : 'default',
           onConfirm: async () => {
             await options.onOk?.();
@@ -33,7 +39,7 @@ export function DialogUIHost() {
         });
       }
     });
-  }, [dialogHandler]);
+  }, [dialogHandler, t]);
 
   return (
     <>

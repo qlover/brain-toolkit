@@ -48,5 +48,11 @@ export const pamGeneralI18n = Object.freeze({
   descProjectStack: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_STACK,
   descProjectRepo: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_REPO,
 
+  deleteZoneTitle: i18nKeys.PAGE_PAM_GENERAL_DELETE_ZONE_TITLE,
+  deleteZoneDesc: i18nKeys.PAGE_PAM_GENERAL_DELETE_ZONE_DESC,
+  deleteProject: i18nKeys.PAGE_PAM_GENERAL_DELETE_PROJECT,
+  deleteTitle: i18nKeys.PAGE_PAM_GENERAL_DELETE_TITLE,
+  deleteContent: i18nKeys.PAGE_PAM_GENERAL_DELETE_CONTENT,
+
   adminTitle: COMMON_ADMIN_TITLE
 });

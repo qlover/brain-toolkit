@@ -94,6 +94,8 @@ export function PAMProjectGeneralPanel({
     loading,
     error: loadError,
     canEdit,
+    deleting,
+    requestDeleteProject,
     setProject
   } = usePAMProjectDetail();
 
@@ -457,6 +459,28 @@ export function PAMProjectGeneralPanel({
           <SettingsFieldSkeleton />
         )}
       </PAMSettingsCard>
+
+      {canEdit && ready ? (
+        <PAMSettingsCard
+          testId="PAMSettingsCard-delete"
+          title={tt.deleteZoneTitle}
+          description={tt.deleteZoneDesc}
+          showSave={false}
+        >
+          <button
+            type="button"
+            data-testid="PAMProjectGeneralDeleteButton"
+            disabled={deleting}
+            onClick={requestDeleteProject}
+            className={clsx(
+              'inline-flex cursor-pointer items-center justify-center rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-2 text-sm font-semibold text-red-600 transition',
+              'hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation'
+            )}
+          >
+            {tt.deleteProject}
+          </button>
+        </PAMSettingsCard>
+      ) : null}
     </div>
   );
 }
