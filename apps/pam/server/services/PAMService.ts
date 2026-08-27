@@ -57,9 +57,13 @@ import {
   capturePageScreenshot,
   resolveProjectCaptureUrl
 } from '@server/utils/PAMPreviewCaptureUtil';
+import { MemoryKvCacheService } from './MemoryKvCacheService';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';
+
+const AUTH_USERS_SEARCH_CACHE_TTL_MS = 45_000;
+const AUTH_USERS_SEARCH_LIMIT = 20;
 
 @injectable()
 export class PAMService implements PAMServiceInterface {
@@ -71,6 +75,9 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(ServerConfig)
   protected readonly serverConfig!: SeedServerConfigInterface;
+
+  @inject(MemoryKvCacheService)
+  protected readonly kv!: MemoryKvCacheService;
 
   @inject(PamCliTokenService)
   protected readonly cliTokenService!: PamCliTokenService;
@@ -614,23 +621,39 @@ export class PAMService implements PAMServiceInterface {
   /**
    * Lists Auth users for the transfer recipient picker.
    *
+   * Uses cookie session (no Supabase refresh) + short TTL KV cache.
+   *
    * @override
    * @param query - Optional email filter
    */
   public async searchUsersForTransfer(
     query?: string
   ): Promise<PAMAuthUserSummary[]> {
-    const user = await this.userService.getUser(true);
+    const user =
+      (await this.userService.getSessionUser()) ??
+      (await this.userService.getUser(true));
     if (!user) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    return this.projectRepo.searchAuthUsers({
-      query,
+    const normalizedQuery = query?.trim().toLowerCase() || '';
+    const cacheKey = `pam:auth-users:search:${user.id}:${normalizedQuery}`;
+    const cached = await this.kv.getItem<PAMAuthUserSummary[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const rows = await this.projectRepo.searchAuthUsers({
+      query: normalizedQuery,
       excludeUserId: user.id,
-      limit: 30,
+      limit: AUTH_USERS_SEARCH_LIMIT,
       offset: 0
     });
+
+    await this.kv.setItem(cacheKey, rows, {
+      ttlMs: AUTH_USERS_SEARCH_CACHE_TTL_MS
+    });
+    return rows;
   }
 
   /**

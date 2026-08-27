@@ -14,8 +14,13 @@ import {
   isCategoryHighlightActive,
   PAM_CATEGORY_HIGHLIGHT_CLASS
 } from './PAMHighlightUtil';
-import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
-import { getPAMAvatarLetter, shortenPAMOwnerId } from './PAMProjectDisplayUtil';
+import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
+import { PAMProjectAvatar } from './PAMProjectAvatar';
+import {
+  getPAMDisplayHost,
+  getPAMPrimaryUrl,
+  shortenPAMOwnerId
+} from './PAMProjectDisplayUtil';
 
 type PAMProjectCardModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
@@ -41,15 +46,16 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
 }) => {
   const envs = project.environments || [];
   const isPublic = project.is_public === PAMPublicType.public;
-  const avatarLetter = getPAMAvatarLetter(project.name);
   const stack = (project.stack || '').trim();
   const hasEnvs = envs.length > 0;
+  const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
+  const displayHost = getPAMDisplayHost(primaryUrl);
   const previewImageUrl = (project.preview_image_url || '').trim();
-  const [previewImageFailed, setPreviewImageFailed] = useState(false);
-  const showPreviewImage = previewImageUrl.length > 0 && !previewImageFailed;
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const showCover = previewImageUrl.length > 0 && !previewFailed;
 
   useEffect(() => {
-    setPreviewImageFailed(false);
+    setPreviewFailed(false);
   }, [previewImageUrl]);
 
   const categoryActive = isCategoryHighlightActive(
@@ -59,17 +65,6 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   const titleNode = useMemo(
     () => highlightText(project.name, highlightKeyword),
     [project.name, highlightKeyword]
-  );
-
-  const avatarClassName = clsx(
-    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-border bg-elevated text-xl font-bold text-brand no-underline sm:h-14 sm:w-14 sm:text-2xl',
-    project.repo_url && 'hover:border-brand hover:bg-primary'
-  );
-
-  const avatarInner = project.repo_url ? (
-    <PAMIcon repoUrl={project.repo_url} className="h-8 w-8 sm:h-9 sm:w-9" />
-  ) : (
-    avatarLetter
   );
 
   const subBits = useMemo(() => {
@@ -144,34 +139,71 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
       data-testid="PAMProjectCard"
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-primary-border bg-secondary transition hover:border-brand hover:shadow-[0_0_0_1px_var(--fe-color-brand)]"
     >
-      {showPreviewImage ? (
+      {showCover ? (
         <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-elevated">
-          <img
-            src={previewImageUrl}
-            alt=""
-            className="h-full w-full object-cover"
-            onError={() => setPreviewImageFailed(true)}
-          />
+          {
+            // eslint-disable-next-line @next/next/no-img-element -- arbitrary project preview URLs
+            <img
+              src={previewImageUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={() => setPreviewFailed(true)}
+            />
+          }
         </div>
-      ) : null}
+      ) : (
+        <div className="flex h-18 shrink-0 items-center gap-3 border-b border-primary-border bg-brand/6 px-3 sm:h-20 sm:gap-3.5 sm:px-3.5">
+          <PAMProjectAvatar
+            name={project.name}
+            primaryUrl={primaryUrl}
+            repoUrl={project.repo_url}
+            allowPreview={false}
+            linkToRepo
+            linkTitle={tt.openRepo}
+            className="h-11! w-11! text-lg! sm:h-12! sm:w-12! sm:text-xl!"
+          />
+          <div className="min-w-0 flex-1">
+            {displayHost && primaryUrl ? (
+              <a
+                href={primaryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={primaryUrl}
+                className="block truncate text-xs font-medium text-tertiary-text no-underline transition hover:text-secondary-text hover:underline"
+              >
+                {displayHost}
+              </a>
+            ) : null}
+            {stack ? (
+              <div
+                className={clsx(
+                  'truncate text-sm font-semibold text-primary-text',
+                  displayHost && 'mt-0.5'
+                )}
+              >
+                {stack}
+              </div>
+            ) : !displayHost ? (
+              <div className="truncate text-sm font-semibold text-secondary-text">
+                {project.name}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
       <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-2.5 sm:p-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
-            {project.repo_url ? (
-              <a
-                href={project.repo_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={tt.openRepo}
-                className={avatarClassName}
-              >
-                {avatarInner}
-              </a>
-            ) : (
-              <div className={avatarClassName} title={project.name}>
-                {avatarInner}
-              </div>
-            )}
+            {showCover ? (
+              <PAMProjectAvatar
+                name={project.name}
+                primaryUrl={primaryUrl}
+                repoUrl={project.repo_url}
+                allowPreview={false}
+                linkToRepo
+                linkTitle={tt.openRepo}
+              />
+            ) : null}
             <div className="min-w-0 flex-1">
               <Link
                 href={{
@@ -201,7 +233,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           />
         </div>
 
-        {stack ? (
+        {showCover && stack ? (
           <p
             className="truncate text-sm font-semibold text-primary-text"
             title={stack}

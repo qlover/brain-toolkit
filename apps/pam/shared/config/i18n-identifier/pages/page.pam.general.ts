@@ -147,16 +147,14 @@ export const PAGE_PAM_GENERAL_PREVIEW_CAPTURING =
  * @localZh 请先配置环境地址或仓库地址后再截取
  * @localEn Add an environment or repository URL before capturing
  */
-export const PAGE_PAM_GENERAL_PREVIEW_NO_URL =
-  'page_pam_general:previewNoUrl';
+export const PAGE_PAM_GENERAL_PREVIEW_NO_URL = 'page_pam_general:previewNoUrl';
 
 /**
  * @description Capture target URL label
  * @localZh 截取来源
  * @localEn Capture from
  */
-export const PAGE_PAM_GENERAL_PREVIEW_SOURCE =
-  'page_pam_general:previewSource';
+export const PAGE_PAM_GENERAL_PREVIEW_SOURCE = 'page_pam_general:previewSource';
 
 /**
  * @description Category label
@@ -368,8 +366,7 @@ export const PAGE_PAM_GENERAL_TRANSFER_ZONE_DESC =
  * @localZh 开始转让
  * @localEn Start transfer
  */
-export const PAGE_PAM_GENERAL_TRANSFER_START =
-  'page_pam_general:transferStart';
+export const PAGE_PAM_GENERAL_TRANSFER_START = 'page_pam_general:transferStart';
 
 /**
  * @description Transfer picker modal title
@@ -400,8 +397,7 @@ export const PAGE_PAM_GENERAL_TRANSFER_LOADING =
  * @localZh 没有匹配的用户
  * @localEn No matching users
  */
-export const PAGE_PAM_GENERAL_TRANSFER_EMPTY =
-  'page_pam_general:transferEmpty';
+export const PAGE_PAM_GENERAL_TRANSFER_EMPTY = 'page_pam_general:transferEmpty';
 
 /**
  * @description Transfer recipient email label

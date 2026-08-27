@@ -1,4 +1,7 @@
-import { MinusCircleIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowTopRightOnSquareIcon,
+  MinusCircleIcon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import React from 'react';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
@@ -57,6 +60,19 @@ function visibleCommentLines(
   return comments.slice(start, end);
 }
 
+function isHttpUrlValue(value: string): boolean {
+  const trimmed = (value || '').trim();
+  if (!trimmed) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export const PAMFormEnvironmentVarRow: React.FC<
   PAMFormEnvironmentVarRowProps
 > = ({
@@ -75,6 +91,8 @@ export const PAMFormEnvironmentVarRow: React.FC<
   const isSensitive = item.sensitive === true;
   const fieldsDisabled = readOnly || sensitiveLocked;
   const commentLines = visibleCommentLines(item.comments);
+  const valueHref =
+    !isSensitive && isHttpUrlValue(item.value) ? item.value.trim() : '';
 
   return (
     <div
@@ -131,30 +149,63 @@ export const PAMFormEnvironmentVarRow: React.FC<
             readOnly && 'cursor-default opacity-80'
           )}
         />
-        <input
-          type={isSensitive ? 'password' : 'text'}
-          placeholder={
-            isSensitive ? tt.envVarSensitivePlaceholder : tt.placehoderEnvValue
-          }
-          value={item.value}
-          readOnly={readOnly}
-          disabled={readOnly}
-          onChange={(e) =>
-            onUpdateVariable(
-              envIndex,
-              item.key,
-              item.key,
-              e.target.value,
+        {readOnly && valueHref ? (
+          <a
+            href={valueHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={valueHref}
+            className={clsx(
+              pamFormMonoFieldClass,
+              'env-var-value inline-flex min-w-20 flex-[1.5] items-center gap-1.5 py-1.5 text-xs text-brand no-underline transition hover:underline sm:text-sm'
+            )}
+          >
+            <span className="min-w-0 truncate">{item.value}</span>
+            <ArrowTopRightOnSquareIcon
+              className="h-3.5 w-3.5 shrink-0"
+              aria-hidden
+            />
+          </a>
+        ) : (
+          <input
+            type={isSensitive ? 'password' : 'text'}
+            placeholder={
               isSensitive
-            )
-          }
-          className={clsx(
-            pamFormMonoFieldClass,
-            'env-var-value min-w-20 flex-[1.5] py-1.5 text-xs sm:text-sm',
-            valueError && 'border-(--fe-color-error)',
-            readOnly && 'cursor-default opacity-80'
-          )}
-        />
+                ? tt.envVarSensitivePlaceholder
+                : tt.placehoderEnvValue
+            }
+            value={item.value}
+            readOnly={readOnly}
+            disabled={readOnly}
+            onChange={(e) =>
+              onUpdateVariable(
+                envIndex,
+                item.key,
+                item.key,
+                e.target.value,
+                isSensitive
+              )
+            }
+            className={clsx(
+              pamFormMonoFieldClass,
+              'env-var-value min-w-20 flex-[1.5] py-1.5 text-xs sm:text-sm',
+              valueError && 'border-(--fe-color-error)',
+              readOnly && 'cursor-default opacity-80'
+            )}
+          />
+        )}
+        {!readOnly && valueHref ? (
+          <a
+            href={valueHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={valueHref}
+            aria-label={valueHref}
+            className="shrink-0 rounded-lg p-1 text-brand transition hover:bg-brand/10"
+          >
+            <ArrowTopRightOnSquareIcon className="h-4 w-4" aria-hidden />
+          </a>
+        ) : null}
         <label
           className={clsx(
             'flex shrink-0 items-center gap-1 text-[10px] text-secondary-text sm:text-xs',

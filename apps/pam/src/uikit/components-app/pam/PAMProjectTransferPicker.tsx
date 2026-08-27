@@ -1,10 +1,11 @@
 'use client';
 
+import { CheckIcon } from '@heroicons/react/20/solid';
 import { clsx } from 'clsx';
-import { useEffect, useState } from 'react';
-import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
-import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
+import { useEffect, useRef, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
+import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
+import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
 
@@ -18,7 +19,64 @@ export type PAMProjectTransferPickerProps = {
   confirmText: string;
   transferring: boolean;
   onConfirm: (user: PAMAuthUserSummary) => void;
+  /** Optional prefetched empty-query list (hover / focus). */
+  initialUsers?: PAMAuthUserSummary[];
 };
+
+function emailInitial(email: string): string {
+  const local = email.split('@')[0]?.trim();
+  return (local?.[0] ?? '?').toUpperCase();
+}
+
+type ClientCacheEntry = {
+  users: PAMAuthUserSummary[];
+  at: number;
+};
+
+const CLIENT_CACHE_TTL_MS = 60_000;
+const clientCache = new Map<string, ClientCacheEntry>();
+
+function cacheKey(query: string): string {
+  return query.trim().toLowerCase();
+}
+
+function readClientCache(query: string): PAMAuthUserSummary[] | null {
+  const entry = clientCache.get(cacheKey(query));
+  if (!entry) return null;
+  if (Date.now() - entry.at > CLIENT_CACHE_TTL_MS) {
+    clientCache.delete(cacheKey(query));
+    return null;
+  }
+  return entry.users;
+}
+
+function writeClientCache(query: string, users: PAMAuthUserSummary[]): void {
+  clientCache.set(cacheKey(query), { users, at: Date.now() });
+}
+
+/**
+ * Prefetch empty-query users for transfer picker (call on hover/focus).
+ */
+export async function prefetchTransferUsers(
+  pamApi: PAMApi
+): Promise<PAMAuthUserSummary[]> {
+  const cached = readClientCache('');
+  if (cached) return cached;
+  const users = await pamApi.searchUsersForTransfer();
+  writeClientCache('', users);
+  return users;
+}
+
+function filterCachedUsers(
+  users: PAMAuthUserSummary[],
+  query: string
+): PAMAuthUserSummary[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return users;
+  return users.filter((user) =>
+    (user.email || user.id).toLowerCase().includes(q)
+  );
+}
 
 /**
  * Modal: load Auth users on open, search/filter, select, confirm.
@@ -32,14 +90,24 @@ export function PAMProjectTransferPicker({
   emptyText,
   confirmText,
   transferring,
-  onConfirm
+  onConfirm,
+  initialUsers
 }: PAMProjectTransferPickerProps) {
   const pamApi = useIOC(PAMApi);
   const [query, setQuery] = useState('');
-  const [users, setUsers] = useState<PAMAuthUserSummary[]>([]);
+  const [users, setUsers] = useState<PAMAuthUserSummary[]>(
+    () => initialUsers ?? readClientCache('') ?? []
+  );
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PAMAuthUserSummary | null>(null);
   const [openedOnce, setOpenedOnce] = useState(0);
+  const requestIdRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const hasUsersRef = useRef(users.length > 0);
+
+  useEffect(() => {
+    hasUsersRef.current = users.length > 0;
+  }, [users.length]);
 
   useEffect(() => {
     if (!open) {
@@ -47,25 +115,75 @@ export function PAMProjectTransferPicker({
     }
     setQuery('');
     setSelected(null);
+    const warm = initialUsers ?? readClientCache('') ?? [];
+    if (warm.length > 0) {
+      setUsers(warm);
+      setLoading(false);
+    }
     setOpenedOnce((n) => n + 1);
-  }, [open]);
+  }, [open, initialUsers]);
 
   useEffect(() => {
     if (!open || openedOnce === 0) {
       return;
     }
-    const handle = window.setTimeout(
-      () => {
+
+    const normalized = query.trim();
+    const emptyCached = readClientCache('');
+
+    // Local filter when we already have a full-enough empty list.
+    if (normalized && emptyCached && emptyCached.length < 20) {
+      setUsers(filterCachedUsers(emptyCached, normalized));
+      setLoading(false);
+      return;
+    }
+
+    const cached = readClientCache(normalized);
+    if (cached) {
+      setUsers(cached);
+      setLoading(false);
+      return;
+    }
+
+    const delayMs = normalized ? 180 : 0;
+    const handle = window.setTimeout(() => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const requestId = ++requestIdRef.current;
+
+      if (!hasUsersRef.current) {
         setLoading(true);
-        void pamApi
-          .searchUsersForTransfer(query)
-          .then(setUsers)
-          .catch(() => setUsers([]))
-          .finally(() => setLoading(false));
-      },
-      query ? 250 : 0
-    );
-    return () => window.clearTimeout(handle);
+      }
+
+      void pamApi
+        .searchUsersForTransfer(normalized || undefined)
+        .then((next) => {
+          if (controller.signal.aborted || requestId !== requestIdRef.current) {
+            return;
+          }
+          writeClientCache(normalized, next);
+          setUsers(next);
+        })
+        .catch(() => {
+          if (controller.signal.aborted || requestId !== requestIdRef.current) {
+            return;
+          }
+          if (!hasUsersRef.current) {
+            setUsers([]);
+          }
+        })
+        .finally(() => {
+          if (requestId === requestIdRef.current) {
+            setLoading(false);
+          }
+        });
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(handle);
+      abortRef.current?.abort();
+    };
   }, [query, open, openedOnce, pamApi]);
 
   return (
@@ -76,7 +194,7 @@ export function PAMProjectTransferPicker({
       closeOnBackdrop={!transferring}
       maxWidthClass="max-w-lg"
       footer={
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             data-testid="PAMProjectTransferConfirm"
@@ -85,8 +203,9 @@ export function PAMProjectTransferPicker({
               if (selected) onConfirm(selected);
             }}
             className={clsx(
-              'rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-700',
-              'hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:text-amber-300'
+              'inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold transition touch-manipulation sm:w-auto sm:min-w-28',
+              'bg-brand text-on-brand hover:bg-brand-hover',
+              'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             {confirmText}
@@ -101,46 +220,67 @@ export function PAMProjectTransferPicker({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={searchPlaceholder}
           disabled={transferring}
-          className={pamFormFieldClass}
+          className={clsx(pamFormFieldClass, 'min-h-11')}
           data-testid="PAMProjectTransferSearch"
           autoFocus
         />
+
         <div
-          className="max-h-72 overflow-y-auto rounded-lg border border-primary-border"
+          className="relative max-h-[min(50vh,20rem)] overflow-y-auto rounded-xl border border-primary-border bg-secondary/40 sm:max-h-72"
           data-testid="PAMProjectTransferUserList"
         >
-          {loading ? (
-            <p className="px-3 py-6 text-center text-sm text-secondary-text">
+          {loading && users.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-secondary-text">
               {loadingText}
             </p>
-          ) : users.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-secondary-text">
+          ) : !loading && users.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-secondary-text">
               {emptyText}
             </p>
           ) : (
-            <ul className="divide-y divide-primary-border">
+            <ul
+              className={clsx(
+                'divide-y divide-primary-border/70',
+                loading && 'opacity-70'
+              )}
+            >
               {users.map((user) => {
                 const isSelected = selected?.id === user.id;
+                const label = user.email || user.id;
                 return (
-                  <li key={user.id}>
+                  <li data-testid="PAMProjectTransferPicker" key={user.id}>
                     <button
                       type="button"
                       disabled={transferring}
                       onClick={() => setSelected(user)}
                       className={clsx(
-                        'flex w-full flex-col items-start gap-0.5 px-3 py-2.5 text-left transition',
+                        'flex w-full items-center gap-3 px-3 py-3 text-left transition touch-manipulation',
                         isSelected
-                          ? 'bg-brand/10 text-primary-text'
-                          : 'hover:bg-elevated text-primary-text'
+                          ? 'bg-brand/10'
+                          : 'hover:bg-elevated active:bg-elevated'
                       )}
                       data-testid={`PAMProjectTransferUser-${user.id}`}
                     >
-                      <span className="text-sm font-medium">
-                        {user.email || user.id}
+                      <span
+                        className={clsx(
+                          'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                          isSelected
+                            ? 'bg-brand text-on-brand'
+                            : 'bg-elevated text-brand'
+                        )}
+                        aria-hidden
+                      >
+                        {emailInitial(label)}
                       </span>
-                      <span className="font-mono text-[11px] text-secondary-text">
-                        {user.id}
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-primary-text">
+                        {label}
                       </span>
+                      {isSelected ? (
+                        <CheckIcon
+                          className="h-5 w-5 shrink-0 text-brand"
+                          aria-hidden
+                        />
+                      ) : null}
                     </button>
                   </li>
                 );

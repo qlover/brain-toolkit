@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
@@ -14,12 +14,9 @@ import {
   isCategoryHighlightActive,
   PAM_CATEGORY_HIGHLIGHT_CLASS
 } from './PAMHighlightUtil';
-import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
-import {
-  getPAMAvatarLetter,
-  getPAMPrimaryUrl,
-  shortenPAMOwnerId
-} from './PAMProjectDisplayUtil';
+import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
+import { PAMProjectAvatar } from './PAMProjectAvatar';
+import { getPAMPrimaryUrl, shortenPAMOwnerId } from './PAMProjectDisplayUtil';
 
 type PAMProjectListModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
@@ -48,15 +45,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     [project.environments]
   );
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
-  const avatarLetter = getPAMAvatarLetter(project.name);
   const isPublic = project.is_public === PAMPublicType.public;
-  const previewImageUrl = (project.preview_image_url || '').trim();
-  const [previewImageFailed, setPreviewImageFailed] = useState(false);
-  const showPreviewImage = previewImageUrl.length > 0 && !previewImageFailed;
-
-  useEffect(() => {
-    setPreviewImageFailed(false);
-  }, [previewImageUrl]);
 
   const categoryActive = isCategoryHighlightActive(
     project.category,
@@ -65,26 +54,6 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   const titleNode = useMemo(
     () => highlightText(project.name, highlightKeyword),
     [project.name, highlightKeyword]
-  );
-
-  const avatarClassName = clsx(
-    'flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary-border bg-elevated text-xl font-bold text-brand no-underline sm:h-14 sm:w-14 sm:text-2xl',
-    project.repo_url &&
-      !showPreviewImage &&
-      'hover:border-brand hover:bg-primary'
-  );
-
-  const avatarInner = showPreviewImage ? (
-    <img
-      src={previewImageUrl}
-      alt=""
-      className="h-full w-full object-cover"
-      onError={() => setPreviewImageFailed(true)}
-    />
-  ) : project.repo_url ? (
-    <PAMIcon repoUrl={project.repo_url} className="h-8 w-8 sm:h-9 sm:w-9" />
-  ) : (
-    avatarLetter
   );
 
   const envChips =
@@ -114,21 +83,14 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
-          {project.repo_url && !showPreviewImage ? (
-            <a
-              href={project.repo_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={tt.openRepo}
-              className={avatarClassName}
-            >
-              {avatarInner}
-            </a>
-          ) : (
-            <div className={avatarClassName} title={project.name}>
-              {avatarInner}
-            </div>
-          )}
+          <PAMProjectAvatar
+            name={project.name}
+            primaryUrl={primaryUrl}
+            repoUrl={project.repo_url}
+            allowPreview={false}
+            linkToRepo
+            linkTitle={tt.openRepo}
+          />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <Link

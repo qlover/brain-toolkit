@@ -1,5 +1,6 @@
 'use client';
 
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { useEffect, type ReactNode } from 'react';
 
@@ -40,41 +41,51 @@ export function DeveloperOverlayModal(props: {
   return (
     <div
       data-testid="DeveloperOverlayModal"
-      className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-6"
+      className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/45 backdrop-blur-[2px] dark:bg-black/70"
+        className="absolute inset-0 bg-black/50 backdrop-blur-[1px] dark:bg-black/65"
         aria-label="Close"
         tabIndex={-1}
         onClick={closeOnBackdrop ? onClose : undefined}
       />
       <div
         className={clsx(
-          'relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-primary-border bg-primary shadow-xl sm:max-h-[85vh] sm:rounded-2xl',
+          'relative flex w-full flex-col overflow-hidden',
+          'max-h-[min(92vh,100dvh)] rounded-t-2xl border border-primary-border bg-primary shadow-2xl',
+          'sm:max-h-[85vh] sm:rounded-2xl',
+          'pb-[env(safe-area-inset-bottom)]',
           maxWidthClass
         )}
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-primary-border bg-elevated/50 px-4 py-3 sm:px-6 sm:py-4">
-          <h2 className="text-base font-semibold text-primary-text sm:text-lg">
+        <div
+          className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-primary-border sm:hidden"
+          aria-hidden
+        />
+
+        <div className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 pb-3 sm:border-b sm:border-primary-border sm:bg-elevated/40 sm:px-5 sm:pt-4 sm:pb-4">
+          <h2 className="min-w-0 truncate text-base font-semibold text-primary-text sm:text-lg">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-2xl leading-none text-secondary-text transition hover:bg-elevated hover:text-primary-text"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-secondary-text transition hover:bg-elevated hover:text-primary-text focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             aria-label="Close"
           >
-            ×
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-primary-text sm:px-6 sm:py-5">
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 text-primary-text sm:px-5 sm:py-5">
           {children}
         </div>
+
         {footer != null && (
-          <div className="shrink-0 border-t border-primary-border bg-elevated/30 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="shrink-0 border-t border-primary-border bg-primary px-4 py-3 sm:bg-elevated/20 sm:px-5 sm:py-4">
             {footer}
           </div>
         )}

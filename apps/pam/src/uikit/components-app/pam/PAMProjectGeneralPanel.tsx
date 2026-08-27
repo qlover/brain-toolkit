@@ -21,7 +21,10 @@ import {
   type PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
-import { PAMProjectTransferPicker } from './PAMProjectTransferPicker';
+import {
+  PAMProjectTransferPicker,
+  prefetchTransferUsers
+} from './PAMProjectTransferPicker';
 import { PAMCategoryField } from '../../components/pam/PAMCategoryField';
 import {
   pamFormFieldClass,
@@ -116,7 +119,16 @@ export function PAMProjectGeneralPanel({
   const [categories, setCategories] = useState<string[]>([]);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  const [transferUsersWarm, setTransferUsersWarm] = useState<
+    PAMAuthUserSummary[] | undefined
+  >(undefined);
   const [capturingPreview, setCapturingPreview] = useState(false);
+
+  const warmTransferUsers = () => {
+    void prefetchTransferUsers(pamApi)
+      .then(setTransferUsersWarm)
+      .catch(() => undefined);
+  };
 
   useEffect(() => {
     if (!project) {
@@ -221,6 +233,74 @@ export function PAMProjectGeneralPanel({
       data-testid="PAMProjectGeneralPanel"
       className="mx-auto flex max-w-3xl flex-col gap-4 sm:gap-5"
     >
+      <PAMSettingsCard
+        testId="PAMSettingsCard-preview-image"
+        title={tt.labelPreviewImage}
+        description={tt.descPreviewImage}
+        showSave={false}
+      >
+        {ready ? (
+          <div className="flex flex-col gap-3">
+            {project.preview_image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={project.preview_image_url}
+                alt=""
+                className="aspect-video w-full rounded-lg border border-primary-border object-cover bg-elevated"
+                data-testid="PAMProjectPreviewImage"
+              />
+            ) : (
+              <div
+                className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-primary-border bg-elevated/40 text-sm text-secondary-text"
+                data-testid="PAMProjectPreviewEmpty"
+              >
+                —
+              </div>
+            )}
+            <p className="text-xs text-secondary-text">
+              {tt.previewSource}:{' '}
+              <span className="break-all text-primary-text">
+                {getPAMPrimaryUrl(project.environments, project.repo_url) ||
+                  tt.previewNoUrl}
+              </span>
+            </p>
+            {canEdit ? (
+              <button
+                type="button"
+                data-testid="PAMProjectPreviewCapture"
+                disabled={
+                  capturingPreview ||
+                  !getPAMPrimaryUrl(project.environments, project.repo_url)
+                }
+                onClick={() => {
+                  if (!projectId) return;
+                  setCapturingPreview(true);
+                  void pamApi
+                    .refreshPreviewImage(projectId)
+                    .then((saved) => {
+                      setProject(saved);
+                      dialogHandler.success(tt.settingsSave);
+                    })
+                    .finally(() => setCapturingPreview(false));
+                }}
+                className={clsx(
+                  'inline-flex cursor-pointer items-center justify-center rounded-lg border border-primary-border bg-elevated px-4 py-2 text-sm font-semibold text-primary-text transition',
+                  'hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation'
+                )}
+              >
+                {capturingPreview
+                  ? tt.previewCapturing
+                  : project.preview_image_url
+                    ? tt.previewRefresh
+                    : tt.previewCapture}
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <SettingsFieldSkeleton />
+        )}
+      </PAMSettingsCard>
+
       <PAMSettingsCard
         testId="PAMSettingsCard-id"
         title="Project ID"
@@ -466,74 +546,6 @@ export function PAMProjectGeneralPanel({
         )}
       </PAMSettingsCard>
 
-      <PAMSettingsCard
-        testId="PAMSettingsCard-preview-image"
-        title={tt.labelPreviewImage}
-        description={tt.descPreviewImage}
-        showSave={false}
-      >
-        {ready ? (
-          <div className="flex flex-col gap-3">
-            {project.preview_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={project.preview_image_url}
-                alt=""
-                className="aspect-video w-full rounded-lg border border-primary-border object-cover bg-elevated"
-                data-testid="PAMProjectPreviewImage"
-              />
-            ) : (
-              <div
-                className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-primary-border bg-elevated/40 text-sm text-secondary-text"
-                data-testid="PAMProjectPreviewEmpty"
-              >
-                —
-              </div>
-            )}
-            <p className="text-xs text-secondary-text">
-              {tt.previewSource}:{' '}
-              <span className="break-all text-primary-text">
-                {getPAMPrimaryUrl(project.environments, project.repo_url) ||
-                  tt.previewNoUrl}
-              </span>
-            </p>
-            {canEdit ? (
-              <button
-                type="button"
-                data-testid="PAMProjectPreviewCapture"
-                disabled={
-                  capturingPreview ||
-                  !getPAMPrimaryUrl(project.environments, project.repo_url)
-                }
-                onClick={() => {
-                  if (!projectId) return;
-                  setCapturingPreview(true);
-                  void pamApi
-                    .refreshPreviewImage(projectId)
-                    .then((saved) => {
-                      setProject(saved);
-                      dialogHandler.success(tt.settingsSave);
-                    })
-                    .finally(() => setCapturingPreview(false));
-                }}
-                className={clsx(
-                  'inline-flex cursor-pointer items-center justify-center rounded-lg border border-primary-border bg-elevated px-4 py-2 text-sm font-semibold text-primary-text transition',
-                  'hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation'
-                )}
-              >
-                {capturingPreview
-                  ? tt.previewCapturing
-                  : project.preview_image_url
-                    ? tt.previewRefresh
-                    : tt.previewCapture}
-              </button>
-            ) : null}
-          </div>
-        ) : (
-          <SettingsFieldSkeleton />
-        )}
-      </PAMSettingsCard>
-
       {canEdit && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-transfer"
@@ -545,7 +557,12 @@ export function PAMProjectGeneralPanel({
             type="button"
             data-testid="PAMProjectGeneralTransferButton"
             disabled={transferring}
-            onClick={() => setTransferOpen(true)}
+            onMouseEnter={warmTransferUsers}
+            onFocus={warmTransferUsers}
+            onClick={() => {
+              warmTransferUsers();
+              setTransferOpen(true);
+            }}
             className={clsx(
               'inline-flex cursor-pointer items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-sm font-semibold text-amber-700 transition',
               'hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation dark:text-amber-300'
@@ -562,6 +579,7 @@ export function PAMProjectGeneralPanel({
             emptyText={tt.transferEmpty}
             confirmText={tt.transferSubmit}
             transferring={transferring}
+            initialUsers={transferUsersWarm}
             onConfirm={(user: PAMAuthUserSummary) => {
               if (!project || !projectId) return;
               dialogHandler.confirm({
