@@ -112,11 +112,51 @@ export const PAGE_PAM_GENERAL_PLACEHOLDER_PREVIEW_IMAGE =
 
 /**
  * @description Preview image settings description
- * @localZh 可选的公开图片 URL，用于列表与卡片封面展示
- * @localEn Optional public image URL for list and card cover display
+ * @localZh 从项目主环境地址截取首屏并保存到存储；可随时重新截取更新
+ * @localEn Capture the primary env URL once into storage; refresh anytime
  */
 export const PAGE_PAM_GENERAL_DESC_PROJECT_PREVIEW_IMAGE =
   'page_pam_general:descPreviewImage';
+
+/**
+ * @description Capture / refresh cover button
+ * @localZh 截取封面
+ * @localEn Capture cover
+ */
+export const PAGE_PAM_GENERAL_PREVIEW_CAPTURE =
+  'page_pam_general:previewCapture';
+
+/**
+ * @description Re-capture cover button when one already exists
+ * @localZh 重新截取
+ * @localEn Refresh cover
+ */
+export const PAGE_PAM_GENERAL_PREVIEW_REFRESH =
+  'page_pam_general:previewRefresh';
+
+/**
+ * @description Cover capture in progress
+ * @localZh 截取中…
+ * @localEn Capturing…
+ */
+export const PAGE_PAM_GENERAL_PREVIEW_CAPTURING =
+  'page_pam_general:previewCapturing';
+
+/**
+ * @description No URL available for capture
+ * @localZh 请先配置环境地址或仓库地址后再截取
+ * @localEn Add an environment or repository URL before capturing
+ */
+export const PAGE_PAM_GENERAL_PREVIEW_NO_URL =
+  'page_pam_general:previewNoUrl';
+
+/**
+ * @description Capture target URL label
+ * @localZh 截取来源
+ * @localEn Capture from
+ */
+export const PAGE_PAM_GENERAL_PREVIEW_SOURCE =
+  'page_pam_general:previewSource';
 
 /**
  * @description Category label
@@ -317,11 +357,51 @@ export const PAGE_PAM_GENERAL_TRANSFER_ZONE_TITLE =
 
 /**
  * @description Transfer project section description
- * @localZh 将所有权转让给其他 PAM 用户（邮箱或用户 ID）。转让后你将失去管理权限。
- * @localEn Transfer ownership to another PAM user (email or user ID). You will lose admin access.
+ * @localZh 选择其他 PAM 用户接收所有权；转让后你将失去管理权限
+ * @localEn Pick another PAM user as the new owner; you will lose admin access
  */
 export const PAGE_PAM_GENERAL_TRANSFER_ZONE_DESC =
   'page_pam_general:transferZoneDesc';
+
+/**
+ * @description Open transfer picker
+ * @localZh 开始转让
+ * @localEn Start transfer
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_START =
+  'page_pam_general:transferStart';
+
+/**
+ * @description Transfer picker modal title
+ * @localZh 选择接收人
+ * @localEn Choose recipient
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_PICKER_TITLE =
+  'page_pam_general:transferPickerTitle';
+
+/**
+ * @description Transfer user search placeholder
+ * @localZh 搜索邮箱…
+ * @localEn Search by email…
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_SEARCH_PLACEHOLDER =
+  'page_pam_general:transferSearchPlaceholder';
+
+/**
+ * @description Transfer users loading
+ * @localZh 加载用户中…
+ * @localEn Loading users…
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_LOADING =
+  'page_pam_general:transferLoading';
+
+/**
+ * @description No users matched
+ * @localZh 没有匹配的用户
+ * @localEn No matching users
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_EMPTY =
+  'page_pam_general:transferEmpty';
 
 /**
  * @description Transfer recipient email label
@@ -363,9 +443,9 @@ export const PAGE_PAM_GENERAL_TRANSFER_SUBMIT =
 export const PAGE_PAM_GENERAL_TRANSFER_TITLE = 'page_pam_general:transferTitle';
 
 /**
- * @description Transfer confirm body; `[name]` is replaced
- * @localZh 确定将「[name]」转让给对方吗？此操作不可撤销。
- * @localEn Transfer “[name]” to the recipient? This cannot be undone.
+ * @description Transfer confirm body; `[name]` / `[email]` are replaced
+ * @localZh 确定将「[name]」转让给 [email] 吗？此操作不可撤销。
+ * @localEn Transfer “[name]” to [email]? This cannot be undone.
  */
 export const PAGE_PAM_GENERAL_TRANSFER_CONTENT =
   'page_pam_general:transferContent';

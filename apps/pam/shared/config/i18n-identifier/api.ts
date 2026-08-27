@@ -172,6 +172,20 @@ export const API_PAM_TRANSFER_USER_NOT_FOUND =
 export const API_PAM_TRANSFER_TO_SELF = 'api:pam_transfer_to_self';
 
 /**
+ * @description Project has no environment/repo URL to capture a cover from
+ * @localZh 没有可用于截取封面的环境地址或仓库地址
+ * @localEn No environment or repository URL available to capture a cover
+ */
+export const API_PAM_PREVIEW_URL_MISSING = 'api:pam_preview_url_missing';
+
+/**
+ * @description Failed to capture or store the project cover image
+ * @localZh 封面截取或保存失败，请稍后重试
+ * @localEn Failed to capture or store the cover image
+ */
+export const API_PAM_PREVIEW_CAPTURE_FAILED = 'api:pam_preview_capture_failed';
+
+/**
  * @description 没有pam 环境
  * @localZh 环境无效
  * @localEn PAM Environment Invalid

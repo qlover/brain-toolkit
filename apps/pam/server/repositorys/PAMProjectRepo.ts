@@ -21,6 +21,7 @@ import { Join } from '@shared/type';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_ENV_NOT_FOUND,
+  API_PAM_PREVIEW_CAPTURE_FAILED,
   API_PAM_PROJECT_NOT_FOUND
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
@@ -1263,5 +1264,87 @@ export class PAMProjectRepo extends BaseRepository<
     const admin = this.supabaseRepo.getAdminSupabase();
     const { data, error } = await admin.auth.admin.getUserById(userId);
     return !error && Boolean(data.user?.id);
+  }
+
+  /**
+   * Searches Auth users for transfer picker (service role RPC).
+   *
+   * @param query - Email substring (empty = first page)
+   * @param excludeUserId - Omit current user
+   * @param limit - Page size (max 50)
+   * @param offset - Offset
+   * @see makes/sql/009-pam-users-search-and-storage.sql
+   */
+  public async searchAuthUsers(params: {
+    query?: string;
+    excludeUserId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ id: string; email: string }[]> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await admin.rpc('pam_auth_users_search', {
+      p_query: params.query?.trim() || '',
+      p_exclude_id: params.excludeUserId || null,
+      p_limit: params.limit ?? 20,
+      p_offset: params.offset ?? 0
+    });
+    if (error) {
+      this.logger.warn('[PAMProjectRepo] searchAuthUsers failed', { error });
+      return [];
+    }
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    return data
+      .map((row) => ({
+        id: String((row as { id?: string }).id || ''),
+        email: String((row as { email?: string }).email || '')
+      }))
+      .filter((row) => row.id.length > 0);
+  }
+
+  /**
+   * Uploads cover bytes to Storage and returns a public URL (cache-busted).
+   *
+   * @param projectId - Project id (object path prefix)
+   * @param bytes - Image bytes
+   * @param contentType - MIME type
+   * @param bucket - Storage bucket id
+   */
+  public async uploadProjectPreviewImage(params: {
+    projectId: string;
+    bytes: ArrayBuffer | Buffer | Uint8Array;
+    contentType: string;
+    bucket: string;
+  }): Promise<string> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const ext = params.contentType.includes('png')
+      ? 'png'
+      : params.contentType.includes('webp')
+        ? 'webp'
+        : 'jpg';
+    const objectPath = `projects/${params.projectId}/cover.${ext}`;
+    const body =
+      params.bytes instanceof ArrayBuffer
+        ? new Uint8Array(params.bytes)
+        : params.bytes;
+
+    const upload = await admin.storage
+      .from(params.bucket)
+      .upload(objectPath, body, {
+        contentType: params.contentType,
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (upload.error) {
+      throw new ExecutorError(API_PAM_PREVIEW_CAPTURE_FAILED, {
+        cause: upload.error
+      });
+    }
+
+    const { data } = admin.storage.from(params.bucket).getPublicUrl(objectPath);
+    const bust = Date.now();
+    return `${data.publicUrl}${data.publicUrl.includes('?') ? '&' : '?'}v=${bust}`;
   }
 }

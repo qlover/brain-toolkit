@@ -29,6 +29,7 @@ const AUDIT_RULES: readonly AuditRule[] = [
   { method: 'POST', path: /^\/api\/pam\/delete\/[^/]+$/ },
   { method: 'POST', path: /^\/api\/pam\/fork\/[^/]+$/ },
   { method: 'POST', path: /^\/api\/pam\/transfer\/[^/]+$/ },
+  { method: 'POST', path: /^\/api\/pam\/preview-image\/[^/]+$/ },
 
   // Environment mutations + secret export
   { method: 'POST', path: /^\/api\/pam\/[^/]+\/environments$/ },

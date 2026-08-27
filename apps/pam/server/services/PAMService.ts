@@ -21,6 +21,8 @@ import {
   API_PAM_SLUG_EXISTS,
   API_PAM_TRANSFER_TO_SELF,
   API_PAM_TRANSFER_USER_NOT_FOUND,
+  API_PAM_PREVIEW_CAPTURE_FAILED,
+  API_PAM_PREVIEW_URL_MISSING,
   API_PAM_VARIABLE_KEY_DUPLICATE,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
@@ -40,7 +42,8 @@ import {
   PAMCreateSourceType,
   type PAMCreateSource,
   type PAMProjectFork,
-  type PAMProjectTransfer
+  type PAMProjectTransfer,
+  type PAMAuthUserSummary
 } from '@schemas/PAMProjectSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type {
@@ -50,6 +53,10 @@ import type {
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
+import {
+  capturePageScreenshot,
+  resolveProjectCaptureUrl
+} from '@server/utils/PAMPreviewCaptureUtil';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';
@@ -602,6 +609,79 @@ export class PAMService implements PAMServiceInterface {
 
     await this.projectRepo.transferProjectOwnerAdmin(id, newOwnerId);
     await this.categoryCache.invalidateAll();
+  }
+
+  /**
+   * Lists Auth users for the transfer recipient picker.
+   *
+   * @override
+   * @param query - Optional email filter
+   */
+  public async searchUsersForTransfer(
+    query?: string
+  ): Promise<PAMAuthUserSummary[]> {
+    const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    return this.projectRepo.searchAuthUsers({
+      query,
+      excludeUserId: user.id,
+      limit: 30,
+      offset: 0
+    });
+  }
+
+  /**
+   * Captures the project primary URL once, stores it in Storage, updates cover.
+   *
+   * @override
+   * @param id - Project id
+   * @returns Updated project detail
+   */
+  public async refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
+    await this.assertProjectOwner(id);
+
+    const detail = await this.projectRepo.getProjectWithEnvironmentsAdmin(id);
+    if (!detail) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const captureUrl = resolveProjectCaptureUrl({
+      environments: detail.environments,
+      repoUrl: detail.repo_url
+    });
+    if (!captureUrl || !/^https?:\/\//i.test(captureUrl)) {
+      throw new ExecutorError(API_PAM_PREVIEW_URL_MISSING);
+    }
+
+    let shot: { bytes: Uint8Array; contentType: string };
+    try {
+      shot = await capturePageScreenshot(
+        captureUrl,
+        this.serverConfig.pamScreenshotUrlTemplate
+      );
+    } catch (error) {
+      throw new ExecutorError(API_PAM_PREVIEW_CAPTURE_FAILED, { cause: error });
+    }
+
+    const publicUrl = await this.projectRepo.uploadProjectPreviewImage({
+      projectId: id,
+      bytes: shot.bytes,
+      contentType: shot.contentType,
+      bucket: this.serverConfig.pamPreviewBucket
+    });
+
+    const updated = await this.projectRepo.updateProject(id, {
+      preview_image_url: publicUrl
+    });
+
+    await this.categoryCache.invalidateAll();
+
+    return Object.assign({}, this.redactProjectDetail(updated), {
+      is_owner: true
+    });
   }
 
   /**

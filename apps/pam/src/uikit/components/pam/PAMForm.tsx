@@ -225,42 +225,24 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-            <div>
-              <label className={pamFormLabelClass}>
-                <span className="mr-1 inline-flex align-middle">
-                  <CodeBracketIcon className="h-4 w-4" />
-                </span>
-                {tt.labelRepo}
-              </label>
-              <input
-                {...register('repo_url')}
-                type="url"
-                placeholder={tt.placeholderRepo}
-                className={pamFormFieldClass}
-              />
-              {errors.repo_url && (
-                <div className="mt-1 text-xs text-(--fe-color-error)">
-                  {errors.repo_url.message}
-                </div>
-              )}
-            </div>
-            <div>
-              <label className={pamFormLabelClass}>
-                {tt.labelPreviewImage}
-              </label>
-              <input
-                {...register('preview_image_url')}
-                type="url"
-                placeholder={tt.placeholderPreviewImage}
-                className={pamFormFieldClass}
-              />
-              {errors.preview_image_url && (
-                <div className="mt-1 text-xs text-(--fe-color-error)">
-                  {errors.preview_image_url.message}
-                </div>
-              )}
-            </div>
+          <div>
+            <label className={pamFormLabelClass}>
+              <span className="mr-1 inline-flex align-middle">
+                <CodeBracketIcon className="h-4 w-4" />
+              </span>
+              {tt.labelRepo}
+            </label>
+            <input
+              {...register('repo_url')}
+              type="url"
+              placeholder={tt.placeholderRepo}
+              className={pamFormFieldClass}
+            />
+            {errors.repo_url && (
+              <div className="mt-1 text-xs text-(--fe-color-error)">
+                {errors.repo_url.message}
+              </div>
+            )}
           </div>
 
           <div>

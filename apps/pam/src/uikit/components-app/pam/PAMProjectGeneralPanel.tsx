@@ -20,11 +20,14 @@ import {
   type PAMProjectDetail,
   type PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
+import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
+import { PAMProjectTransferPicker } from './PAMProjectTransferPicker';
 import { PAMCategoryField } from '../../components/pam/PAMCategoryField';
 import {
   pamFormFieldClass,
   pamFormTextareaClass
 } from '../../components/pam/PAMFormFieldStyles';
+import { getPAMPrimaryUrl } from '../../components/pam/PAMProjectDisplayUtil';
 import { PAMSettingsCard } from '../../components/pam/PAMSettingsCard';
 
 export type PAMProjectGeneralPanelProps = {
@@ -38,8 +41,7 @@ type GeneralFieldKeyType =
   | 'category'
   | 'description'
   | 'stack'
-  | 'repo_url'
-  | 'preview_image_url';
+  | 'repo_url';
 
 function SettingsFieldSkeleton(): React.ReactElement {
   return (
@@ -60,7 +62,6 @@ function applyDetailToFields(
     setDescription: (v: string) => void;
     setStack: (v: string) => void;
     setRepoUrl: (v: string) => void;
-    setPreviewImageUrl: (v: string) => void;
   }
 ): void {
   setters.setName(detail.name ?? '');
@@ -70,7 +71,6 @@ function applyDetailToFields(
   setters.setDescription(detail.description ?? '');
   setters.setStack(detail.stack ?? '');
   setters.setRepoUrl(detail.repo_url ?? '');
-  setters.setPreviewImageUrl(detail.preview_image_url ?? '');
 }
 
 /**
@@ -113,11 +113,10 @@ export function PAMProjectGeneralPanel({
   const [description, setDescription] = useState('');
   const [stack, setStack] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
-  const [previewImageUrl, setPreviewImageUrl] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
-  const [transferEmail, setTransferEmail] = useState('');
-  const [transferUserId, setTransferUserId] = useState('');
+  const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  const [capturingPreview, setCapturingPreview] = useState(false);
 
   useEffect(() => {
     if (!project) {
@@ -130,8 +129,7 @@ export function PAMProjectGeneralPanel({
       setCategory,
       setDescription,
       setStack,
-      setRepoUrl,
-      setPreviewImageUrl
+      setRepoUrl
     });
   }, [project]);
 
@@ -472,32 +470,65 @@ export function PAMProjectGeneralPanel({
         testId="PAMSettingsCard-preview-image"
         title={tt.labelPreviewImage}
         description={tt.descPreviewImage}
-        saveLabel={tt.settingsSave}
-        savingLabel={tt.formSaveing}
-        showSave={canEdit}
-        saving={savingField === 'preview_image_url'}
-        saveDisabled={
-          !ready ||
-          (previewImageUrl || '') === (project.preview_image_url || '')
-        }
-        onSave={() =>
-          void saveField('preview_image_url', {
-            preview_image_url: previewImageUrl || ''
-          })
-        }
+        showSave={false}
       >
         {ready ? (
-          <input
-            type="url"
-            value={previewImageUrl}
-            readOnly={fieldReadOnly}
-            onChange={(e) => setPreviewImageUrl(e.target.value)}
-            placeholder={tt.placeholderPreviewImage}
-            className={clsx(
-              pamFormFieldClass,
-              fieldReadOnly && 'cursor-default opacity-80'
+          <div className="flex flex-col gap-3">
+            {project.preview_image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={project.preview_image_url}
+                alt=""
+                className="aspect-video w-full rounded-lg border border-primary-border object-cover bg-elevated"
+                data-testid="PAMProjectPreviewImage"
+              />
+            ) : (
+              <div
+                className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-primary-border bg-elevated/40 text-sm text-secondary-text"
+                data-testid="PAMProjectPreviewEmpty"
+              >
+                —
+              </div>
             )}
-          />
+            <p className="text-xs text-secondary-text">
+              {tt.previewSource}:{' '}
+              <span className="break-all text-primary-text">
+                {getPAMPrimaryUrl(project.environments, project.repo_url) ||
+                  tt.previewNoUrl}
+              </span>
+            </p>
+            {canEdit ? (
+              <button
+                type="button"
+                data-testid="PAMProjectPreviewCapture"
+                disabled={
+                  capturingPreview ||
+                  !getPAMPrimaryUrl(project.environments, project.repo_url)
+                }
+                onClick={() => {
+                  if (!projectId) return;
+                  setCapturingPreview(true);
+                  void pamApi
+                    .refreshPreviewImage(projectId)
+                    .then((saved) => {
+                      setProject(saved);
+                      dialogHandler.success(tt.settingsSave);
+                    })
+                    .finally(() => setCapturingPreview(false));
+                }}
+                className={clsx(
+                  'inline-flex cursor-pointer items-center justify-center rounded-lg border border-primary-border bg-elevated px-4 py-2 text-sm font-semibold text-primary-text transition',
+                  'hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation'
+                )}
+              >
+                {capturingPreview
+                  ? tt.previewCapturing
+                  : project.preview_image_url
+                    ? tt.previewRefresh
+                    : tt.previewCapture}
+              </button>
+            ) : null}
+          </div>
         ) : (
           <SettingsFieldSkeleton />
         )}
@@ -510,71 +541,51 @@ export function PAMProjectGeneralPanel({
           description={tt.transferZoneDesc}
           showSave={false}
         >
-          <div className="flex flex-col gap-3">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-secondary-text">
-                {tt.transferEmailLabel}
-              </span>
-              <input
-                type="email"
-                value={transferEmail}
-                onChange={(e) => setTransferEmail(e.target.value)}
-                placeholder={tt.transferEmailPlaceholder}
-                disabled={transferring}
-                className={pamFormFieldClass}
-                data-testid="PAMProjectTransferEmail"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-secondary-text">
-                {tt.transferUserIdLabel}
-              </span>
-              <input
-                type="text"
-                value={transferUserId}
-                onChange={(e) => setTransferUserId(e.target.value)}
-                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                disabled={transferring}
-                className={pamFormFieldClass}
-                data-testid="PAMProjectTransferUserId"
-              />
-            </label>
-            <button
-              type="button"
-              data-testid="PAMProjectGeneralTransferButton"
-              disabled={
-                transferring ||
-                (!transferEmail.trim() && !transferUserId.trim())
-              }
-              onClick={() => {
-                if (!project || !projectId) return;
-                dialogHandler.confirm({
-                  okType: 'danger',
-                  title: tt.transferTitle,
-                  content: tt.transferContent.replace('[name]', project.name),
-                  onOk: async () => {
-                    setTransferring(true);
-                    try {
-                      await pamApi.transferProject(projectId, {
-                        email: transferEmail.trim() || undefined,
-                        user_id: transferUserId.trim() || undefined
-                      });
-                      dialogHandler.success(tt.transferSuccess);
-                      router.replace(ROUTE_PROJECTS);
-                    } finally {
-                      setTransferring(false);
-                    }
+          <button
+            type="button"
+            data-testid="PAMProjectGeneralTransferButton"
+            disabled={transferring}
+            onClick={() => setTransferOpen(true)}
+            className={clsx(
+              'inline-flex cursor-pointer items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-sm font-semibold text-amber-700 transition',
+              'hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation dark:text-amber-300'
+            )}
+          >
+            {tt.transferStart}
+          </button>
+          <PAMProjectTransferPicker
+            open={transferOpen}
+            onClose={() => setTransferOpen(false)}
+            title={tt.transferPickerTitle}
+            searchPlaceholder={tt.transferSearchPlaceholder}
+            loadingText={tt.transferLoading}
+            emptyText={tt.transferEmpty}
+            confirmText={tt.transferSubmit}
+            transferring={transferring}
+            onConfirm={(user: PAMAuthUserSummary) => {
+              if (!project || !projectId) return;
+              dialogHandler.confirm({
+                okType: 'danger',
+                title: tt.transferTitle,
+                content: tt.transferContent
+                  .replace('[name]', project.name)
+                  .replace('[email]', user.email || user.id),
+                onOk: async () => {
+                  setTransferring(true);
+                  try {
+                    await pamApi.transferProject(projectId, {
+                      user_id: user.id
+                    });
+                    setTransferOpen(false);
+                    dialogHandler.success(tt.transferSuccess);
+                    router.replace(ROUTE_PROJECTS);
+                  } finally {
+                    setTransferring(false);
                   }
-                });
-              }}
-              className={clsx(
-                'inline-flex cursor-pointer items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-sm font-semibold text-amber-700 transition',
-                'hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation dark:text-amber-300'
-              )}
-            >
-              {tt.transferSubmit}
-            </button>
-          </div>
+                }
+              });
+            }}
+          />
         </PAMSettingsCard>
       ) : null}
 

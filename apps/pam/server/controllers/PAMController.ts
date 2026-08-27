@@ -15,7 +15,8 @@ import {
   PAMProjectForkSchema,
   PAMProjectTransferSchema,
   PAMProjectUpdateSchema,
-  SearchPAMProject
+  SearchPAMProject,
+  type PAMAuthUserSummary
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMService } from '@server/services/PAMService';
@@ -140,6 +141,27 @@ export class PAMController {
     const parsed = PAMProjectTransferSchema.parse(body);
     await this.pamService.transferProject(id, parsed);
     return { ok: true };
+  }
+
+  /**
+   * Lists users for transfer recipient picker.
+   *
+   * @param request - Optional `q` query
+   */
+  public searchUsersForTransfer(
+    request: NextRequest
+  ): Promise<PAMAuthUserSummary[]> {
+    const q = request.nextUrl.searchParams.get('q') || undefined;
+    return this.pamService.searchUsersForTransfer(q);
+  }
+
+  /**
+   * Captures and stores project cover screenshot.
+   *
+   * @param id - Project id
+   */
+  public refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
+    return this.pamService.refreshPreviewImage(uuidSchema.parse(id));
   }
 
   public deleteProject(id: string): unknown {

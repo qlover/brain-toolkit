@@ -61,6 +61,15 @@ export interface SeedServerConfigInterface extends SharedConfigInterface {
   readonly brainOAuthScopes: string;
   /** Optional fixed authorize locale (`en`|`zh`); empty uses request locale. */
   readonly brainOAuthLocale: string;
+
+  /**
+   * Optional screenshot URL template with `{url}` placeholder.
+   * Empty = Microlink default capture.
+   */
+  readonly pamScreenshotUrlTemplate: string;
+
+  /** Supabase Storage bucket for project cover images. */
+  readonly pamPreviewBucket: string;
 }
 export interface SeedSrcConfigInterface extends SharedConfigInterface {
   readonly stringEncryptorKey: string;

@@ -196,6 +196,16 @@ export const PAMProjectTransferSchema = z
 export type PAMProjectTransfer = z.infer<typeof PAMProjectTransferSchema>;
 
 /**
+ * Lightweight Auth user row for transfer recipient picker.
+ */
+export const PAMAuthUserSummarySchema = z.object({
+  id: z.uuid(),
+  email: z.string().email().or(z.literal(''))
+});
+
+export type PAMAuthUserSummary = z.infer<typeof PAMAuthUserSummarySchema>;
+
+/**
  * 搜索参数
  *
  * FIXME: 目前 controller 使用 SearchParamsValidator 直接校验

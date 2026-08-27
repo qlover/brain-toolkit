@@ -10,7 +10,8 @@ import type {
   PAMProjectFork,
   PAMProjectUpdate,
   PAMProjectTransfer,
-  PAMCreateSource
+  PAMCreateSource,
+  PAMAuthUserSummary
 } from '@shared/schemas/PAMProjectSchema';
 import type {
   ResourceSearchParams,
@@ -126,6 +127,20 @@ export interface PAMServiceInterface {
    * @param params - Recipient email and/or user_id
    */
   transferProject(id: string, params: PAMProjectTransfer): Promise<void>;
+
+  /**
+   * Lists Auth users for transfer recipient picker (excludes current user).
+   *
+   * @param query - Optional email substring
+   */
+  searchUsersForTransfer(query?: string): Promise<PAMAuthUserSummary[]>;
+
+  /**
+   * Captures primary env/repo URL screenshot, stores in Storage, updates cover.
+   *
+   * @param id - Project id
+   */
+  refreshPreviewImage(id: string): Promise<PAMProjectDetail>;
 
   deleteProject(id: string): Promise<void>;
 
