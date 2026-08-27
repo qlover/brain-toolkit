@@ -1,3 +1,29 @@
 packages:
   - packages/*
   - apps/*
+
+peerDependencyRules:
+  allowedVersions:
+    eslint: '9 || 10'
+
+overrides:
+  typescript: ~6.0.3
+  '@typescript-eslint/types': ^8.60.1
+  '@typescript-eslint/utils': ^8.60.1
+  '@typescript-eslint/scope-manager': ^8.60.1
+  '@typescript-eslint/typescript-estree': ^8.60.1
+  '@typescript-eslint/parser': ^8.60.1
+
+# pnpm 11+: approve dependency lifecycle scripts (strictDepBuilds default true)
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': false
+  '@swc/core': true
+  '@tree-sitter-grammars/tree-sitter-yaml': true
+  core-js-pure: false
+  esbuild: true
+  nx: true
+  sharp: true
+  tree-sitter: true
+  tree-sitter-json: true
+  unrs-resolver: true
