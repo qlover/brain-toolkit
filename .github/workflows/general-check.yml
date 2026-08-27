@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '20.19.0'
 
-      - run: npm install -g pnpm
+      - run: npm install -g pnpm@10
       - run: pnpm install --frozen-lockfile
 
       - name: Build packages (force)

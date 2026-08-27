@@ -8,17 +8,13 @@ import {
 } from '@qlover/next-kit/server';
 import { RequestLogsRepository } from '@qlover/next-kit/server';
 import { type NextRequest, NextResponse } from 'next/server';
-import {
-  API_PAM_CATEGORIES,
-  API_PAM_SEARCH,
-  API_USER_SESSION
-} from '@config/apiRoutes';
 import { I } from '@config/ioc-identifiter';
 import { oauthI18nIdToRfc } from '@config/oauthErrors';
 import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
 import { ServerConfig } from './ServerConfig';
 import { createServerIoc } from './serverIoc';
 import { NextApiHandler } from './utils/NextApiHandler';
+import { shouldAuditApiRequest } from './utils/shouldAuditApiRequest';
 import type { PamServerIocMap } from './BootstrapServer';
 import type { SeedConfigInterface } from '@qlover/corekit-bridge/bootstrap';
 import type { ExecutorAsyncTask } from '@qlover/fe-corekit/executor';
@@ -96,6 +92,9 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
 
   /**
    * @override
+   *
+   * Allowlist-only HTTP audit. Most GETs and hot home APIs are skipped;
+   * login/logout/CLI token already write dedicated `insertWithAuth` rows.
    */
   protected override afterApiResult<Result>(
     envelope: NextKitApiResult<Result>,
@@ -105,13 +104,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
       return;
     }
 
-    // High-frequency home APIs — skip DB write so the JSON can return first.
-    const path = request.nextUrl.pathname;
-    if (
-      path === API_USER_SESSION ||
-      path === API_PAM_SEARCH ||
-      path === API_PAM_CATEGORIES
-    ) {
+    if (!shouldAuditApiRequest(request.method, request.nextUrl.pathname)) {
       return;
     }
 

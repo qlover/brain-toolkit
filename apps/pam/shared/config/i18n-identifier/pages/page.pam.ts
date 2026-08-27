@@ -42,6 +42,28 @@ export const PAGE_PAM_PLACEHOLDER_SEARCH = 'page_pam:placeholderSearch';
 export const PAGE_PAM_ALL_CATEGORY = 'page_pam:allCategory';
 
 /**
+ * @description All visibility label (public + private)
+ * @localZh 全部
+ * @localEn All
+ */
+export const PAGE_PAM_ALL_VISIBILITY = 'page_pam:allVisibility';
+
+/**
+ * @description Visibility filter group aria label
+ * @localZh 可见性
+ * @localEn Visibility
+ */
+export const PAGE_PAM_LABEL_VISIBILITY = 'page_pam:labelVisibility';
+
+/**
+ * @description Active visibility filter summary; use %visibility% and %count%
+ * @localZh 可见性 “%visibility%” · %count% 项
+ * @localEn Visibility “%visibility%” · %count%
+ */
+export const PAGE_PAM_VISIBILITY_FILTER_SUMMARY =
+  'page_pam:visibilityFilterSummary';
+
+/**
  * @description Add asset button text
  * @localZh 新增资产
  * @localEn Add asset

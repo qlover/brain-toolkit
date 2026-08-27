@@ -46,6 +46,27 @@ function categoryFromFilters(filters: unknown): string {
   return typeof category === 'string' ? category.trim() : '';
 }
 
+function visibilityFromFilters(filters: unknown): string {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return '';
+  }
+  const visibility = (filters as { visibility?: unknown }).visibility;
+  if (visibility === 'public' || visibility === 'private') {
+    return visibility;
+  }
+  return '';
+}
+
+function visibilitySummaryLabel(value: string, tt: PAMI18nInterface): string {
+  if (value === 'public') {
+    return tt.public;
+  }
+  if (value === 'private') {
+    return tt.private;
+  }
+  return '';
+}
+
 export function PAMRoot({
   initialList = null,
   initialCategories = null
@@ -93,6 +114,7 @@ export function PAMRoot({
 
   const listStatus = useStore(pamFacadeStore, (state) => state.status);
   const categoryValue = categoryFromFilters(searchFilters);
+  const visibilityValue = visibilityFromFilters(searchFilters);
   const storeCategories = useStore(pamFacadeStore, (state) => state.categories);
 
   // DRAFT = never fetched; after first pull (PENDING/SUCCESS/FAILED) trust store
@@ -113,7 +135,10 @@ export function PAMRoot({
   // Keep SSR + first client paint on Compact; apply persisted mode after mount.
   const viewMode = mounted ? persistedViewMode : PAMViewMode.Compact;
 
-  const hasActiveFilter = searchKeyword.length > 0 || categoryValue.length > 0;
+  const hasActiveFilter =
+    searchKeyword.length > 0 ||
+    categoryValue.length > 0 ||
+    visibilityValue.length > 0;
   const searchingWithRows = listLoading && projects.length > 0;
 
   // Wait for session restore so we do not pull as guest then again as user.
@@ -137,6 +162,13 @@ export function PAMRoot({
     }
   }, [pamFacade, initialList, authLoading, user?.id]);
 
+  useStrictEffect(() => {
+    if (authLoading || user?.id || visibilityValue !== 'private') {
+      return;
+    }
+    void pamFacade.searchProjectWithVisibility('');
+  }, [authLoading, user?.id, visibilityValue, pamFacade]);
+
   const closeDialog = () => pamFacade.closeDialog();
 
   const clearFilters = () => {
@@ -158,6 +190,13 @@ export function PAMRoot({
           .replace('%count%', String(resultTotal))
       );
     }
+    if (visibilityValue) {
+      parts.push(
+        tt.visibilityFilterSummary
+          .replace('%visibility%', visibilitySummaryLabel(visibilityValue, tt))
+          .replace('%count%', String(resultTotal))
+      );
+    }
     if (categoryValue) {
       parts.push(
         tt.categoryFilterSummary
@@ -168,11 +207,22 @@ export function PAMRoot({
     if (parts.length === 0) {
       return '';
     }
-    // Both active: avoid duplicating count — keep keyword line + category only label.
-    if (searchKeyword && categoryValue) {
-      return `${tt.searchResultSummary
-        .replace('%keyword%', searchKeyword)
-        .replace('%count%', String(resultTotal))} · ${categoryValue}`;
+    const activeCount = [searchKeyword, visibilityValue, categoryValue].filter(
+      Boolean
+    ).length;
+    if (activeCount > 1) {
+      const keywordPart = searchKeyword
+        ? tt.searchResultSummary
+            .replace('%keyword%', searchKeyword)
+            .replace('%count%', String(resultTotal))
+        : '';
+      const visibilityPart = visibilityValue
+        ? visibilitySummaryLabel(visibilityValue, tt)
+        : '';
+      const categoryPart = categoryValue || '';
+      return [keywordPart, visibilityPart, categoryPart]
+        .filter(Boolean)
+        .join(' · ');
     }
     return parts[0] ?? '';
   })();
@@ -192,6 +242,11 @@ export function PAMRoot({
         onCategoryChange={(value) => {
           void pamFacade.searchProjectWithCategory(value);
         }}
+        visibilityValue={visibilityValue}
+        onVisibilityChange={(value) => {
+          void pamFacade.searchProjectWithVisibility(value);
+        }}
+        showPrivateVisibility={isAuthenticated}
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
         categories={categories}
