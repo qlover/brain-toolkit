@@ -13,6 +13,7 @@ import {
   PAMProjectCreateSchema,
   PAMProjectDetail,
   PAMProjectForkSchema,
+  PAMProjectTransferSchema,
   PAMProjectUpdateSchema,
   SearchPAMProject
 } from '@schemas/PAMProjectSchema';
@@ -120,6 +121,25 @@ export class PAMController {
     const parsed = isEmpty(body) ? {} : PAMProjectForkSchema.parse(body ?? {});
 
     return this.pamService.forkProject(sourceId, parsed);
+  }
+
+  /**
+   * Transfers project ownership (owner only).
+   *
+   * @param id - Project id
+   * @param request - `{ email? }` and/or `{ user_id? }`
+   */
+  public async transferProject(
+    id: string,
+    request: NextRequest
+  ): Promise<{ ok: true }> {
+    const body = await request.json();
+    if (isEmpty(body)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+    const parsed = PAMProjectTransferSchema.parse(body);
+    await this.pamService.transferProject(id, parsed);
+    return { ok: true };
   }
 
   public deleteProject(id: string): unknown {

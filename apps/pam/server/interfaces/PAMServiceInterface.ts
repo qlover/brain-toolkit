@@ -9,6 +9,7 @@ import type {
   PAMProjectCreate,
   PAMProjectFork,
   PAMProjectUpdate,
+  PAMProjectTransfer,
   PAMCreateSource
 } from '@shared/schemas/PAMProjectSchema';
 import type {
@@ -117,6 +118,14 @@ export interface PAMServiceInterface {
     sourceId: string,
     options?: PAMProjectFork
   ): Promise<PAMProjectDetail>;
+
+  /**
+   * Transfers ownership to another PAM user (email or user id).
+   *
+   * @param id - Project id
+   * @param params - Recipient email and/or user_id
+   */
+  transferProject(id: string, params: PAMProjectTransfer): Promise<void>;
 
   deleteProject(id: string): Promise<void>;
 

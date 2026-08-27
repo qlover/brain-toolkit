@@ -157,6 +157,21 @@ export const API_REQUEST_BODY_EMPTY = 'api:request_body_empty';
 export const API_PAM_PROJECT_NOT_FOUND = 'api:pam_project_not_found';
 
 /**
+ * @description Transfer target user was not found
+ * @localZh 未找到目标用户，请确认邮箱或用户 ID
+ * @localEn Transfer target user was not found
+ */
+export const API_PAM_TRANSFER_USER_NOT_FOUND =
+  'api:pam_transfer_user_not_found';
+
+/**
+ * @description Cannot transfer a project to yourself
+ * @localZh 不能将项目转让给自己
+ * @localEn Cannot transfer a project to yourself
+ */
+export const API_PAM_TRANSFER_TO_SELF = 'api:pam_transfer_to_self';
+
+/**
  * @description 没有pam 环境
  * @localZh 环境无效
  * @localEn PAM Environment Invalid

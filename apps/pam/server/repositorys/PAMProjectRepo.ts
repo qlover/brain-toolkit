@@ -262,6 +262,34 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Loads project + environments via admin (Brain / CLI; access checked in service).
+   *
+   * @param id - Project id
+   */
+  public async getProjectWithEnvironmentsAdmin(
+    id: string
+  ): Promise<PAMProjectDetail | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select(
+        SearchPAMProjectFields.join(',') +
+          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
+      )
+      .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      return null;
+    }
+
+    return result.data as never;
+  }
+
+  /**
    * 获取用户的一个 project, 包含 RLS 不包含 env
    * @param id
    * @returns
@@ -274,6 +302,27 @@ export class PAMProjectRepo extends BaseRepository<
       .select(SearchPAMProjectFields.join(','))
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as never;
+  }
+
+  /**
+   * Loads project basics via admin (Brain / CLI; access checked in service).
+   *
+   * @param id - Project id
+   */
+  public async getProjectByIdAdmin(
+    id: string
+  ): Promise<SearchPAMRawProject | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select(SearchPAMProjectFields.join(','))
+      .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
       .maybeSingle();
 
     this.supabaseRepo.throwIfError(result);
@@ -339,9 +388,10 @@ export class PAMProjectRepo extends BaseRepository<
   public async getEnvironmentsByProjectId(
     projectId: string
   ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>[]> {
-    const supabase = await this.supabaseRepo.getSupabase();
+    // Admin: used after ownership assert (Brain / CLI have no RLS session).
+    const admin = this.supabaseRepo.getAdminSupabase();
 
-    const result = await supabase
+    const result = await admin
       .from(PAMEnvTableName)
       .select('id,name,url,variables')
       .eq('project_id', projectId);
@@ -737,8 +787,9 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<void> {
     if (Object.keys(updates).length === 0) return;
 
-    const supabase = await this.supabaseRepo.getSupabase();
-    const result = await supabase
+    // Admin write: caller must have asserted ownership (CLI / Brain session).
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
       .from(this.getRepoName())
       .update(updates)
       .eq('id', id)
@@ -758,7 +809,8 @@ export class PAMProjectRepo extends BaseRepository<
     projectId: string,
     requestEnvs: Partial<PAMEnvRaw>[]
   ): Promise<void> {
-    const supabase = await this.supabaseRepo.getSupabase();
+    // Admin write: caller must have asserted ownership (CLI / Brain session).
+    const supabase = this.supabaseRepo.getAdminSupabase();
 
     // 1. 获取当前数据库中该项目的所有环境（仅 id）
     const existingResult = await supabase
@@ -861,8 +913,8 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<PAMProjectDetail> {
     const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
 
-    // 检查项目是否存在且未删除
-    const project = await this.getProjectById(id);
+    // Admin read: ownership already asserted in service (Brain / CLI).
+    const project = await this.getProjectByIdAdmin(id);
     if (!project) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
@@ -876,7 +928,7 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     // 3. 返回最新数据
-    const supabase = await this.supabaseRepo.getSupabase();
+    const supabase = this.supabaseRepo.getAdminSupabase();
     const result = await supabase
       .from(this.getRepoName())
       .select(
@@ -1127,5 +1179,89 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     this.logger.info(`[PAMProjectRepo] soft deleted project ${id}`);
+  }
+
+  /**
+   * Soft-delete via admin client (CLI / Brain session after ownership assert).
+   *
+   * @param id - Project id
+   */
+  public async deleteProjectAdmin(id: string): Promise<void> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .update({ is_deleted: DeleteStatus.DELETE })
+      .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .select('id');
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data?.length) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    this.logger.info(`[PAMProjectRepo] soft deleted project (admin) ${id}`);
+  }
+
+  /**
+   * Transfers ownership via admin client after ownership assert.
+   *
+   * @param id - Project id
+   * @param newOwnerId - New owner user id
+   */
+  public async transferProjectOwnerAdmin(
+    id: string,
+    newOwnerId: string
+  ): Promise<void> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .update({
+        owner_id: newOwnerId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .select('id');
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data?.length) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    this.logger.info(
+      `[PAMProjectRepo] transferred project ${id} to ${newOwnerId}`
+    );
+  }
+
+  /**
+   * Looks up a Supabase Auth user id by email (service role RPC).
+   *
+   * @param email - Normalized email
+   * @returns User id or null when not found
+   * @see makes/sql/008-pam-preview-image.sql `pam_auth_user_id_by_email`
+   */
+  public async findAuthUserIdByEmail(email: string): Promise<string | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await admin.rpc('pam_auth_user_id_by_email', {
+      p_email: email
+    });
+    if (error || typeof data !== 'string' || !data) {
+      return null;
+    }
+    return data;
+  }
+
+  /**
+   * Returns whether an Auth user id exists (service role).
+   *
+   * @param userId - Auth user uuid
+   */
+  public async authUserExistsById(userId: string): Promise<boolean> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await admin.auth.admin.getUserById(userId);
+    return !error && Boolean(data.user?.id);
   }
 }

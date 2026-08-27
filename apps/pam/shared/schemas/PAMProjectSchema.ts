@@ -60,6 +60,7 @@ export const PAMProjectRawSchema = z.object({
   description: z.string().trim().or(z.literal('')).nullish(),
   stack: z.string().trim().or(z.literal('')).nullish(),
   repo_url: z.url().trim().or(z.literal('')).nullish(),
+  preview_image_url: z.string().url().trim().or(z.literal('')).nullish(),
   /**
    * 0: private, 1: public
    */
@@ -170,6 +171,29 @@ export const PAMProjectForkSchema = z.object({
 });
 
 export type PAMProjectFork = z.infer<typeof PAMProjectForkSchema>;
+
+/**
+ * Body for `POST /api/pam/transfer/:id`.
+ * Provide either recipient email (Supabase Auth) or user UUID.
+ */
+export const PAMProjectTransferSchema = z
+  .object({
+    email: z.union([z.string().trim().email(), z.literal('')]).optional(),
+    user_id: z.union([z.uuid(), z.literal('')]).optional()
+  })
+  .superRefine((value, ctx) => {
+    const email = value.email?.trim() || '';
+    const userId = value.user_id?.trim() || '';
+    if (!email && !userId) {
+      ctx.addIssue({
+        code: 'custom',
+        message: V_REQUIRED,
+        path: ['email']
+      });
+    }
+  });
+
+export type PAMProjectTransfer = z.infer<typeof PAMProjectTransferSchema>;
 
 /**
  * 搜索参数

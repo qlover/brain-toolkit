@@ -13,7 +13,8 @@ import {
   buildApiPamEnvironmentDelete,
   buildApiPamEnvironments,
   buildApiPamEnvironmentVariables,
-  buildApiPamFork
+  buildApiPamFork,
+  buildApiPamTransfer
 } from '@config/route';
 import type {
   PAMEnvCreate,
@@ -26,6 +27,7 @@ import {
   PAMProjectDetail,
   PAMProjectCreate,
   PAMProjectFork,
+  PAMProjectTransfer,
   PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import { AppApiRequester } from './AppApiRequester';
@@ -130,6 +132,19 @@ export class PAMApi {
     >(buildApiPamFork(sourceId), data ?? {});
 
     return response.data.data!;
+  }
+
+  /**
+   * Transfers project ownership to another user.
+   *
+   * @param id - Project id
+   * @param data - Recipient email and/or user_id
+   */
+  public async transferProject(
+    id: string,
+    data: PAMProjectTransfer
+  ): Promise<void> {
+    await this.appApiRequester.post(buildApiPamTransfer(id), data);
   }
 
   public async getProjectDetail(params: {

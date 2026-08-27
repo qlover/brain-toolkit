@@ -8,7 +8,8 @@ import {
   API_PAM_ENVIRONMENTS_DELETE,
   API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_VARIABLES,
-  API_PAM_FORK
+  API_PAM_FORK,
+  API_PAM_TRANSFER
 } from './apiRoutes';
 import { i18nConfig } from './i18n';
 import type { LocaleType } from './i18n';
@@ -425,6 +426,15 @@ export function buildApiPamDetele(id: string): string {
  */
 export function buildApiPamFork(id: string): string {
   return buildApiWithPath(API_PAM_FORK, { id });
+}
+
+/**
+ * @see {@link API_PAM_TRANSFER}
+ * @param id - Project id
+ * @returns `/api/pam/transfer/:id`
+ */
+export function buildApiPamTransfer(id: string): string {
+  return buildApiWithPath(API_PAM_TRANSFER, { id });
 }
 
 /**
