@@ -100,6 +100,15 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
   searchProjectWithCategory(category: string): Promise<ResourceSearchResult<T>>;
 
   /**
+   * Filter list by visibility (`public` / `private`; empty clears filter).
+   *
+   * @param visibility - Visibility value or empty for all
+   */
+  searchProjectWithVisibility(
+    visibility: string
+  ): Promise<ResourceSearchResult<T>>;
+
+  /**
    * Loads distinct categories for filters / create form.
    */
   pullCategories(): Promise<string[]>;

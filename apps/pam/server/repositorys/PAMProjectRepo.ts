@@ -34,7 +34,8 @@ import {
   PAMProjectDetail,
   PAMUpdateSQLFunctionName,
   PAMProjectUpdate,
-  PAMProjectCreate
+  PAMProjectCreate,
+  PAMPublicType
 } from '@schemas/PAMProjectSchema';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
@@ -66,6 +67,27 @@ function resolveCategoryFilter(filters: unknown): string | undefined {
   }
   const trimmed = category.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+type VisibilityFilterType = 'public' | 'private';
+
+/**
+ * Reads `visibility` from ResourceSearchParams.filters.
+ *
+ * @param filters - Parsed search filters from query string
+ * @returns `public` / `private`, or undefined for default (public + own)
+ */
+function resolveVisibilityFilter(
+  filters: unknown
+): VisibilityFilterType | undefined {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return undefined;
+  }
+  const visibility = (filters as { visibility?: unknown }).visibility;
+  if (visibility === 'public' || visibility === 'private') {
+    return visibility;
+  }
+  return undefined;
 }
 
 type JoinEnvFieldsResult<T extends '*' | readonly EnvField[]> = T extends '*'
@@ -119,13 +141,16 @@ export class PAMProjectRepo extends BaseRepository<
     const { page = 1, pageSize = 20, user_id, fields } = params;
     const keyword = params.keyword?.trim();
     const categoryFilter = resolveCategoryFilter(params.filters);
+    const visibilityFilter = resolveVisibilityFilter(params.filters);
 
-    const orConditions: FilterTriple<PAMProjectRaw>[] = [
-      ['is_public', Operators.eq, 1]
-    ];
-
-    if (user_id) {
-      orConditions.push(['owner_id', Operators.eq, user_id]);
+    if (visibilityFilter === 'private' && !user_id) {
+      return {
+        page,
+        pageSize,
+        total: 0,
+        items: [],
+        hasMore: false
+      };
     }
 
     const where: FilterTriple<PAMProjectRaw>[] = [
@@ -133,6 +158,20 @@ export class PAMProjectRepo extends BaseRepository<
     ];
     if (categoryFilter) {
       where.push(['category', Operators.eq, categoryFilter]);
+    }
+
+    let whereOr: FilterTriple<PAMProjectRaw>[] | undefined;
+
+    if (visibilityFilter === 'public') {
+      where.push(['is_public', Operators.eq, PAMPublicType.public]);
+    } else if (visibilityFilter === 'private') {
+      where.push(['is_public', Operators.eq, PAMPublicType.private]);
+      where.push(['owner_id', Operators.eq, user_id!]);
+    } else {
+      whereOr = [['is_public', Operators.eq, PAMPublicType.public]];
+      if (user_id) {
+        whereOr.push(['owner_id', Operators.eq, user_id]);
+      }
     }
 
     return await this.supabaseRepo.search({
@@ -156,7 +195,7 @@ export class PAMProjectRepo extends BaseRepository<
           }
         : undefined,
       where,
-      whereOr: orConditions
+      whereOr
     });
   }
 

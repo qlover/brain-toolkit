@@ -394,26 +394,30 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   public async searchProjectWithCategory(
     category: string
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
-    const trimmed = category.trim();
-    const prevFilters = this.searchStore.getState().searchParams.filters;
-    const nextFilters: Record<string, unknown> =
-      prevFilters &&
-      typeof prevFilters === 'object' &&
-      !Array.isArray(prevFilters)
-        ? { ...(prevFilters as Record<string, unknown>) }
-        : {};
-
-    if (trimmed) {
-      nextFilters.category = trimmed;
-    } else {
-      delete nextFilters.category;
-    }
-
     return this.pullProjectList({
       page: defaultSearchParams.page,
       resetResult: false,
       projectsStrategy: ProjectsStrategy.Replace,
-      filters: Object.keys(nextFilters).length > 0 ? nextFilters : undefined
+      filters: this.mergeListFilters({
+        category: category.trim() || undefined
+      })
+    });
+  }
+
+  /**
+   * @override
+   */
+  public async searchProjectWithVisibility(
+    visibility: string
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    const trimmed = visibility.trim();
+    const value =
+      trimmed === 'public' || trimmed === 'private' ? trimmed : undefined;
+    return this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace,
+      filters: this.mergeListFilters({ visibility: value })
     });
   }
 
@@ -447,5 +451,27 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       // Keep ISR/hydrated categories on failure; do not wipe to [].
       return this.searchStore.getState().categories;
     }
+  }
+
+  protected mergeListFilters(
+    patch: Record<string, string | undefined>
+  ): Record<string, unknown> | undefined {
+    const prevFilters = this.searchStore.getState().searchParams.filters;
+    const nextFilters: Record<string, unknown> =
+      prevFilters &&
+      typeof prevFilters === 'object' &&
+      !Array.isArray(prevFilters)
+        ? { ...(prevFilters as Record<string, unknown>) }
+        : {};
+
+    for (const [key, value] of Object.entries(patch)) {
+      if (value) {
+        nextFilters[key] = value;
+      } else {
+        delete nextFilters[key];
+      }
+    }
+
+    return Object.keys(nextFilters).length > 0 ? nextFilters : undefined;
   }
 }

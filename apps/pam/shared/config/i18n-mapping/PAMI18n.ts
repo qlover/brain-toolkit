@@ -20,6 +20,9 @@ export const pamI18n = Object.freeze({
   // Common / list toolbar
   placeholderSearch: i18nKeys.PAGE_PAM_PLACEHOLDER_SEARCH,
   allCategory: i18nKeys.PAGE_PAM_ALL_CATEGORY,
+  allVisibility: i18nKeys.PAGE_PAM_ALL_VISIBILITY,
+  labelVisibility: i18nKeys.PAGE_PAM_LABEL_VISIBILITY,
+  visibilityFilterSummary: i18nKeys.PAGE_PAM_VISIBILITY_FILTER_SUMMARY,
   noSearchMatch: i18nKeys.PAGE_PAM_NO_SEARCH_MATCH,
   searchResultSummary: i18nKeys.PAGE_PAM_SEARCH_RESULT_SUMMARY,
   categoryFilterSummary: i18nKeys.PAGE_PAM_CATEGORY_FILTER_SUMMARY,
