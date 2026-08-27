@@ -1,5 +1,51 @@
 # pam
 
+## 2.6.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 列表可见性筛选与 request log 审计白名单 ([4773555](https://github.com/qlover/brain-toolkit/commit/47735553a53eb4f625a05a13a826e2ba11ea3dc3)) ([#121](https://github.com/qlover/brain-toolkit/pull/121))
+
+  工具栏支持全部/公开/私有筛选；审计改为 allowlist 仅记录变更类 API，并补单测。
+
+- **pam:** 删除项目移至通用设置危险区 ([014ea86](https://github.com/qlover/brain-toolkit/commit/014ea86862a4c117d1b514c88c56bc4715921a21)) ([#120](https://github.com/qlover/brain-toolkit/pull/120))
+
+  详情页顶栏去掉删除按钮，改到 General 危险区域；确认框默认文案走 i18n；升级 next-kit 至 ^1.1.0。
+
+- **pam,brain-oauth:** create/update 支持 logo_uri 落库 ([ba126b4](https://github.com/qlover/brain-toolkit/commit/ba126b458bb7a6a2f06cce66fee3fb1e1632e610)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  本地扩展 Create/Update schema，Repo insert/update 写入 logo_uri（空串存 null）。
+
+- **pam,brain-oauth:** developer apps 补齐 logo 预览与列表展示 ([c57a9dd](https://github.com/qlover/brain-toolkit/commit/c57a9dd76642c7ab61dfb055f79a4b02f883465e)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  表单增加 logo URL 与预览；列表展示头像与可点击 client_uri，并补充 i18n。
+
+- **pam:** 新增项目分类 API 与 ISR 拉取 ([64ad2fc](https://github.com/qlover/brain-toolkit/commit/64ad2fc032573da5ce64a9abb3ee52f8f5d03cee)) ([#117](https://github.com/qlover/brain-toolkit/pull/117))
+
+  Repo/Service 提供去重分类；公开分类走 unstable_cache，并暴露 GET /api/pam/categories。
+
+- **pam:** 分类改为 API 建议列表并支持自由输入 ([2241750](https://github.com/qlover/brain-toolkit/commit/22417501ef7f8254f342d977ea8d4da1591aeed3)) ([#117](https://github.com/qlover/brain-toolkit/pull/117))
+
+  去掉硬编码预设；列表 ISR 注入分类，表单/筛选使用动态选项与自定义输入。
+
+#### 🐞 Bug Fixes
+
+- **pam,brain-oauth:** 修复 rotate-secret URL 拼错导致 405 ([ef87e65](https://github.com/qlover/brain-toolkit/commit/ef87e65976403981978830408066cb0be7e8c071)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  apiClientRotateSecret 改为基于 API_CLIENTS_ROTATE_SECRET 生成路径，避免 POST 打到 detail 路由。
+
+- **pam,brain-oauth:** 优化 developer apps 弹窗交互并修校验 ([1ebc86e](https://github.com/qlover/brain-toolkit/commit/1ebc86e983b72995cc89fb8014270c7dccdb435b)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  编辑弹窗改为可滚动 sheet 与单行底栏；修正空 redirect URI 校验文案、详情加载竞态与 logo 破损态。
+
+#### 🚀 Performance
+
+- **pam:** 加速首页会话与分类接口，并加内存 KV 缓存 ([e6dc66d](https://github.com/qlover/brain-toolkit/commit/e6dc66d0cbc41479d7ef6531d9f14997eb0dd3ab)) ([#119](https://github.com/qlover/brain-toolkit/pull/119))
+
+  session 改为 cookie 只读；分类走轻量查询 + TTL 缓存；热路径跳过 request log；复用 admin Supabase 客户端；AuthButton 避免 hydration 闪烁。
+
 ## 2.5.0
 
 ### Minor Changes
