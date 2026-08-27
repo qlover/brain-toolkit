@@ -1,6 +1,7 @@
 'use client';
 
 import { CodeBracketIcon } from '@heroicons/react/24/outline';
+import { headerIconButtonClass } from './headerChrome';
 import { LocaleLink } from '../components/LocaleLink';
 import { useUserAuth } from '../hook/useUserAuth';
 
@@ -24,9 +25,9 @@ export function DeveloperButton(props: {
       href="/developer/apps"
       title={developerTitle}
       locale={locale}
-      className="text-primary-text hover:text-primary-text-hover cursor-pointer text-lg transition-colors"
+      className={headerIconButtonClass}
     >
-      <CodeBracketIcon className="h-5 w-5 text-lg text-primary-text" />
+      <CodeBracketIcon className="h-5 w-5" />
     </LocaleLink>
   );
 }

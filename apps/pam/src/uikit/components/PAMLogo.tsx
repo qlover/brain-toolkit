@@ -1,4 +1,4 @@
-export function PAMLogo() {
+export function PAMLogo(props: { className?: string }) {
   return (
     <svg
       data-testid="PAMLogo"
@@ -6,6 +6,7 @@ export function PAMLogo() {
       viewBox="40 40 120 120"
       width="1em"
       height="1em"
+      className={props.className}
     >
       <defs>
         <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">

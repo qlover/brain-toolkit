@@ -49,36 +49,36 @@ export function RoutePageLayout({
   return (
     <div
       data-testid="AppRoutePage"
-      className="flex flex-col min-h-screen"
+      className="flex min-h-screen flex-col"
       {...props}
     >
       {topSlot}
       <header
         data-testid="BaseHeader"
-        className="h-16 bg-primary/80 backdrop-blur-md border-b border-primary-border sticky top-0 z-50"
+        className="sticky top-0 z-50 border-b border-primary-border/80 bg-primary/90 backdrop-blur-lg"
       >
         <div
           className={clsx(
-            'flex items-center h-full gap-2 px-3 sm:px-4 mx-auto max-w-7xl min-w-0',
+            'mx-auto flex h-14 max-w-7xl min-w-0 items-center gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8',
             showHeaderLeading ? 'justify-between' : 'justify-end',
             headerClassName
           )}
         >
           {showHeaderLeading && (
-            <div className="flex items-center min-w-0 flex-1 gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
               {showHeaderLogo && (
                 <LocaleLink
                   data-testid="BaseHeaderLogo"
                   title={tt.title}
                   href={headerHref}
                   locale={locale}
-                  className="flex items-center text-5xl text-brand gap-2 hover:opacity-80 transition-opacity min-w-0 shrink"
+                  className="group flex min-w-0 shrink-0 items-center gap-2 text-brand transition-opacity hover:opacity-80"
                 >
-                  <PAMLogo />
+                  <PAMLogo className="text-[1.75rem] sm:text-[2rem]" />
                   <span
                     data-testid="base-header-app-name"
                     className={clsx(
-                      'hidden sm:inline text-base sm:text-lg font-semibold truncate sm:max-w-none',
+                      'hidden truncate text-sm font-semibold tracking-tight sm:inline sm:text-base',
                       headerTitleClassName ?? 'text-primary-text'
                     )}
                   >
@@ -86,19 +86,26 @@ export function RoutePageLayout({
                   </span>
                 </LocaleLink>
               )}
-              {headerSubtitle && (
-                <span className="max-lg:hidden inline text-sm text-secondary-text border-l border-primary-border pl-3 shrink-0">
+
+              {headerSubtitle ? (
+                <span className="text-tertiary-text hidden shrink-0 font-mono text-[11px] lg:inline">
                   {headerSubtitle}
                 </span>
-              )}
+              ) : null}
+
               {headerNav}
             </div>
           )}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
-            {authSlot}
+
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+            {trailingSlot}
             <ThemeSwitcher key="theme-switcher" />
             {languageSlot}
-            {trailingSlot}
+            {authSlot ? (
+              <div className="ml-1 flex items-center border-l border-primary-border/70 pl-1.5 sm:ml-1.5 sm:pl-2">
+                {authSlot}
+              </div>
+            ) : null}
           </div>
         </div>
       </header>

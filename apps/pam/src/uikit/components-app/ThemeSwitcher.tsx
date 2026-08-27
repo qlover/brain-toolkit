@@ -13,7 +13,7 @@ import {
   MoonIcon as MoonSolidIcon,
   SunIcon as SunSolidIcon
 } from '@heroicons/react/24/solid';
-import { Button, Dropdown } from '@qlover/next-kit/client';
+import { Dropdown } from '@qlover/next-kit/client';
 import { useTheme } from '@wrksz/themes/client';
 import { clsx } from 'clsx';
 import { useEffect, useMemo } from 'react';
@@ -25,6 +25,7 @@ import {
 } from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
 import { themeConfig, type SupportedTheme } from '@config/theme';
+import { headerIconButtonClass } from './headerChrome';
 import { useIOC } from '../hook/useIOC';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 
@@ -138,14 +139,15 @@ export function ThemeSwitcher() {
         setTheme(key as SupportedTheme | 'system');
       }}
     >
-      <Button
-        variant="header"
+      <button
+        type="button"
         data-testid="ThemeSwitcher"
         disabled={!mounted}
         aria-label={themeAriaLabel}
+        className={headerIconButtonClass}
       >
-        <ThemeIcon className="h-4 w-4" aria-hidden />
-      </Button>
+        <ThemeIcon className="h-5 w-5" aria-hidden />
+      </button>
     </Dropdown>
   );
 }

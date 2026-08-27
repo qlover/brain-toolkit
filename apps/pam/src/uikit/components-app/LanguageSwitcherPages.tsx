@@ -3,13 +3,14 @@
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { LanguageIcon } from '@heroicons/react/24/outline';
 import { LocaleRouter } from '@qlover/corekit-bridge/url-helper';
-import { Button, Dropdown } from '@qlover/next-kit/client';
+import { Dropdown } from '@qlover/next-kit/client';
 import { useRouter } from 'next/router';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 import { localeQueryParam, useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
+import { headerIconButtonClass } from './headerChrome';
 
 /**
  * Language switcher for Pages Router routes (uses `next/router`).
@@ -70,17 +71,18 @@ export function LanguageSwitcherPages() {
       placement="bottom-end"
       onSelect={handleLanguageChange}
     >
-      <Button
-        variant="header"
+      <button
+        type="button"
         data-testid="LanguageSwitcher"
         // Gate on `mounted`, not `router.isReady`: isReady is often false on
         // SSG HTML and true on the first client render → disabled="" vs undefined.
         disabled={isPending || !mounted}
         aria-label={currentLocaleLabel}
+        title={currentLocaleLabel}
+        className={headerIconButtonClass}
       >
-        <LanguageIcon className="h-4 w-4 shrink-0" aria-hidden />
-        <span className="max-sm:hidden inline">{currentLocaleLabel}</span>
-      </Button>
+        <LanguageIcon className="h-5 w-5" aria-hidden />
+      </button>
     </Dropdown>
   );
 }
