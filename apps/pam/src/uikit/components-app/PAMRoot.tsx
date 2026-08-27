@@ -18,7 +18,6 @@ import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { I } from '@config/ioc-identifiter';
 import { mergePamCategories } from '@config/pamCategories';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
@@ -80,7 +79,6 @@ export function PAMRoot({
   } = useUserAuth();
   const router = useRouter();
 
-  const dialog = useIOC(I.DialogHandler);
   const pamFacade = useIOC(PAMFacade);
   const pamFacadeInfinite = useIOC(PAMFacadeInfinite);
   const pamFacadeStore = pamFacade.getFacadeStore();
@@ -286,15 +284,6 @@ export function PAMRoot({
         highlightCategory={categoryValue}
         isAuthenticated={isAuthenticated}
         isOwner={(data) => !!data.is_owner}
-        onDelete={(project) => {
-          if (!isAuthenticated) return;
-          dialog.confirm({
-            okType: 'danger',
-            title: tt.deleteProjectTitle,
-            content: tt.deleteProjectContent.replace('[name]', project.name),
-            onOk: () => pamFacade.deleteProject(project)
-          });
-        }}
       />
 
       <PAMLoadMoreTrigger

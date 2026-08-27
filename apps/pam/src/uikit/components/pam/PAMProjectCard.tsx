@@ -1,6 +1,5 @@
-import { TrashIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
@@ -26,9 +25,8 @@ interface PAMProjectCardProps {
   tt: PAMI18nInterface;
   project: PAMProjectCardModel;
   isOwner: boolean;
-  /** Guest: hide delete and readonly label. */
+  /** Guest: hide readonly label. */
   isAuthenticated?: boolean;
-  onDelete: (project: PAMProjectCardModel) => void;
   highlightKeyword?: string;
   highlightCategory?: string;
 }
@@ -38,7 +36,6 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   project,
   isOwner,
   isAuthenticated = false,
-  onDelete,
   highlightKeyword = '',
   highlightCategory = ''
 }) => {
@@ -47,6 +44,14 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   const avatarLetter = getPAMAvatarLetter(project.name);
   const stack = (project.stack || '').trim();
   const hasEnvs = envs.length > 0;
+  const previewImageUrl = (project.preview_image_url || '').trim();
+  const [previewImageFailed, setPreviewImageFailed] = useState(false);
+  const showPreviewImage = previewImageUrl.length > 0 && !previewImageFailed;
+
+  useEffect(() => {
+    setPreviewImageFailed(false);
+  }, [previewImageUrl]);
+
   const categoryActive = isCategoryHighlightActive(
     project.category,
     highlightCategory
@@ -139,6 +144,16 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
       data-testid="PAMProjectCard"
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-primary-border bg-secondary transition hover:border-brand hover:shadow-[0_0_0_1px_var(--fe-color-brand)]"
     >
+      {showPreviewImage ? (
+        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-elevated">
+          <img
+            src={previewImageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setPreviewImageFailed(true)}
+          />
+        </div>
+      ) : null}
       <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-2.5 sm:p-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
@@ -212,20 +227,9 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           </div>
         ) : null}
 
-        {isAuthenticated ? (
-          <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-primary-border pt-2.5">
-            {isOwner ? (
-              <button
-                type="button"
-                onClick={() => onDelete(project)}
-                className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
-              >
-                <TrashIcon className="h-3 w-3" />
-                {tt.delete}
-              </button>
-            ) : (
-              <span className="text-xs text-tertiary-text">{tt.readonly}</span>
-            )}
+        {isAuthenticated && !isOwner ? (
+          <div className="mt-auto border-t border-primary-border pt-2.5">
+            <span className="text-xs text-tertiary-text">{tt.readonly}</span>
           </div>
         ) : null}
       </div>

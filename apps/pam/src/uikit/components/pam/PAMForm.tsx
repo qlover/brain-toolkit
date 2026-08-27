@@ -69,6 +69,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       description: initialData?.description,
       stack: initialData?.stack,
       repo_url: initialData?.repo_url,
+      preview_image_url: initialData?.preview_image_url,
       category: initialData?.category,
       is_public: initialData?.is_public ?? PAMPublicType.private,
       [PAMProjectEnvKey]: initialData?.environments || []
@@ -94,6 +95,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       description: initialData?.description ?? '',
       stack: initialData?.stack ?? '',
       repo_url: initialData?.repo_url ?? '',
+      preview_image_url: initialData?.preview_image_url ?? '',
       category: initialData?.category ?? '',
       is_public: initialData?.is_public ?? PAMPublicType.private,
       environments: initialData?.environments || []
@@ -245,27 +247,44 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             </div>
             <div>
               <label className={pamFormLabelClass}>
-                {tt.labelCategory}
-                <span className="text-(--fe-color-error)">*</span>
+                {tt.labelPreviewImage}
               </label>
-              <PAMCategoryField
-                value={watch('category') ?? ''}
-                onChange={(next) => {
-                  setValue('category', next, { shouldValidate: true });
-                }}
-                extras={categories}
-                labels={{
-                  labelUnCategory: tt.labelUnCategory,
-                  categoryCustom: tt.categoryCustom,
-                  categoryCustomPlaceholder: tt.categoryCustomPlaceholder
-                }}
+              <input
+                {...register('preview_image_url')}
+                type="url"
+                placeholder={tt.placeholderPreviewImage}
+                className={pamFormFieldClass}
               />
-              {errors.category && (
+              {errors.preview_image_url && (
                 <div className="mt-1 text-xs text-(--fe-color-error)">
-                  {errors.category.message}
+                  {errors.preview_image_url.message}
                 </div>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className={pamFormLabelClass}>
+              {tt.labelCategory}
+              <span className="text-(--fe-color-error)">*</span>
+            </label>
+            <PAMCategoryField
+              value={watch('category') ?? ''}
+              onChange={(next) => {
+                setValue('category', next, { shouldValidate: true });
+              }}
+              extras={categories}
+              labels={{
+                labelUnCategory: tt.labelUnCategory,
+                categoryCustom: tt.categoryCustom,
+                categoryCustomPlaceholder: tt.categoryCustomPlaceholder
+              }}
+            />
+            {errors.category && (
+              <div className="mt-1 text-xs text-(--fe-color-error)">
+                {errors.category.message}
+              </div>
+            )}
           </div>
         </div>
 

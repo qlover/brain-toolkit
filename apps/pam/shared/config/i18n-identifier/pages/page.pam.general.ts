@@ -95,6 +95,30 @@ export const PAGE_PAM_GENERAL_PLACEHOLDER_REPO =
   'page_pam_general:placeholderRepo';
 
 /**
+ * @description Preview image label
+ * @localZh 封面预览图
+ * @localEn Cover preview image
+ */
+export const PAGE_PAM_GENERAL_LABEL_PREVIEW_IMAGE =
+  'page_pam_general:labelPreviewImage';
+
+/**
+ * @description Preview image placeholder
+ * @localZh https://example.com/cover.png
+ * @localEn https://example.com/cover.png
+ */
+export const PAGE_PAM_GENERAL_PLACEHOLDER_PREVIEW_IMAGE =
+  'page_pam_general:placeholderPreviewImage';
+
+/**
+ * @description Preview image settings description
+ * @localZh 可选的公开图片 URL，用于列表与卡片封面展示
+ * @localEn Optional public image URL for list and card cover display
+ */
+export const PAGE_PAM_GENERAL_DESC_PROJECT_PREVIEW_IMAGE =
+  'page_pam_general:descPreviewImage';
+
+/**
  * @description Category label
  * @localZh 分类
  * @localEn Category
@@ -282,3 +306,74 @@ export const PAGE_PAM_GENERAL_DELETE_TITLE = 'page_pam_general:deleteTitle';
  * @localEn Delete project "[name]"? This cannot be undone.
  */
 export const PAGE_PAM_GENERAL_DELETE_CONTENT = 'page_pam_general:deleteContent';
+
+/**
+ * @description Transfer project section title
+ * @localZh 转让项目
+ * @localEn Transfer project
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_ZONE_TITLE =
+  'page_pam_general:transferZoneTitle';
+
+/**
+ * @description Transfer project section description
+ * @localZh 将所有权转让给其他 PAM 用户（邮箱或用户 ID）。转让后你将失去管理权限。
+ * @localEn Transfer ownership to another PAM user (email or user ID). You will lose admin access.
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_ZONE_DESC =
+  'page_pam_general:transferZoneDesc';
+
+/**
+ * @description Transfer recipient email label
+ * @localZh 对方邮箱
+ * @localEn Recipient email
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_EMAIL_LABEL =
+  'page_pam_general:transferEmailLabel';
+
+/**
+ * @description Transfer recipient email placeholder
+ * @localZh user@example.com
+ * @localEn user@example.com
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_EMAIL_PLACEHOLDER =
+  'page_pam_general:transferEmailPlaceholder';
+
+/**
+ * @description Transfer recipient user id label (optional)
+ * @localZh 或用户 ID（UUID）
+ * @localEn Or user ID (UUID)
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_USER_ID_LABEL =
+  'page_pam_general:transferUserIdLabel';
+
+/**
+ * @description Transfer submit button
+ * @localZh 转让
+ * @localEn Transfer
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_SUBMIT =
+  'page_pam_general:transferSubmit';
+
+/**
+ * @description Transfer confirm title
+ * @localZh 确认转让项目？
+ * @localEn Transfer this project?
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_TITLE = 'page_pam_general:transferTitle';
+
+/**
+ * @description Transfer confirm body; `[name]` is replaced
+ * @localZh 确定将「[name]」转让给对方吗？此操作不可撤销。
+ * @localEn Transfer “[name]” to the recipient? This cannot be undone.
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_CONTENT =
+  'page_pam_general:transferContent';
+
+/**
+ * @description Transfer success toast
+ * @localZh 项目已转让
+ * @localEn Project transferred
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_SUCCESS =
+  'page_pam_general:transferSuccess';
