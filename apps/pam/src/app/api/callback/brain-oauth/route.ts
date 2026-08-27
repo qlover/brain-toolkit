@@ -1,12 +1,73 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { NextResponse } from 'next/server';
 import { API_CALLBACK_BRAIN_OAUTH } from '@config/apiRoutes';
+import { i18nConfig, type LocaleType } from '@config/i18n';
+import {
+  localeFromPathname,
+  ROUTE_LOGIN,
+  withLocalePrefix
+} from '@config/route';
 import { UserController } from '@server/controllers/UserController';
 import { NextApiServer } from '@server/NextApiServer';
 import { ServerConfig } from '@server/ServerConfig';
 import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 
 const PKCE_COOKIE = 'pam_brain_oauth_pkce';
+
+/**
+ * Prefer PKCE locale / returnTo path, then NEXT_LOCALE cookie, then Accept-Language.
+ */
+function resolveLoginLocale(request: Request): LocaleType {
+  const cookieHeader = request.headers.get('cookie') || '';
+
+  const pkceRaw = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${PKCE_COOKIE}=([^;]+)`)
+  )?.[1];
+  if (pkceRaw) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(pkceRaw)) as {
+        locale?: string;
+        returnTo?: string;
+      };
+      if (
+        typeof parsed.locale === 'string' &&
+        (i18nConfig.supportedLngs as readonly string[]).includes(parsed.locale)
+      ) {
+        return parsed.locale as LocaleType;
+      }
+      if (typeof parsed.returnTo === 'string') {
+        return localeFromPathname(parsed.returnTo);
+      }
+    } catch {
+      // ignore malformed PKCE cookie
+    }
+  }
+
+  const fromCookie = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${i18nConfig.storageKey}=([^;]+)`)
+  )?.[1];
+  if (fromCookie) {
+    const value = decodeURIComponent(fromCookie);
+    if ((i18nConfig.supportedLngs as readonly string[]).includes(value)) {
+      return value as LocaleType;
+    }
+  }
+
+  const accept = request.headers.get('accept-language')?.toLowerCase() || '';
+  if (accept.includes('zh')) {
+    return 'zh';
+  }
+
+  return i18nConfig.fallbackLng;
+}
+
+function loginErrorRedirect(request: Request, message: string): NextResponse {
+  const { origin } = new URL(request.url);
+  const locale = resolveLoginLocale(request);
+  const loginUrl = new URL(withLocalePrefix(ROUTE_LOGIN, locale), origin);
+  loginUrl.searchParams.set('error', message);
+  return NextResponse.redirect(loginUrl.toString());
+}
 
 /**
  * Brain OAuth authorization-code callback (PKCE).
@@ -37,9 +98,7 @@ export async function GET(request: Request) {
       !result.data.sessionCookie
     ) {
       const message = result.message?.trim() || 'Brain OAuth callback failed';
-      const loginUrl = new URL('/zh/auth/login', origin);
-      loginUrl.searchParams.set('error', message);
-      return NextResponse.redirect(loginUrl.toString());
+      return loginErrorRedirect(request, message);
     }
 
     const { redirectUrl, sessionCookie } = result.data;
@@ -67,8 +126,6 @@ export async function GET(request: Request) {
         : error instanceof Error
           ? error.message
           : 'Brain OAuth callback failed';
-    const loginUrl = new URL('/zh/auth/login', origin);
-    loginUrl.searchParams.set('error', message);
-    return NextResponse.redirect(loginUrl.toString());
+    return loginErrorRedirect(request, message);
   }
 }

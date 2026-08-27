@@ -30,6 +30,8 @@ export const routing = defineRouting({
 
   localePrefix: useLocaleRoutes ? 'always' : 'as-needed',
 
+  localeDetection: i18nConfig.localeDetection,
+
   pathnames: {
     '/': {
       en: '/',

@@ -243,8 +243,39 @@ export function apiClientRotateSecret(clientId: string): string {
   );
 }
 
+/**
+ * Reads a supported locale from the first path segment, else fallback.
+ *
+ * @param pathname - Pathname that may include a locale prefix
+ */
+export function localeFromPathname(pathname: string): LocaleType {
+  const match = pathname.match(/^\/([^/]+)(?=\/|$)/);
+  const seg = match?.[1];
+  if (seg && (i18nConfig.supportedLngs as readonly string[]).includes(seg)) {
+    return seg as LocaleType;
+  }
+  return i18nConfig.fallbackLng;
+}
+
+/**
+ * Prefixes a locale-agnostic route with `/{locale}`.
+ *
+ * @param route - Path starting with `/` (e.g. `/auth/login`)
+ * @param locale - Supported locale
+ */
+export function withLocalePrefix(route: string, locale: LocaleType): string {
+  const path = route.startsWith('/') ? route : `/${route}`;
+  return `/${locale}${path}`;
+}
+
+/**
+ * Builds an absolute app path for the given locale (leading `/`).
+ *
+ * @param route - Locale-agnostic route (e.g. `/callback/email-login`)
+ * @param locale - Supported locale
+ */
 export function localePage(route: string, locale: LocaleType): string {
-  return locale + route;
+  return withLocalePrefix(route, locale);
 }
 
 /**
@@ -360,10 +391,12 @@ export function redirectToPath(
   targetRoute: string = ROUTE_LOGIN
 ): NextURL {
   const pathnmae2 = pathnmae || request.nextUrl.pathname;
+  const locale = localeFromPathname(pathnmae2);
 
   const url = request.nextUrl.clone();
   const returnPath = `${pathnmae2}${request.nextUrl.search}`;
-  url.pathname = targetRoute;
+  // Keep current UI language on the login (or target) page.
+  url.pathname = withLocalePrefix(targetRoute, locale);
   url.search = `redirect=${encodeURIComponent(returnPath)}`;
   return url;
 }
