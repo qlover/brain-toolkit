@@ -2,7 +2,7 @@
 
 import { buttonClassName, Dropdown } from '@qlover/next-kit/client';
 import { useCallback, useMemo } from 'react';
-import { Link } from '@/i18n/routing';
+import { LocaleLink } from '@/uikit/components/LocaleLink';
 import {
   COMMON_LOGOUT_DIALOG_CONTENT,
   COMMON_LOGOUT_DIALOG_TITLE,
@@ -126,13 +126,13 @@ export function AuthButtonUI(props: {
 
   return (
     <div data-testid="AuthButton" data-auth={hasAuth}>
-      <Link
+      <LocaleLink
         href={ROUTE_LOGIN}
         className={linkPrimary}
         title={t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
       >
         {t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
-      </Link>
+      </LocaleLink>
     </div>
   );
 }
