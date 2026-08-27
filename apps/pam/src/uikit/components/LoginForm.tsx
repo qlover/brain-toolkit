@@ -10,21 +10,24 @@ import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_HOME, ROUTE_REGISTER } from '@config/route';
+import { ROUTE_HOME } from '@config/route';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 
 const inputClass =
   'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-xl border bg-bg-container px-4 py-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
 
-export function LoginForm(props: { tt: LoginI18nInterface }) {
-  const { tt } = props;
+export function LoginForm(props: {
+  tt: LoginI18nInterface;
+  email: string;
+  onEmailChange: (email: string) => void;
+}) {
+  const { tt, email, onEmailChange } = props;
   const t = useWarnTranslations();
   const userGateway = useIOC(AppUserGateway);
   const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
   const formValidator = useMemo(() => new LoginValidator(), []);
   const { returnTo } = useReturnTo({ returnToKey: URLParamsKeys.returnTo });
 
-  const [email, setEmail] = useState(appConfig.testLoginEmail);
   const [password, setPassword] = useState(appConfig.testLoginPassword);
   const [loading, setLoading] = useState(false);
   const [success, _setSuccess] = useState(false);
@@ -112,7 +115,7 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
           placeholder={tt.email}
           value={email}
           onChange={(e) => {
-            setEmail(e.target.value);
+            onEmailChange(e.target.value);
             if (fieldErrors.email)
               setFieldErrors((prev) => ({ ...prev, email: undefined }));
           }}
@@ -193,17 +196,6 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
           tt.button
         )}
       </button>
-
-      <p className="text-secondary-text mt-6 text-center text-sm">
-        {tt.noAccount}{' '}
-        <LocaleLink
-          href={ROUTE_REGISTER}
-          title={tt.createAccountTitle}
-          className="text-brand font-medium hover:underline"
-        >
-          {tt.createAccount}
-        </LocaleLink>
-      </p>
     </form>
   );
 }

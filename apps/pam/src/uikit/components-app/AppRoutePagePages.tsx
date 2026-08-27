@@ -5,9 +5,9 @@ import { Suspense } from 'react';
 import { AdminButton } from './AdminButton';
 import { AppBridgePages } from './AppBridgePages';
 import { AppHeaderNavPages } from './AppHeaderNavPages';
+import { AuthButton } from './AuthButton';
 import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcherPages } from './LanguageSwitcherPages';
-import { LogoutButton } from './LogoutButton';
 import { RoutePageLayout } from './RoutePageLayout';
 import type { AppRoutePageProps } from './AppRoutePage';
 
@@ -41,10 +41,9 @@ export function AppRoutePagePages({
       topSlot={<AppBridgePages />}
       authSlot={
         showAuthButton ? (
-          <LogoutButton
-            key="logout-button"
-            showLabel={authButtonShowLogoutLabel}
-          />
+          <Suspense key="auth-button">
+            <AuthButton showLogoutLabel={authButtonShowLogoutLabel} />
+          </Suspense>
         ) : undefined
       }
       languageSlot={<LanguageSwitcherPages key="language-switcher" />}

@@ -68,6 +68,8 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<LoginTab>('email');
   const [emailMode, setEmailMode] = useState<EmailMode>('otp');
+  const [email, setEmail] = useState(appConfig.testLoginEmail ?? '');
+  const [emailLinkSent, setEmailLinkSent] = useState(false);
   const [providerLogining, setProviderLogining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -254,20 +256,27 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
       {tab === 'email' &&
         (emailMode === 'otp' ? (
           <>
-            <EmailOTPForm tt={tt} />
-            <p className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => setEmailMode('password')}
-                className="text-brand text-sm hover:underline"
-              >
-                {tt.switchToPassword}
-              </button>
-            </p>
+            <EmailOTPForm
+              tt={tt}
+              email={email}
+              onEmailChange={setEmail}
+              onSentChange={setEmailLinkSent}
+            />
+            {!emailLinkSent && (
+              <p className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setEmailMode('password')}
+                  className="text-brand text-sm hover:underline"
+                >
+                  {tt.switchToPassword}
+                </button>
+              </p>
+            )}
           </>
         ) : (
           <>
-            <LoginForm tt={tt} />
+            <LoginForm tt={tt} email={email} onEmailChange={setEmail} />
             <p className="mt-4 text-center">
               <button
                 type="button"

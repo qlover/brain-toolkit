@@ -1,95 +1,22 @@
-import { PageI18nProvider } from '@qlover/next-kit/client';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { FeatureItem } from '@/uikit/components/FeatureItem';
-import { RegisterForm } from '@/uikit/components/RegisterForm';
-import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { i18nConfig } from '@config/i18n';
-import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
-import { register18n } from '@config/i18n-mapping/register18n';
+import { ROUTE_LOGIN } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
-import {
-  AppPageRouteParams,
-  type PageParamsType
-} from '@server/render/AppPageRouteParams';
-import { getI18nInterface, getLocale } from '@server/render/pageRouteParams';
-import type { Metadata } from 'next';
+import type { PageParamsType } from '@server/render/AppPageRouteParams';
+import { getLocale } from '@server/render/pageRouteParams';
 
-// Generate static params for all supported locales (used for SSG)
 export async function generateStaticParams() {
-  // Return one entry for each supported locale
   return i18nConfig.supportedLngs.map((locale) => ({ locale }));
 }
 
-// Allow Next.js to statically generate this page if possible (default behavior)
-// Note: 'auto' is not a valid value in Next.js 15, removed to use default behavior
-
-// Optional: Use revalidate if you want ISR (Incremental Static Regeneration)
-// export const revalidate = 3600; // Rebuild every hour (optional)
-
-// Generate localized SEO metadata per locale (Next.js 15+ best practice)
-export async function generateMetadata({
-  params
-}: {
-  params: Promise<PageParamsType>;
-}): Promise<Metadata> {
-  const pageParams = new AppPageRouteParams(await params);
-
-  return await pageParams.getI18nInterface(register18n);
-}
-
-export default async function LoginPage({ params }: PageParamsProps) {
-  if (!params) {
-    return notFound();
-  }
-
-  const resolvedParams = await params;
+/**
+ * Registration is no longer offered — email magic-link / password login
+ * covers account access. Keep the route so old links land on login.
+ */
+export default async function RegisterPage({ params }: PageParamsProps) {
+  const resolvedParams = (await params) as PageParamsType;
   const locale = getLocale(resolvedParams);
-  setRequestLocale(locale); // 建议加上
-
-  const tt = await getI18nInterface(locale, {
-    ...register18n,
-    adminTitle: COMMON_ADMIN_TITLE
-  });
-
-  return (
-    <PageI18nProvider value={tt}>
-      <AppRoutePage
-        data-testid="AppRoute-RegisterPage"
-        tt={{
-          title: tt.title,
-          adminTitle: tt.adminTitle
-        }}
-        showHeaderNav={false}
-        showAuthButton={false}
-        headerHref=""
-        mainProps={{
-          className: 'text-xs1 bg-primary flex min-h-screen'
-        }}
-      >
-        <div className="max-lg:hidden flex bg-secondary lg:w-1/2 p-12 flex-col">
-          <h1 className="text-4xl font-bold text-primary-text mb-4">
-            {tt.welcome}
-          </h1>
-          <p className="text-secondary-text text-lg mb-8">{tt.subtitle}</p>
-          <div className="space-y-4">
-            <FeatureItem icon="🎯" text={tt.feature_ai_paths} />
-            <FeatureItem icon="🎯" text={tt.feature_smart_recommendations} />
-            <FeatureItem icon="📊" text={tt.feature_progress_tracking} />
-          </div>
-        </div>
-
-        <div className="w-full lg:w-1/2 p-8 sm:p-12 flex items-center justify-center">
-          <div className="w-full max-w-[420px]">
-            <h2 className="text-2xl font-semibold mb-2 text-primary-text">
-              {tt.title}
-            </h2>
-            <p className="text-secondary-text mb-8">{tt.subtitle}</p>
-
-            <RegisterForm tt={tt} />
-          </div>
-        </div>
-      </AppRoutePage>
-    </PageI18nProvider>
-  );
+  setRequestLocale(locale);
+  redirect(`/${locale}${ROUTE_LOGIN}`);
 }
