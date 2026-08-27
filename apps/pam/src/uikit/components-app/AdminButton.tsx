@@ -2,6 +2,7 @@
 
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { ROUTE_ADMIN } from '@config/route';
+import { headerIconButtonClass } from './headerChrome';
 import { LocaleLink } from '../components/LocaleLink';
 import { useUserAuth } from '../hook/useUserAuth';
 
@@ -24,9 +25,9 @@ export function AdminButton(props: { adminTitle: string; locale?: string }) {
       href={ROUTE_ADMIN}
       title={adminTitle}
       locale={locale}
-      className="text-primary-text hover:text-primary-text-hover cursor-pointer text-lg transition-colors"
+      className={headerIconButtonClass}
     >
-      <UserGroupIcon className="h-5 w-5 text-lg text-primary-text" />
+      <UserGroupIcon className="h-5 w-5" />
     </LocaleLink>
   );
 }

@@ -84,6 +84,10 @@ export const loginI18n = Object.freeze({
   emailOtpCountdownSuffix: i18nKeys.PAGE_LOGIN_EMAIL_OTP_COUNTDOWN_SUFFIX,
   emailOtpResend: i18nKeys.PAGE_LOGIN_EMAIL_OTP_RESEND,
   emailOtpSuccess: i18nKeys.PAGE_LOGIN_EMAIL_OTP_SUCCESS,
+  emailOtpSentTitle: i18nKeys.PAGE_LOGIN_EMAIL_OTP_SENT_TITLE,
+  emailOtpSentHint: i18nKeys.PAGE_LOGIN_EMAIL_OTP_SENT_HINT,
+  emailOtpSentSpam: i18nKeys.PAGE_LOGIN_EMAIL_OTP_SENT_SPAM,
+  emailOtpChangeEmail: i18nKeys.PAGE_LOGIN_EMAIL_OTP_CHANGE_EMAIL,
 
   // switch between modes
   switchToOtp: i18nKeys.PAGE_LOGIN_SWITCH_TO_OTP,

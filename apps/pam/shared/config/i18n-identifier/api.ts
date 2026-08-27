@@ -219,3 +219,10 @@ export const API_OTP_SIGN_INVALID = 'api:otp_sign_invalid';
  * @localEn OTP verification requires a valid phone/email and token
  */
 export const API_OTP_VERIFY_INVALID = 'api:otp_verify_invalid';
+
+/**
+ * @description OTP / magic-link send rate limited (per IP cooldown)
+ * @localZh 发送过于频繁，请稍后再试
+ * @localEn Too many send attempts. Please try again later.
+ */
+export const API_OTP_SEND_RATE_LIMITED = 'api:otp_send_rate_limited';

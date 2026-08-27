@@ -29,6 +29,8 @@ import { ServerConfig } from '@server/ServerConfig';
 import { BrainOAuthLoginService } from '@server/services/BrainOAuthLoginService';
 import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 import { OAuthUserService } from '@server/services/OAuthUserService';
+import { OtpSendRateLimitService } from '@server/services/OtpSendRateLimitService';
+import { getClientIpFromRequest } from '@server/utils/getClientIpFromRequest';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
 import type {
   UserLoginContext,
@@ -38,6 +40,7 @@ import type {
   ResourceSearchParams,
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
+import type { NextRequest } from 'next/server';
 
 @injectable()
 export class UserController {
@@ -52,6 +55,8 @@ export class UserController {
     protected brainOAuthLoginService: BrainOAuthLoginService,
     @inject(RequestLogsRepository)
     protected requestLogsRepository: RequestLogsRepository,
+    @inject(OtpSendRateLimitService)
+    protected otpSendRateLimit: OtpSendRateLimitService,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer) base64Serializer: Base64Serializer
   ) {
@@ -142,14 +147,23 @@ export class UserController {
     return await this.requestLogsRepository.search(criteria);
   }
 
-  public signWithOtp(body: unknown): Promise<SignOtpResult> {
+  public async signWithOtp(
+    body: unknown,
+    request?: NextRequest
+  ): Promise<SignOtpResult> {
     const phoneResult = signWithPhoneOtpSchema.safeParse(body);
     if (phoneResult.success) {
+      await this.otpSendRateLimit.assertCanSend(
+        request ? getClientIpFromRequest(request) : 'unknown'
+      );
       return this.userService.signWithOtp(phoneResult.data);
     }
 
     const emailResult = signWithEmailOtpSchema.safeParse(body);
     if (emailResult.success) {
+      await this.otpSendRateLimit.assertCanSend(
+        request ? getClientIpFromRequest(request) : 'unknown'
+      );
       return this.userService.signWithOtp(emailResult.data);
     }
 

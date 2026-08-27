@@ -352,16 +352,42 @@ export const PAGE_LOGIN_EMAIL_OTP_COUNTDOWN_SUFFIX =
   'page_login:email_otp_countdown_suffix';
 /**
  * @description Email OTP resend button
- * @localZh 重新发送验证码
- * @localEn Resend Code
+ * @localZh 重新发送
+ * @localEn Resend email
  */
 export const PAGE_LOGIN_EMAIL_OTP_RESEND = 'page_login:email_otp_resend';
 /**
- * @description Email OTP success message
- * @localZh 登录成功，正在跳转...
- * @localEn Login successful, redirecting...
+ * @description Email magic link sent — short status (legacy key)
+ * @localZh 登录邮件已发送，请查收邮箱
+ * @localEn Sign-in email sent — check your inbox
  */
 export const PAGE_LOGIN_EMAIL_OTP_SUCCESS = 'page_login:email_otp_success';
+/**
+ * @description Email magic link sent — success title
+ * @localZh 邮件已发送
+ * @localEn Check your inbox
+ */
+export const PAGE_LOGIN_EMAIL_OTP_SENT_TITLE =
+  'page_login:email_otp_sent_title';
+/**
+ * @description Email magic link sent — instruction (email shown separately in UI)
+ * @localZh 登录链接已发送至下方邮箱，打开邮件点击链接即可登录。
+ * @localEn A sign-in link was sent to the email below. Open it and click the link to continue.
+ */
+export const PAGE_LOGIN_EMAIL_OTP_SENT_HINT = 'page_login:email_otp_sent_hint';
+/**
+ * @description Email magic link sent — spam folder tip
+ * @localZh 未收到请查垃圾邮件，或重新发送。
+ * @localEn Didn't get it? Check spam or resend.
+ */
+export const PAGE_LOGIN_EMAIL_OTP_SENT_SPAM = 'page_login:email_otp_sent_spam';
+/**
+ * @description Change email after magic link sent
+ * @localZh 更换邮箱
+ * @localEn Use a different email
+ */
+export const PAGE_LOGIN_EMAIL_OTP_CHANGE_EMAIL =
+  'page_login:email_otp_change_email';
 /**
  * @description Switch to OTP login link text
  * @localZh 使用验证码登录

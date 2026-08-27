@@ -7,7 +7,7 @@ import { useUserAuth } from '../hook/useUserAuth';
 const skeleton = (
   <div
     data-testid="AuthButton"
-    className="h-8 w-10 sm:h-9 sm:w-16 animate-pulse rounded-lg bg-elevated border border-primary-border/60"
+    className="h-9 w-9 animate-pulse rounded-full bg-elevated"
     aria-hidden
   />
 );
@@ -24,7 +24,7 @@ export function AuthButton(props: {
   showLogoutLabel?: boolean;
 }) {
   const { loginOnly = false, showLogoutLabel = false } = props;
-  const { success, loading } = useUserAuth();
+  const { success, loading, user } = useUserAuth();
 
   // Keep the skeleton until after hydration so the first client render
   // matches the server-rendered HTML exactly.
@@ -40,6 +40,7 @@ export function AuthButton(props: {
   return (
     <AuthButtonUI
       hasAuth={success}
+      userEmail={user?.email}
       loginOnly={loginOnly}
       showLogoutLabel={showLogoutLabel}
     />
