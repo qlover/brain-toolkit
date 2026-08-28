@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckIcon } from '@heroicons/react/20/solid';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
@@ -17,8 +18,11 @@ export type PAMProjectTransferPickerProps = {
   loadingText: string;
   emptyText: string;
   confirmText: string;
+  /** Confirm body shown when a recipient is selected; `[name]` / `[email]` replaced. */
+  confirmHintTemplate?: string;
+  projectName?: string;
   transferring: boolean;
-  onConfirm: (user: PAMAuthUserSummary) => void;
+  onConfirm: (user: PAMAuthUserSummary) => void | Promise<void>;
   /** Optional prefetched empty-query list (hover / focus). */
   initialUsers?: PAMAuthUserSummary[];
 };
@@ -89,6 +93,8 @@ export function PAMProjectTransferPicker({
   loadingText,
   emptyText,
   confirmText,
+  confirmHintTemplate,
+  projectName = '',
   transferring,
   onConfirm,
   initialUsers
@@ -101,6 +107,7 @@ export function PAMProjectTransferPicker({
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PAMAuthUserSummary | null>(null);
   const [openedOnce, setOpenedOnce] = useState(0);
+  const [confirmPending, setConfirmPending] = useState(false);
   const requestIdRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const hasUsersRef = useRef(users.length > 0);
@@ -111,6 +118,7 @@ export function PAMProjectTransferPicker({
 
   useEffect(() => {
     if (!open) {
+      setConfirmPending(false);
       return;
     }
     setQuery('');
@@ -186,40 +194,72 @@ export function PAMProjectTransferPicker({
     };
   }, [query, open, openedOnce, pamApi]);
 
+  const confirmHint =
+    selected && confirmHintTemplate
+      ? confirmHintTemplate
+          .replace('[name]', projectName)
+          .replace('[email]', selected.email || selected.id)
+      : '';
+  const busy = transferring || confirmPending;
+
   return (
     <DeveloperOverlayModal
       open={open}
       title={title}
-      onClose={transferring ? () => undefined : onClose}
-      closeOnBackdrop={!transferring}
+      onClose={busy ? () => undefined : onClose}
+      closeOnBackdrop={!busy}
       maxWidthClass="max-w-lg"
       footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            data-testid="PAMProjectTransferConfirm"
-            disabled={!selected || transferring}
-            onClick={() => {
-              if (selected) onConfirm(selected);
-            }}
-            className={clsx(
-              'inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold transition touch-manipulation sm:w-auto sm:min-w-28',
-              'bg-brand text-on-brand hover:bg-brand-hover',
-              'disabled:cursor-not-allowed disabled:opacity-50'
-            )}
-          >
-            {confirmText}
-          </button>
+        <div className="flex w-full flex-col gap-3">
+          {confirmHint ? (
+            <p className="text-sm leading-snug text-secondary-text">
+              {confirmHint}
+            </p>
+          ) : null}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              data-testid="PAMProjectTransferConfirm"
+              disabled={!selected || busy}
+              onClick={() => {
+                if (!selected || busy) return;
+                setConfirmPending(true);
+                void Promise.resolve(onConfirm(selected)).finally(() => {
+                  setConfirmPending(false);
+                });
+              }}
+              className={clsx(
+                'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition touch-manipulation sm:w-auto sm:min-w-28',
+                'bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600',
+                'disabled:cursor-not-allowed disabled:opacity-50'
+              )}
+            >
+              {busy ? (
+                <>
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" aria-hidden />
+                  {confirmText}
+                </>
+              ) : (
+                confirmText
+              )}
+            </button>
+          </div>
         </div>
       }
     >
-      <div className="flex flex-col gap-3">
+      <div className="relative flex flex-col gap-3">
+        {busy ? (
+          <div
+            className="absolute inset-0 z-10 rounded-xl bg-secondary/60"
+            aria-hidden
+          />
+        ) : null}
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={searchPlaceholder}
-          disabled={transferring}
+          disabled={busy}
           className={clsx(pamFormFieldClass, 'min-h-11')}
           data-testid="PAMProjectTransferSearch"
           autoFocus
@@ -251,7 +291,7 @@ export function PAMProjectTransferPicker({
                   <li data-testid="PAMProjectTransferPicker" key={user.id}>
                     <button
                       type="button"
-                      disabled={transferring}
+                      disabled={busy}
                       onClick={() => setSelected(user)}
                       className={clsx(
                         'flex w-full items-center gap-3 px-3 py-3 text-left transition touch-manipulation',

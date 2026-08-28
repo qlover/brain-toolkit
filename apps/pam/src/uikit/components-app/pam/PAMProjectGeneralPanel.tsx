@@ -5,11 +5,12 @@ import {
   LockClosedIcon,
   LockOpenIcon
 } from '@heroicons/react/24/outline';
-import { usePageI18nMapping } from '@qlover/next-kit/client';
+import { useStore, usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { PAMApi } from '@/impls/appApi/PAMApi';
+import { PAMFacade } from '@/impls/PAMfacade';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
@@ -93,6 +94,7 @@ export function PAMProjectGeneralPanel({
   const tt = usePageI18nMapping<PAMGeneralI18nInterface>();
   const router = useRouter();
   const pamApi = useIOC(PAMApi);
+  const pamFacade = useIOC(PAMFacade);
   const dialogHandler = useIOC(I.DialogHandler);
   const {
     project,
@@ -116,13 +118,16 @@ export function PAMProjectGeneralPanel({
   const [description, setDescription] = useState('');
   const [stack, setStack] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
-  const [categories, setCategories] = useState<string[]>([]);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferUsersWarm, setTransferUsersWarm] = useState<
     PAMAuthUserSummary[] | undefined
   >(undefined);
   const [capturingPreview, setCapturingPreview] = useState(false);
+  const categories = useStore(
+    pamFacade.getFacadeStore(),
+    (state) => state.categories
+  );
 
   const warmTransferUsers = () => {
     void prefetchTransferUsers(pamApi)
@@ -145,25 +150,6 @@ export function PAMProjectGeneralPanel({
     });
   }, [project]);
 
-  useEffect(() => {
-    let cancelled = false;
-    void pamApi
-      .listCategories()
-      .then((list) => {
-        if (!cancelled) {
-          setCategories(list);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCategories([]);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [pamApi]);
-
   const saveField = async (
     field: GeneralFieldKeyType,
     patch: Partial<PAMProjectUpdate>
@@ -183,10 +169,7 @@ export function PAMProjectGeneralPanel({
       setProject(saved);
       dialogHandler.success(tt.settingsSave);
       if (field === 'category') {
-        void pamApi
-          .listCategories()
-          .then(setCategories)
-          .catch(() => undefined);
+        void pamFacade.pullCategories({ force: true });
       }
       if (field === 'slug' && saved.slug && saved.slug !== previousSlug) {
         router.replace({
@@ -578,30 +561,24 @@ export function PAMProjectGeneralPanel({
             loadingText={tt.transferLoading}
             emptyText={tt.transferEmpty}
             confirmText={tt.transferSubmit}
+            confirmHintTemplate={tt.transferContent}
+            projectName={project?.name ?? ''}
             transferring={transferring}
             initialUsers={transferUsersWarm}
-            onConfirm={(user: PAMAuthUserSummary) => {
+            onConfirm={async (user: PAMAuthUserSummary) => {
               if (!project || !projectId) return;
-              dialogHandler.confirm({
-                okType: 'danger',
-                title: tt.transferTitle,
-                content: tt.transferContent
-                  .replace('[name]', project.name)
-                  .replace('[email]', user.email || user.id),
-                onOk: async () => {
-                  setTransferring(true);
-                  try {
-                    await pamApi.transferProject(projectId, {
-                      user_id: user.id
-                    });
-                    setTransferOpen(false);
-                    dialogHandler.success(tt.transferSuccess);
-                    router.replace(ROUTE_PROJECTS);
-                  } finally {
-                    setTransferring(false);
-                  }
-                }
-              });
+              setTransferring(true);
+              try {
+                await pamApi.transferProject(projectId, {
+                  user_id: user.id
+                });
+                setTransferOpen(false);
+                dialogHandler.success(tt.transferSuccess);
+                void pamFacade.invalidateHomeProjectList();
+                router.replace(ROUTE_PROJECTS);
+              } finally {
+                setTransferring(false);
+              }
             }}
           />
         </PAMSettingsCard>

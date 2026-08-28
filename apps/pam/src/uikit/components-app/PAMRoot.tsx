@@ -103,8 +103,12 @@ export function PAMRoot({
   const resultTotal = useStore(pamFacadeStore, (state) => {
     const apiTotal = state.result?.total;
     const loaded = state.projects?.length ?? 0;
+    const hasMore = state.result?.hasMore;
     // Keyword/join search can return items while PostgREST count is null→0.
     if (typeof apiTotal === 'number' && apiTotal > 0) {
+      if (hasMore === false && loaded > 0 && apiTotal > loaded) {
+        return loaded;
+      }
       return apiTotal;
     }
     return loaded;
@@ -150,14 +154,16 @@ export function PAMRoot({
     if (authLoading) {
       return;
     }
-    void pamFacade.ensureHomeProjectList({
-      initialList,
-      userId: user?.id ?? null
-    });
-    // Soft-refresh so private-project categories appear after login.
-    if (user?.id) {
-      void pamFacade.pullCategories();
-    }
+    void pamFacade
+      .ensureHomeProjectList({
+        initialList,
+        userId: user?.id ?? null
+      })
+      .then(() => {
+        if (user?.id) {
+          void pamFacade.pullCategories();
+        }
+      });
   }, [pamFacade, initialList, authLoading, user?.id]);
 
   useStrictEffect(() => {
@@ -344,7 +350,7 @@ export function PAMRoot({
                 pathname: ROUTE_PROJECT_GENERAL,
                 params: { projectId: result.data.slug }
               });
-              void pamFacade.pullCategories();
+              void pamFacade.pullCategories({ force: true });
             }
           }}
         />
