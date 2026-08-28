@@ -9,7 +9,6 @@ import {
   GatewayResult
 } from '@qlover/corekit-bridge';
 import { KeyStorage, type StorageInterface } from '@qlover/fe-corekit/storage';
-import { cloneDeep } from 'lodash-es';
 import {
   PAMViewMode,
   PAMViewModeType,
@@ -19,6 +18,13 @@ import {
 import { inject, injectable } from '@shared/container';
 import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
+import {
+  buildPamListSort,
+  PAMListSortBy,
+  PAMListSortOrder,
+  type PAMListSortByType,
+  type PAMListSortOrderType
+} from '@config/pamListSort';
 import type {
   SearchPAMProject,
   PAMSearchParams,
@@ -51,11 +57,7 @@ function defaultFacadeState(): PAMFacadeStateInterface<SearchPAMProject> {
     searchParams: {
       page: defaultSearchParams.page,
       pageSize: defaultSearchParams.pageSize,
-      sort: [
-        { orderBy: 'is_public', order: 'desc' },
-        ...cloneDeep(defaultSearchParams.sort),
-        { orderBy: 'id', order: 'desc' }
-      ]
+      sort: buildPamListSort(PAMListSortBy.CreatedAt)
     },
     projects: [],
     viewMode: PAMViewMode.Compact,
@@ -455,6 +457,21 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       resetResult: false,
       projectsStrategy: ProjectsStrategy.Replace,
       filters: this.mergeListFilters({ visibility: value })
+    });
+  }
+
+  /**
+   * @override
+   */
+  public async searchProjectWithSort(
+    sortBy: PAMListSortByType,
+    sortOrder: PAMListSortOrderType = PAMListSortOrder.Desc
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    return this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace,
+      sort: buildPamListSort(sortBy, sortOrder)
     });
   }
 

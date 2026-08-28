@@ -56,6 +56,55 @@ export const PAGE_PAM_ALL_VISIBILITY = 'page_pam:allVisibility';
 export const PAGE_PAM_LABEL_VISIBILITY = 'page_pam:labelVisibility';
 
 /**
+ * @description Sort filter group aria label
+ * @localZh 排序
+ * @localEn Sort
+ */
+export const PAGE_PAM_LABEL_SORT = 'page_pam:labelSort';
+
+/**
+ * @description Sort by created time (newest first)
+ * @localZh 创建时间
+ * @localEn Created
+ */
+export const PAGE_PAM_SORT_BY_CREATED = 'page_pam:sortByCreated';
+
+/**
+ * @description Sort by last updated time (newest first)
+ * @localZh 更新时间
+ * @localEn Updated
+ */
+export const PAGE_PAM_SORT_BY_UPDATED = 'page_pam:sortByUpdated';
+
+/**
+ * @description Sort direction descending
+ * @localZh 降序
+ * @localEn Descending
+ */
+export const PAGE_PAM_SORT_ORDER_DESC = 'page_pam:sortOrderDesc';
+
+/**
+ * @description Sort direction ascending
+ * @localZh 升序
+ * @localEn Ascending
+ */
+export const PAGE_PAM_SORT_ORDER_ASC = 'page_pam:sortOrderAsc';
+
+/**
+ * @description Sort direction group label
+ * @localZh 顺序
+ * @localEn Order
+ */
+export const PAGE_PAM_LABEL_SORT_ORDER = 'page_pam:labelSortOrder';
+
+/**
+ * @description Last updated timestamp label; use %time%
+ * @localZh 更新 %time%
+ * @localEn Updated %time%
+ */
+export const PAGE_PAM_UPDATED_AT = 'page_pam:updatedAt';
+
+/**
  * @description Active visibility filter summary; use %visibility% and %count%
  * @localZh 可见性 “%visibility%” · %count% 项
  * @localEn Visibility “%visibility%” · %count%
@@ -211,6 +260,13 @@ export const PAGE_PAM_CATEGORY_FILTER_SUMMARY =
  * @localEn Clear
  */
 export const PAGE_PAM_CLEAR_FILTERS = 'page_pam:clearFilters';
+
+/**
+ * @description Open filter menu button
+ * @localZh 筛选
+ * @localEn Filters
+ */
+export const PAGE_PAM_FILTERS = 'page_pam:filters';
 
 /**
  * @description Custom category option in create/edit selects

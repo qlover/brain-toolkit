@@ -105,7 +105,12 @@ export class PAMApi {
       >(API_PAM_SEARCH, {
         params: {
           ...params,
-          sort: JSON.stringify(params.sort),
+          sort:
+            params.sort == null
+              ? undefined
+              : typeof params.sort === 'string'
+                ? params.sort
+                : JSON.stringify(params.sort),
           filters:
             params.filters == null
               ? undefined

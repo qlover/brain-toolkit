@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { useLocale } from 'next-intl';
 import React, {
   useCallback,
   useEffect,
@@ -23,6 +24,7 @@ import {
 import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
 import { PAMProjectAvatar } from './PAMProjectAvatar';
 import {
+  formatPAMProjectTimestamp,
   getPAMDisplayHost,
   getPAMPrimaryUrl,
   shortenPAMOwnerId
@@ -50,6 +52,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   highlightKeyword = '',
   highlightCategory = ''
 }) => {
+  const locale = useLocale();
   const envs = project.environments || [];
   const isPublic = project.is_public === PAMPublicType.public;
   const stack = (project.stack || '').trim();
@@ -138,17 +141,31 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         )
       });
     }
+    const updatedAtText = formatPAMProjectTimestamp(project.updated_at, locale);
+    if (updatedAtText) {
+      bits.push({
+        key: 'updated',
+        node: (
+          <time dateTime={String(project.updated_at ?? '')}>
+            {tt.updatedAt.replace('%time%', updatedAtText)}
+          </time>
+        )
+      });
+    }
     return bits;
   }, [
     project.category,
     categoryActive,
     project.owner_id,
+    project.updated_at,
+    locale,
     isOwner,
     isAuthenticated,
     tt.readonly,
     tt.copyOwnerId,
     tt.copyOwnerIdSuccess,
-    tt.errorText
+    tt.errorText,
+    tt.updatedAt
   ]);
 
   return (

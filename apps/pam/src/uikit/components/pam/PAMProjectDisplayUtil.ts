@@ -68,6 +68,27 @@ export function buildPamSiteLogoApiUrl(siteUrl: string): string | null {
   return `${API_PAM_SITE_LOGO}?url=${encodeURIComponent(siteUrl.trim())}`;
 }
 
+/** Format project timestamp for list/card meta rows. */
+export function formatPAMProjectTimestamp(
+  value: string | number | null | undefined,
+  locale?: string
+): string {
+  if (value == null || value === '') {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return date.toLocaleString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 /** Shorten long owner/user ids for dense list rows (e.g. UUID → 308c658e…44f7). */
 export function shortenPAMOwnerId(id: string, head = 8, tail = 4): string {
   const value = (id || '').trim();
