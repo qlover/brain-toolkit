@@ -1,3 +1,27 @@
+ALTER TABLE pam_projects
+  ADD COLUMN IF NOT EXISTS preview_image_url text;
+
+COMMENT ON COLUMN pam_projects.preview_image_url IS
+  'Optional public URL for project cover / first-screen preview image';
+
+-- Lookup Auth user id by email (service_role / SECURITY DEFINER only).
+-- supabase-js admin has no getUserByEmail; listUsers also omits GoTrue's filter.
+CREATE OR REPLACE FUNCTION pam_auth_user_id_by_email(p_email text)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = auth, public
+STABLE
+AS $$
+  SELECT id
+  FROM auth.users
+  WHERE lower(email) = lower(trim(p_email))
+  LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION pam_auth_user_id_by_email(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION pam_auth_user_id_by_email(text) TO service_role;
+
 CREATE OR REPLACE FUNCTION update_project_with_environments(
   p_project_id UUID,
   p_updates JSONB,
@@ -12,7 +36,6 @@ DECLARE
   v_env_record RECORD;
   v_result JSONB;
 BEGIN
-  -- 1. 锁定并验证所有权
   SELECT owner_id INTO v_owner_id
   FROM pam_projects
   WHERE id = p_project_id
@@ -26,7 +49,6 @@ BEGIN
     RAISE EXCEPTION 'Permission denied: not the owner';
   END IF;
 
-  -- 2. 更新项目字段（显式列出允许的字段，避免注入）
   IF p_updates IS NOT NULL AND jsonb_typeof(p_updates) = 'object' AND p_updates <> '{}'::jsonb THEN
     IF p_updates ? 'owner_id' OR p_updates ? 'id' THEN
       RAISE EXCEPTION 'Cannot update id or owner_id';
@@ -45,9 +67,8 @@ BEGIN
     WHERE id = p_project_id;
   END IF;
 
-  -- 3. 处理环境 UPSERT
   IF p_environments IS NOT NULL AND jsonb_typeof(p_environments) = 'array' THEN
-    FOR v_env_record IN 
+    FOR v_env_record IN
       SELECT id, name, url, variables
       FROM jsonb_to_recordset(p_environments) AS x(id UUID, name TEXT, url TEXT, variables JSONB)
     LOOP
@@ -67,7 +88,6 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- 4. 可选删除缺失的环境
   IF p_remove_missing AND p_environments IS NOT NULL THEN
     DELETE FROM pam_environments
     WHERE project_id = p_project_id
@@ -76,7 +96,6 @@ BEGIN
     );
   END IF;
 
-  -- 5. 返回最新数据
   SELECT jsonb_build_object(
     'project', row_to_json(p),
     'environments', COALESCE(

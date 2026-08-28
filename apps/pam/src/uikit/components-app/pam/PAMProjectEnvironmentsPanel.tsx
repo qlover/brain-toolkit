@@ -482,9 +482,17 @@ export function PAMProjectEnvironmentsPanel({
                 <h3 className="font-mono text-base font-bold text-primary-text">
                   {selectedEnv.name}
                 </h3>
-                <p className="mt-0.5 truncate text-xs text-tertiary-text">
-                  {selectedEnv.url}
-                </p>
+                {selectedEnv.url ? (
+                  <a
+                    href={selectedEnv.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={selectedEnv.url}
+                    className="mt-0.5 block truncate text-xs text-tertiary-text no-underline transition hover:text-secondary-text hover:underline"
+                  >
+                    {selectedEnv.url}
+                  </a>
+                ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {canEdit ? (

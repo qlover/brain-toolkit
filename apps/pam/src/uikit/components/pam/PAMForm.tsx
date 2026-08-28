@@ -69,6 +69,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       description: initialData?.description,
       stack: initialData?.stack,
       repo_url: initialData?.repo_url,
+      preview_image_url: initialData?.preview_image_url,
       category: initialData?.category,
       is_public: initialData?.is_public ?? PAMPublicType.private,
       [PAMProjectEnvKey]: initialData?.environments || []
@@ -94,6 +95,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       description: initialData?.description ?? '',
       stack: initialData?.stack ?? '',
       repo_url: initialData?.repo_url ?? '',
+      preview_image_url: initialData?.preview_image_url ?? '',
       category: initialData?.category ?? '',
       is_public: initialData?.is_public ?? PAMPublicType.private,
       environments: initialData?.environments || []
@@ -223,49 +225,48 @@ export const PAMForm: React.FC<PAMFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-            <div>
-              <label className={pamFormLabelClass}>
-                <span className="mr-1 inline-flex align-middle">
-                  <CodeBracketIcon className="h-4 w-4" />
-                </span>
-                {tt.labelRepo}
-              </label>
-              <input
-                {...register('repo_url')}
-                type="url"
-                placeholder={tt.placeholderRepo}
-                className={pamFormFieldClass}
-              />
-              {errors.repo_url && (
-                <div className="mt-1 text-xs text-(--fe-color-error)">
-                  {errors.repo_url.message}
-                </div>
-              )}
-            </div>
-            <div>
-              <label className={pamFormLabelClass}>
-                {tt.labelCategory}
-                <span className="text-(--fe-color-error)">*</span>
-              </label>
-              <PAMCategoryField
-                value={watch('category') ?? ''}
-                onChange={(next) => {
-                  setValue('category', next, { shouldValidate: true });
-                }}
-                extras={categories}
-                labels={{
-                  labelUnCategory: tt.labelUnCategory,
-                  categoryCustom: tt.categoryCustom,
-                  categoryCustomPlaceholder: tt.categoryCustomPlaceholder
-                }}
-              />
-              {errors.category && (
-                <div className="mt-1 text-xs text-(--fe-color-error)">
-                  {errors.category.message}
-                </div>
-              )}
-            </div>
+          <div>
+            <label className={pamFormLabelClass}>
+              <span className="mr-1 inline-flex align-middle">
+                <CodeBracketIcon className="h-4 w-4" />
+              </span>
+              {tt.labelRepo}
+            </label>
+            <input
+              {...register('repo_url')}
+              type="url"
+              placeholder={tt.placeholderRepo}
+              className={pamFormFieldClass}
+            />
+            {errors.repo_url && (
+              <div className="mt-1 text-xs text-(--fe-color-error)">
+                {errors.repo_url.message}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className={pamFormLabelClass}>
+              {tt.labelCategory}
+              <span className="text-(--fe-color-error)">*</span>
+            </label>
+            <PAMCategoryField
+              value={watch('category') ?? ''}
+              onChange={(next) => {
+                setValue('category', next, { shouldValidate: true });
+              }}
+              extras={categories}
+              labels={{
+                labelUnCategory: tt.labelUnCategory,
+                categoryCustom: tt.categoryCustom,
+                categoryCustomPlaceholder: tt.categoryCustomPlaceholder
+              }}
+            />
+            {errors.category && (
+              <div className="mt-1 text-xs text-(--fe-color-error)">
+                {errors.category.message}
+              </div>
+            )}
           </div>
         </div>
 

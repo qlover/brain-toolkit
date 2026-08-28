@@ -2,8 +2,9 @@
 
 import {
   ArrowPathIcon,
-  ExclamationCircleIcon
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import { clsx } from 'clsx';
 import { useState } from 'react';
 import {
   oauthDangerButtonClass,
@@ -58,14 +59,17 @@ export function DeveloperConfirmDialog({
     <DeveloperOverlayModal
       open={open}
       title={options.title}
-      onClose={onClose}
+      onClose={pending ? () => undefined : onClose}
       maxWidthClass="max-w-md"
       closeOnBackdrop={!pending}
       footer={
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className={oauthSecondaryButtonClass}
+            className={clsx(
+              oauthSecondaryButtonClass,
+              'min-h-11 w-full justify-center sm:w-auto'
+            )}
             disabled={pending}
             onClick={onClose}
           >
@@ -73,7 +77,10 @@ export function DeveloperConfirmDialog({
           </button>
           <button
             type="button"
-            className={okClass}
+            className={clsx(
+              okClass,
+              'min-h-11 w-full justify-center gap-2 sm:w-auto'
+            )}
             disabled={pending}
             onClick={() => void handleConfirm()}
           >
@@ -83,10 +90,19 @@ export function DeveloperConfirmDialog({
         </div>
       }
     >
-      <p className="text-sm text-secondary-text leading-relaxed flex gap-2">
-        <ExclamationCircleIcon className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-        <span>{options.content}</span>
-      </p>
+      <div className="flex gap-3 rounded-xl border border-primary-border/80 bg-elevated/40 px-3.5 py-3.5">
+        <ExclamationTriangleIcon
+          className={clsx(
+            'mt-0.5 h-5 w-5 shrink-0',
+            options.variant === 'danger'
+              ? 'text-red-500'
+              : 'text-amber-500 dark:text-amber-400'
+          )}
+        />
+        <p className="text-sm leading-relaxed text-secondary-text">
+          {options.content}
+        </p>
+      </div>
     </DeveloperOverlayModal>
   );
 }

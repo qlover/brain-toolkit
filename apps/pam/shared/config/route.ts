@@ -8,7 +8,9 @@ import {
   API_PAM_ENVIRONMENTS_DELETE,
   API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_VARIABLES,
-  API_PAM_FORK
+  API_PAM_FORK,
+  API_PAM_TRANSFER,
+  API_PAM_PREVIEW_IMAGE
 } from './apiRoutes';
 import { i18nConfig } from './i18n';
 import type { LocaleType } from './i18n';
@@ -242,8 +244,39 @@ export function apiClientRotateSecret(clientId: string): string {
   );
 }
 
+/**
+ * Reads a supported locale from the first path segment, else fallback.
+ *
+ * @param pathname - Pathname that may include a locale prefix
+ */
+export function localeFromPathname(pathname: string): LocaleType {
+  const match = pathname.match(/^\/([^/]+)(?=\/|$)/);
+  const seg = match?.[1];
+  if (seg && (i18nConfig.supportedLngs as readonly string[]).includes(seg)) {
+    return seg as LocaleType;
+  }
+  return i18nConfig.fallbackLng;
+}
+
+/**
+ * Prefixes a locale-agnostic route with `/{locale}`.
+ *
+ * @param route - Path starting with `/` (e.g. `/auth/login`)
+ * @param locale - Supported locale
+ */
+export function withLocalePrefix(route: string, locale: LocaleType): string {
+  const path = route.startsWith('/') ? route : `/${route}`;
+  return `/${locale}${path}`;
+}
+
+/**
+ * Builds an absolute app path for the given locale (leading `/`).
+ *
+ * @param route - Locale-agnostic route (e.g. `/callback/email-login`)
+ * @param locale - Supported locale
+ */
 export function localePage(route: string, locale: LocaleType): string {
-  return locale + route;
+  return withLocalePrefix(route, locale);
 }
 
 /**
@@ -359,10 +392,12 @@ export function redirectToPath(
   targetRoute: string = ROUTE_LOGIN
 ): NextURL {
   const pathnmae2 = pathnmae || request.nextUrl.pathname;
+  const locale = localeFromPathname(pathnmae2);
 
   const url = request.nextUrl.clone();
   const returnPath = `${pathnmae2}${request.nextUrl.search}`;
-  url.pathname = targetRoute;
+  // Keep current UI language on the login (or target) page.
+  url.pathname = withLocalePrefix(targetRoute, locale);
   url.search = `redirect=${encodeURIComponent(returnPath)}`;
   return url;
 }
@@ -425,6 +460,24 @@ export function buildApiPamDetele(id: string): string {
  */
 export function buildApiPamFork(id: string): string {
   return buildApiWithPath(API_PAM_FORK, { id });
+}
+
+/**
+ * @see {@link API_PAM_TRANSFER}
+ * @param id - Project id
+ * @returns `/api/pam/transfer/:id`
+ */
+export function buildApiPamTransfer(id: string): string {
+  return buildApiWithPath(API_PAM_TRANSFER, { id });
+}
+
+/**
+ * @see {@link API_PAM_PREVIEW_IMAGE}
+ * @param id - Project id
+ * @returns `/api/pam/preview-image/:id`
+ */
+export function buildApiPamPreviewImage(id: string): string {
+  return buildApiWithPath(API_PAM_PREVIEW_IMAGE, { id });
 }
 
 /**

@@ -1,5 +1,3 @@
-import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
-import { Dropdown } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -16,12 +14,9 @@ import {
   isCategoryHighlightActive,
   PAM_CATEGORY_HIGHLIGHT_CLASS
 } from './PAMHighlightUtil';
-import { PAMEnvLink, PAMIcon, PAMPublicIcon } from './PAMIcon';
-import {
-  getPAMAvatarLetter,
-  getPAMPrimaryUrl,
-  shortenPAMOwnerId
-} from './PAMProjectDisplayUtil';
+import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
+import { PAMProjectAvatar } from './PAMProjectAvatar';
+import { getPAMPrimaryUrl, shortenPAMOwnerId } from './PAMProjectDisplayUtil';
 
 type PAMProjectListModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
@@ -30,22 +25,18 @@ type PAMProjectListModel = SearchPAMProject & {
 interface PAMProjectListItemProps {
   tt: PAMI18nInterface;
   project: PAMProjectListModel;
-  isOwner: boolean;
-  onDelete: (project: PAMProjectListModel) => void;
   highlightKeyword?: string;
   highlightCategory?: string;
 }
 
 /**
  * List row:
- * 1) larger avatar (→ repo) + title (+ lock) / host | envs + menu
+ * 1) larger avatar (→ repo) + title (+ lock) / host | envs
  * 2–3) description + meta, left-aligned with the avatar
  */
 export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
-  isOwner,
-  onDelete,
   highlightKeyword = '',
   highlightCategory = ''
 }) => {
@@ -54,8 +45,8 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     [project.environments]
   );
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
-  const avatarLetter = getPAMAvatarLetter(project.name);
   const isPublic = project.is_public === PAMPublicType.public;
+
   const categoryActive = isCategoryHighlightActive(
     project.category,
     highlightCategory
@@ -63,35 +54,6 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   const titleNode = useMemo(
     () => highlightText(project.name, highlightKeyword),
     [project.name, highlightKeyword]
-  );
-
-  const menuItems = useMemo(() => {
-    if (!isOwner) {
-      return [] as {
-        key: string;
-        label: string;
-        danger?: boolean;
-        divider?: boolean;
-      }[];
-    }
-    return [{ key: 'delete', label: tt.delete, danger: true }];
-  }, [isOwner, tt.delete]);
-
-  const onMenuSelect = (key: string) => {
-    if (key === 'delete') {
-      onDelete(project);
-    }
-  };
-
-  const avatarClassName = clsx(
-    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-border bg-elevated text-xl font-bold text-brand no-underline sm:h-14 sm:w-14 sm:text-2xl',
-    project.repo_url && 'hover:border-brand hover:bg-primary'
-  );
-
-  const avatarInner = project.repo_url ? (
-    <PAMIcon repoUrl={project.repo_url} className="h-8 w-8 sm:h-9 sm:w-9" />
-  ) : (
-    avatarLetter
   );
 
   const envChips =
@@ -121,21 +83,14 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
-          {project.repo_url ? (
-            <a
-              href={project.repo_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={tt.openRepo}
-              className={avatarClassName}
-            >
-              {avatarInner}
-            </a>
-          ) : (
-            <div className={avatarClassName} title={project.name}>
-              {avatarInner}
-            </div>
-          )}
+          <PAMProjectAvatar
+            name={project.name}
+            primaryUrl={primaryUrl}
+            repoUrl={project.repo_url}
+            allowPreview={false}
+            linkToRepo
+            linkTitle={tt.openRepo}
+          />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <Link
@@ -174,35 +129,13 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           </div>
         </div>
 
-        <div className="flex max-w-[min(100%,20rem)] shrink-0 flex-wrap items-center justify-end gap-1.5">
-          {envChips ? (
+        {envChips ? (
+          <div className="flex max-w-[min(100%,20rem)] shrink-0 flex-wrap items-center justify-end gap-1.5">
             <div className="max-md:hidden flex flex-wrap items-center justify-end gap-1">
               {envChips}
             </div>
-          ) : null}
-          {menuItems.length > 0 ? (
-            <Dropdown
-              items={menuItems}
-              placement="bottom-end"
-              mobileMode="menu"
-              onSelect={onMenuSelect}
-              data-testid="PAMProjectListItemMenu"
-            >
-              <button
-                type="button"
-                title={tt.moreActions}
-                aria-label={tt.moreActions}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-secondary-text transition hover:bg-elevated hover:text-primary-text"
-              >
-                <EllipsisHorizontalIcon className="h-5 w-5" />
-              </button>
-            </Dropdown>
-          ) : (
-            <span className="text-[10px] text-tertiary-text">
-              {tt.readonly}
-            </span>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       <p className="max-md:hidden truncate text-sm text-primary-text block">

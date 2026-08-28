@@ -24,6 +24,13 @@ export const pamGeneralI18n = Object.freeze({
   placeholderDesc: i18nKeys.PAGE_PAM_GENERAL_PLACEHOLDER_DESC,
   labelRepo: i18nKeys.PAGE_PAM_GENERAL_LABEL_REPO,
   placeholderRepo: i18nKeys.PAGE_PAM_GENERAL_PLACEHOLDER_REPO,
+  labelPreviewImage: i18nKeys.PAGE_PAM_GENERAL_LABEL_PREVIEW_IMAGE,
+  placeholderPreviewImage: i18nKeys.PAGE_PAM_GENERAL_PLACEHOLDER_PREVIEW_IMAGE,
+  previewCapture: i18nKeys.PAGE_PAM_GENERAL_PREVIEW_CAPTURE,
+  previewRefresh: i18nKeys.PAGE_PAM_GENERAL_PREVIEW_REFRESH,
+  previewCapturing: i18nKeys.PAGE_PAM_GENERAL_PREVIEW_CAPTURING,
+  previewNoUrl: i18nKeys.PAGE_PAM_GENERAL_PREVIEW_NO_URL,
+  previewSource: i18nKeys.PAGE_PAM_GENERAL_PREVIEW_SOURCE,
   labelCategory: i18nKeys.PAGE_PAM_GENERAL_LABEL_CATEGORY,
   labelUnCategory: i18nKeys.PAGE_PAM_GENERAL_LABEL_UNCATEGORY,
   categoryCustom: i18nKeys.PAGE_PAM_GENERAL_CATEGORY_CUSTOM,
@@ -47,12 +54,30 @@ export const pamGeneralI18n = Object.freeze({
   descProjectDesc: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_DESC,
   descProjectStack: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_STACK,
   descProjectRepo: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_REPO,
+  descPreviewImage: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_PREVIEW_IMAGE,
 
   deleteZoneTitle: i18nKeys.PAGE_PAM_GENERAL_DELETE_ZONE_TITLE,
   deleteZoneDesc: i18nKeys.PAGE_PAM_GENERAL_DELETE_ZONE_DESC,
   deleteProject: i18nKeys.PAGE_PAM_GENERAL_DELETE_PROJECT,
   deleteTitle: i18nKeys.PAGE_PAM_GENERAL_DELETE_TITLE,
   deleteContent: i18nKeys.PAGE_PAM_GENERAL_DELETE_CONTENT,
+
+  transferZoneTitle: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_ZONE_TITLE,
+  transferZoneDesc: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_ZONE_DESC,
+  transferStart: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_START,
+  transferPickerTitle: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_PICKER_TITLE,
+  transferSearchPlaceholder:
+    i18nKeys.PAGE_PAM_GENERAL_TRANSFER_SEARCH_PLACEHOLDER,
+  transferLoading: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_LOADING,
+  transferEmpty: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_EMPTY,
+  transferEmailLabel: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_EMAIL_LABEL,
+  transferEmailPlaceholder:
+    i18nKeys.PAGE_PAM_GENERAL_TRANSFER_EMAIL_PLACEHOLDER,
+  transferUserIdLabel: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_USER_ID_LABEL,
+  transferSubmit: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_SUBMIT,
+  transferTitle: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_TITLE,
+  transferContent: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_CONTENT,
+  transferSuccess: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_SUCCESS,
 
   adminTitle: COMMON_ADMIN_TITLE
 });

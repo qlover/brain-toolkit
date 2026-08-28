@@ -334,6 +334,21 @@ export const PAGE_PAM_LABEL_REPO = 'page_pam:labelRepo';
 export const PAGE_PAM_PLACEHOLDER_REPO = 'page_pam:placeholderRepo';
 
 /**
+ * @description Preview image label
+ * @localZh 封面预览图
+ * @localEn Cover preview image
+ */
+export const PAGE_PAM_LABEL_PREVIEW_IMAGE = 'page_pam:labelPreviewImage';
+
+/**
+ * @description Preview image placeholder
+ * @localZh https://example.com/cover.png
+ * @localEn https://example.com/cover.png
+ */
+export const PAGE_PAM_PLACEHOLDER_PREVIEW_IMAGE =
+  'page_pam:placeholderPreviewImage';
+
+/**
  * @description Category label
  * @localZh 分类
  * @localEn Category

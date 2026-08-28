@@ -65,6 +65,8 @@ export const pamI18n = Object.freeze({
   placeholderDesc: i18nKeys.PAGE_PAM_PLACEHOLDER_DESC,
   labelRepo: i18nKeys.PAGE_PAM_LABEL_REPO,
   placeholderRepo: i18nKeys.PAGE_PAM_PLACEHOLDER_REPO,
+  labelPreviewImage: i18nKeys.PAGE_PAM_LABEL_PREVIEW_IMAGE,
+  placeholderPreviewImage: i18nKeys.PAGE_PAM_PLACEHOLDER_PREVIEW_IMAGE,
   labelCategory: i18nKeys.PAGE_PAM_LABEL_CATEGORY,
   labelUnCategory: i18nKeys.PAGE_PAM_LABEL_UNCATEGORY,
   formCancel: i18nKeys.PAGE_PAM_FORM_CANCEL,

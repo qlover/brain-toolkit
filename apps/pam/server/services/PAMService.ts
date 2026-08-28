@@ -19,6 +19,10 @@ import {
   API_PAM_ENV_NOT_FOUND,
   API_PAM_PROJECT_NOT_FOUND,
   API_PAM_SLUG_EXISTS,
+  API_PAM_TRANSFER_TO_SELF,
+  API_PAM_TRANSFER_USER_NOT_FOUND,
+  API_PAM_PREVIEW_CAPTURE_FAILED,
+  API_PAM_PREVIEW_URL_MISSING,
   API_PAM_VARIABLE_KEY_DUPLICATE,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
@@ -37,7 +41,9 @@ import {
   PAMPublicType,
   PAMCreateSourceType,
   type PAMCreateSource,
-  type PAMProjectFork
+  type PAMProjectFork,
+  type PAMProjectTransfer,
+  type PAMAuthUserSummary
 } from '@schemas/PAMProjectSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type {
@@ -47,9 +53,17 @@ import type {
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
+import {
+  capturePageScreenshot,
+  resolveProjectCaptureUrl
+} from '@server/utils/PAMPreviewCaptureUtil';
+import { MemoryKvCacheService } from './MemoryKvCacheService';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';
+
+const AUTH_USERS_SEARCH_CACHE_TTL_MS = 45_000;
+const AUTH_USERS_SEARCH_LIMIT = 20;
 
 @injectable()
 export class PAMService implements PAMServiceInterface {
@@ -61,6 +75,9 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(ServerConfig)
   protected readonly serverConfig!: SeedServerConfigInterface;
+
+  @inject(MemoryKvCacheService)
+  protected readonly kv!: MemoryKvCacheService;
 
   @inject(PamCliTokenService)
   protected readonly cliTokenService!: PamCliTokenService;
@@ -244,21 +261,28 @@ export class PAMService implements PAMServiceInterface {
       return null;
     }
 
+    // Admin read: Brain/CLI sessions have no Supabase RLS cookies; list already
+    // uses admin. Access is enforced below (public or owner).
     let detail: PAMProjectDetail | null;
     if (withEnvironments) {
       const withEnvs =
-        await this.projectRepo.getProjectWithEnvironments(resolvedId);
+        await this.projectRepo.getProjectWithEnvironmentsAdmin(resolvedId);
       detail = withEnvs ? this.redactProjectDetail(withEnvs) : null;
     } else {
-      detail = await this.projectRepo.getProjectById(resolvedId);
+      detail = await this.projectRepo.getProjectByIdAdmin(resolvedId);
     }
 
     if (!detail) {
       return null;
     }
 
+    const isOwner = Boolean(user && user.id === detail.owner_id);
+    if (!isOwner && detail.is_public !== PAMPublicType.public) {
+      return null;
+    }
+
     return Object.assign({}, detail, {
-      is_owner: Boolean(user && user.id === detail.owner_id)
+      is_owner: isOwner
     });
   }
 
@@ -268,11 +292,11 @@ export class PAMService implements PAMServiceInterface {
   protected async resolveProjectId(idOrSlug: string): Promise<string | null> {
     const asUuid = uuidSchema.safeParse(idOrSlug);
     if (asUuid.success) {
-      const byId = await this.projectRepo.getProjectById(asUuid.data);
+      const byId = await this.projectRepo.getProjectByIdAdmin(asUuid.data);
       return byId?.id ?? null;
     }
 
-    const bySlug = await this.projectRepo.getProjectWithSlug(idOrSlug);
+    const bySlug = await this.projectRepo.getProjectWithSlugAdmin(idOrSlug);
     return bySlug?.id ?? null;
   }
 
@@ -364,9 +388,8 @@ export class PAMService implements PAMServiceInterface {
     extra?: { useRPC?: boolean }
   ): Promise<PAMProjectDetail> {
     const { id } = params;
-    // 权限校验
-    const project = await this.projectRepo.hasAuthProject(id);
-    if (!project) throw new ExecutorError(API_NOT_AUTHORIZED);
+    // App/OAuth/CLI session ownership (not Supabase cookie RLS alone).
+    await this.assertProjectOwner(id);
 
     // --- 补充 slug 唯一性校验 ---
     if (params.slug) {
@@ -384,7 +407,7 @@ export class PAMService implements PAMServiceInterface {
     if (Array.isArray(params.environments) && params.environments.length > 0) {
       // 获取现有环境（仅需 id 和 name）
       const existingEnvs =
-        await this.projectRepo.getEnvIdAndNamesByProjectId(id);
+        await this.projectRepo.getEnvIdAndNamesByProjectIdAdmin(id);
       this.validateEnvironmentNames(existingEnvs, params.environments);
 
       const mergedEnvironments = await this.mergeRequestEnvironments(
@@ -511,7 +534,7 @@ export class PAMService implements PAMServiceInterface {
     }
 
     const source =
-      await this.projectRepo.getProjectWithEnvironments(resolvedId);
+      await this.projectRepo.getProjectWithEnvironmentsAdmin(resolvedId);
     if (!source) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
@@ -565,12 +588,151 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async deleteProject(id: string): Promise<void> {
-    // 权限校验
-    const project = await this.projectRepo.hasAuthProject(id);
-    if (!project) throw new ExecutorError(API_NOT_AUTHORIZED);
+    // App/OAuth/CLI session ownership (not Supabase cookie RLS alone).
+    await this.assertProjectOwner(id);
 
-    await this.projectRepo.deleteProject(id);
+    await this.projectRepo.deleteProjectAdmin(id);
     await this.categoryCache.invalidateAll();
+  }
+
+  /**
+   * @override
+   */
+  public async transferProject(
+    id: string,
+    params: PAMProjectTransfer
+  ): Promise<void> {
+    await this.assertProjectOwner(id);
+
+    const currentUser = await this.userService.getUser(true);
+    if (!currentUser) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const newOwnerId = await this.resolveTransferTargetUserId(params);
+    if (newOwnerId === currentUser.id) {
+      throw new ExecutorError(API_PAM_TRANSFER_TO_SELF);
+    }
+
+    await this.projectRepo.transferProjectOwnerAdmin(id, newOwnerId);
+    await this.categoryCache.invalidateAll();
+  }
+
+  /**
+   * Lists Auth users for the transfer recipient picker.
+   *
+   * Uses cookie session (no Supabase refresh) + short TTL KV cache.
+   *
+   * @override
+   * @param query - Optional email filter
+   */
+  public async searchUsersForTransfer(
+    query?: string
+  ): Promise<PAMAuthUserSummary[]> {
+    const user =
+      (await this.userService.getSessionUser()) ??
+      (await this.userService.getUser(true));
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const normalizedQuery = query?.trim().toLowerCase() || '';
+    const cacheKey = `pam:auth-users:search:${user.id}:${normalizedQuery}`;
+    const cached = await this.kv.getItem<PAMAuthUserSummary[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const rows = await this.projectRepo.searchAuthUsers({
+      query: normalizedQuery,
+      excludeUserId: user.id,
+      limit: AUTH_USERS_SEARCH_LIMIT,
+      offset: 0
+    });
+
+    await this.kv.setItem(cacheKey, rows, {
+      ttlMs: AUTH_USERS_SEARCH_CACHE_TTL_MS
+    });
+    return rows;
+  }
+
+  /**
+   * Captures the project primary URL once, stores it in Storage, updates cover.
+   *
+   * @override
+   * @param id - Project id
+   * @returns Updated project detail
+   */
+  public async refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
+    await this.assertProjectOwner(id);
+
+    const detail = await this.projectRepo.getProjectWithEnvironmentsAdmin(id);
+    if (!detail) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const captureUrl = resolveProjectCaptureUrl({
+      environments: detail.environments,
+      repoUrl: detail.repo_url
+    });
+    if (!captureUrl || !/^https?:\/\//i.test(captureUrl)) {
+      throw new ExecutorError(API_PAM_PREVIEW_URL_MISSING);
+    }
+
+    let shot: { bytes: Uint8Array; contentType: string };
+    try {
+      shot = await capturePageScreenshot(
+        captureUrl,
+        this.serverConfig.pamScreenshotUrlTemplate
+      );
+    } catch (error) {
+      throw new ExecutorError(API_PAM_PREVIEW_CAPTURE_FAILED, { cause: error });
+    }
+
+    const publicUrl = await this.projectRepo.uploadProjectPreviewImage({
+      projectId: id,
+      bytes: shot.bytes,
+      contentType: shot.contentType,
+      bucket: this.serverConfig.pamPreviewBucket
+    });
+
+    const updated = await this.projectRepo.updateProject(id, {
+      preview_image_url: publicUrl
+    });
+
+    await this.categoryCache.invalidateAll();
+
+    return Object.assign({}, this.redactProjectDetail(updated), {
+      is_owner: true
+    });
+  }
+
+  /**
+   * Resolves transfer recipient from email (Auth Admin) or explicit user id.
+   */
+  protected async resolveTransferTargetUserId(
+    params: PAMProjectTransfer
+  ): Promise<string> {
+    const userId = params.user_id?.trim() || '';
+    if (userId) {
+      const id = uuidSchema.parse(userId);
+      const exists = await this.projectRepo.authUserExistsById(id);
+      if (!exists) {
+        throw new ExecutorError(API_PAM_TRANSFER_USER_NOT_FOUND);
+      }
+      return id;
+    }
+
+    const email = params.email?.trim().toLowerCase() || '';
+    if (!email) {
+      throw new ExecutorError(API_PAM_TRANSFER_USER_NOT_FOUND);
+    }
+
+    const foundId = await this.projectRepo.findAuthUserIdByEmail(email);
+    if (!foundId) {
+      throw new ExecutorError(API_PAM_TRANSFER_USER_NOT_FOUND);
+    }
+    return foundId;
   }
 
   /**

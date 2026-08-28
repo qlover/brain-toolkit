@@ -37,6 +37,8 @@ type PkceCookiePayload = {
   state: string;
   codeVerifier: string;
   returnTo: string;
+  /** UI locale when login started (for error redirects). */
+  locale?: string;
 };
 
 type BrainTokenResponse = {
@@ -185,7 +187,9 @@ export class BrainOAuthLoginService {
       return {
         state: parsed.state,
         codeVerifier: parsed.codeVerifier,
-        returnTo: sanitizeReturnTo(parsed.returnTo)
+        returnTo: sanitizeReturnTo(parsed.returnTo),
+        locale:
+          typeof parsed.locale === 'string' ? parsed.locale.trim() : undefined
       };
     } catch {
       return null;
@@ -216,7 +220,7 @@ export class BrainOAuthLoginService {
     const locale = input.locale?.trim() || this.config.brainOAuthLocale || 'zh';
     const redirectUri = this.resolveRedirectUri();
 
-    await this.writePkceCookie({ state, codeVerifier, returnTo });
+    await this.writePkceCookie({ state, codeVerifier, returnTo, locale });
 
     const params = new URLSearchParams({
       response_type: 'code',

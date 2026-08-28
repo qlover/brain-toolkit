@@ -4,7 +4,8 @@ import { inject, injectable } from '@shared/container';
 import {
   API_PAM_CATEGORIES,
   API_PAM_CREATE,
-  API_PAM_SEARCH
+  API_PAM_SEARCH,
+  API_PAM_USERS_SEARCH
 } from '@config/apiRoutes';
 import {
   buildApiPamDetail,
@@ -13,7 +14,9 @@ import {
   buildApiPamEnvironmentDelete,
   buildApiPamEnvironments,
   buildApiPamEnvironmentVariables,
-  buildApiPamFork
+  buildApiPamFork,
+  buildApiPamPreviewImage,
+  buildApiPamTransfer
 } from '@config/route';
 import type {
   PAMEnvCreate,
@@ -26,7 +29,9 @@ import {
   PAMProjectDetail,
   PAMProjectCreate,
   PAMProjectFork,
-  PAMProjectUpdate
+  PAMProjectTransfer,
+  PAMProjectUpdate,
+  type PAMAuthUserSummary
 } from '@schemas/PAMProjectSchema';
 import { AppApiRequester } from './AppApiRequester';
 
@@ -129,6 +134,49 @@ export class PAMApi {
       PAMProjectFork | Record<string, never>
     >(buildApiPamFork(sourceId), data ?? {});
 
+    return response.data.data!;
+  }
+
+  /**
+   * Transfers project ownership to another user.
+   *
+   * @param id - Project id
+   * @param data - Recipient email and/or user_id
+   */
+  public async transferProject(
+    id: string,
+    data: PAMProjectTransfer
+  ): Promise<void> {
+    await this.appApiRequester.post(buildApiPamTransfer(id), data);
+  }
+
+  /**
+   * Searches Auth users for transfer recipient picker.
+   *
+   * @param query - Optional email filter
+   */
+  public async searchUsersForTransfer(
+    query?: string
+  ): Promise<PAMAuthUserSummary[]> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<PAMAuthUserSummary[]>,
+      { q?: string }
+    >(API_PAM_USERS_SEARCH, {
+      params: query?.trim() ? { q: query.trim() } : {}
+    });
+    return response.data.data ?? [];
+  }
+
+  /**
+   * Captures cover from primary env/repo URL and stores in Supabase Storage.
+   *
+   * @param id - Project id
+   */
+  public async refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
+    const response = await this.appApiRequester.post<
+      NextKitApiSuccess<PAMProjectDetail>,
+      Record<string, never>
+    >(buildApiPamPreviewImage(id), {});
     return response.data.data!;
   }
 

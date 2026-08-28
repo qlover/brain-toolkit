@@ -11,9 +11,8 @@ interface PAMProjectListProps {
   projects: readonly SearchPAMProject[];
   viewMode: 'card' | 'compact';
   isOwner: (project: SearchPAMProject) => boolean;
-  /** When false, hide mutate actions and readonly badges (guest). */
+  /** When false, hide readonly badges (guest). */
   isAuthenticated?: boolean;
-  onDelete: (project: SearchPAMProject) => void;
   loading?: boolean;
   /** Dim list while a search/filter request is in flight. */
   searching?: boolean;
@@ -42,18 +41,24 @@ function PAMProjectListSkeleton({
           <div
             data-testid="PAMProjectListSkeleton"
             key={key}
-            className="animate-pulse rounded-2xl border border-primary-border bg-secondary p-4 sm:p-5"
+            className="animate-pulse overflow-hidden rounded-2xl border border-primary-border bg-secondary"
           >
-            <div className="mb-4 flex items-start gap-3">
-              <div className="h-12 w-12 shrink-0 rounded-xl bg-elevated sm:h-14 sm:w-14" />
+            <div className="flex h-18 items-center gap-3 border-b border-primary-border px-3 sm:h-20 sm:px-3.5">
+              <div className="h-11 w-11 shrink-0 rounded-xl bg-elevated sm:h-12 sm:w-12" />
               <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-4 w-2/3 rounded bg-elevated" />
+                <div className="h-3.5 w-2/3 rounded bg-elevated" />
                 <div className="h-3 w-1/2 rounded bg-elevated" />
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="h-3 w-full rounded bg-elevated" />
-              <div className="h-3 w-4/5 rounded bg-elevated" />
+            <div className="p-3 sm:p-3.5">
+              <div className="mb-3 space-y-2">
+                <div className="h-4 w-2/3 rounded bg-elevated" />
+                <div className="h-3 w-1/2 rounded bg-elevated" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-full rounded bg-elevated" />
+                <div className="h-3 w-4/5 rounded bg-elevated" />
+              </div>
             </div>
           </div>
         ))}
@@ -111,7 +116,6 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
   viewMode,
   isOwner,
   isAuthenticated = false,
-  onDelete,
   loading = false,
   searching = false,
   emptyFiltered = false,
@@ -150,7 +154,6 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             project={project}
             isOwner={isOwner(project)}
             isAuthenticated={isAuthenticated}
-            onDelete={onDelete}
             highlightKeyword={highlightKeyword}
             highlightCategory={highlightCategory}
           />
@@ -173,8 +176,6 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
             tt={tt}
             key={project.id}
             project={project}
-            isOwner={isAuthenticated && isOwner(project)}
-            onDelete={onDelete}
             highlightKeyword={highlightKeyword}
             highlightCategory={highlightCategory}
           />

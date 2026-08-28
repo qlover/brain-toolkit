@@ -157,6 +157,35 @@ export const API_REQUEST_BODY_EMPTY = 'api:request_body_empty';
 export const API_PAM_PROJECT_NOT_FOUND = 'api:pam_project_not_found';
 
 /**
+ * @description Transfer target user was not found
+ * @localZh 未找到目标用户，请确认邮箱或用户 ID
+ * @localEn Transfer target user was not found
+ */
+export const API_PAM_TRANSFER_USER_NOT_FOUND =
+  'api:pam_transfer_user_not_found';
+
+/**
+ * @description Cannot transfer a project to yourself
+ * @localZh 不能将项目转让给自己
+ * @localEn Cannot transfer a project to yourself
+ */
+export const API_PAM_TRANSFER_TO_SELF = 'api:pam_transfer_to_self';
+
+/**
+ * @description Project has no environment/repo URL to capture a cover from
+ * @localZh 没有可用于截取封面的环境地址或仓库地址
+ * @localEn No environment or repository URL available to capture a cover
+ */
+export const API_PAM_PREVIEW_URL_MISSING = 'api:pam_preview_url_missing';
+
+/**
+ * @description Failed to capture or store the project cover image
+ * @localZh 封面截取或保存失败，请稍后重试
+ * @localEn Failed to capture or store the cover image
+ */
+export const API_PAM_PREVIEW_CAPTURE_FAILED = 'api:pam_preview_capture_failed';
+
+/**
  * @description 没有pam 环境
  * @localZh 环境无效
  * @localEn PAM Environment Invalid

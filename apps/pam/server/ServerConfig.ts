@@ -117,4 +117,15 @@ export class ServerConfig implements SeedServerConfigInterface {
   public readonly brainOAuthLocale: string = (
     process.env.BRAIN_OAUTH_LOCALE ?? ''
   ).trim();
+
+  /**
+   * Screenshot capture template. Use `{url}` for the target page.
+   * Empty → Microlink API.
+   */
+  public readonly pamScreenshotUrlTemplate: string = (
+    process.env.PAM_SCREENSHOT_URL_TEMPLATE ?? ''
+  ).trim();
+
+  public readonly pamPreviewBucket: string =
+    (process.env.PAM_PREVIEW_BUCKET ?? '').trim() || 'pam-previews';
 }

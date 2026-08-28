@@ -238,6 +238,15 @@ export const API_PAM_EDIT = '/api/pam/edit/:id' as const;
 export const API_PAM_FORK = '/api/pam/fork/:id' as const;
 
 /**
+ * API path: `/api/pam/preview-image/:id`
+ *
+ * @see [src/app/api/pam/preview-image/[id]/route.ts](../../src/app/api/pam/preview-image/[id]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/preview-image/[id]/route.ts`
+ */
+export const API_PAM_PREVIEW_IMAGE = '/api/pam/preview-image/:id' as const;
+
+/**
  * API path: `/api/pam/search`
  *
  * @see [src/app/api/pam/search/route.ts](../../src/app/api/pam/search/route.ts)
@@ -245,6 +254,24 @@ export const API_PAM_FORK = '/api/pam/fork/:id' as const;
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/search/route.ts`
  */
 export const API_PAM_SEARCH = '/api/pam/search' as const;
+
+/**
+ * API path: `/api/pam/transfer/:id`
+ *
+ * @see [src/app/api/pam/transfer/[id]/route.ts](../../src/app/api/pam/transfer/[id]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/transfer/[id]/route.ts`
+ */
+export const API_PAM_TRANSFER = '/api/pam/transfer/:id' as const;
+
+/**
+ * API path: `/api/pam/users/search`
+ *
+ * @see [src/app/api/pam/users/search/route.ts](../../src/app/api/pam/users/search/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/users/search/route.ts`
+ */
+export const API_PAM_USERS_SEARCH = '/api/pam/users/search' as const;
 
 /**
  * API path: `/api/reference`
@@ -362,7 +389,10 @@ export type ApiRoutePath =
   | typeof API_PAM_DETAIL
   | typeof API_PAM_EDIT
   | typeof API_PAM_FORK
+  | typeof API_PAM_PREVIEW_IMAGE
   | typeof API_PAM_SEARCH
+  | typeof API_PAM_TRANSFER
+  | typeof API_PAM_USERS_SEARCH
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGIN_BRAIN
