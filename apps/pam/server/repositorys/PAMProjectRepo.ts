@@ -26,6 +26,10 @@ import {
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import {
+  resolvePamListSortBy,
+  resolvePamListSortOrder
+} from '@config/pamListSort';
+import {
   PAMProjectEnvKey,
   SearchPAMProjectFields,
   PAMProjectTableName,
@@ -279,6 +283,8 @@ export class PAMProjectRepo extends BaseRepository<
     const visibilityFilter = resolveVisibilityFilter(params.filters);
 
     const admin = this.supabaseRepo.getAdminSupabase();
+    const sortBy = resolvePamListSortBy(params.sort);
+    const sortOrder = resolvePamListSortOrder(params.sort);
     const { data, error } = await admin.rpc(PAMSearchProjectsSQLFunctionName, {
       p_user_id: user_id ?? null,
       p_visibility: visibilityFilter ?? null,
@@ -287,7 +293,9 @@ export class PAMProjectRepo extends BaseRepository<
       p_page: page,
       p_page_size: pageSize,
       p_include_count: params.includeCount ?? page <= 1,
-      p_include_owner_id: Boolean(user_id)
+      p_include_owner_id: Boolean(user_id),
+      p_sort_by: sortBy,
+      p_sort_order: sortOrder
     });
 
     this.supabaseRepo.throwIfError({ data, error });

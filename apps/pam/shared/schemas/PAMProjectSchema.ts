@@ -219,7 +219,7 @@ export type PAMAuthUserSummary = z.infer<typeof PAMAuthUserSummarySchema>;
  */
 export interface PAMSearchParams extends Omit<ResourceSearchParams, 'sort'> {
   /**
-   * 重新 sort, 现在仅仅传递一个 json 字符串
+   * Sort clauses (store) or JSON string (query params / API).
    */
-  sort?: string;
+  sort?: string | ResourceSearchParams['sort'];
 }

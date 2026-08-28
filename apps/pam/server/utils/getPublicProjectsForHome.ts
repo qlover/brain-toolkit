@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { defaultSearchParams } from '@config/common';
+import { buildPamListSort, PAMListSortBy } from '@config/pamListSort';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { BootstrapServer } from '@server/BootstrapServer';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
@@ -8,11 +9,7 @@ import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 const HOME_PUBLIC_LIST_REVALIDATE_SECONDS = 60;
 
 function homePublicListSort() {
-  return [
-    { orderBy: 'is_public', order: 'desc' as const },
-    ...defaultSearchParams.sort,
-    { orderBy: 'id', order: 'desc' as const }
-  ];
+  return buildPamListSort(PAMListSortBy.CreatedAt);
 }
 
 /**

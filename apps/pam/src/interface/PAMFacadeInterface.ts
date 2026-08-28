@@ -114,6 +114,17 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
   ): Promise<ResourceSearchResult<T>>;
 
   /**
+   * Re-sort list by created_at or updated_at.
+   *
+   * @param sortBy - Date field (after is_public)
+   * @param sortOrder - asc or desc
+   */
+  searchProjectWithSort(
+    sortBy: 'created_at' | 'updated_at',
+    sortOrder?: 'asc' | 'desc'
+  ): Promise<ResourceSearchResult<T>>;
+
+  /**
    * Loads distinct categories for filters / create form.
    * Skips the API when the store already has rows unless `force` is set.
    */
