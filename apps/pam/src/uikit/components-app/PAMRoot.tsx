@@ -19,6 +19,10 @@ import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { mergePamCategories } from '@config/pamCategories';
+import {
+  resolvePamListSortBy,
+  resolvePamListSortOrder
+} from '@config/pamListSort';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
@@ -117,6 +121,12 @@ export function PAMRoot({
   const listStatus = useStore(pamFacadeStore, (state) => state.status);
   const categoryValue = categoryFromFilters(searchFilters);
   const visibilityValue = visibilityFromFilters(searchFilters);
+  const sortValue = useStore(pamFacadeStore, (state) =>
+    resolvePamListSortBy(state.searchParams.sort)
+  );
+  const sortOrder = useStore(pamFacadeStore, (state) =>
+    resolvePamListSortOrder(state.searchParams.sort)
+  );
   const storeCategories = useStore(pamFacadeStore, (state) => state.categories);
 
   // DRAFT = never fetched; after first pull (PENDING/SUCCESS/FAILED) trust store
@@ -249,6 +259,11 @@ export function PAMRoot({
         visibilityValue={visibilityValue}
         onVisibilityChange={(value) => {
           void pamFacade.searchProjectWithVisibility(value);
+        }}
+        sortValue={sortValue}
+        sortOrder={sortOrder}
+        onSortChange={(by, order) => {
+          void pamFacade.searchProjectWithSort(by, order);
         }}
         showPrivateVisibility={isAuthenticated}
         viewMode={viewMode}

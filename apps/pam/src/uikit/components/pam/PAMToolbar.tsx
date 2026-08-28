@@ -1,4 +1,5 @@
 import {
+  AdjustmentsHorizontalIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
   PlusIcon,
@@ -13,6 +14,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
   type KeyboardEvent
@@ -25,9 +27,103 @@ import type {
 } from '@/interface/PAMFacadeInterface';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { mergePamCategories } from '@config/pamCategories';
+import {
+  PAMListSortBy,
+  PAMListSortOrder,
+  isDefaultPamListSortState,
+  type PAMListSortByType,
+  type PAMListSortOrderType
+} from '@config/pamListSort';
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 
 const SEARCH_DEBOUNCE_MS = 350;
+
+function FilterOption({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      data-testid="FilterOption"
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+        active
+          ? 'bg-brand text-on-brand shadow-sm'
+          : 'text-secondary-text hover:bg-elevated hover:text-primary-text'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ViewModeToggle({
+  viewMode,
+  onViewModeChange,
+  tt
+}: {
+  viewMode: PAMViewModeType;
+  onViewModeChange: (mode: PAMViewModeType) => void;
+  tt: PAMI18nInterface;
+}) {
+  const isCard = viewMode === PAMViewMode.Card;
+
+  return (
+    <div
+      data-testid="PAMToolbarViewToggle"
+      className="bg-primary/80 relative inline-grid h-10 shrink-0 grid-cols-2 rounded-full p-1 ring-1 ring-primary-border/60 sm:h-11"
+      role="group"
+      aria-label={`${tt.pamViewModeCard} / ${tt.pamViewModeList}`}
+    >
+      <span
+        aria-hidden
+        className={clsx(
+          'pointer-events-none absolute inset-y-1 rounded-full bg-secondary ring-1 ring-primary-border/50 transition-all duration-200 ease-out',
+          isCard
+            ? 'left-1 right-[calc(50%+0.125rem)]'
+            : 'left-[calc(50%+0.125rem)] right-1'
+        )}
+      />
+
+      <button
+        type="button"
+        title={tt.pamViewModeCard}
+        aria-label={tt.pamViewModeCard}
+        aria-pressed={isCard}
+        onClick={() => onViewModeChange(PAMViewMode.Card)}
+        className={clsx(
+          'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm',
+          isCard ? 'text-brand' : 'text-secondary-text hover:text-primary-text'
+        )}
+      >
+        <Squares2X2Icon className="h-4 w-4 shrink-0" />
+        <span className="hidden min-[420px]:inline">{tt.pamViewModeCard}</span>
+      </button>
+
+      <button
+        type="button"
+        title={tt.pamViewModeList}
+        aria-label={tt.pamViewModeList}
+        aria-pressed={!isCard}
+        onClick={() => onViewModeChange(PAMViewMode.Compact)}
+        className={clsx(
+          'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm',
+          !isCard ? 'text-brand' : 'text-secondary-text hover:text-primary-text'
+        )}
+      >
+        <ListBulletIcon className="h-4 w-4 shrink-0" />
+        <span className="hidden min-[420px]:inline">{tt.pamViewModeList}</span>
+      </button>
+    </div>
+  );
+}
 
 interface PAMToolbarProps {
   tt: PAMI18nInterface;
@@ -35,16 +131,19 @@ interface PAMToolbarProps {
   onCategoryChange: (value: string) => void;
   visibilityValue: string;
   onVisibilityChange: (value: string) => void;
-  /** When false, hide the private visibility chip (guests). */
+  sortValue: PAMListSortByType;
+  sortOrder: PAMListSortOrderType;
+  onSortChange: (
+    sortBy: PAMListSortByType,
+    sortOrder: PAMListSortOrderType
+  ) => void;
   showPrivateVisibility?: boolean;
   viewMode: PAMViewModeType;
   onViewModeChange: (mode: PAMViewModeType) => void;
   categories: string[];
   facadeInterface: PAMFacadeInterface<PAMProjectDetail>;
   onCreate: () => void;
-  /** Hide create CTA when false (e.g. guest). */
   canCreate?: boolean;
-  /** True while a list request is in flight. */
   searching?: boolean;
 }
 
@@ -58,6 +157,9 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   onCategoryChange,
   visibilityValue,
   onVisibilityChange,
+  sortValue,
+  sortOrder,
+  onSortChange,
   showPrivateVisibility = false,
   viewMode,
   onViewModeChange,
@@ -70,6 +172,8 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   const facadeStore = facadeInterface.getFacadeStore();
   const storeKeyword = useStore(facadeStore, keywordSelector);
   const [draftKeyword, setDraftKeyword] = useState(storeKeyword);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersRef = useRef<HTMLDivElement>(null);
 
   const chipCategories = useMemo(
     () => mergePamCategories(categories),
@@ -79,6 +183,31 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   useEffect(() => {
     setDraftKeyword(storeKeyword);
   }, [storeKeyword]);
+
+  useEffect(() => {
+    if (!filtersOpen) {
+      return;
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      if (
+        filtersRef.current &&
+        !filtersRef.current.contains(event.target as Node)
+      ) {
+        setFiltersOpen(false);
+      }
+    };
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setFiltersOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [filtersOpen]);
 
   const runSearch = useCallback(
     (keyword: string) => {
@@ -133,186 +262,229 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
     runSearch('');
   }, [debouncedSearch, runSearch]);
 
-  const chipClass = (active: boolean) =>
-    clsx(
-      'shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors sm:text-xs',
-      active
-        ? 'border-brand bg-brand/10 text-brand'
-        : 'border-primary-border bg-elevated text-secondary-text hover:text-primary-text'
-    );
-
   const hasCategoryChips = chipCategories.length > 0;
   const showCategoryFilters = hasCategoryChips || categoryValue.length > 0;
 
-  const filterChips = (
-    <>
-      <div
-        data-testid="PAMToolbarVisibilityChips"
-        className="flex shrink-0 items-center gap-1"
-        role="group"
-        aria-label={tt.labelVisibility}
-      >
-        <button
-          type="button"
-          data-testid="PAMToolbarVisibilityAll"
-          onClick={() => onVisibilityChange('')}
-          className={chipClass(visibilityValue === '')}
-        >
-          {tt.allVisibility}
-        </button>
-        <button
-          type="button"
-          data-testid="PAMToolbarVisibilityPublic"
-          onClick={() => onVisibilityChange('public')}
-          className={chipClass(visibilityValue === 'public')}
-        >
-          {tt.public}
-        </button>
-        {showPrivateVisibility ? (
-          <button
-            type="button"
-            data-testid="PAMToolbarVisibilityPrivate"
-            onClick={() => onVisibilityChange('private')}
-            className={chipClass(visibilityValue === 'private')}
-          >
-            {tt.private}
-          </button>
-        ) : null}
-      </div>
+  const filterBadgeCount =
+    (visibilityValue ? 1 : 0) +
+    (isDefaultPamListSortState(sortValue, sortOrder) ? 0 : 1);
 
-      {showCategoryFilters ? (
-        <>
-          <span
-            className="mx-0.5 h-3 w-px shrink-0 bg-primary-border"
-            aria-hidden
-          />
-          <div
-            data-testid="PAMToolbarCategoryChips"
-            className="flex shrink-0 items-center gap-1"
-            role="group"
-            aria-label={tt.labelCategory}
-          >
-            <button
-              type="button"
-              data-testid="PAMToolbarCategoryAll"
-              onClick={() => onCategoryChange('')}
-              className={chipClass(categoryValue === '')}
-            >
-              {tt.allCategory}
-            </button>
-            {chipCategories.map((cat) => (
-              <button
-                type="button"
-                data-testid="PAMToolbarCategoryItem"
-                key={cat}
-                onClick={() => onCategoryChange(cat)}
-                className={chipClass(categoryValue === cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
-    </>
-  );
-
-  const toolbarActions = (
-    <div className="flex shrink-0 items-center gap-1.5">
-      <div className="bg-primary flex items-center gap-0.5 rounded-md p-0.5">
-        <button
-          type="button"
-          title={tt.pamViewModeCard}
-          aria-label={tt.pamViewModeCard}
-          onClick={() => onViewModeChange(PAMViewMode.Card)}
-          className={clsx(
-            'inline-flex h-7 w-7 items-center justify-center rounded transition-all',
-            viewMode === 'card'
-              ? 'bg-elevated text-brand shadow-sm'
-              : 'text-secondary-text hover:bg-elevated/50'
-          )}
-        >
-          <Squares2X2Icon className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          title={tt.pamViewModeList}
-          aria-label={tt.pamViewModeList}
-          onClick={() => onViewModeChange(PAMViewMode.Compact)}
-          className={clsx(
-            'inline-flex h-7 w-7 items-center justify-center rounded transition-all',
-            viewMode === 'compact'
-              ? 'bg-elevated text-brand shadow-sm'
-              : 'text-secondary-text hover:bg-elevated/50'
-          )}
-        >
-          <ListBulletIcon className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      {canCreate ? (
-        <button
-          type="button"
-          id="addProjectBtn"
-          title={tt.addPam}
-          onClick={onCreate}
-          className="bg-brand hover:bg-brand-hover active:bg-brand-active text-on-brand hidden h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium shadow-sm transition sm:inline-flex"
-        >
-          <PlusIcon className="h-3.5 w-3.5" />
-          <span>{tt.addPam}</span>
-        </button>
-      ) : null}
-    </div>
-  );
+  const categoryChipClass = (active: boolean) =>
+    clsx(
+      'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors',
+      active
+        ? 'bg-brand text-on-brand'
+        : 'bg-elevated text-secondary-text ring-1 ring-primary-border/80 hover:text-primary-text'
+    );
 
   return (
     <>
-      <div
-        data-testid="PAMToolbar"
-        className="bg-secondary mb-2 rounded-lg border border-primary-border p-2 shadow-sm sm:mb-3 sm:rounded-xl"
-      >
-        <div className="grid gap-1.5 md:grid-cols-[minmax(11rem,14rem)_1fr_auto] md:items-center md:gap-x-2">
-          <div className="flex items-center gap-1.5 md:contents">
-            <div className="relative min-w-0 flex-1 md:col-start-1 md:row-start-1">
-              <span className="text-tertiary-text absolute top-1/2 left-2 -translate-y-1/2">
-                {searching ? (
-                  <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <MagnifyingGlassIcon className="h-3.5 w-3.5" />
-                )}
-              </span>
-              <input
-                type="text"
-                placeholder={tt.placeholderSearch}
-                value={draftKeyword}
-                onChange={onSearchChange}
-                onKeyDown={onSearchKeyDown}
-                className="bg-secondary h-8 w-full rounded-md border border-primary-border py-1 pr-7 pl-7 text-sm text-primary-text placeholder-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none"
-              />
-              {draftKeyword ? (
+      <div data-testid="PAMToolbar" className="mb-4 flex flex-col sm:mb-5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
+            <span className="text-tertiary-text pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2">
+              {searching ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <MagnifyingGlassIcon className="h-4 w-4" />
+              )}
+            </span>
+            <input
+              type="text"
+              placeholder={tt.placeholderSearch}
+              value={draftKeyword}
+              onChange={onSearchChange}
+              onKeyDown={onSearchKeyDown}
+              className="bg-elevated/70 h-10 w-full rounded-xl py-2 pr-9 pl-10 text-sm text-primary-text ring-1 ring-primary-border/70 transition placeholder:text-tertiary-text focus:ring-2 focus:ring-brand focus:outline-none sm:h-11"
+            />
+            {draftKeyword ? (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={onClearSearch}
+                className="text-tertiary-text hover:text-secondary-text absolute top-1/2 right-2.5 -translate-y-1/2 rounded-full p-0.5 transition-colors"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+
+          <div ref={filtersRef} className="relative shrink-0">
+            <button
+              type="button"
+              data-testid="PAMToolbarFiltersButton"
+              aria-expanded={filtersOpen}
+              aria-haspopup="dialog"
+              onClick={() => setFiltersOpen((open) => !open)}
+              className={clsx(
+                'inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium ring-1 transition sm:h-11 sm:px-3.5',
+                filtersOpen || filterBadgeCount > 0
+                  ? 'bg-brand/10 text-brand ring-brand/30'
+                  : 'bg-elevated/70 text-secondary-text ring-primary-border/70 hover:text-primary-text'
+              )}
+            >
+              <AdjustmentsHorizontalIcon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{tt.filters}</span>
+              {filterBadgeCount > 0 ? (
+                <span className="bg-brand text-on-brand inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
+                  {filterBadgeCount}
+                </span>
+              ) : null}
+            </button>
+
+            {filtersOpen ? (
+              <div
+                data-testid="PAMToolbarFiltersPanel"
+                role="dialog"
+                aria-label={tt.filters}
+                className="bg-secondary absolute top-[calc(100%+0.5rem)] right-0 z-30 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-primary-border p-3 shadow-lg sm:w-72"
+              >
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+                      {tt.labelVisibility}
+                    </p>
+                    <div
+                      data-testid="PAMToolbarVisibilityChips"
+                      className="flex flex-wrap gap-1"
+                      role="group"
+                      aria-label={tt.labelVisibility}
+                    >
+                      <FilterOption
+                        active={visibilityValue === ''}
+                        onClick={() => onVisibilityChange('')}
+                      >
+                        {tt.allVisibility}
+                      </FilterOption>
+                      <FilterOption
+                        active={visibilityValue === 'public'}
+                        onClick={() => onVisibilityChange('public')}
+                      >
+                        {tt.public}
+                      </FilterOption>
+                      {showPrivateVisibility ? (
+                        <FilterOption
+                          active={visibilityValue === 'private'}
+                          onClick={() => onVisibilityChange('private')}
+                        >
+                          {tt.private}
+                        </FilterOption>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-primary-border pt-3">
+                    <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+                      {tt.labelSort}
+                    </p>
+                    <div
+                      data-testid="PAMToolbarSortChips"
+                      className="flex flex-wrap gap-1"
+                      role="group"
+                      aria-label={tt.labelSort}
+                    >
+                      <FilterOption
+                        active={sortValue === PAMListSortBy.CreatedAt}
+                        onClick={() =>
+                          onSortChange(PAMListSortBy.CreatedAt, sortOrder)
+                        }
+                      >
+                        {tt.sortByCreated}
+                      </FilterOption>
+                      <FilterOption
+                        active={sortValue === PAMListSortBy.UpdatedAt}
+                        onClick={() =>
+                          onSortChange(PAMListSortBy.UpdatedAt, sortOrder)
+                        }
+                      >
+                        {tt.sortByUpdated}
+                      </FilterOption>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-primary-border pt-3">
+                    <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+                      {tt.labelSortOrder}
+                    </p>
+                    <div
+                      data-testid="PAMToolbarSortOrderChips"
+                      className="flex flex-wrap gap-1"
+                      role="group"
+                      aria-label={tt.labelSortOrder}
+                    >
+                      <FilterOption
+                        active={sortOrder === PAMListSortOrder.Desc}
+                        onClick={() =>
+                          onSortChange(sortValue, PAMListSortOrder.Desc)
+                        }
+                      >
+                        {tt.sortOrderDesc}
+                      </FilterOption>
+                      <FilterOption
+                        active={sortOrder === PAMListSortOrder.Asc}
+                        onClick={() =>
+                          onSortChange(sortValue, PAMListSortOrder.Asc)
+                        }
+                      >
+                        {tt.sortOrderAsc}
+                      </FilterOption>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <ViewModeToggle
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+            tt={tt}
+          />
+
+          {canCreate ? (
+            <button
+              type="button"
+              id="addProjectBtn"
+              title={tt.addPam}
+              onClick={onCreate}
+              className="bg-brand hover:bg-brand-hover active:bg-brand-active text-on-brand hidden h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-medium shadow-sm transition sm:inline-flex sm:h-11"
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>{tt.addPam}</span>
+            </button>
+          ) : null}
+        </div>
+
+        {showCategoryFilters ? (
+          <div
+            data-testid="PAMToolbarCategoryChips"
+            className="mt-3 overflow-x-auto overscroll-x-contain py-1.5 scrollbar-none sm:mt-3.5"
+            role="group"
+            aria-label={tt.labelCategory}
+          >
+            <div className="flex w-max min-w-full items-center gap-1.5">
+              <button
+                type="button"
+                data-testid="PAMToolbarCategoryAll"
+                onClick={() => onCategoryChange('')}
+                className={categoryChipClass(categoryValue === '')}
+              >
+                {tt.allCategory}
+              </button>
+              {chipCategories.map((cat) => (
                 <button
                   type="button"
-                  aria-label="Clear search"
-                  onClick={onClearSearch}
-                  className="text-tertiary-text hover:text-secondary-text absolute top-1/2 right-1 -translate-y-1/2 rounded-full p-0.5 transition-colors"
+                  data-testid="PAMToolbarCategoryItem"
+                  key={cat}
+                  onClick={() => onCategoryChange(cat)}
+                  className={categoryChipClass(categoryValue === cat)}
                 >
-                  <XMarkIcon className="h-3.5 w-3.5" />
+                  {cat}
                 </button>
-              ) : null}
-            </div>
-
-            <div className="md:col-start-3 md:row-start-1">
-              {toolbarActions}
+              ))}
             </div>
           </div>
-
-          <div
-            data-testid="PAMToolbarFilters"
-            className="-mx-0.5 flex min-w-0 items-center gap-1 overflow-x-auto px-0.5 scrollbar-none md:col-start-2 md:row-start-1 md:flex-wrap md:overflow-visible md:px-0"
-          >
-            {filterChips}
-          </div>
-        </div>
+        ) : null}
       </div>
 
       {canCreate ? (

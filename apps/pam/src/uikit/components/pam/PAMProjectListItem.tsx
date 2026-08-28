@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { useLocale } from 'next-intl';
 import React, { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
@@ -16,7 +17,11 @@ import {
 } from './PAMHighlightUtil';
 import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
 import { PAMProjectAvatar } from './PAMProjectAvatar';
-import { getPAMPrimaryUrl, shortenPAMOwnerId } from './PAMProjectDisplayUtil';
+import {
+  formatPAMProjectTimestamp,
+  getPAMPrimaryUrl,
+  shortenPAMOwnerId
+} from './PAMProjectDisplayUtil';
 
 type PAMProjectListModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
@@ -40,6 +45,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   highlightKeyword = '',
   highlightCategory = ''
 }) => {
+  const locale = useLocale();
   const envs = useMemo(
     () => project.environments || [],
     [project.environments]
@@ -63,6 +69,10 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
 
   const ownerId = project.owner_id || '';
   const ownerIdShort = shortenPAMOwnerId(ownerId);
+  const updatedAtText = formatPAMProjectTimestamp(project.updated_at, locale);
+  const updatedAtLabel = updatedAtText
+    ? tt.updatedAt.replace('%time%', updatedAtText)
+    : '';
 
   const onCopyOwnerId = useCallback(async () => {
     if (!ownerId) {
@@ -179,6 +189,16 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
             <span className="inline-flex flex-wrap items-center gap-1 md:hidden">
               {envChips}
             </span>
+          </>
+        ) : null}
+        {updatedAtLabel ? (
+          <>
+            {ownerId || project.category || project.stack || envChips ? (
+              <span>·</span>
+            ) : null}
+            <time dateTime={String(project.updated_at ?? '')}>
+              {updatedAtLabel}
+            </time>
           </>
         ) : null}
       </div>
