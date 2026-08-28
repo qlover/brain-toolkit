@@ -186,6 +186,13 @@ export const API_PAM_PREVIEW_URL_MISSING = 'api:pam_preview_url_missing';
 export const API_PAM_PREVIEW_CAPTURE_FAILED = 'api:pam_preview_capture_failed';
 
 /**
+ * @description Site logo proxy received an invalid or blocked URL
+ * @localZh 站点 URL 无效
+ * @localEn Invalid site URL
+ */
+export const API_PAM_SITE_URL_INVALID = 'api:pam_site_url_invalid';
+
+/**
  * @description 没有pam 环境
  * @localZh 环境无效
  * @localEn PAM Environment Invalid

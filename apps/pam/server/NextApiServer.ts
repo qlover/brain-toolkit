@@ -1,3 +1,4 @@
+import { ExecutorError } from '@qlover/fe-corekit/executor';
 import {
   ApiServer,
   createLogger,
@@ -8,6 +9,7 @@ import {
 } from '@qlover/next-kit/server';
 import { RequestLogsRepository } from '@qlover/next-kit/server';
 import { type NextRequest, NextResponse } from 'next/server';
+import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { oauthI18nIdToRfc } from '@config/oauthErrors';
 import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
@@ -33,6 +35,11 @@ type RunWithTask<Result> = ExecutorAsyncTask<
   Result | NextKitApiResult<Result>,
   BootstrapServerContextOptions<PamServerIocMap>
 >;
+
+export type BinaryApiPayload = {
+  bytes: Uint8Array;
+  contentType: string;
+};
 
 /**
  * App Next.js API server: wires ServerConfig + IOC, resolves ServerContext,
@@ -127,6 +134,52 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
       `app;dur=${Math.round(performance.now() - started)}`
     );
     return response;
+  }
+
+  /**
+   * Binary/image endpoints: success returns raw bytes; errors use the JSON envelope.
+   */
+  public async runWithBinary(
+    task?: RunWithTask<BinaryApiPayload | null>,
+    init?: RunWithInit & {
+      notFoundHeaders?: HeadersInit;
+      notFoundCacheControl?: string;
+      successCacheControl?: string;
+    }
+  ): Promise<NextResponse> {
+    const started = performance.now();
+    const result = await this.run(task);
+    const timing = `app;dur=${Math.round(performance.now() - started)}`;
+
+    if (!result.success) {
+      return super.runWithJson(async () => {
+        throw new ExecutorError(result.id ?? API_SERVER_ERROR, result.message);
+      }, init);
+    }
+
+    const payload = result.data ?? null;
+    if (!payload) {
+      return new NextResponse(null, {
+        status: 404,
+        headers: {
+          ...init?.notFoundHeaders,
+          'Cache-Control': init?.notFoundCacheControl ?? 'public, max-age=300',
+          'Server-Timing': timing
+        }
+      });
+    }
+
+    return new NextResponse(Buffer.from(payload.bytes), {
+      status: init?.httpStatus ?? 200,
+      headers: {
+        'Content-Type': payload.contentType,
+        'Cache-Control':
+          init?.successCacheControl ??
+          'public, max-age=86400, stale-while-revalidate=604800',
+        ...init?.successHeaders,
+        'Server-Timing': timing
+      }
+    });
   }
 
   /**
