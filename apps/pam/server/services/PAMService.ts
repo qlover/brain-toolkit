@@ -12,6 +12,7 @@ import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
 import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
+import { parsePAMSiteUrl } from '@shared/utils/PAMSiteIconUtil';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_ENV_ID_NOT_EXISTS,
@@ -23,6 +24,7 @@ import {
   API_PAM_TRANSFER_USER_NOT_FOUND,
   API_PAM_PREVIEW_CAPTURE_FAILED,
   API_PAM_PREVIEW_URL_MISSING,
+  API_PAM_SITE_URL_INVALID,
   API_PAM_VARIABLE_KEY_DUPLICATE,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
@@ -57,6 +59,8 @@ import {
   capturePageScreenshot,
   resolveProjectCaptureUrl
 } from '@server/utils/PAMPreviewCaptureUtil';
+import { fetchSiteLogoForUrl } from '@server/utils/PAMSiteLogoFetchUtil';
+import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
 import { MemoryKvCacheService } from './MemoryKvCacheService';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
@@ -85,7 +89,43 @@ export class PAMService implements PAMServiceInterface {
   @inject(PAMCategoryCacheService)
   protected readonly categoryCache!: PAMCategoryCacheService;
 
+  /** Coalesce identical in-flight searches (real-time; not a result cache). */
+  private readonly searchInflight = new Map<
+    string,
+    Promise<ResourceSearchResult<SearchPAMProject>>
+  >();
+
   protected secretEncryption: PAMEnvSecretEncryption | null = null;
+
+  protected buildSearchInflightKey(
+    userId: string | undefined,
+    params: ResourceSearchParams
+  ): string {
+    return JSON.stringify({
+      userId: userId ?? null,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 10,
+      keyword: (params.keyword || '').trim(),
+      filters: params.filters ?? null,
+      sort: params.sort ?? null
+    });
+  }
+
+  protected attachSearchOwnership(
+    user: { id: string } | null | undefined,
+    result: ResourceSearchResult<SearchPAMProject>
+  ): ResourceSearchResult<SearchPAMProject> {
+    if (!user?.id || !result.items?.length) {
+      return result;
+    }
+    return Object.assign({}, result, {
+      items: result.items.map((item) =>
+        Object.assign({}, item, {
+          is_owner: user.id === item.owner_id
+        } as SearchPAMProject)
+      )
+    });
+  }
 
   /**
    * Lazy AES helper for sensitive env values at rest.
@@ -210,25 +250,25 @@ export class PAMService implements PAMServiceInterface {
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
     const user = await this.userService.getSessionUser();
-
-    const result = await this.projectRepo.searchProjects({
-      ...params,
-      // 如果已经登陆则查询包含用户本身的
-      // 如果没有登陆则查询公开项目
-      user_id: user?.id
-    });
-
-    if (user && result.items && result.items.length > 0) {
-      const newItems = result.items.map((item) =>
-        Object.assign({}, item, {
-          is_owner: user.id === item.owner_id
-        } as SearchPAMProject)
-      );
-
-      return Object.assign(result, { items: newItems });
+    const userId = user?.id;
+    const inflightKey = this.buildSearchInflightKey(userId, params);
+    const pending = this.searchInflight.get(inflightKey);
+    if (pending) {
+      return pending;
     }
 
-    return result;
+    const promise = this.projectRepo
+      .searchProjects({
+        ...params,
+        user_id: userId
+      })
+      .then((result) => this.attachSearchOwnership(user, result))
+      .finally(() => {
+        this.searchInflight.delete(inflightKey);
+      });
+
+    this.searchInflight.set(inflightKey, promise);
+    return promise;
   }
 
   /**
@@ -250,27 +290,34 @@ export class PAMService implements PAMServiceInterface {
   /**
    * @override
    */
+  public async fetchSiteLogo(siteUrl: string): Promise<FetchedSiteLogo | null> {
+    const trimmed = siteUrl.trim();
+    if (!trimmed || !parsePAMSiteUrl(trimmed)) {
+      throw new ExecutorError(API_PAM_SITE_URL_INVALID);
+    }
+    return fetchSiteLogoForUrl(trimmed);
+  }
+
+  /**
+   * @override
+   */
   public async getProjectDetail(
     params: ProjectDetailParams
   ): Promise<PAMProjectDetail | null> {
     const { id: idOrSlug, withEnvironments } = params;
-    const user = await this.userService.getUser();
 
-    const resolvedId = await this.resolveProjectId(idOrSlug);
-    if (!resolvedId) {
-      return null;
-    }
+    const [user, rawDetail] = await Promise.all([
+      this.userService.getUser(),
+      withEnvironments
+        ? this.projectRepo.getProjectDetailWithEnvironmentsAdmin(idOrSlug)
+        : this.projectRepo.getProjectDetailAdmin(idOrSlug)
+    ]);
 
-    // Admin read: Brain/CLI sessions have no Supabase RLS cookies; list already
-    // uses admin. Access is enforced below (public or owner).
-    let detail: PAMProjectDetail | null;
-    if (withEnvironments) {
-      const withEnvs =
-        await this.projectRepo.getProjectWithEnvironmentsAdmin(resolvedId);
-      detail = withEnvs ? this.redactProjectDetail(withEnvs) : null;
-    } else {
-      detail = await this.projectRepo.getProjectByIdAdmin(resolvedId);
-    }
+    const detail: PAMProjectDetail | null = rawDetail
+      ? withEnvironments
+        ? this.redactProjectDetail(rawDetail as PAMProjectDetail)
+        : (rawDetail as PAMProjectDetail)
+      : null;
 
     if (!detail) {
       return null;
@@ -807,16 +854,24 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
-    const detail = await this.getProjectDetail({
-      id: projectId,
-      withEnvironments: true
-    });
+    const [user, access] = await Promise.all([
+      this.userService.getUser(),
+      this.projectRepo.getProjectAccessAdmin(projectId)
+    ]);
 
-    if (!detail) {
+    if (!access) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    return detail[PAMProjectEnvKey] || [];
+    const isOwner = Boolean(user && user.id === access.owner_id);
+    if (!isOwner && access.is_public !== PAMPublicType.public) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const envs = await this.projectRepo.getEnvironmentsByProjectId(projectId);
+    return PAMEnvVariableRedactUtil.redactEnvironments(
+      envs as PAMEnvWriteable[]
+    );
   }
 
   /**
