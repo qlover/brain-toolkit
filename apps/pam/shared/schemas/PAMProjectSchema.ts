@@ -43,6 +43,13 @@ export const PAMUpdateSQLFunctionName =
   'update_project_with_environments' as const;
 
 /**
+ * Paginated project list with environments (single round-trip).
+ *
+ * @see {@link makes/sql/012-pam-search-projects-rpc.sql}
+ */
+export const PAMSearchProjectsSQLFunctionName = 'pam_search_projects' as const;
+
+/**
  * description， stack， repo_url 可能是 null 则需要使用 nullish 而不是 optional
  *
  * sql 中描述时并没有明确规定 not null, 也就是如果入库的时候没有值那么默认就是 null
