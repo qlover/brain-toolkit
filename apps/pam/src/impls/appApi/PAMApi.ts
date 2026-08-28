@@ -49,6 +49,13 @@ export class PAMApi {
     Promise<ResourceSearchResult<SearchPAMProject>>
   >();
 
+  private readonly listEnvironmentsInflight = new Map<
+    string,
+    Promise<PAMEnvWriteable[]>
+  >();
+
+  private listCategoriesInflight: Promise<string[]> | null = null;
+
   constructor(
     @inject(AppApiRequester) private readonly appApiRequester: AppApiRequester
   ) {}
@@ -65,12 +72,21 @@ export class PAMApi {
    * Distinct categories from projects the caller can see (public + owned).
    */
   public async listCategories(): Promise<string[]> {
-    const response = await this.appApiRequester.get<
-      NextKitApiSuccess<string[]>,
-      Record<string, never>
-    >(API_PAM_CATEGORIES);
+    if (this.listCategoriesInflight) {
+      return this.listCategoriesInflight;
+    }
 
-    return response.data.data ?? [];
+    const request = this.appApiRequester
+      .get<NextKitApiSuccess<string[]>, Record<string, never>>(
+        API_PAM_CATEGORIES
+      )
+      .then((response) => response.data.data ?? [])
+      .finally(() => {
+        this.listCategoriesInflight = null;
+      });
+
+    this.listCategoriesInflight = request;
+    return request;
   }
 
   public async searchProjects(
@@ -187,7 +203,7 @@ export class PAMApi {
       NextKitApiSuccess<PAMProjectDetail>,
       { isEnv: 1 | 0 }
     >(buildApiPamDetail(params.id), {
-      params: { isEnv: 1 },
+      params: { isEnv: 0 },
       abortId: PAMAbortId.projectDetail(params.id)
     });
 
@@ -217,14 +233,25 @@ export class PAMApi {
    * @returns Redacted environment list
    */
   public async listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
-    const response = await this.appApiRequester.get<
-      NextKitApiSuccess<PAMEnvWriteable[]>,
-      Record<string, never>
-    >(buildApiPamEnvironments(projectId), {
-      abortId: PAMAbortId.listEnvironments(projectId)
-    });
+    const pending = this.listEnvironmentsInflight.get(projectId);
+    if (pending) {
+      return pending;
+    }
 
-    return response.data.data!;
+    const request = this.appApiRequester
+      .get<NextKitApiSuccess<PAMEnvWriteable[]>, Record<string, never>>(
+        buildApiPamEnvironments(projectId),
+        {
+          abortId: PAMAbortId.listEnvironments(projectId)
+        }
+      )
+      .then((response) => response.data.data!)
+      .finally(() => {
+        this.listEnvironmentsInflight.delete(projectId);
+      });
+
+    this.listEnvironmentsInflight.set(projectId, request);
+    return request;
   }
 
   /**

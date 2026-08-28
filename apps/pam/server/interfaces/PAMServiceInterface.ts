@@ -13,6 +13,7 @@ import type {
   PAMCreateSource,
   PAMAuthUserSummary
 } from '@shared/schemas/PAMProjectSchema';
+import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
 import type {
   ResourceSearchParams,
   ResourceSearchResult
@@ -223,4 +224,9 @@ export interface PAMServiceInterface {
       comments?: string[];
     }>;
   }>;
+
+  /**
+   * Proxies favicon/logo for a public site page URL (`null` when not found).
+   */
+  fetchSiteLogo(siteUrl: string): Promise<FetchedSiteLogo | null>;
 }

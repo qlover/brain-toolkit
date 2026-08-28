@@ -76,6 +76,11 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
   pullProjectList(params?: PAMSearchParams): Promise<ResourceSearchResult<T>>;
 
   /**
+   * Clears cached home list scope and reloads from page 1.
+   */
+  invalidateHomeProjectList(): Promise<ResourceSearchResult<T>>;
+
+  /**
    * 创建一个新的项目，允许传入环境信息
    *
    * 这里使用了 GatewayResult 作为返回结果，就是期望方法不会抛出错误，而是返回错误信息
@@ -110,8 +115,9 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
 
   /**
    * Loads distinct categories for filters / create form.
+   * Skips the API when the store already has rows unless `force` is set.
    */
-  pullCategories(): Promise<string[]>;
+  pullCategories(options?: { force?: boolean }): Promise<string[]>;
 
   /**
    * Seeds categories from RSC/ISR without waiting on the API.

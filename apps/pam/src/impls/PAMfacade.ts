@@ -85,6 +85,8 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   /** Latest list request id — stale responses are ignored. */
   protected listRequestId = 0;
 
+  private categoriesInflight: Promise<string[]> | null = null;
+
   /**
    * Home-list scope key: `'anon'` or logged-in user id.
    * Not persisted — session memory only for `ensureHomeProjectList`.
@@ -265,20 +267,31 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
           return response;
         }
 
-        const projects = this.withProjectsStrategy(projectsStrategy, response);
+        const prevResult = this.searchStore.getState().result;
+        const normalizedResponse =
+          projectsStrategy === ProjectsStrategy.Push &&
+          prevResult?.total &&
+          (!response.total || response.total <= 0)
+            ? { ...response, total: prevResult.total }
+            : response;
+
+        const projects = this.withProjectsStrategy(
+          projectsStrategy,
+          normalizedResponse
+        );
 
         this.logger.debug(
           `PAMFacade pullProjectList success projects ids`,
-          response.items.map((item) => item.id)
+          normalizedResponse.items.map((item) => item.id)
         );
 
-        this.searchStore.success(response);
+        this.searchStore.success(normalizedResponse);
         this.searchStore.emit({
           searchParams: mergedParams,
           projects: projects
         });
 
-        return response;
+        return normalizedResponse;
       })
       .catch((error) => {
         if (requestId !== this.listRequestId) {
@@ -294,8 +307,20 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
     response: ResourceSearchResult<SearchPAMProject>
   ): SearchPAMProject[] {
     switch (projectsStrategy) {
-      case ProjectsStrategy.Push:
-        return [...this.searchStore.getState().projects, ...response.items];
+      case ProjectsStrategy.Push: {
+        const merged = [
+          ...this.searchStore.getState().projects,
+          ...response.items
+        ];
+        const seen = new Set<string>();
+        return merged.filter((project) => {
+          if (seen.has(project.id)) {
+            return false;
+          }
+          seen.add(project.id);
+          return true;
+        });
+      }
       case ProjectsStrategy.Replace:
         return response.items as SearchPAMProject[];
     }
@@ -309,6 +334,18 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
       resetResult: true,
       projectsStrategy: ProjectsStrategy.Replace
     });
+  }
+
+  /**
+   * Clears home-list scope and reloads from page 1 after mutations (transfer, etc.).
+   *
+   * @override
+   */
+  public invalidateHomeProjectList(): Promise<
+    ResourceSearchResult<SearchPAMProject>
+  > {
+    this.homeListOwnerKey = null;
+    return this.reloadProjectListFromFirstPage();
   }
 
   /**
@@ -441,16 +478,35 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   /**
    * @override
    */
-  public async pullCategories(): Promise<string[]> {
-    try {
-      const categories = await this.pamApi.listCategories();
-      this.searchStore.emit({ categories });
-      return categories;
-    } catch (error) {
-      this.logger.warn('pullCategories failed', error);
-      // Keep ISR/hydrated categories on failure; do not wipe to [].
-      return this.searchStore.getState().categories;
+  public async pullCategories(options?: {
+    force?: boolean;
+  }): Promise<string[]> {
+    const force = options?.force ?? false;
+    const cached = this.searchStore.getState().categories;
+    if (!force && cached.length > 0) {
+      return cached;
     }
+
+    if (this.categoriesInflight) {
+      return this.categoriesInflight;
+    }
+
+    const request = (async () => {
+      try {
+        const categories = await this.pamApi.listCategories();
+        this.searchStore.emit({ categories });
+        return categories;
+      } catch (error) {
+        this.logger.warn('pullCategories failed', error);
+        // Keep ISR/hydrated categories on failure; do not wipe to [].
+        return this.searchStore.getState().categories;
+      } finally {
+        this.categoriesInflight = null;
+      }
+    })();
+
+    this.categoriesInflight = request;
+    return request;
   }
 
   protected mergeListFilters(

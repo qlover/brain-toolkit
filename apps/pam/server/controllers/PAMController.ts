@@ -20,6 +20,7 @@ import {
 } from '@schemas/PAMProjectSchema';
 import type { PAMServiceInterface } from '@server/interfaces/PAMServiceInterface';
 import { PAMService } from '@server/services/PAMService';
+import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
 import type { NextRequest } from 'next/server';
 
 @injectable()
@@ -268,5 +269,13 @@ export class PAMController {
     const projectUuid = uuidSchema.parse(projectId);
     const envUuid = uuidSchema.parse(envId);
     return this.pamService.exportEnvironment(projectUuid, envUuid);
+  }
+
+  /**
+   * Proxies site favicon/logo for list avatars (`?url=` page URL).
+   */
+  public getSiteLogo(request: NextRequest): Promise<FetchedSiteLogo | null> {
+    const siteUrl = request.nextUrl.searchParams.get('url') ?? '';
+    return this.pamService.fetchSiteLogo(siteUrl);
   }
 }

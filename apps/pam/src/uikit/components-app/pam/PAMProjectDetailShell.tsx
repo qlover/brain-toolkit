@@ -14,6 +14,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction
@@ -30,6 +31,7 @@ import {
   ROUTE_PROJECT_GENERAL,
   ROUTE_PROJECTS
 } from '@config/route';
+import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
   PAMPublicType,
   type PAMProjectDetail
@@ -55,6 +57,11 @@ export type PAMProjectDetailValue = {
   /** Opens the delete confirmation dialog (owner only). */
   readonly requestDeleteProject: () => void;
   readonly setProject: Dispatch<SetStateAction<PAMProjectDetail | null>>;
+  /** Lazy-loaded env list (cached in layout while switching tabs). */
+  readonly environments: PAMEnvWriteable[] | null;
+  readonly environmentsLoading: boolean;
+  readonly ensureEnvironments: () => Promise<void>;
+  readonly setEnvironments: Dispatch<SetStateAction<PAMEnvWriteable[] | null>>;
 };
 
 const PAMProjectDetailContext = createContext<PAMProjectDetailValue | null>(
@@ -86,7 +93,8 @@ export function usePAMProjectDetail(): PAMProjectDetailValue {
  * Significance: Shared layout shell for project detail App Router pages.
  * Core idea: Load project detail once here; tab panels reuse via context.
  * Main function: Header + tab bar + child panel slot.
- * Main purpose: One getProjectDetail for the whole detail tree.
+ * Main purpose: One lightweight getProjectDetail for the detail tree;
+ * environments load on demand via `/api/pam/:id/environments` on that tab.
  */
 export function PAMProjectDetailShell({
   projectId: routeKey,
@@ -102,6 +110,12 @@ export function PAMProjectDetailShell({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [environments, setEnvironments] = useState<PAMEnvWriteable[] | null>(
+    null
+  );
+  const [environmentsLoading, setEnvironmentsLoading] = useState(false);
+  const envLoadedForProjectRef = useRef('');
+  const envLoadInflightRef = useRef<Promise<void> | null>(null);
 
   const activeTab: PAMProjectDetailTabType = useMemo(() => {
     if (pathname.includes('/environments')) {
@@ -133,6 +147,52 @@ export function PAMProjectDetailShell({
       pamApi.stop(PAMAbortId.projectDetail(routeKey));
     };
   }, [pamApi, routeKey, tt.projectNotFound]);
+
+  useStrictEffect(() => {
+    void pamFacade.pullCategories();
+  }, [pamFacade]);
+
+  useEffect(() => {
+    envLoadedForProjectRef.current = '';
+    envLoadInflightRef.current = null;
+    setEnvironments(null);
+    setEnvironmentsLoading(false);
+  }, [routeKey]);
+
+  const ensureEnvironments = useCallback(async (): Promise<void> => {
+    const id = project?.id ?? '';
+    if (!id) {
+      return;
+    }
+    if (envLoadedForProjectRef.current === id) {
+      return;
+    }
+    if (envLoadInflightRef.current) {
+      await envLoadInflightRef.current;
+      return;
+    }
+
+    const load = (async () => {
+      setEnvironmentsLoading(true);
+      try {
+        const list = await pamApi.listEnvironments(id);
+        envLoadedForProjectRef.current = id;
+        setEnvironments(list);
+      } catch (caught) {
+        if (isAbortError(caught)) {
+          return;
+        }
+        envLoadedForProjectRef.current = id;
+        setEnvironments([]);
+      } finally {
+        setEnvironmentsLoading(false);
+        envLoadInflightRef.current = null;
+      }
+    })();
+
+    envLoadInflightRef.current = load;
+    await load;
+  }, [pamApi, project?.id]);
 
   // Legacy UUID URLs → replace with slug while keeping the current tab.
   useEffect(() => {
@@ -195,9 +255,24 @@ export function PAMProjectDetailShell({
       canEdit,
       deleting,
       requestDeleteProject: onDelete,
-      setProject
+      setProject,
+      environments,
+      environmentsLoading,
+      ensureEnvironments,
+      setEnvironments
     }),
-    [resolvedProjectId, project, loading, error, canEdit, deleting, onDelete]
+    [
+      resolvedProjectId,
+      project,
+      loading,
+      error,
+      canEdit,
+      deleting,
+      onDelete,
+      environments,
+      environmentsLoading,
+      ensureEnvironments
+    ]
   );
 
   const tabClass = (tab: PAMProjectDetailTabType): string =>

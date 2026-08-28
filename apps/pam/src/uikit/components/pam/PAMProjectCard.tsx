@@ -1,5 +1,11 @@
 import { clsx } from 'clsx';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
@@ -52,11 +58,22 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   const displayHost = getPAMDisplayHost(primaryUrl);
   const previewImageUrl = (project.preview_image_url || '').trim();
   const [previewFailed, setPreviewFailed] = useState(false);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
+  const previewImgRef = useRef<HTMLImageElement>(null);
   const showCover = previewImageUrl.length > 0 && !previewFailed;
+
+  const syncPreviewLoaded = useCallback((img: HTMLImageElement | null) => {
+    previewImgRef.current = img;
+    if (img?.complete && img.naturalWidth > 0) {
+      setPreviewLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
     setPreviewFailed(false);
-  }, [previewImageUrl]);
+    setPreviewLoaded(false);
+    syncPreviewLoaded(previewImgRef.current);
+  }, [previewImageUrl, syncPreviewLoaded]);
 
   const categoryActive = isCategoryHighlightActive(
     project.category,
@@ -140,13 +157,33 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-primary-border bg-secondary transition hover:border-brand hover:shadow-[0_0_0_1px_var(--fe-color-brand)]"
     >
       {showCover ? (
-        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-elevated">
+        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-brand/6">
+          <div
+            className={clsx(
+              'absolute inset-0 flex items-center justify-center transition-opacity',
+              previewLoaded ? 'pointer-events-none opacity-0' : 'opacity-100'
+            )}
+            aria-hidden={previewLoaded}
+          >
+            <PAMProjectAvatar
+              name={project.name}
+              primaryUrl={primaryUrl}
+              repoUrl={project.repo_url}
+              allowPreview={false}
+              variant="cover"
+            />
+          </div>
           {
             // eslint-disable-next-line @next/next/no-img-element -- arbitrary project preview URLs
             <img
+              ref={syncPreviewLoaded}
               src={previewImageUrl}
               alt=""
-              className="h-full w-full object-cover"
+              className={clsx(
+                'absolute inset-0 h-full w-full object-cover transition-opacity',
+                previewLoaded ? 'opacity-100' : 'opacity-0'
+              )}
+              onLoad={() => setPreviewLoaded(true)}
               onError={() => setPreviewFailed(true)}
             />
           }

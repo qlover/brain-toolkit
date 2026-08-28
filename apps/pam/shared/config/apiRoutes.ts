@@ -256,6 +256,15 @@ export const API_PAM_PREVIEW_IMAGE = '/api/pam/preview-image/:id' as const;
 export const API_PAM_SEARCH = '/api/pam/search' as const;
 
 /**
+ * API path: `/api/pam/site-logo`
+ *
+ * @see [src/app/api/pam/site-logo/route.ts](../../src/app/api/pam/site-logo/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/site-logo/route.ts`
+ */
+export const API_PAM_SITE_LOGO = '/api/pam/site-logo' as const;
+
+/**
  * API path: `/api/pam/transfer/:id`
  *
  * @see [src/app/api/pam/transfer/[id]/route.ts](../../src/app/api/pam/transfer/[id]/route.ts)
@@ -391,6 +400,7 @@ export type ApiRoutePath =
   | typeof API_PAM_FORK
   | typeof API_PAM_PREVIEW_IMAGE
   | typeof API_PAM_SEARCH
+  | typeof API_PAM_SITE_LOGO
   | typeof API_PAM_TRANSFER
   | typeof API_PAM_USERS_SEARCH
   | typeof API_REFERENCE

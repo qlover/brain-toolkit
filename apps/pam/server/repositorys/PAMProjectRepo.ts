@@ -1,6 +1,6 @@
 import { ResourceSearchResult } from '@qlover/corekit-bridge';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { DeleteStatus } from '@qlover/next-kit/common';
+import { DeleteStatus, uuidSchema } from '@qlover/next-kit/common';
 import {
   BaseRepository,
   FilterTriple,
@@ -34,10 +34,12 @@ import {
   SearchPAMProject,
   PAMProjectDetail,
   PAMUpdateSQLFunctionName,
+  PAMSearchProjectsSQLFunctionName,
   PAMProjectUpdate,
   PAMProjectCreate,
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
+import { isPamSearchRpcUnavailable } from '@server/utils/postgrestError';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
@@ -48,6 +50,10 @@ interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
   user_id?: string;
   /** Structured filters from ResourceSearchParams (e.g. `{ category }`). */
   filters?: unknown;
+  /** When set, overrides automatic exact vs planned count selection. */
+  exactCount?: boolean;
+  /** When false, skip row count (used for page 2+). */
+  includeCount?: boolean;
 }
 
 type EnvField = keyof PAMEnvWriteable;
@@ -181,6 +187,8 @@ export class PAMProjectRepo extends BaseRepository<
       page: page,
       pageSize: pageSize,
       sort: params.sort,
+      includeCount: params.includeCount ?? page <= 1,
+      exactCount: params.exactCount,
       // Substring match across project text fields (not FTS / search_vector).
       ilikeOr: keyword
         ? {
@@ -201,36 +209,179 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
-   * 搜索项目列表
-   *
-   * - params.fields 默认 {@link SearchPAMProjectFields} 所有属性
+   * Batch-load env summaries for list cards (keeps pagination on projects only).
+   */
+  private async listEnvironmentsForProjectIds(
+    projectIds: readonly string[]
+  ): Promise<Map<string, Pick<PAMEnvWriteable, 'id' | 'name' | 'url'>[]>> {
+    const map = new Map<
+      string,
+      Pick<PAMEnvWriteable, 'id' | 'name' | 'url'>[]
+    >();
+    if (projectIds.length === 0) {
+      return map;
+    }
+
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .select('id,name,url,project_id')
+      .in('project_id', [...projectIds]);
+
+    this.supabaseRepo.throwIfError(result);
+
+    for (const row of result.data ?? []) {
+      const projectId = String(row.project_id);
+      const env = {
+        id: row.id,
+        name: row.name,
+        url: row.url
+      } as Pick<PAMEnvWriteable, 'id' | 'name' | 'url'>;
+      const list = map.get(projectId);
+      if (list) {
+        list.push(env);
+      } else {
+        map.set(projectId, [env]);
+      }
+    }
+
+    return map;
+  }
+
+  /**
+   * 搜索项目列表 — prefers `pam_search_projects` RPC (one DB round-trip).
    *
    * @param params
    * @returns
    */
-  public searchProjects(
+  public async searchProjects(
     params: PAMProjectSearchParams
   ): Promise<ResourceSearchResult<SearchPAMProject>> {
-    // 如果没有传递 user_id 则，不需要查询在 fields 中增加 user_id
-    let fields: (keyof SearchPAMRawProject)[] = [];
+    try {
+      return await this.rpcSearchProjects(params);
+    } catch (error) {
+      if (isPamSearchRpcUnavailable(error)) {
+        this.logger.warn(
+          '[PAMProjectRepo] pam_search_projects unavailable, using legacy search'
+        );
+        return this.searchProjectsLegacy(params);
+      }
+      throw error;
+    }
+  }
 
-    // NOTE: 默认查询所有字段
+  private async rpcSearchProjects(
+    params: PAMProjectSearchParams
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    const { page = 1, pageSize = 20, user_id } = params;
+    const keyword = params.keyword?.trim();
+    const categoryFilter = resolveCategoryFilter(params.filters);
+    const visibilityFilter = resolveVisibilityFilter(params.filters);
+
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await admin.rpc(PAMSearchProjectsSQLFunctionName, {
+      p_user_id: user_id ?? null,
+      p_visibility: visibilityFilter ?? null,
+      p_category: categoryFilter ?? null,
+      p_keyword: keyword ?? null,
+      p_page: page,
+      p_page_size: pageSize,
+      p_include_count: params.includeCount ?? page <= 1,
+      p_include_owner_id: Boolean(user_id)
+    });
+
+    this.supabaseRepo.throwIfError({ data, error });
+
+    const payload = data as ResourceSearchResult<SearchPAMProject>;
+    return {
+      page: payload.page ?? page,
+      pageSize: payload.pageSize ?? pageSize,
+      total: payload.total ?? 0,
+      hasMore: payload.hasMore ?? false,
+      items: (payload.items ?? []) as SearchPAMProject[]
+    };
+  }
+
+  /**
+   * Legacy: PostgREST search + batch env load (two round-trips).
+   */
+  private async searchProjectsLegacy(
+    params: PAMProjectSearchParams
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
     const excludedFields = params.user_id ? [] : ['owner_id'];
 
-    fields = SearchPAMProjectFields.filter(
+    const fields = SearchPAMProjectFields.filter(
       (field) => !excludedFields.includes(field)
     );
 
-    // search list 带上环境信息，但不查询环境变量
-    // 环境变量单独查询
-    const envField = this.buildJoinEnvFields(['id', 'name', 'url'] as const);
-
-    fields.push(envField as keyof SearchPAMRawProject);
-
-    return this.search({
+    const result = await this.search({
       ...params,
       fields
-    }) as Promise<ResourceSearchResult<SearchPAMProject>>;
+    });
+
+    const items = result.items ?? [];
+    if (items.length === 0) {
+      return result as ResourceSearchResult<SearchPAMProject>;
+    }
+
+    const envMap = await this.listEnvironmentsForProjectIds(
+      items.map((item) => item.id)
+    );
+
+    const withEnvs = items.map((project) =>
+      Object.assign({}, project, {
+        [PAMProjectEnvKey]: envMap.get(project.id) ?? []
+      })
+    ) as SearchPAMProject[];
+
+    return Object.assign({}, result, { items: withEnvs });
+  }
+
+  /**
+   * Loads project basics by UUID or slug (admin; access checked in service).
+   */
+  public async getProjectDetailAdmin(
+    idOrSlug: string
+  ): Promise<SearchPAMRawProject | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const column = uuidSchema.safeParse(idOrSlug).success ? 'id' : 'slug';
+    const result = await admin
+      .from(this.getRepoName())
+      .select(SearchPAMProjectFields.join(','))
+      .eq(column, idOrSlug)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as SearchPAMRawProject | null;
+  }
+
+  /**
+   * Loads project + environments by UUID or slug (admin; access checked in service).
+   */
+  public async getProjectDetailWithEnvironmentsAdmin(
+    idOrSlug: string
+  ): Promise<PAMProjectDetail | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const column = uuidSchema.safeParse(idOrSlug).success ? 'id' : 'slug';
+    const result = await admin
+      .from(this.getRepoName())
+      .select(
+        SearchPAMProjectFields.join(',') +
+          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
+      )
+      .eq(column, idOrSlug)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      return null;
+    }
+
+    return result.data as never;
   }
 
   /**
@@ -449,6 +600,28 @@ export class PAMProjectRepo extends BaseRepository<
       }
     }
     return Array.from(unique).sort((a, b) => a.localeCompare(b, 'zh'));
+  }
+
+  /**
+   * Minimal project row for read-access checks (admin).
+   */
+  public async getProjectAccessAdmin(
+    projectId: string
+  ): Promise<Pick<PAMProjectRaw, 'id' | 'is_public' | 'owner_id'> | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id,is_public,owner_id')
+      .eq('id', projectId)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .maybeSingle();
+
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as Pick<
+      PAMProjectRaw,
+      'id' | 'is_public' | 'owner_id'
+    > | null;
   }
 
   /**

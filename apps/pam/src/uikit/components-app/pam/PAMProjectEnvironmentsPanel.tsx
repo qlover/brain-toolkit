@@ -6,7 +6,6 @@ import {
   PlusIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
-import { isAbortError } from '@qlover/fe-corekit/aborter';
 import {
   Loading,
   useStrictEffect,
@@ -21,7 +20,7 @@ import React, {
   useState
 } from 'react';
 import { v4 as uuid } from 'uuid';
-import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
+import { PAMApi } from '@/impls/appApi/PAMApi';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
@@ -70,11 +69,15 @@ export function PAMProjectEnvironmentsPanel({
   const tt = usePageI18nMapping<PAMEnvironmentsI18nInterface>();
   const pamApi = useIOC(PAMApi);
   const dialogHandler = useIOC(I.DialogHandler);
-  const { projectId, canEdit } = usePAMProjectDetail();
+  const {
+    projectId,
+    canEdit,
+    environments,
+    ensureEnvironments,
+    setEnvironments
+  } = usePAMProjectDetail();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [environments, setEnvironments] = useState<PAMEnvWriteable[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedEnvId, setSelectedEnvId] = useState<string | null>(null);
   const [draftVariables, setDraftVariables] = useState<PAMVariable[]>([]);
@@ -82,9 +85,11 @@ export function PAMProjectEnvironmentsPanel({
   const [newEnvName, setNewEnvName] = useState('');
   const [newEnvUrl, setNewEnvUrl] = useState('');
 
+  const envList = useMemo(() => environments ?? [], [environments]);
+
   const lockedSensitiveIds = useMemo(() => {
     const ids = new Set<string>();
-    for (const env of environments) {
+    for (const env of envList) {
       for (const variable of env.variables || []) {
         if (variable.id) {
           ids.add(variable.id);
@@ -92,59 +97,50 @@ export function PAMProjectEnvironmentsPanel({
       }
     }
     return ids;
-  }, [environments]);
+  }, [envList]);
 
   const selectedEnv = useMemo(
-    () => environments.find((env) => env.id === selectedEnvId) ?? null,
-    [environments, selectedEnvId]
+    () => envList.find((env) => env.id === selectedEnvId) ?? null,
+    [envList, selectedEnvId]
   );
 
-  const upsertEnvironment = useCallback((env: PAMEnvWriteable): void => {
-    setEnvironments((prev) => {
-      const index = prev.findIndex((item) => item.id === env.id);
-      if (index === -1) {
-        return [...prev, env];
-      }
-      const next = [...prev];
-      next[index] = env;
-      return next;
-    });
-    setSelectedEnvId(env.id);
-  }, []);
+  const upsertEnvironment = useCallback(
+    (env: PAMEnvWriteable): void => {
+      setEnvironments((prev) => {
+        const list = prev ?? [];
+        const index = list.findIndex((item) => item.id === env.id);
+        if (index === -1) {
+          return [...list, env];
+        }
+        const next = [...list];
+        next[index] = env;
+        return next;
+      });
+      setSelectedEnvId(env.id);
+    },
+    [setEnvironments]
+  );
 
   useStrictEffect(() => {
     if (!projectId) {
-      setLoading(true);
       return;
     }
+    void ensureEnvironments();
+  }, [projectId, ensureEnvironments]);
 
-    setLoading(true);
+  useEffect(() => {
+    if (environments === null) {
+      return;
+    }
+    setSelectedEnvId((prev) => {
+      if (prev && environments.some((env) => env.id === prev)) {
+        return prev;
+      }
+      return environments[0]?.id ?? null;
+    });
+  }, [environments]);
 
-    void pamApi
-      .listEnvironments(projectId)
-      .then((list) => {
-        setEnvironments(list);
-        setSelectedEnvId((prev) => {
-          if (prev && list.some((env) => env.id === prev)) {
-            return prev;
-          }
-          return list[0]?.id ?? null;
-        });
-        setLoading(false);
-      })
-      .catch((error) => {
-        if (isAbortError(error)) {
-          return;
-        }
-        // DialogErrorPlugin already toasts API failures.
-        setEnvironments([]);
-        setLoading(false);
-      });
-
-    return () => {
-      pamApi.stop(PAMAbortId.listEnvironments(projectId));
-    };
-  }, [pamApi, projectId]);
+  const loading = Boolean(projectId) && environments === null;
 
   useEffect(() => {
     if (!selectedEnv) {
@@ -361,7 +357,8 @@ export function PAMProjectEnvironmentsPanel({
         try {
           await pamApi.deleteEnvironment(projectId, env.id);
           setEnvironments((prev) => {
-            const next = prev.filter((item) => item.id !== env.id);
+            const list = prev ?? [];
+            const next = list.filter((item) => item.id !== env.id);
             setSelectedEnvId((current) => {
               if (current !== env.id) {
                 return current;
@@ -399,13 +396,11 @@ export function PAMProjectEnvironmentsPanel({
       <aside className="space-y-3 rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-primary-text">{tt.mulitEnv}</h2>
-          <span className="text-xs text-tertiary-text">
-            ({environments.length})
-          </span>
+          <span className="text-xs text-tertiary-text">({envList.length})</span>
         </div>
 
         <ul className="space-y-1">
-          {environments.map((env) => (
+          {envList.map((env) => (
             <li
               data-testid="PAMProjectEnvironmentsPanel"
               key={env.id}
