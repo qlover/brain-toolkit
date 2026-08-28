@@ -2,6 +2,11 @@ import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SupabaseRepo, type RepoSearchParams } from '@qlover/next-kit/server';
 import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
 import { toStableApiExecutorError } from '@server/utils/normalizeApiExecutorError';
+import {
+  extractPostgrestError,
+  isPostgrestRangeNotSatisfiable,
+  parsePostgrestRowCount
+} from '@server/utils/postgrestError';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
 /**
@@ -16,10 +21,11 @@ export type PAMSearchParams<Raw> = RepoSearchParams<Raw> & {
   table?: string;
   ilikeOr?: IlikeOrParams;
   /**
-   * Exact `count=exact` is expensive with `.or()` + env joins.
-   * Default `planned` keeps hasMore usable without a full table count.
+   * Exact `count=exact` is expensive with `.or()` + ilike; default planned.
    */
   exactCount?: boolean;
+  /** When false, skip PostgREST count (faster page 2+ / load-more). */
+  includeCount?: boolean;
 };
 
 /** Mirrors kit's protected (unexported) `getSearchBuilder` return tuple. */
@@ -92,18 +98,82 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
   public async search(
     params: PAMSearchParams<Raw>
   ): Promise<ResourceSearchResult<T>> {
-    const result = await super.search(params);
+    try {
+      return this.normalizeSearchResult(params, await super.search(params));
+    } catch (error) {
+      if (
+        error instanceof ExecutorError &&
+        error.id === 'SupabasePGRSTError' &&
+        isPostgrestRangeNotSatisfiable(error.cause ?? error)
+      ) {
+        return this.emptySearchPage(params, error.cause ?? error);
+      }
+      if (isPostgrestRangeNotSatisfiable(error)) {
+        return this.emptySearchPage(params, error);
+      }
+      throw error;
+    }
+  }
+
+  protected normalizeSearchResult(
+    params: PAMSearchParams<Raw>,
+    result: ResourceSearchResult<T>
+  ): ResourceSearchResult<T> {
     const loaded = result.items?.length ?? 0;
-    const apiTotal = result.total ?? 0;
-    if (loaded === 0 || apiTotal >= loaded) {
-      return result;
+    const pageSize = params.pageSize ?? result.pageSize ?? 20;
+    const exactCount = params.exactCount === true;
+    let total = result.total ?? 0;
+
+    if (loaded > 0 && total < loaded) {
+      total = Math.max(total, loaded);
     }
 
-    const pageSize = params.pageSize ?? result.pageSize ?? loaded;
+    const offset =
+      params.offset ?? (params.page != null ? (params.page - 1) * pageSize : 0);
+
+    let hasMore = result.hasMore ?? false;
+    if (loaded < pageSize) {
+      hasMore = false;
+    } else if (exactCount && total > 0 && offset + loaded >= total) {
+      hasMore = false;
+    } else if (loaded >= pageSize) {
+      // Full page — keep fetching when count is planned/estimated.
+      hasMore = true;
+    } else if (loaded > 0 && total === 0) {
+      hasMore = loaded >= pageSize;
+    }
+
+    // `count=planned` can over-estimate vs actual rows.
+    if (!hasMore && loaded > 0 && total > offset + loaded) {
+      total = offset + loaded;
+    }
+
     return {
       ...result,
-      total: Math.max(apiTotal, loaded),
-      hasMore: result.hasMore || loaded >= pageSize
+      page: params.page ?? result.page ?? 1,
+      pageSize,
+      total,
+      hasMore
+    };
+  }
+
+  protected emptySearchPage(
+    params: PAMSearchParams<Raw>,
+    error: unknown
+  ): ResourceSearchResult<T> {
+    const pageSize = params.pageSize ?? 20;
+    const page = params.page ?? 1;
+    const pg = extractPostgrestError(error);
+    const parsedTotal = pg?.message
+      ? parsePostgrestRowCount(pg.message)
+      : undefined;
+
+    return {
+      page,
+      pageSize,
+      total: parsedTotal ?? 0,
+      items: [],
+      hasMore: false
     };
   }
 
@@ -113,7 +183,9 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
   protected async getSearchBuilder(
     params: PAMSearchParams<Raw>
   ): Promise<SearchBuilderResult<Raw, T>> {
-    const { ilikeOr, exactCount = false, ...rest } = params;
+    const { ilikeOr, exactCount = false, includeCount, ...rest } = params;
+    const page = rest.page ?? 1;
+    const shouldCount = includeCount ?? page <= 1;
     const client = this.getAdminSupabase();
     let selector = '*';
     if (rest.fields) {
@@ -125,10 +197,14 @@ export class PAMSupabaseRepo<Raw, T = Raw> extends SupabaseRepo<Raw, T> {
       }
     }
 
-    let query = client.from(rest.table ?? this.getRepoName()).select(selector, {
-      count: exactCount ? 'exact' : 'planned',
-      head: false
-    });
+    let query = client
+      .from(rest.table ?? this.getRepoName())
+      .select(
+        selector,
+        shouldCount
+          ? { count: exactCount ? 'exact' : 'planned', head: false }
+          : { head: false }
+      );
 
     if (rest.where && rest.where.length) {
       for (const cond of rest.where) {
