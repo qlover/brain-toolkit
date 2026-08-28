@@ -910,7 +910,7 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async updateProject(
     id: string,
-    updates: Omit<PAMProjectUpdate, 'id'>
+    updates: Partial<Omit<PAMProjectUpdate, 'id'>>
   ): Promise<PAMProjectDetail> {
     const { [PAMProjectEnvKey]: envUpdates, ...projectUpdates } = updates;
 
