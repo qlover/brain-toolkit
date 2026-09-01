@@ -1,5 +1,19 @@
 # pamenv-cli
 
+## 1.6.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** pull/push 支持 --file 指定本地 dotenv ([dbff077](https://github.com/qlover/brain-toolkit/commit/dbff077089e810238290b01d007fcfc80071b7a9)) ([#127](https://github.com/qlover/brain-toolkit/pull/127))
+
+  默认仍为 .env.<环境名>；可用 --file .env 在 -e local 时读写根目录 .env。pull/push 共用 PamCliLocalEnvFileUtil.resolveLocalPath。
+
+- **pamenv:** init 从 API 拉取分类并支持自定义 ([c64c4d4](https://github.com/qlover/brain-toolkit/commit/c64c4d47158f0e19fe586d30021994dc7a244564)) ([#117](https://github.com/qlover/brain-toolkit/pull/117))
+
+  CLI 拉取可见分类作为选项，并允许自定义必填分类。
+
 ## 1.5.0
 
 ### Minor Changes
