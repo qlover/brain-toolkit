@@ -26,8 +26,10 @@ pamenv init -o ./packages/app
 pamenv fork <slug|id>             # fork readable project (secrets cleared)
 pamenv fork <slug|id> -y
 pamenv pull <slug|id> -e staging
+pamenv pull <slug|id> -e local --file .env
 pamenv pull <slug|id> -e staging -f
 pamenv push <slug|id> -e staging
+pamenv push <slug|id> -e local --file .env
 pamenv push <slug|id> -e staging -y
 pamenv push <slug|id> -e staging -f
 pamenv push <slug|id> -e staging --show-values
@@ -36,7 +38,7 @@ pamenv remove <slug|id> -e local -y
 pamenv logout
 ```
 
-Local files are `.env.<environment>` (e.g. env `local` → `.env.local`). Without `-e`, the first environment in the list is used (`remove` always requires `-e`).
+Local files default to `.env.<environment>` (e.g. `-e local` → `.env.local`). Use `--file .env` to override (relative to `-o`/cwd or absolute). Without `-e`, the first environment in the list is used (`remove` always requires `-e`).
 
 ### Config and locales
 

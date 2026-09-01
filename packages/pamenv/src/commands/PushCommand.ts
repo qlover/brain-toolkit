@@ -110,16 +110,20 @@ export class PushCommand {
 
     const outDir = resolve(options.outDir || process.cwd());
     const targetEnv = await this.planEnvironment(project, options, outDir);
-    const fileName = PamCliLocalEnvFileUtil.toFileName(targetEnv.name);
-    const target = resolve(outDir, fileName);
+    const target = PamCliLocalEnvFileUtil.resolveLocalPath(
+      outDir,
+      targetEnv.name,
+      options.file
+    );
 
     let localDoc: PamCliDotenvDocumentType;
     try {
       localDoc = PamCliDotenvUtil.parseDocument(await readFile(target, 'utf8'));
     } catch {
-      throw new Error(
-        `Local file not found: ${target}. Run \`pamenv pull ${project.slug} -e ${targetEnv.name}\` first, or create ${fileName}.`
-      );
+      const hint = options.file?.trim()
+        ? `Create ${target} or choose another --file.`
+        : `Run \`pamenv pull ${project.slug} -e ${targetEnv.name}\` first, or create ${PamCliLocalEnvFileUtil.toFileName(targetEnv.name)} (or pass --file .env).`;
+      throw new Error(`Local file not found: ${target}. ${hint}`);
     }
 
     let localVars: PamCliParsedVarType[] = [...localDoc.variables];

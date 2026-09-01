@@ -31,8 +31,10 @@ pnpm pamenv fork <slug|id>             # Fork 可读项目（敏感值清空）
 pnpm pamenv fork <slug|id> -y          # 使用默认 slug/name，跳过确认
 pnpm pamenv pull <slug|id>             # → ./.env.<环境名>
 pnpm pamenv pull <slug|id> -e staging
+pnpm pamenv pull <slug|id> -e local --file .env   # 写入 ./.env 而非 .env.local
 pnpm pamenv pull <slug|id> -e staging -f   # 仅跳过「覆盖本地」冲突确认
 pnpm pamenv push <slug|id> -e staging      # diff + 同步冲突检测后回写
+pnpm pamenv push <slug|id> -e local --file .env   # 从 ./.env 读取并推到 local 环境
 pnpm pamenv push <slug|id> -e staging -y   # 跳过普通确认（不含冲突覆盖）
 pnpm pamenv push <slug|id> -e staging -f   # 仅跳过同步冲突覆盖确认（不等于 -y）
 pnpm pamenv push <slug|id> -e staging --show-values  # review 显示非敏感明文
@@ -75,7 +77,7 @@ pamenv --local locales pull                 # 强制刷新 API 错误文案缓�
 
 API 失败时 CLI 会打印可读文案（若已缓存），并附带稳定错误码 `id`（如 `api:not_authorized`）与 `requestId`。
 
-本地文件：`.env.<环境名>`（例如环境 `local` → `.env.local`）。未传 `-e` 时用环境列表**第一个**（`remove` 除外，必须传 `-e`）。
+本地文件：默认 `.env.<环境名>`（例如 `-e local` → `.env.local`）。可用 `--file .env` 指定其它路径（相对 `-o`/cwd 或绝对路径）。未传 `-e` 时用环境列表**第一个**（`remove` 除外，必须传 `-e`）。
 
 ---
 
