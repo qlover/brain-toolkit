@@ -70,8 +70,8 @@ export const PAGE_DOCS_CLI_SECTION_COMMANDS = 'page_docs_cli:section__commands';
 
 /**
  * @description Commands body
- * @localZh 本地文件名为 `.env.<环境名>`（如环境 local 对应 `.env.local`）。未传 `-e` 时使用环境列表中的第一个环境。新建项目请用 `pamenv init`。
- * @localEn Local files are named `.env.<environment>` (e.g. env `local` → `.env.local`). Without `-e`, the first environment in the list is used. Use `pamenv init` to create a new project.
+ * @localZh 本地文件默认 `.env.<环境名>`（如 `-e local` → `.env.local`）。可用 `--file .env` 指定其它路径（相对 `-o`/cwd 或绝对路径）。未传 `-e` 时使用环境列表中的第一个环境。新建项目请用 `pamenv init`。
+ * @localEn Local files default to `.env.<environment>` (e.g. `-e local` → `.env.local`). Use `--file .env` to override (relative to `-o`/cwd or absolute). Without `-e`, the first environment in the list is used. Use `pamenv init` to create a new project.
  */
 export const PAGE_DOCS_CLI_COMMANDS_BODY = 'page_docs_cli:commands__body';
 
@@ -112,8 +112,8 @@ export const PAGE_DOCS_CLI_SECTION_SYNC = 'page_docs_cli:section__sync';
 
 /**
  * @description Sync body
- * @localZh `pull` 以远端为准写入本地，并尽量保留本地注释；语义冲突时可选择覆盖或中止。`push` 用 `~/.pam/sync` 基线做三方比较：仅远端变更时提示先 pull；双方都改则冲突交互。`-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记等），二者互不隐含。Diff 默认将值打码为 `*****`；`--show-values` 仅明文显示非敏感值。`pamenv remove <slug> -e <env>` 删除远端环境（两次确认，`-y` 可跳过），并清除对应 sync 基线，不删本地 `.env.*`。
- * @localEn `pull` writes remote values into the local file and preserves local comments when possible; on semantic conflicts you can overwrite or abort. `push` uses `~/.pam/sync` baselines for a three-way compare: remote-only changes ask you to pull first; both sides changed triggers a conflict prompt. `-f` only skips conflict overwrite confirms; `-y` skips ordinary confirms (missing baseline, final push, new-key sensitivity), and neither implies the other. Diff review masks values as `*****` by default; `--show-values` shows non-sensitive plaintext only. `pamenv remove <slug> -e <env>` deletes a remote environment (two confirms, skip with `-y`), clears the matching sync baseline, and does not delete local `.env.*` files.
+ * @localZh `pull` 以远端为准写入本地，并尽量保留本地注释；语义冲突时可选择覆盖或中止。`push` 用 `~/.pam/sync` 基线做三方比较：仅远端变更时提示先 pull；双方都改则冲突交互。`-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记等），二者互不隐含。Diff 默认将值打码为 `*****`；`--show-values` 仅明文显示非敏感值。`--file` 可指定本地 dotenv（如仅有 `.env` 时用 `pamenv push <slug> -e local --file .env`）。`pamenv remove <slug> -e <env>` 删除远端环境（两次确认，`-y` 可跳过），并清除对应 sync 基线，不删本地 `.env.*`。
+ * @localEn `pull` writes remote values into the local file and preserves local comments when possible; on semantic conflicts you can overwrite or abort. `push` uses `~/.pam/sync` baselines for a three-way compare: remote-only changes ask you to pull first; both sides changed triggers a conflict prompt. `-f` only skips conflict overwrite confirms; `-y` skips ordinary confirms (missing baseline, final push, new-key sensitivity), and neither implies the other. Diff review masks values as `*****` by default; `--show-values` shows non-sensitive plaintext only. `--file` overrides the local dotenv path (e.g. `pamenv push <slug> -e local --file .env` when you only have `.env`). `pamenv remove <slug> -e <env>` deletes a remote environment (two confirms, skip with `-y`), clears the matching sync baseline, and does not delete local `.env.*` files.
  */
 export const PAGE_DOCS_CLI_SYNC_BODY = 'page_docs_cli:sync__body';
 
