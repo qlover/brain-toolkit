@@ -134,6 +134,11 @@ export type PamCliRemoteEnvironmentType = {
 export type PamCliLocalEnvOptionsType = {
   readonly envName?: string;
   readonly outDir?: string;
+  /**
+   * Local dotenv file override (relative to `-o` / cwd, or absolute).
+   * Default: `.env.<envName>` (e.g. `-e local` → `.env.local`).
+   */
+  readonly file?: string;
   /** Skip ordinary confirmation prompts (not sync-conflict overwrite). */
   readonly yes?: boolean;
   /** Skip only sync/file conflict overwrite prompts. */

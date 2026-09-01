@@ -66,8 +66,11 @@ export class PullCommand {
       project.slug
     );
     const outDir = resolve(options.outDir || process.cwd());
-    const fileName = PamCliLocalEnvFileUtil.toFileName(env.name);
-    const target = resolve(outDir, fileName);
+    const target = PamCliLocalEnvFileUtil.resolveLocalPath(
+      outDir,
+      env.name,
+      options.file
+    );
 
     const exported = await this.apiClient.exportEnvironment(project.id, env.id);
     const remoteVars = this.toRemoteVariables(exported);

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { PamCliDotenvUtil } from '../src/impls/PamCliDotenvUtil';
 import { PamCliEnvDiffUtil } from '../src/impls/PamCliEnvDiffUtil';
 import { PamCliEnvironmentSelectUtil } from '../src/impls/PamCliEnvironmentSelectUtil';
@@ -118,6 +118,19 @@ describe('PamCliLocalEnvFileUtil', () => {
   it('builds .env.<envName> filenames', () => {
     expect(PamCliLocalEnvFileUtil.toFileName('staging')).toBe('.env.staging');
     expect(PamCliLocalEnvFileUtil.toFileName('local')).toBe('.env.local');
+  });
+
+  it('resolveLocalPath uses default .env.<env> or --file override', () => {
+    const outDir = resolve('project', 'app');
+    expect(
+      PamCliLocalEnvFileUtil.resolveLocalPath(outDir, 'local')
+    ).toBe(resolve(outDir, '.env.local'));
+    expect(
+      PamCliLocalEnvFileUtil.resolveLocalPath(outDir, 'local', '.env')
+    ).toBe(resolve(outDir, '.env'));
+    expect(
+      PamCliLocalEnvFileUtil.resolveLocalPath(outDir, 'staging', 'secrets/stg.env')
+    ).toBe(resolve(outDir, 'secrets/stg.env'));
   });
 });
 

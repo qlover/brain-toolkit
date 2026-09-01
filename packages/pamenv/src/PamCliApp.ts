@@ -120,6 +120,10 @@ export class PamCliApp {
       .argument('<slug|id>', 'Project slug or project id')
       .option('-e, --env <name>', 'Environment name (default: first)')
       .option('-o, --out <dir>', 'Output directory (default: cwd)')
+      .option(
+        '--file <path>',
+        'Local dotenv file (default: .env.<env>; e.g. --file .env with -e local)'
+      )
       .option('-f, --force', 'Overwrite local file on conflict without asking')
       .option(
         '--show-values',
@@ -131,6 +135,7 @@ export class PamCliApp {
           options: {
             env?: string;
             out?: string;
+            file?: string;
             force?: boolean;
             showValues?: boolean;
           }
@@ -141,6 +146,7 @@ export class PamCliApp {
             {
               envName: options.env,
               outDir: options.out,
+              file: options.file,
               force: options.force,
               showValues: options.showValues
             }
@@ -155,6 +161,10 @@ export class PamCliApp {
       .argument('<slug|id>', 'Project slug or project id')
       .option('-e, --env <name>', 'Environment name (default: first)')
       .option('-o, --out <dir>', 'Local directory (default: cwd)')
+      .option(
+        '--file <path>',
+        'Local dotenv file (default: .env.<env>; e.g. --file .env with -e local)'
+      )
       .option(
         '-y, --yes',
         'Skip ordinary confirmation prompts (not sync-conflict overwrite)'
@@ -173,6 +183,7 @@ export class PamCliApp {
           options: {
             env?: string;
             out?: string;
+            file?: string;
             yes?: boolean;
             force?: boolean;
             showValues?: boolean;
@@ -186,6 +197,7 @@ export class PamCliApp {
           ).run(projectRef, {
             envName: options.env,
             outDir: options.out,
+            file: options.file,
             yes: options.yes,
             force: options.force,
             showValues: options.showValues

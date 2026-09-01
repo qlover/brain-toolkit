@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+
 /**
  * Local working-directory env file naming for pull / push.
  *
@@ -22,5 +24,26 @@ export class PamCliLocalEnvFileUtil {
       throw new Error('Environment name is required to build the local file');
     }
     return `.env.${envName}`;
+  }
+
+  /**
+   * Resolves the local dotenv path for pull / push.
+   *
+   * Default: `{outDir}/.env.{envName}`. With `file`, relative paths join `outDir`.
+   *
+   * @param outDir - Working directory (`-o` or cwd)
+   * @param environmentName - PAM environment name (default filename)
+   * @param file - Optional override (`--file`, e.g. `.env`)
+   */
+  public static resolveLocalPath(
+    outDir: string,
+    environmentName: string,
+    file?: string
+  ): string {
+    const override = file?.trim();
+    if (override) {
+      return resolve(outDir, override);
+    }
+    return resolve(outDir, this.toFileName(environmentName));
   }
 }
