@@ -1,5 +1,94 @@
 # pam
 
+## 2.7.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** pam_search_projects 支持按时间排序 ([d13d790](https://github.com/qlover/brain-toolkit/commit/d13d790cb51b84a02d8e3ca9cd5bd2c6e089fa28)) ([#126](https://github.com/qlover/brain-toolkit/pull/126))
+
+  新增 pamListSort 与 013 SQL，RPC 传入 sort_by/sort_order；统一首页 ISR 与 Facade 默认排序。
+
+- **pam:** 列表筛选面板、排序与更新时间展示 ([e1e6a49](https://github.com/qlover/brain-toolkit/commit/e1e6a49ae9325673b54f387e13de5958233ffc33)) ([#126](https://github.com/qlover/brain-toolkit/pull/126))
+
+  工具栏合并筛选/排序/视图切换；卡片与列表行展示 updated_at；补充中英文 i18n。
+
+- **pam:** 新增 pam_search_projects RPC 与列表索引 ([bcdaaac](https://github.com/qlover/brain-toolkit/commit/bcdaaac760f68777c7156829636ba8b9708a087a)) ([#125](https://github.com/qlover/brain-toolkit/pull/125))
+
+  单次 RPC 拉取分页项目与环境摘要；未部署时回退 PostgREST 搜索。附带列表索引与 PostgREST 错误识别工具。
+
+- **pam:** 站点 Logo 代理 API 与列表头像 ([1315134](https://github.com/qlover/brain-toolkit/commit/1315134a8e2f31aaf54e0d9cd2bbd597bf5a8042)) ([#125](https://github.com/qlover/brain-toolkit/pull/125))
+
+  新增 /api/pam/site-logo 二进制响应；列表头像经服务端抓取 favicon/logo，避免浏览器直连跨域。
+
+- **pam:** 封面预览图、转让项目 UI，并移除列表删除 ([c6d6afb](https://github.com/qlover/brain-toolkit/commit/c6d6afba9678b45fcd0647d4f9e2c9e609f1b81f)) ([#124](https://github.com/qlover/brain-toolkit/pull/124))
+
+  General 增加转让与封面字段；卡片/列表展示封面；首页不再提供删除入口。
+
+- **pam:** 转让改为选人确认，封面改为截取入库可刷新 ([cff9e71](https://github.com/qlover/brain-toolkit/commit/cff9e71270081f65bb9087ff67ede71c1282e9ce)) ([#124](https://github.com/qlover/brain-toolkit/pull/124))
+
+  转让打开弹层加载用户并搜索选择；封面从主环境 URL 截取后存
+  Supabase Storage，支持重新截取（可配 PAM_SCREENSHOT_URL_TEMPLATE）。
+
+- **pam:** 封面置顶，并优化转让选人与列表封面展示 ([8c01538](https://github.com/qlover/brain-toolkit/commit/8c0153876b44260efc7c8edef43be9e1b5fc7eaf)) ([#124](https://github.com/qlover/brain-toolkit/pull/124))
+
+  General 封面移至首卡；转让用户搜索加缓存与 SQL 优化；卡片/列表
+  封面与头像展示完善，弹层与环境变量行交互小改。
+
+- **pam:** OTP 发送按 IP 限流 ([637bf4a](https://github.com/qlover/brain-toolkit/commit/637bf4a6f49164feaa299f2ebdc94c0cf58a3043)) ([#123](https://github.com/qlover/brain-toolkit/pull/123))
+
+  邮箱/手机 OTP 发送前按客户端 IP 做 60s 冷却，避免刷验证码；附带单测。
+
+- **pam:** 优化邮箱 magic link 登录并关闭注册页 ([1e69338](https://github.com/qlover/brain-toolkit/commit/1e69338f5da78151e436fdacb2f9dd487c48e9ea)) ([#123](https://github.com/qlover/brain-toolkit/pull/123))
+
+  发送成功态、重发倒计时与文案补齐；/auth/register 重定向到登录。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 列表分页越界 PGRST103 与 hasMore 校正 ([00e8516](https://github.com/qlover/brain-toolkit/commit/00e85169b570304e2428ab778e6d9594137fa892)) ([#125](https://github.com/qlover/brain-toolkit/pull/125))
+
+  捕获 PostgREST 越界请求并返回空页；第 2 页起可选跳过 count；修正 planned count 导致的 hasMore 误判。
+
+- **pam:** 首页列表状态与转让选人体验 ([592d46c](https://github.com/qlover/brain-toolkit/commit/592d46c2fb419340e6e3e9be18b72bed4c645445)) ([#125](https://github.com/qlover/brain-toolkit/pull/125))
+
+  转让后重置列表；无限滚动去重与 total 校正；分类缓存；转让确认移入选人弹层。
+
+- **pam:** Brain/CLI 会话下统一 owner 鉴权，并支持转让与封面字段 ([871c305](https://github.com/qlover/brain-toolkit/commit/871c3050729ab6bf8bc063194f23ae4dfe90cfb4)) ([#124](https://github.com/qlover/brain-toolkit/pull/124))
+
+  删除/更新/详情改为 assertProjectOwner + admin 读写，避免仅有
+  应用会话却无 Supabase cookie 时「能见按钮却无权限」。同步加入
+  preview_image_url 与 transfer API（邮箱经 pam_auth_user_id_by_email）。
+
+- **pam:** 未登录跳转登录页时保留当前语言 ([de31a31](https://github.com/qlover/brain-toolkit/commit/de31a3173547e933948ab13ddf28bee89d0d7a9b)) ([#124](https://github.com/qlover/brain-toolkit/pull/124))
+
+  middleware redirectToPath、LocaleLink、/login 别名与 Brain OAuth
+  错误回跳不再落到默认英文；localePage 补齐语言前缀。
+
+- **pam:** AuthButton 登录链接改用 LocaleLink ([9ad49b6](https://github.com/qlover/brain-toolkit/commit/9ad49b6d66f69b4953ad8361bd199631c95fa69f)) ([#123](https://github.com/qlover/brain-toolkit/pull/123))
+
+  未登录跳转登录页时保留当前语言前缀。
+
+#### 📝 Documentation
+
+- **pam:** CLI 文档补充 pull/push --file 用法 ([91ff907](https://github.com/qlover/brain-toolkit/commit/91ff90755918c5673ab6d85bc92412037cc73856)) ([#127](https://github.com/qlover/brain-toolkit/pull/127))
+
+  Web /docs/cli 示例与 i18n 文案同步 pamenv --file 参数。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### ♻️ Refactors
+
+- **pam:** 统一顶栏控件样式并增强 AuthButton ([11ac31d](https://github.com/qlover/brain-toolkit/commit/11ac31d2325363738ae2a7f84ca2e325a0fa5d4e)) ([#123](https://github.com/qlover/brain-toolkit/pull/123))
+
+  抽取 headerChrome；登录态展示邮箱/登出，Pages 布局改用 AuthButton。
+
+#### 🚀 Performance
+
+- **pam:** 搜索/详情/环境 API 去重与按需加载 ([9636fff](https://github.com/qlover/brain-toolkit/commit/9636fff6c6a19cdcd7f4478528fbfc33b69967db)) ([#125](https://github.com/qlover/brain-toolkit/pull/125))
+
+  服务端合并重复搜索请求；详情与环境分接口加载；Shell 缓存环境列表。
+
 ## 2.6.0
 
 ### Minor Changes
