@@ -10,10 +10,12 @@ import {
   API_USER_NOT_FOUND
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
+import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { UserLoginContext } from '@server/interfaces/UserServiceInterface';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
+import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { LoggerInterface } from '@qlover/logger';
 import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
 
@@ -123,13 +125,50 @@ export class BrainOAuthLoginService {
     @inject(I.AppConfig)
     protected config: SeedServerConfigInterface,
     @inject(RequestLogsRepository)
-    protected requestLogsRepository: RequestLogsRepository
+    protected requestLogsRepository: RequestLogsRepository,
+    @inject(SiteSettingsService)
+    protected siteSettings: SiteSettingsService
   ) {}
 
+  protected async getOAuthSettings(): Promise<{
+    siteUrl: string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    scopes: string;
+    locale: string;
+  }> {
+    const [siteUrl, clientId, clientSecret, redirectUri, scopes, locale] =
+      await Promise.all([
+        this.siteSettings.getString(PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_SITE_URL),
+        this.siteSettings.getString(
+          PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_CLIENT_ID
+        ),
+        this.siteSettings.getSecretString(
+          PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_CLIENT_SECRET
+        ),
+        this.siteSettings.getString(
+          PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_REDIRECT_URI
+        ),
+        this.siteSettings.getString(PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_SCOPES),
+        this.siteSettings.getString(PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_LOCALE)
+      ]);
+
+    return {
+      siteUrl,
+      clientId,
+      clientSecret,
+      redirectUri,
+      scopes: scopes || 'openid profile email',
+      locale
+    };
+  }
+
   /** Default callback: `{PAM SITE_URL}api/callback/brain-oauth`. */
-  public resolveRedirectUri(): string {
-    if (this.config.brainOAuthRedirectUri) {
-      return this.config.brainOAuthRedirectUri;
+  public async resolveRedirectUri(): Promise<string> {
+    const oauth = await this.getOAuthSettings();
+    if (oauth.redirectUri) {
+      return oauth.redirectUri;
     }
     const base = this.config.siteUrl.endsWith('/')
       ? this.config.siteUrl
@@ -140,14 +179,13 @@ export class BrainOAuthLoginService {
     ).toString();
   }
 
-  public isConfigured(): boolean {
-    return Boolean(
-      this.config.brainOAuthSiteUrl && this.config.brainOAuthClientId
-    );
+  public async isConfigured(): Promise<boolean> {
+    const oauth = await this.getOAuthSettings();
+    return Boolean(oauth.siteUrl && oauth.clientId);
   }
 
-  protected assertConfigured(): void {
-    if (!this.isConfigured()) {
+  protected async assertConfigured(): Promise<void> {
+    if (!(await this.isConfigured())) {
       throw new ExecutorError(
         API_OAUTH_INVALID_REQUEST,
         'Brain OAuth is not configured (BRAIN_OAUTH_SITE_URL / BRAIN_OAUTH_CLIENT_ID)'
@@ -205,34 +243,38 @@ export class BrainOAuthLoginService {
     locale?: string;
     returnTo?: string;
   }): Promise<LoginProviderResult> {
-    if (this.config.env !== 'localhost') {
+    const brainPkceEnabled = await this.siteSettings.getBoolean(
+      PAM_SITE_SETTING_KEYS.AUTH_BRAIN_PKCE_ENABLED
+    );
+    if (!brainPkceEnabled) {
       throw new ExecutorError(
         API_OAUTH_INVALID_REQUEST,
-        'Brain PKCE login is only available in local environment (APP_ENV=localhost)'
+        'Brain PKCE login is disabled'
       );
     }
 
-    this.assertConfigured();
+    await this.assertConfigured();
 
+    const oauth = await this.getOAuthSettings();
     const { codeVerifier, codeChallenge } = createPkcePair();
     const state = base64Url(randomBytes(16));
     const returnTo = sanitizeReturnTo(input.returnTo);
-    const locale = input.locale?.trim() || this.config.brainOAuthLocale || 'zh';
-    const redirectUri = this.resolveRedirectUri();
+    const locale = input.locale?.trim() || oauth.locale || 'zh';
+    const redirectUri = await this.resolveRedirectUri();
 
     await this.writePkceCookie({ state, codeVerifier, returnTo, locale });
 
     const params = new URLSearchParams({
       response_type: 'code',
-      client_id: this.config.brainOAuthClientId,
+      client_id: oauth.clientId,
       redirect_uri: redirectUri,
-      scope: this.config.brainOAuthScopes,
+      scope: oauth.scopes,
       state,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256'
     });
 
-    const providerUrl = `${this.config.brainOAuthSiteUrl}/${locale}/oauth/authorize?${params.toString()}`;
+    const providerUrl = `${oauth.siteUrl}/${locale}/oauth/authorize?${params.toString()}`;
 
     this.logger.info('Brain OAuth authorize redirect prepared', {
       locale,
@@ -255,7 +297,7 @@ export class BrainOAuthLoginService {
     },
     loginContext?: UserLoginContext
   ): Promise<BrainOAuthCallbackSuccess> {
-    this.assertConfigured();
+    await this.assertConfigured();
 
     if (query.error) {
       await this.clearPkceCookie();
@@ -326,29 +368,27 @@ export class BrainOAuthLoginService {
     code: string,
     codeVerifier: string
   ): Promise<BrainTokenResponse> {
+    const oauth = await this.getOAuthSettings();
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: this.resolveRedirectUri(),
-      client_id: this.config.brainOAuthClientId,
+      redirect_uri: await this.resolveRedirectUri(),
+      client_id: oauth.clientId,
       code_verifier: codeVerifier
     });
 
-    if (this.config.brainOAuthClientSecret) {
-      body.set('client_secret', this.config.brainOAuthClientSecret);
+    if (oauth.clientSecret) {
+      body.set('client_secret', oauth.clientSecret);
     }
 
-    const response = await fetch(
-      `${this.config.brainOAuthSiteUrl}/oauth/token`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json'
-        },
-        body
-      }
-    );
+    const response = await fetch(`${oauth.siteUrl}/oauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json'
+      },
+      body
+    });
 
     const json = (await response.json()) as BrainTokenResponse;
     if (!response.ok || !json.access_token) {
@@ -367,16 +407,14 @@ export class BrainOAuthLoginService {
   }
 
   protected async fetchUserInfo(accessToken: string): Promise<BrainUserInfo> {
-    const response = await fetch(
-      `${this.config.brainOAuthSiteUrl}/oauth/userinfo`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: 'application/json'
-        }
+    const oauth = await this.getOAuthSettings();
+    const response = await fetch(`${oauth.siteUrl}/oauth/userinfo`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json'
       }
-    );
+    });
 
     if (!response.ok) {
       this.logger.warn('Brain OAuth userinfo failed', {

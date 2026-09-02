@@ -7,10 +7,8 @@ import { isEmpty } from 'lodash-es';
 import { ROUTE_OAUTH_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerConfig } from '@server/ServerConfig';
+import { loadRuntimeCorsConfig } from '@server/utils/loadRuntimeCorsConfig';
 import type { NextRequest } from 'next/server';
-
-const corsConfig = new ServerConfig();
 
 export function parseBearerAuthorization(
   header: string | null
@@ -28,6 +26,7 @@ export function parseBearerAuthorization(
  * CORS preflight for cross-origin userinfo requests.
  */
 export async function OPTIONS(req: NextRequest) {
+  const corsConfig = await loadRuntimeCorsConfig(req);
   return apiCorsPreflightResponse(req, corsConfig);
 }
 
@@ -38,6 +37,7 @@ export async function OPTIONS(req: NextRequest) {
  * Returns flat OIDC claims (`sub`, `email`, …) without the app API envelope.
  */
 export async function GET(req: NextRequest) {
+  const corsConfig = await loadRuntimeCorsConfig(req);
   const corsHeaders = buildApiCorsHeaders(req, corsConfig);
 
   return await new NextApiServer({

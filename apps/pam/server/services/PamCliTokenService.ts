@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { inject, injectable } from '@shared/container';
+import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { PamCliTokenRepo } from '@server/repositorys/PamCliTokenRepo';
 import { ServerConfig } from '@server/ServerConfig';
+import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { UserSchema } from '@qlover/next-kit/common';
 import type {
   OAuthSessionPayload,
@@ -52,7 +54,9 @@ export class PamCliTokenService {
     @inject(ServerConfig)
     config: SeedServerConfigInterface,
     @inject(PamCliTokenRepo)
-    protected readonly tokenRepo: PamCliTokenRepo
+    protected readonly tokenRepo: PamCliTokenRepo,
+    @inject(SiteSettingsService)
+    protected readonly siteSettings: SiteSettingsService
   ) {
     this.sessionSecret = config.sessionSecret;
     this.expiresIn = config.pamCliTokenExpiresIn;
@@ -81,8 +85,12 @@ export class PamCliTokenService {
       providerRefreshToken: ''
     };
 
+    const expiresIn = ((await this.siteSettings.getString(
+      PAM_SITE_SETTING_KEYS.AUTH_CLI_TOKEN_EXPIRES_IN
+    )) || this.expiresIn) as SignOptions['expiresIn'];
+
     const token = jwt.sign(payload, this.sessionSecret, {
-      expiresIn: this.expiresIn,
+      expiresIn,
       jwtid: jti,
       audience: PAM_CLI_TOKEN_AUD
     });

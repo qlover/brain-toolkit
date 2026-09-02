@@ -28,6 +28,7 @@ import {
   API_PAM_VARIABLE_KEY_DUPLICATE,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
+import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type {
   PAMEnvCreate,
   PAMEnvReplaceVariables,
@@ -54,6 +55,7 @@ import type {
 } from '@server/interfaces/PAMServiceInterface';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
+import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import {
   capturePageScreenshot,
@@ -79,6 +81,9 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(ServerConfig)
   protected readonly serverConfig!: SeedServerConfigInterface;
+
+  @inject(SiteSettingsService)
+  protected readonly siteSettings!: SiteSettingsService;
 
   @inject(MemoryKvCacheService)
   protected readonly kv!: MemoryKvCacheService;
@@ -728,19 +733,22 @@ export class PAMService implements PAMServiceInterface {
 
     let shot: { bytes: Uint8Array; contentType: string };
     try {
-      shot = await capturePageScreenshot(
-        captureUrl,
-        this.serverConfig.pamScreenshotUrlTemplate
+      const screenshotTemplate = await this.siteSettings.getString(
+        PAM_SITE_SETTING_KEYS.STORAGE_SCREENSHOT_URL_TEMPLATE
       );
+      shot = await capturePageScreenshot(captureUrl, screenshotTemplate);
     } catch (error) {
       throw new ExecutorError(API_PAM_PREVIEW_CAPTURE_FAILED, { cause: error });
     }
 
+    const previewBucket = await this.siteSettings.getString(
+      PAM_SITE_SETTING_KEYS.STORAGE_PREVIEW_BUCKET
+    );
     const publicUrl = await this.projectRepo.uploadProjectPreviewImage({
       projectId: id,
       bytes: shot.bytes,
       contentType: shot.contentType,
-      bucket: this.serverConfig.pamPreviewBucket
+      bucket: previewBucket || this.serverConfig.pamPreviewBucket
     });
 
     const updated = await this.projectRepo.updateProject(id, {
