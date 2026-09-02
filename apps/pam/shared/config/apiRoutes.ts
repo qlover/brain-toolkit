@@ -6,6 +6,15 @@
  */
 
 /**
+ * API path: `/api/admin/site-settings`
+ *
+ * @see [src/app/api/admin/site-settings/route.ts](../../src/app/api/admin/site-settings/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/site-settings/route.ts`
+ */
+export const API_ADMIN_SITE_SETTINGS = '/api/admin/site-settings' as const;
+
+/**
  * API path: `/api/callback/brain-oauth`
  *
  * @see [src/app/api/callback/brain-oauth/route.ts](../../src/app/api/callback/brain-oauth/route.ts)
@@ -283,6 +292,15 @@ export const API_PAM_TRANSFER = '/api/pam/transfer/:id' as const;
 export const API_PAM_USERS_SEARCH = '/api/pam/users/search' as const;
 
 /**
+ * API path: `/api/public-config`
+ *
+ * @see [src/app/api/public-config/route.ts](../../src/app/api/public-config/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/public-config/route.ts`
+ */
+export const API_PUBLIC_CONFIG = '/api/public-config' as const;
+
+/**
  * API path: `/api/reference`
  *
  * @see [src/app/api/reference/route.ts](../../src/app/api/reference/route.ts)
@@ -373,6 +391,7 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
+  | typeof API_ADMIN_SITE_SETTINGS
   | typeof API_CALLBACK_BRAIN_OAUTH
   | typeof API_CALLBACK_EMAIL_LOGIN
   | typeof API_CALLBACK_PROVIDER_LOGIN
@@ -403,6 +422,7 @@ export type ApiRoutePath =
   | typeof API_PAM_SITE_LOGO
   | typeof API_PAM_TRANSFER
   | typeof API_PAM_USERS_SEARCH
+  | typeof API_PUBLIC_CONFIG
   | typeof API_REFERENCE
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGIN_BRAIN
