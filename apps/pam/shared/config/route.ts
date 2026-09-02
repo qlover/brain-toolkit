@@ -47,6 +47,11 @@ export const ROUTE_ADMIN = '/admin' as const;
 export const ROUTE_ADMIN_USERS = '/admin/users' as const;
 
 /**
+ * Admin phone OTP monitor. Pages Router: `src/pages/[locale]/admin/phone-otps.tsx`.
+ */
+export const ROUTE_ADMIN_PHONE_OTPS = '/admin/phone-otps' as const;
+
+/**
  * Current-user request / activity log viewer (requires auth). Pages Router: `src/pages/[locale]/admin/request-logs.tsx`.
  */
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
@@ -165,6 +170,7 @@ export const AUTH_ROUTES = [
 export const LOGINED_PAGES = [
   ROUTE_ADMIN,
   ROUTE_ADMIN_USERS,
+  ROUTE_ADMIN_PHONE_OTPS,
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,
   ROUTE_DEVELOPER_APPS,

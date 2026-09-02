@@ -105,6 +105,13 @@ export const COMMON_ADMIN_NAV_REQUEST_LOGS = 'common:admin_nav__request_logs';
 export const COMMON_ADMIN_NAV_SITE_SETTINGS = 'common:admin_nav__site_settings';
 
 /**
+ * @description Admin sidebar nav - phone OTP monitor
+ * @localZh 验证码监控
+ * @localEn OTP monitor
+ */
+export const COMMON_ADMIN_NAV_PHONE_OTPS = 'common:admin_nav__phone_otps';
+
+/**
  * @description logout dialog title
  * @localZh 登出
  * @localEn Logout

@@ -1,6 +1,7 @@
 import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
+import * as phoneOtpsKeys from '../i18n-identifier/pages/page.admin.phone-otps';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
 import * as settingsKeys from '../i18n-identifier/pages/page.admin.settings';
 import * as userKeys from '../i18n-identifier/pages/page.admin.user';
@@ -41,6 +42,28 @@ export type AdminUsersI18nInterface = typeof adminUsers18n;
 export type AdminRequestLogsI18nInterface = typeof adminRequestLogs18n;
 
 export type AdminSettingsI18nInterface = typeof adminSettings18n;
+
+export type AdminPhoneOtpsI18nInterface = typeof adminPhoneOtps18n;
+
+export const adminPhoneOtps18n = Object.freeze({
+  title: phoneOtpsKeys.ADMIN_PHONE_OTPS_TITLE,
+  description: phoneOtpsKeys.ADMIN_PHONE_OTPS_DESCRIPTION,
+  content: phoneOtpsKeys.ADMIN_PHONE_OTPS_DESCRIPTION,
+  keywords: phoneOtpsKeys.ADMIN_PHONE_OTPS_KEYWORDS,
+  searchPlaceholder: phoneOtpsKeys.ADMIN_PHONE_OTPS_SEARCH_PLACEHOLDER,
+  refresh: phoneOtpsKeys.ADMIN_PHONE_OTPS_REFRESH,
+  autoRefresh: phoneOtpsKeys.ADMIN_PHONE_OTPS_AUTO_REFRESH,
+  colPhone: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_PHONE,
+  colCode: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_CODE,
+  colProvider: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_PROVIDER,
+  colStatus: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_STATUS,
+  colAttempts: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_ATTEMPTS,
+  colExpires: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_EXPIRES,
+  colCreated: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_CREATED,
+  colIp: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_IP,
+  empty: phoneOtpsKeys.ADMIN_PHONE_OTPS_EMPTY,
+  codeHidden: phoneOtpsKeys.ADMIN_PHONE_OTPS_CODE_HIDDEN
+});
 
 export const adminSettings18n = Object.freeze({
   title: settingsKeys.ADMIN_SETTINGS_TITLE,
