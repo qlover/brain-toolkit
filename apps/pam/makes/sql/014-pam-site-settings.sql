@@ -39,8 +39,8 @@ alter table public.pam_site_settings enable row level security;
 insert into public.pam_site_settings (key, value, description, is_sensitive) values
   (
     'auth.phone_login_enabled',
-    'false'::jsonb,
-    '是否在登录页展示「手机号」Tab 并允许短信验证码登录。需 Supabase SMS 或测试 OTP 已正确配置。',
+    'true'::jsonb,
+    '是否在登录页展示「手机号」Tab。开发/内测可用 Supabase Test phone + 固定 OTP（Authentication → Phone → Test phone numbers），无需真实短信；正式环境再接 SMS Provider。',
     false
   ),
   (
