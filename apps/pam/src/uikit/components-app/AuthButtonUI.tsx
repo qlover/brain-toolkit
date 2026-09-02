@@ -2,7 +2,6 @@
 
 import { buttonClassName, Dropdown } from '@qlover/next-kit/client';
 import { useCallback, useMemo } from 'react';
-import { useRouter } from '@/i18n/routing';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import {
   COMMON_ADMIN_TITLE,
@@ -42,7 +41,6 @@ export function AuthButtonUI(props: {
 }) {
   const { hasAuth, userEmail } = props;
   const t = useWarnTranslations();
-  const router = useRouter();
   const { platformAdmin } = usePlatformAdmin();
   const dialogHandler = useIOC(I.DialogHandler);
   const userService = useIOC(I.UserServiceInterface);
@@ -104,14 +102,15 @@ export function AuthButtonUI(props: {
   const onMenuSelect = useCallback(
     (key: string) => {
       if (key === 'admin') {
-        router.push(ROUTE_ADMIN);
+        // AuthButton also mounts on Pages routes; avoid next-intl/navigation.
+        routerService.goto(ROUTE_ADMIN);
         return;
       }
       if (key === 'logout') {
         onLogout();
       }
     },
-    [onLogout, router]
+    [onLogout, routerService]
   );
 
   if (hasAuth) {
