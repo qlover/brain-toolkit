@@ -4,15 +4,17 @@ import { buttonClassName, Dropdown } from '@qlover/next-kit/client';
 import { useCallback, useMemo } from 'react';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import {
+  COMMON_ADMIN_TITLE,
   COMMON_LOGOUT_DIALOG_CONTENT,
   COMMON_LOGOUT_DIALOG_TITLE,
   COMMON_SIGNED_IN_AS,
   COMMON_USER_AUTH_FAILED_GO_TO_LOGIN
 } from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_LOGIN } from '@config/route';
+import { ROUTE_ADMIN, ROUTE_LOGIN } from '@config/route';
 import { useI18nMapping } from '../hook/useI18nMapping';
 import { useIOC } from '../hook/useIOC';
+import { usePlatformAdmin } from '../hook/usePlatformAdmin';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 
 /**
@@ -39,6 +41,7 @@ export function AuthButtonUI(props: {
 }) {
   const { hasAuth, userEmail } = props;
   const t = useWarnTranslations();
+  const { platformAdmin } = usePlatformAdmin();
   const dialogHandler = useIOC(I.DialogHandler);
   const userService = useIOC(I.UserServiceInterface);
   const routerService = useIOC(I.RouterServiceInterface);
@@ -68,15 +71,22 @@ export function AuthButtonUI(props: {
       });
     }
 
+    if (platformAdmin) {
+      items.push({
+        key: 'admin',
+        label: t(COMMON_ADMIN_TITLE)
+      });
+    }
+
     items.push({
       key: 'logout',
       label: logoutTt.title,
       danger: true,
-      divider: Boolean(emailLabel)
+      divider: Boolean(emailLabel || platformAdmin)
     });
 
     return items;
-  }, [emailLabel, logoutTt.title]);
+  }, [emailLabel, logoutTt.title, platformAdmin, t]);
 
   const onLogout = useCallback(() => {
     dialogHandler.confirm({
@@ -91,11 +101,16 @@ export function AuthButtonUI(props: {
 
   const onMenuSelect = useCallback(
     (key: string) => {
+      if (key === 'admin') {
+        // AuthButton also mounts on Pages routes; avoid next-intl/navigation.
+        routerService.goto(ROUTE_ADMIN);
+        return;
+      }
       if (key === 'logout') {
         onLogout();
       }
     },
-    [onLogout]
+    [onLogout, routerService]
   );
 
   if (hasAuth) {

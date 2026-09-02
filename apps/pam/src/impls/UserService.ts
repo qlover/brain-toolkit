@@ -1,4 +1,9 @@
-import { UserService as CorekitBridgeUserService } from '@qlover/corekit-bridge';
+import {
+  UserService as CorekitBridgeUserService,
+  AsyncStore,
+  createAsyncState,
+  type StoreInterface
+} from '@qlover/corekit-bridge';
 import {
   userSchema,
   type UserCredential,
@@ -8,6 +13,8 @@ import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { isObject, isString } from 'lodash-es';
 import { inject, injectable } from '@shared/container';
 import { API_REFRESH_USER_INFO_FAILED } from '@config/i18n-identifier/api';
+import type { PamSessionCapabilities } from '@schemas/PamUserSchema';
+import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import type {
   UserServiceGatewayInterface,
   UserServiceInterface
@@ -19,17 +26,35 @@ import type {
   UserStateInterface
 } from '@qlover/corekit-bridge';
 
+function defaultCapabilitiesState(): PamSessionCapabilitiesStateInterface {
+  return Object.assign(createAsyncState(), {
+    platformAdmin: false,
+    result: { platformAdmin: false }
+  });
+}
+
 @injectable()
 export class UserService
   extends CorekitBridgeUserService<UserSchema, UserCredential>
   implements UserServiceInterface
 {
+  protected readonly capabilitiesStore: AsyncStore<
+    PamSessionCapabilitiesStateInterface,
+    string
+  >;
+
   constructor(
     @inject(AppUserGateway)
     userApi: UserServiceGatewayInterface
   ) {
     super(userApi, {
       pullUserWithLogin: false
+    });
+    this.capabilitiesStore = new AsyncStore<
+      PamSessionCapabilitiesStateInterface,
+      string
+    >({
+      defaultState: defaultCapabilitiesState
     });
   }
 
@@ -67,6 +92,25 @@ export class UserService
   /**
    * @override
    */
+  public getCapabilitiesStore(): StoreInterface<PamSessionCapabilitiesStateInterface> {
+    return this.capabilitiesStore.getStore();
+  }
+
+  public applySessionCapabilities(capabilities: PamSessionCapabilities): void {
+    this.capabilitiesStore.emit({
+      platformAdmin: capabilities.platformAdmin,
+      result: { platformAdmin: capabilities.platformAdmin }
+    });
+  }
+
+  public clearSessionCapabilities(): void {
+    const reset = defaultCapabilitiesState();
+    this.capabilitiesStore.emit(reset);
+  }
+
+  /**
+   * @override
+   */
   public isUser(value: unknown): value is UserSchema {
     return userSchema.safeParse(value).success;
   }
@@ -83,31 +127,44 @@ export class UserService
   }
 
   public refreshUser(params?: AppApiConfig): Promise<boolean> {
-    // TODO: 验证是否有 token 有才进行刷新
-
     if (this.isAuthenticated()) {
       return Promise.resolve(true);
     }
 
     this.getStore().start();
 
-    return this.refreshUserInfo(null, params)
-      .then((result) => {
-        if (result && this.isUser(result.data)) {
-          this.getStore().success(result.data, {
-            credential_token: result.data.credential_token
+    return this.gateway
+      .fetchSession(params)
+      .then((session) => {
+        if (session.user && this.isUser(session.user)) {
+          this.getStore().success(session.user, {
+            credential_token: session.user.credential_token ?? ''
           });
-
+          this.applySessionCapabilities(session.capabilities);
           return true;
         }
 
+        this.clearSessionCapabilities();
         this.getStore().failed(API_REFRESH_USER_INFO_FAILED);
         return false;
       })
       .catch((error) => {
+        this.clearSessionCapabilities();
         this.getStore().failed(error);
         return false;
       });
+  }
+
+  /**
+   * @override
+   */
+  public async logout<R = void>(
+    params?: unknown,
+    config?: unknown
+  ): Promise<R> {
+    await super.logout(params, config);
+    this.clearSessionCapabilities();
+    return undefined as R;
   }
 
   public async sendOtp(params: SignWithOtpParams): Promise<SignOtpResult> {

@@ -16,6 +16,7 @@ import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrap
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { PamCliTokenService } from '@server/services/PamCliTokenService';
+import { PamUserService } from '@server/services/PamUserService';
 import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
 import type { LoggerInterface } from '@qlover/logger';
 import type {
@@ -80,6 +81,9 @@ export class SupabaseOAuthProvider
   protected logger!: LoggerInterface;
   @inject(I.ServerContextInterface)
   protected serverContext!: ServerContextInterface;
+
+  @inject(PamUserService)
+  protected pamUserService!: PamUserService;
 
   protected readonly appHost: string;
 
@@ -376,6 +380,11 @@ export class SupabaseOAuthProvider
     }
 
     const profile = supabaseSessionToUserSchema(session);
+
+    await this.pamUserService.ensurePamUser({
+      id: profile.id,
+      email: profile.email
+    });
 
     this.oauthSession.setSession({
       userId: profile.id,

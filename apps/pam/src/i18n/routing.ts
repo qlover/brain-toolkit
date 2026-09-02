@@ -3,6 +3,7 @@ import { defineRouting } from 'next-intl/routing';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import {
+  ROUTE_ADMIN,
   ROUTE_CALLBACK_EMAIL_LOGIN,
   ROUTE_PAMENV_DEVICE,
   ROUTE_DEVELOPER_APPS,
@@ -48,6 +49,10 @@ export const routing = defineRouting({
     [ROUTE_CALLBACK_EMAIL_LOGIN]: {
       en: '/callback/email-login',
       zh: '/callback/email-login'
+    },
+    [ROUTE_ADMIN]: {
+      en: '/admin',
+      zh: '/admin'
     },
     [ROUTE_REQUEST_LOGS]: {
       en: '/admin/request-logs',

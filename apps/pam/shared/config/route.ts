@@ -409,6 +409,31 @@ export function redirectToPath(
 }
 
 /**
+ * Redirect logged-in non-platform-admin users away from `/admin/*`.
+ */
+export function redirectToProjects(request: NextRequest): NextURL {
+  const locale = localeFromPathname(request.nextUrl.pathname);
+  const url = request.nextUrl.clone();
+  url.pathname = withLocalePrefix(ROUTE_PROJECTS, locale);
+  url.search = '';
+  return url;
+}
+
+/**
+ * Platform admin console paths (`/admin`, `/admin/users`, …).
+ */
+export function isPlatformAdminPath(pathname: string): boolean {
+  const localeAlt = i18nConfig.supportedLngs.join('|');
+  const withoutLocale = pathname.replace(
+    new RegExp(`^\\/(${localeAlt})(?=\\/|$)`),
+    ''
+  );
+  return (
+    withoutLocale === ROUTE_ADMIN || withoutLocale.startsWith(`${ROUTE_ADMIN}/`)
+  );
+}
+
+/**
  * 用于构建一个带 path 参数的 api 请求地址
  *
  * @example

@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { AdminPageShell } from '@/uikit/components-pages/AdminPageShell';
+import { AdminUsersPanel } from '@/uikit/components-pages/AdminUsersPanel';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { defaultNavItems } from '@config/adminNavs';
 import { i18nConfig } from '@config/i18n';
@@ -16,17 +17,17 @@ const AdminLayout = dynamic(
   { ssr: false }
 );
 
-interface AdminIndexProps {
+interface AdminUserPageProps {
   messages: Record<string, string>;
 }
 
 const namespace = 'admin_users';
 
 /**
- * Admin users (Pages Router / CSR).
- * Entry auth is middleware via LOGINED_PAGES.
+ * Platform admin user management (Pages Router / CSR).
+ * Entry: middleware session + platform admin gate.
  */
-export default function AdminUserPage({}: AdminIndexProps) {
+export default function AdminUserPage({}: AdminUserPageProps) {
   const seoMetadata = useI18nMapping(adminUsers18n);
 
   return (
@@ -35,9 +36,7 @@ export default function AdminUserPage({}: AdminIndexProps) {
         title={seoMetadata.title}
         description={seoMetadata.description}
       >
-        <p className="text-base text-secondary-text">
-          {seoMetadata.description}
-        </p>
+        <AdminUsersPanel tt={seoMetadata} />
       </AdminPageShell>
     </AdminLayout>
   );

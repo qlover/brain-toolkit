@@ -13,18 +13,21 @@ import { debounce } from 'lodash-es';
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ChangeEvent,
   type KeyboardEvent
 } from 'react';
+import { createPortal } from 'react-dom';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
 import type {
   PAMViewModeType,
   PAMFacadeInterface,
   PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
+import { ResponsiveModal } from '@/uikit/components/ResponsiveModal';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { mergePamCategories } from '@config/pamCategories';
 import {
@@ -37,6 +40,35 @@ import {
 import type { PAMProjectDetail } from '@schemas/PAMProjectSchema';
 
 const SEARCH_DEBOUNCE_MS = 350;
+const FILTERS_PANEL_WIDTH = 288;
+const FILTERS_PANEL_GAP = 8;
+const MOBILE_FILTERS_MQ = '(max-width: 639px)';
+
+function isMobileFiltersViewport(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia(MOBILE_FILTERS_MQ).matches
+  );
+}
+
+function computeFiltersPanelPosition(buttonRect: DOMRect): {
+  top: number;
+  left: number;
+} {
+  const viewportMargin = 8;
+  let left = buttonRect.left;
+  const maxLeft = window.innerWidth - FILTERS_PANEL_WIDTH - viewportMargin;
+  if (left > maxLeft) {
+    left = maxLeft;
+  }
+  if (left < viewportMargin) {
+    left = viewportMargin;
+  }
+  return {
+    top: buttonRect.bottom + FILTERS_PANEL_GAP,
+    left
+  };
+}
 
 function FilterOption({
   active,
@@ -61,6 +93,114 @@ function FilterOption({
     >
       {children}
     </button>
+  );
+}
+
+function PAMToolbarFiltersContent({
+  tt,
+  visibilityValue,
+  onVisibilityChange,
+  showPrivateVisibility,
+  sortValue,
+  sortOrder,
+  onSortChange
+}: {
+  tt: PAMI18nInterface;
+  visibilityValue: string;
+  onVisibilityChange: (value: string) => void;
+  showPrivateVisibility: boolean;
+  sortValue: PAMListSortByType;
+  sortOrder: PAMListSortOrderType;
+  onSortChange: (
+    sortBy: PAMListSortByType,
+    sortOrder: PAMListSortOrderType
+  ) => void;
+}) {
+  return (
+    <div data-testid="PAMToolbarFiltersContent" className="space-y-3">
+      <div>
+        <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+          {tt.labelVisibility}
+        </p>
+        <div
+          data-testid="PAMToolbarVisibilityChips"
+          className="flex flex-wrap gap-1"
+          role="group"
+          aria-label={tt.labelVisibility}
+        >
+          <FilterOption
+            active={visibilityValue === ''}
+            onClick={() => onVisibilityChange('')}
+          >
+            {tt.allVisibility}
+          </FilterOption>
+          <FilterOption
+            active={visibilityValue === 'public'}
+            onClick={() => onVisibilityChange('public')}
+          >
+            {tt.public}
+          </FilterOption>
+          {showPrivateVisibility ? (
+            <FilterOption
+              active={visibilityValue === 'private'}
+              onClick={() => onVisibilityChange('private')}
+            >
+              {tt.private}
+            </FilterOption>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="border-t border-primary-border pt-3">
+        <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+          {tt.labelSort}
+        </p>
+        <div
+          data-testid="PAMToolbarSortChips"
+          className="flex flex-wrap gap-1"
+          role="group"
+          aria-label={tt.labelSort}
+        >
+          <FilterOption
+            active={sortValue === PAMListSortBy.CreatedAt}
+            onClick={() => onSortChange(PAMListSortBy.CreatedAt, sortOrder)}
+          >
+            {tt.sortByCreated}
+          </FilterOption>
+          <FilterOption
+            active={sortValue === PAMListSortBy.UpdatedAt}
+            onClick={() => onSortChange(PAMListSortBy.UpdatedAt, sortOrder)}
+          >
+            {tt.sortByUpdated}
+          </FilterOption>
+        </div>
+      </div>
+
+      <div className="border-t border-primary-border pt-3">
+        <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+          {tt.labelSortOrder}
+        </p>
+        <div
+          data-testid="PAMToolbarSortOrderChips"
+          className="flex flex-wrap gap-1"
+          role="group"
+          aria-label={tt.labelSortOrder}
+        >
+          <FilterOption
+            active={sortOrder === PAMListSortOrder.Desc}
+            onClick={() => onSortChange(sortValue, PAMListSortOrder.Desc)}
+          >
+            {tt.sortOrderDesc}
+          </FilterOption>
+          <FilterOption
+            active={sortOrder === PAMListSortOrder.Asc}
+            onClick={() => onSortChange(sortValue, PAMListSortOrder.Asc)}
+          >
+            {tt.sortOrderAsc}
+          </FilterOption>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -173,7 +313,15 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   const storeKeyword = useStore(facadeStore, keywordSelector);
   const [draftKeyword, setDraftKeyword] = useState(storeKeyword);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const filtersRef = useRef<HTMLDivElement>(null);
+  const [isMobileFilters, setIsMobileFilters] = useState(
+    isMobileFiltersViewport
+  );
+  const [panelPosition, setPanelPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const filtersButtonRef = useRef<HTMLButtonElement>(null);
+  const filtersPanelRef = useRef<HTMLDivElement>(null);
 
   const chipCategories = useMemo(
     () => mergePamCategories(categories),
@@ -185,16 +333,63 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   }, [storeKeyword]);
 
   useEffect(() => {
-    if (!filtersOpen) {
+    const mediaQuery = window.matchMedia(MOBILE_FILTERS_MQ);
+    const syncViewport = () => {
+      setIsMobileFilters(mediaQuery.matches);
+    };
+    syncViewport();
+    mediaQuery.addEventListener('change', syncViewport);
+    return () => {
+      mediaQuery.removeEventListener('change', syncViewport);
+    };
+  }, []);
+
+  const updatePanelPosition = useCallback(() => {
+    const button = filtersButtonRef.current;
+    if (!button) {
+      return;
+    }
+    setPanelPosition(
+      computeFiltersPanelPosition(button.getBoundingClientRect())
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!filtersOpen || isMobileFilters) {
+      setPanelPosition(null);
+      return;
+    }
+    updatePanelPosition();
+  }, [filtersOpen, isMobileFilters, updatePanelPosition]);
+
+  useEffect(() => {
+    if (!filtersOpen || isMobileFilters) {
+      return;
+    }
+    const onReposition = () => {
+      updatePanelPosition();
+    };
+    window.addEventListener('resize', onReposition);
+    window.addEventListener('scroll', onReposition, true);
+    return () => {
+      window.removeEventListener('resize', onReposition);
+      window.removeEventListener('scroll', onReposition, true);
+    };
+  }, [filtersOpen, isMobileFilters, updatePanelPosition]);
+
+  useEffect(() => {
+    if (!filtersOpen || isMobileFilters) {
       return;
     }
     const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
-        filtersRef.current &&
-        !filtersRef.current.contains(event.target as Node)
+        filtersButtonRef.current?.contains(target) ||
+        filtersPanelRef.current?.contains(target)
       ) {
-        setFiltersOpen(false);
+        return;
       }
+      setFiltersOpen(false);
     };
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -207,7 +402,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
       document.removeEventListener('mousedown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [filtersOpen]);
+  }, [filtersOpen, isMobileFilters]);
 
   const runSearch = useCallback(
     (keyword: string) => {
@@ -277,6 +472,37 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
         : 'bg-elevated text-secondary-text ring-1 ring-primary-border/80 hover:text-primary-text'
     );
 
+  const filtersContentProps = {
+    tt,
+    visibilityValue,
+    onVisibilityChange,
+    showPrivateVisibility,
+    sortValue,
+    sortOrder,
+    onSortChange
+  };
+
+  const desktopFiltersPanel =
+    filtersOpen && !isMobileFilters && panelPosition
+      ? createPortal(
+          <div
+            ref={filtersPanelRef}
+            data-testid="PAMToolbarFiltersPanel"
+            role="dialog"
+            aria-label={tt.filters}
+            style={{
+              top: panelPosition.top,
+              left: panelPosition.left,
+              width: FILTERS_PANEL_WIDTH
+            }}
+            className="bg-secondary fixed z-50 rounded-xl border border-primary-border p-3 shadow-lg"
+          >
+            <PAMToolbarFiltersContent {...filtersContentProps} />
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
     <>
       <div data-testid="PAMToolbar" className="mb-4 flex flex-col sm:mb-5">
@@ -309,8 +535,9 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             ) : null}
           </div>
 
-          <div ref={filtersRef} className="relative shrink-0">
+          <div className="relative shrink-0">
             <button
+              ref={filtersButtonRef}
               type="button"
               data-testid="PAMToolbarFiltersButton"
               aria-expanded={filtersOpen}
@@ -331,108 +558,6 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
                 </span>
               ) : null}
             </button>
-
-            {filtersOpen ? (
-              <div
-                data-testid="PAMToolbarFiltersPanel"
-                role="dialog"
-                aria-label={tt.filters}
-                className="bg-secondary absolute top-[calc(100%+0.5rem)] right-0 z-30 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-primary-border p-3 shadow-lg sm:w-72"
-              >
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
-                      {tt.labelVisibility}
-                    </p>
-                    <div
-                      data-testid="PAMToolbarVisibilityChips"
-                      className="flex flex-wrap gap-1"
-                      role="group"
-                      aria-label={tt.labelVisibility}
-                    >
-                      <FilterOption
-                        active={visibilityValue === ''}
-                        onClick={() => onVisibilityChange('')}
-                      >
-                        {tt.allVisibility}
-                      </FilterOption>
-                      <FilterOption
-                        active={visibilityValue === 'public'}
-                        onClick={() => onVisibilityChange('public')}
-                      >
-                        {tt.public}
-                      </FilterOption>
-                      {showPrivateVisibility ? (
-                        <FilterOption
-                          active={visibilityValue === 'private'}
-                          onClick={() => onVisibilityChange('private')}
-                        >
-                          {tt.private}
-                        </FilterOption>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-primary-border pt-3">
-                    <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
-                      {tt.labelSort}
-                    </p>
-                    <div
-                      data-testid="PAMToolbarSortChips"
-                      className="flex flex-wrap gap-1"
-                      role="group"
-                      aria-label={tt.labelSort}
-                    >
-                      <FilterOption
-                        active={sortValue === PAMListSortBy.CreatedAt}
-                        onClick={() =>
-                          onSortChange(PAMListSortBy.CreatedAt, sortOrder)
-                        }
-                      >
-                        {tt.sortByCreated}
-                      </FilterOption>
-                      <FilterOption
-                        active={sortValue === PAMListSortBy.UpdatedAt}
-                        onClick={() =>
-                          onSortChange(PAMListSortBy.UpdatedAt, sortOrder)
-                        }
-                      >
-                        {tt.sortByUpdated}
-                      </FilterOption>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-primary-border pt-3">
-                    <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
-                      {tt.labelSortOrder}
-                    </p>
-                    <div
-                      data-testid="PAMToolbarSortOrderChips"
-                      className="flex flex-wrap gap-1"
-                      role="group"
-                      aria-label={tt.labelSortOrder}
-                    >
-                      <FilterOption
-                        active={sortOrder === PAMListSortOrder.Desc}
-                        onClick={() =>
-                          onSortChange(sortValue, PAMListSortOrder.Desc)
-                        }
-                      >
-                        {tt.sortOrderDesc}
-                      </FilterOption>
-                      <FilterOption
-                        active={sortOrder === PAMListSortOrder.Asc}
-                        onClick={() =>
-                          onSortChange(sortValue, PAMListSortOrder.Asc)
-                        }
-                      >
-                        {tt.sortOrderAsc}
-                      </FilterOption>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <ViewModeToggle
@@ -502,6 +627,19 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
           <PlusIcon className="h-6 w-6" />
         </button>
       ) : null}
+
+      {desktopFiltersPanel}
+
+      <ResponsiveModal
+        open={filtersOpen && isMobileFilters}
+        title={tt.filters}
+        onClose={() => setFiltersOpen(false)}
+        showFullscreenToggle={false}
+        closeLabel={tt.formCancel}
+        bodyClassName="px-4 py-4"
+      >
+        <PAMToolbarFiltersContent {...filtersContentProps} />
+      </ResponsiveModal>
     </>
   );
 };

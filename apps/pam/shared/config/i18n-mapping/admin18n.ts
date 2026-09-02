@@ -103,5 +103,10 @@ export const adminUsers18n = Object.freeze({
   saveButton: commonKeys.COMMON_SAVE,
   detailButton: commonKeys.COMMON_DETAIL,
   cancelButton: commonKeys.COMMON_CANCEL,
-  createButton: commonKeys.COMMON_CREATE
+  createButton: commonKeys.COMMON_CREATE,
+  platformAdminLabel: userKeys.ADMIN_USERS_PLATFORM_ADMIN_LABEL,
+  searchPlaceholder: userKeys.ADMIN_USERS_SEARCH_PLACEHOLDER,
+  empty: userKeys.ADMIN_USERS_EMPTY,
+  emailLabel: userKeys.ADMIN_USERS_EMAIL_LABEL,
+  searchButton: commonTablesKeys.COMMON_ADMIN_TABLE_SEARCH
 });

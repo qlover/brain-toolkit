@@ -1,8 +1,11 @@
 import type { LoginProviderType } from '@config/common';
+import type { PamSessionResponse } from '@schemas/PamUserSchema';
+import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import type {
   UserService as CorekitBridgeUserServiceInterface,
   GatewayResult,
   LoginParams,
+  StoreInterface,
   UserServiceGateway
 } from '@qlover/corekit-bridge';
 import type { UserCredential, UserSchema } from '@qlover/next-kit/common';
@@ -23,6 +26,8 @@ export interface UserServiceInterface
    * This is a extends method from the corekit-bridge UserServiceInterface.
    */
   getToken(): string;
+
+  getCapabilitiesStore(): StoreInterface<PamSessionCapabilitiesStateInterface>;
 }
 
 export type OAuthConsentPayload = {
@@ -67,4 +72,6 @@ export interface UserServiceGatewayInterface
     locale?: string;
     returnTo?: string;
   }): Promise<LoginProviderResult>;
+
+  fetchSession(config?: {}): Promise<PamSessionResponse>;
 }

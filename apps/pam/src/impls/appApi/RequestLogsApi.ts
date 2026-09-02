@@ -1,5 +1,5 @@
 import { inject } from '@shared/container';
-import { API_USER_REQUEST_LOGS } from '@config/route';
+import { API_ADMIN_REQUEST_LOGS } from '@config/route';
 import { AppApiRequester } from './AppApiRequester';
 import type {
   ResourceOptions,
@@ -55,7 +55,7 @@ export class RequestLogsApi implements ResourceSearchInterface<RequestLogRow> {
     criteria: ResourceSearchParams,
     resourceOptions?: ResourceOptions
   ): Promise<ResourceSearchResult<RequestLogRow>> {
-    const response = await this.appApiRequester.get(API_USER_REQUEST_LOGS, {
+    const response = await this.appApiRequester.get(API_ADMIN_REQUEST_LOGS, {
       params: sortCriteriaToQuery(criteria),
       signal: resourceOptions?.signal
     });

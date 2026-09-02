@@ -15,6 +15,7 @@ import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface'
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { UserLoginContext } from '@server/interfaces/UserServiceInterface';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
+import { PamUserService } from '@server/services/PamUserService';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { LoggerInterface } from '@qlover/logger';
 import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
@@ -127,7 +128,9 @@ export class BrainOAuthLoginService {
     @inject(RequestLogsRepository)
     protected requestLogsRepository: RequestLogsRepository,
     @inject(SiteSettingsService)
-    protected siteSettings: SiteSettingsService
+    protected siteSettings: SiteSettingsService,
+    @inject(PamUserService)
+    protected pamUserService: PamUserService
   ) {}
 
   protected async getOAuthSettings(): Promise<{
@@ -328,6 +331,11 @@ export class BrainOAuthLoginService {
     const accessToken = token.access_token!;
     const userInfo = await this.fetchUserInfo(accessToken);
     const user = mapBrainUserToSchema(userInfo);
+
+    await this.pamUserService.ensurePamUser({
+      id: user.id,
+      email: user.email
+    });
 
     const sessionPayload: PamSessionPayload = {
       userId: user.id,
