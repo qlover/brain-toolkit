@@ -63,6 +63,7 @@ export const adminSettings18n = Object.freeze({
   secretHint: settingsKeys.ADMIN_SETTINGS_SECRET_HINT,
   loadFailed: settingsKeys.ADMIN_SETTINGS_LOAD_FAILED,
   saveFailed: settingsKeys.ADMIN_SETTINGS_SAVE_FAILED,
+  saveSuccess: settingsKeys.ADMIN_SETTINGS_SAVE_SUCCESS,
   sourceDb: settingsKeys.ADMIN_SETTINGS_SOURCE_DB,
   sourceEnv: settingsKeys.ADMIN_SETTINGS_SOURCE_ENV,
   sourceDefault: settingsKeys.ADMIN_SETTINGS_SOURCE_DEFAULT

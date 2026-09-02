@@ -103,7 +103,19 @@ export class SiteSettingsService {
 
   public async getBoolean(key: PamSiteSettingKey): Promise<boolean> {
     const value = await this.getValue(key);
-    return value === true;
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'true') {
+        return true;
+      }
+      if (normalized === 'false') {
+        return false;
+      }
+    }
+    return false;
   }
 
   public async getString(key: PamSiteSettingKey): Promise<string> {

@@ -138,6 +138,13 @@ export const ADMIN_SETTINGS_LOAD_FAILED = 'admin_settings:load__failed';
 export const ADMIN_SETTINGS_SAVE_FAILED = 'admin_settings:save__failed';
 
 /**
+ * @description Save succeeded message
+ * @localZh 已保存
+ * @localEn Saved
+ */
+export const ADMIN_SETTINGS_SAVE_SUCCESS = 'admin_settings:save__success';
+
+/**
  * @description Source badge: database
  * @localZh 数据库
  * @localEn Database

@@ -4,7 +4,8 @@ import { NextApiServer } from '@server/NextApiServer';
 
 const API_PUBLIC_CONFIG = '/api/public-config' as const;
 
-export const revalidate = 60;
+/** Login feature flags must reflect DB immediately after Admin saves. */
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const result = await new NextApiServer(API_PUBLIC_CONFIG, req).run(
@@ -24,6 +25,9 @@ export async function GET(req: NextRequest) {
   }
 
   const response = NextResponse.json(result.data);
-  response.headers.set('Cache-Control', 's-maxage=60');
+  response.headers.set(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, max-age=0'
+  );
   return response;
 }

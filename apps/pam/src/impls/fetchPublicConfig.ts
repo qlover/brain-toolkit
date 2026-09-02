@@ -17,7 +17,8 @@ async function loadPublicConfigFromNetwork(): Promise<PamPublicConfig> {
   try {
     const response = await fetch(API_PUBLIC_CONFIG, {
       method: 'GET',
-      credentials: 'same-origin'
+      credentials: 'same-origin',
+      cache: 'no-store'
     });
     if (!response.ok) {
       return defaultPublicConfig;

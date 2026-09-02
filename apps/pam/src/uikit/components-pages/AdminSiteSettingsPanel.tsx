@@ -4,10 +4,12 @@ import { useStrictEffect } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { SiteSettingsApi } from '@/impls/appApi/SiteSettingsApi';
+import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminSettingsI18nInterface } from '@config/i18n-mapping/admin18n';
+import { I } from '@config/ioc-identifiter';
 import {
   PAM_SITE_SETTING_KEYS,
   PAM_SITE_SETTING_SECRET_UNCHANGED,
@@ -172,6 +174,7 @@ export function AdminSiteSettingsPanel({
   tt: AdminSettingsI18nInterface;
 }) {
   const siteSettingsApi = useIOC(SiteSettingsApi);
+  const dialogHandler = useIOC(I.DialogHandler);
   const [entries, setEntries] = useState<PamAdminSiteSettingEntry[]>([]);
   const [draft, setDraft] = useState<DraftState>({});
   const [loading, setLoading] = useState(true);
@@ -223,13 +226,24 @@ export function AdminSiteSettingsPanel({
           }
           return next;
         });
+        if (section === 'auth') {
+          invalidatePublicConfigCache();
+        }
+        dialogHandler.success(tt.saveSuccess);
       } catch {
         setError(tt.saveFailed);
       } finally {
         setSavingSection(null);
       }
     },
-    [byKey, draft, siteSettingsApi, tt.saveFailed]
+    [
+      byKey,
+      dialogHandler,
+      draft,
+      siteSettingsApi,
+      tt.saveFailed,
+      tt.saveSuccess
+    ]
   );
 
   const setDraftValue = useCallback(
