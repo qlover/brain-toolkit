@@ -23,6 +23,7 @@ import {
   API_OTP_VERIFY_INVALID
 } from '@config/i18n-identifier/api';
 import { loginWithProviderSchema } from '@schemas/LoginSchema';
+import type { PamSessionResponse } from '@schemas/PamUserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import { ServerConfig } from '@server/ServerConfig';
@@ -30,6 +31,7 @@ import { BrainOAuthLoginService } from '@server/services/BrainOAuthLoginService'
 import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { OtpSendRateLimitService } from '@server/services/OtpSendRateLimitService';
+import { PamUserService } from '@server/services/PamUserService';
 import { getClientIpFromRequest } from '@server/utils/getClientIpFromRequest';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
 import type {
@@ -57,6 +59,8 @@ export class UserController {
     protected requestLogsRepository: RequestLogsRepository,
     @inject(OtpSendRateLimitService)
     protected otpSendRateLimit: OtpSendRateLimitService,
+    @inject(PamUserService)
+    protected pamUserService: PamUserService,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer) base64Serializer: Base64Serializer
   ) {
@@ -126,9 +130,24 @@ export class UserController {
   /**
    * Cookie-only session for bootstrap (no Supabase refresh, no tokens in JSON).
    */
-  public async getSession(): Promise<UserSchema | null> {
+  public async getSession(): Promise<PamSessionResponse> {
     const user = await this.userService.getSessionUser();
-    return user ? { ...user, credential_token: '' } : null;
+    if (!user) {
+      return {
+        user: null,
+        capabilities: { platformAdmin: false }
+      };
+    }
+
+    const pamUser = await this.pamUserService.ensurePamUser({
+      id: user.id,
+      email: user.email
+    });
+
+    return {
+      user: { ...user, credential_token: '' },
+      capabilities: { platformAdmin: pamUser.is_platform_admin }
+    };
   }
 
   public async getUser(): Promise<UserSchema | null> {

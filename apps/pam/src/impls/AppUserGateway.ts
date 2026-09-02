@@ -8,6 +8,7 @@ import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { LoginProviderType } from '@config/common';
 import * as apiRoutes from '@config/route';
+import type { PamSessionResponse } from '@schemas/PamUserSchema';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
@@ -24,6 +25,32 @@ import {
   AppApiRequesterContext
 } from './appApi/AppApiRequester';
 import type { GatewayResult, LoginParams } from '@qlover/corekit-bridge';
+
+const emptySession = (): PamSessionResponse => ({
+  user: null,
+  capabilities: { platformAdmin: false }
+});
+
+function parseSessionPayload(
+  payload: PamSessionResponse | UserSchema | null
+): PamSessionResponse {
+  if (
+    payload != null &&
+    typeof payload === 'object' &&
+    'capabilities' in payload
+  ) {
+    return payload as PamSessionResponse;
+  }
+
+  if (payload == null) {
+    return emptySession();
+  }
+
+  return {
+    user: payload as UserSchema,
+    capabilities: { platformAdmin: false }
+  };
+}
 
 /**
  * UserApi
@@ -51,25 +78,36 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   /**
    * @override
    */
-  public async refreshUserInfo(
-    _params?: unknown,
-    _config?: {} | undefined
-  ): Promise<GatewayResult<UserSchema>> {
+  public async fetchSession(
+    config?: Pick<AppApiConfig, 'signal'>
+  ): Promise<PamSessionResponse> {
     const response = await this.client.request<
-      UserApiLoginTransaction['response'],
-      UserApiLoginTransaction['request']
+      NextKitApiResult<PamSessionResponse>,
+      undefined
     >({
-      ..._config,
       url: apiRoutes.API_USER_SESSION,
-      method: HttpMethods.GET
+      method: HttpMethods.GET,
+      signal: config?.signal
     });
 
     if (!response.data.success) {
       throw new Error(response.data.message);
     }
 
+    return parseSessionPayload(response.data.data ?? null);
+  }
+
+  /**
+   * @override
+   */
+  public async refreshUserInfo(
+    _params?: unknown,
+    _config?: {} | undefined
+  ): Promise<GatewayResult<UserSchema>> {
+    const session = await this.fetchSession(_config);
+
     return {
-      data: response.data.data as UserSchema,
+      data: session.user as UserSchema,
       error: null
     };
   }
