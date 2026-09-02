@@ -291,3 +291,25 @@ export const ADMIN_USERS_UPDATED_AT_LABEL = 'admin_users:updated_at__label';
  */
 export const ADMIN_USERS_UPDATED_AT_PLACEHOLDER =
   'admin_users:updated_at__placeholder';
+
+/**
+ * @description Platform admin toggle label
+ * @localZh 平台管理员
+ * @localEn Platform admin
+ */
+export const ADMIN_USERS_PLATFORM_ADMIN_LABEL =
+  'admin_users:platform_admin__label';
+
+/**
+ * @description User search placeholder
+ * @localZh 按邮箱搜索用户
+ * @localEn Search users by email
+ */
+export const ADMIN_USERS_SEARCH_PLACEHOLDER = 'admin_users:search__placeholder';
+
+/**
+ * @description Empty user list
+ * @localZh 暂无用户
+ * @localEn No users found
+ */
+export const ADMIN_USERS_EMPTY = 'admin_users:empty';
