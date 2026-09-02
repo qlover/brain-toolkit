@@ -1,13 +1,13 @@
 import { type NextRequest } from 'next/server';
 import { SiteSettingsController } from '@server/controllers/SiteSettingsController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { PlatformAdminPlugin } from '@server/plugins/PlatformAdminPlugin';
 
 const API_ADMIN_SITE_SETTINGS = '/api/admin/site-settings' as const;
 
 export async function GET(req: NextRequest) {
   return await new NextApiServer(API_ADMIN_SITE_SETTINGS, req)
-    .use(new ServerAuthPlugin())
+    .use(new PlatformAdminPlugin())
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(SiteSettingsController).getAdminSettings()
     );
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
   return await new NextApiServer(API_ADMIN_SITE_SETTINGS, req)
-    .use(new ServerAuthPlugin())
+    .use(new PlatformAdminPlugin())
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(SiteSettingsController).patchAdminSettings(body)
     );

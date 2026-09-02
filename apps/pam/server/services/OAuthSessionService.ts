@@ -1,9 +1,15 @@
 import jwt from 'jsonwebtoken';
 import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { hasSessionPath, redirectToPath } from '@config/route';
+import {
+  hasSessionPath,
+  isPlatformAdminPath,
+  redirectToPath,
+  redirectToProjects
+} from '@config/route';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthSessionServiceInterface } from '@server/interfaces/OAuthSessionServiceInterface';
+import { checkPlatformAdmin } from '@server/utils/checkPlatformAdmin';
 import type { UserSchema } from '@qlover/next-kit/common';
 import type {
   OAuthSessionInterface,
@@ -95,6 +101,18 @@ export class OAuthSessionService
     // 3. 如果无效，重定向到登录页（并携带当前路径）
     if (!payload) {
       return NextResponse.redirect(redirectToPath(request));
+    }
+
+    const pathname = request.nextUrl.pathname;
+    if (isPlatformAdminPath(pathname)) {
+      const userId = String(
+        payload.userId ??
+          (payload as { user?: Pick<UserSchema, 'id'> }).user?.id ??
+          ''
+      );
+      if (!userId || !(await checkPlatformAdmin(userId))) {
+        return NextResponse.redirect(redirectToProjects(request));
+      }
     }
 
     // 4. 验证通过，返回正常响应
