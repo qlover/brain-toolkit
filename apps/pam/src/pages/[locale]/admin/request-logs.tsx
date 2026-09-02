@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo } from 'react';
 import { RequestLogsApi } from '@/impls/appApi/RequestLogsApi';
+import { AdminPageShell } from '@/uikit/components-pages/AdminPageShell';
 import { RequestLogsTable } from '@/uikit/components-pages/RequestLogsTable';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -95,18 +96,17 @@ export default function AdminRequestLogsPage({}: AdminRequestLogsProps) {
   return (
     <PageI18nProvider value={seoMetadata}>
       <AdminLayout seoMetadata={seoMetadata} navItems={defaultNavItems}>
-        <div>
-          <h1 className="text-2xl font-semibold text-primary-text mb-6">
-            {seoMetadata.title}
-          </h1>
-          <p className="text-secondary-text mb-6">{seoMetadata.description}</p>
+        <AdminPageShell
+          title={seoMetadata.title}
+          description={seoMetadata.description}
+        >
           <RequestLogsTable
             rows={rows}
             locale={locale}
             loading={loading}
             pagination={tablePagination}
           />
-        </div>
+        </AdminPageShell>
       </AdminLayout>
     </PageI18nProvider>
   );

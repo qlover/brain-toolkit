@@ -51,6 +51,11 @@ export const ROUTE_ADMIN_USERS = '/admin/users' as const;
  */
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
 
+/**
+ * Admin site settings. Pages Router: `src/pages/[locale]/admin/settings.tsx`.
+ */
+export const ROUTE_ADMIN_SETTINGS = '/admin/settings' as const;
+
 export const ROUTE_HOME = '/' as const;
 
 /**
@@ -161,6 +166,7 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN,
   ROUTE_ADMIN_USERS,
   ROUTE_REQUEST_LOGS,
+  ROUTE_ADMIN_SETTINGS,
   ROUTE_DEVELOPER_APPS,
   ROUTE_OAUTH_PLAYGROUND,
   // Consent requires an app session; gate here so unauthenticated users
