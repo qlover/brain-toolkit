@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const pamUserRowSchema = z.object({
   id: z.string().uuid(),
   email: z.string(),
+  phone: z.string().nullable().optional(),
   display_name: z.string().nullable().optional(),
   is_platform_admin: z.boolean(),
   status: z.enum(['active', 'suspended']),

@@ -1,5 +1,6 @@
 ﻿export const PAM_SITE_SETTING_KEYS = {
   AUTH_PHONE_LOGIN_ENABLED: 'auth.phone_login_enabled',
+  AUTH_PHONE_OTP_PROVIDER: 'auth.phone_otp_provider',
   AUTH_GOOGLE_OAUTH_ENABLED: 'auth.google_oauth_enabled',
   AUTH_BRAIN_PKCE_ENABLED: 'auth.brain_pkce_enabled',
   AUTH_BRAIN_SUPABASE_ENABLED: 'auth.brain_supabase_enabled',
@@ -46,9 +47,17 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       key: PAM_SITE_SETTING_KEYS.AUTH_PHONE_LOGIN_ENABLED,
       label: '手机验证码登录',
       description:
-        '是否在登录页展示「手机号」Tab 并允许短信验证码登录。需 Supabase SMS 或测试 OTP 已正确配置。',
+        '是否在登录页展示「手机号」Tab。memory：码在 Admin「验证码监控」查看；aliyun：真实短信（后续）。',
       isSensitive: false,
-      defaultValue: false
+      defaultValue: true
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER,
+      label: '手机验证码通道',
+      description:
+        'memory=不发短信，码写入 pam_phone_otps 供 Admin 监控；aliyun=阿里云短信（未就绪前勿切）。',
+      isSensitive: false,
+      defaultValue: 'memory'
     },
     {
       key: PAM_SITE_SETTING_KEYS.AUTH_GOOGLE_OAUTH_ENABLED,
