@@ -265,6 +265,7 @@ export function AdminSiteSettingsPanel({
   }
 
   const cliKey = PAM_SITE_SETTING_KEYS.AUTH_CLI_TOKEN_EXPIRES_IN;
+  const phoneOtpProviderKey = PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER;
 
   const authToggleKeys = [
     PAM_SITE_SETTING_KEYS.AUTH_PHONE_LOGIN_ENABLED,
@@ -317,7 +318,9 @@ export function AdminSiteSettingsPanel({
         saveLabel={tt.save}
         savingLabel={tt.saving}
         saving={savingSection === 'auth'}
-        onSave={() => patchSection('auth', [...authToggleKeys, cliKey])}
+        onSave={() =>
+          patchSection('auth', [...authToggleKeys, phoneOtpProviderKey, cliKey])
+        }
       >
         <div>
           {authToggleKeys.map((key) => (
@@ -335,6 +338,27 @@ export function AdminSiteSettingsPanel({
               />
             </SettingRow>
           ))}
+          <SettingRow entry={byKey.get(phoneOtpProviderKey)} tt={tt}>
+            <select
+              value={(() => {
+                const raw = String(
+                  getDraftValue(
+                    draft,
+                    byKey.get(phoneOtpProviderKey),
+                    phoneOtpProviderKey
+                  )
+                ).trim();
+                return raw === 'aliyun' ? 'aliyun' : 'memory';
+              })()}
+              onChange={(event) =>
+                setDraftValue(phoneOtpProviderKey, event.target.value)
+              }
+              className={pamFormFieldClass}
+            >
+              <option value="memory">memory（Admin 监控看码）</option>
+              <option value="aliyun">aliyun（真实短信，后续）</option>
+            </select>
+          </SettingRow>
           <SettingRow entry={byKey.get(cliKey)} tt={tt}>
             <input
               type="text"
