@@ -41,8 +41,10 @@ export class ServerConfig implements SeedServerConfigInterface {
    */
   public readonly jwtExpiresIn: StringValue = '30 days';
 
-  public readonly openaiBaseUrl: string = process.env.CEREBRAS_BASE_URL ?? '';
-  public readonly openaiApiKey: string = process.env.CEREBRAS_API_KEY ?? '';
+  public readonly openaiBaseUrl: string =
+    process.env.OPENAI_BASE_URL ?? process.env.CEREBRAS_BASE_URL ?? '';
+  public readonly openaiApiKey: string =
+    process.env.OPENAI_API_KEY ?? process.env.CEREBRAS_API_KEY ?? '';
   public readonly stringEncryptorKey: string =
     process.env.NEXT_PUBLIC_STRING_ENCRYPT_KEY ?? '';
 

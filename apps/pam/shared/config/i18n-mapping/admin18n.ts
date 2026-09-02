@@ -2,6 +2,7 @@ import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
+import * as settingsKeys from '../i18n-identifier/pages/page.admin.settings';
 import * as userKeys from '../i18n-identifier/pages/page.admin.user';
 
 export const adminTableHeaderI18n = {
@@ -38,6 +39,35 @@ export const admin18n = Object.freeze({
 export type AdminUsersI18nInterface = typeof adminUsers18n;
 
 export type AdminRequestLogsI18nInterface = typeof adminRequestLogs18n;
+
+export type AdminSettingsI18nInterface = typeof adminSettings18n;
+
+export const adminSettings18n = Object.freeze({
+  title: settingsKeys.ADMIN_SETTINGS_TITLE,
+  description: settingsKeys.ADMIN_SETTINGS_DESCRIPTION,
+  content: settingsKeys.ADMIN_SETTINGS_DESCRIPTION,
+  keywords: settingsKeys.ADMIN_SETTINGS_KEYWORDS,
+  sectionAuth: settingsKeys.ADMIN_SETTINGS_SECTION_AUTH,
+  sectionAuthDesc: settingsKeys.ADMIN_SETTINGS_SECTION_AUTH_DESC,
+  sectionBrainOAuth: settingsKeys.ADMIN_SETTINGS_SECTION_BRAIN_OAUTH,
+  sectionBrainOAuthDesc: settingsKeys.ADMIN_SETTINGS_SECTION_BRAIN_OAUTH_DESC,
+  sectionOpenai: settingsKeys.ADMIN_SETTINGS_SECTION_OPENAI,
+  sectionOpenaiDesc: settingsKeys.ADMIN_SETTINGS_SECTION_OPENAI_DESC,
+  sectionApi: settingsKeys.ADMIN_SETTINGS_SECTION_API,
+  sectionApiDesc: settingsKeys.ADMIN_SETTINGS_SECTION_API_DESC,
+  sectionStorage: settingsKeys.ADMIN_SETTINGS_SECTION_STORAGE,
+  sectionStorageDesc: settingsKeys.ADMIN_SETTINGS_SECTION_STORAGE_DESC,
+  loading: settingsKeys.ADMIN_SETTINGS_LOADING,
+  save: settingsKeys.ADMIN_SETTINGS_SAVE,
+  saving: settingsKeys.ADMIN_SETTINGS_SAVING,
+  secretHint: settingsKeys.ADMIN_SETTINGS_SECRET_HINT,
+  loadFailed: settingsKeys.ADMIN_SETTINGS_LOAD_FAILED,
+  saveFailed: settingsKeys.ADMIN_SETTINGS_SAVE_FAILED,
+  saveSuccess: settingsKeys.ADMIN_SETTINGS_SAVE_SUCCESS,
+  sourceDb: settingsKeys.ADMIN_SETTINGS_SOURCE_DB,
+  sourceEnv: settingsKeys.ADMIN_SETTINGS_SOURCE_ENV,
+  sourceDefault: settingsKeys.ADMIN_SETTINGS_SOURCE_DEFAULT
+});
 
 export const adminRequestLogs18n = Object.freeze({
   title: requestLogsKeys.ADMIN_REQUEST_LOGS_TITLE,

@@ -5,10 +5,8 @@ import {
 import { ROUTE_OAUTH_TOKEN } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerConfig } from '@server/ServerConfig';
+import { loadRuntimeCorsConfig } from '@server/utils/loadRuntimeCorsConfig';
 import type { NextRequest } from 'next/server';
-
-const corsConfig = new ServerConfig();
 
 /**
  * Parses OAuth token POST body (application/x-www-form-urlencoded or multipart).
@@ -82,6 +80,7 @@ function parseBasicAuth(header: string | null): {
  * CORS preflight for cross-origin OAuth token requests.
  */
 export async function OPTIONS(req: NextRequest) {
+  const corsConfig = await loadRuntimeCorsConfig(req);
   return apiCorsPreflightResponse(req, corsConfig);
 }
 
@@ -95,6 +94,7 @@ export async function OPTIONS(req: NextRequest) {
  * so standard OAuth clients (e.g. Supabase Custom Providers) can parse it.
  */
 export async function POST(req: NextRequest) {
+  const corsConfig = await loadRuntimeCorsConfig(req);
   const corsHeaders = buildApiCorsHeaders(req, corsConfig);
 
   return await new NextApiServer({

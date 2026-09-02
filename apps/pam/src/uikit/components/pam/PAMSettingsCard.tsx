@@ -14,6 +14,7 @@ export type PAMSettingsCardProps = {
   readonly onSave?: () => void;
   readonly footerLeft?: React.ReactNode;
   readonly testId?: string;
+  readonly className?: string;
 };
 
 /**
@@ -40,24 +41,30 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
   saving = false,
   onSave,
   footerLeft,
-  testId = 'PAMSettingsCard'
+  testId = 'PAMSettingsCard',
+  className
 }) => {
   return (
     <section
       data-testid={testId}
-      className="overflow-hidden rounded-2xl border border-primary-border bg-secondary"
+      className={clsx(
+        'overflow-hidden rounded-2xl border border-primary-border bg-secondary shadow-sm',
+        className
+      )}
     >
-      <div className="space-y-4 px-4 py-5 sm:px-6 sm:py-6">
+      <div className="space-y-4 px-3 py-4 sm:px-6 sm:py-6">
         <div className="space-y-1">
           <h2 className="text-base font-semibold text-primary-text sm:text-lg">
             {title}
           </h2>
-          <p className="text-sm text-secondary-text">{description}</p>
+          <p className="text-sm leading-relaxed text-secondary-text">
+            {description}
+          </p>
         </div>
         <div>{children}</div>
       </div>
       {(showSave || footerLeft) && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary-border bg-elevated/40 px-4 py-3 sm:px-6">
+        <div className="flex flex-col gap-3 border-t border-primary-border bg-elevated/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="min-w-0 text-xs text-tertiary-text sm:text-sm">
             {footerLeft}
           </div>
@@ -67,7 +74,7 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
               onClick={onSave}
               disabled={saveDisabled || saving}
               className={clsx(
-                'inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand px-3.5 py-2 text-sm font-medium text-on-brand transition',
+                'inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand px-3.5 py-2.5 text-sm font-medium text-on-brand transition sm:w-auto',
                 'hover:bg-brand-hover active:bg-brand-active',
                 'disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation'
               )}

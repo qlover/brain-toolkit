@@ -98,6 +98,13 @@ export const COMMON_ADMIN_NAV_LOCALES = 'common:admin_nav__locales';
 export const COMMON_ADMIN_NAV_REQUEST_LOGS = 'common:admin_nav__request_logs';
 
 /**
+ * @description Admin sidebar nav - site settings
+ * @localZh 站点设置
+ * @localEn Site settings
+ */
+export const COMMON_ADMIN_NAV_SITE_SETTINGS = 'common:admin_nav__site_settings';
+
+/**
  * @description logout dialog title
  * @localZh 登出
  * @localEn Logout

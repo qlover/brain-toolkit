@@ -85,12 +85,6 @@ export const PAGE_LOGIN_DEMO_NOTE = 'page_login:demo__note';
  */
 export const PAGE_LOGIN_LINK_DOCS = 'page_login:link__docs';
 /**
- * @description Login page footer link - Playground
- * @localZh OAuth 测试台
- * @localEn OAuth Playground
- */
-export const PAGE_LOGIN_LINK_PLAYGROUND = 'page_login:link__playground';
-/**
  * @description Login page forgot password text
  * @localZh 忘记密码？
  * @localEn Forgot your password?

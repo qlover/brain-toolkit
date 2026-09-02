@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import { AdminPageShell } from '@/uikit/components-pages/AdminPageShell';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { defaultNavItems } from '@config/adminNavs';
 import { i18nConfig } from '@config/i18n';
@@ -30,7 +31,9 @@ export default function AdminIndex({}: AdminIndexProps) {
 
   return (
     <AdminLayout seoMetadata={seoMetadata} navItems={defaultNavItems}>
-      <div>{seoMetadata.description}</div>
+      <AdminPageShell title={seoMetadata.title}>
+        <p className="text-base text-secondary-text">{seoMetadata.welcome}</p>
+      </AdminPageShell>
     </AdminLayout>
   );
 }
