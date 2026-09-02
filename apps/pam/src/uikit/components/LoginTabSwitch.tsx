@@ -1,9 +1,11 @@
 'use client';
 
+import { useStrictEffect } from '@qlover/next-kit/client';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useCallback, useState, type ReactNode } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
+import { fetchPublicConfig } from '@/impls/fetchPublicConfig';
 import { EmailOTPForm } from '@/uikit/components/EmailOTPForm';
 import { BrainIcon, GithubIcon, GoogleIcon } from '@/uikit/components/icons';
 import { LoginForm } from '@/uikit/components/LoginForm';
@@ -12,6 +14,7 @@ import type { LoginProviderType } from '@config/common';
 import { URLParamsKeys, loginProviders } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
+import type { PamPublicConfig } from '@schemas/PamSiteSettingsSchema';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { useIOC } from '../hook/useIOC';
 
@@ -72,19 +75,18 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const [emailLinkSent, setEmailLinkSent] = useState(false);
   const [providerLogining, setProviderLogining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [publicConfig, setPublicConfig] = useState<PamPublicConfig | null>(
+    null
+  );
 
-  const phoneLoginEnabled = false;
-  /**
-   * Supabase `custom:brain` needs a Brain AS reachable from Supabase (usually
-   * public URL). Localhost-only brain-oauth cannot complete that hop — use PKCE.
-   */
-  const brainSupabaseEnabled = false;
-  /**
-   * Brain PKCE talks to brain-oauth / Brain API cross-origin; production has no
-   * CORS path yet — only enable when APP_ENV=localhost.
-   */
-  const brainPkceEnabled = appConfig.env === 'localhost';
-  const googleEnabled = false;
+  useStrictEffect(() => {
+    void fetchPublicConfig().then(setPublicConfig);
+  }, []);
+
+  const phoneLoginEnabled = publicConfig?.auth.phoneLoginEnabled ?? false;
+  const brainSupabaseEnabled = publicConfig?.auth.brainSupabaseEnabled ?? false;
+  const brainPkceEnabled = publicConfig?.auth.brainPkceEnabled ?? false;
+  const googleEnabled = publicConfig?.auth.googleOauthEnabled ?? false;
 
   const tabBaseClass =
     'flex-1 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer border-b-2 outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-secondary-text disabled:hover:border-transparent';

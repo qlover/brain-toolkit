@@ -9,11 +9,7 @@ import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { loginI18n, NS_PAGE_LOGIN } from '@config/i18n-mapping/loginI18n';
-import {
-  ROUTE_DOCS_OAUTH,
-  ROUTE_LOGIN,
-  ROUTE_OAUTH_PLAYGROUND
-} from '@config/route';
+import { ROUTE_DOCS_OAUTH, ROUTE_LOGIN } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import { type PageParamsType } from '@server/render/AppPageRouteParams';
 import { getI18nInterface, getLocale } from '@server/render/pageRouteParams';
@@ -134,14 +130,6 @@ export default async function LoginPage({ params }: PageParamsProps) {
                 className="text-brand hover:underline"
               >
                 {tt.linkDocs}
-              </LocaleLink>
-              {' · '}
-              <LocaleLink
-                title={tt.linkPlayground}
-                href={ROUTE_OAUTH_PLAYGROUND}
-                className="text-brand hover:underline"
-              >
-                {tt.linkPlayground}
               </LocaleLink>
             </p>
             <p className="text-tertiary-text mt-3 text-center font-mono text-[11px]">
