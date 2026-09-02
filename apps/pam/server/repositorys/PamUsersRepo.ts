@@ -10,6 +10,7 @@ export type PamUserUpsertInput = {
   readonly id: string;
   readonly email: string;
   readonly displayName?: string | null;
+  readonly phone?: string | null;
 };
 
 @injectable()
@@ -37,6 +38,22 @@ export class PamUsersRepo {
     return (data as PamUserRow | null) ?? null;
   }
 
+  public async findByPhone(phone: string): Promise<PamUserRow | null> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('phone', phone)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error('PamUsersRepo.findByPhone failed', { error, phone });
+      throw new Error(error.message);
+    }
+
+    return (data as PamUserRow | null) ?? null;
+  }
+
   /**
    * Upsert profile fields; never clears an existing platform admin flag.
    */
@@ -50,6 +67,7 @@ export class PamUsersRepo {
         .update({
           email: input.email,
           display_name: input.displayName ?? existing.display_name,
+          phone: input.phone ?? existing.phone ?? null,
           updated_at: new Date().toISOString()
         })
         .eq('id', input.id)
@@ -73,6 +91,7 @@ export class PamUsersRepo {
         id: input.id,
         email: input.email,
         display_name: input.displayName ?? null,
+        phone: input.phone ?? null,
         is_platform_admin: false,
         status: 'active'
       })

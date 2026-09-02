@@ -45,14 +45,19 @@ function requireSupabaseRefreshToken(
   return token;
 }
 
+function phoneFallbackEmail(phone: string | undefined | null): string {
+  const digits = phone?.replace(/\D/g, '') ?? '';
+  return digits ? `${digits}@phone.pam.local` : 'unknown@phone.pam.local';
+}
+
 function supababseUserToUserSchema(
   user: User,
   credential_token = ''
 ): UserSchema {
   return {
     id: user.id,
-    // FIXME: 邮箱类型
-    email: user.email || user.new_email!,
+    // Phone-OTP users often have no email; keep pam_users.email NOT NULL happy.
+    email: user.email || user.new_email || phoneFallbackEmail(user.phone),
     role: UserRole.USER,
     credential_token,
     created_at: user.created_at

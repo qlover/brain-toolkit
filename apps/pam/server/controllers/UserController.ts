@@ -175,7 +175,9 @@ export class UserController {
       await this.otpSendRateLimit.assertCanSend(
         request ? getClientIpFromRequest(request) : 'unknown'
       );
-      return this.userService.signWithOtp(phoneResult.data);
+      return this.userService.signWithOtp(phoneResult.data, {
+        clientIp: request ? getClientIpFromRequest(request) : 'unknown'
+      });
     }
 
     const emailResult = signWithEmailOtpSchema.safeParse(body);
