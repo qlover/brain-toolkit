@@ -79,14 +79,16 @@ export function AdminUserPanel({
   }
 
   if (!success || !user) {
+    const loginLabel = t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN);
     return (
       <div data-testid="AdminUserPanel" className="p-3">
         <LocaleLink
           href={ROUTE_LOGIN}
           locale={locale}
+          title={loginLabel}
           className="flex w-full items-center justify-center rounded-lg border border-primary-border bg-elevated px-3 py-2 text-sm font-medium text-primary-text transition hover:bg-primary touch-manipulation"
         >
-          {t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
+          {loginLabel}
         </LocaleLink>
       </div>
     );

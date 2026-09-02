@@ -6,9 +6,7 @@ import {
   Cog6ToothIcon,
   DocumentTextIcon,
   UsersIcon,
-  XMarkIcon,
-  type ComponentType,
-  type SVGProps
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { ClientSeo } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
@@ -23,6 +21,7 @@ import { LocaleLink } from '../components/LocaleLink';
 import { ThemeSwitcher } from '../components-app/ThemeSwitcher';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 import type { PageI18nInterface } from '@qlover/next-kit/common';
+import type { ComponentType, SVGProps } from 'react';
 
 export interface AdminLayoutTT {
   title: string;
@@ -163,6 +162,7 @@ export function AdminLayout({
             <LocaleLink
               href={ROUTE_ADMIN}
               locale={locale}
+              title="PAM Admin"
               className="inline-flex min-w-0 items-baseline gap-1.5 truncate"
             >
               <span className="text-base font-semibold text-brand">PAM</span>

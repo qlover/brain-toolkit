@@ -34,7 +34,11 @@ export default function AdminUserPage({}: AdminIndexProps) {
       <AdminPageShell
         title={seoMetadata.title}
         description={seoMetadata.description}
-      />
+      >
+        <p className="text-base text-secondary-text">
+          {seoMetadata.description}
+        </p>
+      </AdminPageShell>
     </AdminLayout>
   );
 }
