@@ -6,6 +6,15 @@
  */
 
 /**
+ * API path: `/api/admin/request-logs`
+ *
+ * @see [src/app/api/admin/request-logs/route.ts](../../src/app/api/admin/request-logs/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/request-logs/route.ts`
+ */
+export const API_ADMIN_REQUEST_LOGS = '/api/admin/request-logs' as const;
+
+/**
  * API path: `/api/admin/site-settings`
  *
  * @see [src/app/api/admin/site-settings/route.ts](../../src/app/api/admin/site-settings/route.ts)
@@ -13,6 +22,25 @@
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/site-settings/route.ts`
  */
 export const API_ADMIN_SITE_SETTINGS = '/api/admin/site-settings' as const;
+
+/**
+ * API path: `/api/admin/users`
+ *
+ * @see [src/app/api/admin/users/route.ts](../../src/app/api/admin/users/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/users/route.ts`
+ */
+export const API_ADMIN_USERS = '/api/admin/users' as const;
+
+/**
+ * API path: `/api/admin/users/:userId/platform-admin`
+ *
+ * @see [src/app/api/admin/users/[userId]/platform-admin/route.ts](../../src/app/api/admin/users/[userId]/platform-admin/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/users/[userId]/platform-admin/route.ts`
+ */
+export const API_ADMIN_USERS_PLATFORM_ADMIN =
+  '/api/admin/users/:userId/platform-admin' as const;
 
 /**
  * API path: `/api/callback/brain-oauth`
@@ -391,7 +419,10 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
+  | typeof API_ADMIN_REQUEST_LOGS
   | typeof API_ADMIN_SITE_SETTINGS
+  | typeof API_ADMIN_USERS
+  | typeof API_ADMIN_USERS_PLATFORM_ADMIN
   | typeof API_CALLBACK_BRAIN_OAUTH
   | typeof API_CALLBACK_EMAIL_LOGIN
   | typeof API_CALLBACK_PROVIDER_LOGIN
