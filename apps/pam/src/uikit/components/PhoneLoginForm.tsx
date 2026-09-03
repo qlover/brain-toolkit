@@ -65,9 +65,11 @@ type Step = 'phone' | 'otp';
 
 interface PhoneLoginFormProps {
   tt: LoginI18nInterface;
+  /** memory provider: no SMS; ask a platform admin for the code. */
+  memoryOtp?: boolean;
 }
 
-export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
+export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
   const t = useWarnTranslations();
   const userGateway = useIOC(AppUserGateway);
   const { returnTo } = useReturnTo({ returnToKey: URLParamsKeys.returnTo });
@@ -279,6 +281,15 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
               ✎
             </button>
           </div>
+
+          {memoryOtp ? (
+            <p
+              data-testid="PhoneLoginAskAdminHint"
+              className="rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-primary-text"
+            >
+              {tt.phoneAskAdmin}
+            </p>
+          ) : null}
 
           <div>
             <label

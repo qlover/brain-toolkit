@@ -4,6 +4,7 @@ import type { PamPublicConfig } from '@schemas/PamSiteSettingsSchema';
 const defaultPublicConfig: PamPublicConfig = {
   auth: {
     phoneLoginEnabled: false,
+    phoneOtpProvider: 'memory',
     googleOauthEnabled: false,
     brainPkceEnabled: false,
     brainSupabaseEnabled: false

@@ -291,7 +291,12 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
           </>
         ))}
 
-      {phoneLoginEnabled && tab === 'phone' && <PhoneLoginForm tt={tt} />}
+      {phoneLoginEnabled && tab === 'phone' && (
+        <PhoneLoginForm
+          tt={tt}
+          memoryOtp={publicConfig?.auth.phoneOtpProvider !== 'aliyun'}
+        />
+      )}
     </div>
   );
 }

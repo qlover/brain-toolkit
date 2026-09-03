@@ -195,19 +195,27 @@ export class SiteSettingsService {
   public async getPublicConfig(): Promise<PamPublicConfig> {
     const [
       phoneLoginEnabled,
+      phoneOtpProviderRaw,
       googleOauthEnabled,
       brainPkceEnabled,
       brainSupabaseEnabled
     ] = await Promise.all([
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_PHONE_LOGIN_ENABLED),
+      this.getString(PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER),
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_GOOGLE_OAUTH_ENABLED),
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_BRAIN_PKCE_ENABLED),
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_BRAIN_SUPABASE_ENABLED)
     ]);
 
+    const phoneOtpProvider =
+      phoneOtpProviderRaw.trim().toLowerCase() === 'aliyun'
+        ? ('aliyun' as const)
+        : ('memory' as const);
+
     return {
       auth: {
         phoneLoginEnabled,
+        phoneOtpProvider,
         googleOauthEnabled,
         brainPkceEnabled,
         brainSupabaseEnabled

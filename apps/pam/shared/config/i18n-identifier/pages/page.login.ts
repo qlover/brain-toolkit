@@ -227,10 +227,16 @@ export const PAGE_LOGIN_TAB_PHONE_DISABLED = 'page_login:tab_phone_disabled';
 export const PAGE_LOGIN_PHONE_TITLE = 'page_login:phone_title';
 /**
  * @description Phone login form subtitle
- * @localZh 获取验证码后，请到管理后台「验证码监控」查看（memory 测试模式）
- * @localEn After sending, open Admin → OTP monitor to read the code (memory test mode).
+ * @localZh 使用手机号和验证码登录
+ * @localEn Sign in with your phone number and verification code.
  */
 export const PAGE_LOGIN_PHONE_SUBTITLE = 'page_login:phone_subtitle';
+/**
+ * @description Hint after sending OTP in memory mode
+ * @localZh 验证码不会发到手机。请向超级管理员询问验证码（管理后台 → 验证码监控）。
+ * @localEn No SMS is sent. Ask a platform admin for the code (Admin → OTP monitor).
+ */
+export const PAGE_LOGIN_PHONE_ASK_ADMIN = 'page_login:phone_ask_admin';
 /**
  * @description Phone number field label
  * @localZh 手机号

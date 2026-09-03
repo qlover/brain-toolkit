@@ -61,6 +61,7 @@ export const loginI18n = Object.freeze({
   // phone OTP login
   phoneTitle: i18nKeys.PAGE_LOGIN_PHONE_TITLE,
   phoneSubtitle: i18nKeys.PAGE_LOGIN_PHONE_SUBTITLE,
+  phoneAskAdmin: i18nKeys.PAGE_LOGIN_PHONE_ASK_ADMIN,
   phoneLabel: i18nKeys.PAGE_LOGIN_PHONE_LABEL,
   phonePlaceholder: i18nKeys.PAGE_LOGIN_PHONE_PLACEHOLDER,
   phoneInvalid: i18nKeys.PAGE_LOGIN_PHONE_INVALID,

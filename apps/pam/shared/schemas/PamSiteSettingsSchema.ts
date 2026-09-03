@@ -17,6 +17,7 @@ export type PamSiteSettingRow = z.infer<typeof pamSiteSettingRowSchema>;
 export const pamPublicConfigSchema = z.object({
   auth: z.object({
     phoneLoginEnabled: z.boolean(),
+    phoneOtpProvider: z.enum(['memory', 'aliyun']).optional(),
     googleOauthEnabled: z.boolean(),
     brainPkceEnabled: z.boolean(),
     brainSupabaseEnabled: z.boolean()
