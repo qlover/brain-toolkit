@@ -38,7 +38,7 @@ pnpm pamenv push <slug|id> -e local --file .env   # 从 ./.env 读取并推到 l
 pnpm pamenv push <slug|id> -e staging -y   # 跳过普通确认（不含冲突覆盖）
 pnpm pamenv push <slug|id> -e staging -f   # 仅跳过同步冲突覆盖确认（不等于 -y）
 pnpm pamenv push <slug|id> -e staging --show-values  # review 显示非敏感明文
-pnpm pamenv remove <slug|id> -e local   # 删除远端环境（两次确认）
+pnpm pamenv remove <slug|id> -e local   # 删除远端环境（需 admin；两次确认）
 pnpm pamenv remove <slug|id> -e local -y
 pnpm pamenv logout
 pnpm pamenv --local logout             # 清理 cwd/.pam 下的 token/sync
@@ -152,7 +152,7 @@ pamenv fork <slug|id> -y   # 默认 {slug}-fork / {name} (fork)，跳过确认
 
 若 `-e` 指定的环境不存在，会先收集 URL 并走完本地校验/确认，**全部通过后再创建环境并写入变量**（不会先建空环境）。`-y` 时若能解析到默认 URL 则延后创建，否则报错。
 
-`pamenv remove <slug> -e <env>` 删除远端环境（仅 owner），默认两次确认；`-y` 跳过确认。成功后清除对应 `~/.pam/sync` 基线，不删除本地 `.env.*` 文件。
+`pamenv remove <slug> -e <env>` 删除远端环境（需项目 **admin**，含 owner），默认两次确认；`-y` 跳过确认。成功后清除对应 `~/.pam/sync` 基线，不删除本地 `.env.*` 文件。
 
 **Flags：** `-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记、创建缺失环境、remove 确认）。两者互不隐含。  
 **Diff：** 默认全部打码为 `*****`；`--show-values` 仅明文显示非敏感（含名称启发式，如 `*_SECRET` / `*_TOKEN`）。
@@ -175,4 +175,7 @@ NORMAL=1
 `pamenv logout` 会先请求服务端吊销当前 Token，再清除本地 token，并删除整个 `~/.pam/sync`。  
 CLI Token 默认 **30d**（`PAM_CLI_TOKEN_EXPIRES_IN` 可改，如 `21d`），带 `jti` 登记，可服务端吊销；旧版无 `jti` 的 Token 将失效，需重新 `login`。
 
-导出解密与 `push` 仅项目 **owner** 可用。
+项目协作权限：
+- **owner / admin / member**：均可 `pull`、`push`（解密导出）
+- **admin**（含 owner）：可 `remove` 环境、转让项目、管理协作者
+- **member**：不可删除环境或管理协作者
