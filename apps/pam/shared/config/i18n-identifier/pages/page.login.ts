@@ -232,6 +232,12 @@ export const PAGE_LOGIN_PHONE_TITLE = 'page_login:phone_title';
  */
 export const PAGE_LOGIN_PHONE_SUBTITLE = 'page_login:phone_subtitle';
 /**
+ * @description Hint after sending OTP in memory mode
+ * @localZh 验证码不会发到手机。请向超级管理员询问验证码（管理后台 → 验证码监控）。
+ * @localEn No SMS is sent. Ask a platform admin for the code (Admin → OTP monitor).
+ */
+export const PAGE_LOGIN_PHONE_ASK_ADMIN = 'page_login:phone_ask_admin';
+/**
  * @description Phone number field label
  * @localZh 手机号
  * @localEn Phone Number
@@ -239,14 +245,14 @@ export const PAGE_LOGIN_PHONE_SUBTITLE = 'page_login:phone_subtitle';
 export const PAGE_LOGIN_PHONE_LABEL = 'page_login:phone_label';
 /**
  * @description Phone number placeholder
- * @localZh 请输入手机号
- * @localEn Enter phone number
+ * @localZh +8613800138000
+ * @localEn +8613800138000
  */
 export const PAGE_LOGIN_PHONE_PLACEHOLDER = 'page_login:phone_placeholder';
 /**
  * @description Phone validation error
- * @localZh 请输入正确的手机号
- * @localEn Please enter a valid phone number
+ * @localZh 请输入正确的手机号（如 +8613800138000 或 13800138000）
+ * @localEn Enter a valid phone number (e.g. +8613800138000)
  */
 export const PAGE_LOGIN_PHONE_INVALID = 'page_login:phone_invalid';
 /**

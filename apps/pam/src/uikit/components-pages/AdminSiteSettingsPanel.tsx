@@ -265,6 +265,7 @@ export function AdminSiteSettingsPanel({
   }
 
   const cliKey = PAM_SITE_SETTING_KEYS.AUTH_CLI_TOKEN_EXPIRES_IN;
+  const phoneOtpProviderKey = PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER;
 
   const authToggleKeys = [
     PAM_SITE_SETTING_KEYS.AUTH_PHONE_LOGIN_ENABLED,
@@ -285,6 +286,16 @@ export function AdminSiteSettingsPanel({
   const openaiKeys = [
     PAM_SITE_SETTING_KEYS.OPENAI_BASE_URL,
     PAM_SITE_SETTING_KEYS.OPENAI_API_KEY
+  ] as const;
+
+  const aliyunSmsKeys = [
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ACCESS_KEY_ID,
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ACCESS_KEY_SECRET,
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_SIGN_NAME,
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_TEMPLATE_CODE,
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_TEMPLATE_PARAM_KEY,
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_REGION_ID,
+    PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ENDPOINT
   ] as const;
 
   const apiKeys = [
@@ -317,7 +328,9 @@ export function AdminSiteSettingsPanel({
         saveLabel={tt.save}
         savingLabel={tt.saving}
         saving={savingSection === 'auth'}
-        onSave={() => patchSection('auth', [...authToggleKeys, cliKey])}
+        onSave={() =>
+          patchSection('auth', [...authToggleKeys, phoneOtpProviderKey, cliKey])
+        }
       >
         <div>
           {authToggleKeys.map((key) => (
@@ -335,6 +348,27 @@ export function AdminSiteSettingsPanel({
               />
             </SettingRow>
           ))}
+          <SettingRow entry={byKey.get(phoneOtpProviderKey)} tt={tt}>
+            <select
+              value={(() => {
+                const raw = String(
+                  getDraftValue(
+                    draft,
+                    byKey.get(phoneOtpProviderKey),
+                    phoneOtpProviderKey
+                  )
+                ).trim();
+                return raw === 'aliyun' ? 'aliyun' : 'memory';
+              })()}
+              onChange={(event) =>
+                setDraftValue(phoneOtpProviderKey, event.target.value)
+              }
+              className={pamFormFieldClass}
+            >
+              <option value="memory">memory（Admin 监控看码）</option>
+              <option value="aliyun">aliyun（阿里云短信）</option>
+            </select>
+          </SettingRow>
           <SettingRow entry={byKey.get(cliKey)} tt={tt}>
             <input
               type="text"
@@ -404,6 +438,46 @@ export function AdminSiteSettingsPanel({
                   placeholder={
                     isSensitive ? tt.secretHint : 'https://api.openai.com/v1'
                   }
+                  onChange={(event) => setDraftValue(key, event.target.value)}
+                  className={pamFormFieldClass}
+                />
+              </SettingRow>
+            );
+          })}
+        </div>
+      </PAMSettingsCard>
+
+      <PAMSettingsCard
+        title={tt.sectionAliyunSms}
+        description={tt.sectionAliyunSmsDesc}
+        saveLabel={tt.save}
+        savingLabel={tt.saving}
+        saving={savingSection === 'aliyunSms'}
+        onSave={() => patchSection('aliyunSms', [...aliyunSmsKeys])}
+      >
+        <div>
+          {aliyunSmsKeys.map((key) => {
+            const entry = byKey.get(key);
+            const raw = getDraftValue(draft, entry, key);
+            const isSensitive = entry?.isSensitive;
+            const value =
+              isSensitive && raw === PAM_SITE_SETTING_SECRET_UNCHANGED
+                ? ''
+                : String(raw);
+            const placeholder =
+              key === PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ENDPOINT
+                ? 'https://dysmsapi.aliyuncs.com'
+                : key === PAM_SITE_SETTING_KEYS.ALIYUN_SMS_TEMPLATE_CODE
+                  ? 'SMS_123456789'
+                  : isSensitive
+                    ? tt.secretHint
+                    : undefined;
+            return (
+              <SettingRow key={key} entry={entry} tt={tt}>
+                <input
+                  type={isSensitive ? 'password' : 'text'}
+                  value={value}
+                  placeholder={placeholder}
                   onChange={(event) => setDraftValue(key, event.target.value)}
                   className={pamFormFieldClass}
                 />

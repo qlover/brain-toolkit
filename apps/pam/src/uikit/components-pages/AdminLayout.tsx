@@ -4,6 +4,7 @@ import {
   Bars3Icon,
   ChartBarSquareIcon,
   Cog6ToothIcon,
+  DevicePhoneMobileIcon,
   DocumentTextIcon,
   UsersIcon,
   XMarkIcon
@@ -46,6 +47,7 @@ type NavIcon = ComponentType<SVGProps<SVGSVGElement>>;
 const NAV_ICONS: Record<string, NavIcon> = {
   dashboard: ChartBarSquareIcon,
   users: UsersIcon,
+  'phone-otps': DevicePhoneMobileIcon,
   'request-logs': DocumentTextIcon,
   settings: Cog6ToothIcon
 };

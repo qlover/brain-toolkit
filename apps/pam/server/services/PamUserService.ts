@@ -10,6 +10,7 @@ export type PamUserEnsureInput = {
   readonly id: string;
   readonly email: string;
   readonly displayName?: string | null;
+  readonly phone?: string | null;
 };
 
 @injectable()

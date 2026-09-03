@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       auth: {
         phoneLoginEnabled: false,
+        phoneOtpProvider: 'memory',
         googleOauthEnabled: false,
         brainPkceEnabled: false,
         brainSupabaseEnabled: false

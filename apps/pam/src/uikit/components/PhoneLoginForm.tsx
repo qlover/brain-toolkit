@@ -1,6 +1,8 @@
 'use client';
 
+import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { useReturnTo } from '@qlover/next-kit/client';
+import { isI18nKey, type TranslateFn } from '@qlover/next-kit/common';
 import {
   type FormEvent,
   useCallback,
@@ -15,6 +17,47 @@ import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { ROUTE_HOME } from '@config/route';
 
+const RESEND_COOLDOWN_SEC = 60;
+
+function resolveSubmitError(
+  err: unknown,
+  fallback: string,
+  t: TranslateFn
+): string {
+  if (err instanceof ExecutorError && isI18nKey(err.id)) {
+    return t(err.id);
+  }
+  if (err instanceof Error) {
+    if (isI18nKey(err.message)) {
+      return t(err.message);
+    }
+    return err.message || fallback;
+  }
+  return fallback;
+}
+
+/**
+ * Normalize to E.164 for Supabase Phone Auth / Test phone numbers.
+ * Accepts +86138…, 86138…, or mainland 11-digit 1xxxxxxxxxx.
+ */
+function normalizePhoneE164(raw: string): string {
+  const trimmed = raw.trim().replace(/[\s-]/g, '');
+  if (!trimmed) {
+    return '';
+  }
+  if (trimmed.startsWith('+')) {
+    return `+${trimmed.slice(1).replace(/\D/g, '')}`;
+  }
+  const digits = trimmed.replace(/\D/g, '');
+  if (/^1\d{10}$/.test(digits)) {
+    return `+86${digits}`;
+  }
+  if (digits.startsWith('86') && digits.length >= 12) {
+    return `+${digits}`;
+  }
+  return digits ? `+${digits}` : '';
+}
+
 const inputClass =
   'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-xl border bg-bg-container px-4 py-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
 
@@ -22,9 +65,11 @@ type Step = 'phone' | 'otp';
 
 interface PhoneLoginFormProps {
   tt: LoginI18nInterface;
+  /** memory provider: no SMS; ask a platform admin for the code. */
+  memoryOtp?: boolean;
 }
 
-export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
+export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
   const t = useWarnTranslations();
   const userGateway = useIOC(AppUserGateway);
   const { returnTo } = useReturnTo({ returnToKey: URLParamsKeys.returnTo });
@@ -62,8 +107,9 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
 
   const validatePhone = useCallback(
     (value: string): boolean => {
-      const trimmed = value.trim();
-      if (!trimmed || !/^\+?\d{7,15}$/.test(trimmed)) {
+      const normalized = normalizePhoneE164(value);
+      // E.164: + and 8–15 digits total after country code (ITU max 15 digits).
+      if (!normalized || !/^\+[1-9]\d{7,14}$/.test(normalized)) {
         setPhoneError(t(tt.phoneInvalid));
         return false;
       }
@@ -92,13 +138,15 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
 
     if (!validatePhone(phone)) return;
 
+    const normalized = normalizePhoneE164(phone);
+    setPhone(normalized);
     setLoading(true);
     try {
-      await userGateway.sendOtp({ phone: phone.trim() });
+      await userGateway.sendOtp({ phone: normalized });
       setStep('otp');
-      setCountdown(60);
+      setCountdown(RESEND_COOLDOWN_SEC);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Send OTP failed');
+      setSubmitError(resolveSubmitError(err, 'Send OTP failed', t));
     } finally {
       setLoading(false);
     }
@@ -110,12 +158,13 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
 
     if (!validateOtp(otp)) return;
 
+    const normalized = normalizePhoneE164(phone);
     setLoading(true);
     try {
-      await userGateway.verifyOtp({ phone: phone.trim(), token: otp.trim() });
+      await userGateway.verifyOtp({ phone: normalized, token: otp.trim() });
       returnTo(ROUTE_HOME);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Phone login failed');
+      setSubmitError(resolveSubmitError(err, 'Phone login failed', t));
     } finally {
       setLoading(false);
     }
@@ -124,13 +173,14 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
   const handleResend = async () => {
     if (countdown > 0 || loading) return;
     setSubmitError(null);
+    const normalized = normalizePhoneE164(phone);
     setLoading(true);
     try {
-      await userGateway.sendOtp({ phone: phone.trim() });
+      await userGateway.sendOtp({ phone: normalized });
       setOtp('');
-      setCountdown(60);
+      setCountdown(RESEND_COOLDOWN_SEC);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Resend OTP failed');
+      setSubmitError(resolveSubmitError(err, 'Resend OTP failed', t));
     } finally {
       setLoading(false);
     }
@@ -158,6 +208,7 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
           noValidate
           className="space-y-4"
         >
+          <p className="text-sm text-secondary-text">{tt.phoneSubtitle}</p>
           <div>
             <label
               htmlFor="phone-number"
@@ -230,6 +281,15 @@ export function PhoneLoginForm({ tt }: PhoneLoginFormProps) {
               ✎
             </button>
           </div>
+
+          {memoryOtp ? (
+            <p
+              data-testid="PhoneLoginAskAdminHint"
+              className="rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-primary-text"
+            >
+              {tt.phoneAskAdmin}
+            </p>
+          ) : null}
 
           <div>
             <label

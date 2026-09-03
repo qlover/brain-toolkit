@@ -66,6 +66,22 @@ export const ADMIN_SETTINGS_SECTION_OPENAI_DESC =
   'admin_settings:section__openai_desc';
 
 /**
+ * @description Aliyun SMS section title
+ * @localZh 阿里云短信
+ * @localEn Aliyun SMS
+ */
+export const ADMIN_SETTINGS_SECTION_ALIYUN_SMS =
+  'admin_settings:section__aliyun_sms';
+
+/**
+ * @description Aliyun SMS section description
+ * @localZh 手机验证码通道为 aliyun 时使用。在 Admin 站点设置中配置 AccessKey、签名与模板。
+ * @localEn Used when phone OTP provider is aliyun. Configure AccessKey, sign name, and template in Admin site settings.
+ */
+export const ADMIN_SETTINGS_SECTION_ALIYUN_SMS_DESC =
+  'admin_settings:section__aliyun_sms_desc';
+
+/**
  * @description API / CORS section title
  * @localZh API 与 CORS
  * @localEn API & CORS
