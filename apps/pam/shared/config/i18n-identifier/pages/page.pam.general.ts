@@ -453,3 +453,125 @@ export const PAGE_PAM_GENERAL_TRANSFER_CONTENT =
  */
 export const PAGE_PAM_GENERAL_TRANSFER_SUCCESS =
   'page_pam_general:transferSuccess';
+
+/**
+ * @description Collaborators section title
+ * @localZh 协作成员
+ * @localEn Collaborators
+ */
+export const PAGE_PAM_GENERAL_COLLAB_TITLE = 'page_pam_general:collabTitle';
+
+/**
+ * @description Collaborators section description
+ * @localZh 协作者可读写本项目环境变量（含敏感项）。移除后将无法继续访问；已同步到本地的内容需自行清理，建议同时轮换相关密钥。
+ * @localEn Collaborators can read and write env vars (including secrets). Removing them cuts future access only — rotate secrets if they may have copied values locally.
+ */
+export const PAGE_PAM_GENERAL_COLLAB_DESC = 'page_pam_general:collabDesc';
+
+/**
+ * @description Add collaborator button
+ * @localZh 添加协作者
+ * @localEn Add collaborator
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ADD = 'page_pam_general:collabAdd';
+
+/**
+ * @description Collaborator role: admin
+ * @localZh 管理员
+ * @localEn Admin
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ROLE_ADMIN =
+  'page_pam_general:collabRoleAdmin';
+
+/**
+ * @description Collaborator role: member
+ * @localZh 成员
+ * @localEn Member
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ROLE_MEMBER =
+  'page_pam_general:collabRoleMember';
+
+/**
+ * @description Owner row label
+ * @localZh 所有者
+ * @localEn Owner
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ROLE_OWNER =
+  'page_pam_general:collabRoleOwner';
+
+/**
+ * @description Empty collaborators list
+ * @localZh 暂无协作者
+ * @localEn No collaborators yet
+ */
+export const PAGE_PAM_GENERAL_COLLAB_EMPTY = 'page_pam_general:collabEmpty';
+
+/**
+ * @description Remove collaborator button
+ * @localZh 移除
+ * @localEn Remove
+ */
+export const PAGE_PAM_GENERAL_COLLAB_REMOVE = 'page_pam_general:collabRemove';
+
+/**
+ * @description Remove collaborator confirm title
+ * @localZh 移除协作者？
+ * @localEn Remove collaborator?
+ */
+export const PAGE_PAM_GENERAL_COLLAB_REMOVE_TITLE =
+  'page_pam_general:collabRemoveTitle';
+
+/**
+ * @description Remove collaborator confirm body; `[email]` replaced
+ * @localZh 将移除 [email] 的访问权限。已同步到本地的敏感数据无法收回，请尽快轮换相关密钥。
+ * @localEn [email] will lose access. Secrets already synced locally cannot be recalled — rotate related secrets promptly.
+ */
+export const PAGE_PAM_GENERAL_COLLAB_REMOVE_CONTENT =
+  'page_pam_general:collabRemoveContent';
+
+/**
+ * @description Collaborator role updated toast
+ * @localZh 角色已更新
+ * @localEn Role updated
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ROLE_UPDATE_SUCCESS =
+  'page_pam_general:collabRoleUpdateSuccess';
+
+/**
+ * @description Collaborator role updating hint
+ * @localZh 更新中…
+ * @localEn Updating…
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ROLE_UPDATING =
+  'page_pam_general:collabRoleUpdating';
+
+/**
+ * @description Collaborator added toast
+ * @localZh 已添加协作者
+ * @localEn Collaborator added
+ */
+export const PAGE_PAM_GENERAL_COLLAB_ADD_SUCCESS =
+  'page_pam_general:collabAddSuccess';
+
+/**
+ * @description Collaborator removed toast
+ * @localZh 已移除协作者。如对方曾拉取过敏感配置，请轮换相关密钥。
+ * @localEn Collaborator removed. If they may have pulled secrets, rotate related keys.
+ */
+export const PAGE_PAM_GENERAL_COLLAB_REMOVE_SUCCESS =
+  'page_pam_general:collabRemoveSuccess';
+
+/**
+ * @description Collaborator picker title
+ * @localZh 选择协作者
+ * @localEn Choose collaborator
+ */
+export const PAGE_PAM_GENERAL_COLLAB_PICKER_TITLE =
+  'page_pam_general:collabPickerTitle';
+
+/**
+ * @description Loading collaborators
+ * @localZh 加载中…
+ * @localEn Loading…
+ */
+export const PAGE_PAM_GENERAL_COLLAB_LOADING = 'page_pam_general:collabLoading';

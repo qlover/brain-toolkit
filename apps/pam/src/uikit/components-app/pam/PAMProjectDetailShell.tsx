@@ -51,10 +51,12 @@ export type PAMProjectDetailValue = {
   readonly project: PAMProjectDetail | null;
   readonly loading: boolean;
   readonly error: string | null;
-  /** Owner-only mutations; non-owners may view but not save. */
+  /** Owner / admin / member may edit project content. */
   readonly canEdit: boolean;
+  /** Owner / admin may manage collaborators, transfer, and delete. */
+  readonly canManageCollaborators: boolean;
   readonly deleting: boolean;
-  /** Opens the delete confirmation dialog (owner only). */
+  /** Opens the delete confirmation dialog (admin+). */
   readonly requestDeleteProject: () => void;
   readonly setProject: Dispatch<SetStateAction<PAMProjectDetail | null>>;
   /** Lazy-loaded env list (cached in layout while switching tabs). */
@@ -211,14 +213,17 @@ export function PAMProjectDetailShell({
     });
   }, [project, routeKey, activeTab, router]);
 
-  const canEdit = Boolean(project?.is_owner);
+  const canEdit = Boolean(project?.can_edit ?? project?.is_owner);
+  const canManageCollaborators = Boolean(
+    project?.can_manage_collaborators ?? project?.is_owner
+  );
   const canFork =
     Boolean(project) && !canEdit && project?.is_public === PAMPublicType.public;
   const routeSlug = project?.slug || routeKey;
   const resolvedProjectId = project?.id ?? '';
 
   const onDelete = useCallback((): void => {
-    if (!project || !canEdit || deleting) {
+    if (!project || !canManageCollaborators || deleting) {
       return;
     }
     dialog.confirm({
@@ -237,7 +242,7 @@ export function PAMProjectDetailShell({
     });
   }, [
     project,
-    canEdit,
+    canManageCollaborators,
     deleting,
     dialog,
     tt.deleteTitle,
@@ -253,6 +258,7 @@ export function PAMProjectDetailShell({
       loading,
       error,
       canEdit,
+      canManageCollaborators,
       deleting,
       requestDeleteProject: onDelete,
       setProject,
@@ -267,6 +273,7 @@ export function PAMProjectDetailShell({
       loading,
       error,
       canEdit,
+      canManageCollaborators,
       deleting,
       onDelete,
       environments,

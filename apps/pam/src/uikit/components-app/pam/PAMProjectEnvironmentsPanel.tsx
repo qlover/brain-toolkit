@@ -72,6 +72,7 @@ export function PAMProjectEnvironmentsPanel({
   const {
     projectId,
     canEdit,
+    canManageCollaborators,
     environments,
     ensureEnvironments,
     setEnvironments
@@ -345,7 +346,7 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onDeleteEnvironment = (env: PAMEnvWriteable): void => {
-    if (!canEdit) {
+    if (!canManageCollaborators) {
       return;
     }
     dialogHandler.confirm({
@@ -421,7 +422,7 @@ export function PAMProjectEnvironmentsPanel({
               >
                 {env.name}
               </button>
-              {canEdit ? (
+              {canManageCollaborators ? (
                 <button
                   type="button"
                   title={tt.envDelete}

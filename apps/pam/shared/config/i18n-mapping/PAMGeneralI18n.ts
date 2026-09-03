@@ -79,5 +79,22 @@ export const pamGeneralI18n = Object.freeze({
   transferContent: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_CONTENT,
   transferSuccess: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_SUCCESS,
 
+  collabTitle: i18nKeys.PAGE_PAM_GENERAL_COLLAB_TITLE,
+  collabDesc: i18nKeys.PAGE_PAM_GENERAL_COLLAB_DESC,
+  collabAdd: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ADD,
+  collabRoleAdmin: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ROLE_ADMIN,
+  collabRoleMember: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ROLE_MEMBER,
+  collabRoleOwner: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ROLE_OWNER,
+  collabEmpty: i18nKeys.PAGE_PAM_GENERAL_COLLAB_EMPTY,
+  collabRemove: i18nKeys.PAGE_PAM_GENERAL_COLLAB_REMOVE,
+  collabRemoveTitle: i18nKeys.PAGE_PAM_GENERAL_COLLAB_REMOVE_TITLE,
+  collabRemoveContent: i18nKeys.PAGE_PAM_GENERAL_COLLAB_REMOVE_CONTENT,
+  collabAddSuccess: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ADD_SUCCESS,
+  collabRemoveSuccess: i18nKeys.PAGE_PAM_GENERAL_COLLAB_REMOVE_SUCCESS,
+  collabRoleUpdateSuccess: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ROLE_UPDATE_SUCCESS,
+  collabRoleUpdating: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ROLE_UPDATING,
+  collabPickerTitle: i18nKeys.PAGE_PAM_GENERAL_COLLAB_PICKER_TITLE,
+  collabLoading: i18nKeys.PAGE_PAM_GENERAL_COLLAB_LOADING,
+
   adminTitle: COMMON_ADMIN_TITLE
 });

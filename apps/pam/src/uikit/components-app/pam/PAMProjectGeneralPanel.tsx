@@ -22,6 +22,7 @@ import {
   type PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
+import { PAMProjectCollaboratorsPanel } from './PAMProjectCollaboratorsPanel';
 import {
   PAMProjectTransferPicker,
   prefetchTransferUsers
@@ -102,6 +103,7 @@ export function PAMProjectGeneralPanel({
     loading,
     error: loadError,
     canEdit,
+    canManageCollaborators,
     deleting,
     requestDeleteProject,
     setProject
@@ -529,7 +531,11 @@ export function PAMProjectGeneralPanel({
         )}
       </PAMSettingsCard>
 
-      {canEdit && ready ? (
+      {project?.can_edit && ready ? (
+        <PAMProjectCollaboratorsPanel tt={tt} />
+      ) : null}
+
+      {canManageCollaborators && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-transfer"
           title={tt.transferZoneTitle}
@@ -584,7 +590,7 @@ export function PAMProjectGeneralPanel({
         </PAMSettingsCard>
       ) : null}
 
-      {canEdit && ready ? (
+      {canManageCollaborators && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-delete"
           title={tt.deleteZoneTitle}
