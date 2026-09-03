@@ -16,6 +16,14 @@
   OPENAI_API_KEY: 'openai.api_key',
   OPENAI_BASE_URL: 'openai.base_url',
 
+  ALIYUN_SMS_ACCESS_KEY_ID: 'aliyun_sms.access_key_id',
+  ALIYUN_SMS_ACCESS_KEY_SECRET: 'aliyun_sms.access_key_secret',
+  ALIYUN_SMS_SIGN_NAME: 'aliyun_sms.sign_name',
+  ALIYUN_SMS_TEMPLATE_CODE: 'aliyun_sms.template_code',
+  ALIYUN_SMS_TEMPLATE_PARAM_KEY: 'aliyun_sms.template_param_key',
+  ALIYUN_SMS_REGION_ID: 'aliyun_sms.region_id',
+  ALIYUN_SMS_ENDPOINT: 'aliyun_sms.endpoint',
+
   API_CORS_ORIGINS: 'api.cors_origins',
   API_CORS_METHODS: 'api.cors_methods',
 
@@ -47,7 +55,7 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       key: PAM_SITE_SETTING_KEYS.AUTH_PHONE_LOGIN_ENABLED,
       label: '手机验证码登录',
       description:
-        '是否在登录页展示「手机号」Tab。memory：码在 Admin「验证码监控」查看；aliyun：真实短信（后续）。',
+        '是否在登录页展示「手机号」Tab。memory：码在 Admin「验证码监控」查看；aliyun：阿里云真实短信。',
       isSensitive: false,
       defaultValue: true
     },
@@ -55,7 +63,7 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       key: PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER,
       label: '手机验证码通道',
       description:
-        'memory=不发短信，码写入 pam_phone_otps 供 Admin 监控；aliyun=阿里云短信（未就绪前勿切）。',
+        'memory=不发短信，码写入 pam_phone_otps 供 Admin 监控；aliyun=阿里云短信（在「阿里云短信」分组配置）。',
       isSensitive: false,
       defaultValue: 'memory'
     },
@@ -144,6 +152,54 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       description:
         'Chat Completions 兼容接口根地址。示例：https://api.openai.com/v1',
       isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ACCESS_KEY_ID,
+      label: '阿里云 AccessKey ID',
+      description: '短信服务 AccessKey ID。建议使用仅短信权限的 RAM 子账号。',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ACCESS_KEY_SECRET,
+      label: '阿里云 AccessKey Secret',
+      description: '短信服务 AccessKey Secret。加密存储，界面不回显明文。',
+      isSensitive: true
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_SIGN_NAME,
+      label: '短信签名',
+      description: '控制台已审核通过的签名名称（不是签名 ID）。',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_TEMPLATE_CODE,
+      label: '短信模板 CODE',
+      description:
+        '控制台已审核通过的模板 CODE，须含验证码变量。示例：SMS_123456789',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_TEMPLATE_PARAM_KEY,
+      label: '模板验证码变量名',
+      description:
+        '模板 JSON 中验证码字段名。默认 code → TemplateParam={"code":"123456"}。',
+      isSensitive: false,
+      defaultValue: 'code'
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_REGION_ID,
+      label: '短信 API 地域',
+      description: 'DysmsAPI RegionId。默认 cn-hangzhou。',
+      isSensitive: false,
+      defaultValue: 'cn-hangzhou'
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ENDPOINT,
+      label: '短信 API Endpoint',
+      description:
+        'DysmsAPI 地址。默认 https://dysmsapi.aliyuncs.com。一般无需修改。',
+      isSensitive: false,
+      defaultValue: 'https://dysmsapi.aliyuncs.com'
     },
     {
       key: PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS,

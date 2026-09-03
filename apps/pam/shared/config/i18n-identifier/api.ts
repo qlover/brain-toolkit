@@ -271,6 +271,13 @@ export const API_OTP_SEND_RATE_LIMITED = 'api:otp_send_rate_limited';
 export const API_OTP_PROVIDER_NOT_READY = 'api:otp_provider_not_ready';
 
 /**
+ * @description Phone OTP SMS send failed (provider / upstream error)
+ * @localZh 短信发送失败，请稍后重试
+ * @localEn Failed to send SMS. Please try again later.
+ */
+export const API_OTP_SEND_FAILED = 'api:otp_send_failed';
+
+/**
  * @description Phone OTP code is wrong or expired
  * @localZh 验证码错误或已过期
  * @localEn OTP code is invalid or expired

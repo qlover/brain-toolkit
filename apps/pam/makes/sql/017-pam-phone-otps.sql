@@ -1,5 +1,5 @@
--- Phone OTP send/verify records for PAM (memory provider now; aliyun later).
--- Admin monitors phone + code here; production aliyun may leave code_plain null.
+-- Phone OTP send/verify records for PAM (memory | aliyun DysmsAPI).
+-- Admin monitors phone + code for memory; aliyun leaves code_plain null.
 
 CREATE TABLE IF NOT EXISTS public.pam_phone_otps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -22,7 +22,7 @@ COMMENT ON TABLE public.pam_phone_otps IS
 COMMENT ON COLUMN public.pam_phone_otps.code_plain IS
   'Plain OTP for Admin monitoring (memory/test). Null in production SMS providers.';
 COMMENT ON COLUMN public.pam_phone_otps.provider IS
-  'Sending channel: memory (no SMS) | aliyun (future).';
+  'Sending channel: memory (no SMS) | aliyun (DysmsAPI).';
 
 CREATE INDEX IF NOT EXISTS idx_pam_phone_otps_phone_created
   ON public.pam_phone_otps (phone, created_at DESC);
@@ -48,9 +48,57 @@ INSERT INTO public.pam_site_settings (key, value, description, is_sensitive)
 VALUES (
   'auth.phone_otp_provider',
   '"memory"'::jsonb,
-  '手机验证码发送通道：memory=不发短信（码进 Admin 监控页）；aliyun=阿里云短信（后续接入）。',
+  '手机验证码发送通道：memory=不发短信（码进 Admin 监控页）；aliyun=阿里云短信（Admin「阿里云短信」配置）。',
   false
 )
+ON CONFLICT (key) DO UPDATE
+SET description = EXCLUDED.description;
+
+-- Aliyun DysmsAPI settings (edit in Admin; secret encrypted at app layer).
+INSERT INTO public.pam_site_settings (key, value, description, is_sensitive)
+VALUES
+  (
+    'aliyun_sms.access_key_id',
+    '""'::jsonb,
+    '短信服务 AccessKey ID。建议使用仅短信权限的 RAM 子账号。',
+    false
+  ),
+  (
+    'aliyun_sms.access_key_secret',
+    '""'::jsonb,
+    '短信服务 AccessKey Secret。加密存储，界面不回显明文。',
+    true
+  ),
+  (
+    'aliyun_sms.sign_name',
+    '""'::jsonb,
+    '控制台已审核通过的签名名称（不是签名 ID）。',
+    false
+  ),
+  (
+    'aliyun_sms.template_code',
+    '""'::jsonb,
+    '控制台已审核通过的模板 CODE，须含验证码变量。示例：SMS_123456789',
+    false
+  ),
+  (
+    'aliyun_sms.template_param_key',
+    '"code"'::jsonb,
+    '模板 JSON 中验证码字段名。默认 code → TemplateParam={"code":"123456"}。',
+    false
+  ),
+  (
+    'aliyun_sms.region_id',
+    '"cn-hangzhou"'::jsonb,
+    'DysmsAPI RegionId。默认 cn-hangzhou。',
+    false
+  ),
+  (
+    'aliyun_sms.endpoint',
+    '"https://dysmsapi.aliyuncs.com"'::jsonb,
+    'DysmsAPI 地址。默认 https://dysmsapi.aliyuncs.com。一般无需修改。',
+    false
+  )
 ON CONFLICT (key) DO NOTHING;
 
 -- Keep phone login tab enabled when using PAM memory OTP.
