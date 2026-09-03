@@ -10,6 +10,11 @@ import {
   type PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
 import {
+  PAMProjectCollaboratorAddSchema,
+  PAMProjectCollaboratorUpdateSchema,
+  type PAMProjectCollaboratorItem
+} from '@schemas/PAMProjectCollaboratorSchema';
+import {
   PAMProjectCreateSchema,
   PAMProjectDetail,
   PAMProjectForkSchema,
@@ -163,6 +168,48 @@ export class PAMController {
    */
   public refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
     return this.pamService.refreshPreviewImage(uuidSchema.parse(id));
+  }
+
+  public listCollaborators(
+    projectId: string
+  ): Promise<PAMProjectCollaboratorItem[]> {
+    return this.pamService.listCollaborators(uuidSchema.parse(projectId));
+  }
+
+  public async addCollaborator(
+    projectId: string,
+    request: NextRequest
+  ): Promise<PAMProjectCollaboratorItem> {
+    const body = await request.json();
+    if (isEmpty(body)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+    const parsed = PAMProjectCollaboratorAddSchema.parse(body);
+    return this.pamService.addCollaborator(uuidSchema.parse(projectId), parsed);
+  }
+
+  public async updateCollaborator(
+    projectId: string,
+    userId: string,
+    request: NextRequest
+  ): Promise<PAMProjectCollaboratorItem> {
+    const body = await request.json();
+    if (isEmpty(body)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+    const parsed = PAMProjectCollaboratorUpdateSchema.parse(body);
+    return this.pamService.updateCollaboratorRole(
+      uuidSchema.parse(projectId),
+      uuidSchema.parse(userId),
+      parsed
+    );
+  }
+
+  public removeCollaborator(projectId: string, userId: string): Promise<void> {
+    return this.pamService.removeCollaborator(
+      uuidSchema.parse(projectId),
+      uuidSchema.parse(userId)
+    );
   }
 
   public deleteProject(id: string): unknown {

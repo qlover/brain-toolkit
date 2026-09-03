@@ -8,6 +8,8 @@ import {
   API_PAM_ENVIRONMENTS_DELETE,
   API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_VARIABLES,
+  API_PAM_COLLABORATORS,
+  API_PAM_COLLABORATORS_2,
   API_PAM_FORK,
   API_PAM_TRANSFER,
   API_PAM_PREVIEW_IMAGE
@@ -524,6 +526,23 @@ export function buildApiPamPreviewImage(id: string): string {
  */
 export function buildApiPamEnvironments(projectId: string): string {
   return buildApiWithPath(API_PAM_ENVIRONMENTS, { projectId });
+}
+
+/**
+ * @see {@link API_PAM_COLLABORATORS}
+ */
+export function buildApiPamCollaborators(projectId: string): string {
+  return buildApiWithPath(API_PAM_COLLABORATORS, { projectId });
+}
+
+/**
+ * @see {@link API_PAM_COLLABORATORS_2}
+ */
+export function buildApiPamCollaboratorUser(
+  projectId: string,
+  userId: string
+): string {
+  return buildApiWithPath(API_PAM_COLLABORATORS_2, { projectId, userId });
 }
 
 /**

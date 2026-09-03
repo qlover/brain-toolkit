@@ -172,6 +172,27 @@ export const API_PAM_TRANSFER_USER_NOT_FOUND =
 export const API_PAM_TRANSFER_TO_SELF = 'api:pam_transfer_to_self';
 
 /**
+ * @description Collaborator was not found on the project
+ * @localZh 未找到该协作者
+ * @localEn Collaborator not found on this project
+ */
+export const API_PAM_COLLABORATOR_NOT_FOUND = 'api:pam_collaborator_not_found';
+
+/**
+ * @description Collaborator already exists on the project
+ * @localZh 该用户已是项目协作者
+ * @localEn User is already a collaborator on this project
+ */
+export const API_PAM_COLLABORATOR_EXISTS = 'api:pam_collaborator_exists';
+
+/**
+ * @description Cannot add the project owner as a collaborator
+ * @localZh 不能将项目所有者添加为协作者
+ * @localEn Cannot add the project owner as a collaborator
+ */
+export const API_PAM_COLLABORATOR_IS_OWNER = 'api:pam_collaborator_is_owner';
+
+/**
  * @description Project has no environment/repo URL to capture a cover from
  * @localZh 没有可用于截取封面的环境地址或仓库地址
  * @localEn No environment or repository URL available to capture a cover
