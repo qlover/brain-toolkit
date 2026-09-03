@@ -596,16 +596,16 @@ export const PAMENV_CLI_PULL_UP_TO_DATE = 'pamenv_cli:pull_up_to_date';
 export const PAMENV_CLI_PULLED = 'pamenv_cli:pulled';
 
 /**
- * @description 你不是项目 "{{slug}}" 的所有者。导出需要所有权。
- * @localZh 你不是项目 "{{slug}}" 的所有者。导出需要所有权。
- * @localEn You are not the owner of project "{{slug}}". Export requires ownership.
+ * @description 你没有项目 "{{slug}}" 的写权限（需为所有者或协作者）。
+ * @localZh 你没有项目 "{{slug}}" 的写权限（需为所有者或协作者）。
+ * @localEn You do not have write access to project "{{slug}}" (owner or collaborator required).
  */
 export const PAMENV_CLI_NOT_OWNER_EXPORT = 'pamenv_cli:not_owner_export';
 
 /**
- * @description 你不是项目 "{{slug}}" 的所有者。推送需要所有权。
- * @localZh 你不是项目 "{{slug}}" 的所有者。推送需要所有权。
- * @localEn You are not the owner of project "{{slug}}". Push requires ownership.
+ * @description 你没有项目 "{{slug}}" 的写权限（需为所有者或协作者）。
+ * @localZh 你没有项目 "{{slug}}" 的写权限（需为所有者或协作者）。
+ * @localEn You do not have write access to project "{{slug}}" (owner or collaborator required).
  */
 export const PAMENV_CLI_NOT_OWNER_PUSH = 'pamenv_cli:not_owner_push';
 

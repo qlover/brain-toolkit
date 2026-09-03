@@ -59,6 +59,7 @@ import {
   PamCliLocalProjectScanUtil,
   type PamCliLocalProjectScanType
 } from '../impls/PamCliLocalProjectScanUtil';
+import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
 
 const CATEGORY_CUSTOM_VALUE = '__custom__' as const;
@@ -321,7 +322,7 @@ export class InitCommand {
       .map((env) => env.name)
       .join(', ');
 
-    if (project.is_owner) {
+    if (PamCliProjectAccessUtil.canEdit(project)) {
       console.log(
         PamCliI18n.t(PAMENV_CLI_PROJECT_EXISTS_OWNED, { slug: project.slug })
       );

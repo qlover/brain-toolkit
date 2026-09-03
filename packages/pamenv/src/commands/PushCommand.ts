@@ -45,6 +45,7 @@ import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUti
 import { PamCliLocalEnvFileUtil } from '../impls/PamCliLocalEnvFileUtil';
 import { PamCliLocalProjectScanUtil } from '../impls/PamCliLocalProjectScanUtil';
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
+import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
 import { PamCliSensitivePromptUtil } from '../impls/PamCliSensitivePromptUtil';
 import {
@@ -102,7 +103,7 @@ export class PushCommand {
       projectRef
     );
 
-    if (!project.is_owner) {
+    if (!PamCliProjectAccessUtil.canEdit(project)) {
       throw new Error(
         PamCliI18n.t(PAMENV_CLI_NOT_OWNER_PUSH, { slug: project.slug })
       );

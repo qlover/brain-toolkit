@@ -1,6 +1,7 @@
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import { PamCliConfirmUtil } from '../impls/PamCliConfirmUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
+import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
 import { PamCliSyncStore } from '../impls/PamCliSyncStore';
 
@@ -13,9 +14,9 @@ export type PamCliRemoveOptionsType = {
 /**
  * `pamenv remove` — delete one PAM environment from a project.
  *
- * Significance: Lets owners drop a remote env without the web UI.
+ * Significance: Lets admins drop a remote env without the web UI.
  * Core idea: Resolve by `-e`, confirm twice, then DELETE via API.
- * Main function: Owner check, dual confirm, delete, clear sync baseline.
+ * Main function: Admin check, dual confirm, delete, clear sync baseline.
  * Main purpose: Safer remote env teardown from the working directory.
  *
  * @example
@@ -47,9 +48,9 @@ export class RemoveCommand {
       projectRef
     );
 
-    if (!project.is_owner) {
+    if (!PamCliProjectAccessUtil.canManage(project)) {
       throw new Error(
-        `You are not the owner of project "${project.slug}". Remove requires ownership.`
+        `You do not have admin access to project "${project.slug}". Removing an environment requires admin.`
       );
     }
 
