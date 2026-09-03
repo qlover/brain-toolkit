@@ -4,6 +4,11 @@ import type {
   PAMEnvWriteable
 } from '@shared/schemas/PAMEnvironmentSchema';
 import type {
+  PAMProjectCollaboratorAdd,
+  PAMProjectCollaboratorItem,
+  PAMProjectCollaboratorUpdate
+} from '@shared/schemas/PAMProjectCollaboratorSchema';
+import type {
   SearchPAMProject,
   PAMProjectDetail,
   PAMProjectCreate,
@@ -229,4 +234,19 @@ export interface PAMServiceInterface {
    * Proxies favicon/logo for a public site page URL (`null` when not found).
    */
   fetchSiteLogo(siteUrl: string): Promise<FetchedSiteLogo | null>;
+
+  listCollaborators(projectId: string): Promise<PAMProjectCollaboratorItem[]>;
+
+  addCollaborator(
+    projectId: string,
+    params: PAMProjectCollaboratorAdd
+  ): Promise<PAMProjectCollaboratorItem>;
+
+  updateCollaboratorRole(
+    projectId: string,
+    userId: string,
+    params: PAMProjectCollaboratorUpdate
+  ): Promise<PAMProjectCollaboratorItem>;
+
+  removeCollaborator(projectId: string, userId: string): Promise<void>;
 }

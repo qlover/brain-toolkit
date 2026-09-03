@@ -562,14 +562,19 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
-   * Distinct non-empty categories from visible projects (public + owned).
+   * Distinct non-empty categories from visible projects
+   * (public + owned + collaborated).
    *
    * Single admin select of `category` only — no env join, no exact count,
    * no paginated `searchProjects` (that path was 2s+ for a few strings).
    *
    * @param userId - Optional authenticated user id
+   * @param collaboratorProjectIds - Project ids where user is an active collaborator
    */
-  public async listDistinctCategories(userId?: string): Promise<string[]> {
+  public async listDistinctCategories(
+    userId?: string,
+    collaboratorProjectIds: string[] = []
+  ): Promise<string[]> {
     const supabase = this.supabaseRepo.getAdminSupabase();
     let query = supabase
       .from(this.getRepoName())
@@ -578,7 +583,11 @@ export class PAMProjectRepo extends BaseRepository<
       .not('category', 'is', null);
 
     if (userId) {
-      query = query.or(`is_public.eq.1,owner_id.eq.${userId}`);
+      const parts = [`is_public.eq.1`, `owner_id.eq.${userId}`];
+      if (collaboratorProjectIds.length > 0) {
+        parts.push(`id.in.(${collaboratorProjectIds.join(',')})`);
+      }
+      query = query.or(parts.join(','));
     } else {
       query = query.eq('is_public', 1);
     }
@@ -741,17 +750,15 @@ export class PAMProjectRepo extends BaseRepository<
 
   /**
    * Loads an environment for CLI export using the admin client.
-   * Enforces ownership in the query (bypasses cookie-based RLS).
+   * Caller must have already asserted project access (owner or collaborator).
    *
    * @param projectId - Project id
    * @param envId - Environment id
-   * @param ownerId - Authenticated owner user id
-   * @returns Project slug + environment row, or null when missing / not owned
+   * @returns Project slug + environment row, or null when missing
    */
-  public async getOwnedEnvironmentForExport(
+  public async getEnvironmentForExport(
     projectId: string,
-    envId: string,
-    ownerId: string
+    envId: string
   ): Promise<{
     projectSlug: string;
     environment: Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>;
@@ -762,7 +769,6 @@ export class PAMProjectRepo extends BaseRepository<
       .from(this.getRepoName())
       .select('id,slug')
       .eq('id', projectId)
-      .eq('owner_id', ownerId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
       .maybeSingle();
 
@@ -790,6 +796,24 @@ export class PAMProjectRepo extends BaseRepository<
         'id' | 'name' | 'url' | 'variables'
       >
     };
+  }
+
+  /**
+   * @deprecated Prefer {@link getEnvironmentForExport} after assertProjectAccess.
+   */
+  public async getOwnedEnvironmentForExport(
+    projectId: string,
+    envId: string,
+    ownerId: string
+  ): Promise<{
+    projectSlug: string;
+    environment: Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>;
+  } | null> {
+    const owned = await this.isProjectOwnedByUser(projectId, ownerId);
+    if (!owned) {
+      return null;
+    }
+    return this.getEnvironmentForExport(projectId, envId);
   }
 
   /**

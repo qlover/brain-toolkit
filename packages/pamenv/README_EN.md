@@ -33,7 +33,7 @@ pamenv push <slug|id> -e local --file .env
 pamenv push <slug|id> -e staging -y
 pamenv push <slug|id> -e staging -f
 pamenv push <slug|id> -e staging --show-values
-pamenv remove <slug|id> -e local   # delete remote env (two confirms)
+pamenv remove <slug|id> -e local   # delete remote env (admin; two confirms)
 pamenv remove <slug|id> -e local -y
 pamenv logout
 ```
@@ -125,7 +125,7 @@ Then fill secrets with `pamenv push <new-slug> -e <env>`.
 
 If `-e` names an environment that does not exist, the CLI collects a URL and runs local validation/confirmation first, then **creates the environment and uploads variables together** (no empty env is created early). With `-y`, it defers create when a default URL is available; otherwise it errors.
 
-`pamenv remove <slug> -e <env>` deletes a remote environment (owner only) with two confirmation prompts (`-y` skips them). It clears the matching `~/.pam/sync` baseline and does not delete local `.env.*` files.
+`pamenv remove <slug> -e <env>` deletes a remote environment (**project admin** required, including owner) with two confirmation prompts (`-y` skips them). It clears the matching `~/.pam/sync` baseline and does not delete local `.env.*` files.
 
 Mark secrets with `# pam:sensitive` above the key. Header and inline comments are preserved.
 
@@ -133,4 +133,9 @@ Mark secrets with `# pam:sensitive` above the key. Header and inline comments ar
 
 ## Auth and permissions
 
-Auth/sync/`.env.*` use mode `0600` on POSIX. `pamenv logout` revokes the server token then clears local auth and `~/.pam/sync`. CLI tokens last **30d** by default (`PAM_CLI_TOKEN_EXPIRES_IN`, e.g. `21d`) and are revocable via `jti`. Decrypted export and `push` are owner-only.
+Auth/sync/`.env.*` use mode `0600` on POSIX. `pamenv logout` revokes the server token then clears local auth and `~/.pam/sync`. CLI tokens last **30d** by default (`PAM_CLI_TOKEN_EXPIRES_IN`, e.g. `21d`) and are revocable via `jti`.
+
+Collaborator access:
+- **owner / admin / member**: `pull` and `push` (decrypted export)
+- **admin** (including owner): `remove` environments, transfer project, manage collaborators
+- **member**: cannot delete environments or manage collaborators

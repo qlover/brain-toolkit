@@ -304,7 +304,7 @@ export function PAMRoot({
         highlightKeyword={searchKeyword}
         highlightCategory={categoryValue}
         isAuthenticated={isAuthenticated}
-        isOwner={(data) => !!data.is_owner}
+        isOwner={(data) => !!(data.can_edit ?? data.is_owner)}
       />
 
       <PAMLoadMoreTrigger

@@ -20,6 +20,7 @@ import { PamCliEnvDiffUtil } from '../impls/PamCliEnvDiffUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
 import { PamCliLocalEnvFileUtil } from '../impls/PamCliLocalEnvFileUtil';
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
+import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
 import { PamCliSyncConflictUtil } from '../impls/PamCliSyncConflictUtil';
 import { PamCliSyncStore } from '../impls/PamCliSyncStore';
@@ -54,7 +55,7 @@ export class PullCommand {
       projectRef
     );
 
-    if (!project.is_owner) {
+    if (!PamCliProjectAccessUtil.canEdit(project)) {
       throw new Error(
         PamCliI18n.t(PAMENV_CLI_NOT_OWNER_EXPORT, { slug: project.slug })
       );

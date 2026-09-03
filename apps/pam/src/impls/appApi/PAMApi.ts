@@ -8,6 +8,8 @@ import {
   API_PAM_USERS_SEARCH
 } from '@config/apiRoutes';
 import {
+  buildApiPamCollaborators,
+  buildApiPamCollaboratorUser,
   buildApiPamDetail,
   buildApiPamDetele,
   buildApiPamEdit,
@@ -23,6 +25,11 @@ import type {
   PAMEnvReplaceVariables,
   PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
+import type {
+  PAMProjectCollaboratorAdd,
+  PAMProjectCollaboratorItem,
+  PAMProjectCollaboratorUpdate
+} from '@schemas/PAMProjectCollaboratorSchema';
 import {
   SearchPAMProject,
   PAMSearchParams,
@@ -186,6 +193,48 @@ export class PAMApi {
       params: query?.trim() ? { q: query.trim() } : {}
     });
     return response.data.data ?? [];
+  }
+
+  public async listCollaborators(
+    projectId: string
+  ): Promise<PAMProjectCollaboratorItem[]> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<PAMProjectCollaboratorItem[]>,
+      Record<string, never>
+    >(buildApiPamCollaborators(projectId));
+    return response.data.data ?? [];
+  }
+
+  public async addCollaborator(
+    projectId: string,
+    data: PAMProjectCollaboratorAdd
+  ): Promise<PAMProjectCollaboratorItem> {
+    const response = await this.appApiRequester.post<
+      NextKitApiSuccess<PAMProjectCollaboratorItem>,
+      PAMProjectCollaboratorAdd
+    >(buildApiPamCollaborators(projectId), data);
+    return response.data.data!;
+  }
+
+  public async updateCollaboratorRole(
+    projectId: string,
+    userId: string,
+    data: PAMProjectCollaboratorUpdate
+  ): Promise<PAMProjectCollaboratorItem> {
+    const response = await this.appApiRequester.put<
+      NextKitApiSuccess<PAMProjectCollaboratorItem>,
+      PAMProjectCollaboratorUpdate
+    >(buildApiPamCollaboratorUser(projectId, userId), data);
+    return response.data.data!;
+  }
+
+  public async removeCollaborator(
+    projectId: string,
+    userId: string
+  ): Promise<void> {
+    await this.appApiRequester.delete(
+      buildApiPamCollaboratorUser(projectId, userId)
+    );
   }
 
   /**

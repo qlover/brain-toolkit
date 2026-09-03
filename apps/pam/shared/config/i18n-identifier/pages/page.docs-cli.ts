@@ -112,8 +112,8 @@ export const PAGE_DOCS_CLI_SECTION_SYNC = 'page_docs_cli:section__sync';
 
 /**
  * @description Sync body
- * @localZh `pull` 以远端为准写入本地，并尽量保留本地注释；语义冲突时可选择覆盖或中止。`push` 用 `~/.pam/sync` 基线做三方比较：仅远端变更时提示先 pull；双方都改则冲突交互。`-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记等），二者互不隐含。Diff 默认将值打码为 `*****`；`--show-values` 仅明文显示非敏感值。`--file` 可指定本地 dotenv（如仅有 `.env` 时用 `pamenv push <slug> -e local --file .env`）。`pamenv remove <slug> -e <env>` 删除远端环境（两次确认，`-y` 可跳过），并清除对应 sync 基线，不删本地 `.env.*`。
- * @localEn `pull` writes remote values into the local file and preserves local comments when possible; on semantic conflicts you can overwrite or abort. `push` uses `~/.pam/sync` baselines for a three-way compare: remote-only changes ask you to pull first; both sides changed triggers a conflict prompt. `-f` only skips conflict overwrite confirms; `-y` skips ordinary confirms (missing baseline, final push, new-key sensitivity), and neither implies the other. Diff review masks values as `*****` by default; `--show-values` shows non-sensitive plaintext only. `--file` overrides the local dotenv path (e.g. `pamenv push <slug> -e local --file .env` when you only have `.env`). `pamenv remove <slug> -e <env>` deletes a remote environment (two confirms, skip with `-y`), clears the matching sync baseline, and does not delete local `.env.*` files.
+ * @localZh `pull` 以远端为准写入本地，并尽量保留本地注释；语义冲突时可选择覆盖或中止。`push` 用 `~/.pam/sync` 基线做三方比较：仅远端变更时提示先 pull；双方都改则冲突交互。`-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记等），二者互不隐含。Diff 默认将值打码为 `*****`；`--show-values` 仅明文显示非敏感值。`--file` 可指定本地 dotenv（如仅有 `.env` 时用 `pamenv push <slug> -e local --file .env`）。`pamenv remove <slug> -e <env>` 删除远端环境（需项目 admin；两次确认，`-y` 可跳过），并清除对应 sync 基线，不删本地 `.env.*`。
+ * @localEn `pull` writes remote values into the local file and preserves local comments when possible; on semantic conflicts you can overwrite or abort. `push` uses `~/.pam/sync` baselines for a three-way compare: remote-only changes ask you to pull first; both sides changed triggers a conflict prompt. `-f` only skips conflict overwrite confirms; `-y` skips ordinary confirms (missing baseline, final push, new-key sensitivity), and neither implies the other. Diff review masks values as `*****` by default; `--show-values` shows non-sensitive plaintext only. `--file` overrides the local dotenv path (e.g. `pamenv push <slug> -e local --file .env` when you only have `.env`). `pamenv remove <slug> -e <env>` deletes a remote environment (project admin required; two confirms, skip with `-y`), clears the matching sync baseline, and does not delete local `.env.*` files.
  */
 export const PAGE_DOCS_CLI_SYNC_BODY = 'page_docs_cli:sync__body';
 
@@ -141,8 +141,8 @@ export const PAGE_DOCS_CLI_SECTION_NOTES = 'page_docs_cli:section__notes';
 
 /**
  * @description Notes body
- * @localZh 导出解密与 push 仅项目 owner 可用。本地 `~/.pam/config.json`、`~/.pam/sync/...` 与写出的 `.env.<env>` 在 POSIX 上按 0600 落盘。改 CLI 源码后需先 build 再执行。旧版无 `jti` 的 Token 会失效，需重新 `pamenv login`。
- * @localEn Decrypted export and push are owner-only. Local `~/.pam/config.json`, `~/.pam/sync/...`, and written `.env.<env>` files use mode 0600 on POSIX. Rebuild the CLI after source changes before running. Legacy tokens without `jti` are rejected; run `pamenv login` again.
+ * @localZh 项目协作权限：owner / admin / member 均可 `pull` 与 `push`（解密导出）；删除环境（Web 与 `pamenv remove`）、转让项目与管理协作者需 admin（含 owner）。本地 `~/.pam/config.json`、`~/.pam/sync/...` 与写出的 `.env.<env>` 在 POSIX 上按 0600 落盘。改 CLI 源码后需先 build 再执行。旧版无 `jti` 的 Token 会失效，需重新 `pamenv login`。
+ * @localEn Collaborator access: owner / admin / member can `pull` and `push` (decrypted export). Deleting environments (web and `pamenv remove`), transferring the project, and managing collaborators require admin (including owner). Local `~/.pam/config.json`, `~/.pam/sync/...`, and written `.env.<env>` files use mode 0600 on POSIX. Rebuild the CLI after source changes before running. Legacy tokens without `jti` are rejected; run `pamenv login` again.
  */
 export const PAGE_DOCS_CLI_NOTES_BODY = 'page_docs_cli:notes__body';
 

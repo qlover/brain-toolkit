@@ -108,6 +108,12 @@ export type SearchPAMProject = SearchPAMRawProject & {
    * 额外增加属性
    */
   is_owner?: boolean;
+  /** Effective role for the current user. */
+  my_role?: 'owner' | 'admin' | 'member' | 'none';
+  /** Owner / admin / member may edit project content. */
+  can_edit?: boolean;
+  /** Owner / admin may manage collaborators. */
+  can_manage_collaborators?: boolean;
 };
 
 /**
@@ -119,6 +125,9 @@ export type PAMProjectDetail = SearchPAMRawProject & {
    * 当前登录用户是否为项目 owner（详情接口附加，与 search 一致）
    */
   is_owner?: boolean;
+  my_role?: 'owner' | 'admin' | 'member' | 'none';
+  can_edit?: boolean;
+  can_manage_collaborators?: boolean;
 };
 
 /**

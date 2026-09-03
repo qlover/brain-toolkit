@@ -15,6 +15,9 @@ import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import { parsePAMSiteUrl } from '@shared/utils/PAMSiteIconUtil';
 import {
   API_NOT_AUTHORIZED,
+  API_PAM_COLLABORATOR_EXISTS,
+  API_PAM_COLLABORATOR_IS_OWNER,
+  API_PAM_COLLABORATOR_NOT_FOUND,
   API_PAM_ENV_ID_NOT_EXISTS,
   API_PAM_ENV_NAME_EXISTS,
   API_PAM_ENV_NOT_FOUND,
@@ -35,6 +38,12 @@ import type {
   PAMEnvWriteable,
   PAMVariable
 } from '@schemas/PAMEnvironmentSchema';
+import type {
+  PAMProjectCollaboratorAdd,
+  PAMProjectCollaboratorItem,
+  PAMProjectCollaboratorUpdate,
+  PAMProjectAccessRole
+} from '@schemas/PAMProjectCollaboratorSchema';
 import {
   SearchPAMProject,
   PAMProjectEnvKey,
@@ -53,6 +62,7 @@ import type {
   PAMServiceInterface,
   ProjectDetailParams
 } from '@server/interfaces/PAMServiceInterface';
+import { PamProjectCollaboratorsRepo } from '@server/repositorys/PamProjectCollaboratorsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
@@ -63,6 +73,10 @@ import {
 } from '@server/utils/PAMPreviewCaptureUtil';
 import { fetchSiteLogoForUrl } from '@server/utils/PAMSiteLogoFetchUtil';
 import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
+import {
+  hasMinProjectAccess,
+  projectAccessFlags
+} from '@server/utils/projectAccessRole';
 import { MemoryKvCacheService } from './MemoryKvCacheService';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
@@ -75,6 +89,9 @@ const AUTH_USERS_SEARCH_LIMIT = 20;
 export class PAMService implements PAMServiceInterface {
   @inject(PAMProjectRepo)
   protected readonly projectRepo!: PAMProjectRepo;
+
+  @inject(PamProjectCollaboratorsRepo)
+  protected readonly collaboratorsRepo!: PamProjectCollaboratorsRepo;
 
   @inject(OAuthUserService)
   protected readonly userService!: OAuthUserService;
@@ -102,6 +119,109 @@ export class PAMService implements PAMServiceInterface {
 
   protected secretEncryption: PAMEnvSecretEncryption | null = null;
 
+  protected async attachSearchAccess(
+    user: { id: string } | null | undefined,
+    result: ResourceSearchResult<SearchPAMProject>
+  ): Promise<ResourceSearchResult<SearchPAMProject>> {
+    if (!user?.id || !result.items?.length) {
+      return result;
+    }
+
+    const projectIds = result.items.map((item) => item.id);
+    const collabRoles = await this.collaboratorsRepo.listActiveRolesForUser(
+      user.id,
+      projectIds
+    );
+
+    const items = result.items.map((item) => {
+      let role: PAMProjectAccessRole = 'none';
+      if (item.owner_id && user.id === item.owner_id) {
+        role = 'owner';
+      } else {
+        role = collabRoles.get(item.id) ?? 'none';
+      }
+      return Object.assign({}, item, projectAccessFlags(role));
+    });
+
+    return Object.assign({}, result, { items });
+  }
+
+  /**
+   * Resolves effective project role for a user.
+   */
+  protected async resolveAccessRole(
+    projectId: string,
+    userId: string,
+    ownerId?: string | null
+  ): Promise<PAMProjectAccessRole> {
+    if (ownerId && userId === ownerId) {
+      return 'owner';
+    }
+
+    if (!ownerId) {
+      const owned = await this.projectRepo.isProjectOwnedByUser(
+        projectId,
+        userId
+      );
+      if (owned) {
+        return 'owner';
+      }
+    }
+
+    const collabRole = await this.collaboratorsRepo.getActiveRole(
+      projectId,
+      userId
+    );
+    return collabRole ?? 'none';
+  }
+
+  /**
+   * Ensures the current user has at least `minRole` on the project.
+   */
+  protected async assertProjectAccess(
+    projectId: string,
+    minRole: Exclude<PAMProjectAccessRole, 'none'>
+  ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
+    const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const access = await this.projectRepo.getProjectAccessAdmin(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const role = await this.resolveAccessRole(
+      projectId,
+      user.id,
+      access.owner_id
+    );
+
+    if (!hasMinProjectAccess(role, minRole)) {
+      // Prefer explicit owner check fallback for legacy RLS cookie sessions.
+      if (minRole === 'owner') {
+        const hasAuth = await this.projectRepo.hasAuthProject(projectId);
+        if (hasAuth) {
+          return { userId: user.id, role: 'owner' };
+        }
+      }
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    return { userId: user.id, role };
+  }
+
+  /**
+   * Ensures the current user is at least project admin (owner included).
+   *
+   * @param projectId - Project id
+   * @throws When the user lacks admin access
+   */
+  protected async assertProjectOwner(projectId: string): Promise<void> {
+    await this.assertProjectAccess(projectId, 'admin');
+  }
+
   protected buildSearchInflightKey(
     userId: string | undefined,
     params: ResourceSearchParams
@@ -113,22 +233,6 @@ export class PAMService implements PAMServiceInterface {
       keyword: (params.keyword || '').trim(),
       filters: params.filters ?? null,
       sort: params.sort ?? null
-    });
-  }
-
-  protected attachSearchOwnership(
-    user: { id: string } | null | undefined,
-    result: ResourceSearchResult<SearchPAMProject>
-  ): ResourceSearchResult<SearchPAMProject> {
-    if (!user?.id || !result.items?.length) {
-      return result;
-    }
-    return Object.assign({}, result, {
-      items: result.items.map((item) =>
-        Object.assign({}, item, {
-          is_owner: user.id === item.owner_id
-        } as SearchPAMProject)
-      )
     });
   }
 
@@ -267,7 +371,7 @@ export class PAMService implements PAMServiceInterface {
         ...params,
         user_id: userId
       })
-      .then((result) => this.attachSearchOwnership(user, result))
+      .then((result) => this.attachSearchAccess(user, result))
       .finally(() => {
         this.searchInflight.delete(inflightKey);
       });
@@ -287,7 +391,13 @@ export class PAMService implements PAMServiceInterface {
       return cached;
     }
 
-    const categories = await this.projectRepo.listDistinctCategories(userId);
+    const collabIds = userId
+      ? await this.collaboratorsRepo.listActiveProjectIdsForUser(userId)
+      : [];
+    const categories = await this.projectRepo.listDistinctCategories(
+      userId,
+      collabIds
+    );
     await this.categoryCache.set(userId, categories);
     return categories;
   }
@@ -328,14 +438,15 @@ export class PAMService implements PAMServiceInterface {
       return null;
     }
 
-    const isOwner = Boolean(user && user.id === detail.owner_id);
-    if (!isOwner && detail.is_public !== PAMPublicType.public) {
+    const role = user
+      ? await this.resolveAccessRole(detail.id, user.id, detail.owner_id)
+      : ('none' as const);
+
+    if (role === 'none' && detail.is_public !== PAMPublicType.public) {
       return null;
     }
 
-    return Object.assign({}, detail, {
-      is_owner: isOwner
-    });
+    return Object.assign({}, detail, projectAccessFlags(role));
   }
 
   /**
@@ -440,8 +551,7 @@ export class PAMService implements PAMServiceInterface {
     extra?: { useRPC?: boolean }
   ): Promise<PAMProjectDetail> {
     const { id } = params;
-    // App/OAuth/CLI session ownership (not Supabase cookie RLS alone).
-    await this.assertProjectOwner(id);
+    const { role } = await this.assertProjectAccess(id, 'member');
 
     // --- 补充 slug 唯一性校验 ---
     if (params.slug) {
@@ -480,9 +590,11 @@ export class PAMService implements PAMServiceInterface {
 
     await this.categoryCache.invalidateAll();
 
-    return Object.assign({}, this.redactProjectDetail(detail), {
-      is_owner: true
-    });
+    return Object.assign(
+      {},
+      this.redactProjectDetail(detail),
+      projectAccessFlags(role)
+    );
   }
 
   /**
@@ -539,7 +651,11 @@ export class PAMService implements PAMServiceInterface {
 
     await this.categoryCache.invalidateAll();
 
-    return this.redactProjectDetail(detail);
+    return Object.assign(
+      {},
+      this.redactProjectDetail(detail),
+      projectAccessFlags('owner')
+    );
   }
 
   /**
@@ -640,8 +756,8 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async deleteProject(id: string): Promise<void> {
-    // App/OAuth/CLI session ownership (not Supabase cookie RLS alone).
-    await this.assertProjectOwner(id);
+    // Admin+ may delete (owner included via role rank).
+    await this.assertProjectAccess(id, 'admin');
 
     await this.projectRepo.deleteProjectAdmin(id);
     await this.categoryCache.invalidateAll();
@@ -654,7 +770,7 @@ export class PAMService implements PAMServiceInterface {
     id: string,
     params: PAMProjectTransfer
   ): Promise<void> {
-    await this.assertProjectOwner(id);
+    await this.assertProjectAccess(id, 'admin');
 
     const currentUser = await this.userService.getUser(true);
     if (!currentUser) {
@@ -667,6 +783,7 @@ export class PAMService implements PAMServiceInterface {
     }
 
     await this.projectRepo.transferProjectOwnerAdmin(id, newOwnerId);
+    await this.collaboratorsRepo.deleteAllForProject(id);
     await this.categoryCache.invalidateAll();
   }
 
@@ -716,7 +833,7 @@ export class PAMService implements PAMServiceInterface {
    * @returns Updated project detail
    */
   public async refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
-    await this.assertProjectOwner(id);
+    await this.assertProjectAccess(id, 'member');
 
     const detail = await this.projectRepo.getProjectWithEnvironmentsAdmin(id);
     if (!detail) {
@@ -758,8 +875,126 @@ export class PAMService implements PAMServiceInterface {
     await this.categoryCache.invalidateAll();
 
     return Object.assign({}, this.redactProjectDetail(updated), {
-      is_owner: true
+      ...projectAccessFlags('owner')
     });
+  }
+
+  /**
+   * Lists project collaborators (any member+ may view).
+
+   * @override
+      */
+  public async listCollaborators(
+    projectId: string
+  ): Promise<PAMProjectCollaboratorItem[]> {
+    await this.assertProjectAccess(projectId, 'member');
+    return this.collaboratorsRepo.listByProjectId(projectId);
+  }
+
+  /**
+   * Adds a collaborator (admin+).
+
+   * @override
+      */
+  public async addCollaborator(
+    projectId: string,
+    params: PAMProjectCollaboratorAdd
+  ): Promise<PAMProjectCollaboratorItem> {
+    const { userId: actorId } = await this.assertProjectAccess(
+      projectId,
+      'admin'
+    );
+
+    const access = await this.projectRepo.getProjectAccessAdmin(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    if (params.user_id === access.owner_id) {
+      throw new ExecutorError(API_PAM_COLLABORATOR_IS_OWNER);
+    }
+
+    const exists = await this.projectRepo.authUserExistsById(params.user_id);
+    if (!exists) {
+      throw new ExecutorError(API_PAM_TRANSFER_USER_NOT_FOUND);
+    }
+
+    const existingRole = await this.collaboratorsRepo.getActiveRole(
+      projectId,
+      params.user_id
+    );
+    if (existingRole) {
+      throw new ExecutorError(API_PAM_COLLABORATOR_EXISTS);
+    }
+
+    await this.collaboratorsRepo.insert({
+      projectId,
+      userId: params.user_id,
+      role: params.role,
+      invitedBy: actorId
+    });
+
+    await this.categoryCache.invalidateAll();
+
+    const list = await this.collaboratorsRepo.listByProjectId(projectId);
+    const item = list.find((row) => row.user_id === params.user_id);
+    if (!item) {
+      throw new ExecutorError(API_PAM_COLLABORATOR_NOT_FOUND);
+    }
+    return item;
+  }
+
+  /**
+   * Updates collaborator role (admin+).
+
+   * @override
+      */
+  public async updateCollaboratorRole(
+    projectId: string,
+    userId: string,
+    params: PAMProjectCollaboratorUpdate
+  ): Promise<PAMProjectCollaboratorItem> {
+    await this.assertProjectAccess(projectId, 'admin');
+
+    const access = await this.projectRepo.getProjectAccessAdmin(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+    if (userId === access.owner_id) {
+      throw new ExecutorError(API_PAM_COLLABORATOR_IS_OWNER);
+    }
+
+    await this.collaboratorsRepo.updateRole(projectId, userId, params.role);
+
+    const list = await this.collaboratorsRepo.listByProjectId(projectId);
+    const item = list.find((row) => row.user_id === userId);
+    if (!item) {
+      throw new ExecutorError(API_PAM_COLLABORATOR_NOT_FOUND);
+    }
+    return item;
+  }
+
+  /**
+   * Removes a collaborator (admin+). Cuts future access only.
+
+   * @override
+      */
+  public async removeCollaborator(
+    projectId: string,
+    userId: string
+  ): Promise<void> {
+    await this.assertProjectAccess(projectId, 'admin');
+
+    const access = await this.projectRepo.getProjectAccessAdmin(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+    if (userId === access.owner_id) {
+      throw new ExecutorError(API_PAM_COLLABORATOR_IS_OWNER);
+    }
+
+    await this.collaboratorsRepo.remove(projectId, userId);
+    await this.categoryCache.invalidateAll();
   }
 
   /**
@@ -788,34 +1023,6 @@ export class PAMService implements PAMServiceInterface {
       throw new ExecutorError(API_PAM_TRANSFER_USER_NOT_FOUND);
     }
     return foundId;
-  }
-
-  /**
-   * Ensures the current user owns the project.
-   *
-   * @param projectId - Project id
-   * @throws When the user is not the owner
-   */
-  protected async assertProjectOwner(projectId: string): Promise<void> {
-    const user = await this.userService.getUser(true);
-    if (!user) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    // Prefer explicit owner check (works for CLI bearer tokens without
-    // a Supabase Auth session). Falls back to RLS session check.
-    const owned = await this.projectRepo.isProjectOwnedByUser(
-      projectId,
-      user.id
-    );
-    if (owned) {
-      return;
-    }
-
-    const hasAuth = await this.projectRepo.hasAuthProject(projectId);
-    if (!hasAuth) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
   }
 
   /**
@@ -871,8 +1078,11 @@ export class PAMService implements PAMServiceInterface {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    const isOwner = Boolean(user && user.id === access.owner_id);
-    if (!isOwner && access.is_public !== PAMPublicType.public) {
+    const role = user
+      ? await this.resolveAccessRole(projectId, user.id, access.owner_id)
+      : ('none' as const);
+
+    if (role === 'none' && access.is_public !== PAMPublicType.public) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
@@ -889,7 +1099,7 @@ export class PAMService implements PAMServiceInterface {
     projectId: string,
     params: PAMEnvCreate
   ): Promise<PAMEnvWriteable> {
-    await this.assertProjectOwner(projectId);
+    await this.assertProjectAccess(projectId, 'member');
 
     // Admin read/write: CLI bearer auth has no Supabase RLS session.
     const existingEnvs =
@@ -925,7 +1135,8 @@ export class PAMService implements PAMServiceInterface {
     projectId: string,
     envId: string
   ): Promise<void> {
-    await this.assertProjectOwner(projectId);
+    // Deleting an environment affects all collaborators — admin+ only.
+    await this.assertProjectAccess(projectId, 'admin');
 
     // Admin read/write: CLI bearer auth has no Supabase RLS session.
     await this.projectRepo.deleteEnvironmentAdmin(projectId, envId);
@@ -939,7 +1150,7 @@ export class PAMService implements PAMServiceInterface {
     envId: string,
     params: PAMEnvReplaceVariables
   ): Promise<PAMEnvWriteable> {
-    await this.assertProjectOwner(projectId);
+    await this.assertProjectAccess(projectId, 'member');
 
     // Admin read/write: CLI bearer auth has no Supabase RLS session.
     const existing = await this.projectRepo.getEnvironmentByIdAdmin(
@@ -994,15 +1205,11 @@ export class PAMService implements PAMServiceInterface {
       comments?: string[];
     }>;
   }> {
-    const user = await this.userService.getUser(true);
-    if (!user) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
+    await this.assertProjectAccess(projectId, 'member');
 
-    const owned = await this.projectRepo.getOwnedEnvironmentForExport(
+    const owned = await this.projectRepo.getEnvironmentForExport(
       projectId,
-      envId,
-      user.id
+      envId
     );
 
     if (!owned) {

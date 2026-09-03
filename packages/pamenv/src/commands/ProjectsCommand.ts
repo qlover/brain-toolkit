@@ -1,4 +1,5 @@
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
+import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 
 /**
  * `pamenv projects` — list owned / visible PAM projects.
@@ -17,14 +18,15 @@ export class ProjectsCommand {
     }
 
     for (const project of projects) {
-      const owner = project.is_owner ? ' (owner)' : '';
+      const role = PamCliProjectAccessUtil.roleLabel(project);
+      const roleSuffix = role ? ` (${role})` : '';
       const envs =
         project.environments
           ?.map((env) => env.name)
           .filter(Boolean)
           .join(', ') || '-';
       console.log(
-        `${project.slug}\t${project.name}${owner}\tenvs: ${envs}\tid: ${project.id}`
+        `${project.slug}\t${project.name}${roleSuffix}\tenvs: ${envs}\tid: ${project.id}`
       );
     }
   }

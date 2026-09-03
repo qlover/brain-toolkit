@@ -37,6 +37,11 @@ export type PamCliProjectType = {
   readonly slug: string;
   readonly name: string;
   readonly is_owner?: boolean;
+  /** Owner / admin / member may edit (from PAM collaborators). */
+  readonly can_edit?: boolean;
+  /** Owner / admin may manage collaborators and delete environments. */
+  readonly can_manage_collaborators?: boolean;
+  readonly my_role?: 'owner' | 'admin' | 'member' | 'none';
   readonly environments?: readonly PamCliEnvironmentSummaryType[];
 };
 
