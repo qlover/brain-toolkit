@@ -16,6 +16,7 @@ import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrap
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { PamCliTokenService } from '@server/services/PamCliTokenService';
+import { PamSupabaseSessionMintService } from '@server/services/PamSupabaseSessionMintService';
 import { PamUserService } from '@server/services/PamUserService';
 import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
 import type { LoggerInterface } from '@qlover/logger';
@@ -100,7 +101,9 @@ export class SupabaseOAuthProvider
     protected encryptor: EncryptorInterface<string, string>,
     @inject(SupabaseRepo) protected supabaseRepo: SupabaseRepo<unknown>,
     @inject(PamCliTokenService)
-    cliTokenService: PamCliTokenService
+    cliTokenService: PamCliTokenService,
+    @inject(PamSupabaseSessionMintService)
+    protected sessionMint: PamSupabaseSessionMintService
   ) {
     super(
       new OAuthSessionService(config, (token) =>
@@ -377,6 +380,67 @@ export class SupabaseOAuthProvider
     await this.syncUserSession(refreshed);
   }
 
+  /**
+   * Repair missing OAuth AS credentials before consent issues an auth code.
+   * Phone OTP users may still hold an old cookie session with empty
+   * `providerRefreshToken` and no `n_oauth_wrapper__user_credentials` row.
+   *
+   * Throws if credentials still cannot be established — better to fail on
+   * consent than issue a code that burns on /oauth/token.
+   *
+   * @override
+   */
+  public async ensureProviderCredentials(): Promise<void> {
+    const payload = await this.oauthSession.getSession();
+    const userId = String(payload?.userId ?? '').trim();
+    if (!userId) {
+      throw new Error('Not authenticated; cannot issue OAuth credentials');
+    }
+
+    const oauthRepo = this.getOAuthRepo();
+    const existing = await oauthRepo.getUserCredentials(userId);
+    if (existing?.provider_session_token?.trim()) {
+      return;
+    }
+
+    const fromCookie = payload?.providerRefreshToken?.trim();
+    if (fromCookie) {
+      await oauthRepo.upsertUserCredentials(userId, {
+        provider_session_token: fromCookie
+      });
+      this.logger.info(
+        'Repaired OAuth provider credentials from cookie refresh token',
+        { userId }
+      );
+      return;
+    }
+
+    const embedded = payload?.user as UserSchema | undefined;
+    const email = embedded?.email?.trim();
+    if (!email) {
+      throw new Error(
+        'OAuth provider credentials missing; please sign out and sign in again'
+      );
+    }
+
+    const minted = await this.sessionMint.mintSessionForAuthUser({
+      userId,
+      email
+    });
+    await this.syncUserSession(minted);
+
+    const repaired = await oauthRepo.getUserCredentials(userId);
+    if (!repaired?.provider_session_token?.trim()) {
+      throw new Error(
+        'Failed to persist OAuth provider credentials; please sign in again'
+      );
+    }
+
+    this.logger.info('Repaired OAuth provider credentials via session mint', {
+      userId
+    });
+  }
+
   protected async syncUserSession(session: Session): Promise<void> {
     const refreshToken = requireSupabaseRefreshToken(session);
 
@@ -402,6 +466,9 @@ export class SupabaseOAuthProvider
     // when exchanging authorization codes (fetchProviderAccessToken).
     await oauthRepo.upsertUserCredentials(profile.id, {
       provider_session_token: refreshToken
+    });
+    this.logger.info('Upserted OAuth provider credentials', {
+      userId: profile.id
     });
   }
 

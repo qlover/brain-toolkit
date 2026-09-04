@@ -19,6 +19,7 @@ import {
 } from '@server/repositorys/PamPhoneOtpsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { OTP_SEND_COOLDOWN_MS } from '@server/services/OtpSendRateLimitService';
+import { PamSupabaseSessionMintService } from '@server/services/PamSupabaseSessionMintService';
 import { PamUserService } from '@server/services/PamUserService';
 import { AliyunPhoneOtpProvider } from '@server/services/phoneOtp/AliyunPhoneOtpProvider';
 import { MemoryPhoneOtpProvider } from '@server/services/phoneOtp/MemoryPhoneOtpProvider';
@@ -69,7 +70,9 @@ export class PhoneOtpService {
     @inject(AliyunPhoneOtpProvider)
     protected readonly aliyunProvider: AliyunPhoneOtpProvider,
     @inject(I.OAuthWrapperProviderInterface)
-    protected readonly oauthProvider: OAuthWrapperProviderInterface
+    protected readonly oauthProvider: OAuthWrapperProviderInterface,
+    @inject(PamSupabaseSessionMintService)
+    protected readonly sessionMint: PamSupabaseSessionMintService
   ) {}
 
   public async send(params: {
@@ -174,50 +177,21 @@ export class PhoneOtpService {
    * Creates a real Supabase Auth session for an admin-managed phone user.
    *
    * Custom Aliyun/memory OTP never goes through GoTrue SMS verify, so we mint
-   * a magic-link token for the synthetic email and exchange it for a session.
-   *
-   * @param user - Auth user resolved for the verified phone
-   * @returns Supabase session containing a refresh_token
+   * a session for the synthetic email (cookie-free client) and hand it to
+   * `loginWithSession` which upserts `provider_session_token`.
    */
   protected async createSupabaseSessionForAuthUser(
     user: UserSchema
   ): Promise<SupabaseSession> {
     const email = user.email?.trim();
-    if (!email) {
-      throw new Error('Phone auth user is missing email for session minting');
-    }
-
-    const admin = await this.supabaseBridge.getAdminSupabase();
-    const linkResult = await admin.auth.admin.generateLink({
-      type: 'magiclink',
-      email
-    });
-    this.supabaseBridge.throwIfError(linkResult);
-
-    const hashedToken = linkResult.data.properties?.hashed_token?.trim();
-    if (!hashedToken) {
+    const userId = user.id?.trim();
+    if (!email || !userId) {
       throw new Error(
-        'Failed to generate Supabase magic-link token for phone user'
+        'Phone auth user is missing id/email for session minting'
       );
     }
 
-    const supabase = await this.supabaseBridge.getSupabase();
-    const verified = await supabase.auth.verifyOtp({
-      token_hash: hashedToken,
-      type: 'email'
-    });
-    this.supabaseBridge.throwIfError(verified);
-
-    const session = verified.data.session;
-    if (!session?.refresh_token) {
-      throw new Error('Phone login did not establish a Supabase refresh token');
-    }
-
-    this.logger.debug('Phone OTP established Supabase session', {
-      userId: session.user?.id || user.id
-    });
-
-    return session;
+    return this.sessionMint.mintSessionForAuthUser({ userId, email });
   }
 
   public async listForAdmin(params: {

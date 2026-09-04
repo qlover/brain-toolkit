@@ -86,6 +86,12 @@ export class OAuthWrapperController {
   public async submitConsent(
     requestBody: unknown
   ): Promise<OAuthConsentResult> {
+    // Phone-OTP (and similar) sessions may browse PAM without
+    // provider_session_token; repair before the auth code is issued so
+    // downstream /oauth/token exchange can refresh the upstream session.
+    if (this.oauthProvider.ensureProviderCredentials) {
+      await this.oauthProvider.ensureProviderCredentials();
+    }
     return await this.oauthProvider.processConsent(requestBody);
   }
 
