@@ -10,7 +10,7 @@ import { I } from '@config/ioc-identifiter';
 import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type { PamPhoneOtpAdminItem } from '@schemas/PamPhoneOtpSchema';
 import type { PamPhoneOtpProvider } from '@schemas/PamPhoneOtpSchema';
-import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import {
   generatePhoneOtpCode,
   hashPhoneOtpCode,
@@ -18,7 +18,6 @@ import {
   safeEqualOtp
 } from '@server/repositorys/PamPhoneOtpsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
-import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { OTP_SEND_COOLDOWN_MS } from '@server/services/OtpSendRateLimitService';
 import { PamUserService } from '@server/services/PamUserService';
 import { AliyunPhoneOtpProvider } from '@server/services/phoneOtp/AliyunPhoneOtpProvider';
@@ -26,7 +25,8 @@ import { MemoryPhoneOtpProvider } from '@server/services/phoneOtp/MemoryPhoneOtp
 import type { PhoneOtpProviderInterface } from '@server/services/phoneOtp/PhoneOtpProviderInterface';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { LoggerInterface } from '@qlover/logger';
-import type { SignOtpResult, OAuthSessionPayload } from '@qlover/oauth-wrapper';
+import type { SignOtpResult } from '@qlover/oauth-wrapper';
+import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 const OTP_TTL_MS = 5 * 60_000;
 
@@ -57,7 +57,6 @@ function normalizePhoneE164(raw: string): string {
 export class PhoneOtpService {
   constructor(
     @inject(I.Logger) protected readonly logger: LoggerInterface,
-    @inject(I.AppConfig) protected readonly config: SeedServerConfigInterface,
     @inject(PamPhoneOtpsRepo) protected readonly otpsRepo: PamPhoneOtpsRepo,
     @inject(PamUsersRepo) protected readonly pamUsersRepo: PamUsersRepo,
     @inject(PamUserService) protected readonly pamUserService: PamUserService,
@@ -68,7 +67,9 @@ export class PhoneOtpService {
     @inject(MemoryPhoneOtpProvider)
     protected readonly memoryProvider: MemoryPhoneOtpProvider,
     @inject(AliyunPhoneOtpProvider)
-    protected readonly aliyunProvider: AliyunPhoneOtpProvider
+    protected readonly aliyunProvider: AliyunPhoneOtpProvider,
+    @inject(I.OAuthWrapperProviderInterface)
+    protected readonly oauthProvider: OAuthWrapperProviderInterface
   ) {}
 
   public async send(params: {
@@ -153,17 +154,70 @@ export class PhoneOtpService {
       phone
     });
 
-    const sessionService = new OAuthSessionService(this.config);
-    const sessionPayload: OAuthSessionPayload & { user?: UserSchema } = {
-      userId: user.id,
-      providerRefreshToken: '',
-      user
-    };
-    await sessionService.setSession(sessionPayload);
+    // OAuth AS (/oauth/token) needs provider_session_token = Supabase refresh.
+    // Cookie-only sessions with an empty refresh token can browse PAM, but
+    // authorization-code exchange fails for third-party apps.
+    const supabaseSession = await this.createSupabaseSessionForAuthUser(user);
+    if (!this.oauthProvider.loginWithSession) {
+      throw new Error('OAuth provider does not support loginWithSession');
+    }
+    await this.oauthProvider.loginWithSession(supabaseSession);
 
     return {
-      expired: Math.floor(Date.now() / 1000) + 7 * 24 * 3600
+      expired:
+        supabaseSession.expires_at ??
+        Math.floor(Date.now() / 1000) + 7 * 24 * 3600
     };
+  }
+
+  /**
+   * Creates a real Supabase Auth session for an admin-managed phone user.
+   *
+   * Custom Aliyun/memory OTP never goes through GoTrue SMS verify, so we mint
+   * a magic-link token for the synthetic email and exchange it for a session.
+   *
+   * @param user - Auth user resolved for the verified phone
+   * @returns Supabase session containing a refresh_token
+   */
+  protected async createSupabaseSessionForAuthUser(
+    user: UserSchema
+  ): Promise<SupabaseSession> {
+    const email = user.email?.trim();
+    if (!email) {
+      throw new Error('Phone auth user is missing email for session minting');
+    }
+
+    const admin = await this.supabaseBridge.getAdminSupabase();
+    const linkResult = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email
+    });
+    this.supabaseBridge.throwIfError(linkResult);
+
+    const hashedToken = linkResult.data.properties?.hashed_token?.trim();
+    if (!hashedToken) {
+      throw new Error(
+        'Failed to generate Supabase magic-link token for phone user'
+      );
+    }
+
+    const supabase = await this.supabaseBridge.getSupabase();
+    const verified = await supabase.auth.verifyOtp({
+      token_hash: hashedToken,
+      type: 'email'
+    });
+    this.supabaseBridge.throwIfError(verified);
+
+    const session = verified.data.session;
+    if (!session?.refresh_token) {
+      throw new Error('Phone login did not establish a Supabase refresh token');
+    }
+
+    this.logger.debug('Phone OTP established Supabase session', {
+      userId: session.user?.id || user.id
+    });
+
+    return session;
   }
 
   public async listForAdmin(params: {
