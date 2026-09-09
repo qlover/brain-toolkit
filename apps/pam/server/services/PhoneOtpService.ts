@@ -3,6 +3,10 @@ import { UserRole, type UserSchema } from '@qlover/next-kit/common';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
 import {
+  defaultDisplayNameFromPhone,
+  phonePlaceholderEmail
+} from '@shared/utils/pamUserIdentity';
+import {
   API_OTP_CODE_INVALID,
   API_OTP_SEND_RATE_LIMITED
 } from '@config/i18n-identifier/api';
@@ -31,11 +35,6 @@ import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 const OTP_TTL_MS = 5 * 60_000;
 
-function phoneFallbackEmail(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  return digits ? `${digits}@phone.pam.local` : 'unknown@phone.pam.local';
-}
-
 function normalizePhoneE164(raw: string): string {
   const trimmed = raw.trim().replace(/[\s-]/g, '');
   if (!trimmed) {
@@ -45,13 +44,14 @@ function normalizePhoneE164(raw: string): string {
     return `+${trimmed.slice(1).replace(/\D/g, '')}`;
   }
   const digits = trimmed.replace(/\D/g, '');
+  // Default country code +86 for mainland numbers / bare digit input.
   if (/^1\d{10}$/.test(digits)) {
     return `+86${digits}`;
   }
   if (digits.startsWith('86') && digits.length >= 12) {
     return `+${digits}`;
   }
-  return digits ? `+${digits}` : '';
+  return digits ? `+86${digits}` : '';
 }
 
 @injectable()
@@ -151,10 +151,14 @@ export class PhoneOtpService {
     await this.otpsRepo.markVerified(pending.id);
 
     const user = await this.ensureAuthUserForPhone(phone);
+    const existingPam = await this.pamUsersRepo.findById(user.id);
     await this.pamUserService.ensurePamUser({
       id: user.id,
-      email: user.email,
-      phone
+      email: null,
+      phone,
+      ...(existingPam?.display_name
+        ? {}
+        : { displayName: defaultDisplayNameFromPhone(phone) })
     });
 
     // OAuth AS (/oauth/token) needs provider_session_token = Supabase refresh.
@@ -233,12 +237,16 @@ export class PhoneOtpService {
   }
 
   protected async ensureAuthUserForPhone(phone: string): Promise<UserSchema> {
-    const email = phoneFallbackEmail(phone);
+    // Placeholder email only on auth.users for session mint; never written to pam_users.
+    const authEmail = phonePlaceholderEmail(phone);
     const existingPam = await this.pamUsersRepo.findByPhone(phone);
     if (existingPam) {
+      const admin = await this.supabaseBridge.getAdminSupabase();
+      const authUser = await admin.auth.admin.getUserById(existingPam.id);
+      const mintEmail = authUser.data.user?.email?.trim() || authEmail;
       return {
         id: existingPam.id,
-        email: existingPam.email || email,
+        email: mintEmail,
         role: UserRole.USER,
         credential_token: '',
         created_at: existingPam.created_at
@@ -247,7 +255,7 @@ export class PhoneOtpService {
 
     const admin = await this.supabaseBridge.getAdminSupabase();
     const created = await admin.auth.admin.createUser({
-      email,
+      email: authEmail,
       phone,
       email_confirm: true,
       phone_confirm: true,
@@ -257,15 +265,14 @@ export class PhoneOtpService {
     if (created.data.user?.id) {
       return {
         id: created.data.user.id,
-        email: created.data.user.email || email,
+        email: created.data.user.email || authEmail,
         role: UserRole.USER,
         credential_token: '',
         created_at: created.data.user.created_at
       };
     }
 
-    // User may already exist (email/phone conflict) — scan recent pages.
-    const found = await this.findAuthUserByEmailOrPhone(email, phone);
+    const found = await this.findAuthUserByEmailOrPhone(authEmail, phone);
     if (found) {
       return found;
     }

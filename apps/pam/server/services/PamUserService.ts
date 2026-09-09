@@ -1,4 +1,5 @@
 import { inject, injectable } from '@shared/container';
+import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
 import type { PamAdminUserListItem, PamUserRow } from '@schemas/PamUserSchema';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import {
@@ -8,7 +9,7 @@ import {
 
 export type PamUserEnsureInput = {
   readonly id: string;
-  readonly email: string;
+  readonly email: string | null;
   readonly displayName?: string | null;
   readonly phone?: string | null;
 };
@@ -18,9 +19,24 @@ export class PamUserService {
   constructor(@inject(PamUsersRepo) protected readonly repo: PamUsersRepo) {}
 
   public async ensurePamUser(input: PamUserEnsureInput): Promise<PamUserRow> {
-    const row = await this.repo.ensureProfile(input);
+    const row = await this.repo.ensureProfile({
+      ...input,
+      email: toBusinessEmail(input.email)
+    });
     setPlatformAdminCache(row.id, row.is_platform_admin);
     return row;
+  }
+
+  public async findById(userId: string): Promise<PamUserRow | null> {
+    return this.repo.findById(userId);
+  }
+
+  public async findByEmail(email: string): Promise<PamUserRow | null> {
+    return this.repo.findByEmail(email);
+  }
+
+  public async findByPhone(phone: string): Promise<PamUserRow | null> {
+    return this.repo.findByPhone(phone);
   }
 
   public async isPlatformAdmin(userId: string): Promise<boolean> {
@@ -48,6 +64,7 @@ export class PamUserService {
     return rows.map((row) => ({
       id: row.id,
       email: row.email,
+      phone: row.phone,
       displayName: row.displayName,
       isPlatformAdmin: row.isPlatformAdmin,
       status: row.status as 'active' | 'suspended',
