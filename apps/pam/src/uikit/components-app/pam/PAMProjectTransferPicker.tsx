@@ -8,6 +8,7 @@ import { PAMApi } from '@/impls/appApi/PAMApi';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
 
 export type PAMProjectTransferPickerProps = {
@@ -77,9 +78,13 @@ function filterCachedUsers(
 ): PAMAuthUserSummary[] {
   const q = query.trim().toLowerCase();
   if (!q) return users;
-  return users.filter((user) =>
-    (user.email || user.id).toLowerCase().includes(q)
-  );
+  return users.filter((user) => {
+    const hay = [user.email, user.phone, user.display_name, user.id]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return hay.includes(q);
+  });
 }
 
 /**
@@ -196,9 +201,15 @@ export function PAMProjectTransferPicker({
 
   const confirmHint =
     selected && confirmHintTemplate
-      ? confirmHintTemplate
-          .replace('[name]', projectName)
-          .replace('[email]', selected.email || selected.id)
+      ? confirmHintTemplate.replace('[name]', projectName ?? '').replace(
+          '[email]',
+          resolveUserDisplayLabel({
+            displayName: selected.display_name,
+            phone: selected.phone,
+            email: selected.email,
+            userId: selected.id
+          })
+        )
       : '';
   const busy = transferring || confirmPending;
 
@@ -286,7 +297,12 @@ export function PAMProjectTransferPicker({
             >
               {users.map((user) => {
                 const isSelected = selected?.id === user.id;
-                const label = user.email || user.id;
+                const label = resolveUserDisplayLabel({
+                  displayName: user.display_name,
+                  phone: user.phone,
+                  email: user.email,
+                  userId: user.id
+                });
                 return (
                   <li data-testid="PAMProjectTransferPicker" key={user.id}>
                     <button

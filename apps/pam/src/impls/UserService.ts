@@ -13,7 +13,11 @@ import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { isObject, isString } from 'lodash-es';
 import { inject, injectable } from '@shared/container';
 import { API_REFRESH_USER_INFO_FAILED } from '@config/i18n-identifier/api';
-import type { PamSessionCapabilities } from '@schemas/PamUserSchema';
+import {
+  pamSessionUserSchema,
+  type PamSessionCapabilities,
+  type PamSessionResponse
+} from '@schemas/PamUserSchema';
 import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import type {
   UserServiceGatewayInterface,
@@ -110,9 +114,39 @@ export class UserService
 
   /**
    * @override
+   * Phone-only pam sessions may have empty business email; prefer pam schema.
    */
   public isUser(value: unknown): value is UserSchema {
+    if (pamSessionUserSchema.safeParse(value).success) {
+      return true;
+    }
     return userSchema.safeParse(value).success;
+  }
+
+  /** Force-refresh cookie session into the client store (e.g. after bind/merge). */
+  public async reloadSession(params?: AppApiConfig): Promise<boolean> {
+    this.getStore().start();
+    try {
+      const session = await this.gateway.fetchSession(params);
+      return this.applySessionResponse(session);
+    } catch (error) {
+      this.clearSessionCapabilities();
+      this.getStore().failed(error);
+      return false;
+    }
+  }
+
+  public applySessionResponse(session: PamSessionResponse): boolean {
+    if (session.user && this.isUser(session.user)) {
+      this.getStore().success(session.user, {
+        credential_token: session.user.credential_token ?? ''
+      });
+      this.applySessionCapabilities(session.capabilities);
+      return true;
+    }
+    this.clearSessionCapabilities();
+    this.getStore().failed(API_REFRESH_USER_INFO_FAILED);
+    return false;
   }
 
   /**
@@ -135,19 +169,7 @@ export class UserService
 
     return this.gateway
       .fetchSession(params)
-      .then((session) => {
-        if (session.user && this.isUser(session.user)) {
-          this.getStore().success(session.user, {
-            credential_token: session.user.credential_token ?? ''
-          });
-          this.applySessionCapabilities(session.capabilities);
-          return true;
-        }
-
-        this.clearSessionCapabilities();
-        this.getStore().failed(API_REFRESH_USER_INFO_FAILED);
-        return false;
-      })
+      .then((session) => this.applySessionResponse(session))
       .catch((error) => {
         this.clearSessionCapabilities();
         this.getStore().failed(error);

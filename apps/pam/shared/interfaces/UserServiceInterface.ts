@@ -1,5 +1,6 @@
 import type { LoginProviderType } from '@config/common';
 import type { PamSessionResponse } from '@schemas/PamUserSchema';
+import type { PamBindEmailVerifyResult } from '@schemas/PamUserSchema';
 import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import type {
   UserService as CorekitBridgeUserServiceInterface,
@@ -74,4 +75,10 @@ export interface UserServiceGatewayInterface
   }): Promise<LoginProviderResult>;
 
   fetchSession(config?: {}): Promise<PamSessionResponse>;
+
+  sendBindEmail(params: { email: string }): Promise<SignOtpResult>;
+  verifyBindEmail(params: {
+    email: string;
+    token: string;
+  }): Promise<PamBindEmailVerifyResult>;
 }

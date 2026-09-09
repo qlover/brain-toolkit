@@ -1,5 +1,9 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
+import {
+  isPhonePlaceholderEmail,
+  toBusinessEmail
+} from '@shared/utils/pamUserIdentity';
 import { I } from '@config/ioc-identifiter';
 import type { PamUserRow } from '@schemas/PamUserSchema';
 import type { LoggerInterface } from '@qlover/logger';
@@ -8,7 +12,8 @@ const TABLE = 'pam_users';
 
 export type PamUserUpsertInput = {
   readonly id: string;
-  readonly email: string;
+  /** Business email; null for phone-only. */
+  readonly email: string | null;
   readonly displayName?: string | null;
   readonly phone?: string | null;
 };
@@ -54,20 +59,55 @@ export class PamUsersRepo {
     return (data as PamUserRow | null) ?? null;
   }
 
+  public async findByEmail(email: string): Promise<PamUserRow | null> {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || isPhonePlaceholderEmail(normalized)) {
+      return null;
+    }
+
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .ilike('email', normalized)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error('PamUsersRepo.findByEmail failed', {
+        error,
+        email: normalized
+      });
+      throw new Error(error.message);
+    }
+
+    return (data as PamUserRow | null) ?? null;
+  }
+
   /**
    * Upsert profile fields; never clears an existing platform admin flag.
+   * Never overwrites a real email with null/placeholder.
    */
   public async ensureProfile(input: PamUserUpsertInput): Promise<PamUserRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const existing = await this.findById(input.id);
+    const incomingEmail = toBusinessEmail(input.email);
 
     if (existing) {
+      const existingBusiness = toBusinessEmail(existing.email);
+      const nextEmail = incomingEmail ?? existingBusiness ?? null;
+      const nextDisplayName =
+        input.displayName !== undefined
+          ? input.displayName
+          : existing.display_name;
+      const nextPhone =
+        input.phone !== undefined ? input.phone : (existing.phone ?? null);
+
       const { data, error } = await supabase
         .from(TABLE)
         .update({
-          email: input.email,
-          display_name: input.displayName ?? existing.display_name,
-          phone: input.phone ?? existing.phone ?? null,
+          email: nextEmail,
+          display_name: nextDisplayName,
+          phone: nextPhone,
           updated_at: new Date().toISOString()
         })
         .eq('id', input.id)
@@ -89,7 +129,7 @@ export class PamUsersRepo {
       .from(TABLE)
       .insert({
         id: input.id,
-        email: input.email,
+        email: incomingEmail,
         display_name: input.displayName ?? null,
         phone: input.phone ?? null,
         is_platform_admin: false,
@@ -107,6 +147,53 @@ export class PamUsersRepo {
     }
 
     return data as PamUserRow;
+  }
+
+  public async updateEmailAndPhone(params: {
+    userId: string;
+    email?: string | null;
+    phone?: string | null;
+    displayName?: string | null;
+  }): Promise<PamUserRow> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const patch: Record<string, unknown> = {
+      updated_at: new Date().toISOString()
+    };
+    if (params.email !== undefined) {
+      patch.email = toBusinessEmail(params.email);
+    }
+    if (params.phone !== undefined) {
+      patch.phone = params.phone;
+    }
+    if (params.displayName !== undefined) {
+      patch.display_name = params.displayName;
+    }
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update(patch)
+      .eq('id', params.userId)
+      .select('*')
+      .single();
+
+    if (error) {
+      this.logger.error('PamUsersRepo.updateEmailAndPhone failed', {
+        error,
+        userId: params.userId
+      });
+      throw new Error(error.message);
+    }
+
+    return data as PamUserRow;
+  }
+
+  public async deleteById(userId: string): Promise<void> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase.from(TABLE).delete().eq('id', userId);
+    if (error) {
+      this.logger.error('PamUsersRepo.deleteById failed', { error, userId });
+      throw new Error(error.message);
+    }
   }
 
   public async setPlatformAdmin(
@@ -127,7 +214,8 @@ export class PamUsersRepo {
 
       await this.ensureProfile({
         id: authData.user.id,
-        email: authData.user.email ?? ''
+        email: toBusinessEmail(authData.user.email),
+        phone: authData.user.phone ?? null
       });
     }
 
@@ -187,7 +275,8 @@ export class PamUsersRepo {
   }): Promise<
     Array<{
       id: string;
-      email: string;
+      email: string | null;
+      phone: string | null;
       isPlatformAdmin: boolean;
       status: string;
       createdAt: string;
@@ -223,7 +312,9 @@ export class PamUsersRepo {
 
     const { data: pamRows, error: pamError } = await supabase
       .from(TABLE)
-      .select('id, is_platform_admin, status, created_at, display_name, email')
+      .select(
+        'id, is_platform_admin, status, created_at, display_name, email, phone'
+      )
       .in('id', ids);
 
     if (pamError) {
@@ -239,11 +330,12 @@ export class PamUsersRepo {
 
     return users.map((row) => {
       const id = String((row as { id?: string }).id ?? '');
-      const email = String((row as { email?: string }).email ?? '');
+      const authEmail = String((row as { email?: string }).email ?? '');
       const pam = pamById.get(id);
       return {
         id,
-        email: pam?.email ?? email,
+        email: toBusinessEmail(pam?.email ?? authEmail),
+        phone: pam?.phone ?? null,
         displayName: pam?.display_name ?? null,
         isPlatformAdmin: pam?.is_platform_admin ?? false,
         status: pam?.status ?? 'active',

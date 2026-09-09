@@ -94,6 +94,12 @@ export const ROUTE_PROJECT_ENVIRONMENTS =
 /** Developer console app list (PRD default post-login redirect). */
 export const ROUTE_DEVELOPER_APPS = '/developer/apps' as const;
 
+/**
+ * Account / profile center. Pages Router: `src/pages/[locale]/account.tsx`.
+ * Entry gate: middleware via LOGINED_PAGES.
+ */
+export const ROUTE_ACCOUNT = '/account' as const;
+
 /** OAuth 2.0 authorization consent page. */
 export const ROUTE_OAUTH_AUTHORIZE = '/oauth/authorize' as const;
 
@@ -176,6 +182,7 @@ export const LOGINED_PAGES = [
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,
   ROUTE_DEVELOPER_APPS,
+  ROUTE_ACCOUNT,
   ROUTE_OAUTH_PLAYGROUND,
   // Consent requires an app session; gate here so unauthenticated users
   // are sent to login with `?redirect=<full authorize URL>` via redirectToPath.

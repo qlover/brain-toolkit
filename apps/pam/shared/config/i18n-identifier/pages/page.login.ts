@@ -245,14 +245,14 @@ export const PAGE_LOGIN_PHONE_ASK_ADMIN = 'page_login:phone_ask_admin';
 export const PAGE_LOGIN_PHONE_LABEL = 'page_login:phone_label';
 /**
  * @description Phone number placeholder
- * @localZh +8613800138000
- * @localEn +8613800138000
+ * @localZh 13800138000
+ * @localEn 13800138000
  */
 export const PAGE_LOGIN_PHONE_PLACEHOLDER = 'page_login:phone_placeholder';
 /**
  * @description Phone validation error
- * @localZh 请输入正确的手机号（如 +8613800138000 或 13800138000）
- * @localEn Enter a valid phone number (e.g. +8613800138000)
+ * @localZh 请输入正确的中国大陆手机号（11 位，如 13800138000）
+ * @localEn Enter a valid mainland China mobile number (11 digits, e.g. 13800138000)
  */
 export const PAGE_LOGIN_PHONE_INVALID = 'page_login:phone_invalid';
 /**

@@ -304,3 +304,24 @@ export const API_OTP_SEND_FAILED = 'api:otp_send_failed';
  * @localEn OTP code is invalid or expired
  */
 export const API_OTP_CODE_INVALID = 'api:otp_code_invalid';
+
+/**
+ * @description Current account already has a different verified email
+ * @localZh 当前账号已绑定其他邮箱
+ * @localEn This account already has a different email bound
+ */
+export const API_BIND_EMAIL_ALREADY_BOUND = 'api:bind_email_already_bound';
+
+/**
+ * @description Target email account already has a different phone
+ * @localZh 目标邮箱账号已绑定其他手机号，请先解绑后再合并
+ * @localEn Target email account already has a different phone; unbind it first
+ */
+export const API_BIND_EMAIL_PHONE_CONFLICT = 'api:bind_email_phone_conflict';
+
+/**
+ * @description Bind-email target is the same as the current user (noop conflict)
+ * @localZh 不能绑定到当前账号自身
+ * @localEn Cannot bind email to the same account
+ */
+export const API_BIND_EMAIL_SAME_USER = 'api:bind_email_same_user';

@@ -19,6 +19,9 @@ import { ROUTE_HOME } from '@config/route';
 
 const RESEND_COOLDOWN_SEC = 60;
 
+/** Default country calling code for phone login (mainland China). */
+const DEFAULT_PHONE_COUNTRY_CODE = '+86';
+
 function resolveSubmitError(
   err: unknown,
   fallback: string,
@@ -37,29 +40,43 @@ function resolveSubmitError(
 }
 
 /**
- * Normalize to E.164 for Supabase Phone Auth / Test phone numbers.
- * Accepts +86138…, 86138…, or mainland 11-digit 1xxxxxxxxxx.
+ * Normalize to E.164 with default country code +86.
+ * Accepts local 138…, 86138…, or +86138….
  */
 function normalizePhoneE164(raw: string): string {
   const trimmed = raw.trim().replace(/[\s-]/g, '');
   if (!trimmed) {
     return '';
   }
-  if (trimmed.startsWith('+')) {
-    return `+${trimmed.slice(1).replace(/\D/g, '')}`;
-  }
-  const digits = trimmed.replace(/\D/g, '');
-  if (/^1\d{10}$/.test(digits)) {
-    return `+86${digits}`;
-  }
+
+  const digits = trimmed.startsWith('+')
+    ? trimmed.slice(1).replace(/\D/g, '')
+    : trimmed.replace(/\D/g, '');
+
   if (digits.startsWith('86') && digits.length >= 12) {
     return `+${digits}`;
   }
-  return digits ? `+${digits}` : '';
+  if (/^1\d{10}$/.test(digits)) {
+    return `${DEFAULT_PHONE_COUNTRY_CODE}${digits}`;
+  }
+  // Other bare digit strings also default to +86 (e.g. pasted without +).
+  return digits ? `${DEFAULT_PHONE_COUNTRY_CODE}${digits}` : '';
+}
+
+/** Keep only the domestic subscriber digits for the +86-prefixed input. */
+function toLocalPhoneDigits(raw: string): string {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('86') && digits.length >= 12) {
+    digits = digits.slice(2);
+  }
+  return digits.slice(0, 11);
 }
 
 const inputClass =
   'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-xl border bg-bg-container px-4 py-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
+
+const phoneFieldClass =
+  'flex overflow-hidden rounded-xl border border-primary-border bg-bg-container focus-within:border-brand focus-within:ring-2 focus-within:ring-brand';
 
 type Step = 'phone' | 'otp';
 
@@ -75,7 +92,10 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
   const { returnTo } = useReturnTo({ returnToKey: URLParamsKeys.returnTo });
 
   const [step, setStep] = useState<Step>('phone');
-  const [phone, setPhone] = useState('');
+  /** Domestic digits only; UI always shows +86 prefix. */
+  const [phoneLocal, setPhoneLocal] = useState('');
+  /** Full E.164 after a successful send (OTP step display / verify). */
+  const [phoneE164, setPhoneE164] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -108,8 +128,7 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
   const validatePhone = useCallback(
     (value: string): boolean => {
       const normalized = normalizePhoneE164(value);
-      // E.164: + and 8–15 digits total after country code (ITU max 15 digits).
-      if (!normalized || !/^\+[1-9]\d{7,14}$/.test(normalized)) {
+      if (!normalized || !/^\+861\d{10}$/.test(normalized)) {
         setPhoneError(t(tt.phoneInvalid));
         return false;
       }
@@ -136,10 +155,10 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
     e.preventDefault();
     setSubmitError(null);
 
-    if (!validatePhone(phone)) return;
+    if (!validatePhone(phoneLocal)) return;
 
-    const normalized = normalizePhoneE164(phone);
-    setPhone(normalized);
+    const normalized = normalizePhoneE164(phoneLocal);
+    setPhoneE164(normalized);
     setLoading(true);
     try {
       await userGateway.sendOtp({ phone: normalized });
@@ -158,7 +177,7 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
 
     if (!validateOtp(otp)) return;
 
-    const normalized = normalizePhoneE164(phone);
+    const normalized = phoneE164 || normalizePhoneE164(phoneLocal);
     setLoading(true);
     try {
       await userGateway.verifyOtp({ phone: normalized, token: otp.trim() });
@@ -173,7 +192,7 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
   const handleResend = async () => {
     if (countdown > 0 || loading) return;
     setSubmitError(null);
-    const normalized = normalizePhoneE164(phone);
+    const normalized = phoneE164 || normalizePhoneE164(phoneLocal);
     setLoading(true);
     try {
       await userGateway.sendOtp({ phone: normalized });
@@ -186,7 +205,7 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
     }
   };
 
-  const isEmpty = !phone.trim();
+  const isEmpty = !phoneLocal.trim();
   const submitDisabled = loading;
 
   return (
@@ -216,22 +235,31 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
             >
               {tt.phoneLabel}
             </label>
-            <input
-              id="phone-number"
-              type="tel"
-              name="phone"
-              autoComplete="tel"
-              placeholder={tt.phonePlaceholder}
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value);
-                if (phoneError) setPhoneError(undefined);
-              }}
-              className={inputClass}
-              disabled={submitDisabled}
-              aria-invalid={!!phoneError}
-              aria-describedby={phoneError ? 'phone-error' : undefined}
-            />
+            <div className={phoneFieldClass}>
+              <span
+                className="inline-flex shrink-0 items-center border-r border-primary-border bg-elevated/50 px-3 text-sm font-medium text-secondary-text"
+                aria-hidden
+              >
+                {DEFAULT_PHONE_COUNTRY_CODE}
+              </span>
+              <input
+                id="phone-number"
+                type="tel"
+                name="phone"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                placeholder={tt.phonePlaceholder}
+                value={phoneLocal}
+                onChange={(e) => {
+                  setPhoneLocal(toLocalPhoneDigits(e.target.value));
+                  if (phoneError) setPhoneError(undefined);
+                }}
+                className="text-primary-text placeholder:text-tertiary-text w-full border-0 bg-transparent px-3 py-3 text-sm outline-none"
+                disabled={submitDisabled}
+                aria-invalid={!!phoneError}
+                aria-describedby={phoneError ? 'phone-error' : undefined}
+              />
+            </div>
             {phoneError && (
               <p
                 id="phone-error"
@@ -268,7 +296,7 @@ export function PhoneLoginForm({ tt, memoryOtp = true }: PhoneLoginFormProps) {
           className="space-y-4"
         >
           <div className="text-sm text-secondary-text">
-            {phone}
+            {phoneE164 || `${DEFAULT_PHONE_COUNTRY_CODE}${phoneLocal}`}
             <button
               type="button"
               onClick={() => {

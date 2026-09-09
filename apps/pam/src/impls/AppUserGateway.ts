@@ -9,6 +9,7 @@ import { inject, injectable } from '@shared/container';
 import { LoginProviderType } from '@config/common';
 import * as apiRoutes from '@config/route';
 import type { PamSessionResponse } from '@schemas/PamUserSchema';
+import type { PamBindEmailVerifyResult } from '@schemas/PamUserSchema';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
@@ -296,5 +297,56 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     });
 
     return response.data.data! as LoginProviderResult;
+  }
+
+  /**
+   * @override
+   */
+  public async sendBindEmail(params: {
+    email: string;
+  }): Promise<SignOtpResult> {
+    const response = await this.client.request<
+      NextKitApiResult<SignOtpResult>,
+      { email: string }
+    >({
+      url: apiRoutes.API_USER_BIND_EMAIL_SEND,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        (!response.data.success && response.data.message) ||
+          'Send bind-email OTP failed'
+      );
+    }
+
+    return response.data.data;
+  }
+
+  /**
+   * @override
+   */
+  public async verifyBindEmail(params: {
+    email: string;
+    token: string;
+  }): Promise<PamBindEmailVerifyResult> {
+    const response = await this.client.request<
+      NextKitApiResult<PamBindEmailVerifyResult>,
+      { email: string; token: string }
+    >({
+      url: apiRoutes.API_USER_BIND_EMAIL_VERIFY,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        (!response.data.success && response.data.message) ||
+          'Verify bind-email failed'
+      );
+    }
+
+    return response.data.data;
   }
 }

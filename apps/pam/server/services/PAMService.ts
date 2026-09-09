@@ -13,6 +13,7 @@ import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormali
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
 import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import { parsePAMSiteUrl } from '@shared/utils/PAMSiteIconUtil';
+import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_COLLABORATOR_EXISTS,
@@ -64,6 +65,7 @@ import type {
 } from '@server/interfaces/PAMServiceInterface';
 import { PamProjectCollaboratorsRepo } from '@server/repositorys/PamProjectCollaboratorsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
+import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { ServerConfig } from '@server/ServerConfig';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
@@ -110,6 +112,9 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(PAMCategoryCacheService)
   protected readonly categoryCache!: PAMCategoryCacheService;
+
+  @inject(PamUsersRepo)
+  protected readonly pamUsersRepo!: PamUsersRepo;
 
   /** Coalesce identical in-flight searches (real-time; not a result cache). */
   private readonly searchInflight = new Map<
@@ -819,10 +824,22 @@ export class PAMService implements PAMServiceInterface {
       offset: 0
     });
 
-    await this.kv.setItem(cacheKey, rows, {
+    const enriched: PAMAuthUserSummary[] = await Promise.all(
+      rows.map(async (row) => {
+        const pam = await this.pamUsersRepo.findById(row.id);
+        return {
+          id: row.id,
+          email: toBusinessEmail(pam?.email ?? row.email) ?? '',
+          phone: pam?.phone ?? null,
+          display_name: pam?.display_name ?? null
+        };
+      })
+    );
+
+    await this.kv.setItem(cacheKey, enriched, {
       ttlMs: AUTH_USERS_SEARCH_CACHE_TTL_MS
     });
-    return rows;
+    return enriched;
   }
 
   /**

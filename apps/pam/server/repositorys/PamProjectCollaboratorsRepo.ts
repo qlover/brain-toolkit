@@ -137,13 +137,77 @@ export class PamProjectCollaboratorsRepo {
     }
 
     const userIds = [...new Set(rows.map((row) => row.user_id))];
-    const emailById = await this.loadEmailsByUserIds(userIds);
+    const profileById = await this.loadProfilesByUserIds(userIds);
 
-    return rows.map((row) => ({
-      ...row,
-      email: emailById.get(row.user_id) ?? '',
-      display_name: null
-    }));
+    return rows.map((row) => {
+      const profile = profileById.get(row.user_id);
+      return {
+        ...row,
+        email: profile?.email ?? '',
+        phone: profile?.phone ?? null,
+        display_name: profile?.displayName ?? null
+      };
+    });
+  }
+
+  /**
+   * Moves collaborator rows from one user to another (merge accounts).
+   * When both users are on the same project, keeps the higher role on target.
+   */
+  public async reassignUserId(
+    fromUserId: string,
+    toUserId: string
+  ): Promise<void> {
+    if (fromUserId === toUserId) {
+      return;
+    }
+
+    const admin = this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await admin
+      .from(TABLE)
+      .select('id,project_id,role')
+      .eq('user_id', fromUserId);
+
+    if (error) {
+      this.logger.error('PamProjectCollaboratorsRepo.reassignUserId list', {
+        error
+      });
+      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
+    }
+
+    for (const row of data ?? []) {
+      const projectId =
+        typeof row.project_id === 'string' ? row.project_id : '';
+      if (!projectId) {
+        continue;
+      }
+
+      const existingRole = await this.getActiveRole(projectId, toUserId);
+      if (existingRole) {
+        const nextRole =
+          existingRole === 'admin' || row.role === 'admin' ? 'admin' : 'member';
+        if (nextRole !== existingRole) {
+          await this.updateRole(projectId, toUserId, nextRole);
+        }
+        await this.remove(projectId, fromUserId);
+        continue;
+      }
+
+      const { error: updateError } = await admin
+        .from(TABLE)
+        .update({
+          user_id: toUserId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', row.id);
+
+      if (updateError) {
+        this.logger.error('PamProjectCollaboratorsRepo.reassignUserId update', {
+          error: updateError
+        });
+        throw new ExecutorError(API_SERVER_ERROR, { cause: updateError });
+      }
+    }
   }
 
   public async insert(input: {
@@ -234,10 +298,18 @@ export class PamProjectCollaboratorsRepo {
     }
   }
 
-  protected async loadEmailsByUserIds(
+  protected async loadProfilesByUserIds(
     userIds: string[]
-  ): Promise<Map<string, string>> {
-    const map = new Map<string, string>();
+  ): Promise<
+    Map<
+      string,
+      { email: string; phone: string | null; displayName: string | null }
+    >
+  > {
+    const map = new Map<
+      string,
+      { email: string; phone: string | null; displayName: string | null }
+    >();
     if (userIds.length === 0) {
       return map;
     }
@@ -246,30 +318,48 @@ export class PamProjectCollaboratorsRepo {
 
     const { data: pamUsers, error: pamError } = await admin
       .from('pam_users')
-      .select('id,email')
+      .select('id,email,phone,display_name')
       .in('id', userIds);
 
     if (pamError) {
-      this.logger.warn('PamProjectCollaboratorsRepo.loadEmails pam_users', {
+      this.logger.warn('PamProjectCollaboratorsRepo.loadProfiles pam_users', {
         error: pamError
       });
     } else {
       for (const row of pamUsers ?? []) {
-        if (typeof row.id === 'string') {
-          map.set(row.id, typeof row.email === 'string' ? row.email : '');
+        if (typeof row.id !== 'string') {
+          continue;
         }
+        const emailRaw = typeof row.email === 'string' ? row.email : '';
+        const email = emailRaw.toLowerCase().endsWith('@phone.pam.local')
+          ? ''
+          : emailRaw;
+        map.set(row.id, {
+          email,
+          phone: typeof row.phone === 'string' ? row.phone : null,
+          displayName:
+            typeof row.display_name === 'string' ? row.display_name : null
+        });
       }
     }
 
-    const missing = userIds.filter((id) => !map.has(id) || !map.get(id));
+    const missing = userIds.filter((id) => !map.has(id));
     for (const userId of missing) {
       try {
         const { data, error } = await admin.auth.admin.getUserById(userId);
         if (!error && data.user) {
-          map.set(userId, data.user.email ?? '');
+          const emailRaw = data.user.email ?? '';
+          const email = emailRaw.toLowerCase().endsWith('@phone.pam.local')
+            ? ''
+            : emailRaw;
+          map.set(userId, {
+            email,
+            phone: data.user.phone ?? null,
+            displayName: null
+          });
         }
       } catch (error) {
-        this.logger.warn('PamProjectCollaboratorsRepo.loadEmails auth', {
+        this.logger.warn('PamProjectCollaboratorsRepo.loadProfiles auth', {
           userId,
           error
         });

@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
+import type { PamSessionUser } from '@schemas/PamUserSchema';
 import { AuthButtonUI } from './AuthButtonUI';
 import { useUserAuth } from '../hook/useUserAuth';
 
@@ -33,6 +35,21 @@ export function AuthButton(props: {
     setMounted(true);
   }, []);
 
+  const sessionUser = user as PamSessionUser | undefined;
+  const displayLabel = useMemo(
+    () =>
+      resolveUserDisplayLabel({
+        displayName: sessionUser?.display_name,
+        phone: sessionUser?.phone,
+        email: sessionUser?.email,
+        userId: sessionUser?.id
+      }),
+    [sessionUser]
+  );
+  const needsBindEmail = Boolean(
+    success && !(sessionUser?.email && sessionUser.email.trim())
+  );
+
   if (!mounted || loading) {
     return skeleton;
   }
@@ -40,7 +57,8 @@ export function AuthButton(props: {
   return (
     <AuthButtonUI
       hasAuth={success}
-      userEmail={user?.email}
+      displayLabel={displayLabel}
+      needsBindEmail={needsBindEmail}
       loginOnly={loginOnly}
       showLogoutLabel={showLogoutLabel}
     />

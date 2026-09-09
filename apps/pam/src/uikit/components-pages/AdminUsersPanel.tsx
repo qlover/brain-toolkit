@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import { AdminUsersApi } from '@/impls/appApi/AdminUsersApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { AdminUsersI18nInterface } from '@config/i18n-mapping/admin18n';
 import type { PamAdminUserListItem } from '@schemas/PamUserSchema';
 
@@ -92,8 +93,14 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const columns: TableColumn<PamAdminUserListItem>[] = [
     {
       title: tt.emailLabel,
-      dataIndex: 'email',
-      key: 'email'
+      key: 'identity',
+      render: (_, row) =>
+        resolveUserDisplayLabel({
+          displayName: row.displayName,
+          phone: row.phone,
+          email: row.email,
+          userId: row.id
+        })
     },
     {
       title: tt.platformAdminLabel,

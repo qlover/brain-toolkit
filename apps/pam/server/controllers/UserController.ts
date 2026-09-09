@@ -19,11 +19,17 @@ import {
 import { inject, injectable } from '@shared/container';
 import {
   API_ENCRYPT_PASSWORD_FAILED,
+  API_NOT_AUTHORIZED,
   API_OTP_SIGN_INVALID,
   API_OTP_VERIFY_INVALID
 } from '@config/i18n-identifier/api';
 import { loginWithProviderSchema } from '@schemas/LoginSchema';
-import type { PamSessionResponse } from '@schemas/PamUserSchema';
+import {
+  pamBindEmailSendSchema,
+  pamBindEmailVerifySchema,
+  type PamBindEmailVerifyResult,
+  type PamSessionResponse
+} from '@schemas/PamUserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import { ServerConfig } from '@server/ServerConfig';
@@ -31,6 +37,7 @@ import { BrainOAuthLoginService } from '@server/services/BrainOAuthLoginService'
 import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { OtpSendRateLimitService } from '@server/services/OtpSendRateLimitService';
+import { PamBindEmailService } from '@server/services/PamBindEmailService';
 import { PamUserService } from '@server/services/PamUserService';
 import { getClientIpFromRequest } from '@server/utils/getClientIpFromRequest';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
@@ -61,6 +68,8 @@ export class UserController {
     protected otpSendRateLimit: OtpSendRateLimitService,
     @inject(PamUserService)
     protected pamUserService: PamUserService,
+    @inject(PamBindEmailService)
+    protected pamBindEmailService: PamBindEmailService,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer) base64Serializer: Base64Serializer
   ) {
@@ -144,8 +153,18 @@ export class UserController {
       email: user.email
     });
 
+    const businessEmail = pamUser.email?.trim() ?? '';
+
     return {
-      user: { ...user, credential_token: '' },
+      user: {
+        id: user.id,
+        email: businessEmail,
+        phone: pamUser.phone ?? null,
+        display_name: pamUser.display_name ?? null,
+        role: user.role,
+        credential_token: '',
+        created_at: user.created_at ?? pamUser.created_at
+      },
       capabilities: { platformAdmin: pamUser.is_platform_admin }
     };
   }
@@ -242,6 +261,39 @@ export class UserController {
       error: query.error,
       error_description: query.error_description,
       origin: query.origin
+    });
+  }
+
+  public async bindEmailSend(
+    body: unknown,
+    request?: NextRequest
+  ): Promise<SignOtpResult> {
+    const user = await this.userService.getSessionUser();
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    const parsed = pamBindEmailSendSchema.parse(body);
+    await this.otpSendRateLimit.assertCanSend(
+      request ? getClientIpFromRequest(request) : 'unknown'
+    );
+    return this.pamBindEmailService.send({
+      currentUserId: user.id,
+      email: parsed.email
+    });
+  }
+
+  public async bindEmailVerify(
+    body: unknown
+  ): Promise<PamBindEmailVerifyResult> {
+    const user = await this.userService.getSessionUser();
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    const parsed = pamBindEmailVerifySchema.parse(body);
+    return this.pamBindEmailService.verify({
+      currentUserId: user.id,
+      email: parsed.email,
+      token: parsed.token
     });
   }
 }

@@ -119,4 +119,29 @@ export class PamCliTokenRepo {
 
     return Array.isArray(data) ? data.length : 0;
   }
+
+  /**
+   * Moves active CLI tokens from one user to another (account merge).
+   */
+  public async reassignUserId(
+    fromUserId: string,
+    toUserId: string
+  ): Promise<number> {
+    if (fromUserId === toUserId) {
+      return 0;
+    }
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(PamCliTokenTableName)
+      .update({ user_id: toUserId })
+      .eq('user_id', fromUserId)
+      .eq('revoked', false)
+      .select('jti');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return Array.isArray(data) ? data.length : 0;
+  }
 }

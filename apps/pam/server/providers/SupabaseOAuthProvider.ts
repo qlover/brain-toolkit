@@ -51,13 +51,17 @@ function phoneFallbackEmail(phone: string | undefined | null): string {
   return digits ? `${digits}@phone.pam.local` : 'unknown@phone.pam.local';
 }
 
+function isPhonePlaceholderEmail(email: string | undefined | null): boolean {
+  return (email ?? '').toLowerCase().endsWith('@phone.pam.local');
+}
+
 function supababseUserToUserSchema(
   user: User,
   credential_token = ''
 ): UserSchema {
   return {
     id: user.id,
-    // Phone-OTP users often have no email; keep pam_users.email NOT NULL happy.
+    // Cookie UserSchema.email may still hold placeholder for mint repair paths.
     email: user.email || user.new_email || phoneFallbackEmail(user.phone),
     role: UserRole.USER,
     credential_token,
@@ -452,7 +456,8 @@ export class SupabaseOAuthProvider
 
     await this.pamUserService.ensurePamUser({
       id: profile.id,
-      email: profile.email
+      email: isPhonePlaceholderEmail(profile.email) ? null : profile.email,
+      ...(session.user.phone ? { phone: session.user.phone } : {})
     });
 
     this.oauthSession.setSession({
