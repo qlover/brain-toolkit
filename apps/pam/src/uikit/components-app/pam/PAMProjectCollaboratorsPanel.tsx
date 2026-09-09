@@ -10,6 +10,7 @@ import {
   prefetchTransferUsers
 } from '@/uikit/components-app/pam/PAMProjectTransferPicker';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
 import { I } from '@config/ioc-identifiter';
 import type {
@@ -224,7 +225,12 @@ export function PAMProjectCollaboratorsPanel({
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-primary-text">
-                      {item.email || item.user_id}
+                      {resolveUserDisplayLabel({
+                        displayName: item.display_name,
+                        phone: item.phone,
+                        email: item.email,
+                        userId: item.user_id
+                      })}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -258,7 +264,12 @@ export function PAMProjectCollaboratorsPanel({
                             title: tt.collabRemoveTitle,
                             content: tt.collabRemoveContent.replace(
                               '[email]',
-                              item.email || item.user_id
+                              resolveUserDisplayLabel({
+                                displayName: item.display_name,
+                                phone: item.phone,
+                                email: item.email,
+                                userId: item.user_id
+                              })
                             ),
                             onOk: async () => {
                               setBusyUserId(item.user_id);

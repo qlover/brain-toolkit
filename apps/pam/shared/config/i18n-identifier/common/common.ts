@@ -184,6 +184,99 @@ export const COMMON_AUTH_NAV_REQUEST_LOGS = 'common:authNav_requestLogs';
 export const COMMON_SIGNED_IN_AS = 'common:signed_in_as';
 
 /**
+ * @description Account center menu item
+ * @localZh 个人中心
+ * @localEn Account
+ */
+export const COMMON_ACCOUNT_CENTER = 'common:account_center';
+
+/**
+ * @description Bind email menu item
+ * @localZh 绑定邮箱
+ * @localEn Bind email
+ */
+export const COMMON_BIND_EMAIL = 'common:bind_email';
+
+/**
+ * @description Bind email dialog title
+ * @localZh 绑定邮箱
+ * @localEn Bind email
+ */
+export const COMMON_BIND_EMAIL_TITLE = 'common:bind_email__title';
+
+/**
+ * @description Bind email dialog description
+ * @localZh 验证后可将邮箱绑定到当前账号；若邮箱已存在将合并到该邮箱账号
+ * @localEn Verify to bind this email. If it already belongs to another account, accounts will be merged.
+ */
+export const COMMON_BIND_EMAIL_DESCRIPTION = 'common:bind_email__description';
+
+/**
+ * @description Bind email merge hint
+ * @localZh 合并后仅保留邮箱账号，手机号会挂到该账号
+ * @localEn After merge only the email account remains; your phone moves to it.
+ */
+export const COMMON_BIND_EMAIL_MERGE_HINT = 'common:bind_email__merge_hint';
+
+/**
+ * @description Bind email email placeholder
+ * @localZh 邮箱地址
+ * @localEn Email address
+ */
+export const COMMON_BIND_EMAIL_PLACEHOLDER = 'common:bind_email__placeholder';
+
+/**
+ * @description Bind email OTP placeholder
+ * @localZh 邮箱验证码
+ * @localEn Email verification code
+ */
+export const COMMON_BIND_EMAIL_OTP_PLACEHOLDER =
+  'common:bind_email__otp_placeholder';
+
+/**
+ * @description Bind email send code button
+ * @localZh 发送验证码
+ * @localEn Send code
+ */
+export const COMMON_BIND_EMAIL_SEND = 'common:bind_email__send';
+
+/**
+ * @description Bind email resend code button
+ * @localZh 重新发送
+ * @localEn Resend
+ */
+export const COMMON_BIND_EMAIL_RESEND = 'common:bind_email__resend';
+
+/**
+ * @description Bind email verify button
+ * @localZh 确认绑定
+ * @localEn Confirm
+ */
+export const COMMON_BIND_EMAIL_VERIFY = 'common:bind_email__verify';
+
+/**
+ * @description Bind email success (new email)
+ * @localZh 邮箱绑定成功
+ * @localEn Email bound successfully
+ */
+export const COMMON_BIND_EMAIL_SUCCESS = 'common:bind_email__success';
+
+/**
+ * @description Bind email success (merged)
+ * @localZh 账号已合并到邮箱账号
+ * @localEn Account merged into the email account
+ */
+export const COMMON_BIND_EMAIL_SUCCESS_MERGED =
+  'common:bind_email__success_merged';
+
+/**
+ * @description Bind email generic error
+ * @localZh 绑定失败，请重试
+ * @localEn Binding failed. Please try again.
+ */
+export const COMMON_BIND_EMAIL_ERROR = 'common:bind_email__error';
+
+/**
  * @description App header nav - Docs
  * @localZh 文档
  * @localEn Docs

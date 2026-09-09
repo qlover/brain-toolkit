@@ -9,6 +9,7 @@ import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
+import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import {
   COMMON_LOGOUT_DIALOG_CONTENT,
   COMMON_LOGOUT_DIALOG_TITLE,
@@ -17,9 +18,12 @@ import {
 } from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_LOGIN } from '@config/route';
+import type { PamSessionUser } from '@schemas/PamUserSchema';
 
 function emailInitial(email: string): string {
-  const local = email.split('@')[0]?.trim();
+  const local = email.includes('@')
+    ? (email.split('@')[0]?.trim() ?? email)
+    : email.trim();
   return (local?.[0] ?? '?').toUpperCase();
 }
 
@@ -94,8 +98,14 @@ export function AdminUserPanel({
     );
   }
 
-  const email = user.email?.trim() ?? '';
-  const displayName = email || shortUserId(user.id);
+  const sessionUser = user as PamSessionUser;
+  const displayName = resolveUserDisplayLabel({
+    displayName: sessionUser.display_name,
+    phone: sessionUser.phone,
+    email: sessionUser.email,
+    userId: sessionUser.id
+  });
+  const email = sessionUser.email?.trim() ?? '';
   const signedInLabel = t(COMMON_SIGNED_IN_AS);
 
   if (collapsed) {

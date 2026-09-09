@@ -2,7 +2,8 @@
 
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 export function DeveloperOverlayModal(props: {
   open: boolean;
@@ -23,6 +24,11 @@ export function DeveloperOverlayModal(props: {
     closeOnBackdrop = true
   } = props;
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -36,12 +42,12 @@ export function DeveloperOverlayModal(props: {
     };
   }, [open, onClose, closeOnBackdrop]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       data-testid="DeveloperOverlayModal"
-      className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center sm:p-6"
+      className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
     >
@@ -90,6 +96,7 @@ export function DeveloperOverlayModal(props: {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
