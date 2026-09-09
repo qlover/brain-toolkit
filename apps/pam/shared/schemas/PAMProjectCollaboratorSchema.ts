@@ -38,6 +38,7 @@ export type PAMProjectCollaboratorRow = z.infer<
 export const PAMProjectCollaboratorItemSchema =
   PAMProjectCollaboratorRowSchema.extend({
     email: z.string().email().or(z.literal('')),
+    phone: z.string().nullable().optional(),
     display_name: z.string().nullable().optional()
   });
 

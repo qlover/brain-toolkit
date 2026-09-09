@@ -121,6 +121,55 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
   }
 
+  public async deleteUserCredentials(userId: string): Promise<void> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase
+      .from('n_oauth_wrapper__user_credentials')
+      .delete()
+      .eq('user_id', userId);
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  public async reassignClientOwner(
+    fromUserId: string,
+    toUserId: string
+  ): Promise<void> {
+    if (fromUserId === toUserId) {
+      return;
+    }
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase
+      .from('n_oauth_wrapper__clients')
+      .update({
+        owner_user_id: toUserId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('owner_user_id', fromUserId);
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  public async reassignRefreshTokensUserId(
+    fromUserId: string,
+    toUserId: string
+  ): Promise<void> {
+    if (fromUserId === toUserId) {
+      return;
+    }
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase
+      .from('n_oauth_wrapper__refresh_tokens')
+      .update({ user_id: toUserId })
+      .eq('user_id', fromUserId)
+      .eq('revoked', false);
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
   /**
    * @override
    */

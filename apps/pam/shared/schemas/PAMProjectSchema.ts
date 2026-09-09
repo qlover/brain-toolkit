@@ -216,7 +216,9 @@ export type PAMProjectTransfer = z.infer<typeof PAMProjectTransferSchema>;
  */
 export const PAMAuthUserSummarySchema = z.object({
   id: z.uuid(),
-  email: z.string().email().or(z.literal(''))
+  email: z.string().email().or(z.literal('')),
+  phone: z.string().nullable().optional(),
+  display_name: z.string().nullable().optional()
 });
 
 export type PAMAuthUserSummary = z.infer<typeof PAMAuthUserSummarySchema>;

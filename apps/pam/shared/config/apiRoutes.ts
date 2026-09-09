@@ -367,6 +367,25 @@ export const API_PUBLIC_CONFIG = '/api/public-config' as const;
 export const API_REFERENCE = '/api/reference' as const;
 
 /**
+ * API path: `/api/user/bind-email/send`
+ *
+ * @see [src/app/api/user/bind-email/send/route.ts](../../src/app/api/user/bind-email/send/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/user/bind-email/send/route.ts`
+ */
+export const API_USER_BIND_EMAIL_SEND = '/api/user/bind-email/send' as const;
+
+/**
+ * API path: `/api/user/bind-email/verify`
+ *
+ * @see [src/app/api/user/bind-email/verify/route.ts](../../src/app/api/user/bind-email/verify/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/user/bind-email/verify/route.ts`
+ */
+export const API_USER_BIND_EMAIL_VERIFY =
+  '/api/user/bind-email/verify' as const;
+
+/**
  * API path: `/api/user/login`
  *
  * @see [src/app/api/user/login/route.ts](../../src/app/api/user/login/route.ts)
@@ -487,6 +506,8 @@ export type ApiRoutePath =
   | typeof API_PAM_USERS_SEARCH
   | typeof API_PUBLIC_CONFIG
   | typeof API_REFERENCE
+  | typeof API_USER_BIND_EMAIL_SEND
+  | typeof API_USER_BIND_EMAIL_VERIFY
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGIN_BRAIN
   | typeof API_USER_LOGIN_PROVIDER

@@ -1411,6 +1411,32 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Transfers all undeleted projects owned by fromUserId to toUserId.
+   */
+  public async reassignOwnerProjects(
+    fromUserId: string,
+    toUserId: string
+  ): Promise<number> {
+    if (fromUserId === toUserId) {
+      return 0;
+    }
+
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .update({
+        owner_id: toUserId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('owner_id', fromUserId)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .select('id');
+
+    this.supabaseRepo.throwIfError(result);
+    return result.data?.length ?? 0;
+  }
+
+  /**
    * Transfers ownership via admin client after ownership assert.
    *
    * @param id - Project id
