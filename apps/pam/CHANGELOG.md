@@ -1,5 +1,134 @@
 # pam
 
+## 2.8.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 个人中心支持修改 display_name ([4ad6c5b](https://github.com/qlover/brain-toolkit/commit/4ad6c5b01763da33129fc7095f3fc9edb5d3f20e)) ([#136](https://github.com/qlover/brain-toolkit/pull/136))
+
+  新增 POST /api/user/display-name；前端即时校验（字母/数字/下划线），
+  成功后直接回写 session store，无需再拉 session。
+
+- **pam:** 邮箱可空并以 display_name 作为手机账号展示身份 ([26080cc](https://github.com/qlover/brain-toolkit/commit/26080cc3f19dcfc76735c18aa1705a69865e25d6)) ([#135](https://github.com/qlover/brain-toolkit/pull/135))
+
+  手机登录不再写入 @phone.pam.local 到 pam_users；session 返回业务邮箱/手机/展示名。
+
+- **pam:** 支持绑定邮箱与已有邮箱账号合并 ([2bb7aea](https://github.com/qlover/brain-toolkit/commit/2bb7aeaa6a82d197db987d361fc3735311d49d0e)) ([#135](https://github.com/qlover/brain-toolkit/pull/135))
+
+  新增 bind-email send/verify API；新邮箱挂当前账号，已有邮箱验证后合并资源并迁移手机号。
+
+- **pam:** 新增个人中心页并以 display_name 优先展示身份 ([5d8e24c](https://github.com/qlover/brain-toolkit/commit/5d8e24c71ce461a5e35622406d46e7cb11ab6390)) ([#135](https://github.com/qlover/brain-toolkit/pull/135))
+
+  用户菜单进入 /account 绑定邮箱；Auth/Admin/协作者/转让选人统一展示规则；手机登录默认 +86；弹层 portal 到 body。
+
+- **pam:** 新增项目协作者表与访问角色契约 ([0b620ae](https://github.com/qlover/brain-toolkit/commit/0b620aecff456343d8f74c7cc37d930dea6a690b)) ([#132](https://github.com/qlover/brain-toolkit/pull/132))
+
+- **pam:** 以角色权限改造项目访问并实现协作者 API ([d5f2e67](https://github.com/qlover/brain-toolkit/commit/d5f2e67d3f1d0d8e275bd9bec4fe63adf98de1c1)) ([#132](https://github.com/qlover/brain-toolkit/pull/132))
+
+- **pam:** 项目详情支持协作成员管理 UI ([ce67f64](https://github.com/qlover/brain-toolkit/commit/ce67f64f6235c9833ae2dd1119bbd5e278c0b0a9)) ([#132](https://github.com/qlover/brain-toolkit/pull/132))
+
+- **pam:** 新增 pam_phone_otps 表与手机验证码站点配置 ([87e1024](https://github.com/qlover/brain-toolkit/commit/87e102406d554c3c9f7799617a4c33a39ff0fe33)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+- **pam:** 定义手机 OTP schema 与通道配置契约 ([e0e68ed](https://github.com/qlover/brain-toolkit/commit/e0e68ed5d9216d87755123ee6c0c15ca75b54318)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+- **pam:** 实现 memory 手机验证码发送校验并接入登录 ([3a9fa47](https://github.com/qlover/brain-toolkit/commit/3a9fa47563d2a477ed6d3d771faa7b4cfb445e6f)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+- **pam:** 新增管理端验证码监控页与 API ([ba5810d](https://github.com/qlover/brain-toolkit/commit/ba5810de88b095679c3f48d5d87b0842cdd31a61)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+- **pam:** 优化手机登录表单并支持 OTP 通道设置 ([8adfeea](https://github.com/qlover/brain-toolkit/commit/8adfeea0f2d1da5fd57befbcc816f20b131741d3)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+- **pam:** 实现阿里云短信 OTP 并从站点设置读取配置 ([787a01a](https://github.com/qlover/brain-toolkit/commit/787a01a53cfd84498a32fc92319fe199eebc42fa)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+  DysmsAPI SendSms（RPC 签名）；Admin「阿里云短信」分组配置密钥/签名/模板，无 ALIYUN*SMS*\* 环境变量。
+
+- **pam:** public-config 暴露 OTP 通道并提示 memory 模式找管理员拿码 ([6d37e2e](https://github.com/qlover/brain-toolkit/commit/6d37e2e559bb95773aa5a310d32614ca029514b8)) ([#131](https://github.com/qlover/brain-toolkit/pull/131))
+
+  登录页按 phoneOtpProvider 展示提示；memory 不发短信，aliyun 不显示该提示。
+
+- **pam:** 新增 pam_users 表存储平台管理员与应用用户档案 ([4568c62](https://github.com/qlover/brain-toolkit/commit/4568c62285a703d3090a19f7731e233b3c6beca3)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** 实现 PamUsersRepo 与 PamUserService 及 platform admin 缓存 ([d0513f1](https://github.com/qlover/brain-toolkit/commit/d0513f10a0c09def27934d683e7c125823205577)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** OAuth 登录时自动 ensure pam_users 档案 ([f3c4995](https://github.com/qlover/brain-toolkit/commit/f3c4995dacb44a3d068d0f86024afa0313d5eb3c)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** 引入 PlatformAdminPlugin 并收紧 /admin 页面与 site-settings API ([c76e2ed](https://github.com/qlover/brain-toolkit/commit/c76e2edbfdfb3dfbc91a4b3a0bcc94a643218229)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** Session 返回 platformAdmin 能力并接入客户端 capabilities store ([c74516f](https://github.com/qlover/brain-toolkit/commit/c74516fc7ed492acca111da0e9af924e92b6ce24)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** 新增管理端用户搜索与 platform admin 切换 API ([8fd951a](https://github.com/qlover/brain-toolkit/commit/8fd951af1b3f633a505aada3f1cfbb9a1cc4601f)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** 实现管理端用户列表与 platform admin 开关 UI ([325fde0](https://github.com/qlover/brain-toolkit/commit/325fde0caeb6c4255142bca97a092e6235d75346)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** Admin 入口与用户菜单仅对 platform admin 可见 ([a777f62](https://github.com/qlover/brain-toolkit/commit/a777f62e742770959ad42758bbed7b593e579e74)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** 添加管理员路由并更新 AuthButtonUI 以使用 routerService ([b3bbea9](https://github.com/qlover/brain-toolkit/commit/b3bbea9145b92385d87c6d9ee76b8f27ef44e3c0)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+- **pam:** 站点设置 DB、服务层与 Admin/Public API ([b3933dc](https://github.com/qlover/brain-toolkit/commit/b3933dc326eafa0bc82d44017aa1fd7cd9eb2e38)) ([#129](https://github.com/qlover/brain-toolkit/pull/129))
+  - pam_site_settings 表与种子数据（无 updated_by / system.log_level）
+  - SiteSettingsRepo/Service/Controller 与运行时缓存
+  - /api/admin/site-settings、/api/public-config 及前端 API 封装
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 运行时配置改读站点设置并统一 OPENAI 环境变量 ([e46e130](https://github.com/qlover/brain-toolkit/commit/e46e13031875f65bf42221dc247113e6caf65851)) ([#129](https://github.com/qlover/brain-toolkit/pull/129))
+
+  Brain OAuth、CLI Token、预览图、OAuth CORS 等从 DB 站点设置读取；LOG_LEVEL 仍保留在 .env。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** Admin 站点设置页与后台布局优化 ([18297fc](https://github.com/qlover/brain-toolkit/commit/18297fc0e8dec6f662854151ddbca0713446cc00)) ([#129](https://github.com/qlover/brain-toolkit/pull/129))
+
+  站点设置管理 UI、侧栏抽屉/用户信息固定底栏、移动端适配与 i18n。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+#### 🐞 Bug Fixes
+
+- **pam:** 头像菜单个人中心与管理后台改为链接跳转 ([f4bd16b](https://github.com/qlover/brain-toolkit/commit/f4bd16b402f8a219a0489216016eea5e01d0eb05)) ([#136](https://github.com/qlover/brain-toolkit/pull/136))
+
+  使用 LocaleLink，并补齐必填 title，支持新开标签访问。
+
+- **pam:** 加固手机号 OAuth 换票的 provider credentials ([c766636](https://github.com/qlover/brain-toolkit/commit/c766636a233bba4bc66956425d2f814b25c7b8a1)) ([#134](https://github.com/qlover/brain-toolkit/pull/134))
+
+  无 cookie 签发 Supabase session，并在 consent 前补写
+  provider_session_token，避免第三方 SSO 换票失败。
+
+- **pam:** 手机号 OTP 登录写入 Supabase refresh 以支持 OAuth 换票 ([ef54891](https://github.com/qlover/brain-toolkit/commit/ef54891628a0df20c5890d51dd8ad119e2243a93)) ([#133](https://github.com/qlover/brain-toolkit/pull/133))
+
+  自定义手机号登录此前只写空 refresh 的 cookie，第三方 /oauth/token 因缺少
+  provider_session_token 失败；现改为 magiclink 换 session 并走 loginWithSession。
+
+- **pam:** 首页工具栏筛选面板移动端 Modal 与桌面 Portal 定位 ([fdbfbde](https://github.com/qlover/brain-toolkit/commit/fdbfbde0a6fd868f89e631e969c86dd9526e889d)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+  移动端用 ResponsiveModal；桌面端 portal 固定定位并随滚动/resize 更新，避免被 overflow 裁剪。
+
+- **pam:** 登录页客户端拉 public-config 并移除 Playground 链接 ([6d556eb](https://github.com/qlover/brain-toolkit/commit/6d556ebba441b101177c2ddddf359192ff548400)) ([#129](https://github.com/qlover/brain-toolkit/pull/129))
+
+  保持 SSG 壳子 + CSR 拉取登录开关；去掉需登录的 OAuth Playground 入口。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
+- **pam:** 站点设置保存后立即生效并修复布尔值解析 ([ba6f460](https://github.com/qlover/brain-toolkit/commit/ba6f460a4c5de9e3dce4558fb62580631ed8c94c)) ([#129](https://github.com/qlover/brain-toolkit/pull/129))
+
+  public-config 禁用缓存；保存 auth 设置后清除客户端缓存；getBoolean 兼容 DB 字符串；保存成功提示。
+
+- **pam:** 修复 Admin 布局 type-check 报错 ([a651a62](https://github.com/qlover/brain-toolkit/commit/a651a620c47ce4a45cf3e3d60472d3e441041d6b)) ([#129](https://github.com/qlover/brain-toolkit/pull/129))
+
+  ComponentType/SVGProps 改从 react 导入；LocaleLink 补 title；users 页 AdminPageShell 补 children。
+
+#### 📝 Documentation
+
+- **pam:** 同步协作权限到 CLI 文档与 pamenv README ([c12acd6](https://github.com/qlover/brain-toolkit/commit/c12acd62568eafb00f5aef1af742e1ed1e5bd558)) ([#132](https://github.com/qlover/brain-toolkit/pull/132))
+
+  说明 owner/admin/member 对 pull/push/remove 的差异；Web /docs/cli 与中英文 README 对齐。
+
+#### ♻️ Refactors
+
+- **pam:** 请求日志 API 迁至 /api/admin/request-logs 并支持全量查询 ([21475a0](https://github.com/qlover/brain-toolkit/commit/21475a0ca54bffd5c7b8ad06e2993951e1a0864d)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
+
+
 ## 2.7.0
 
 ### Minor Changes
