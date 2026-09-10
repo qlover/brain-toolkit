@@ -1,5 +1,21 @@
 # pamenv-cli
 
+## 1.7.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** CLI 按协作者权限放宽 pull/push 并限制 remove ([f4984da](https://github.com/qlover/brain-toolkit/commit/f4984da33a6f70cbd3fa9ca9c28a5d560a4261b2)) ([#132](https://github.com/qlover/brain-toolkit/pull/132))
+
+  owner/admin/member 均可 pull/push；remove 仍仅 owner。与 PAM 协作者角色对齐。
+
+#### 📝 Documentation
+
+- **pamenv:** 同步协作权限说明到 README ([c12acd6](https://github.com/qlover/brain-toolkit/commit/c12acd62568eafb00f5aef1af742e1ed1e5bd558)) ([#132](https://github.com/qlover/brain-toolkit/pull/132))
+
+  说明 owner/admin/member 对 pull/push/remove 的差异；中英文 README 对齐。
+
 ## 1.6.0
 
 ### Minor Changes
