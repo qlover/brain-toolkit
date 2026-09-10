@@ -85,4 +85,14 @@ export class PamUserService {
     invalidatePlatformAdminCache(targetUserId);
     return row;
   }
+
+  public async updateDisplayName(
+    userId: string,
+    displayName: string
+  ): Promise<PamUserRow> {
+    return this.repo.updateEmailAndPhone({
+      userId,
+      displayName
+    });
+  }
 }

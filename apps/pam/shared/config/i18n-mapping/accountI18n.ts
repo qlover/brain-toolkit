@@ -11,6 +11,11 @@ export const accountI18n = Object.freeze({
 
   sectionTitle: accountKeys.PAGE_ACCOUNT_SECTION_TITLE,
   displayNameLabel: accountKeys.PAGE_ACCOUNT_DISPLAY_NAME_LABEL,
+  displayNamePlaceholder: accountKeys.PAGE_ACCOUNT_DISPLAY_NAME_PLACEHOLDER,
+  displayNameEdit: accountKeys.PAGE_ACCOUNT_DISPLAY_NAME_EDIT,
+  displayNameSuccess: accountKeys.PAGE_ACCOUNT_DISPLAY_NAME_SUCCESS,
+  displayNameError: accountKeys.PAGE_ACCOUNT_DISPLAY_NAME_ERROR,
+  displayNameInvalid: accountKeys.PAGE_ACCOUNT_DISPLAY_NAME_INVALID,
   phoneLabel: accountKeys.PAGE_ACCOUNT_PHONE_LABEL,
   emailLabel: accountKeys.PAGE_ACCOUNT_EMAIL_LABEL,
   userIdLabel: accountKeys.PAGE_ACCOUNT_USER_ID_LABEL,
@@ -18,6 +23,9 @@ export const accountI18n = Object.freeze({
   bindHint: accountKeys.PAGE_ACCOUNT_BIND_HINT,
   emailBound: accountKeys.PAGE_ACCOUNT_EMAIL_BOUND,
   bindSectionTitle: accountKeys.PAGE_ACCOUNT_BIND_SECTION_TITLE,
+
+  save: commonKeys.COMMON_SAVE,
+  cancel: commonKeys.COMMON_CANCEL,
 
   bindDescription: commonKeys.COMMON_BIND_EMAIL_DESCRIPTION,
   bindMergeHint: commonKeys.COMMON_BIND_EMAIL_MERGE_HINT,

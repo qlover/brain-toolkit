@@ -35,6 +35,46 @@ export const PAGE_ACCOUNT_DISPLAY_NAME_LABEL =
   'page_account:display_name_label';
 
 /**
+ * @description Display name input placeholder
+ * @localZh 仅支持字母、数字与下划线，1–32 个字符，不可含空格或其他符号
+ * @localEn Letters, numbers, and underscore only; 1–32 characters; no spaces or other symbols
+ */
+export const PAGE_ACCOUNT_DISPLAY_NAME_PLACEHOLDER =
+  'page_account:display_name_placeholder';
+
+/**
+ * @description Edit display name button
+ * @localZh 修改
+ * @localEn Edit
+ */
+export const PAGE_ACCOUNT_DISPLAY_NAME_EDIT =
+  'page_account:display_name_edit';
+
+/**
+ * @description Display name saved successfully
+ * @localZh 显示名称已更新
+ * @localEn Display name updated
+ */
+export const PAGE_ACCOUNT_DISPLAY_NAME_SUCCESS =
+  'page_account:display_name_success';
+
+/**
+ * @description Display name update failed
+ * @localZh 更新显示名称失败，请重试
+ * @localEn Failed to update display name. Please try again.
+ */
+export const PAGE_ACCOUNT_DISPLAY_NAME_ERROR =
+  'page_account:display_name_error';
+
+/**
+ * @description Display name client/server validation failed
+ * @localZh 仅支持字母、数字与下划线（含中文），不可含空格或其他符号
+ * @localEn Only letters, numbers, and underscore (incl. Chinese); no spaces or other symbols
+ */
+export const PAGE_ACCOUNT_DISPLAY_NAME_INVALID =
+  'page_account:display_name_invalid';
+
+/**
  * @description Phone field label
  * @localZh 手机号
  * @localEn Phone

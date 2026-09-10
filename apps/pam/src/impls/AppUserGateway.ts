@@ -8,8 +8,11 @@ import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { LoginProviderType } from '@config/common';
 import * as apiRoutes from '@config/route';
-import type { PamSessionResponse } from '@schemas/PamUserSchema';
-import type { PamBindEmailVerifyResult } from '@schemas/PamUserSchema';
+import type {
+  PamBindEmailVerifyResult,
+  PamSessionResponse,
+  PamSessionUser
+} from '@schemas/PamUserSchema';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
@@ -344,6 +347,31 @@ export class AppUserGateway implements UserServiceGatewayInterface {
       throw new Error(
         (!response.data.success && response.data.message) ||
           'Verify bind-email failed'
+      );
+    }
+
+    return response.data.data;
+  }
+
+  /**
+   * @override
+   */
+  public async updateDisplayName(params: {
+    display_name: string;
+  }): Promise<PamSessionUser> {
+    const response = await this.client.request<
+      NextKitApiResult<PamSessionUser>,
+      { display_name: string }
+    >({
+      url: apiRoutes.API_USER_DISPLAY_NAME,
+      method: HttpMethods.POST,
+      data: params
+    });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        (!response.data.success && response.data.message) ||
+          'Update display name failed'
       );
     }
 
