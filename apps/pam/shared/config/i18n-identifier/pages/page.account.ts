@@ -47,8 +47,7 @@ export const PAGE_ACCOUNT_DISPLAY_NAME_PLACEHOLDER =
  * @localZh 修改
  * @localEn Edit
  */
-export const PAGE_ACCOUNT_DISPLAY_NAME_EDIT =
-  'page_account:display_name_edit';
+export const PAGE_ACCOUNT_DISPLAY_NAME_EDIT = 'page_account:display_name_edit';
 
 /**
  * @description Display name saved successfully

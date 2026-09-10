@@ -1,7 +1,7 @@
 'use client';
 
 import { buttonClassName, Dropdown } from '@qlover/next-kit/client';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import {
   COMMON_ACCOUNT_CENTER,
@@ -69,7 +69,7 @@ export function AuthButtonUI(props: {
   const menuItems = useMemo(() => {
     const items: {
       key: string;
-      label: string;
+      label: ReactNode;
       danger?: boolean;
       disabled?: boolean;
       divider?: boolean;
@@ -85,13 +85,30 @@ export function AuthButtonUI(props: {
 
     items.push({
       key: 'account',
-      label: accountLabel
+      label: (
+        <LocaleLink
+          href={ROUTE_ACCOUNT}
+          title={accountLabel}
+          className="block w-full text-inherit"
+        >
+          {accountLabel}
+        </LocaleLink>
+      )
     });
 
     if (platformAdmin) {
+      const adminLabel = t(COMMON_ADMIN_TITLE);
       items.push({
         key: 'admin',
-        label: t(COMMON_ADMIN_TITLE)
+        label: (
+          <LocaleLink
+            href={ROUTE_ADMIN}
+            title={adminLabel}
+            className="block w-full text-inherit"
+          >
+            {adminLabel}
+          </LocaleLink>
+        )
       });
     }
 
@@ -118,19 +135,11 @@ export function AuthButtonUI(props: {
 
   const onMenuSelect = useCallback(
     (key: string) => {
-      if (key === 'account') {
-        routerService.goto(ROUTE_ACCOUNT);
-        return;
-      }
-      if (key === 'admin') {
-        routerService.goto(ROUTE_ADMIN);
-        return;
-      }
       if (key === 'logout') {
         onLogout();
       }
     },
-    [onLogout, routerService]
+    [onLogout]
   );
 
   if (hasAuth) {

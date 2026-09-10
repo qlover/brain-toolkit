@@ -85,7 +85,5 @@ export interface UserServiceGatewayInterface
     token: string;
   }): Promise<PamBindEmailVerifyResult>;
 
-  updateDisplayName(params: {
-    display_name: string;
-  }): Promise<PamSessionUser>;
+  updateDisplayName(params: { display_name: string }): Promise<PamSessionUser>;
 }

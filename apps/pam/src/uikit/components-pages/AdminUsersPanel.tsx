@@ -136,7 +136,9 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
         </button>
       </div>
 
-      {error ? <p className="text-sm text-(--fe-color-error)">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-(--fe-color-error)">{error}</p>
+      ) : null}
 
       <Table
         rowKey="id"

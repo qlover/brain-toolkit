@@ -11,19 +11,19 @@ import {
   useState
 } from 'react';
 
-import { BindEmailForm } from '@/uikit/components-app/BindEmailForm';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import type { UserService } from '@/impls/UserService';
+import { BindEmailForm } from '@/uikit/components-app/BindEmailForm';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
-import { I } from '@config/ioc-identifiter';
 import {
   maskPhoneForDisplay,
   resolveUserDisplayLabel,
   toBusinessEmail
 } from '@shared/utils/pamUserIdentity';
 import type { AccountI18nInterface } from '@config/i18n-mapping/accountI18n';
+import { I } from '@config/ioc-identifiter';
 import {
   isValidDisplayName,
   pamDisplayNameUpdateSchema,
@@ -91,8 +91,7 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
 
   const storedRawName = sessionUser?.display_name ?? '';
   const draftValid = isValidDisplayName(draftName);
-  const canSave =
-    !savingName && draftValid && draftName !== storedRawName;
+  const canSave = !savingName && draftValid && draftName !== storedRawName;
 
   useEffect(() => {
     if (!editingName) {
@@ -270,9 +269,7 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
             </span>
           </FieldRow>
           <FieldRow label={tt.userIdLabel}>
-            <span className="break-all">
-              {sessionUser.id || tt.valueEmpty}
-            </span>
+            <span className="break-all">{sessionUser.id || tt.valueEmpty}</span>
           </FieldRow>
         </dl>
         {needsBindEmail ? (
