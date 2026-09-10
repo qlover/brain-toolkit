@@ -1,6 +1,9 @@
 import type { LoginProviderType } from '@config/common';
-import type { PamSessionResponse } from '@schemas/PamUserSchema';
-import type { PamBindEmailVerifyResult } from '@schemas/PamUserSchema';
+import type {
+  PamBindEmailVerifyResult,
+  PamSessionResponse,
+  PamSessionUser
+} from '@schemas/PamUserSchema';
 import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import type {
   UserService as CorekitBridgeUserServiceInterface,
@@ -81,4 +84,6 @@ export interface UserServiceGatewayInterface
     email: string;
     token: string;
   }): Promise<PamBindEmailVerifyResult>;
+
+  updateDisplayName(params: { display_name: string }): Promise<PamSessionUser>;
 }

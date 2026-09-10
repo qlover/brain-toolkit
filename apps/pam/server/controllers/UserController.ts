@@ -27,8 +27,10 @@ import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import {
   pamBindEmailSendSchema,
   pamBindEmailVerifySchema,
+  pamDisplayNameUpdateSchema,
   type PamBindEmailVerifyResult,
-  type PamSessionResponse
+  type PamSessionResponse,
+  type PamSessionUser
 } from '@schemas/PamUserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
@@ -295,5 +297,26 @@ export class UserController {
       email: parsed.email,
       token: parsed.token
     });
+  }
+
+  public async updateDisplayName(body: unknown): Promise<PamSessionUser> {
+    const user = await this.userService.getSessionUser();
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    const parsed = pamDisplayNameUpdateSchema.parse(body);
+    const pam = await this.pamUserService.updateDisplayName(
+      user.id,
+      parsed.display_name
+    );
+    return {
+      id: pam.id,
+      email: pam.email?.trim() ?? '',
+      phone: pam.phone ?? null,
+      display_name: pam.display_name ?? null,
+      role: user.role,
+      credential_token: '',
+      created_at: user.created_at ?? pam.created_at
+    };
   }
 }

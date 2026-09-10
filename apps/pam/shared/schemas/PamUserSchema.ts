@@ -78,3 +78,25 @@ export const pamBindEmailVerifyResultSchema = z.object({
 export type PamBindEmailVerifyResult = z.infer<
   typeof pamBindEmailVerifyResultSchema
 >;
+
+/**
+ * Display name: 1–32 Unicode letters/numbers/underscore.
+ * No spaces, punctuation (except `_`), or other symbols.
+ */
+export const DISPLAY_NAME_PATTERN = /^[\p{L}\p{N}_]{1,32}$/u;
+
+export function isValidDisplayName(value: string): boolean {
+  return DISPLAY_NAME_PATTERN.test(value);
+}
+
+export const pamDisplayNameUpdateSchema = z.object({
+  display_name: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(DISPLAY_NAME_PATTERN, { message: 'Invalid display name' })
+});
+
+export type PamDisplayNameUpdateInput = z.infer<
+  typeof pamDisplayNameUpdateSchema
+>;

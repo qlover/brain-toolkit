@@ -22,6 +22,7 @@ const AUDIT_RULES: readonly AuditRule[] = [
   { method: 'POST', path: '/api/user/otp/verify' },
   { method: 'POST', path: '/api/user/bind-email/send' },
   { method: 'POST', path: '/api/user/bind-email/verify' },
+  { method: 'POST', path: '/api/user/display-name' },
   { method: 'POST', path: '/api/user/login/provider' },
   { method: 'POST', path: '/api/user/login/brain' },
 

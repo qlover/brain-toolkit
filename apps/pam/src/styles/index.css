@@ -7,6 +7,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled,
+button[disabled] {
+  cursor: not-allowed;
+}
+
 /**
  * Search highlight — tied to `data-theme` (not Tailwind `dark:`), so light mode
  * never inherits pale/white text on a soft wash.

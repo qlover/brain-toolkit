@@ -146,7 +146,9 @@ export function BindEmailForm(props: {
         />
       ) : null}
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-(--fe-color-error)">{error}</p>
+      ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
         {sent ? (

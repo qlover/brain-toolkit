@@ -16,7 +16,8 @@ import { API_REFRESH_USER_INFO_FAILED } from '@config/i18n-identifier/api';
 import {
   pamSessionUserSchema,
   type PamSessionCapabilities,
-  type PamSessionResponse
+  type PamSessionResponse,
+  type PamSessionUser
 } from '@schemas/PamUserSchema';
 import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import type {
@@ -134,6 +135,17 @@ export class UserService
       this.getStore().failed(error);
       return false;
     }
+  }
+
+  /** Apply a session user payload already returned by an API (no /session round-trip). */
+  public applySessionUser(user: PamSessionUser): boolean {
+    if (!this.isUser(user)) {
+      return false;
+    }
+    this.getStore().success(user, {
+      credential_token: user.credential_token ?? ''
+    });
+    return true;
   }
 
   public applySessionResponse(session: PamSessionResponse): boolean {

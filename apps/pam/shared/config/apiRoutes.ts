@@ -386,6 +386,15 @@ export const API_USER_BIND_EMAIL_VERIFY =
   '/api/user/bind-email/verify' as const;
 
 /**
+ * API path: `/api/user/display-name`
+ *
+ * @see [src/app/api/user/display-name/route.ts](../../src/app/api/user/display-name/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/user/display-name/route.ts`
+ */
+export const API_USER_DISPLAY_NAME = '/api/user/display-name' as const;
+
+/**
  * API path: `/api/user/login`
  *
  * @see [src/app/api/user/login/route.ts](../../src/app/api/user/login/route.ts)
@@ -508,6 +517,7 @@ export type ApiRoutePath =
   | typeof API_REFERENCE
   | typeof API_USER_BIND_EMAIL_SEND
   | typeof API_USER_BIND_EMAIL_VERIFY
+  | typeof API_USER_DISPLAY_NAME
   | typeof API_USER_LOGIN
   | typeof API_USER_LOGIN_BRAIN
   | typeof API_USER_LOGIN_PROVIDER
