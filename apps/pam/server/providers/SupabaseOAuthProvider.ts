@@ -76,9 +76,7 @@ function supababseUserToUserSchema(
   const nameFromMeta = readSupabaseUserName(user);
   const name =
     nameFromMeta ??
-    (phone
-      ? resolveUserDisplayLabel({ phone, userId: user.id })
-      : undefined);
+    (phone ? resolveUserDisplayLabel({ phone, userId: user.id }) : undefined);
 
   return {
     id: user.id,
