@@ -27,3 +27,7 @@ allowBuilds:
   tree-sitter: true
   tree-sitter-json: true
   unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@qlover/next-kit@1.4.0'
+  - '@qlover/oauth-wrapper@0.10.0'
