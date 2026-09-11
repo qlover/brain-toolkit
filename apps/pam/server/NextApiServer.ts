@@ -138,8 +138,10 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
 
   /**
    * Binary/image endpoints: success returns raw bytes; errors use the JSON envelope.
+   *
+   * @override
    */
-  public async runWithBinary(
+  public override async runWithBinary(
     task?: RunWithTask<BinaryApiPayload | null>,
     init?: RunWithInit & {
       notFoundHeaders?: HeadersInit;

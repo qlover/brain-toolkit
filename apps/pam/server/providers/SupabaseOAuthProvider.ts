@@ -8,6 +8,10 @@ import {
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { OAuthWrapperService } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import {
+  resolveUserDisplayLabel,
+  toBusinessEmail
+} from '@shared/utils/pamUserIdentity';
 import type { LocaleType } from '@config/i18n';
 import { I } from '@config/ioc-identifiter';
 import { localePage, ROUTE_CALLBACK_EMAIL_LOGIN } from '@config/route';
@@ -51,21 +55,38 @@ function phoneFallbackEmail(phone: string | undefined | null): string {
   return digits ? `${digits}@phone.pam.local` : 'unknown@phone.pam.local';
 }
 
-function isPhonePlaceholderEmail(email: string | undefined | null): boolean {
-  return (email ?? '').toLowerCase().endsWith('@phone.pam.local');
+function readSupabaseUserName(user: User): string | null {
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  for (const key of ['name', 'full_name', 'display_name'] as const) {
+    const value = meta[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
 }
 
 function supababseUserToUserSchema(
   user: User,
   credential_token = ''
 ): UserSchema {
+  const rawEmail = user.email || user.new_email || '';
+  const email = toBusinessEmail(rawEmail) ?? '';
+  const phone = user.phone?.trim() || null;
+  const nameFromMeta = readSupabaseUserName(user);
+  const name =
+    nameFromMeta ??
+    (phone ? resolveUserDisplayLabel({ phone, userId: user.id }) : undefined);
+
   return {
     id: user.id,
-    // Cookie UserSchema.email may still hold placeholder for mint repair paths.
-    email: user.email || user.new_email || phoneFallbackEmail(user.phone),
+    // Session email is business-only; @phone.pam.local stays in auth.users for mint.
+    email,
     role: UserRole.USER,
     credential_token,
-    created_at: user.created_at
+    created_at: user.created_at,
+    ...(name ? { name } : {}),
+    ...(phone ? { phone } : {})
   };
 }
 function supabaseSessionToUserSchema(session: Session): UserSchema {
@@ -420,8 +441,12 @@ export class SupabaseOAuthProvider
     }
 
     const embedded = payload?.user as UserSchema | undefined;
-    const email = embedded?.email?.trim();
-    if (!email) {
+    const businessEmail = toBusinessEmail(embedded?.email);
+    const phone = embedded?.phone?.trim();
+    // Mint still needs an auth.users email; phone-only accounts use internal placeholder.
+    const emailForMint =
+      businessEmail ?? (phone ? phoneFallbackEmail(phone) : null);
+    if (!emailForMint) {
       throw new Error(
         'OAuth provider credentials missing; please sign out and sign in again'
       );
@@ -429,7 +454,7 @@ export class SupabaseOAuthProvider
 
     const minted = await this.sessionMint.mintSessionForAuthUser({
       userId,
-      email
+      email: emailForMint
     });
     await this.syncUserSession(minted);
 
@@ -456,7 +481,7 @@ export class SupabaseOAuthProvider
 
     await this.pamUserService.ensurePamUser({
       id: profile.id,
-      email: isPhonePlaceholderEmail(profile.email) ? null : profile.email,
+      email: toBusinessEmail(profile.email),
       ...(session.user.phone ? { phone: session.user.phone } : {})
     });
 
