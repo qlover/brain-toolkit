@@ -185,8 +185,8 @@ export const PAGE_DOCS_OAUTH_ENDPOINT_VERIFY_DESC =
 
 /**
  * @description Userinfo endpoint description
- * @localZh 需要 Authorization: Bearer；返回 sub、email、name 等声明。
- * @localEn Requires Authorization: Bearer; returns sub, email, name, and related claims.
+ * @localZh 需要 Authorization: Bearer；返回 sub、name（优先 display_name）、业务邮箱 email（手机占位邮箱不对外）、可选 phone_number。
+ * @localEn Requires Authorization: Bearer; returns sub, name (prefers display_name), business email (no @phone.pam.local), optional phone_number.
  */
 export const PAGE_DOCS_OAUTH_ENDPOINT_USERINFO_DESC =
   'page_docs_oauth:endpoint__userinfo__desc';
@@ -253,8 +253,8 @@ export const PAGE_DOCS_OAUTH_SECTION_USERINFO =
 
 /**
  * @description Userinfo body
- * @localZh 成功时返回 JSON：sub（用户 ID）、email、name，以及可选 roles。无效或过期令牌返回 401 与 error=invalid_token。
- * @localEn Success returns JSON with sub (user id), email, name, and optional roles. Invalid or expired tokens yield 401 with error=invalid_token.
+ * @localZh 成功时返回 JSON：sub（用户 ID）、name（优先 pam_users.display_name）、email（仅真实业务邮箱；手机号登录可能为空）、email_verified，以及有手机号时的 phone_number。无效或过期令牌返回 401 与 error=invalid_token。内部 @phone.pam.local 占位邮箱不会对外返回。
+ * @localEn Success returns JSON with sub (user id), name (prefers pam_users.display_name), email (real business email only; may be empty for phone login), email_verified, and phone_number when present. Invalid or expired tokens yield 401 with error=invalid_token. Internal @phone.pam.local placeholders are never returned.
  */
 export const PAGE_DOCS_OAUTH_USERINFO_BODY = 'page_docs_oauth:userinfo__body';
 
