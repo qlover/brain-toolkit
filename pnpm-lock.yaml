@@ -41,8 +41,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(@typescript-eslint/parser@8.65.0(eslint@9.39.1(jiti@2.6.1)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.1(jiti@2.6.1)(supports-color@8.1.1))(typescript@6.0.3)
       '@qlover/fe-release':
-        specifier: 5.1.0
-        version: 5.1.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
+        specifier: 5.3.1
+        version: 5.3.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       '@qlover/fe-scripts':
         specifier: ^2.0.0
         version: 2.0.0(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
@@ -346,7 +346,7 @@ importers:
         version: 19.2.3(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
-        version: 5.2.0(supports-color@8.1.1)(vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
+        version: 5.2.0(supports-color@8.1.1)(vite@6.4.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -403,7 +403,7 @@ importers:
         version: 8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@20.19.41)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.32.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
+        version: 3.2.4(@types/node@20.19.41)(jiti@1.21.7)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.32.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
 
   apps/pam:
     dependencies:
@@ -578,7 +578,7 @@ importers:
         version: 19.2.3(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
-        version: 5.2.0(supports-color@8.1.1)(vite@6.4.1(@types/node@20.19.41)(jiti@1.21.7)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
+        version: 5.2.0(supports-color@8.1.1)(vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -635,7 +635,7 @@ importers:
         version: 8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@20.19.41)(jiti@1.21.7)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.32.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
+        version: 3.2.4(@types/node@20.19.41)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.32.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
 
   packages/antd-blocks:
     dependencies:
@@ -3100,6 +3100,9 @@ packages:
   '@qlover/env-loader@1.0.2':
     resolution: {integrity: sha512-b8AVxWvandr9aEM+CBGI1hs8tnu/Z5PihSqc08trCbJ1Jc3kHZJUc6HQhiZdFePDr5rNpfPmD4vC5AAFSE0rYA==}
 
+  '@qlover/env-loader@1.1.0':
+    resolution: {integrity: sha512-Y7ndeg+n7wPi4oaaUdXVrB+ztJsBWfgOQH8QYBTScDtbLFQ2NOD2Q8yiU0ipxtwawM/TQiQ4W9jzAu3wTE9ppA==}
+
   '@qlover/eslint-plugin@2.0.0':
     resolution: {integrity: sha512-jaYlaYiiHpFffZoLOh7DiOJcBs68MYYk/3CvOkXy4CAv5Qt3Nf7dHRybCjZ6KjN57HAVxMTuuP5bSEQkQ7CNPA==}
     engines: {node: '>=16.0.0'}
@@ -3139,14 +3142,11 @@ packages:
   '@qlover/fe-corekit@3.3.0':
     resolution: {integrity: sha512-6G40onZHnR8nTp3AJ4cWEezeqzRy5huNPQAzxNpURhYkhOAQjmd0qPZ9WLWEzFx3ENvZfYEzGIoLY8b6rkcsPw==}
 
-  '@qlover/fe-corekit@3.4.4':
-    resolution: {integrity: sha512-WzSo3e1cfyhJGwbvP4ZcnlQaPGF+1MrDlt5ZA3WbEWw48khEh75O9D7w4xUnu2Nn3l+gVWYvG43yKqyc2RVURQ==}
-
   '@qlover/fe-corekit@3.4.6':
     resolution: {integrity: sha512-IdUAvVF5pVFJ6XOZtlPDDeLa9AMUu8IngnnqOs2bwEs0ZIGgaQ8fl3x21MqgBwCpUbqM7VIbJq9Nvj1QP+Ao/w==}
 
-  '@qlover/fe-release@5.1.0':
-    resolution: {integrity: sha512-c2La0ZM8c08lbXH1m6z8KthqXKmwL1x8C6WH77UoumBZhkw0M//0Ui8coew/mV9zfKLC0hlqkT0EXNt5EFv80w==}
+  '@qlover/fe-release@5.3.1':
+    resolution: {integrity: sha512-AzsT8Cmulc3MjbX76fPMODRnuZNJCmYxjbxsmD3uGvhj6UEct182b1eGTqmYd2xTO2uby0iU/LvVPAwANNcwFQ==}
     hasBin: true
 
   '@qlover/fe-scripts@2.0.0':
@@ -11469,6 +11469,10 @@ snapshots:
     dependencies:
       dotenv: 16.6.1
 
+  '@qlover/env-loader@1.1.0':
+    dependencies:
+      dotenv: 16.6.1
+
   '@qlover/eslint-plugin@2.0.0(@typescript-eslint/parser@8.65.0(eslint@9.39.1(jiti@2.6.1)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.1(jiti@2.6.1)(supports-color@8.1.1))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/parser': 8.65.0(eslint@9.39.1(jiti@2.6.1)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
@@ -11533,15 +11537,6 @@ snapshots:
       - debug
       - supports-color
 
-  '@qlover/fe-corekit@3.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
-    dependencies:
-      any-signal: 4.2.0
-      axios: 1.16.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      p-retry: 7.1.1
-    transitivePeerDependencies:
-      - debug
-      - supports-color
-
   '@qlover/fe-corekit@3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       any-signal: 4.2.0
@@ -11551,13 +11546,13 @@ snapshots:
       - debug
       - supports-color
 
-  '@qlover/fe-release@5.1.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
+  '@qlover/fe-release@5.3.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
       '@changesets/get-dependents-graph': 2.1.4
       '@manypkg/get-packages': 1.1.3
       '@octokit/rest': 21.1.1
-      '@qlover/env-loader': 1.0.2
-      '@qlover/fe-corekit': 3.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@qlover/env-loader': 1.1.0
+      '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@qlover/logger': 1.2.1
       '@qlover/scripts-context': 2.3.3(typescript@6.0.3)
       commander: 11.1.0

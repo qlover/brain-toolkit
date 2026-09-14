@@ -52,7 +52,7 @@
     "@nx/js": "20.6.4",
     "@qlover/env-loader": "^1.0.0",
     "@qlover/eslint-plugin": "^2.0.0",
-    "@qlover/fe-release": "5.1.0",
+    "@qlover/fe-release": "5.3.1",
     "@qlover/fe-scripts": "^2.0.0",
     "@qlover/fe-standard": "^0.0.6",
     "@qlover/scripts-context": "^2.0.0",
