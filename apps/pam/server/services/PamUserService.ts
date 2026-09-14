@@ -1,6 +1,16 @@
 import { inject, injectable } from '@shared/container';
 import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
-import type { PamAdminUserListItem, PamUserRow } from '@schemas/PamUserSchema';
+import {
+  expandSystemPermissions,
+  isPlatformAdminRole,
+  normalizeSystemRole,
+  type SystemRoleType
+} from '@shared/auth/systemRole';
+import type {
+  PamAdminUserListItem,
+  PamSessionCapabilities,
+  PamUserRow
+} from '@schemas/PamUserSchema';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import {
   invalidatePlatformAdminCache,
@@ -23,7 +33,8 @@ export class PamUserService {
       ...input,
       email: toBusinessEmail(input.email)
     });
-    setPlatformAdminCache(row.id, row.is_platform_admin);
+    const role = normalizeSystemRole(row.system_role);
+    setPlatformAdminCache(row.id, isPlatformAdminRole(role));
     return row;
   }
 
@@ -39,20 +50,28 @@ export class PamUserService {
     return this.repo.findByPhone(phone);
   }
 
-  public async isPlatformAdmin(userId: string): Promise<boolean> {
+  public async getSystemRole(userId: string): Promise<SystemRoleType> {
     const row = await this.repo.findById(userId);
-    if (!row) {
-      return false;
-    }
-    setPlatformAdminCache(userId, row.is_platform_admin);
-    return row.is_platform_admin;
+    return normalizeSystemRole(row?.system_role);
   }
 
-  public async getCapabilities(userId: string): Promise<{
-    platformAdmin: boolean;
-  }> {
-    const platformAdmin = await this.isPlatformAdmin(userId);
-    return { platformAdmin };
+  /** True when system_role has admin.access (operator or admin). */
+  public async isPlatformAdmin(userId: string): Promise<boolean> {
+    const role = await this.getSystemRole(userId);
+    const allowed = isPlatformAdminRole(role);
+    setPlatformAdminCache(userId, allowed);
+    return allowed;
+  }
+
+  public async getCapabilities(
+    userId: string
+  ): Promise<PamSessionCapabilities> {
+    const role = await this.getSystemRole(userId);
+    return {
+      platformAdmin: isPlatformAdminRole(role),
+      roles: [role],
+      permissions: [...expandSystemPermissions(role)]
+    };
   }
 
   public async searchAdminUsers(params: {
@@ -67,6 +86,7 @@ export class PamUserService {
       phone: row.phone,
       displayName: row.displayName,
       isPlatformAdmin: row.isPlatformAdmin,
+      systemRole: row.systemRole,
       status: row.status as 'active' | 'suspended',
       createdAt: row.createdAt
     }));
@@ -83,6 +103,8 @@ export class PamUserService {
       actorUserId
     );
     invalidatePlatformAdminCache(targetUserId);
+    const role = normalizeSystemRole(row.system_role);
+    setPlatformAdminCache(targetUserId, isPlatformAdminRole(role));
     return row;
   }
 

@@ -34,7 +34,9 @@ import type {
 function defaultCapabilitiesState(): PamSessionCapabilitiesStateInterface {
   return Object.assign(createAsyncState(), {
     platformAdmin: false,
-    result: { platformAdmin: false }
+    roles: [],
+    permissions: [],
+    result: { platformAdmin: false, roles: [], permissions: [] }
   });
 }
 
@@ -102,9 +104,17 @@ export class UserService
   }
 
   public applySessionCapabilities(capabilities: PamSessionCapabilities): void {
+    const roles = capabilities.roles ?? [];
+    const permissions = capabilities.permissions ?? [];
     this.capabilitiesStore.emit({
       platformAdmin: capabilities.platformAdmin,
-      result: { platformAdmin: capabilities.platformAdmin }
+      roles,
+      permissions,
+      result: {
+        platformAdmin: capabilities.platformAdmin,
+        roles,
+        permissions
+      }
     });
   }
 

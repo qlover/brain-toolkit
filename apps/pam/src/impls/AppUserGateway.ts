@@ -32,7 +32,11 @@ import type { GatewayResult, LoginParams } from '@qlover/corekit-bridge';
 
 const emptySession = (): PamSessionResponse => ({
   user: null,
-  capabilities: { platformAdmin: false }
+  capabilities: {
+    platformAdmin: false,
+    roles: [],
+    permissions: []
+  }
 });
 
 function parseSessionPayload(
@@ -52,7 +56,11 @@ function parseSessionPayload(
 
   return {
     user: payload as UserSchema,
-    capabilities: { platformAdmin: false }
+    capabilities: {
+      platformAdmin: false,
+      roles: [],
+      permissions: []
+    }
   };
 }
 

@@ -5,6 +5,8 @@ import type {
 
 export type PamCapabilitiesResult = {
   platformAdmin: boolean;
+  roles?: string[];
+  permissions?: string[];
 };
 
 /**
@@ -14,6 +16,8 @@ export type PamCapabilitiesResult = {
 export interface PamSessionCapabilitiesStateInterface
   extends AsyncStoreStateInterface<PamCapabilitiesResult> {
   platformAdmin: boolean;
+  roles: string[];
+  permissions: string[];
 }
 
 export interface PamSessionCapabilitiesStoreInterface {

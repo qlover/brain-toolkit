@@ -13,6 +13,10 @@ import {
   PHONE_PLACEHOLDER_EMAIL_SUFFIX
 } from '@shared/utils/pamUserIdentity';
 import {
+  normalizeSystemRole,
+  SystemRole
+} from '@shared/auth/systemRole';
+import {
   API_BIND_EMAIL_ALREADY_BOUND,
   API_BIND_EMAIL_PHONE_CONFLICT,
   API_NOT_AUTHORIZED,
@@ -228,7 +232,10 @@ export class PamBindEmailService {
     await this.oauthRepo.reassignRefreshTokensUserId(A.id, B.id);
     await this.oauthRepo.deleteUserCredentials(A.id);
 
-    if (A.is_platform_admin && !B.is_platform_admin) {
+    if (
+      normalizeSystemRole(A.system_role) === SystemRole.Admin &&
+      normalizeSystemRole(B.system_role) !== SystemRole.Admin
+    ) {
       await this.pamUsersRepo.setPlatformAdmin(B.id, true, B.id);
     }
 

@@ -146,7 +146,11 @@ export class UserController {
     if (!user) {
       return {
         user: null,
-        capabilities: { platformAdmin: false }
+        capabilities: {
+          platformAdmin: false,
+          roles: [],
+          permissions: []
+        }
       };
     }
 
@@ -156,6 +160,7 @@ export class UserController {
     });
 
     const businessEmail = pamUser.email?.trim() ?? '';
+    const capabilities = await this.pamUserService.getCapabilities(user.id);
 
     return {
       user: {
@@ -167,7 +172,7 @@ export class UserController {
         credential_token: '',
         created_at: user.created_at ?? pamUser.created_at
       },
-      capabilities: { platformAdmin: pamUser.is_platform_admin }
+      capabilities
     };
   }
 

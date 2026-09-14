@@ -1,11 +1,21 @@
 import { z } from 'zod';
+import { SystemRole } from '@shared/auth/systemRole';
+
+const systemRoleSchema = z.enum([
+  SystemRole.User,
+  SystemRole.Operator,
+  SystemRole.Admin
+]);
 
 export const pamUserRowSchema = z.object({
   id: z.string().uuid(),
   email: z.string().nullable(),
   phone: z.string().nullable().optional(),
   display_name: z.string().nullable().optional(),
+  /** Legacy column — kept intact; do not drop until post-merge cleanup. */
   is_platform_admin: z.boolean(),
+  /** New RBAC column (additive). */
+  system_role: systemRoleSchema.default(SystemRole.User),
   status: z.enum(['active', 'suspended']),
   created_at: z.string(),
   updated_at: z.string()
@@ -18,7 +28,9 @@ export const pamAdminUserListItemSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable().optional(),
   displayName: z.string().nullable(),
+  /** UI toggle: system_role === admin */
   isPlatformAdmin: z.boolean(),
+  systemRole: systemRoleSchema.optional(),
   status: z.enum(['active', 'suspended']),
   createdAt: z.string()
 });
@@ -26,7 +38,10 @@ export const pamAdminUserListItemSchema = z.object({
 export type PamAdminUserListItem = z.infer<typeof pamAdminUserListItemSchema>;
 
 export const pamSessionCapabilitiesSchema = z.object({
-  platformAdmin: z.boolean()
+  /** True when role has admin.access (operator or admin). */
+  platformAdmin: z.boolean(),
+  roles: z.array(systemRoleSchema).default([]),
+  permissions: z.array(z.string()).default([])
 });
 
 export type PamSessionCapabilities = z.infer<
