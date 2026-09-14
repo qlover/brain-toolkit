@@ -1,5 +1,17 @@
 # @brain-toolkit/react-kit
 
+## 0.3.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **react-kit:** 修正 package.json 仓库路径与 keywords ([bdd13af](https://github.com/qlover/brain-toolkit/commit/bdd13af3eede33f21f1087725893e194938d93d9)) ([#141](https://github.com/qlover/brain-toolkit/pull/141))
+
+  repository.directory 误指向 antd-blocks；keywords 去掉误拷的 antd override。
+
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 0.2.4
 
 ### Patch Changes
