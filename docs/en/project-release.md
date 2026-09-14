@@ -114,7 +114,21 @@ If `github.autoMergeReleasePR` is `true` in `fe-config.json`, the Release PR may
 ### GitHub Secrets
 
 - `PAT_TOKEN` — create PRs / push tags / GitHub Releases
-- `NPM_TOKEN` — publish to npm
+
+### npm Trusted Publishing (OIDC)
+
+Publish uses [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers); **`NPM_TOKEN` is not required**.
+
+For each package published to npm (`packages/*`), add a Trusted Publisher in the package settings:
+
+| Field | Value |
+| --- | --- |
+| Provider | GitHub Actions |
+| Repository | `qlover/brain-toolkit` |
+| Workflow filename | `release.yml` |
+| Environment | (leave empty unless the workflow uses an environment) |
+
+CI: the `publish` job needs `permissions.id-token: write` and `--changesetVersion.use-trusted-publishing` (see `.github/workflows/release.yml`).
 
 ### Scripts
 

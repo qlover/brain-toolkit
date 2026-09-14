@@ -114,7 +114,21 @@ npx fe-release -V \
 ### GitHub Secrets
 
 - `PAT_TOKEN`：创建 PR / 推 tag / GitHub Release
-- `NPM_TOKEN`：发布到 npm
+
+### npm Trusted Publishing（OIDC）
+
+发布阶段使用 [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers)，**不再依赖** `NPM_TOKEN`。
+
+对每个会发布到 npm 的包（`packages/*`），在 npm 包设置里添加 Trusted Publisher：
+
+| 项 | 值 |
+| --- | --- |
+| Provider | GitHub Actions |
+| Repository | `qlover/brain-toolkit` |
+| Workflow filename | `release.yml` |
+| Environment | （留空，除非 workflow 绑定了 environment） |
+
+CI 侧：`publish` job 需 `permissions.id-token: write`，并传入 `--changesetVersion.use-trusted-publishing`（见 `.github/workflows/release.yml`）。
 
 ### 相关脚本
 

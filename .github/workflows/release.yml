@@ -108,6 +108,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Required for npm Trusted Publishing (OIDC)
+      id-token: write
     env:
       NX_DAEMON: 'false'
 
@@ -131,6 +133,10 @@ jobs:
           node-version: '20.19.0'
 
       - run: npm install -g pnpm@10
+
+      - name: Upgrade npm for Trusted Publishing
+        run: npm install -g npm@11.15.0
+
       - run: pnpm install --frozen-lockfile
 
       - name: Build packages (force)
@@ -157,9 +163,9 @@ jobs:
             --workspaces.compare-ref "${{ github.event.pull_request.base.sha }}" \
             --changesetVersion.skip-changeset \
             --changesetVersion.mode publish \
+            --changesetVersion.use-trusted-publishing \
             --github.mode createRelease \
             --github.ignore-release-paths apps
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           FE_RELEASE_BRANCH: master
