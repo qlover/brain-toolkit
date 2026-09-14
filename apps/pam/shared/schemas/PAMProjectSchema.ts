@@ -114,6 +114,10 @@ export type SearchPAMProject = SearchPAMRawProject & {
   can_edit?: boolean;
   /** Owner / admin may manage collaborators. */
   can_manage_collaborators?: boolean;
+  /** Owner / admin may delete project (matches current API asserts). */
+  can_delete?: boolean;
+  /** Institution permission codes for current user (project === org). */
+  org_permissions?: string[];
 };
 
 /**
@@ -128,6 +132,8 @@ export type PAMProjectDetail = SearchPAMRawProject & {
   my_role?: 'owner' | 'admin' | 'member' | 'none';
   can_edit?: boolean;
   can_manage_collaborators?: boolean;
+  can_delete?: boolean;
+  org_permissions?: string[];
 };
 
 /**

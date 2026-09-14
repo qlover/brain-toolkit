@@ -79,6 +79,10 @@ import {
   hasMinProjectAccess,
   projectAccessFlags
 } from '@server/utils/projectAccessRole';
+import {
+  hasOrgPermission,
+  type OrgPermissionType
+} from '@shared/auth/orgRole';
 import { MemoryKvCacheService } from './MemoryKvCacheService';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
@@ -211,6 +215,37 @@ export class PAMService implements PAMServiceInterface {
           return { userId: user.id, role: 'owner' };
         }
       }
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    return { userId: user.id, role };
+  }
+
+  /**
+   * Ensures the current user has an institution (project) permission.
+   * Project === org container.
+   */
+  protected async assertOrgPermission(
+    projectId: string,
+    permission: OrgPermissionType
+  ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
+    const user = await this.userService.getUser(true);
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const access = await this.projectRepo.getProjectAccessAdmin(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const role = await this.resolveAccessRole(
+      projectId,
+      user.id,
+      access.owner_id
+    );
+
+    if (!hasOrgPermission(role, permission)) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
