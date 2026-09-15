@@ -1,6 +1,7 @@
 /**
  * Platform system roles (PAM).
- * Stored in pam_users.system_role. is_platform_admin is legacy.
+ * Bound via pam_users.role_id → pam_roles.key (user|operator|admin).
+ * is_platform_admin is legacy.
  *
  * Permission identifiers are immutable API uids (method_path).
  */

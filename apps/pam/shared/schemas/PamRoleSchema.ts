@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import { OrgRole } from '@shared/auth/orgRole';
-import { SystemRole } from '@shared/auth/systemRole';
+import { RoleKind } from '@shared/auth/roleKeys';
 
-export const pamPermissionScopeSchema = z.enum(['system', 'org']);
+export const pamRoleKindSchema = z.enum([RoleKind.Platform, RoleKind.Team]);
 
-export type PamPermissionScope = z.infer<typeof pamPermissionScopeSchema>;
+export type PamRoleKind = z.infer<typeof pamRoleKindSchema>;
 
 export const pamAdminPermissionItemSchema = z.object({
   uid: z.string(),
@@ -21,50 +20,33 @@ export type PamAdminPermissionItem = z.infer<
   typeof pamAdminPermissionItemSchema
 >;
 
+export const pamAdminRoleItemSchema = z.object({
+  id: z.string().uuid(),
+  key: z.string(),
+  name: z.string(),
+  kind: pamRoleKindSchema,
+  description: z.string().nullable(),
+  isSystem: z.boolean(),
+  permissionUids: z.array(z.string())
+});
+
+export type PamAdminRoleItem = z.infer<typeof pamAdminRoleItemSchema>;
+
 export const pamAdminRolesResponseSchema = z.object({
   catalog: z.array(pamAdminPermissionItemSchema),
-  system: z.record(z.string(), z.array(z.string())),
-  org: z.record(z.string(), z.array(z.string()))
+  roles: z.array(pamAdminRoleItemSchema),
+  /** @deprecated Prefer `roles`; kept for older clients */
+  system: z.record(z.string(), z.array(z.string())).optional(),
+  /** @deprecated Prefer `roles`; kept for older clients */
+  org: z.record(z.string(), z.array(z.string())).optional()
 });
 
 export type PamAdminRolesResponse = z.infer<typeof pamAdminRolesResponseSchema>;
 
-const systemRoleKeySchema = z.enum([
-  SystemRole.User,
-  SystemRole.Operator,
-  SystemRole.Admin
-]);
-
-const orgRoleKeySchema = z.enum([OrgRole.Member, OrgRole.Admin, OrgRole.Owner]);
-
-export const pamAdminRoleAssignmentsPatchSchema = z
-  .object({
-    scope: pamPermissionScopeSchema,
-    roleKey: z.string().min(1),
-    permissionUids: z.array(z.string().min(1))
-  })
-  .superRefine((value, ctx) => {
-    if (
-      value.scope === 'system' &&
-      !systemRoleKeySchema.safeParse(value.roleKey).success
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['roleKey'],
-        message: 'Invalid system role key'
-      });
-    }
-    if (
-      value.scope === 'org' &&
-      !orgRoleKeySchema.safeParse(value.roleKey).success
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['roleKey'],
-        message: 'Invalid org role key'
-      });
-    }
-  });
+export const pamAdminRoleAssignmentsPatchSchema = z.object({
+  roleId: z.string().uuid(),
+  permissionUids: z.array(z.string().min(1))
+});
 
 export type PamAdminRoleAssignmentsPatch = z.infer<
   typeof pamAdminRoleAssignmentsPatchSchema

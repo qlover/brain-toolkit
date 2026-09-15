@@ -22,7 +22,7 @@ export const PamTeamMemberRowSchema = z.object({
   id: z.uuid(),
   team_id: z.uuid(),
   user_id: z.uuid(),
-  role: PamTeamRoleSchema,
+  role_id: z.uuid(),
   status: z.literal('active'),
   invited_by: z.uuid().nullable(),
   created_at: z.string(),
@@ -32,6 +32,8 @@ export const PamTeamMemberRowSchema = z.object({
 export type PamTeamMemberRow = z.infer<typeof PamTeamMemberRowSchema>;
 
 export const PamTeamMemberItemSchema = PamTeamMemberRowSchema.extend({
+  /** Derived from role_id for API/UI (owner|admin|member). */
+  role: PamTeamRoleSchema,
   email: z.string().email().or(z.literal('')).optional(),
   phone: z.string().nullable().optional(),
   display_name: z.string().nullable().optional()

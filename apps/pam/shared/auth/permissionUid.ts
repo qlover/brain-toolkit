@@ -1,6 +1,6 @@
 /**
  * Immutable API permission uid: `{method}_{pathTemplate}`.
- * Keep in sync with apps/pam/makes/sql/021-pam-permissions.sql
+ * Keep in sync with apps/pam/makes/sql/020-pam-roles.sql
  *
  * Display / i18n id is {@link permissionSlug} → key `permission:{slug}`.
  */
@@ -41,17 +41,16 @@ export function permissionSlug(uid: string): string {
     return uid
       .replace(/[^a-zA-Z0-9]+/g, '_')
       .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '')
-      .toLowerCase();
+      .replace(/^_|_$/g, '');
   }
   const method = match[1].toLowerCase();
+  // Keep path param casing (projectId, userId) so i18n keys stay stable.
   const pathSlug = match[2]
     .replace(/^\//, '')
     .replace(/:/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '_')
     .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '')
-    .toLowerCase();
+    .replace(/^_|_$/g, '');
   return `${method}_${pathSlug}`;
 }
 

@@ -1,6 +1,6 @@
 /**
  * Default role → permission uid maps (seed / fallback when DB not loaded).
- * Keep in sync with 021 + 022 SQL seeds.
+ * Keep in sync with apps/pam/makes/sql/020-pam-roles.sql
  */
 
 import {
@@ -20,6 +20,7 @@ import {
   API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_VARIABLES,
   API_PAM_PREVIEW_IMAGE,
+  API_PAM_TEAMS,
   API_PAM_TEAMS_2,
   API_PAM_TEAMS_MEMBERS,
   API_PAM_TEAMS_MEMBERS_2,
@@ -87,17 +88,26 @@ const ORG_ADMIN = [
   ...TEAM_ADMIN
 ] as const;
 
+const PLATFORM_USER = [
+  permissionUid('GET', API_PAM_TEAMS),
+  permissionUid('POST', API_PAM_TEAMS)
+] as const;
+
 export const DEFAULT_SYSTEM_ROLE_PERMISSIONS: Record<
   string,
   readonly string[]
 > = {
-  user: [],
-  operator: [...ADMIN_READ],
-  admin: [...ADMIN_READ, ...ADMIN_WRITE]
+  user: [...PLATFORM_USER],
+  operator: [...PLATFORM_USER, ...ADMIN_READ],
+  admin: [...PLATFORM_USER, ...ADMIN_READ, ...ADMIN_WRITE]
 };
 
+/** Legacy org keys owner|admin|member — also exposed as team_* via registry. */
 export const DEFAULT_ORG_ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   member: [...ORG_MEMBER],
   admin: [...ORG_ADMIN],
-  owner: [...ORG_ADMIN]
+  owner: [...ORG_ADMIN],
+  team_member: [...ORG_MEMBER],
+  team_admin: [...ORG_ADMIN],
+  team_owner: [...ORG_ADMIN]
 };

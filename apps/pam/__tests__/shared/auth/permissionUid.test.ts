@@ -126,6 +126,9 @@ describe('systemRole (API uids)', () => {
     expect(isPlatformAdminRole('operator')).toBe(true);
     expect(isPlatformAdminRole('user')).toBe(false);
     expect(hasSystemPermission('admin', SYSTEM_ADMIN_GATE_UID)).toBe(true);
-    expect(expandSystemPermissions('user')).toEqual([]);
+    expect(expandSystemPermissions('user')).toEqual([
+      'get_/api/pam/teams',
+      'post_/api/pam/teams'
+    ]);
   });
 });
