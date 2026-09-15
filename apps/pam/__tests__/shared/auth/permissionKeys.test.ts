@@ -20,11 +20,7 @@ import {
   resolveOrgPermissions,
   resolveSystemPermissions
 } from '@shared/auth/permissionRegistry';
-import {
-  expandSystemPermissions,
-  hasSystemPermission,
-  isPlatformAdminRole
-} from '@shared/auth/systemRole';
+import { hasSystemPermission } from '@shared/auth/systemRole';
 
 describe('permissionKeys', () => {
   it('uses stable permission_key format', () => {
@@ -85,13 +81,18 @@ describe('role permission maps', () => {
     expect(flags.permissions).toEqual([...perms]);
   });
 
-  it('gates platform admin via admin_site_settings_read', () => {
-    expect(isPlatformAdminRole('user')).toBe(false);
-    expect(isPlatformAdminRole('operator')).toBe(true);
-    expect(isPlatformAdminRole('admin')).toBe(true);
-    expect(hasSystemPermission('admin', SYSTEM_ADMIN_GATE_KEY)).toBe(true);
-    expect(expandSystemPermissions('user')).toContain(
-      PermissionKey.pam_project_create
-    );
+  it('only platform admin role gets permission catalog management', () => {
+    expect(
+      hasSystemPermission('admin', PermissionKey.admin_permissions_read)
+    ).toBe(true);
+    expect(
+      hasSystemPermission('admin', PermissionKey.admin_permissions_write)
+    ).toBe(true);
+    expect(
+      hasSystemPermission('operator', PermissionKey.admin_permissions_read)
+    ).toBe(false);
+    expect(
+      hasSystemPermission('operator', PermissionKey.admin_permissions_write)
+    ).toBe(false);
   });
 });

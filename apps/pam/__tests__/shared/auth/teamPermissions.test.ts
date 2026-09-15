@@ -15,12 +15,12 @@ describe('teamPermissions', () => {
     ).toBe(false);
   });
 
-  it('team admin can manage members', () => {
+  it('team member can read environments but not delete them', () => {
     expect(
-      hasOrgPermission('admin', PermissionKey.pam_teams_members_create)
+      hasOrgPermission('member', PermissionKey.pam_environments_read)
     ).toBe(true);
     expect(
-      hasOrgPermission('owner', PermissionKey.pam_teams_members_create)
-    ).toBe(true);
+      hasOrgPermission('member', PermissionKey.pam_environments_delete)
+    ).toBe(false);
   });
 });

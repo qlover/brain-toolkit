@@ -41,6 +41,22 @@ export const PERMISSION_ADMIN_ROLES_READ = 'permission:admin_roles_read';
 export const PERMISSION_ADMIN_ROLES_WRITE = 'permission:admin_roles_write';
 
 /**
+ * @description List permission catalog (super admin)
+ * @localZh 查看权限目录
+ * @localEn List permission catalog
+ */
+export const PERMISSION_ADMIN_PERMISSIONS_READ =
+  'permission:admin_permissions_read';
+
+/**
+ * @description Create or update permission catalog (super admin)
+ * @localZh 创建或修改权限目录
+ * @localEn Create or update permission catalog
+ */
+export const PERMISSION_ADMIN_PERMISSIONS_WRITE =
+  'permission:admin_permissions_write';
+
+/**
  * @description Read request audit logs
  * @localZh 查看请求审计日志
  * @localEn Read request audit logs
@@ -103,6 +119,14 @@ export const PERMISSION_PAM_COLLABORATORS_UPDATE =
  */
 export const PERMISSION_PAM_COLLABORATORS_DELETE =
   'permission:pam_collaborators_delete';
+
+/**
+ * @description List project environments
+ * @localZh 查看环境列表
+ * @localEn List project environments
+ */
+export const PERMISSION_PAM_ENVIRONMENTS_READ =
+  'permission:pam_environments_read';
 
 /**
  * @description Create environment

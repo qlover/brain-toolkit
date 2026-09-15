@@ -30,6 +30,12 @@ const ADMIN_WRITE = [
   PermissionKey.admin_site_settings_write
 ] as const;
 
+/** Super-admin only: permission catalog CRUD (not granted to operator). */
+const ADMIN_PERMISSIONS_CATALOG = [
+  PermissionKey.admin_permissions_read,
+  PermissionKey.admin_permissions_write
+] as const;
+
 const TEAM_MEMBER = [PermissionKey.pam_teams_read] as const;
 
 const TEAM_ADMIN = [
@@ -42,6 +48,7 @@ const TEAM_ADMIN = [
 
 const ORG_MEMBER = [
   PermissionKey.pam_collaborators_read,
+  PermissionKey.pam_environments_read,
   PermissionKey.pam_environments_create,
   PermissionKey.pam_environments_variables_write,
   PermissionKey.pam_environments_export,
@@ -74,7 +81,12 @@ export const DEFAULT_SYSTEM_ROLE_PERMISSIONS: Record<
 > = {
   user: [...PLATFORM_USER],
   operator: [...PLATFORM_USER, ...ADMIN_READ],
-  admin: [...PLATFORM_USER, ...ADMIN_READ, ...ADMIN_WRITE]
+  admin: [
+    ...PLATFORM_USER,
+    ...ADMIN_READ,
+    ...ADMIN_WRITE,
+    ...ADMIN_PERMISSIONS_CATALOG
+  ]
 };
 
 /** Legacy org keys owner|admin|member — also exposed as team_* via registry. */
