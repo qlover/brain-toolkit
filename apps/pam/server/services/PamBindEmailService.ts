@@ -7,15 +7,12 @@ import {
   type SupabaseClient,
   type User
 } from '@supabase/supabase-js';
+import { normalizeSystemRole, SystemRole } from '@shared/auth/systemRole';
 import { inject, injectable } from '@shared/container';
 import {
   toBusinessEmail,
   PHONE_PLACEHOLDER_EMAIL_SUFFIX
 } from '@shared/utils/pamUserIdentity';
-import {
-  normalizeSystemRole,
-  SystemRole
-} from '@shared/auth/systemRole';
 import {
   API_BIND_EMAIL_ALREADY_BOUND,
   API_BIND_EMAIL_PHONE_CONFLICT,

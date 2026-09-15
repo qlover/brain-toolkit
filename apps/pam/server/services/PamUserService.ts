@@ -1,17 +1,19 @@
-import { inject, injectable } from '@shared/container';
-import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
 import {
   expandSystemPermissions,
   isPlatformAdminRole,
   normalizeSystemRole,
+  SystemRole,
   type SystemRoleType
 } from '@shared/auth/systemRole';
+import { inject, injectable } from '@shared/container';
+import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
 import type {
   PamAdminUserListItem,
   PamSessionCapabilities,
   PamUserRow
 } from '@schemas/PamUserSchema';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
+import { PamPermissionService } from '@server/services/PamPermissionService';
 import {
   invalidatePlatformAdminCache,
   setPlatformAdminCache
@@ -26,7 +28,11 @@ export type PamUserEnsureInput = {
 
 @injectable()
 export class PamUserService {
-  constructor(@inject(PamUsersRepo) protected readonly repo: PamUsersRepo) {}
+  constructor(
+    @inject(PamUsersRepo) protected readonly repo: PamUsersRepo,
+    @inject(PamPermissionService)
+    protected readonly permissionService: PamPermissionService
+  ) {}
 
   public async ensurePamUser(input: PamUserEnsureInput): Promise<PamUserRow> {
     const row = await this.repo.ensureProfile({
@@ -55,7 +61,7 @@ export class PamUserService {
     return normalizeSystemRole(row?.system_role);
   }
 
-  /** True when system_role has admin.access (operator or admin). */
+  /** True when system_role has admin console gate uid (operator or admin). */
   public async isPlatformAdmin(userId: string): Promise<boolean> {
     const role = await this.getSystemRole(userId);
     const allowed = isPlatformAdminRole(role);
@@ -66,6 +72,7 @@ export class PamUserService {
   public async getCapabilities(
     userId: string
   ): Promise<PamSessionCapabilities> {
+    await this.permissionService.ensureLoaded();
     const role = await this.getSystemRole(userId);
     return {
       platformAdmin: isPlatformAdminRole(role),
@@ -97,9 +104,21 @@ export class PamUserService {
     enabled: boolean,
     actorUserId: string
   ): Promise<PamUserRow> {
-    const row = await this.repo.setPlatformAdmin(
+    return this.setSystemRole(
       targetUserId,
-      enabled,
+      enabled ? SystemRole.Admin : SystemRole.User,
+      actorUserId
+    );
+  }
+
+  public async setSystemRole(
+    targetUserId: string,
+    systemRole: SystemRoleType,
+    actorUserId: string
+  ): Promise<PamUserRow> {
+    const row = await this.repo.setSystemRole(
+      targetUserId,
+      systemRole,
       actorUserId
     );
     invalidatePlatformAdminCache(targetUserId);

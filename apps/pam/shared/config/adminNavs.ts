@@ -2,11 +2,13 @@ import {
   COMMON_ADMIN_NAV_DASHBOARD,
   COMMON_ADMIN_NAV_PHONE_OTPS,
   COMMON_ADMIN_NAV_REQUEST_LOGS,
+  COMMON_ADMIN_NAV_ROLES,
   COMMON_ADMIN_NAV_SITE_SETTINGS,
   COMMON_ADMIN_NAV_USER_MANAGEMENT
 } from '@config/i18n-identifier/common/common';
 import {
   ROUTE_ADMIN_PHONE_OTPS,
+  ROUTE_ADMIN_ROLES,
   ROUTE_ADMIN_SETTINGS,
   ROUTE_REQUEST_LOGS
 } from './route';
@@ -14,6 +16,7 @@ import {
 export type NavItemPaths =
   | 'admin'
   | 'admin/users'
+  | 'admin/roles'
   | 'admin/phone-otps'
   | 'admin/request-logs'
   | 'admin/settings';
@@ -34,6 +37,11 @@ export const defaultNavItems: NavItemInterface[] = [
     key: 'users',
     i18nKey: COMMON_ADMIN_NAV_USER_MANAGEMENT,
     pathname: '/admin/users'
+  },
+  {
+    key: 'roles',
+    i18nKey: COMMON_ADMIN_NAV_ROLES,
+    pathname: ROUTE_ADMIN_ROLES
   },
   {
     key: 'phone-otps',

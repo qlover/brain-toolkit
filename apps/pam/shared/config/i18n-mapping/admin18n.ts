@@ -3,6 +3,7 @@ import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
 import * as phoneOtpsKeys from '../i18n-identifier/pages/page.admin.phone-otps';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
+import * as rolesKeys from '../i18n-identifier/pages/page.admin.roles';
 import * as settingsKeys from '../i18n-identifier/pages/page.admin.settings';
 import * as userKeys from '../i18n-identifier/pages/page.admin.user';
 
@@ -39,11 +40,37 @@ export const admin18n = Object.freeze({
 
 export type AdminUsersI18nInterface = typeof adminUsers18n;
 
+export type AdminRolesI18nInterface = typeof adminRoles18n;
+
 export type AdminRequestLogsI18nInterface = typeof adminRequestLogs18n;
 
 export type AdminSettingsI18nInterface = typeof adminSettings18n;
 
 export type AdminPhoneOtpsI18nInterface = typeof adminPhoneOtps18n;
+
+export const adminRoles18n = Object.freeze({
+  title: rolesKeys.ADMIN_ROLES_TITLE,
+  description: rolesKeys.ADMIN_ROLES_DESCRIPTION,
+  content: rolesKeys.ADMIN_ROLES_DESCRIPTION,
+  keywords: rolesKeys.ADMIN_ROLES_KEYWORDS,
+  sectionSystem: rolesKeys.ADMIN_ROLES_SECTION_SYSTEM,
+  sectionOrg: rolesKeys.ADMIN_ROLES_SECTION_ORG,
+  permissionLabel: rolesKeys.ADMIN_ROLES_PERMISSION_LABEL,
+  selectedCount: rolesKeys.ADMIN_ROLES_SELECTED_COUNT,
+  save: rolesKeys.ADMIN_ROLES_SAVE,
+  saving: rolesKeys.ADMIN_ROLES_SAVING,
+  loadFailed: rolesKeys.ADMIN_ROLES_LOAD_FAILED,
+  saveFailed: rolesKeys.ADMIN_ROLES_SAVE_FAILED,
+  saveSuccess: rolesKeys.ADMIN_ROLES_SAVE_SUCCESS,
+  empty: rolesKeys.ADMIN_ROLES_EMPTY,
+  systemUser: rolesKeys.ADMIN_ROLES_SYSTEM_USER,
+  systemOperator: rolesKeys.ADMIN_ROLES_SYSTEM_OPERATOR,
+  systemAdmin: rolesKeys.ADMIN_ROLES_SYSTEM_ADMIN,
+  orgMember: rolesKeys.ADMIN_ROLES_ORG_MEMBER,
+  orgAdmin: rolesKeys.ADMIN_ROLES_ORG_ADMIN,
+  orgOwner: rolesKeys.ADMIN_ROLES_ORG_OWNER,
+  saveButton: commonKeys.COMMON_SAVE
+});
 
 export const adminPhoneOtps18n = Object.freeze({
   title: phoneOtpsKeys.ADMIN_PHONE_OTPS_TITLE,
@@ -130,6 +157,10 @@ export const adminUsers18n = Object.freeze({
   cancelButton: commonKeys.COMMON_CANCEL,
   createButton: commonKeys.COMMON_CREATE,
   platformAdminLabel: userKeys.ADMIN_USERS_PLATFORM_ADMIN_LABEL,
+  systemRoleLabel: userKeys.ADMIN_USERS_SYSTEM_ROLE_LABEL,
+  systemRoleUser: userKeys.ADMIN_USERS_SYSTEM_ROLE_USER,
+  systemRoleOperator: userKeys.ADMIN_USERS_SYSTEM_ROLE_OPERATOR,
+  systemRoleAdmin: userKeys.ADMIN_USERS_SYSTEM_ROLE_ADMIN,
   searchPlaceholder: userKeys.ADMIN_USERS_SEARCH_PLACEHOLDER,
   empty: userKeys.ADMIN_USERS_EMPTY,
   emailLabel: userKeys.ADMIN_USERS_EMAIL_LABEL,

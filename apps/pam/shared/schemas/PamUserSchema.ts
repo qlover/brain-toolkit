@@ -28,9 +28,9 @@ export const pamAdminUserListItemSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable().optional(),
   displayName: z.string().nullable(),
-  /** UI toggle: system_role === admin */
+  /** @deprecated Prefer systemRole; true when system_role === admin */
   isPlatformAdmin: z.boolean(),
-  systemRole: systemRoleSchema.optional(),
+  systemRole: systemRoleSchema,
   status: z.enum(['active', 'suspended']),
   createdAt: z.string()
 });
@@ -38,7 +38,7 @@ export const pamAdminUserListItemSchema = z.object({
 export type PamAdminUserListItem = z.infer<typeof pamAdminUserListItemSchema>;
 
 export const pamSessionCapabilitiesSchema = z.object({
-  /** True when role has admin.access (operator or admin). */
+  /** True when role has admin console gate uid (operator or admin). */
   platformAdmin: z.boolean(),
   roles: z.array(systemRoleSchema).default([]),
   permissions: z.array(z.string()).default([])
@@ -71,6 +71,13 @@ export type PamSessionResponse = z.infer<typeof pamSessionResponseSchema>;
 export const pamPlatformAdminPatchSchema = z.object({
   enabled: z.boolean()
 });
+
+/** PATCH /api/admin/users/:userId/system-role */
+export const pamSystemRolePatchSchema = z.object({
+  systemRole: systemRoleSchema
+});
+
+export type PamSystemRolePatch = z.infer<typeof pamSystemRolePatchSchema>;
 
 export const pamBindEmailSendSchema = z.object({
   email: z.string().email()

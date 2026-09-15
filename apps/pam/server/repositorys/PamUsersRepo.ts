@@ -1,14 +1,14 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
-import { inject, injectable } from '@shared/container';
-import {
-  isPhonePlaceholderEmail,
-  toBusinessEmail
-} from '@shared/utils/pamUserIdentity';
 import {
   normalizeSystemRole,
   SystemRole,
   type SystemRoleType
 } from '@shared/auth/systemRole';
+import { inject, injectable } from '@shared/container';
+import {
+  isPhonePlaceholderEmail,
+  toBusinessEmail
+} from '@shared/utils/pamUserIdentity';
 import { I } from '@config/ioc-identifiter';
 import type { PamUserRow } from '@schemas/PamUserSchema';
 import type { LoggerInterface } from '@qlover/logger';
