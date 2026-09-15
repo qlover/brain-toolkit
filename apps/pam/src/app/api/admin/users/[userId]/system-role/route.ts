@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_ADMIN_USERS_SYSTEM_ROLE } from '@config/apiRoutes';
 import { AdminUsersController } from '@server/controllers/AdminUsersController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -16,11 +16,7 @@ export async function PATCH(
     API_ADMIN_USERS_SYSTEM_ROLE.replace(':userId', userId),
     req
   )
-    .use(
-      new RequirePermissionPlugin(
-        permissionUid('PATCH', API_ADMIN_USERS_SYSTEM_ROLE)
-      )
-    )
+    .use(new RequirePermissionPlugin(PermissionKey.admin_users_system_role))
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(AdminUsersController).setSystemRole(userId, body)
     );

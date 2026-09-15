@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_EDIT } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -12,7 +12,7 @@ export async function POST(
   const { id } = await params;
   return new NextApiServer(API_PAM_EDIT, req)
     .use(
-      new RequirePermissionPlugin(permissionUid('POST', API_PAM_EDIT), {
+      new RequirePermissionPlugin(PermissionKey.pam_project_edit, {
         projectId: id
       })
     )

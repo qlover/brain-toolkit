@@ -1,7 +1,8 @@
-import { API_PAM_CREATE } from '@config/route';
+import { PermissionKey } from '@shared/auth/permissionKeys';
+import { API_PAM_CREATE } from '@config/apiRoutes';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -29,7 +30,7 @@ import type { NextRequest } from 'next/server';
  */
 export function POST(req: NextRequest) {
   return new NextApiServer(API_PAM_CREATE, req)
-    .use(new ServerAuthPlugin())
+    .use(new RequirePermissionPlugin(PermissionKey.pam_project_create))
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).createProject(req)
     );

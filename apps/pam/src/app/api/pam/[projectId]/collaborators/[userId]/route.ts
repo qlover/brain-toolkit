@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_COLLABORATORS_2 } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -19,10 +19,9 @@ export async function PATCH(
   const { projectId, userId } = await context.params;
   return new NextApiServer(API_PAM_COLLABORATORS_2, req)
     .use(
-      new RequirePermissionPlugin(
-        permissionUid('PATCH', API_PAM_COLLABORATORS_2),
-        { projectId }
-      )
+      new RequirePermissionPlugin(PermissionKey.pam_collaborators_update, {
+        projectId
+      })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).updateCollaborator(projectId, userId, req)
@@ -46,10 +45,9 @@ export async function DELETE(
   const { projectId, userId } = await context.params;
   return new NextApiServer(API_PAM_COLLABORATORS_2, req)
     .use(
-      new RequirePermissionPlugin(
-        permissionUid('DELETE', API_PAM_COLLABORATORS_2),
-        { projectId }
-      )
+      new RequirePermissionPlugin(PermissionKey.pam_collaborators_delete, {
+        projectId
+      })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).removeCollaborator(projectId, userId)

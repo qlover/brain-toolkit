@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_ENVIRONMENTS_DELETE } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -19,10 +19,9 @@ export async function POST(
   const { projectId, envId } = await context.params;
   return new NextApiServer(API_PAM_ENVIRONMENTS_DELETE, req)
     .use(
-      new RequirePermissionPlugin(
-        permissionUid('POST', API_PAM_ENVIRONMENTS_DELETE),
-        { projectId }
-      )
+      new RequirePermissionPlugin(PermissionKey.pam_environments_delete, {
+        projectId
+      })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).deleteEnvironment(projectId, envId)

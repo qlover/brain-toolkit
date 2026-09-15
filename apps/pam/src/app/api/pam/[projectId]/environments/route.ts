@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_ENVIRONMENTS } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -33,7 +33,7 @@ export async function POST(
   const { projectId } = await context.params;
   return new NextApiServer(API_PAM_ENVIRONMENTS, req)
     .use(
-      new RequirePermissionPlugin(permissionUid('POST', API_PAM_ENVIRONMENTS), {
+      new RequirePermissionPlugin(PermissionKey.pam_environments_create, {
         projectId
       })
     )

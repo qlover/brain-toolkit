@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_PREVIEW_IMAGE } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -15,12 +15,9 @@ export async function POST(
   const { id } = await params;
   return new NextApiServer(API_PAM_PREVIEW_IMAGE, req)
     .use(
-      new RequirePermissionPlugin(
-        permissionUid('POST', API_PAM_PREVIEW_IMAGE),
-        {
-          projectId: id
-        }
-      )
+      new RequirePermissionPlugin(PermissionKey.pam_project_preview_write, {
+        projectId: id
+      })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).refreshPreviewImage(id)

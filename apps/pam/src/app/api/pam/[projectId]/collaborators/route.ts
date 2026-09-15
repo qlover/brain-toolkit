@@ -1,4 +1,4 @@
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_COLLABORATORS } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -19,7 +19,7 @@ export async function GET(
   const { projectId } = await context.params;
   return new NextApiServer(API_PAM_COLLABORATORS, req)
     .use(
-      new RequirePermissionPlugin(permissionUid('GET', API_PAM_COLLABORATORS), {
+      new RequirePermissionPlugin(PermissionKey.pam_collaborators_read, {
         projectId
       })
     )
@@ -38,10 +38,9 @@ export async function POST(
   const { projectId } = await context.params;
   return new NextApiServer(API_PAM_COLLABORATORS, req)
     .use(
-      new RequirePermissionPlugin(
-        permissionUid('POST', API_PAM_COLLABORATORS),
-        { projectId }
-      )
+      new RequirePermissionPlugin(PermissionKey.pam_collaborators_create, {
+        projectId
+      })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).addCollaborator(projectId, req)

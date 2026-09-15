@@ -1,5 +1,5 @@
 import { RequestLogsRepository } from '@qlover/next-kit/server';
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_ENVIRONMENTS_EXPORT } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -20,10 +20,9 @@ export async function GET(req: NextRequest, context: ExportRouteContext) {
   return new NextApiServer(API_PAM_ENVIRONMENTS_EXPORT, req)
     .use(new PamCliAuthPlugin())
     .use(
-      new RequirePermissionPlugin(
-        permissionUid('GET', API_PAM_ENVIRONMENTS_EXPORT),
-        { projectId }
-      )
+      new RequirePermissionPlugin(PermissionKey.pam_environments_export, {
+        projectId
+      })
     )
     .runWithJson(async ({ parameters: { IOC } }) => {
       const result = await IOC(PAMController).exportEnvironment(
