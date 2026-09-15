@@ -7,8 +7,8 @@ export const ADMIN_ROLES_TITLE = 'admin_roles:title';
 
 /**
  * @description Admin roles page description
- * @localZh 查看并编辑系统角色与机构角色的权限（API uid）
- * @localEn View and edit system and org role permission uids
+ * @localZh 选择左侧角色，勾选并保存其 API 权限
+ * @localEn Select a role on the left, then edit and save its API permissions
  */
 export const ADMIN_ROLES_DESCRIPTION = 'admin_roles:description';
 
@@ -27,9 +27,9 @@ export const ADMIN_ROLES_KEYWORDS = 'admin_roles:keywords';
 export const ADMIN_ROLES_SECTION_SYSTEM = 'admin_roles:section__system';
 
 /**
- * @description Org / team roles section heading
- * @localZh 机构角色
- * @localEn Organization roles
+ * @description Team roles section heading
+ * @localZh 团队角色
+ * @localEn Team roles
  */
 export const ADMIN_ROLES_SECTION_ORG = 'admin_roles:section__org';
 
@@ -46,6 +46,34 @@ export const ADMIN_ROLES_PERMISSION_LABEL = 'admin_roles:permission__label';
  * @localEn Selected
  */
 export const ADMIN_ROLES_SELECTED_COUNT = 'admin_roles:selected__count';
+
+/**
+ * @description Granted permissions section heading
+ * @localZh 已授权
+ * @localEn Granted
+ */
+export const ADMIN_ROLES_SECTION_GRANTED = 'admin_roles:section__granted';
+
+/**
+ * @description Available (unchecked) permissions section heading
+ * @localZh 未授权
+ * @localEn Not granted
+ */
+export const ADMIN_ROLES_SECTION_AVAILABLE = 'admin_roles:section__available';
+
+/**
+ * @description Hint under platform role editor
+ * @localZh 自己的项目按项目所有者鉴权，权限模板是「团队所有者」，不是「普通用户」。普通用户只配平台能力（创建团队、后台）。
+ * @localEn Own projects are authorized as project owner using the Team owner template, not User. The user role only covers platform capabilities (create teams, admin console).
+ */
+export const ADMIN_ROLES_HINT_PLATFORM = 'admin_roles:hint__platform';
+
+/**
+ * @description Hint under team role editor
+ * @localZh 自己的项目 = 团队所有者权限。这里改的是加入别人团队后的角色。
+ * @localEn Own projects use Team owner. This template is for membership in someone else's team.
+ */
+export const ADMIN_ROLES_HINT_TEAM = 'admin_roles:hint__team';
 
 /**
  * @description Save role assignments button
@@ -111,22 +139,22 @@ export const ADMIN_ROLES_SYSTEM_OPERATOR = 'admin_roles:system__operator';
 export const ADMIN_ROLES_SYSTEM_ADMIN = 'admin_roles:system__admin';
 
 /**
- * @description Org role label: member
- * @localZh 成员
- * @localEn Member
+ * @description Team role label: member
+ * @localZh 团队成员
+ * @localEn Team member
  */
 export const ADMIN_ROLES_ORG_MEMBER = 'admin_roles:org__member';
 
 /**
- * @description Org role label: admin
- * @localZh 管理员
- * @localEn Admin
+ * @description Team role label: admin
+ * @localZh 团队管理员
+ * @localEn Team admin
  */
 export const ADMIN_ROLES_ORG_ADMIN = 'admin_roles:org__admin';
 
 /**
- * @description Org role label: owner
- * @localZh 所有者
- * @localEn Owner
+ * @description Team role label: owner
+ * @localZh 团队所有者
+ * @localEn Team owner
  */
 export const ADMIN_ROLES_ORG_OWNER = 'admin_roles:org__owner';

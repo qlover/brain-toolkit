@@ -19,8 +19,7 @@ export class AdminRolesApi {
     return (
       envelope.data ?? {
         catalog: [],
-        system: {},
-        org: {}
+        roles: []
       }
     );
   }
@@ -33,8 +32,7 @@ export class AdminRolesApi {
     return (
       envelope.data ?? {
         catalog: [],
-        system: {},
-        org: {}
+        roles: []
       }
     );
   }
