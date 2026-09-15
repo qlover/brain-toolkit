@@ -1,8 +1,10 @@
 import { RequestLogsRepository } from '@qlover/next-kit/server';
+import { permissionUid } from '@shared/auth/permissionUid';
 import { API_PAM_ENVIRONMENTS_EXPORT } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
 import { PamCliAuthPlugin } from '@server/plugins/PamCliAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 type ExportRouteContext = {
@@ -11,13 +13,19 @@ type ExportRouteContext = {
 
 /**
  * GET /api/pam/:projectId/environments/:envId/export
- * Owner-only decrypted dotenv export (CLI Bearer required).
+ * Decrypted dotenv export (CLI Bearer + permission uid).
  */
-export function GET(req: NextRequest, context: ExportRouteContext) {
+export async function GET(req: NextRequest, context: ExportRouteContext) {
+  const { projectId, envId } = await context.params;
   return new NextApiServer(API_PAM_ENVIRONMENTS_EXPORT, req)
     .use(new PamCliAuthPlugin())
+    .use(
+      new RequirePermissionPlugin(
+        permissionUid('GET', API_PAM_ENVIRONMENTS_EXPORT),
+        { projectId }
+      )
+    )
     .runWithJson(async ({ parameters: { IOC } }) => {
-      const { projectId, envId } = await context.params;
       const result = await IOC(PAMController).exportEnvironment(
         projectId,
         envId

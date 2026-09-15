@@ -1,10 +1,9 @@
+import { permissionUid } from '@shared/auth/permissionUid';
+import { API_ADMIN_USERS_PLATFORM_ADMIN } from '@config/apiRoutes';
 import { AdminUsersController } from '@server/controllers/AdminUsersController';
 import { NextApiServer } from '@server/NextApiServer';
-import { PlatformAdminPlugin } from '@server/plugins/PlatformAdminPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
-
-const API_ADMIN_USERS_PLATFORM_ADMIN =
-  '/api/admin/users/:userId/platform-admin' as const;
 
 export async function PATCH(
   req: NextRequest,
@@ -17,7 +16,11 @@ export async function PATCH(
     API_ADMIN_USERS_PLATFORM_ADMIN.replace(':userId', userId),
     req
   )
-    .use(new PlatformAdminPlugin())
+    .use(
+      new RequirePermissionPlugin(
+        permissionUid('PATCH', API_ADMIN_USERS_PLATFORM_ADMIN)
+      )
+    )
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(AdminUsersController).setPlatformAdmin(userId, body)
     );
