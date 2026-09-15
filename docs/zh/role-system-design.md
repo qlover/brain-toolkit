@@ -1,170 +1,78 @@
-# next-oauth / PAM 角色 · 机构（完整方案 · 已拍板）
+# next-oauth / PAM 角色 · 权限（uid）· 团队
 
-> **状态：已决定**  
-> **产品核心：机构 = 协作容器（PAM 里就是「项目协作」这一层）**  
-> **机构角色：`owner` / `admin` / `member`（三种够用；枚举可扩展，首期只实现这三种）**  
-> **另有：系统角色（全站后台）—— 与机构协作分开**  
-> **分支：** `feat/role-system`（子 PR 合入此分支）  
-> **落地顺序（已改）：先 PAM 做完整 → 再抽通用能力移植到 next-oauth 模板**
+> **分支：** `feat/role-system`  
+> **权限主键：** 不可变 API `uid` = `{method}_{path模板}`  
+> **机构 = `pam_role_teams`**；项目通过 `pam_projects.team_id` 挂到团队  
+> **角色相关表统一 `pam_role_*` 前缀**
 
 ---
 
-## 0. 产品定论（与你对齐）
+## 0. 产品定论
 
-| 你的观点 | 决定 |
+| 点 | 决定 |
 | --- | --- |
-| PAM 协作就是一个机构 | **同意**。用户加入「当前机构」= 加入该协作容器 |
-| 小机构 / 小团体各自有拥有者、管理员、成员 | **同意**。每个机构独立一席成员表 |
-| 三种角色即可，以后可扩展 | **同意**。首期只实现三档；角色字符串预留扩展 |
-
-**不做：** 在 PAM 项目协作之上再叠一套平行的「Organization 表」导致两套人马。  
-**要做：** 先在 PAM 把完整 role 跑通；稳定后再抽通用能力移植到 next-oauth。
+| 权限标识 | `permissionUid(METHOD, API_*)` → uid；FE/BE `includes(uid)` |
+| uid | 生成后不可改、不可重复；表 PK = uid（鉴权） |
+| slug | `permissionSlug(uid)`；i18n key = `permission:{slug}`；UI 展示翻译 |
+| description | 仅 DB 备注/查询；页面不用 |
+| 系统角色 | `pam_users.system_role`：user / operator / admin |
+| 机构角色 | `pam_role_team_members.role`：owner / admin / member |
+| 项目 | **不再等于机构**；归属 `team_id` |
+| 协作者表 | `pam_project_collaborators` **保留**；有 `team_id` 时以团队成员为准 |
 
 ```
 平台
- └─ 系统角色：user | operator | admin     → 全站 Admin 等
+ └─ system_role → pam_role_assignments(system) → uid[]
 
-机构（协作容器）= PAM「项目」协作
- └─ 成员角色：owner | admin | member
-      └─ 权限按角色等级包含：owner ⊃ admin ⊃ member
+团队（机构）
+ └─ pam_role_team_members.role → pam_role_assignments(org) → uid[]
+      └─ pam_projects.team_id → pam_role_teams
 ```
 
 ---
 
-## 1. 机构角色（与 PAM 协作对齐）
+## 1. 用户 ↔ 角色绑定
 
-| 角色 | 含义（产品） | 与现 PAM |
-| --- | --- | --- |
-| `owner` | 拥有者 | `pam_projects.owner_id`（可继续不放在协作者行里） |
-| `admin` | 管理员 | `pam_project_collaborators.role = admin` |
-| `member` | 成员 | `pam_project_collaborators.role = member` |
-
-等级：`none < member < admin < owner`（沿用现 `projectAccessRole` 思路）。
-
-**继承（仅此一种）：** 更高机构角色自动具备更低角色的能力（写在代码权限表里），不是「没有权限再回落另一套组」。
-
-**系统角色不与机构角色互转：** 平台 `admin` ≠ 每个机构的 `owner`。
-
----
-
-## 2. 系统角色（仍然需要，且独立）
-
-机构解决「这个小团体里谁能管人、谁能改资源」；  
-全站还要「谁能进平台后台、停用用户」——继续用系统角色：
-
-| 角色 | 职责 |
+| 范围 | 绑定位置 |
 | --- | --- |
-| `user` | 默认 |
-| `operator` | 全局只读后台 |
-| `admin` | 平台管理员 |
+| 系统 | `pam_users.system_role` |
+| 团队 | `pam_role_team_members (team_id, user_id, role)` |
+| 项目访问 | 若 `project.team_id` 有值 → 团队角色；否则回落 owner + collaborators |
 
-| Permission | user | operator | admin |
-| --- | --- | --- | --- |
-| `admin.access` | | ✓ | ✓ |
-| `users.read` | | ✓ | ✓ |
-| `users.write` | | | ✓ |
-| `audit.read` | | ✓ | ✓ |
-
-PAM：在 `pam_users` **新增** `system_role`（**不改、不删** `is_platform_admin`）；代码走新字段。合主分支稳定后再删旧列。
+角色 → 权限：只查 `pam_role_assignments`。
 
 ---
 
-## 3. 机构权限（三角色，可扩展）
+## 2. 表（`pam_role_*`）
 
-首期权限表示例（可按产品微调，但角色只有三档）：
+| 表 | 作用 |
+| --- | --- |
+| `pam_role_permissions` | 权限目录（uid / type / method / path） |
+| `pam_role_assignments` | scope + role_key → permission_uid |
+| `pam_role_teams` | 团队 / 机构 |
+| `pam_role_team_members` | 团队成员与角色 |
 
-| Permission / 能力 | member | admin | owner |
-| --- | --- | --- | --- |
-| 读机构 / 读资源（按现 PAM：可见性规则） | ✓ | ✓ | ✓ |
-| 编辑内容（现 `can_edit`：member+） | ✓ | ✓ | ✓ |
-| 管理成员（现 `can_manage_collaborators`：admin+） | | ✓ | ✓ |
-| 删除机构 / 转让拥有者 | | | ✓ |
-
-以后若加 `viewer` 等，只扩枚举与映射表，不改「机构 = 协作容器」的产品结构。
+**回填（022）**：按项目 owner 建 `personal-{userId}` 团队；挂项目；并入协作者。
 
 ---
 
-## 4. PAM 先行 → 再移植模板
+## 3. API
 
-### PAM（先做完整）
+| Method | Path | 说明 |
+| --- | --- | --- |
+| GET/POST | `/api/pam/teams` | 列表 / 创建 |
+| GET | `/api/pam/teams/:teamId` | 详情 |
+| POST | `.../members` | 加人 |
+| PATCH/DELETE | `.../members/:userId` | 改角色 / 移除 |
+| POST | `.../projects` | 挂项目 |
+| PATCH | `/api/admin/users/:userId/system-role` | 设系统角色 `user\|operator\|admin` |
+| GET | `/api/admin/roles` | 权限目录 + 角色授权视图 |
+| PATCH | `/api/admin/roles` | 替换某角色的 permission uid 列表 |
 
-- **机构 = 现有项目协作模型**（不另叠平行 Organization 成员表）  
-- 系统角色：`pam_users` **新增** `system_role`；**保留** `is_platform_admin`；代码读新字段  
-- Session `capabilities`（系统 + 当前机构/项目角色）  
-- 页面 middleware + API Plugin 统一 `assertPermission` / 机构（项目）访问  
-- 产品文案可称「机构」；表结构优先兼容现有 `pam_projects` / collaborators  
-
-### next-oauth（PAM 稳定后再移植）
-
-- 将 PAM 验证过的：权限常量、RoleService 形态、JWT 声明、`Require*Plugin`、session capabilities  
-- 落成模板通用表 `organizations` + `organization_members`（与 PAM 语义同构）  
-- 避免模板先行导致与线上 PAM 二次对齐成本  
-
----
-
-## 5. 高性能（不变）
-
-- JWT 瘦载荷：系统角色 + 当前 `orgId`/`orgRole`（PAM 即当前项目上下文）+ `rv`  
-- 权限内存展开；热路径零 DB  
-- 改角色 → `rv++` + refresh session  
+后台：
+- **用户管理** `/admin/users`：给用户绑定 `system_role`
+- **角色管理** `/admin/roles`：编辑 `pam_role_assignments`（系统角色 + 机构角色 → uid）
 
 ---
 
-## 6. Session 示意
-
-```json
-{
-  "user": { "id": "...", "email": "...", "name": "..." },
-  "capabilities": {
-    "roles": ["user"],
-    "permissions": [],
-    "orgId": "...",
-    "orgRole": "admin",
-    "orgPermissions": ["…"],
-    "platformAdmin": false
-  }
-}
-```
-
-PAM 可继续暴露现有 `my_role` / `can_edit` / `can_manage_collaborators`，与 `orgRole` 同源。
-
----
-
-## 7. 落地切片（合入 `feat/role-system`）
-
-### 阶段 1 — PAM（brain-toolkit）
-
-1. **A** `pam_users` **新增** `system_role`（不删旧列）；代码走新字段；session capabilities  
-2. **B** 明确「项目 = 机构」：统一 assert / capabilities 与现有协作三角色  
-3. **C** 页面 + API 闸门（Admin 用系统角色；项目用机构角色）  
-4. **D** Admin / 协作 UI 与文案对齐（按需）  
-5. **合主后清理** 再删 `is_platform_admin` 等无用旧字段  
-
-### 阶段 2 — 移植 next-oauth（fe-base）
-
-5. **E** 抽通用权限常量 / Plugin / session 形状  
-6. **F** 模板机构表 + UI，语义与 PAM 对齐  
-7. **G** 集成分支收齐 → 合主线  
-
----
-
-## 8. 明确不做
-
-- 机构上再叠一层平行 Organization，与项目成员两套名单  
-- 机构下再嵌套「组/部门」  
-- 平台 admin 默认拥有所有机构的 owner 权限  
-- 每页查库；Casbin；OAuth scope 当机构权限  
-- **先改模板再倒逼 PAM**（顺序已定为 PAM 先行）  
-
----
-
-## 9. 对外口径
-
-1. **机构** = 一个协作小团体（PAM 项目协作）  
-2. 成员三角色：**拥有者 / 管理员 / 成员**（可扩展，首期三种）  
-3. **系统角色**管平台后台，不管「进没进某个机构」  
-4. **先 PAM，后 next-oauth**；页面与 API 同一套鉴权；热路径要快  
-
----
-
-*已拍板：协作即机构 + 三角色；实现顺序 PAM → next-oauth。*
+*机构 = pam_role_teams；权限目录 = pam_role_permissions；授权 = pam_role_assignments。*
