@@ -1,96 +1,71 @@
 /**
- * Default role → permission uid maps (seed / fallback when DB not loaded).
+ * Default role → permission_key maps (seed / fallback when DB not loaded).
  * Keep in sync with apps/pam/makes/sql/020-pam-roles.sql
  */
 
-import {
-  API_ADMIN_PHONE_OTPS,
-  API_ADMIN_REQUEST_LOGS,
-  API_ADMIN_ROLES,
-  API_ADMIN_SITE_SETTINGS,
-  API_ADMIN_USERS,
-  API_ADMIN_USERS_PLATFORM_ADMIN,
-  API_ADMIN_USERS_SYSTEM_ROLE,
-  API_PAM_COLLABORATORS,
-  API_PAM_COLLABORATORS_2,
-  API_PAM_DELETE,
-  API_PAM_EDIT,
-  API_PAM_ENVIRONMENTS,
-  API_PAM_ENVIRONMENTS_DELETE,
-  API_PAM_ENVIRONMENTS_EXPORT,
-  API_PAM_ENVIRONMENTS_VARIABLES,
-  API_PAM_PREVIEW_IMAGE,
-  API_PAM_TEAMS,
-  API_PAM_TEAMS_2,
-  API_PAM_TEAMS_MEMBERS,
-  API_PAM_TEAMS_MEMBERS_2,
-  API_PAM_TEAMS_PROJECTS,
-  API_PAM_TRANSFER
-} from '@config/apiRoutes';
-import { permissionUid } from './permissionUid';
+import { PermissionKey } from './permissionKeys';
 
-/** Representative uids for legacy UI flags (can_edit / can_manage / can_delete). */
-export const OrgFlagUid = {
-  Edit: permissionUid('POST', API_PAM_EDIT),
-  ManageCollaborators: permissionUid('POST', API_PAM_COLLABORATORS),
-  Delete: permissionUid('POST', API_PAM_DELETE)
+/** Project access flags derived from team-role permission_keys. */
+export const OrgFlagPermission = {
+  Edit: PermissionKey.pam_project_edit,
+  ManageCollaborators: PermissionKey.pam_collaborators_create,
+  Delete: PermissionKey.pam_project_delete
 } as const;
 
-/** Admin console gate (operator+): any user with this uid may open /admin. */
-export const SYSTEM_ADMIN_GATE_UID = permissionUid(
-  'GET',
-  API_ADMIN_SITE_SETTINGS
-);
+/** /admin gate: operator+ (has site-settings read). */
+export const SYSTEM_ADMIN_GATE_KEY = PermissionKey.admin_site_settings_read;
 
 const ADMIN_READ = [
-  permissionUid('GET', API_ADMIN_USERS),
-  permissionUid('GET', API_ADMIN_ROLES),
-  permissionUid('GET', API_ADMIN_REQUEST_LOGS),
-  permissionUid('GET', API_ADMIN_PHONE_OTPS),
-  permissionUid('GET', API_ADMIN_SITE_SETTINGS)
+  PermissionKey.admin_users_read,
+  PermissionKey.admin_roles_read,
+  PermissionKey.admin_request_logs_read,
+  PermissionKey.admin_phone_otps_read,
+  PermissionKey.admin_site_settings_read
 ] as const;
 
 const ADMIN_WRITE = [
-  permissionUid('PATCH', API_ADMIN_USERS_PLATFORM_ADMIN),
-  permissionUid('PATCH', API_ADMIN_USERS_SYSTEM_ROLE),
-  permissionUid('PATCH', API_ADMIN_ROLES),
-  permissionUid('PATCH', API_ADMIN_SITE_SETTINGS)
+  PermissionKey.admin_users_platform_admin,
+  PermissionKey.admin_users_system_role,
+  PermissionKey.admin_roles_write,
+  PermissionKey.admin_site_settings_write
 ] as const;
 
-const TEAM_MEMBER = [permissionUid('GET', API_PAM_TEAMS_2)] as const;
+const TEAM_MEMBER = [PermissionKey.pam_teams_read] as const;
 
 const TEAM_ADMIN = [
   ...TEAM_MEMBER,
-  permissionUid('POST', API_PAM_TEAMS_MEMBERS),
-  permissionUid('PATCH', API_PAM_TEAMS_MEMBERS_2),
-  permissionUid('DELETE', API_PAM_TEAMS_MEMBERS_2),
-  permissionUid('POST', API_PAM_TEAMS_PROJECTS)
+  PermissionKey.pam_teams_members_create,
+  PermissionKey.pam_teams_members_update,
+  PermissionKey.pam_teams_members_delete,
+  PermissionKey.pam_teams_projects_attach
 ] as const;
 
 const ORG_MEMBER = [
-  permissionUid('GET', API_PAM_COLLABORATORS),
-  permissionUid('POST', API_PAM_ENVIRONMENTS),
-  permissionUid('POST', API_PAM_ENVIRONMENTS_VARIABLES),
-  permissionUid('GET', API_PAM_ENVIRONMENTS_EXPORT),
-  permissionUid('POST', API_PAM_EDIT),
-  permissionUid('POST', API_PAM_PREVIEW_IMAGE),
+  PermissionKey.pam_collaborators_read,
+  PermissionKey.pam_environments_create,
+  PermissionKey.pam_environments_variables_write,
+  PermissionKey.pam_environments_export,
+  PermissionKey.pam_project_edit,
+  PermissionKey.pam_project_preview_write,
   ...TEAM_MEMBER
 ] as const;
 
 const ORG_ADMIN = [
   ...ORG_MEMBER,
-  permissionUid('POST', API_PAM_COLLABORATORS),
-  permissionUid('PATCH', API_PAM_COLLABORATORS_2),
-  permissionUid('DELETE', API_PAM_COLLABORATORS_2),
-  permissionUid('POST', API_PAM_ENVIRONMENTS_DELETE),
-  permissionUid('POST', API_PAM_DELETE),
-  permissionUid('POST', API_PAM_TRANSFER),
+  PermissionKey.pam_collaborators_create,
+  PermissionKey.pam_collaborators_update,
+  PermissionKey.pam_collaborators_delete,
+  PermissionKey.pam_environments_delete,
+  PermissionKey.pam_project_delete,
+  PermissionKey.pam_project_transfer,
   ...TEAM_ADMIN
 ] as const;
 
 const PLATFORM_USER = [
-  permissionUid('GET', API_PAM_TEAMS),
-  permissionUid('POST', API_PAM_TEAMS)
+  PermissionKey.pam_teams_list,
+  PermissionKey.pam_teams_create,
+  PermissionKey.pam_project_create,
+  PermissionKey.pam_project_fork
 ] as const;
 
 export const DEFAULT_SYSTEM_ROLE_PERMISSIONS: Record<

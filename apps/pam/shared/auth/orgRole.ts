@@ -5,11 +5,11 @@
  * Project access prefers `pam_projects.team_id` membership; falls back to
  * project owner + `pam_project_collaborators` when team_id is null.
  *
- * Permission identifiers are immutable API uids (method_path).
+ * Permission identifiers are immutable permission_key values.
  */
 
 import type { PAMProjectAccessRole } from '@schemas/PAMProjectCollaboratorSchema';
-import { OrgFlagUid } from './permissionDefaults';
+import { OrgFlagPermission } from './permissionDefaults';
 import { resolveOrgPermissions } from './permissionRegistry';
 
 /** Membership roles (excludes `none`). */
@@ -39,7 +39,7 @@ export function hasMinOrgRole(
   return orgRoleRank(role) >= orgRoleRank(minRole);
 }
 
-/** Expand org role to API permission uids. */
+/** Expand org role to permission_key list. */
 export function expandOrgPermissions(
   role: PAMProjectAccessRole
 ): readonly string[] {
@@ -51,14 +51,14 @@ export function expandOrgPermissions(
 
 export function hasOrgPermission(
   role: PAMProjectAccessRole,
-  permissionUid: string
+  permissionKey: string
 ): boolean {
-  return expandOrgPermissions(role).includes(permissionUid);
+  return expandOrgPermissions(role).includes(permissionKey);
 }
 
 /**
- * API / UI flags derived from org permission uids.
- * `permissions` is the uid array for FE includes checks.
+ * API / UI flags derived from org permission_keys.
+ * `permissions` is the key array for FE includes checks.
  */
 export function orgAccessFlags(role: PAMProjectAccessRole): {
   my_role: PAMProjectAccessRole;
@@ -74,12 +74,12 @@ export function orgAccessFlags(role: PAMProjectAccessRole): {
   return {
     my_role: role,
     is_owner: role === OrgRole.Owner,
-    can_edit: hasOrgPermission(role, OrgFlagUid.Edit),
+    can_edit: hasOrgPermission(role, OrgFlagPermission.Edit),
     can_manage_collaborators: hasOrgPermission(
       role,
-      OrgFlagUid.ManageCollaborators
+      OrgFlagPermission.ManageCollaborators
     ),
-    can_delete: hasOrgPermission(role, OrgFlagUid.Delete),
+    can_delete: hasOrgPermission(role, OrgFlagPermission.Delete),
     org_permissions: permissions,
     permissions
   };

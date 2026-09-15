@@ -1,24 +1,26 @@
-import { describe, expect, it } from 'vitest';
-import { expandOrgPermissions, hasOrgPermission } from '@shared/auth/orgRole';
-import { permissionUid } from '@shared/auth/permissionUid';
-import { API_PAM_TEAMS_2, API_PAM_TEAMS_MEMBERS } from '@config/apiRoutes';
+import { describe, expect, it, beforeEach } from 'vitest';
+import { hasOrgPermission } from '@shared/auth/orgRole';
+import { PermissionKey } from '@shared/auth/permissionKeys';
+import { clearPermissionMaps } from '@shared/auth/permissionRegistry';
 
-describe('team org permissions (uid)', () => {
-  it('member can read team detail but not manage members', () => {
+describe('teamPermissions', () => {
+  beforeEach(() => {
+    clearPermissionMaps();
+  });
+
+  it('team member can read team but not manage members', () => {
+    expect(hasOrgPermission('member', PermissionKey.pam_teams_read)).toBe(true);
     expect(
-      hasOrgPermission('member', permissionUid('GET', API_PAM_TEAMS_2))
-    ).toBe(true);
-    expect(
-      hasOrgPermission('member', permissionUid('POST', API_PAM_TEAMS_MEMBERS))
+      hasOrgPermission('member', PermissionKey.pam_teams_members_create)
     ).toBe(false);
   });
 
-  it('admin/owner can manage team members', () => {
+  it('team admin can manage members', () => {
     expect(
-      hasOrgPermission('admin', permissionUid('POST', API_PAM_TEAMS_MEMBERS))
+      hasOrgPermission('admin', PermissionKey.pam_teams_members_create)
     ).toBe(true);
-    expect(expandOrgPermissions('owner')).toContain(
-      permissionUid('POST', API_PAM_TEAMS_MEMBERS)
-    );
+    expect(
+      hasOrgPermission('owner', PermissionKey.pam_teams_members_create)
+    ).toBe(true);
   });
 });
