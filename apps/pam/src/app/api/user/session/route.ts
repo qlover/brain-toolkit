@@ -26,7 +26,7 @@ import type { NextRequest } from 'next/server';
  *                   example: true
  *                 data:
  *                   type: object
- *                   description: Current user (UserSchema). Omitted if not logged in.
+ *                   description: Current user (flat PamSessionUser). Null if not logged in.
  *                   nullable: true
  *                   properties:
  *                     id:
@@ -34,19 +34,25 @@ import type { NextRequest } from 'next/server';
  *                     role:
  *                       type: integer
  *                       enum: [0, 1]
+ *                     system_role:
+ *                       type: string
+ *                       enum: [user, operator, admin]
+ *                     permissions:
+ *                       type: array
+ *                       items:
+ *                         type: string
  *                     email:
  *                       type: string
- *                       format: email
+ *                     phone:
+ *                       type: string
+ *                       nullable: true
+ *                     display_name:
+ *                       type: string
+ *                       nullable: true
  *                     credential_token:
  *                       type: string
- *                     email_confirmed_at:
- *                       type: number
- *                       nullable: true
  *                     created_at:
  *                       type: string
- *                     updated_at:
- *                       type: string
- *                       nullable: true
  *       400:
  *         description: Request failed. Error details in envelope.
  *         content:

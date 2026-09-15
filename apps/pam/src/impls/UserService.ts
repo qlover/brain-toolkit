@@ -11,11 +11,14 @@ import {
 } from '@qlover/next-kit/common';
 import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { isObject, isString } from 'lodash-es';
+import {
+  isPlatformAdminRole,
+  normalizeSystemRole
+} from '@shared/auth/systemRole';
 import { inject, injectable } from '@shared/container';
 import { API_REFRESH_USER_INFO_FAILED } from '@config/i18n-identifier/api';
 import {
   pamSessionUserSchema,
-  type PamSessionCapabilities,
   type PamSessionResponse,
   type PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -34,9 +37,8 @@ import type {
 function defaultCapabilitiesState(): PamSessionCapabilitiesStateInterface {
   return Object.assign(createAsyncState(), {
     platformAdmin: false,
-    roles: [],
     permissions: [],
-    result: { platformAdmin: false, roles: [], permissions: [] }
+    result: { platformAdmin: false, permissions: [] }
   });
 }
 
@@ -103,18 +105,15 @@ export class UserService
     return this.capabilitiesStore.getStore();
   }
 
-  public applySessionCapabilities(capabilities: PamSessionCapabilities): void {
-    const roles = capabilities.roles ?? [];
-    const permissions = capabilities.permissions ?? [];
+  public applySessionCapabilities(user: PamSessionUser): void {
+    const permissions = user.permissions ?? [];
+    const platformAdmin = isPlatformAdminRole(
+      normalizeSystemRole(user.system_role)
+    );
     this.capabilitiesStore.emit({
-      platformAdmin: capabilities.platformAdmin,
-      roles,
+      platformAdmin,
       permissions,
-      result: {
-        platformAdmin: capabilities.platformAdmin,
-        roles,
-        permissions
-      }
+      result: { platformAdmin, permissions }
     });
   }
 
@@ -155,16 +154,13 @@ export class UserService
     this.getStore().success(user, {
       credential_token: user.credential_token ?? ''
     });
+    this.applySessionCapabilities(user);
     return true;
   }
 
   public applySessionResponse(session: PamSessionResponse): boolean {
-    if (session.user && this.isUser(session.user)) {
-      this.getStore().success(session.user, {
-        credential_token: session.user.credential_token ?? ''
-      });
-      this.applySessionCapabilities(session.capabilities);
-      return true;
+    if (session && this.isUser(session)) {
+      return this.applySessionUser(session);
     }
     this.clearSessionCapabilities();
     this.getStore().failed(API_REFRESH_USER_INFO_FAILED);

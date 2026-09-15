@@ -5,18 +5,16 @@ import type {
 
 export type PamCapabilitiesResult = {
   platformAdmin: boolean;
-  roles?: string[];
-  permissions?: string[];
+  permissions: string[];
 };
 
 /**
- * Client session capabilities from GET /api/user/session (UI only).
- * Server gates remain middleware + PlatformAdminPlugin.
+ * Client session flags derived from flat session user
+ * (`system_role` + `permissions`). Server gates remain middleware / plugins.
  */
 export interface PamSessionCapabilitiesStateInterface
   extends AsyncStoreStateInterface<PamCapabilitiesResult> {
   platformAdmin: boolean;
-  roles: string[];
   permissions: string[];
 }
 

@@ -30,38 +30,29 @@ import {
 } from './appApi/AppApiRequester';
 import type { GatewayResult, LoginParams } from '@qlover/corekit-bridge';
 
-const emptySession = (): PamSessionResponse => ({
-  user: null,
-  capabilities: {
-    platformAdmin: false,
-    roles: [],
-    permissions: []
-  }
-});
-
-function parseSessionPayload(
-  payload: PamSessionResponse | UserSchema | null
-): PamSessionResponse {
-  if (
-    payload != null &&
-    typeof payload === 'object' &&
-    'capabilities' in payload
-  ) {
-    return payload as PamSessionResponse;
-  }
-
+/**
+ * Normalize session payload:
+ * - current: flat PamSessionUser | null
+ * - legacy: { user, capabilities }
+ */
+function parseSessionPayload(payload: unknown): PamSessionResponse {
   if (payload == null) {
-    return emptySession();
+    return null;
+  }
+  if (typeof payload !== 'object') {
+    return null;
   }
 
-  return {
-    user: payload as UserSchema,
-    capabilities: {
-      platformAdmin: false,
-      roles: [],
-      permissions: []
-    }
-  };
+  if ('capabilities' in payload && 'user' in payload) {
+    const user = (payload as { user: PamSessionUser | null }).user;
+    return user ?? null;
+  }
+
+  if ('id' in payload && 'email' in payload) {
+    return payload as PamSessionUser;
+  }
+
+  return null;
 }
 
 /**
@@ -119,7 +110,7 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     const session = await this.fetchSession(_config);
 
     return {
-      data: session.user as UserSchema,
+      data: session as UserSchema,
       error: null
     };
   }
