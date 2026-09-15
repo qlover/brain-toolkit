@@ -1133,27 +1133,10 @@ export class PAMService implements PAMServiceInterface {
    * @override
    */
   public async listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
-    const [user, access] = await Promise.all([
-      this.userService.getUser(),
-      this.projectRepo.getProjectAccessAdmin(projectId)
-    ]);
-
-    if (!access) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
-
-    const role = user
-      ? await this.resolveAccessRole(
-          projectId,
-          user.id,
-          access.owner_id,
-          access.team_id
-        )
-      : ('none' as const);
-
-    if (role === 'none' && access.is_public !== PAMPublicType.public) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_read
+    );
 
     const envs = await this.projectRepo.getEnvironmentsByProjectId(projectId);
     return PAMEnvVariableRedactUtil.redactEnvironments(

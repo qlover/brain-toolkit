@@ -12,6 +12,8 @@ export type PAMSettingsCardProps = {
   readonly saveDisabled?: boolean;
   readonly saving?: boolean;
   readonly onSave?: () => void;
+  /** When set, Save button gets `data-permission` for permission UI tests. */
+  readonly savePermission?: string;
   readonly footerLeft?: React.ReactNode;
   readonly testId?: string;
   readonly className?: string;
@@ -40,6 +42,7 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
   saveDisabled = false,
   saving = false,
   onSave,
+  savePermission,
   footerLeft,
   testId = 'PAMSettingsCard',
   className
@@ -71,6 +74,7 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
           {showSave && onSave ? (
             <button
               type="button"
+              data-permission={savePermission}
               onClick={onSave}
               disabled={saveDisabled || saving}
               className={clsx(
