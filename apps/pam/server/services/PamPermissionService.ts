@@ -11,12 +11,16 @@ import { RoleKind } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type {
+  PamAdminPermissionCreate,
   PamAdminPermissionItem,
+  PamAdminPermissionUpdate,
+  PamAdminPermissionsResponse,
   PamAdminRoleItem,
   PamAdminRolesResponse
 } from '@schemas/PamRoleSchema';
 import {
   PamRolePermissionsRepo,
+  type PamPermissionRow,
   type PamRoleAssignmentJoinRow,
   type PamRoleRow
 } from '../repositorys/PamRolePermissionsRepo';
@@ -52,6 +56,16 @@ function defaultRoleMaps(): Record<string, string[]> {
   return maps;
 }
 
+function toPermissionItem(row: PamPermissionRow): PamAdminPermissionItem {
+  return {
+    permissionKey: row.permission_key,
+    type: row.type,
+    method: row.method,
+    path: row.path,
+    description: row.description
+  };
+}
+
 @injectable()
 export class PamPermissionService {
   private loadPromise: Promise<void> | null = null;
@@ -85,13 +99,7 @@ export class PamPermissionService {
     let catalog: PamAdminPermissionItem[] = [];
     try {
       const rows = await this.repo.listPermissions();
-      catalog = rows.map((row) => ({
-        permissionKey: row.permission_key,
-        type: row.type,
-        method: row.method,
-        path: row.path,
-        description: row.description
-      }));
+      catalog = rows.map(toPermissionItem);
     } catch (error) {
       this.logger.warn('listPermissions failed for admin roles view', error);
     }
@@ -157,6 +165,45 @@ export class PamPermissionService {
     });
     await this.reload();
     return this.getAdminRolesView();
+  }
+
+  public async listPermissionCatalog(): Promise<PamAdminPermissionsResponse> {
+    const rows = await this.repo.listPermissions();
+    return { catalog: rows.map(toPermissionItem) };
+  }
+
+  public async createPermission(
+    input: PamAdminPermissionCreate
+  ): Promise<PamAdminPermissionsResponse> {
+    const existing = await this.repo.findPermissionByKey(input.permissionKey);
+    if (existing) {
+      throw new Error(`Permission already exists: ${input.permissionKey}`);
+    }
+    await this.repo.insertPermission({
+      permissionKey: input.permissionKey,
+      type: input.type,
+      method: input.method ?? null,
+      path: input.path ?? null,
+      description: input.description ?? null
+    });
+    return this.listPermissionCatalog();
+  }
+
+  public async updatePermission(
+    input: PamAdminPermissionUpdate
+  ): Promise<PamAdminPermissionsResponse> {
+    const existing = await this.repo.findPermissionByKey(input.permissionKey);
+    if (!existing) {
+      throw new Error(`Permission not found: ${input.permissionKey}`);
+    }
+    await this.repo.updatePermission({
+      permissionKey: input.permissionKey,
+      type: input.type,
+      method: input.method,
+      path: input.path,
+      description: input.description
+    });
+    return this.listPermissionCatalog();
   }
 
   private async loadFromDb(): Promise<void> {

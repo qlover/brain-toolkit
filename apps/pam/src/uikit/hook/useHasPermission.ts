@@ -28,6 +28,8 @@ function useSessionPermissionKeys(): {
   return { permissions, success, loading };
 }
 
+export { useSessionPermissionKeys };
+
 /**
  * UI gate by permission_key (sole identity).
  *

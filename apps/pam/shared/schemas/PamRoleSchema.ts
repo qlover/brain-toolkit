@@ -50,3 +50,40 @@ export const pamAdminRoleAssignmentsPatchSchema = z.object({
 export type PamAdminRoleAssignmentsPatch = z.infer<
   typeof pamAdminRoleAssignmentsPatchSchema
 >;
+
+const permissionKeyField = z
+  .string()
+  .min(1)
+  .regex(/^[A-Za-z_][A-Za-z0-9_]*$/, 'Invalid permission_key format');
+
+export const pamAdminPermissionCreateSchema = z.object({
+  permissionKey: permissionKeyField,
+  type: z.enum(['api', 'page', 'feature']).default('api'),
+  method: z.string().nullable().optional(),
+  path: z.string().nullable().optional(),
+  description: z.string().nullable().optional()
+});
+
+export type PamAdminPermissionCreate = z.infer<
+  typeof pamAdminPermissionCreateSchema
+>;
+
+export const pamAdminPermissionUpdateSchema = z.object({
+  permissionKey: permissionKeyField,
+  type: z.enum(['api', 'page', 'feature']).optional(),
+  method: z.string().nullable().optional(),
+  path: z.string().nullable().optional(),
+  description: z.string().nullable().optional()
+});
+
+export type PamAdminPermissionUpdate = z.infer<
+  typeof pamAdminPermissionUpdateSchema
+>;
+
+export const pamAdminPermissionsResponseSchema = z.object({
+  catalog: z.array(pamAdminPermissionItemSchema)
+});
+
+export type PamAdminPermissionsResponse = z.infer<
+  typeof pamAdminPermissionsResponseSchema
+>;

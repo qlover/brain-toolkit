@@ -1,6 +1,7 @@
 import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
+import * as permissionsKeys from '../i18n-identifier/pages/page.admin.permissions';
 import * as phoneOtpsKeys from '../i18n-identifier/pages/page.admin.phone-otps';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
 import * as rolesKeys from '../i18n-identifier/pages/page.admin.roles';
@@ -42,6 +43,8 @@ export type AdminUsersI18nInterface = typeof adminUsers18n;
 
 export type AdminRolesI18nInterface = typeof adminRoles18n;
 
+export type AdminPermissionsI18nInterface = typeof adminPermissions18n;
+
 export type AdminRequestLogsI18nInterface = typeof adminRequestLogs18n;
 
 export type AdminSettingsI18nInterface = typeof adminSettings18n;
@@ -74,6 +77,31 @@ export const adminRoles18n = Object.freeze({
   orgAdmin: rolesKeys.ADMIN_ROLES_ORG_ADMIN,
   orgOwner: rolesKeys.ADMIN_ROLES_ORG_OWNER,
   saveButton: commonKeys.COMMON_SAVE
+});
+
+export const adminPermissions18n = Object.freeze({
+  title: permissionsKeys.ADMIN_PERMISSIONS_TITLE,
+  description: permissionsKeys.ADMIN_PERMISSIONS_DESCRIPTION,
+  content: permissionsKeys.ADMIN_PERMISSIONS_DESCRIPTION,
+  keywords: permissionsKeys.ADMIN_PERMISSIONS_KEYWORDS,
+  create: permissionsKeys.ADMIN_PERMISSIONS_CREATE,
+  save: permissionsKeys.ADMIN_PERMISSIONS_SAVE,
+  saving: permissionsKeys.ADMIN_PERMISSIONS_SAVING,
+  cancel: permissionsKeys.ADMIN_PERMISSIONS_CANCEL,
+  edit: permissionsKeys.ADMIN_PERMISSIONS_EDIT,
+  fieldKey: permissionsKeys.ADMIN_PERMISSIONS_FIELD_KEY,
+  fieldType: permissionsKeys.ADMIN_PERMISSIONS_FIELD_TYPE,
+  fieldMethod: permissionsKeys.ADMIN_PERMISSIONS_FIELD_METHOD,
+  fieldPath: permissionsKeys.ADMIN_PERMISSIONS_FIELD_PATH,
+  fieldDescription: permissionsKeys.ADMIN_PERMISSIONS_FIELD_DESCRIPTION,
+  keyHint: permissionsKeys.ADMIN_PERMISSIONS_KEY_HINT,
+  loadFailed: permissionsKeys.ADMIN_PERMISSIONS_LOAD_FAILED,
+  saveFailed: permissionsKeys.ADMIN_PERMISSIONS_SAVE_FAILED,
+  createSuccess: permissionsKeys.ADMIN_PERMISSIONS_CREATE_SUCCESS,
+  updateSuccess: permissionsKeys.ADMIN_PERMISSIONS_UPDATE_SUCCESS,
+  empty: permissionsKeys.ADMIN_PERMISSIONS_EMPTY,
+  forbidden: permissionsKeys.ADMIN_PERMISSIONS_FORBIDDEN,
+  search: permissionsKeys.ADMIN_PERMISSIONS_SEARCH
 });
 
 export const adminPhoneOtps18n = Object.freeze({

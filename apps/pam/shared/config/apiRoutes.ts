@@ -6,6 +6,15 @@
  */
 
 /**
+ * API path: `/api/admin/permissions`
+ *
+ * @see [src/app/api/admin/permissions/route.ts](../../src/app/api/admin/permissions/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/permissions/route.ts`
+ */
+export const API_ADMIN_PERMISSIONS = '/api/admin/permissions' as const;
+
+/**
  * API path: `/api/admin/phone-otps`
  *
  * @see [src/app/api/admin/phone-otps/route.ts](../../src/app/api/admin/phone-otps/route.ts)
@@ -542,6 +551,7 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
+  | typeof API_ADMIN_PERMISSIONS
   | typeof API_ADMIN_PHONE_OTPS
   | typeof API_ADMIN_REQUEST_LOGS
   | typeof API_ADMIN_ROLES

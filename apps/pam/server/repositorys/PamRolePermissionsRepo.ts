@@ -159,7 +159,8 @@ export class PamRolePermissionsRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(PERMISSIONS_TABLE)
-      .select('permission_key, type, method, path, description');
+      .select('permission_key, type, method, path, description')
+      .order('permission_key', { ascending: true });
 
     if (error) {
       this.logger.error('listPermissions failed', error);
@@ -167,6 +168,81 @@ export class PamRolePermissionsRepo {
     }
 
     return (data ?? []) as PamPermissionRow[];
+  }
+
+  public async findPermissionByKey(
+    permissionKey: string
+  ): Promise<PamPermissionRow | null> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(PERMISSIONS_TABLE)
+      .select('permission_key, type, method, path, description')
+      .eq('permission_key', permissionKey)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error('findPermissionByKey failed', error);
+      throw error;
+    }
+
+    return (data as PamPermissionRow | null) ?? null;
+  }
+
+  public async insertPermission(input: {
+    permissionKey: string;
+    type: string;
+    method: string | null;
+    path: string | null;
+    description: string | null;
+  }): Promise<PamPermissionRow> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(PERMISSIONS_TABLE)
+      .insert({
+        permission_key: input.permissionKey,
+        type: input.type,
+        method: input.method,
+        path: input.path,
+        description: input.description
+      })
+      .select('permission_key, type, method, path, description')
+      .single();
+
+    if (error) {
+      this.logger.error('insertPermission failed', error);
+      throw error;
+    }
+
+    return data as PamPermissionRow;
+  }
+
+  public async updatePermission(input: {
+    permissionKey: string;
+    type?: string;
+    method?: string | null;
+    path?: string | null;
+    description?: string | null;
+  }): Promise<PamPermissionRow> {
+    const patch: Record<string, string | null> = {};
+    if (input.type !== undefined) patch.type = input.type;
+    if (input.method !== undefined) patch.method = input.method;
+    if (input.path !== undefined) patch.path = input.path;
+    if (input.description !== undefined) patch.description = input.description;
+
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(PERMISSIONS_TABLE)
+      .update(patch)
+      .eq('permission_key', input.permissionKey)
+      .select('permission_key, type, method, path, description')
+      .single();
+
+    if (error) {
+      this.logger.error('updatePermission failed', error);
+      throw error;
+    }
+
+    return data as PamPermissionRow;
   }
 
   public async replaceRoleAssignments(input: {
