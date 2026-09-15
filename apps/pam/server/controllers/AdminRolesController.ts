@@ -21,8 +21,7 @@ export class AdminRolesController {
   ): Promise<PamAdminRolesResponse> {
     const parsed = pamAdminRoleAssignmentsPatchSchema.parse(body);
     return this.permissions.replaceRoleAssignments({
-      scope: parsed.scope,
-      roleKey: parsed.roleKey,
+      roleId: parsed.roleId,
       permissionUids: parsed.permissionUids
     });
   }

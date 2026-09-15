@@ -140,18 +140,12 @@ export class UserController {
 
   /**
    * Cookie-only session for bootstrap (no Supabase refresh, no tokens in JSON).
+   * Returns flat user (or null) — role fields live on the user object.
    */
   public async getSession(): Promise<PamSessionResponse> {
     const user = await this.userService.getSessionUser();
     if (!user) {
-      return {
-        user: null,
-        capabilities: {
-          platformAdmin: false,
-          roles: [],
-          permissions: []
-        }
-      };
+      return null;
     }
 
     const pamUser = await this.pamUserService.ensurePamUser({
@@ -159,21 +153,10 @@ export class UserController {
       email: user.email
     });
 
-    const businessEmail = pamUser.email?.trim() ?? '';
-    const capabilities = await this.pamUserService.getCapabilities(user.id);
-
-    return {
-      user: {
-        id: user.id,
-        email: businessEmail,
-        phone: pamUser.phone ?? null,
-        display_name: pamUser.display_name ?? null,
-        role: user.role,
-        credential_token: '',
-        created_at: user.created_at ?? pamUser.created_at
-      },
-      capabilities
-    };
+    return this.pamUserService.toSessionUser(pamUser, {
+      role: user.role,
+      created_at: user.created_at ?? pamUser.created_at
+    });
   }
 
   public async getUser(): Promise<UserSchema | null> {
@@ -314,14 +297,9 @@ export class UserController {
       user.id,
       parsed.display_name
     );
-    return {
-      id: pam.id,
-      email: pam.email?.trim() ?? '',
-      phone: pam.phone ?? null,
-      display_name: pam.display_name ?? null,
+    return this.pamUserService.toSessionUser(pam, {
       role: user.role,
-      credential_token: '',
       created_at: user.created_at ?? pam.created_at
-    };
+    });
   }
 }

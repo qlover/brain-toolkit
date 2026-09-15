@@ -1,4 +1,9 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
+import {
+  legacyTeamRoleFromKey,
+  teamRoleKeyFromLegacy,
+  TeamRoleKey
+} from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import type {
@@ -6,15 +11,23 @@ import type {
   PamTeamMemberRow,
   PamTeamRole
 } from '@schemas/PamTeamSchema';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
 const TABLE = 'pam_role_team_members';
+
+type MemberRoleJoin = {
+  role_id: string;
+  pam_roles: { key: string } | null;
+};
 
 @injectable()
 export class PamTeamMembersRepo {
   constructor(
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
+    @inject(PamRolePermissionsRepo)
+    protected readonly roles: PamRolePermissionsRepo,
     @inject(I.Logger)
     protected readonly logger: LoggerInterface
   ) {}
@@ -26,7 +39,7 @@ export class PamTeamMembersRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(TABLE)
-      .select('role')
+      .select('role_id, pam_roles ( key )')
       .eq('team_id', teamId)
       .eq('user_id', userId)
       .eq('status', 'active')
@@ -36,7 +49,8 @@ export class PamTeamMembersRepo {
       this.logger.error('PamTeamMembersRepo.getActiveRole', error);
       throw error;
     }
-    return (data?.role as PamTeamRole | undefined) ?? null;
+    const row = data as MemberRoleJoin | null;
+    return legacyTeamRoleFromKey(row?.pam_roles?.key);
   }
 
   public async listActiveTeamIdsForUser(userId: string): Promise<string[]> {
@@ -58,7 +72,7 @@ export class PamTeamMembersRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(TABLE)
-      .select('*')
+      .select('*, pam_roles ( key )')
       .eq('team_id', teamId)
       .eq('status', 'active')
       .order('created_at', { ascending: true });
@@ -68,7 +82,9 @@ export class PamTeamMembersRepo {
       throw error;
     }
 
-    const rows = (data ?? []) as PamTeamMemberRow[];
+    const rows = (data ?? []) as Array<
+      PamTeamMemberRow & { pam_roles: { key: string } | null }
+    >;
     if (rows.length === 0) {
       return [];
     }
@@ -99,8 +115,10 @@ export class PamTeamMembersRepo {
 
     return rows.map((row) => {
       const u = byId.get(row.user_id);
+      const { pam_roles: _join, ...member } = row;
       return {
-        ...row,
+        ...member,
+        role: legacyTeamRoleFromKey(row.pam_roles?.key) ?? 'member',
         email: u?.email ?? '',
         phone: u?.phone ?? null,
         display_name: u?.display_name ?? null
@@ -114,6 +132,9 @@ export class PamTeamMembersRepo {
     role: Exclude<PamTeamRole, 'owner'>;
     invitedBy: string;
   }): Promise<PamTeamMemberRow> {
+    const roleId = await this.roles.requireRoleIdByKey(
+      teamRoleKeyFromLegacy(input.role)
+    );
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(TABLE)
@@ -121,7 +142,7 @@ export class PamTeamMembersRepo {
         {
           team_id: input.teamId,
           user_id: input.userId,
-          role: input.role,
+          role_id: roleId,
           status: 'active',
           invited_by: input.invitedBy
         },
@@ -142,14 +163,18 @@ export class PamTeamMembersRepo {
     userId: string,
     role: Exclude<PamTeamRole, 'owner'>
   ): Promise<void> {
+    const roleId = await this.roles.requireRoleIdByKey(
+      teamRoleKeyFromLegacy(role)
+    );
+    const ownerRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.Owner);
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { error } = await supabase
       .from(TABLE)
-      .update({ role })
+      .update({ role_id: roleId })
       .eq('team_id', teamId)
       .eq('user_id', userId)
       .eq('status', 'active')
-      .neq('role', 'owner');
+      .neq('role_id', ownerRoleId);
 
     if (error) {
       this.logger.error('PamTeamMembersRepo.updateRole', error);
@@ -158,13 +183,14 @@ export class PamTeamMembersRepo {
   }
 
   public async remove(teamId: string, userId: string): Promise<void> {
+    const ownerRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.Owner);
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { error } = await supabase
       .from(TABLE)
       .delete()
       .eq('team_id', teamId)
       .eq('user_id', userId)
-      .neq('role', 'owner');
+      .neq('role_id', ownerRoleId);
 
     if (error) {
       this.logger.error('PamTeamMembersRepo.remove', error);
@@ -219,7 +245,7 @@ export class PamTeamMembersRepo {
 
     const { data: members, error: membersError } = await supabase
       .from(TABLE)
-      .select('team_id, role')
+      .select('team_id, role_id, pam_roles ( key )')
       .eq('user_id', userId)
       .eq('status', 'active')
       .in('team_id', teamIds);
@@ -233,7 +259,15 @@ export class PamTeamMembersRepo {
     }
 
     const roleByTeam = new Map(
-      (members ?? []).map((m) => [m.team_id as string, m.role as PamTeamRole])
+      (members ?? [])
+        .map((m) => {
+          const join = m as MemberRoleJoin & { team_id: string };
+          const legacy = legacyTeamRoleFromKey(join.pam_roles?.key);
+          return legacy ? ([join.team_id, legacy] as const) : null;
+        })
+        .filter((entry): entry is readonly [string, PamTeamRole] =>
+          Boolean(entry)
+        )
     );
 
     for (const p of projects ?? []) {
@@ -254,12 +288,13 @@ export class PamTeamMembersRepo {
     teamId: string,
     ownerId: string
   ): Promise<void> {
+    const ownerRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.Owner);
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { error } = await supabase.from(TABLE).upsert(
       {
         team_id: teamId,
         user_id: ownerId,
-        role: 'owner',
+        role_id: ownerRoleId,
         status: 'active',
         invited_by: ownerId
       },

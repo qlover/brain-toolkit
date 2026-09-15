@@ -1,4 +1,5 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
+import { PlatformRoleKey } from '@shared/auth/roleKeys';
 import {
   normalizeSystemRole,
   SystemRole,
@@ -11,6 +12,7 @@ import {
 } from '@shared/utils/pamUserIdentity';
 import { I } from '@config/ioc-identifiter';
 import type { PamUserRow } from '@schemas/PamUserSchema';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
 const TABLE = 'pam_users';
@@ -28,6 +30,8 @@ export class PamUsersRepo {
   constructor(
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
+    @inject(PamRolePermissionsRepo)
+    protected readonly roles: PamRolePermissionsRepo,
     @inject(I.Logger)
     protected readonly logger: LoggerInterface
   ) {}
@@ -89,7 +93,7 @@ export class PamUsersRepo {
   }
 
   /**
-   * Upsert profile fields; never clears an existing system_role.
+   * Upsert profile fields; never clears an existing role_id.
    * Never overwrites a real email with null/placeholder.
    * Does not touch legacy is_platform_admin except on insert default.
    */
@@ -131,6 +135,10 @@ export class PamUsersRepo {
       return data as PamUserRow;
     }
 
+    const defaultRoleId = await this.roles.requireRoleIdByKey(
+      PlatformRoleKey.User
+    );
+
     const { data, error } = await supabase
       .from(TABLE)
       .insert({
@@ -139,7 +147,7 @@ export class PamUsersRepo {
         display_name: input.displayName ?? null,
         phone: input.phone ?? null,
         is_platform_admin: false,
-        system_role: SystemRole.User,
+        role_id: defaultRoleId,
         status: 'active'
       })
       .select('*')
@@ -204,7 +212,7 @@ export class PamUsersRepo {
   }
 
   /**
-   * Set platform admin via **system_role** (new column).
+   * Set platform admin via role_id.
    * Does not modify legacy is_platform_admin.
    */
   public async setPlatformAdmin(
@@ -244,7 +252,9 @@ export class PamUsersRepo {
 
     const nextRole = normalizeSystemRole(systemRole);
     const target = await this.findById(userId);
-    const prevRole = normalizeSystemRole(target?.system_role);
+    const prevRole = normalizeSystemRole(
+      await this.roles.getRoleKeyById(target?.role_id)
+    );
 
     if (
       prevRole === SystemRole.Admin &&
@@ -261,10 +271,12 @@ export class PamUsersRepo {
       }
     }
 
+    const nextRoleId = await this.roles.requireRoleIdByKey(nextRole);
+
     const { data, error } = await supabase
       .from(TABLE)
       .update({
-        system_role: nextRole,
+        role_id: nextRoleId,
         updated_at: new Date().toISOString()
       })
       .eq('id', userId)
@@ -283,13 +295,16 @@ export class PamUsersRepo {
     return data as PamUserRow;
   }
 
-  /** Counts users with system_role = admin (new column). */
+  /** Counts users with platform admin role key. */
   public async countPlatformAdmins(): Promise<number> {
+    const adminRoleId = await this.roles.requireRoleIdByKey(
+      PlatformRoleKey.Admin
+    );
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { count, error } = await supabase
       .from(TABLE)
       .select('id', { count: 'exact', head: true })
-      .eq('system_role', SystemRole.Admin);
+      .eq('role_id', adminRoleId);
 
     if (error) {
       this.logger.error('PamUsersRepo.countPlatformAdmins failed', { error });
@@ -345,7 +360,7 @@ export class PamUsersRepo {
     const { data: pamRows, error: pamError } = await supabase
       .from(TABLE)
       .select(
-        'id, system_role, is_platform_admin, status, created_at, display_name, email, phone'
+        'id, role_id, is_platform_admin, status, created_at, display_name, email, phone'
       )
       .in('id', ids);
 
@@ -360,12 +375,15 @@ export class PamUsersRepo {
       (pamRows ?? []).map((row) => [String(row.id), row as PamUserRow])
     );
 
-    return users.map((row) => {
+    const results = [];
+    for (const row of users) {
       const id = String((row as { id?: string }).id ?? '');
       const authEmail = String((row as { email?: string }).email ?? '');
       const pam = pamById.get(id);
-      const systemRole = normalizeSystemRole(pam?.system_role);
-      return {
+      const systemRole = normalizeSystemRole(
+        await this.roles.getRoleKeyById(pam?.role_id)
+      );
+      results.push({
         id,
         email: toBusinessEmail(pam?.email ?? authEmail),
         phone: pam?.phone ?? null,
@@ -374,7 +392,8 @@ export class PamUsersRepo {
         isPlatformAdmin: systemRole === SystemRole.Admin,
         status: pam?.status ?? 'active',
         createdAt: pam?.created_at ?? new Date().toISOString()
-      };
-    });
+      });
+    }
+    return results;
   }
 }

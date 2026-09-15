@@ -202,7 +202,9 @@ export class PAMService implements PAMServiceInterface {
         resolvedTeamId,
         userId
       );
-      return teamRole ?? 'none';
+      if (teamRole) {
+        return teamRole;
+      }
     }
 
     if (ownerId && userId === ownerId) {

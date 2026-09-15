@@ -1,5 +1,4 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { UserRole } from '@qlover/next-kit/common';
 import { SUPABASE_KEY, SUPABASE_URL } from '@qlover/next-kit/common';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import {
@@ -30,6 +29,7 @@ import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperReposito
 import { PamCliTokenRepo } from '@server/repositorys/PamCliTokenRepo';
 import { PamProjectCollaboratorsRepo } from '@server/repositorys/PamProjectCollaboratorsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { PamSupabaseSessionMintService } from '@server/services/PamSupabaseSessionMintService';
 import { PamUserService } from '@server/services/PamUserService';
@@ -44,6 +44,8 @@ export class PamBindEmailService {
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
     @inject(PamUserService) protected readonly pamUserService: PamUserService,
     @inject(PamUsersRepo) protected readonly pamUsersRepo: PamUsersRepo,
+    @inject(PamRolePermissionsRepo)
+    protected readonly roles: PamRolePermissionsRepo,
     @inject(PAMProjectRepo) protected readonly projectRepo: PAMProjectRepo,
     @inject(PamProjectCollaboratorsRepo)
     protected readonly collaboratorsRepo: PamProjectCollaboratorsRepo,
@@ -230,8 +232,10 @@ export class PamBindEmailService {
     await this.oauthRepo.deleteUserCredentials(A.id);
 
     if (
-      normalizeSystemRole(A.system_role) === SystemRole.Admin &&
-      normalizeSystemRole(B.system_role) !== SystemRole.Admin
+      normalizeSystemRole(await this.roles.getRoleKeyById(A.role_id)) ===
+        SystemRole.Admin &&
+      normalizeSystemRole(await this.roles.getRoleKeyById(B.role_id)) !==
+        SystemRole.Admin
     ) {
       await this.pamUsersRepo.setPlatformAdmin(B.id, true, B.id);
     }
@@ -297,15 +301,7 @@ export class PamBindEmailService {
     await this.oauthProvider.loginWithSession(session);
   }
 
-  protected toSessionUser(pam: PamUserRow): PamSessionUser {
-    return {
-      id: pam.id,
-      email: pam.email?.trim() ?? '',
-      phone: pam.phone ?? null,
-      display_name: pam.display_name ?? null,
-      role: UserRole.USER,
-      credential_token: '',
-      created_at: pam.created_at
-    };
+  protected toSessionUser(pam: PamUserRow): Promise<PamSessionUser> {
+    return this.pamUserService.toSessionUser(pam);
   }
 }

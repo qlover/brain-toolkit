@@ -1,3 +1,4 @@
+import { UserRole } from '@qlover/next-kit/common';
 import {
   expandSystemPermissions,
   isPlatformAdminRole,
@@ -9,9 +10,10 @@ import { inject, injectable } from '@shared/container';
 import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
 import type {
   PamAdminUserListItem,
-  PamSessionCapabilities,
+  PamSessionUser,
   PamUserRow
 } from '@schemas/PamUserSchema';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { PamPermissionService } from '@server/services/PamPermissionService';
 import {
@@ -30,16 +32,25 @@ export type PamUserEnsureInput = {
 export class PamUserService {
   constructor(
     @inject(PamUsersRepo) protected readonly repo: PamUsersRepo,
+    @inject(PamRolePermissionsRepo)
+    protected readonly roles: PamRolePermissionsRepo,
     @inject(PamPermissionService)
     protected readonly permissionService: PamPermissionService
   ) {}
+
+  protected async systemRoleFromUser(
+    pam: Pick<PamUserRow, 'role_id'> | null | undefined
+  ): Promise<SystemRoleType> {
+    const key = await this.roles.getRoleKeyById(pam?.role_id);
+    return normalizeSystemRole(key);
+  }
 
   public async ensurePamUser(input: PamUserEnsureInput): Promise<PamUserRow> {
     const row = await this.repo.ensureProfile({
       ...input,
       email: toBusinessEmail(input.email)
     });
-    const role = normalizeSystemRole(row.system_role);
+    const role = await this.systemRoleFromUser(row);
     setPlatformAdminCache(row.id, isPlatformAdminRole(role));
     return row;
   }
@@ -58,10 +69,10 @@ export class PamUserService {
 
   public async getSystemRole(userId: string): Promise<SystemRoleType> {
     const row = await this.repo.findById(userId);
-    return normalizeSystemRole(row?.system_role);
+    return this.systemRoleFromUser(row);
   }
 
-  /** True when system_role has admin console gate uid (operator or admin). */
+  /** True when platform role has admin console gate uid (operator or admin). */
   public async isPlatformAdmin(userId: string): Promise<boolean> {
     const role = await this.getSystemRole(userId);
     const allowed = isPlatformAdminRole(role);
@@ -69,15 +80,23 @@ export class PamUserService {
     return allowed;
   }
 
-  public async getCapabilities(
-    userId: string
-  ): Promise<PamSessionCapabilities> {
+  /** Flat session user payload (system_role + permissions on the user object). */
+  public async toSessionUser(
+    pam: PamUserRow,
+    extras?: { role?: number; created_at?: string }
+  ): Promise<PamSessionUser> {
     await this.permissionService.ensureLoaded();
-    const role = await this.getSystemRole(userId);
+    const system_role = await this.systemRoleFromUser(pam);
     return {
-      platformAdmin: isPlatformAdminRole(role),
-      roles: [role],
-      permissions: [...expandSystemPermissions(role)]
+      id: pam.id,
+      email: pam.email?.trim() ?? '',
+      phone: pam.phone ?? null,
+      display_name: pam.display_name ?? null,
+      role: extras?.role ?? UserRole.USER,
+      system_role,
+      permissions: [...expandSystemPermissions(system_role)],
+      credential_token: '',
+      created_at: extras?.created_at ?? pam.created_at
     };
   }
 
@@ -122,7 +141,7 @@ export class PamUserService {
       actorUserId
     );
     invalidatePlatformAdminCache(targetUserId);
-    const role = normalizeSystemRole(row.system_role);
+    const role = await this.systemRoleFromUser(row);
     setPlatformAdminCache(targetUserId, isPlatformAdminRole(role));
     return row;
   }
