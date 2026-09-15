@@ -6,7 +6,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { AdminRolesApi } from '@/impls/appApi/AdminRolesApi';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
-import { permissionI18nKey, permissionSlug } from '@shared/auth/permissionUid';
+import {
+  isPlatformPermissionKey,
+  permissionI18nKey
+} from '@shared/auth/permissionKeys';
 import { PlatformRoleKey, RoleKind, TeamRoleKey } from '@shared/auth/roleKeys';
 import type { AdminRolesI18nInterface } from '@config/i18n-mapping/admin18n';
 import type {
@@ -41,11 +44,7 @@ function sortByKeyOrder(
 }
 
 function isPlatformCatalogItem(item: PamAdminPermissionItem): boolean {
-  const path = item.path;
-  if (path.startsWith('/api/admin')) return true;
-  // List / create team are platform capabilities.
-  if (path === '/api/pam/teams') return true;
-  return false;
+  return isPlatformPermissionKey(item.permissionKey);
 }
 
 function catalogForRoleKind(
@@ -100,10 +99,9 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
 
   const permissionLabel = useCallback(
     (item: PamAdminPermissionItem) => {
-      const slug = item.slug || permissionSlug(item.uid);
-      const key = permissionI18nKey(slug);
+      const key = permissionI18nKey(item.permissionKey);
       const translated = t(key);
-      return translated === key ? slug : translated;
+      return translated === key ? item.permissionKey : translated;
     },
     [t]
   );
@@ -112,7 +110,7 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
     setData(next);
     const nextDraft: Record<string, string[]> = {};
     for (const role of next.roles ?? []) {
-      nextDraft[role.id] = [...role.permissionUids];
+      nextDraft[role.id] = [...role.permissionKeys];
     }
     setDraft(nextDraft);
     setSelectedId((prev) => {
@@ -149,31 +147,32 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
 
   const catalog = useMemo(() => {
     const all = [...(data?.catalog ?? [])].sort((a, b) =>
-      a.uid.localeCompare(b.uid)
+      a.permissionKey.localeCompare(b.permissionKey)
     );
     if (!selectedRole) return all;
     const scoped = catalogForRoleKind(all, selectedRole.kind);
     const selected = new Set(draft[selectedRole.id] ?? []);
     const extraGranted = all.filter(
       (item) =>
-        selected.has(item.uid) && !scoped.some((s) => s.uid === item.uid)
+        selected.has(item.permissionKey) &&
+        !scoped.some((s) => s.permissionKey === item.permissionKey)
     );
     return [...extraGranted, ...scoped];
   }, [data?.catalog, selectedRole, draft]);
 
-  const selectedUids = useMemo(
+  const selectedKeys = useMemo(
     () => new Set(selectedRole ? (draft[selectedRole.id] ?? []) : []),
     [draft, selectedRole]
   );
 
   const grantedCatalog = useMemo(
-    () => catalog.filter((item) => selectedUids.has(item.uid)),
-    [catalog, selectedUids]
+    () => catalog.filter((item) => selectedKeys.has(item.permissionKey)),
+    [catalog, selectedKeys]
   );
 
   const availableCatalog = useMemo(
-    () => catalog.filter((item) => !selectedUids.has(item.uid)),
-    [catalog, selectedUids]
+    () => catalog.filter((item) => !selectedKeys.has(item.permissionKey)),
+    [catalog, selectedKeys]
   );
 
   const platformRoles = useMemo(
@@ -194,13 +193,13 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
     [data?.roles]
   );
 
-  const toggleUid = (roleId: string, uid: string) => {
+  const togglePermissionKey = (roleId: string, permissionKey: string) => {
     setDraft((prev) => {
       const current = new Set(prev[roleId] ?? []);
-      if (current.has(uid)) {
-        current.delete(uid);
+      if (current.has(permissionKey)) {
+        current.delete(permissionKey);
       } else {
-        current.add(uid);
+        current.add(permissionKey);
       }
       return { ...prev, [roleId]: [...current].sort() };
     });
@@ -209,10 +208,10 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
 
   const isDirty = (role: PamAdminRoleItem) => {
     const current = draft[role.id] ?? [];
-    const saved = role.permissionUids;
+    const saved = role.permissionKeys;
     if (current.length !== saved.length) return true;
     const savedSet = new Set(saved);
-    return current.some((uid) => !savedSet.has(uid));
+    return current.some((key) => !savedSet.has(key));
   };
 
   const handleSave = async (role: PamAdminRoleItem) => {
@@ -222,7 +221,7 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
     try {
       const next = await adminRolesApi.replaceAssignments({
         roleId: role.id,
-        permissionUids: draft[role.id] ?? []
+        permissionKeys: draft[role.id] ?? []
       });
       applyResponse(next);
       setSuccess(tt.saveSuccess);
@@ -275,29 +274,33 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
   };
 
   const renderPermissionItems = (items: PamAdminPermissionItem[]) =>
-    items.map((item) => {
-      const slug = item.slug || permissionSlug(item.uid);
-      return (
-        <li data-testid="renderPermissionItems" key={item.uid}>
-          <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-elevated/50">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={selectedUids.has(item.uid)}
-              onChange={() => toggleUid(selectedRole!.id, item.uid)}
-            />
-            <span className="min-w-0">
-              <span className="block text-primary-text">
-                {permissionLabel(item)}
-              </span>
-              <span className="block font-mono text-xs text-secondary-text">
-                {slug}
-              </span>
+    items.map((item) => (
+      <li
+        data-testid="renderPermissionItems"
+        key={item.permissionKey}
+        data-permission={item.permissionKey}
+      >
+        <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-elevated/50">
+          <input
+            type="checkbox"
+            className="mt-1"
+            data-permission={item.permissionKey}
+            checked={selectedKeys.has(item.permissionKey)}
+            onChange={() =>
+              togglePermissionKey(selectedRole!.id, item.permissionKey)
+            }
+          />
+          <span className="min-w-0">
+            <span className="block text-primary-text">
+              {permissionLabel(item)}
             </span>
-          </label>
-        </li>
-      );
-    });
+            <span className="block font-mono text-xs text-secondary-text">
+              {item.permissionKey}
+            </span>
+          </span>
+        </label>
+      </li>
+    ));
 
   const dirty = selectedRole ? isDirty(selectedRole) : false;
   const saving = selectedRole ? savingId === selectedRole.id : false;
@@ -363,7 +366,7 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
                     </p>
                     <p className="mt-1 text-xs text-secondary-text">
                       {tt.permissionLabel} · {tt.selectedCount}{' '}
-                      {selectedUids.size}
+                      {selectedKeys.size}
                     </p>
                     <p className="mt-2 text-xs leading-relaxed text-secondary-text">
                       {selectedRole.kind === RoleKind.Platform
