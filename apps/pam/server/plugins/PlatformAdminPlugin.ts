@@ -1,6 +1,5 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { permissionUid } from '@shared/auth/permissionUid';
-import { API_ADMIN_SITE_SETTINGS } from '@config/apiRoutes';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { PamUserService } from '@server/services/PamUserService';
@@ -11,14 +10,14 @@ import type {
 } from '@qlover/next-kit/server';
 
 /**
- * Requires session + admin console gate uid (`get_/api/admin/site-settings`).
- * Prefer {@link RequirePermissionPlugin} with a specific API uid on new routes.
+ * Requires session + admin console gate (`admin_site_settings_read`).
+ * Prefer {@link RequirePermissionPlugin} with a specific permission key on new routes.
  */
 export class PlatformAdminPlugin implements BootstrapServerPlugin {
   public readonly pluginName = 'PlatformAdminPlugin';
 
   private readonly inner = new RequirePermissionPlugin(
-    permissionUid('GET', API_ADMIN_SITE_SETTINGS)
+    PermissionKey.admin_site_settings_read
   );
 
   /**

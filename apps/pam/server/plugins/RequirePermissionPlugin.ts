@@ -1,4 +1,5 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
+import type { PamPermissionKey } from '@shared/auth/permissionKeys';
 import { hasSystemPermission } from '@shared/auth/systemRole';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { OAuthUserService } from '@server/services/OAuthUserService';
@@ -13,19 +14,19 @@ import type {
 export type RequirePermissionOptions = {
   /**
    * When set, check org/project role permissions for this project id/slug.
-   * Omit for system (platform) permission uids.
+   * Omit for system (platform) permission keys.
    */
   projectId?: string;
 };
 
 /**
- * Route-layer gate: inject an immutable API permission uid.
+ * Route-layer gate: inject an immutable permission_key.
  *
  * @example
  * ```ts
- * .use(new RequirePermissionPlugin(permissionUid('GET', API_ADMIN_USERS)))
+ * .use(new RequirePermissionPlugin(PermissionKey.admin_users_read))
  * .use(new RequirePermissionPlugin(
- *   permissionUid('POST', API_PAM_ENVIRONMENTS_DELETE),
+ *   PermissionKey.pam_environments_delete,
  *   { projectId }
  * ))
  * ```
@@ -34,7 +35,7 @@ export class RequirePermissionPlugin implements BootstrapServerPlugin {
   public readonly pluginName = 'RequirePermissionPlugin';
 
   constructor(
-    private readonly uid: string,
+    private readonly permissionKey: PamPermissionKey,
     private readonly options: RequirePermissionOptions = {}
   ) {}
 
@@ -49,7 +50,7 @@ export class RequirePermissionPlugin implements BootstrapServerPlugin {
 
     const projectId = this.options.projectId?.trim();
     if (projectId) {
-      await IOC(PAMService).assertOrgPermission(projectId, this.uid);
+      await IOC(PAMService).assertOrgPermission(projectId, this.permissionKey);
       return;
     }
 
@@ -59,7 +60,7 @@ export class RequirePermissionPlugin implements BootstrapServerPlugin {
     }
 
     const role = await IOC(PamUserService).getSystemRole(user.id);
-    if (!hasSystemPermission(role, this.uid)) {
+    if (!hasSystemPermission(role, this.permissionKey)) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
   }

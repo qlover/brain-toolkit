@@ -1,13 +1,7 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { expandOrgPermissions, hasOrgPermission } from '@shared/auth/orgRole';
-import { permissionUid } from '@shared/auth/permissionUid';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { inject, injectable } from '@shared/container';
-import {
-  API_PAM_TEAMS_2,
-  API_PAM_TEAMS_MEMBERS,
-  API_PAM_TEAMS_MEMBERS_2,
-  API_PAM_TEAMS_PROJECTS
-} from '@config/apiRoutes';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_PROJECT_NOT_FOUND,
@@ -142,7 +136,7 @@ export class PamTeamService {
     await this.permissionService.ensureLoaded();
     const { role } = await this.assertTeamPermission(
       teamId,
-      permissionUid('GET', API_PAM_TEAMS_2)
+      PermissionKey.pam_teams_read
     );
     const team = await this.teamsRepo.findById(teamId);
     if (!team) {
@@ -162,7 +156,7 @@ export class PamTeamService {
   ): Promise<PamTeamMemberItem> {
     const { userId: actorId } = await this.assertTeamPermission(
       teamId,
-      permissionUid('POST', API_PAM_TEAMS_MEMBERS)
+      PermissionKey.pam_teams_members_create
     );
 
     const team = await this.teamsRepo.findById(teamId);
@@ -200,7 +194,7 @@ export class PamTeamService {
   ): Promise<PamTeamMemberItem> {
     await this.assertTeamPermission(
       teamId,
-      permissionUid('PATCH', API_PAM_TEAMS_MEMBERS_2)
+      PermissionKey.pam_teams_members_update
     );
 
     const team = await this.teamsRepo.findById(teamId);
@@ -223,7 +217,7 @@ export class PamTeamService {
   public async removeMember(teamId: string, userId: string): Promise<void> {
     await this.assertTeamPermission(
       teamId,
-      permissionUid('DELETE', API_PAM_TEAMS_MEMBERS_2)
+      PermissionKey.pam_teams_members_delete
     );
 
     const team = await this.teamsRepo.findById(teamId);
@@ -243,7 +237,7 @@ export class PamTeamService {
   ): Promise<void> {
     const { userId } = await this.assertTeamPermission(
       teamId,
-      permissionUid('POST', API_PAM_TEAMS_PROJECTS)
+      PermissionKey.pam_teams_projects_attach
     );
 
     const team = await this.teamsRepo.findById(teamId);
@@ -284,7 +278,7 @@ export class PamTeamService {
 
   protected async assertTeamPermission(
     teamId: string,
-    permissionUidValue: string
+    permissionKey: string
   ): Promise<{ userId: string; role: PamTeamRole }> {
     await this.permissionService.ensureLoaded();
     const user = await this.userService.getUser(true);
@@ -298,7 +292,7 @@ export class PamTeamService {
     }
 
     const role = await this.membersRepo.getActiveRole(teamId, user.id);
-    if (!role || !hasOrgPermission(role, permissionUidValue)) {
+    if (!role || !hasOrgPermission(role, permissionKey)) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 

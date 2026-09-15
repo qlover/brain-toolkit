@@ -9,11 +9,10 @@ const PERMISSIONS_TABLE = 'pam_role_permissions';
 const ROLE_ASSIGNMENTS_TABLE = 'pam_role_assignments';
 
 export type PamPermissionRow = {
-  uid: string;
-  slug: string | null;
+  permission_key: string;
   type: string;
-  method: string;
-  path: string;
+  method: string | null;
+  path: string | null;
   description: string | null;
 };
 
@@ -28,7 +27,7 @@ export type PamRoleRow = {
 
 export type PamRoleAssignmentJoinRow = {
   role_id: string;
-  permission_uid: string;
+  permission_key: string;
   pam_roles: { id: string; key: string; kind: string } | null;
 };
 
@@ -146,21 +145,21 @@ export class PamRolePermissionsRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
-      .select('role_id, permission_uid, pam_roles ( id, key, kind )');
+      .select('role_id, permission_key, pam_roles ( id, key, kind )');
 
     if (error) {
       this.logger.error('listAllRolePermissions failed', error);
       throw error;
     }
 
-    return (data ?? []) as PamRoleAssignmentJoinRow[];
+    return (data ?? []) as unknown as PamRoleAssignmentJoinRow[];
   }
 
   public async listPermissions(): Promise<PamPermissionRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(PERMISSIONS_TABLE)
-      .select('uid, slug, type, method, path, description');
+      .select('permission_key, type, method, path, description');
 
     if (error) {
       this.logger.error('listPermissions failed', error);
@@ -172,10 +171,10 @@ export class PamRolePermissionsRepo {
 
   public async replaceRoleAssignments(input: {
     roleId: string;
-    permissionUids: string[];
+    permissionKeys: string[];
   }): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const uniqueUids = [...new Set(input.permissionUids)];
+    const uniqueKeys = [...new Set(input.permissionKeys)];
 
     const { error: deleteError } = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
@@ -187,13 +186,13 @@ export class PamRolePermissionsRepo {
       throw deleteError;
     }
 
-    if (uniqueUids.length === 0) {
+    if (uniqueKeys.length === 0) {
       return;
     }
 
-    const rows = uniqueUids.map((permission_uid) => ({
+    const rows = uniqueKeys.map((permission_key) => ({
       role_id: input.roleId,
-      permission_uid
+      permission_key
     }));
 
     const { error: insertError } = await supabase

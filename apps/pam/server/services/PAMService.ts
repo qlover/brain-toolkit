@@ -7,8 +7,8 @@ import { uuidSchema } from '@qlover/next-kit/common';
 import { headers } from 'next/headers';
 import { v4 as uuid } from 'uuid';
 import { hasOrgPermission } from '@shared/auth/orgRole';
-import { OrgFlagUid } from '@shared/auth/permissionDefaults';
-import { permissionUid } from '@shared/auth/permissionUid';
+import { OrgFlagPermission } from '@shared/auth/permissionDefaults';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
@@ -17,18 +17,6 @@ import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil
 import { PAMProjectForkUtil } from '@shared/utils/PAMProjectForkUtil';
 import { parsePAMSiteUrl } from '@shared/utils/PAMSiteIconUtil';
 import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
-import {
-  API_PAM_COLLABORATORS,
-  API_PAM_COLLABORATORS_2,
-  API_PAM_DELETE,
-  API_PAM_EDIT,
-  API_PAM_ENVIRONMENTS,
-  API_PAM_ENVIRONMENTS_DELETE,
-  API_PAM_ENVIRONMENTS_EXPORT,
-  API_PAM_ENVIRONMENTS_VARIABLES,
-  API_PAM_PREVIEW_IMAGE,
-  API_PAM_TRANSFER
-} from '@config/apiRoutes';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_COLLABORATOR_EXISTS,
@@ -229,12 +217,12 @@ export class PAMService implements PAMServiceInterface {
   }
 
   /**
-   * Ensures the current user has an institution (project) permission uid.
+   * Ensures the current user has an institution (project) permission key.
    * Used by RequirePermissionPlugin and service methods.
    */
   public async assertOrgPermission(
     projectId: string,
-    permissionUidValue: string
+    permissionKey: string
   ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
     await this.permissionService.ensureLoaded();
     const user = await this.userService.getUser(true);
@@ -254,7 +242,7 @@ export class PAMService implements PAMServiceInterface {
       access.team_id
     );
 
-    if (!hasOrgPermission(role, permissionUidValue)) {
+    if (!hasOrgPermission(role, permissionKey)) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
@@ -268,7 +256,7 @@ export class PAMService implements PAMServiceInterface {
    * @throws When the user lacks admin access
    */
   protected async assertProjectOwner(projectId: string): Promise<void> {
-    await this.assertOrgPermission(projectId, OrgFlagUid.Delete);
+    await this.assertOrgPermission(projectId, OrgFlagPermission.Delete);
   }
 
   protected buildSearchInflightKey(
@@ -603,7 +591,7 @@ export class PAMService implements PAMServiceInterface {
     const { id } = params;
     const { role } = await this.assertOrgPermission(
       id,
-      permissionUid('POST', API_PAM_EDIT)
+      PermissionKey.pam_project_edit
     );
 
     // --- 补充 slug 唯一性校验 ---
@@ -812,7 +800,7 @@ export class PAMService implements PAMServiceInterface {
    */
   public async deleteProject(id: string): Promise<void> {
     // Admin+ may delete (owner included via role permissions).
-    await this.assertOrgPermission(id, permissionUid('POST', API_PAM_DELETE));
+    await this.assertOrgPermission(id, PermissionKey.pam_project_delete);
 
     await this.projectRepo.deleteProjectAdmin(id);
     await this.categoryCache.invalidateAll();
@@ -825,7 +813,7 @@ export class PAMService implements PAMServiceInterface {
     id: string,
     params: PAMProjectTransfer
   ): Promise<void> {
-    await this.assertOrgPermission(id, permissionUid('POST', API_PAM_TRANSFER));
+    await this.assertOrgPermission(id, PermissionKey.pam_project_transfer);
 
     const currentUser = await this.userService.getUser(true);
     if (!currentUser) {
@@ -900,10 +888,7 @@ export class PAMService implements PAMServiceInterface {
    * @returns Updated project detail
    */
   public async refreshPreviewImage(id: string): Promise<PAMProjectDetail> {
-    await this.assertOrgPermission(
-      id,
-      permissionUid('POST', API_PAM_PREVIEW_IMAGE)
-    );
+    await this.assertOrgPermission(id, PermissionKey.pam_project_preview_write);
 
     const detail = await this.projectRepo.getProjectWithEnvironmentsAdmin(id);
     if (!detail) {
@@ -959,7 +944,7 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMProjectCollaboratorItem[]> {
     await this.assertOrgPermission(
       projectId,
-      permissionUid('GET', API_PAM_COLLABORATORS)
+      PermissionKey.pam_collaborators_read
     );
     return this.collaboratorsRepo.listByProjectId(projectId);
   }
@@ -975,7 +960,7 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMProjectCollaboratorItem> {
     const { userId: actorId } = await this.assertOrgPermission(
       projectId,
-      permissionUid('POST', API_PAM_COLLABORATORS)
+      PermissionKey.pam_collaborators_create
     );
 
     const access = await this.projectRepo.getProjectAccessAdmin(projectId);
@@ -1029,7 +1014,7 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMProjectCollaboratorItem> {
     await this.assertOrgPermission(
       projectId,
-      permissionUid('PATCH', API_PAM_COLLABORATORS_2)
+      PermissionKey.pam_collaborators_update
     );
 
     const access = await this.projectRepo.getProjectAccessAdmin(projectId);
@@ -1061,7 +1046,7 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<void> {
     await this.assertOrgPermission(
       projectId,
-      permissionUid('DELETE', API_PAM_COLLABORATORS_2)
+      PermissionKey.pam_collaborators_delete
     );
 
     const access = await this.projectRepo.getProjectAccessAdmin(projectId);
@@ -1185,7 +1170,7 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMEnvWriteable> {
     await this.assertOrgPermission(
       projectId,
-      permissionUid('POST', API_PAM_ENVIRONMENTS)
+      PermissionKey.pam_environments_create
     );
 
     // Admin read/write: CLI bearer auth has no Supabase RLS session.
@@ -1225,7 +1210,7 @@ export class PAMService implements PAMServiceInterface {
     // Deleting an environment affects all collaborators — admin+ only.
     await this.assertOrgPermission(
       projectId,
-      permissionUid('POST', API_PAM_ENVIRONMENTS_DELETE)
+      PermissionKey.pam_environments_delete
     );
 
     // Admin read/write: CLI bearer auth has no Supabase RLS session.
@@ -1242,7 +1227,7 @@ export class PAMService implements PAMServiceInterface {
   ): Promise<PAMEnvWriteable> {
     await this.assertOrgPermission(
       projectId,
-      permissionUid('POST', API_PAM_ENVIRONMENTS_VARIABLES)
+      PermissionKey.pam_environments_variables_write
     );
 
     // Admin read/write: CLI bearer auth has no Supabase RLS session.
@@ -1300,7 +1285,7 @@ export class PAMService implements PAMServiceInterface {
   }> {
     await this.assertOrgPermission(
       projectId,
-      permissionUid('GET', API_PAM_ENVIRONMENTS_EXPORT)
+      PermissionKey.pam_environments_export
     );
 
     const owned = await this.projectRepo.getEnvironmentForExport(

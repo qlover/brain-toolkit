@@ -7,7 +7,6 @@ import {
   clearPermissionMaps,
   setPermissionMaps
 } from '@shared/auth/permissionRegistry';
-import { permissionSlug } from '@shared/auth/permissionUid';
 import { RoleKind } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
@@ -35,8 +34,8 @@ function mapsFromAssignmentRows(
     const key = assignmentRoleKey(row);
     if (!key) continue;
     if (!maps[key]) maps[key] = [];
-    if (!maps[key].includes(row.permission_uid)) {
-      maps[key].push(row.permission_uid);
+    if (!maps[key].includes(row.permission_key)) {
+      maps[key].push(row.permission_key);
     }
   }
   return maps;
@@ -44,11 +43,11 @@ function mapsFromAssignmentRows(
 
 function defaultRoleMaps(): Record<string, string[]> {
   const maps: Record<string, string[]> = {};
-  for (const [key, uids] of Object.entries(DEFAULT_SYSTEM_ROLE_PERMISSIONS)) {
-    maps[key] = [...uids];
+  for (const [key, keys] of Object.entries(DEFAULT_SYSTEM_ROLE_PERMISSIONS)) {
+    maps[key] = [...keys];
   }
-  for (const [key, uids] of Object.entries(DEFAULT_ORG_ROLE_PERMISSIONS)) {
-    maps[key] = [...uids];
+  for (const [key, keys] of Object.entries(DEFAULT_ORG_ROLE_PERMISSIONS)) {
+    maps[key] = [...keys];
   }
   return maps;
 }
@@ -87,8 +86,7 @@ export class PamPermissionService {
     try {
       const rows = await this.repo.listPermissions();
       catalog = rows.map((row) => ({
-        uid: row.uid,
-        slug: row.slug?.trim() || permissionSlug(row.uid),
+        permissionKey: row.permission_key,
         type: row.type,
         method: row.method,
         path: row.path,
@@ -128,17 +126,17 @@ export class PamPermissionService {
       kind: role.kind,
       description: role.description,
       isSystem: role.is_system,
-      permissionUids: [...(maps[role.key] ?? [])]
+      permissionKeys: [...(maps[role.key] ?? [])]
     }));
 
     const system: Record<string, string[]> = {};
     const org: Record<string, string[]> = {};
     for (const role of roles) {
       if (role.kind === RoleKind.Platform) {
-        system[role.key] = [...role.permissionUids];
+        system[role.key] = [...role.permissionKeys];
       } else {
         const legacy = role.key.replace(/^team_/, '');
-        org[legacy] = [...role.permissionUids];
+        org[legacy] = [...role.permissionKeys];
       }
     }
 
@@ -147,7 +145,7 @@ export class PamPermissionService {
 
   public async replaceRoleAssignments(input: {
     roleId: string;
-    permissionUids: string[];
+    permissionKeys: string[];
   }): Promise<PamAdminRolesResponse> {
     const role = await this.repo.findRoleById(input.roleId);
     if (!role) {
@@ -155,7 +153,7 @@ export class PamPermissionService {
     }
     await this.repo.replaceRoleAssignments({
       roleId: role.id,
-      permissionUids: input.permissionUids
+      permissionKeys: input.permissionKeys
     });
     await this.reload();
     return this.getAdminRolesView();

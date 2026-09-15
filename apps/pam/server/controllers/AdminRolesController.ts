@@ -22,7 +22,7 @@ export class AdminRolesController {
     const parsed = pamAdminRoleAssignmentsPatchSchema.parse(body);
     return this.permissions.replaceRoleAssignments({
       roleId: parsed.roleId,
-      permissionUids: parsed.permissionUids
+      permissionKeys: parsed.permissionKeys
     });
   }
 }
