@@ -1,7 +1,12 @@
 /**
- * Platform system roles and permission map (PAM).
- * Stored in pam_users.system_role (new column). is_platform_admin is legacy.
+ * Platform system roles (PAM).
+ * Stored in pam_users.system_role. is_platform_admin is legacy.
+ *
+ * Permission identifiers are immutable API uids (method_path).
  */
+
+import { SYSTEM_ADMIN_GATE_UID } from './permissionDefaults';
+import { resolveSystemPermissions } from './permissionRegistry';
 
 export const SystemRole = {
   User: 'user',
@@ -25,50 +30,23 @@ export function isSystemRole(value: unknown): value is SystemRoleType {
   );
 }
 
-export const SystemPermission = {
-  AdminAccess: 'admin.access',
-  UsersRead: 'users.read',
-  UsersWrite: 'users.write',
-  AuditRead: 'audit.read'
-} as const;
-
-export type SystemPermissionType =
-  (typeof SystemPermission)[keyof typeof SystemPermission];
-
-const ROLE_PERMISSIONS: Record<
-  SystemRoleType,
-  readonly SystemPermissionType[]
-> = {
-  [SystemRole.User]: [],
-  [SystemRole.Operator]: [
-    SystemPermission.AdminAccess,
-    SystemPermission.UsersRead,
-    SystemPermission.AuditRead
-  ],
-  [SystemRole.Admin]: [
-    SystemPermission.AdminAccess,
-    SystemPermission.UsersRead,
-    SystemPermission.UsersWrite,
-    SystemPermission.AuditRead
-  ]
-};
-
+/** Expand system role to API permission uids. */
 export function expandSystemPermissions(
   role: SystemRoleType
-): readonly SystemPermissionType[] {
-  return ROLE_PERMISSIONS[role] ?? [];
+): readonly string[] {
+  return resolveSystemPermissions(role);
 }
 
 export function hasSystemPermission(
   role: SystemRoleType,
-  permission: SystemPermissionType
+  permissionUid: string
 ): boolean {
-  return expandSystemPermissions(role).includes(permission);
+  return expandSystemPermissions(role).includes(permissionUid);
 }
 
-/** /admin gate: has admin.access (operator or admin). */
+/** /admin gate: operator or admin (has admin site-settings read uid). */
 export function isPlatformAdminRole(role: SystemRoleType): boolean {
-  return hasSystemPermission(role, SystemPermission.AdminAccess);
+  return hasSystemPermission(role, SYSTEM_ADMIN_GATE_UID);
 }
 
 export function normalizeSystemRole(value: unknown): SystemRoleType {

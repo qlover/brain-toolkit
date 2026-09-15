@@ -1,12 +1,16 @@
 /**
  * Institution (org) roles for PAM.
  *
- * Product: a PAM **project** is an institution container.
- * Roles owner / admin / member match project access (owner on pam_projects,
- * admin|member on pam_project_collaborators). No parallel org table.
+ * Institution = team (`pam_role_teams` / `pam_role_team_members`).
+ * Project access prefers `pam_projects.team_id` membership; falls back to
+ * project owner + `pam_project_collaborators` when team_id is null.
+ *
+ * Permission identifiers are immutable API uids (method_path).
  */
 
 import type { PAMProjectAccessRole } from '@schemas/PAMProjectCollaboratorSchema';
+import { OrgFlagUid } from './permissionDefaults';
+import { resolveOrgPermissions } from './permissionRegistry';
 
 /** Membership roles (excludes `none`). */
 export const OrgRole = {
@@ -17,56 +21,11 @@ export const OrgRole = {
 
 export type OrgRoleType = (typeof OrgRole)[keyof typeof OrgRole];
 
-export const OrgPermission = {
-  Read: 'org.read',
-  MembersRead: 'org.members.read',
-  MembersWrite: 'org.members.write',
-  SettingsWrite: 'org.settings.write',
-  /** Content / env edit (existing can_edit). */
-  ContentWrite: 'org.content.write',
-  /**
-   * Delete project / destructive manage.
-   * PAM currently allows admin+ (same as API asserts); ideal design is owner-only later.
-   */
-  Delete: 'org.delete'
-} as const;
-
-export type OrgPermissionType =
-  (typeof OrgPermission)[keyof typeof OrgPermission];
-
 const ROLE_RANK: Record<PAMProjectAccessRole, number> = {
   none: 0,
   member: 1,
   admin: 2,
   owner: 3
-};
-
-/** Rank-inclusive permission sets (higher role includes lower). */
-const ORG_ROLE_PERMISSIONS: Record<
-  OrgRoleType,
-  readonly OrgPermissionType[]
-> = {
-  [OrgRole.Member]: [
-    OrgPermission.Read,
-    OrgPermission.MembersRead,
-    OrgPermission.ContentWrite
-  ],
-  [OrgRole.Admin]: [
-    OrgPermission.Read,
-    OrgPermission.MembersRead,
-    OrgPermission.MembersWrite,
-    OrgPermission.SettingsWrite,
-    OrgPermission.ContentWrite,
-    OrgPermission.Delete
-  ],
-  [OrgRole.Owner]: [
-    OrgPermission.Read,
-    OrgPermission.MembersRead,
-    OrgPermission.MembersWrite,
-    OrgPermission.SettingsWrite,
-    OrgPermission.ContentWrite,
-    OrgPermission.Delete
-  ]
 };
 
 export function orgRoleRank(role: PAMProjectAccessRole): number {
@@ -80,25 +39,26 @@ export function hasMinOrgRole(
   return orgRoleRank(role) >= orgRoleRank(minRole);
 }
 
+/** Expand org role to API permission uids. */
 export function expandOrgPermissions(
   role: PAMProjectAccessRole
-): readonly OrgPermissionType[] {
+): readonly string[] {
   if (role === 'none') {
     return [];
   }
-  return ORG_ROLE_PERMISSIONS[role] ?? [];
+  return resolveOrgPermissions(role);
 }
 
 export function hasOrgPermission(
   role: PAMProjectAccessRole,
-  permission: OrgPermissionType
+  permissionUid: string
 ): boolean {
-  return expandOrgPermissions(role).includes(permission);
+  return expandOrgPermissions(role).includes(permissionUid);
 }
 
 /**
- * API / UI flags derived from org permissions.
- * Field names keep existing PAM / pamenv contracts.
+ * API / UI flags derived from org permission uids.
+ * `permissions` is the uid array for FE includes checks.
  */
 export function orgAccessFlags(role: PAMProjectAccessRole): {
   my_role: PAMProjectAccessRole;
@@ -106,17 +66,21 @@ export function orgAccessFlags(role: PAMProjectAccessRole): {
   can_edit: boolean;
   can_manage_collaborators: boolean;
   can_delete: boolean;
-  org_permissions: OrgPermissionType[];
+  /** @deprecated Prefer `permissions` */
+  org_permissions: string[];
+  permissions: string[];
 } {
+  const permissions = [...expandOrgPermissions(role)];
   return {
     my_role: role,
     is_owner: role === OrgRole.Owner,
-    can_edit: hasOrgPermission(role, OrgPermission.ContentWrite),
+    can_edit: hasOrgPermission(role, OrgFlagUid.Edit),
     can_manage_collaborators: hasOrgPermission(
       role,
-      OrgPermission.MembersWrite
+      OrgFlagUid.ManageCollaborators
     ),
-    can_delete: hasOrgPermission(role, OrgPermission.Delete),
-    org_permissions: [...expandOrgPermissions(role)]
+    can_delete: hasOrgPermission(role, OrgFlagUid.Delete),
+    org_permissions: permissions,
+    permissions
   };
 }
