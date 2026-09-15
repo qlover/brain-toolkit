@@ -5,13 +5,13 @@
  * Prefer importing from `@shared/auth/orgRole` for new code.
  */
 
-import type { PAMProjectAccessRole } from '@schemas/PAMProjectCollaboratorSchema';
 import {
   hasMinOrgRole,
   orgAccessFlags,
   orgRoleRank,
   type OrgRoleType
 } from '@shared/auth/orgRole';
+import type { PAMProjectAccessRole } from '@schemas/PAMProjectCollaboratorSchema';
 
 export function projectAccessRoleRank(role: PAMProjectAccessRole): number {
   return orgRoleRank(role);
@@ -30,7 +30,9 @@ export function projectAccessFlags(role: PAMProjectAccessRole): {
   can_edit: boolean;
   can_manage_collaborators: boolean;
   can_delete: boolean;
+  /** @deprecated Prefer `permissions` */
   org_permissions: string[];
+  permissions: string[];
 } {
   return orgAccessFlags(role);
 }

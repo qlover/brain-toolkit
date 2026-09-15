@@ -77,6 +77,10 @@ export const PAMProjectRawSchema = z.object({
    */
   create_source: z.enum(PAMCreateSourceType),
   /**
+   * Owning team / institution. Null = legacy or unassigned.
+   */
+  team_id: z.uuid().nullable().optional(),
+  /**
    * 是否已删除
    */
   is_deleted: z.enum(DeleteStatus),
@@ -118,6 +122,8 @@ export type SearchPAMProject = SearchPAMRawProject & {
   can_delete?: boolean;
   /** Institution permission codes for current user (project === org). */
   org_permissions?: string[];
+  /** Unified permission identifiers for FE includes checks. */
+  permissions?: string[];
 };
 
 /**
@@ -134,6 +140,7 @@ export type PAMProjectDetail = SearchPAMRawProject & {
   can_manage_collaborators?: boolean;
   can_delete?: boolean;
   org_permissions?: string[];
+  permissions?: string[];
 };
 
 /**
@@ -145,7 +152,8 @@ export const PAMProjectCreateSchema = PAMProjectRawSchema.omit({
   created_at: true,
   updated_at: true,
   owner_id: true,
-  create_source: true
+  create_source: true,
+  team_id: true
 }).extend({
   [PAMProjectEnvKey]: z
     .array(
@@ -164,7 +172,8 @@ export const PAMProjectUpdateSchema = PAMProjectRawSchema.omit({
   created_at: true,
   updated_at: true,
   owner_id: true,
-  create_source: true
+  create_source: true,
+  team_id: true
 }).extend({
   [PAMProjectEnvKey]: z
     .array(
