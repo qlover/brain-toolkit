@@ -17,8 +17,9 @@ import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRe
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { PamPermissionService } from '@server/services/PamPermissionService';
 import {
+  getSystemRoleCache,
   invalidatePlatformAdminCache,
-  setPlatformAdminCache
+  setSystemRoleCache
 } from '@server/utils/platformAdminCache';
 
 export type PamUserEnsureInput = {
@@ -51,7 +52,7 @@ export class PamUserService {
       email: toBusinessEmail(input.email)
     });
     const role = await this.systemRoleFromUser(row);
-    setPlatformAdminCache(row.id, isPlatformAdminRole(role));
+    setSystemRoleCache(row.id, role);
     return row;
   }
 
@@ -68,16 +69,20 @@ export class PamUserService {
   }
 
   public async getSystemRole(userId: string): Promise<SystemRoleType> {
+    const cached = getSystemRoleCache(userId);
+    if (cached) {
+      return cached;
+    }
     const row = await this.repo.findById(userId);
-    return this.systemRoleFromUser(row);
+    const role = await this.systemRoleFromUser(row);
+    setSystemRoleCache(userId, role);
+    return role;
   }
 
   /** True when platform role has admin console gate uid (operator or admin). */
   public async isPlatformAdmin(userId: string): Promise<boolean> {
     const role = await this.getSystemRole(userId);
-    const allowed = isPlatformAdminRole(role);
-    setPlatformAdminCache(userId, allowed);
-    return allowed;
+    return isPlatformAdminRole(role);
   }
 
   /** Flat session user payload (system_role + permissions on the user object). */
@@ -87,6 +92,7 @@ export class PamUserService {
   ): Promise<PamSessionUser> {
     await this.permissionService.ensureLoaded();
     const system_role = await this.systemRoleFromUser(pam);
+    setSystemRoleCache(pam.id, system_role);
     return {
       id: pam.id,
       email: pam.email?.trim() ?? '',
@@ -142,7 +148,7 @@ export class PamUserService {
     );
     invalidatePlatformAdminCache(targetUserId);
     const role = await this.systemRoleFromUser(row);
-    setPlatformAdminCache(targetUserId, isPlatformAdminRole(role));
+    setSystemRoleCache(targetUserId, role);
     return row;
   }
 

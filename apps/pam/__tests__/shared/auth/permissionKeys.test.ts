@@ -20,9 +20,36 @@ import {
   resolveOrgPermissions,
   resolveSystemPermissions
 } from '@shared/auth/permissionRegistry';
-import { hasSystemPermission } from '@shared/auth/systemRole';
+import {
+  hasSystemPermission,
+  sessionHasSystemPermission
+} from '@shared/auth/systemRole';
 
 describe('permissionKeys', () => {
+  it('reads platform permission from session without DB', () => {
+    expect(
+      sessionHasSystemPermission(
+        { permissions: [PermissionKey.admin_roles_read] },
+        PermissionKey.admin_roles_read
+      )
+    ).toBe(true);
+    expect(
+      sessionHasSystemPermission(
+        { permissions: [PermissionKey.admin_roles_read] },
+        PermissionKey.admin_roles_write
+      )
+    ).toBe(false);
+    expect(
+      sessionHasSystemPermission(
+        { system_role: 'operator' },
+        SYSTEM_ADMIN_GATE_KEY
+      )
+    ).toBe(true);
+    expect(
+      sessionHasSystemPermission({ id: 'x' }, PermissionKey.admin_roles_read)
+    ).toBe(null);
+  });
+
   it('uses stable permission_key format', () => {
     expect(PermissionKey.pam_project_create).toBe('pam_project_create');
     expect(PERMISSION_KEY_PATTERN.test(PermissionKey.pam_project_create)).toBe(
