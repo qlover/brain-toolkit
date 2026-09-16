@@ -237,13 +237,13 @@ export class PAMProjectRepo extends BaseRepository<
     userId: string
   ): Promise<string[]> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from('pam_role_team_members')
       .select('team_id')
       .eq('user_id', userId)
-      .eq('status', 'active');
-    this.supabaseRepo.throwIfError(result);
-    return (result.data ?? []).map((row) => row.team_id as string);
+      .eq('status', 'active')
+      .throwOnError();
+    return (data ?? []).map((row) => row.team_id as string);
   }
 
   /**
@@ -261,14 +261,13 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(PAMEnvTableName)
       .select('id,name,url,project_id')
-      .in('project_id', [...projectIds]);
+      .in('project_id', [...projectIds])
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    for (const row of result.data ?? []) {
+    for (const row of data ?? []) {
       const projectId = String(row.project_id);
       const env = {
         id: row.id,
@@ -387,16 +386,15 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<SearchPAMRawProject | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const column = uuidSchema.safeParse(idOrSlug).success ? 'id' : 'slug';
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select(SearchPAMProjectFields.join(','))
       .eq(column, idOrSlug)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as SearchPAMRawProject | null;
+    return data as SearchPAMRawProject | null;
   }
 
   /**
@@ -407,7 +405,7 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<PAMProjectDetail | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const column = uuidSchema.safeParse(idOrSlug).success ? 'id' : 'slug';
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select(
         SearchPAMProjectFields.join(',') +
@@ -415,15 +413,14 @@ export class PAMProjectRepo extends BaseRepository<
       )
       .eq(column, idOrSlug)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data) {
+    if (!data) {
       return null;
     }
 
-    return result.data as never;
+    return data as never;
   }
 
   /**
@@ -436,7 +433,7 @@ export class PAMProjectRepo extends BaseRepository<
     id: string
   ): Promise<PAMProjectDetail | null> {
     const supabase = await this.supabaseRepo.getSupabase();
-    const result = await supabase
+    const { data } = await supabase
       .from(this.getRepoName())
       .select(
         SearchPAMProjectFields.join(',') +
@@ -444,15 +441,14 @@ export class PAMProjectRepo extends BaseRepository<
       )
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data) {
+    if (!data) {
       return null;
     }
 
-    return result.data as never;
+    return data as never;
   }
 
   /**
@@ -464,7 +460,7 @@ export class PAMProjectRepo extends BaseRepository<
     id: string
   ): Promise<PAMProjectDetail | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select(
         SearchPAMProjectFields.join(',') +
@@ -472,15 +468,14 @@ export class PAMProjectRepo extends BaseRepository<
       )
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data) {
+    if (!data) {
       return null;
     }
 
-    return result.data as never;
+    return data as never;
   }
 
   /**
@@ -491,16 +486,15 @@ export class PAMProjectRepo extends BaseRepository<
   public async getProjectById(id: string): Promise<SearchPAMRawProject | null> {
     const supabase = await this.supabaseRepo.getSupabase();
 
-    const result = await supabase
+    const { data } = await supabase
       .from(this.getRepoName())
       .select(SearchPAMProjectFields.join(','))
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as never;
+    return data as never;
   }
 
   /**
@@ -512,16 +506,15 @@ export class PAMProjectRepo extends BaseRepository<
     id: string
   ): Promise<SearchPAMRawProject | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select(SearchPAMProjectFields.join(','))
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as never;
+    return data as never;
   }
 
   /**
@@ -550,9 +543,8 @@ export class PAMProjectRepo extends BaseRepository<
       .eq('id', id)
       .eq('owner_id', userId)
       .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
-      .maybeSingle();
-
-    this.supabaseRepo.throwIfError(result);
+      .maybeSingle()
+      .throwOnError();
     return !isEmpty(result.data);
   }
 
@@ -563,14 +555,13 @@ export class PAMProjectRepo extends BaseRepository<
     // 此处我们信任调用者已检查项目存在，暂不添加额外查询
     const supabase = await this.supabaseRepo.getSupabase();
 
-    const result = await supabase
+    const { data } = await supabase
       .from(PAMEnvTableName)
       .select('id,name')
-      .eq('project_id', id);
+      .eq('project_id', id)
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data || [];
+    return data || [];
   }
 
   /**
@@ -585,14 +576,13 @@ export class PAMProjectRepo extends BaseRepository<
     // Admin: used after ownership assert (Brain / CLI have no RLS session).
     const admin = this.supabaseRepo.getAdminSupabase();
 
-    const result = await admin
+    const { data } = await admin
       .from(PAMEnvTableName)
       .select('id,name,url,variables')
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data || [];
+    return data || [];
   }
 
   /**
@@ -626,11 +616,10 @@ export class PAMProjectRepo extends BaseRepository<
       query = query.eq('is_public', 1);
     }
 
-    const result = await query.limit(1000);
-    this.supabaseRepo.throwIfError(result);
+    const { data } = await query.limit(1000).throwOnError();
 
     return this.normalizeCategoryList(
-      (result.data ?? []).map((row) =>
+      (data ?? []).map((row) =>
         typeof row.category === 'string' ? row.category : ''
       )
     );
@@ -644,14 +633,13 @@ export class PAMProjectRepo extends BaseRepository<
       return [];
     }
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select('id')
       .in('team_id', teamIds)
-      .eq('is_deleted', DeleteStatus.UNDELETE);
-
-    this.supabaseRepo.throwIfError(result);
-    return (result.data ?? []).map((row) => row.id as string);
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .throwOnError();
+    return (data ?? []).map((row) => row.id as string);
   }
 
   /**
@@ -683,16 +671,15 @@ export class PAMProjectRepo extends BaseRepository<
   > | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const column = uuidSchema.safeParse(projectId).success ? 'id' : 'slug';
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select('id,slug,is_public,owner_id,team_id')
       .eq(column, projectId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as Pick<
+    return data as Pick<
       PAMProjectRaw,
       'id' | 'slug' | 'is_public' | 'owner_id' | 'team_id'
     > | null;
@@ -703,13 +690,12 @@ export class PAMProjectRepo extends BaseRepository<
     teamId: string | null
   ): Promise<void> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    await admin
       .from(this.getRepoName())
       .update({ team_id: teamId })
       .eq('id', projectId)
-      .eq('is_deleted', DeleteStatus.UNDELETE);
-
-    this.supabaseRepo.throwIfError(result);
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .throwOnError();
   }
 
   /**
@@ -721,16 +707,15 @@ export class PAMProjectRepo extends BaseRepository<
     Array<Pick<PAMProjectRaw, 'id' | 'name' | 'slug' | 'owner_id' | 'team_id'>>
   > {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select('id,name,slug,owner_id,team_id')
       .eq('team_id', teamId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return (result.data ?? []) as Array<
+    return (data ?? []) as Array<
       Pick<PAMProjectRaw, 'id' | 'name' | 'slug' | 'owner_id' | 'team_id'>
     >;
   }
@@ -746,16 +731,15 @@ export class PAMProjectRepo extends BaseRepository<
     ownerId: string
   ): Promise<boolean> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select('id')
       .eq('id', projectId)
       .eq('owner_id', ownerId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
-
-    this.supabaseRepo.throwIfError(result);
-    return !isEmpty(result.data);
+      .maybeSingle()
+      .throwOnError();
+    return !isEmpty(data);
   }
 
   /**
@@ -769,16 +753,15 @@ export class PAMProjectRepo extends BaseRepository<
     envId: string
   ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(PAMEnvTableName)
       .select('id,name,url,variables')
       .eq('project_id', projectId)
       .eq('id', envId)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as Pick<
+    return data as Pick<
       PAMEnvRaw,
       'id' | 'name' | 'url' | 'variables'
     > | null;
@@ -797,21 +780,20 @@ export class PAMProjectRepo extends BaseRepository<
     variables: PAMVariable[]
   ): Promise<PAMEnvWriteable> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(PAMEnvTableName)
       .update({ variables })
       .eq('id', envId)
       .eq('project_id', projectId)
       .select('id,name,url,variables')
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data) {
+    if (!data) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
-    return result.data as PAMEnvWriteable;
+    return data as PAMEnvWriteable;
   }
 
   /**
@@ -827,16 +809,15 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null> {
     const supabase = await this.supabaseRepo.getSupabase();
 
-    const result = await supabase
+    const { data } = await supabase
       .from(PAMEnvTableName)
       .select('id,name,url,variables')
       .eq('project_id', projectId)
       .eq('id', envId)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as Pick<
+    return data as Pick<
       PAMEnvRaw,
       'id' | 'name' | 'url' | 'variables'
     > | null;
@@ -864,9 +845,8 @@ export class PAMProjectRepo extends BaseRepository<
       .select('id,slug')
       .eq('id', projectId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
-
-    this.supabaseRepo.throwIfError(projectResult);
+      .maybeSingle()
+      .throwOnError();
     if (!projectResult.data) {
       return null;
     }
@@ -876,9 +856,8 @@ export class PAMProjectRepo extends BaseRepository<
       .select('id,name,url,variables')
       .eq('project_id', projectId)
       .eq('id', envId)
-      .maybeSingle();
-
-    this.supabaseRepo.throwIfError(envResult);
+      .maybeSingle()
+      .throwOnError();
     if (!envResult.data) {
       return null;
     }
@@ -927,7 +906,7 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<PAMEnvWriteable> {
     const supabase = await this.supabaseRepo.getSupabase();
 
-    const result = await supabase
+    const { data: created } = await supabase
       .from(PAMEnvTableName)
       .insert({
         project_id: projectId,
@@ -936,11 +915,10 @@ export class PAMProjectRepo extends BaseRepository<
         variables: data.variables || []
       })
       .select('id,name,url,variables')
-      .single();
+      .single()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as PAMEnvWriteable;
+    return created as PAMEnvWriteable;
   }
 
   /**
@@ -961,7 +939,7 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<PAMEnvWriteable> {
     const admin = this.supabaseRepo.getAdminSupabase();
 
-    const result = await admin
+    const { data: created } = await admin
       .from(PAMEnvTableName)
       .insert({
         project_id: projectId,
@@ -970,11 +948,10 @@ export class PAMProjectRepo extends BaseRepository<
         variables: data.variables || []
       })
       .select('id,name,url,variables')
-      .single();
+      .single()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data as PAMEnvWriteable;
+    return created as PAMEnvWriteable;
   }
 
   /**
@@ -987,14 +964,13 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<Pick<PAMEnvRaw, 'id' | 'name'>[]> {
     const admin = this.supabaseRepo.getAdminSupabase();
 
-    const result = await admin
+    const { data } = await admin
       .from(PAMEnvTableName)
       .select('id,name')
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    return result.data || [];
+    return data || [];
   }
 
   /**
@@ -1013,13 +989,12 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     const supabase = await this.supabaseRepo.getSupabase();
-    const result = await supabase
+    await supabase
       .from(PAMEnvTableName)
       .delete()
       .eq('id', envId)
-      .eq('project_id', projectId);
-
-    this.supabaseRepo.throwIfError(result);
+      .eq('project_id', projectId)
+      .throwOnError();
   }
 
   /**
@@ -1038,13 +1013,12 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    await admin
       .from(PAMEnvTableName)
       .delete()
       .eq('id', envId)
-      .eq('project_id', projectId);
-
-    this.supabaseRepo.throwIfError(result);
+      .eq('project_id', projectId)
+      .throwOnError();
   }
 
   /**
@@ -1061,21 +1035,20 @@ export class PAMProjectRepo extends BaseRepository<
     variables: PAMVariable[]
   ): Promise<PAMEnvWriteable> {
     const supabase = await this.supabaseRepo.getSupabase();
-    const result = await supabase
+    const { data } = await supabase
       .from(PAMEnvTableName)
       .update({ variables })
       .eq('id', envId)
       .eq('project_id', projectId)
       .select('id,name,url,variables')
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data) {
+    if (!data) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
-    return result.data as PAMEnvWriteable;
+    return data as PAMEnvWriteable;
   }
 
   /**
@@ -1089,13 +1062,12 @@ export class PAMProjectRepo extends BaseRepository<
 
     // Admin write: caller must have asserted ownership (CLI / Brain session).
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    await admin
       .from(this.getRepoName())
       .update(updates)
       .eq('id', id)
-      .eq('is_deleted', DeleteStatus.UNDELETE); // 防止更新已删除项目
-
-    this.supabaseRepo.throwIfError(result);
+      .eq('is_deleted', DeleteStatus.UNDELETE) // 防止更新已删除项目
+      .throwOnError();
   }
 
   /**
@@ -1113,12 +1085,12 @@ export class PAMProjectRepo extends BaseRepository<
     const supabase = this.supabaseRepo.getAdminSupabase();
 
     // 1. 获取当前数据库中该项目的所有环境（仅 id）
-    const existingResult = await supabase
+    const { data: existingRows } = await supabase
       .from(PAMEnvTableName)
       .select('id')
-      .eq('project_id', projectId);
-    this.supabaseRepo.throwIfError(existingResult);
-    const existingIds = new Set(existingResult.data?.map((e) => e.id) || []);
+      .eq('project_id', projectId)
+      .throwOnError();
+    const existingIds = new Set(existingRows?.map((e) => e.id) || []);
 
     // 2. 区分请求中的更新和新增
     const toUpdate = requestEnvs.filter((env) => env.id);
@@ -1132,12 +1104,12 @@ export class PAMProjectRepo extends BaseRepository<
 
     // 4. 执行删除
     if (toDeleteIds.length > 0) {
-      const deleteResult = await supabase
+      await supabase
         .from(PAMEnvTableName)
         .delete()
         .eq('project_id', projectId)
-        .in('id', toDeleteIds);
-      this.supabaseRepo.throwIfError(deleteResult);
+        .in('id', toDeleteIds)
+        .throwOnError();
     }
 
     // 5. 执行更新（确保 id 存在，但可以在更新时用 project_id 限制）
@@ -1149,14 +1121,14 @@ export class PAMProjectRepo extends BaseRepository<
       if (env.variables !== undefined) updateData.variables = env.variables;
       if (Object.keys(updateData).length === 0) continue;
 
-      const updateResult = await supabase
+      const { count } = await supabase
         .from(PAMEnvTableName)
         .update(updateData)
         .eq('id', env.id)
-        .eq('project_id', projectId); // 防止跨项目更新
-      this.supabaseRepo.throwIfError(updateResult);
+        .eq('project_id', projectId) // 防止跨项目更新
+        .throwOnError();
 
-      if (updateResult.count !== undefined && updateResult.count === 0) {
+      if (count !== undefined && count === 0) {
         throw new ExecutorError(
           API_PAM_ENV_NOT_FOUND,
           `Environment ${env.id} not found in this project`
@@ -1172,11 +1144,11 @@ export class PAMProjectRepo extends BaseRepository<
         url: env.url!,
         variables: env.variables || []
       }));
-      const insertResult = await supabase
+      await supabase
         .from(PAMEnvTableName)
         .insert(insertData)
-        .select();
-      this.supabaseRepo.throwIfError(insertResult);
+        .select()
+        .throwOnError();
     }
   }
 
@@ -1229,7 +1201,7 @@ export class PAMProjectRepo extends BaseRepository<
 
     // 3. 返回最新数据
     const supabase = this.supabaseRepo.getAdminSupabase();
-    const result = await supabase
+    const { data } = await supabase
       .from(this.getRepoName())
       .select(
         !envUpdates
@@ -1238,20 +1210,19 @@ export class PAMProjectRepo extends BaseRepository<
       )
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
+      .maybeSingle()
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data) {
+    if (!data) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
     this.logger.info(
       `[PAMProjectRepo] update project ${id} success`,
-      result.data
+      data
     );
 
-    return result.data as never;
+    return data as never;
   }
 
   /**
@@ -1276,17 +1247,17 @@ export class PAMProjectRepo extends BaseRepository<
     const envJson = envUpdates ? envUpdates : null;
 
     // 调用 RPC
-    const result = await supabase.rpc(PAMUpdateSQLFunctionName, {
-      p_project_id: id,
-      p_updates: projectUpdates,
-      p_environments: envJson
-    });
-
-    this.supabaseRepo.throwIfError(result);
+    const { data } = await supabase
+      .rpc(PAMUpdateSQLFunctionName, {
+        p_project_id: id,
+        p_updates: projectUpdates,
+        p_environments: envJson
+      })
+      .throwOnError();
 
     return {
-      ...result.data.project,
-      environments: result.data.environments || []
+      ...data.project,
+      environments: data.environments || []
     };
   }
 
@@ -1302,15 +1273,15 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<Pick<PAMProjectDetail, 'id' | 'slug'> | null> {
     const supabase = await this.supabaseRepo.getSupabase();
 
-    const result = await supabase
+    const { data } = await supabase
       .from(this.getRepoName())
       .select('id')
       .eq('slug', slug)
       .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
-      .maybeSingle();
-    this.supabaseRepo.throwIfError(result);
+      .maybeSingle()
+      .throwOnError();
 
-    return result.data as PAMProjectDetail;
+    return data as PAMProjectDetail;
   }
 
   /**
@@ -1323,15 +1294,15 @@ export class PAMProjectRepo extends BaseRepository<
   ): Promise<Pick<PAMProjectDetail, 'id' | 'slug'> | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
 
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .select('id,slug')
       .eq('slug', slug)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .maybeSingle();
-    this.supabaseRepo.throwIfError(result);
+      .maybeSingle()
+      .throwOnError();
 
-    return result.data as Pick<PAMProjectDetail, 'id' | 'slug'> | null;
+    return data as Pick<PAMProjectDetail, 'id' | 'slug'> | null;
   }
 
   /**
@@ -1375,15 +1346,14 @@ export class PAMProjectRepo extends BaseRepository<
         variables: env.variables || []
       }));
 
-      const envResult = await supabase
+      const { data: envRows } = await supabase
         .from(PAMEnvTableName)
         .insert(envsToInsert)
-        .select('*');
+        .select('*')
+        .throwOnError();
 
-      this.supabaseRepo.throwIfError(envResult);
-
-      if (envResult.data) {
-        createdEnvs = envResult.data;
+      if (envRows) {
+        createdEnvs = envRows;
       }
     }
 
@@ -1411,16 +1381,15 @@ export class PAMProjectRepo extends BaseRepository<
     const admin = this.supabaseRepo.getAdminSupabase();
     const { [PAMProjectEnvKey]: envs, ...projectData } = params;
 
-    const projectResult = await admin
+    const { data: projectRow } = await admin
       .from(this.getRepoName())
       .insert(projectData as PAMProjectRaw)
       .select(SearchPAMProjectFields.join(','))
-      .single();
-
-    this.supabaseRepo.throwIfError(projectResult);
+      .single()
+      .throwOnError();
 
     // Dynamic `.select(fields.join(','))` widens PostgREST typings to GenericStringError.
-    const project = projectResult.data as unknown as SearchPAMRawProject;
+    const project = projectRow as unknown as SearchPAMRawProject;
 
     this.logger.info(
       `[PAMProjectRepo] create project (admin) ${projectData.name} success`,
@@ -1442,15 +1411,14 @@ export class PAMProjectRepo extends BaseRepository<
         variables: env.variables || []
       }));
 
-      const envResult = await admin
+      const { data: envRows } = await admin
         .from(PAMEnvTableName)
         .insert(envsToInsert)
-        .select('*');
+        .select('*')
+        .throwOnError();
 
-      this.supabaseRepo.throwIfError(envResult);
-
-      if (envResult.data) {
-        createdEnvs = envResult.data;
+      if (envRows) {
+        createdEnvs = envRows;
       }
     }
 
@@ -1467,15 +1435,14 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async deleteProject(id: string): Promise<void> {
     const supabase = await this.supabaseRepo.getSupabase();
-    const result = await supabase
+    const { count } = await supabase
       .from(this.getRepoName())
       .update({ is_deleted: DeleteStatus.DELETE })
       .eq('id', id)
-      .eq('is_deleted', DeleteStatus.UNDELETE); // 只允许删除未删除的
+      .eq('is_deleted', DeleteStatus.UNDELETE) // 只允许删除未删除的
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (result.count === 0) {
+    if (count === 0) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
@@ -1489,16 +1456,15 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async deleteProjectAdmin(id: string): Promise<void> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .update({ is_deleted: DeleteStatus.DELETE })
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .select('id');
+      .select('id')
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data?.length) {
+    if (!data?.length) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
@@ -1517,7 +1483,7 @@ export class PAMProjectRepo extends BaseRepository<
     }
 
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .update({
         owner_id: toUserId,
@@ -1525,10 +1491,9 @@ export class PAMProjectRepo extends BaseRepository<
       })
       .eq('owner_id', fromUserId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .select('id');
-
-    this.supabaseRepo.throwIfError(result);
-    return result.data?.length ?? 0;
+      .select('id')
+      .throwOnError();
+    return data?.length ?? 0;
   }
 
   /**
@@ -1542,7 +1507,7 @@ export class PAMProjectRepo extends BaseRepository<
     newOwnerId: string
   ): Promise<void> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const result = await admin
+    const { data } = await admin
       .from(this.getRepoName())
       .update({
         owner_id: newOwnerId,
@@ -1550,11 +1515,10 @@ export class PAMProjectRepo extends BaseRepository<
       })
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE)
-      .select('id');
+      .select('id')
+      .throwOnError();
 
-    this.supabaseRepo.throwIfError(result);
-
-    if (!result.data?.length) {
+    if (!data?.length) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
@@ -1572,10 +1536,12 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async findAuthUserIdByEmail(email: string): Promise<string | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const { data, error } = await admin.rpc('pam_auth_user_id_by_email', {
-      p_email: email
-    });
-    if (error || typeof data !== 'string' || !data) {
+    const { data } = await admin
+      .rpc('pam_auth_user_id_by_email', {
+        p_email: email
+      })
+      .throwOnError();
+    if (typeof data !== 'string' || !data) {
       return null;
     }
     return data;
@@ -1588,8 +1554,23 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async authUserExistsById(userId: string): Promise<boolean> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const { data, error } = await admin.auth.admin.getUserById(userId);
-    return !error && Boolean(data.user?.id);
+    const result = await admin.auth.admin.getUserById(userId);
+    if (result.error) {
+      const err = result.error as {
+        status?: number;
+        code?: string;
+        message?: string;
+      };
+      const missing =
+        err.status === 404 ||
+        err.code === 'user_not_found' ||
+        /user not found/i.test(String(err.message ?? ''));
+      if (missing) {
+        return false;
+      }
+      this.supabaseRepo.throwIfError(result);
+    }
+    return Boolean(result.data.user?.id);
   }
 
   /**
@@ -1608,16 +1589,14 @@ export class PAMProjectRepo extends BaseRepository<
     offset?: number;
   }): Promise<{ id: string; email: string }[]> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const { data, error } = await admin.rpc('pam_auth_users_search', {
-      p_query: params.query?.trim() || '',
-      p_exclude_id: params.excludeUserId || null,
-      p_limit: params.limit ?? 20,
-      p_offset: params.offset ?? 0
-    });
-    if (error) {
-      this.logger.warn('[PAMProjectRepo] searchAuthUsers failed', { error });
-      return [];
-    }
+    const { data } = await admin
+      .rpc('pam_auth_users_search', {
+        p_query: params.query?.trim() || '',
+        p_exclude_id: params.excludeUserId || null,
+        p_limit: params.limit ?? 20,
+        p_offset: params.offset ?? 0
+      })
+      .throwOnError();
     if (!Array.isArray(data)) {
       return [];
     }

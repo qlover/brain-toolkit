@@ -3,11 +3,11 @@ import {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import { localesSchema, type LocalesSchema } from '@qlover/next-kit/common';
-import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
 import { createAdminClient, createServerClient } from '@shared/supabase/server';
 import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
+import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
 export interface UpsertChunkResult {
@@ -65,7 +65,7 @@ async function runWithConcurrency<T>(
 }
 
 @injectable()
-export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
+export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
   protected safeFields = Object.keys(localesSchema.shape);
 
   constructor(@inject(I.Logger) logger: LoggerInterface) {
@@ -77,14 +77,10 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   }
 
   public async getAll(): Promise<LocalesSchema[]> {
-    const supabase = this.getAdminSupabase();
-    const { data, error } = await supabase.from(TABLE).select('*');
-
-    if (error) {
-      this.logger.error('LocalesRepository.getAll failed', { error });
-      throw new Error(error.message);
-    }
-
+    const { data } = await this.getAdminSupabase()
+      .from(TABLE)
+      .select('*')
+      .throwOnError();
     return (data ?? []) as LocalesSchema[];
   }
 
@@ -94,16 +90,11 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
 
   /** Distinct namespaces for exact filter dropdown (sorted). */
   public async listNamespaces(): Promise<string[]> {
-    const supabase = this.getAdminSupabase();
-    const { data, error } = await supabase
+    const { data } = await this.getAdminSupabase()
       .from(TABLE)
       .select('namespace')
-      .order('namespace', { ascending: true });
-
-    if (error) {
-      this.logger.error('LocalesRepository.listNamespaces failed', { error });
-      throw new Error(error.message);
-    }
+      .order('namespace', { ascending: true })
+      .throwOnError();
 
     const set = new Set<string>();
     for (const row of data ?? []) {
@@ -116,7 +107,6 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   }
 
   public async add(params: LocalesSchema): Promise<LocalesSchema[] | null> {
-    const supabase = this.getAdminSupabase();
     const now = new Date().toISOString();
     const payload = {
       value: params.value,
@@ -128,16 +118,11 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
       updated_at: now
     };
 
-    const { data, error } = await supabase
+    const { data } = await this.getAdminSupabase()
       .from(TABLE)
       .insert(payload)
-      .select('*');
-
-    if (error) {
-      this.logger.error('LocalesRepository.add failed', { error });
-      throw new Error(error.message);
-    }
-
+      .select('*')
+      .throwOnError();
     return (data ?? null) as LocalesSchema[] | null;
   }
 
@@ -145,7 +130,6 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
     id: number,
     params: Partial<Omit<LocalesSchema, 'id' | 'created_at'>>
   ): Promise<void> {
-    const supabase = this.getAdminSupabase();
     const payload: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
@@ -159,12 +143,11 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
       }
     }
 
-    const { error } = await supabase.from(TABLE).update(payload).eq('id', id);
-
-    if (error) {
-      this.logger.error('LocalesRepository.updateById failed', { error, id });
-      throw new Error(error.message);
-    }
+    await this.getAdminSupabase()
+      .from(TABLE)
+      .update(payload)
+      .eq('id', id)
+      .throwOnError();
   }
 
   public async pagination<T = LocalesSchema>(
@@ -222,14 +205,10 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
       }
     }
 
-    const { data, error, count } = await query
+    const { data, count } = await query
       .order(orderBy, { ascending })
-      .range(from, to);
-
-    if (error) {
-      this.logger.error('LocalesRepository.pagination failed', { error });
-      throw new Error(error.message);
-    }
+      .range(from, to)
+      .throwOnError();
 
     const items = (data ?? []) as T[];
     const total = count ?? items.length;
@@ -270,17 +249,13 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
       }));
 
       try {
-        const supabase = this.getAdminSupabase();
-        const { data: returned, error } = await supabase
+        const { data } = await this.getAdminSupabase()
           .from(TABLE)
           .upsert(inputData, { onConflict: 'value' })
-          .select('*');
+          .select('*')
+          .throwOnError();
 
-        if (error) {
-          throw new Error(error.message);
-        }
-
-        const returnedData = (returned ?? []) as LocalesSchema[];
+        const returnedData = (data ?? []) as LocalesSchema[];
         return {
           success: true as const,
           chunkIndex,
@@ -289,6 +264,7 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
           affectedCount: returnedData.length
         };
       } catch (err) {
+        // Partial failure: collect per-chunk errors instead of aborting the batch.
         const message = err instanceof Error ? err.message : String(err);
         this.logger.error('LocalesRepository.upsert chunk failed', {
           chunkIndex,

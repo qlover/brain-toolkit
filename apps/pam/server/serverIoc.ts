@@ -61,8 +61,11 @@ const ServerIocRegister: IOCRegisterInterface<
       getAdminClient: createAdminClient
     };
 
-    ioc.bind(SupabaseRepo, new SupabaseRepo('', supabaseDeps));
-    ioc.bind(PAMSupabaseRepo, new PAMSupabaseRepo('', supabaseDeps));
+    // Same instance for both tokens so `@inject(SupabaseRepo)` also gets
+    // PAM's throwIfError remap (Auth / non-builder paths).
+    const pamSupabaseRepo = new PAMSupabaseRepo('', supabaseDeps);
+    ioc.bind(PAMSupabaseRepo, pamSupabaseRepo);
+    ioc.bind(SupabaseRepo, pamSupabaseRepo);
     ioc.bind(
       RequestLogsRepository,
       new RequestLogsRepository({

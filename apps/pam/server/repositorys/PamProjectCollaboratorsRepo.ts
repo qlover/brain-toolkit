@@ -1,10 +1,7 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
-import {
-  API_PAM_COLLABORATOR_NOT_FOUND,
-  API_SERVER_ERROR
-} from '@config/i18n-identifier/api';
+import { API_PAM_COLLABORATOR_NOT_FOUND } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type {
   PAMProjectCollaboratorItem,
@@ -26,21 +23,12 @@ export class PamProjectCollaboratorsRepo {
 
   public async listActiveProjectIdsForUser(userId: string): Promise<string[]> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .select('project_id')
       .eq('user_id', userId)
-      .eq('status', 'active');
-
-    if (error) {
-      this.logger.error(
-        'PamProjectCollaboratorsRepo.listActiveProjectIdsForUser',
-        {
-          error
-        }
-      );
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .eq('status', 'active')
+      .throwOnError();
 
     return (data ?? [])
       .map((row) => (typeof row.project_id === 'string' ? row.project_id : ''))
@@ -52,18 +40,14 @@ export class PamProjectCollaboratorsRepo {
     userId: string
   ): Promise<PAMProjectCollaboratorRole | null> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .select('role')
       .eq('project_id', projectId)
       .eq('user_id', userId)
       .eq('status', 'active')
-      .maybeSingle();
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.getActiveRole', { error });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .maybeSingle()
+      .throwOnError();
 
     const role = data?.role;
     if (role === 'admin' || role === 'member') {
@@ -85,19 +69,13 @@ export class PamProjectCollaboratorsRepo {
     }
 
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .select('project_id,role')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .in('project_id', projectIds);
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.listActiveRolesForUser', {
-        error
-      });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .in('project_id', projectIds)
+      .throwOnError();
 
     for (const row of data ?? []) {
       const projectId =
@@ -115,21 +93,15 @@ export class PamProjectCollaboratorsRepo {
     projectId: string
   ): Promise<PAMProjectCollaboratorItem[]> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .select(
         'id,project_id,user_id,role,status,invited_by,created_at,updated_at'
       )
       .eq('project_id', projectId)
       .eq('status', 'active')
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.listByProjectId', {
-        error
-      });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .order('created_at', { ascending: true })
+      .throwOnError();
 
     const rows = (data ?? []) as PAMProjectCollaboratorRow[];
     if (rows.length === 0) {
@@ -163,17 +135,11 @@ export class PamProjectCollaboratorsRepo {
     }
 
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .select('id,project_id,role')
-      .eq('user_id', fromUserId);
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.reassignUserId list', {
-        error
-      });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .eq('user_id', fromUserId)
+      .throwOnError();
 
     for (const row of data ?? []) {
       const projectId =
@@ -193,20 +159,14 @@ export class PamProjectCollaboratorsRepo {
         continue;
       }
 
-      const { error: updateError } = await admin
+      await admin
         .from(TABLE)
         .update({
           user_id: toUserId,
           updated_at: new Date().toISOString()
         })
-        .eq('id', row.id);
-
-      if (updateError) {
-        this.logger.error('PamProjectCollaboratorsRepo.reassignUserId update', {
-          error: updateError
-        });
-        throw new ExecutorError(API_SERVER_ERROR, { cause: updateError });
-      }
+        .eq('id', row.id)
+        .throwOnError();
     }
   }
 
@@ -217,7 +177,7 @@ export class PamProjectCollaboratorsRepo {
     invitedBy: string | null;
   }): Promise<PAMProjectCollaboratorRow> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .insert({
         project_id: input.projectId,
@@ -227,12 +187,8 @@ export class PamProjectCollaboratorsRepo {
         invited_by: input.invitedBy
       })
       .select('*')
-      .single();
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.insert', { error });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .single()
+      .throwOnError();
 
     return data as PAMProjectCollaboratorRow;
   }
@@ -243,19 +199,15 @@ export class PamProjectCollaboratorsRepo {
     role: PAMProjectCollaboratorRole
   ): Promise<PAMProjectCollaboratorRow> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .update({ role })
       .eq('project_id', projectId)
       .eq('user_id', userId)
       .eq('status', 'active')
       .select('*')
-      .maybeSingle();
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.updateRole', { error });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .maybeSingle()
+      .throwOnError();
 
     if (!data) {
       throw new ExecutorError(API_PAM_COLLABORATOR_NOT_FOUND);
@@ -266,17 +218,13 @@ export class PamProjectCollaboratorsRepo {
 
   public async remove(projectId: string, userId: string): Promise<void> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await admin
+    const { data } = await admin
       .from(TABLE)
       .delete()
       .eq('project_id', projectId)
       .eq('user_id', userId)
-      .select('id');
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.remove', { error });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+      .select('id')
+      .throwOnError();
 
     if (!data?.length) {
       throw new ExecutorError(API_PAM_COLLABORATOR_NOT_FOUND);
@@ -285,17 +233,7 @@ export class PamProjectCollaboratorsRepo {
 
   public async deleteAllForProject(projectId: string): Promise<void> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { error } = await admin
-      .from(TABLE)
-      .delete()
-      .eq('project_id', projectId);
-
-    if (error) {
-      this.logger.error('PamProjectCollaboratorsRepo.deleteAllForProject', {
-        error
-      });
-      throw new ExecutorError(API_SERVER_ERROR, { cause: error });
-    }
+    await admin.from(TABLE).delete().eq('project_id', projectId).throwOnError();
   }
 
   protected async loadProfilesByUserIds(
@@ -316,31 +254,26 @@ export class PamProjectCollaboratorsRepo {
 
     const admin = this.supabaseBridge.getAdminSupabase();
 
-    const { data: pamUsers, error: pamError } = await admin
+    const { data: pamUsersData } = await admin
       .from('pam_users')
       .select('id,email,phone,display_name')
-      .in('id', userIds);
+      .in('id', userIds)
+      .throwOnError();
 
-    if (pamError) {
-      this.logger.warn('PamProjectCollaboratorsRepo.loadProfiles pam_users', {
-        error: pamError
-      });
-    } else {
-      for (const row of pamUsers ?? []) {
-        if (typeof row.id !== 'string') {
-          continue;
-        }
-        const emailRaw = typeof row.email === 'string' ? row.email : '';
-        const email = emailRaw.toLowerCase().endsWith('@phone.pam.local')
-          ? ''
-          : emailRaw;
-        map.set(row.id, {
-          email,
-          phone: typeof row.phone === 'string' ? row.phone : null,
-          displayName:
-            typeof row.display_name === 'string' ? row.display_name : null
-        });
+    for (const row of pamUsersData ?? []) {
+      if (typeof row.id !== 'string') {
+        continue;
       }
+      const emailRaw = typeof row.email === 'string' ? row.email : '';
+      const email = emailRaw.toLowerCase().endsWith('@phone.pam.local')
+        ? ''
+        : emailRaw;
+      map.set(row.id, {
+        email,
+        phone: typeof row.phone === 'string' ? row.phone : null,
+        displayName:
+          typeof row.display_name === 'string' ? row.display_name : null
+      });
     }
 
     const missing = userIds.filter((id) => !map.has(id));

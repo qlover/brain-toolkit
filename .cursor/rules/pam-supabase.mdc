@@ -1,0 +1,30 @@
+---
+description: PAM PostgREST 优先 throwOnError；Auth/例外用 throwIfError
+globs: apps/pam/server/**/*.ts
+alwaysApply: false
+---
+
+# PAM Supabase 查询错误约定
+
+## 默认（PostgREST）
+
+`from` / `rpc` 等 builder：**`.throwOnError()`**。错误由 `NextApiHandler` + `toExecutorErrorFromThrown` 收成 `api:server__error`（production 不回传诊断 `data`）。
+
+```ts
+const { data } = await this.getAdminSupabase()
+  .from('pam_locales')
+  .select('*')
+  .throwOnError();
+```
+
+## 例外（不用 throwOnError）
+
+1. **Auth SDK**（`auth.*`）：`throwIfError(result)`。
+2. **可恢复错误**：`try/catch` 后 fallback。
+3. **fail-closed 探测**：如 `checkPlatformAdmin`。
+4. **业务 `api:*`**：OTP 等继续抛业务 `ExecutorError`。
+5. **批量部分失败 / 可选 Auth enrichment**。
+
+禁止：`if (error) throw new Error(error.message)`。
+
+详见 `apps/pam/docs/supabase-errors.md`。
