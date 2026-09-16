@@ -89,6 +89,20 @@ export const PERMISSION_ADMIN_SITE_SETTINGS_WRITE =
   'permission:admin_site_settings_write';
 
 /**
+ * @description List locale dictionary rows
+ * @localZh 查看国际化文案
+ * @localEn List locale dictionary rows
+ */
+export const PERMISSION_ADMIN_LOCALES_READ = 'permission:admin_locales_read';
+
+/**
+ * @description Create / update / import locales
+ * @localZh 修改国际化文案
+ * @localEn Create / update / import locales
+ */
+export const PERMISSION_ADMIN_LOCALES_WRITE = 'permission:admin_locales_write';
+
+/**
  * @description List project collaborators
  * @localZh 查看项目协作者
  * @localEn List project collaborators

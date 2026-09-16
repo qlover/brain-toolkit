@@ -71,6 +71,11 @@ export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
  */
 export const ROUTE_ADMIN_SETTINGS = '/admin/settings' as const;
 
+/**
+ * Admin locales CMS. Pages Router: `src/pages/[locale]/admin/locales.tsx`.
+ */
+export const ROUTE_ADMIN_LOCALES = '/admin/locales' as const;
+
 export const ROUTE_HOME = '/' as const;
 
 /**
@@ -200,6 +205,7 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN_PHONE_OTPS,
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,
+  ROUTE_ADMIN_LOCALES,
   ROUTE_DEVELOPER_APPS,
   ROUTE_ACCOUNT,
   ROUTE_OAUTH_PLAYGROUND,

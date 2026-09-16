@@ -34,9 +34,10 @@ export class ApiLocaleService {
     localeName: string,
     _orderBy?: ResourceSortClause
   ): Promise<Record<string, string>> {
-    // App uses static ts2locales JSON (`useApiLocales=false`); DB repo is stubbed.
+    const staticJson = await this.loadStaticLocaleJson(localeName);
+
     if (!useApiLocales) {
-      return this.loadStaticLocaleJson(localeName);
+      return staticJson;
     }
 
     try {
@@ -49,14 +50,11 @@ export class ApiLocaleService {
         },
         {} as Record<string, string>
       );
-      if (Object.keys(fromDb).length > 0) {
-        return fromDb;
-      }
+      // Static base + DB overrides (CMS edits win; missing DB keys stay from JSON).
+      return { ...staticJson, ...fromDb };
     } catch {
-      // Fall through to static files.
+      return staticJson;
     }
-
-    return this.loadStaticLocaleJson(localeName);
   }
 
   /**
@@ -77,6 +75,10 @@ export class ApiLocaleService {
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<LocalesSchema>> {
     return this.localesRepository.pagination(params);
+  }
+
+  public async listNamespaces(): Promise<string[]> {
+    return this.localesRepository.listNamespaces();
   }
 
   public async update(data: Partial<LocalesSchema>): Promise<void> {

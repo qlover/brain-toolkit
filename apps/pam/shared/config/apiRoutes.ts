@@ -6,6 +6,34 @@
  */
 
 /**
+ * API path: `/api/admin/locales`
+ *
+ * @see [src/app/api/admin/locales/route.ts](../../src/app/api/admin/locales/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/locales/route.ts`
+ */
+export const API_ADMIN_LOCALES = '/api/admin/locales' as const;
+
+/**
+ * API path: `/api/admin/locales/import`
+ *
+ * @see [src/app/api/admin/locales/import/route.ts](../../src/app/api/admin/locales/import/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/locales/import/route.ts`
+ */
+export const API_ADMIN_LOCALES_IMPORT = '/api/admin/locales/import' as const;
+
+/**
+ * API path: `/api/admin/locales/namespaces`
+ *
+ * @see [src/app/api/admin/locales/namespaces/route.ts](../../src/app/api/admin/locales/namespaces/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/locales/namespaces/route.ts`
+ */
+export const API_ADMIN_LOCALES_NAMESPACES =
+  '/api/admin/locales/namespaces' as const;
+
+/**
  * API path: `/api/admin/permissions`
  *
  * @see [src/app/api/admin/permissions/route.ts](../../src/app/api/admin/permissions/route.ts)
@@ -531,6 +559,9 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
+  | typeof API_ADMIN_LOCALES
+  | typeof API_ADMIN_LOCALES_IMPORT
+  | typeof API_ADMIN_LOCALES_NAMESPACES
   | typeof API_ADMIN_PERMISSIONS
   | typeof API_ADMIN_PHONE_OTPS
   | typeof API_ADMIN_REQUEST_LOGS

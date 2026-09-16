@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import {
   ResourceSearchParams,
   ResourceSearchResult
@@ -7,28 +6,64 @@ import { localesSchema, type LocalesSchema } from '@qlover/next-kit/common';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
 import { createAdminClient, createServerClient } from '@shared/supabase/server';
+import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
 import type { LoggerInterface } from '@qlover/logger';
 
 export interface UpsertChunkResult {
   success: boolean;
   chunkIndex: number;
-  inputData: Partial<LocalesSchema>[]; // Original data sent to upsert
-  returnedData?: LocalesSchema[]; // Actual data returned from database
-  affectedCount?: number; // Number of rows affected
+  inputData: Partial<LocalesSchema>[];
+  returnedData?: LocalesSchema[];
+  affectedCount?: number;
   error?: string;
 }
 
 export interface UpsertResult {
-  totalCount: number; // Total items attempted
-  successCount: number; // Successfully upserted items
-  failureCount: number; // Failed items
+  totalCount: number;
+  successCount: number;
+  failureCount: number;
   successChunks: UpsertChunkResult[];
   failureChunks: UpsertChunkResult[];
-  allReturnedData: LocalesSchema[]; // All successfully upserted data combined
+  allReturnedData: LocalesSchema[];
 }
 
-const TABLE = 'next_app_locales';
+const TABLE = 'pam_locales';
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  if (size <= 0) {
+    return [items];
+  }
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function runWithConcurrency<T>(
+  tasks: Array<() => Promise<T>>,
+  concurrency: number
+): Promise<T[]> {
+  const results: T[] = new Array(tasks.length);
+  let nextIndex = 0;
+
+  async function worker(): Promise<void> {
+    while (nextIndex < tasks.length) {
+      const current = nextIndex;
+      nextIndex += 1;
+      results[current] = await tasks[current]!();
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.max(1, Math.min(concurrency, tasks.length || 1)) },
+    () => worker()
+  );
+  await Promise.all(workers);
+  return results;
+}
+
 @injectable()
 export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   protected safeFields = Object.keys(localesSchema.shape);
@@ -42,37 +77,175 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   }
 
   public async getAll(): Promise<LocalesSchema[]> {
-    throw new Error('LocalesRepository.getAll Method not implemented.');
+    const supabase = this.getAdminSupabase();
+    const { data, error } = await supabase.from(TABLE).select('*');
+
+    if (error) {
+      this.logger.error('LocalesRepository.getAll failed', { error });
+      throw new Error(error.message);
+    }
+
+    return (data ?? []) as LocalesSchema[];
   }
 
-  public async getLocales(localeName: string): Promise<LocalesSchema[]> {
-    throw new Error('LocalesRepository.getLocales Method not implemented.');
+  public async getLocales(_localeName: string): Promise<LocalesSchema[]> {
+    return this.getAll();
+  }
+
+  /** Distinct namespaces for exact filter dropdown (sorted). */
+  public async listNamespaces(): Promise<string[]> {
+    const supabase = this.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('namespace')
+      .order('namespace', { ascending: true });
+
+    if (error) {
+      this.logger.error('LocalesRepository.listNamespaces failed', { error });
+      throw new Error(error.message);
+    }
+
+    const set = new Set<string>();
+    for (const row of data ?? []) {
+      const ns = (row as { namespace?: unknown }).namespace;
+      if (typeof ns === 'string' && ns.trim()) {
+        set.add(ns.trim());
+      }
+    }
+    return [...set];
   }
 
   public async add(params: LocalesSchema): Promise<LocalesSchema[] | null> {
-    throw new Error('LocalesRepository.add Method not implemented.');
+    const supabase = this.getAdminSupabase();
+    const now = new Date().toISOString();
+    const payload = {
+      value: params.value,
+      en: params.en ?? '',
+      zh: params.zh ?? '',
+      description: params.description ?? '',
+      namespace: params.namespace ?? 'common',
+      created_at: now,
+      updated_at: now
+    };
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert(payload)
+      .select('*');
+
+    if (error) {
+      this.logger.error('LocalesRepository.add failed', { error });
+      throw new Error(error.message);
+    }
+
+    return (data ?? null) as LocalesSchema[] | null;
   }
 
   public async updateById(
     id: number,
     params: Partial<Omit<LocalesSchema, 'id' | 'created_at'>>
   ): Promise<void> {
-    throw new Error('LocalesRepository.updateById Method not implemented.');
+    const supabase = this.getAdminSupabase();
+    const payload: Record<string, unknown> = {
+      updated_at: new Date().toISOString()
+    };
+
+    for (const key of this.safeFields) {
+      if (key === 'id' || key === 'created_at') {
+        continue;
+      }
+      if (key in params) {
+        payload[key] = (params as Record<string, unknown>)[key];
+      }
+    }
+
+    const { error } = await supabase.from(TABLE).update(payload).eq('id', id);
+
+    if (error) {
+      this.logger.error('LocalesRepository.updateById failed', { error, id });
+      throw new Error(error.message);
+    }
   }
 
   public async pagination<T = LocalesSchema>(
     params: ResourceSearchParams
   ): Promise<ResourceSearchResult<T>> {
-    throw new Error('LocalesRepository.pagination Method not implemented.');
+    const page = params.page ?? defaultSearchParams.page;
+    const pageSize = params.pageSize ?? defaultSearchParams.pageSize;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const sort = params.sort?.[0];
+    const orderBy =
+      typeof sort?.orderBy === 'string' ? sort.orderBy : 'updated_at';
+    const ascending = sort?.order === 'asc';
+
+    const supabase = this.getAdminSupabase();
+    let query = supabase.from(TABLE).select('*', { count: 'exact' });
+
+    const filters = params.filters;
+    if (
+      filters != null &&
+      typeof filters === 'object' &&
+      !Array.isArray(filters) &&
+      'namespace' in filters &&
+      typeof (filters as { namespace?: unknown }).namespace === 'string' &&
+      (filters as { namespace: string }).namespace.trim()
+    ) {
+      query = query.eq(
+        'namespace',
+        (filters as { namespace: string }).namespace.trim()
+      );
+    }
+
+    if (params.keyword?.trim()) {
+      const kw = params.keyword.trim();
+      const localeCol =
+        filters != null &&
+        typeof filters === 'object' &&
+        !Array.isArray(filters) &&
+        'locale' in filters &&
+        typeof (filters as { locale?: unknown }).locale === 'string' &&
+        ((filters as { locale: string }).locale === 'en' ||
+          (filters as { locale: string }).locale === 'zh')
+          ? (filters as { locale: 'en' | 'zh' }).locale
+          : null;
+
+      if (localeCol) {
+        query = query.or(
+          `value.ilike.%${kw}%,${localeCol}.ilike.%${kw}%,description.ilike.%${kw}%,namespace.ilike.%${kw}%`
+        );
+      } else {
+        query = query.or(
+          `value.ilike.%${kw}%,en.ilike.%${kw}%,zh.ilike.%${kw}%,description.ilike.%${kw}%,namespace.ilike.%${kw}%`
+        );
+      }
+    }
+
+    const { data, error, count } = await query
+      .order(orderBy, { ascending })
+      .range(from, to);
+
+    if (error) {
+      this.logger.error('LocalesRepository.pagination failed', { error });
+      throw new Error(error.message);
+    }
+
+    const items = (data ?? []) as T[];
+    const total = count ?? items.length;
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      hasMore: from + items.length < total
+    };
   }
 
   /**
-   * batch upsert data, support chunk processing and concurrency control
-   * @param data - data to upsert
-   * @param options - options
-   * @param options.chunkSize - chunk size, default 100
-   * @param options.concurrency - concurrency, default 3
-   * @returns UpsertResult - contains success/failure details with returned data
+   * Batch upsert with chunking and concurrency control.
+   * Conflict target: `value` (unique i18n key).
    */
   public async upsert(
     data: Partial<LocalesSchema>[],
@@ -81,6 +254,87 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
       concurrency?: number;
     }
   ): Promise<UpsertResult> {
-    throw new Error('LocalesRepository.updateById Method not implemented.');
+    const chunkSize = options?.chunkSize ?? 100;
+    const concurrency = options?.concurrency ?? 3;
+    const chunks = chunkArray(data, chunkSize);
+    const now = new Date().toISOString();
+
+    const tasks = chunks.map((chunk, chunkIndex) => async () => {
+      const inputData = chunk.map((row) => ({
+        value: row.value ?? '',
+        en: row.en ?? '',
+        zh: row.zh ?? '',
+        description: row.description ?? '',
+        namespace: row.namespace ?? 'common',
+        updated_at: now
+      }));
+
+      try {
+        const supabase = this.getAdminSupabase();
+        const { data: returned, error } = await supabase
+          .from(TABLE)
+          .upsert(inputData, { onConflict: 'value' })
+          .select('*');
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        const returnedData = (returned ?? []) as LocalesSchema[];
+        return {
+          success: true as const,
+          chunkIndex,
+          inputData: chunk,
+          returnedData,
+          affectedCount: returnedData.length
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.error('LocalesRepository.upsert chunk failed', {
+          chunkIndex,
+          error: message
+        });
+        return {
+          success: false as const,
+          chunkIndex,
+          inputData: chunk,
+          error: message
+        };
+      }
+    });
+
+    const chunkResults = await runWithConcurrency(tasks, concurrency);
+    const successChunks: UpsertChunkResult[] = [];
+    const failureChunks: UpsertChunkResult[] = [];
+    const allReturnedData: LocalesSchema[] = [];
+
+    for (const result of chunkResults) {
+      if (result.success) {
+        successChunks.push(result);
+        if (result.returnedData) {
+          allReturnedData.push(...result.returnedData);
+        }
+      } else {
+        failureChunks.push(result);
+      }
+    }
+
+    const successCount = successChunks.reduce(
+      (sum, chunk) => sum + (chunk.affectedCount ?? chunk.inputData.length),
+      0
+    );
+    const failureCount = failureChunks.reduce(
+      (sum, chunk) => sum + chunk.inputData.length,
+      0
+    );
+
+    return {
+      totalCount: data.length,
+      successCount,
+      failureCount,
+      successChunks,
+      failureChunks,
+      allReturnedData
+    };
   }
 }
