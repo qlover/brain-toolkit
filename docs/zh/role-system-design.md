@@ -38,6 +38,7 @@ API 仍可用遗留文案 `owner|admin|member`（映射到 `team_*`）。
 
 1. **`apps/pam/makes/sql/020-pam-roles.sql`** — 角色 / 权限目录 / 赋值 / 团队表 / `pam_users.role_id`（可重跑）
 2. **`apps/pam/makes/sql/021-pam-projects-backfill-team-id.sql`** — 历史项目补 `team_id`
+3. **`apps/pam/makes/sql/022-pam-search-projects-team.sql`** — `pam_search_projects` 私有可见性改为团队成员（不再用写作者表）
 
 ---
 
