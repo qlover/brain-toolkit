@@ -1,3 +1,4 @@
+import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import * as i18nKeys from '../i18n-identifier/pages/page.pam.teams';
 
 export type PAMTeamsI18nInterface = typeof pamTeamsI18n;
@@ -9,6 +10,7 @@ export const pamTeamsI18n = Object.freeze({
   description: i18nKeys.PAGE_PAM_TEAMS_DESCRIPTION,
   content: i18nKeys.PAGE_PAM_TEAMS_DESCRIPTION,
   keywords: i18nKeys.PAGE_PAM_TEAMS_KEYWORDS,
+  adminTitle: COMMON_ADMIN_TITLE,
 
   empty: i18nKeys.PAGE_PAM_TEAMS_EMPTY,
   create: i18nKeys.PAGE_PAM_TEAMS_CREATE,

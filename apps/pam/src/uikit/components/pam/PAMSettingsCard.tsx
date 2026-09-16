@@ -5,7 +5,7 @@ import React from 'react';
 export type PAMSettingsCardProps = {
   readonly title: string;
   readonly description: string;
-  readonly children: React.ReactNode;
+  readonly children?: React.ReactNode;
   readonly saveLabel?: string;
   readonly savingLabel?: string;
   readonly showSave?: boolean;
@@ -64,7 +64,7 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
             {description}
           </p>
         </div>
-        <div>{children}</div>
+        {children != null ? <div>{children}</div> : null}
       </div>
       {(showSave || footerLeft) && (
         <div className="flex flex-col gap-3 border-t border-primary-border bg-elevated/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
