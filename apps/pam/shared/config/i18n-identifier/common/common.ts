@@ -324,3 +324,10 @@ export const COMMON_HEADER_NAV_ABOUT = 'common:header_nav__about';
  * @localEn Developer
  */
 export const COMMON_HEADER_NAV_DEVELOPER = 'common:header_nav__developer';
+
+/**
+ * @description App header nav - Teams
+ * @localZh 团队
+ * @localEn Teams
+ */
+export const COMMON_HEADER_NAV_TEAMS = 'common:header_nav__teams';

@@ -74,8 +74,21 @@ export const PamTeamAttachProjectSchema = z.object({
 
 export type PamTeamAttachProject = z.infer<typeof PamTeamAttachProjectSchema>;
 
+export type PamTeamProjectItem = {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+  team_id: string | null;
+};
+
 export type PamTeamDetail = PamTeamRow & {
   my_role: PamTeamRole | 'none';
   members?: PamTeamMemberItem[];
   permissions: string[];
 };
+
+/** Auto-created per-user team (`personal-{userId}`). */
+export function isPersonalTeamSlug(slug: string): boolean {
+  return slug.startsWith('personal-');
+}

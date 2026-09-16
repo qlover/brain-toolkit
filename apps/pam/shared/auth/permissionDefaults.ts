@@ -47,7 +47,6 @@ const TEAM_ADMIN = [
 ] as const;
 
 const ORG_MEMBER = [
-  PermissionKey.pam_collaborators_read,
   PermissionKey.pam_environments_read,
   PermissionKey.pam_environments_create,
   PermissionKey.pam_environments_variables_write,
@@ -59,12 +58,7 @@ const ORG_MEMBER = [
 
 const ORG_ADMIN = [
   ...ORG_MEMBER,
-  PermissionKey.pam_collaborators_create,
-  PermissionKey.pam_collaborators_update,
-  PermissionKey.pam_collaborators_delete,
   PermissionKey.pam_environments_delete,
-  PermissionKey.pam_project_delete,
-  PermissionKey.pam_project_transfer,
   ...TEAM_ADMIN
 ] as const;
 
@@ -93,8 +87,18 @@ export const DEFAULT_SYSTEM_ROLE_PERMISSIONS: Record<
 export const DEFAULT_ORG_ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   member: [...ORG_MEMBER],
   admin: [...ORG_ADMIN],
-  owner: [...ORG_ADMIN],
+  owner: [
+    ...ORG_ADMIN,
+    PermissionKey.pam_project_delete,
+    PermissionKey.pam_project_transfer,
+    PermissionKey.pam_teams_delete
+  ],
   team_member: [...ORG_MEMBER],
   team_admin: [...ORG_ADMIN],
-  team_owner: [...ORG_ADMIN]
+  team_owner: [
+    ...ORG_ADMIN,
+    PermissionKey.pam_project_delete,
+    PermissionKey.pam_project_transfer,
+    PermissionKey.pam_teams_delete
+  ]
 };

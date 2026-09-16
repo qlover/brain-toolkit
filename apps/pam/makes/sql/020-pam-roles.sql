@@ -126,7 +126,8 @@ INSERT INTO public.pam_role_permissions (permission_key, type, method, path, des
   ('pam_teams_members_create', 'api', 'post', '/api/pam/teams/:teamId/members', 'Add team member'),
   ('pam_teams_members_update', 'api', 'patch', '/api/pam/teams/:teamId/members/:userId', 'Update team member role'),
   ('pam_teams_members_delete', 'api', 'delete', '/api/pam/teams/:teamId/members/:userId', 'Remove team member'),
-  ('pam_teams_projects_attach', 'api', 'post', '/api/pam/teams/:teamId/projects', 'Attach project to team');
+  ('pam_teams_projects_attach', 'api', 'post', '/api/pam/teams/:teamId/projects', 'Attach project to team'),
+  ('pam_teams_delete', 'api', 'delete', '/api/pam/teams/:teamId', 'Dissolve team');
 
 -- ---------------------------------------------------------------------------
 -- 3) Default assignments (by role key)
@@ -185,7 +186,6 @@ INSERT INTO public.pam_role_assignments (role_id, permission_key)
 SELECT r.id, v.permission_key
 FROM public.pam_roles r
 JOIN (VALUES
-  ('pam_collaborators_read'),
   ('pam_environments_read'),
   ('pam_environments_create'),
   ('pam_environments_variables_write'),
@@ -200,10 +200,25 @@ INSERT INTO public.pam_role_assignments (role_id, permission_key)
 SELECT r.id, v.permission_key
 FROM public.pam_roles r
 JOIN (VALUES
-  ('pam_collaborators_read'),
-  ('pam_collaborators_create'),
-  ('pam_collaborators_update'),
-  ('pam_collaborators_delete'),
+  ('pam_environments_read'),
+  ('pam_environments_create'),
+  ('pam_environments_delete'),
+  ('pam_environments_variables_write'),
+  ('pam_environments_export'),
+  ('pam_project_edit'),
+  ('pam_project_preview_write'),
+  ('pam_teams_read'),
+  ('pam_teams_members_create'),
+  ('pam_teams_members_update'),
+  ('pam_teams_members_delete'),
+  ('pam_teams_projects_attach')
+) AS v(permission_key) ON TRUE
+WHERE r.key = 'team_admin';
+
+INSERT INTO public.pam_role_assignments (role_id, permission_key)
+SELECT r.id, v.permission_key
+FROM public.pam_roles r
+JOIN (VALUES
   ('pam_environments_read'),
   ('pam_environments_create'),
   ('pam_environments_delete'),
@@ -217,9 +232,10 @@ JOIN (VALUES
   ('pam_teams_members_create'),
   ('pam_teams_members_update'),
   ('pam_teams_members_delete'),
-  ('pam_teams_projects_attach')
+  ('pam_teams_projects_attach'),
+  ('pam_teams_delete')
 ) AS v(permission_key) ON TRUE
-WHERE r.key IN ('team_admin', 'team_owner');
+WHERE r.key = 'team_owner';
 
 -- ---------------------------------------------------------------------------
 -- 4) pam_users.role_id (drop legacy system_role)

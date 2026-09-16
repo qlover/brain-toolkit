@@ -8,6 +8,7 @@ import {
   PamTeamMemberUpdateSchema,
   type PamTeamDetail,
   type PamTeamMemberItem,
+  type PamTeamProjectItem,
   type PamTeamRole,
   type PamTeamRow
 } from '@schemas/PamTeamSchema';
@@ -84,6 +85,15 @@ export class PamTeamsController {
       teamId,
       PamTeamAttachProjectSchema.parse(body)
     );
+    return { ok: true };
+  }
+
+  public async listProjects(teamId: string): Promise<PamTeamProjectItem[]> {
+    return this.teams.listProjects(teamId);
+  }
+
+  public async dissolve(teamId: string): Promise<{ ok: true }> {
+    await this.teams.dissolveTeam(teamId);
     return { ok: true };
   }
 }

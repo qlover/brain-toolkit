@@ -2,8 +2,7 @@
  * Institution (org) roles for PAM.
  *
  * Institution = team (`pam_role_teams` / `pam_role_team_members`).
- * Project access prefers `pam_projects.team_id` membership; falls back to
- * project owner + `pam_project_collaborators` when team_id is null.
+ * Project access uses `pam_projects.team_id` membership (plus project owner).
  *
  * Permission identifiers are immutable permission_key values.
  */

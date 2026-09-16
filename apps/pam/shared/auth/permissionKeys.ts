@@ -36,6 +36,7 @@ export const PermissionKey = {
   pam_teams_members_update: 'pam_teams_members_update',
   pam_teams_members_delete: 'pam_teams_members_delete',
   pam_teams_projects_attach: 'pam_teams_projects_attach',
+  pam_teams_delete: 'pam_teams_delete',
   pam_collaborators_read: 'pam_collaborators_read',
   pam_collaborators_create: 'pam_collaborators_create',
   pam_collaborators_update: 'pam_collaborators_update',

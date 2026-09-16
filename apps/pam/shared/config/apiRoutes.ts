@@ -173,26 +173,6 @@ export const API_OAUTH_PLAYGROUND_VALIDATE =
 export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 
 /**
- * API path: `/api/pam/:projectId/collaborators`
- *
- * @see [src/app/api/pam/[projectId]/collaborators/route.ts](../../src/app/api/pam/[projectId]/collaborators/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/collaborators/route.ts`
- */
-export const API_PAM_COLLABORATORS =
-  '/api/pam/:projectId/collaborators' as const;
-
-/**
- * API path: `/api/pam/:projectId/collaborators/:userId`
- *
- * @see [src/app/api/pam/[projectId]/collaborators/[userId]/route.ts](../../src/app/api/pam/[projectId]/collaborators/[userId]/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/collaborators/[userId]/route.ts`
- */
-export const API_PAM_COLLABORATORS_2 =
-  '/api/pam/:projectId/collaborators/:userId' as const;
-
-/**
  * API path: `/api/pam/:projectId/environments`
  *
  * @see [src/app/api/pam/[projectId]/environments/route.ts](../../src/app/api/pam/[projectId]/environments/route.ts)
@@ -569,8 +549,6 @@ export type ApiRoutePath =
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
-  | typeof API_PAM_COLLABORATORS
-  | typeof API_PAM_COLLABORATORS_2
   | typeof API_PAM_ENVIRONMENTS
   | typeof API_PAM_ENVIRONMENTS_DELETE
   | typeof API_PAM_ENVIRONMENTS_EXPORT

@@ -14,3 +14,12 @@ export async function GET(req: NextRequest, context: TeamRouteContext) {
       IOC(PamTeamsController).detail(teamId)
     );
 }
+
+export async function DELETE(req: NextRequest, context: TeamRouteContext) {
+  const { teamId } = await context.params;
+  return new NextApiServer(API_PAM_TEAMS_2, req)
+    .use(new ServerAuthPlugin())
+    .runWithJson(async ({ parameters: { IOC } }) =>
+      IOC(PamTeamsController).dissolve(teamId)
+    );
+}

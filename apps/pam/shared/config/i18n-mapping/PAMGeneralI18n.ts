@@ -58,12 +58,14 @@ export const pamGeneralI18n = Object.freeze({
 
   deleteZoneTitle: i18nKeys.PAGE_PAM_GENERAL_DELETE_ZONE_TITLE,
   deleteZoneDesc: i18nKeys.PAGE_PAM_GENERAL_DELETE_ZONE_DESC,
+  deleteOwnerOnly: i18nKeys.PAGE_PAM_GENERAL_DELETE_OWNER_ONLY,
   deleteProject: i18nKeys.PAGE_PAM_GENERAL_DELETE_PROJECT,
   deleteTitle: i18nKeys.PAGE_PAM_GENERAL_DELETE_TITLE,
   deleteContent: i18nKeys.PAGE_PAM_GENERAL_DELETE_CONTENT,
 
   transferZoneTitle: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_ZONE_TITLE,
   transferZoneDesc: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_ZONE_DESC,
+  transferOwnerOnly: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_OWNER_ONLY,
   transferStart: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_START,
   transferPickerTitle: i18nKeys.PAGE_PAM_GENERAL_TRANSFER_PICKER_TITLE,
   transferSearchPlaceholder:
@@ -95,6 +97,12 @@ export const pamGeneralI18n = Object.freeze({
   collabRoleUpdating: i18nKeys.PAGE_PAM_GENERAL_COLLAB_ROLE_UPDATING,
   collabPickerTitle: i18nKeys.PAGE_PAM_GENERAL_COLLAB_PICKER_TITLE,
   collabLoading: i18nKeys.PAGE_PAM_GENERAL_COLLAB_LOADING,
+
+  teamTitle: i18nKeys.PAGE_PAM_GENERAL_TEAM_TITLE,
+  teamDesc: i18nKeys.PAGE_PAM_GENERAL_TEAM_DESC,
+  teamSave: i18nKeys.PAGE_PAM_GENERAL_TEAM_SAVE,
+  teamSuccess: i18nKeys.PAGE_PAM_GENERAL_TEAM_SUCCESS,
+  teamPersonal: i18nKeys.PAGE_PAM_GENERAL_TEAM_PERSONAL,
 
   adminTitle: COMMON_ADMIN_TITLE
 });

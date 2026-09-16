@@ -563,17 +563,17 @@ export class PAMProjectRepo extends BaseRepository<
 
   /**
    * Distinct non-empty categories from visible projects
-   * (public + owned + collaborated).
+   * (public + owned + team-shared).
    *
    * Single admin select of `category` only — no env join, no exact count,
    * no paginated `searchProjects` (that path was 2s+ for a few strings).
    *
    * @param userId - Optional authenticated user id
-   * @param collaboratorProjectIds - Project ids where user is an active collaborator
+   * @param teamProjectIds - Project ids on teams the user belongs to
    */
   public async listDistinctCategories(
     userId?: string,
-    collaboratorProjectIds: string[] = []
+    teamProjectIds: string[] = []
   ): Promise<string[]> {
     const supabase = this.supabaseRepo.getAdminSupabase();
     let query = supabase
@@ -584,8 +584,8 @@ export class PAMProjectRepo extends BaseRepository<
 
     if (userId) {
       const parts = [`is_public.eq.1`, `owner_id.eq.${userId}`];
-      if (collaboratorProjectIds.length > 0) {
-        parts.push(`id.in.(${collaboratorProjectIds.join(',')})`);
+      if (teamProjectIds.length > 0) {
+        parts.push(`id.in.(${teamProjectIds.join(',')})`);
       }
       query = query.or(parts.join(','));
     } else {
@@ -600,6 +600,24 @@ export class PAMProjectRepo extends BaseRepository<
         typeof row.category === 'string' ? row.category : ''
       )
     );
+  }
+
+  /**
+   * Project ids attached to any of the given teams (admin).
+   */
+  public async listIdsByTeamIdsAdmin(teamIds: string[]): Promise<string[]> {
+    if (teamIds.length === 0) {
+      return [];
+    }
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id')
+      .in('team_id', teamIds)
+      .eq('is_deleted', DeleteStatus.UNDELETE);
+
+    this.supabaseRepo.throwIfError(result);
+    return (result.data ?? []).map((row) => row.id as string);
   }
 
   /**
@@ -658,6 +676,29 @@ export class PAMProjectRepo extends BaseRepository<
       .eq('is_deleted', DeleteStatus.UNDELETE);
 
     this.supabaseRepo.throwIfError(result);
+  }
+
+  /**
+   * Projects currently attached to a team (admin client).
+   */
+  public async listByTeamIdAdmin(
+    teamId: string
+  ): Promise<
+    Array<Pick<PAMProjectRaw, 'id' | 'name' | 'slug' | 'owner_id' | 'team_id'>>
+  > {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id,name,slug,owner_id,team_id')
+      .eq('team_id', teamId)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .order('updated_at', { ascending: false });
+
+    this.supabaseRepo.throwIfError(result);
+
+    return (result.data ?? []) as Array<
+      Pick<PAMProjectRaw, 'id' | 'name' | 'slug' | 'owner_id' | 'team_id'>
+    >;
   }
 
   /**

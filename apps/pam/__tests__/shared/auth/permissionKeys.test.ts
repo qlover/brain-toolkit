@@ -97,14 +97,15 @@ describe('role permission maps', () => {
     expect(hasOrgPermission('admin', OrgFlagPermission.Edit)).toBe(true);
     expect(
       hasOrgPermission('admin', OrgFlagPermission.ManageCollaborators)
-    ).toBe(true);
-    expect(hasOrgPermission('admin', OrgFlagPermission.Delete)).toBe(true);
+    ).toBe(false);
+    expect(hasOrgPermission('admin', OrgFlagPermission.Delete)).toBe(false);
 
     const flags = orgAccessFlags('owner');
     const perms = expandOrgPermissions('owner');
     expect(perms).toContain(OrgFlagPermission.Delete);
-    expect(perms).toContain(OrgFlagPermission.ManageCollaborators);
+    expect(perms).not.toContain(OrgFlagPermission.ManageCollaborators);
     expect(flags.can_delete).toBe(true);
+    expect(flags.can_manage_collaborators).toBe(false);
     expect(flags.permissions).toEqual([...perms]);
   });
 

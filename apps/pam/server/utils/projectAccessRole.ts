@@ -24,7 +24,11 @@ export function hasMinProjectAccess(
   return hasMinOrgRole(role, minRole as OrgRoleType);
 }
 
-export function projectAccessFlags(role: PAMProjectAccessRole): {
+export function projectAccessFlags(
+  role: PAMProjectAccessRole,
+  /** True only when current user id === project.owner_id (not team_owner). */
+  isProjectOwner: boolean
+): {
   my_role: PAMProjectAccessRole;
   is_owner: boolean;
   can_edit: boolean;
@@ -34,5 +38,8 @@ export function projectAccessFlags(role: PAMProjectAccessRole): {
   org_permissions: string[];
   permissions: string[];
 } {
-  return orgAccessFlags(role);
+  return {
+    ...orgAccessFlags(role),
+    is_owner: isProjectOwner
+  };
 }
