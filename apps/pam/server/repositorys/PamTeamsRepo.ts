@@ -5,8 +5,8 @@ import type { PamTeamRow } from '@schemas/PamTeamSchema';
 const TABLE = 'pam_role_teams';
 
 /**
- * PostgREST `.throwOnError()` — native errors bubble to
- * {@link NextApiHandler} which remaps via {@link toExecutorErrorFromThrown}.
+ * PostgREST queries use {@link SupabaseRepo.throwIfError} —
+ * remapped errors bubble to {@link NextApiHandler}.
  */
 @injectable()
 export class PamTeamsRepo {
@@ -17,28 +17,28 @@ export class PamTeamsRepo {
 
   public async findById(teamId: string): Promise<PamTeamRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('id', teamId)
       .eq('is_deleted', 0)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamTeamRow | null) ?? null;
+    return (result.data as PamTeamRow | null) ?? null;
   }
 
   public async findBySlug(slug: string): Promise<PamTeamRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('slug', slug)
       .eq('is_deleted', 0)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamTeamRow | null) ?? null;
+    return (result.data as PamTeamRow | null) ?? null;
   }
 
   public async listByIds(teamIds: string[]): Promise<PamTeamRow[]> {
@@ -46,14 +46,14 @@ export class PamTeamsRepo {
       return [];
     }
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .in('id', teamIds)
-      .eq('is_deleted', 0)
-      .throwOnError();
+      .eq('is_deleted', 0);
+    this.supabaseBridge.throwIfError(result);
 
-    return (data ?? []) as PamTeamRow[];
+    return (result.data ?? []) as PamTeamRow[];
   }
 
   public async create(input: {
@@ -62,7 +62,7 @@ export class PamTeamsRepo {
     ownerId: string;
   }): Promise<PamTeamRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .insert({
         name: input.name,
@@ -70,18 +70,18 @@ export class PamTeamsRepo {
         owner_id: input.ownerId
       })
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamTeamRow;
+    return result.data as PamTeamRow;
   }
 
   public async softDelete(teamId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from(TABLE)
       .update({ is_deleted: 1 })
-      .eq('id', teamId)
-      .throwOnError();
+      .eq('id', teamId);
+    this.supabaseBridge.throwIfError(result);
   }
 }

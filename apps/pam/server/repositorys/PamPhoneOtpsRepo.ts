@@ -61,7 +61,7 @@ export class PamPhoneOtpsRepo {
     maxAttempts?: number;
   }): Promise<PamPhoneOtpRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .insert({
         phone: input.phone,
@@ -74,58 +74,58 @@ export class PamPhoneOtpsRepo {
         max_attempts: input.maxAttempts ?? 5
       })
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamPhoneOtpRow;
+    return result.data as PamPhoneOtpRow;
   }
 
   public async revokePendingByPhone(phone: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from(TABLE)
       .update({ status: 'revoked' satisfies PamPhoneOtpStatus })
       .eq('phone', phone)
-      .eq('status', 'pending')
-      .throwOnError();
+      .eq('status', 'pending');
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async findLatestPending(
     phone: string
   ): Promise<PamPhoneOtpRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('phone', phone)
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamPhoneOtpRow | null) ?? null;
+    return (result.data as PamPhoneOtpRow | null) ?? null;
   }
 
   public async markVerified(id: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from(TABLE)
       .update({
         status: 'verified' satisfies PamPhoneOtpStatus,
         verified_at: new Date().toISOString()
       })
-      .eq('id', id)
-      .throwOnError();
+      .eq('id', id);
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async markExpired(id: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from(TABLE)
       .update({ status: 'expired' satisfies PamPhoneOtpStatus })
-      .eq('id', id)
-      .throwOnError();
+      .eq('id', id);
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async incrementAttempts(
@@ -136,14 +136,14 @@ export class PamPhoneOtpsRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const nextStatus: PamPhoneOtpStatus | undefined =
       attempts >= maxAttempts ? 'revoked' : undefined;
-    await supabase
+    const result = await supabase
       .from(TABLE)
       .update({
         attempts,
         ...(nextStatus ? { status: nextStatus } : {})
       })
-      .eq('id', id)
-      .throwOnError();
+      .eq('id', id);
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async listRecent(params: {
@@ -163,22 +163,23 @@ export class PamPhoneOtpsRepo {
       query = query.ilike('phone', `%${phone}%`);
     }
 
-    const { data } = await query.throwOnError();
+    const result = await query;
+    this.supabaseBridge.throwIfError(result);
 
-    return ((data as PamPhoneOtpRow[]) ?? []).map(mapAdminItem);
+    return ((result.data as PamPhoneOtpRow[]) ?? []).map(mapAdminItem);
   }
 
   public async findLatestSendAt(phone: string): Promise<string | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('created_at')
       .eq('phone', phone)
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as { created_at?: string } | null)?.created_at ?? null;
+    return (result.data as { created_at?: string } | null)?.created_at ?? null;
   }
 }

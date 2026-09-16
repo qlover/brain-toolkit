@@ -31,20 +31,18 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
    */
   public async create(input: CreateAuthorizationCodeInput): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
-      .from('n_oauth_wrapper__authorization_codes')
-      .insert({
-        code: input.code,
-        client_id: input.client_id,
-        user_id: input.user_id,
-        redirect_uri: input.redirect_uri,
-        scope: input.scope,
-        code_challenge: input.code_challenge,
-        code_challenge_method: input.code_challenge_method,
-        expires_at: input.expires_at,
-        used: false
-      })
-      .throwOnError();
+    const result = await supabase.from('n_oauth_wrapper__authorization_codes').insert({
+      code: input.code,
+      client_id: input.client_id,
+      user_id: input.user_id,
+      redirect_uri: input.redirect_uri,
+      scope: input.scope,
+      code_challenge: input.code_challenge,
+      code_challenge_method: input.code_challenge_method,
+      expires_at: input.expires_at,
+      used: false
+    });
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -56,17 +54,17 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     code: string
   ): Promise<OAuthAuthorizationCodeRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__authorization_codes')
       .update({ used: true })
       .eq('code', code)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
       .select('*')
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as OAuthAuthorizationCodeRow | null) ?? null;
+    return (result.data as OAuthAuthorizationCodeRow | null) ?? null;
   }
 
   /**
@@ -76,13 +74,13 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     userId: string
   ): Promise<OAuthUserCredentialsRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__user_credentials')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle()
-      .throwOnError();
-    return (data as OAuthUserCredentialsRow | null) ?? null;
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
+    return (result.data as OAuthUserCredentialsRow | null) ?? null;
   }
 
   /**
@@ -96,26 +94,24 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
-      .from('n_oauth_wrapper__user_credentials')
-      .upsert(
-        {
-          user_id: userId,
-          ...fields,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id' }
-      )
-      .throwOnError();
+    const result = await supabase.from('n_oauth_wrapper__user_credentials').upsert(
+      {
+        user_id: userId,
+        ...fields,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: 'user_id' }
+    );
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async deleteUserCredentials(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__user_credentials')
       .delete()
-      .eq('user_id', userId)
-      .throwOnError();
+      .eq('user_id', userId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async reassignClientOwner(
@@ -126,14 +122,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       return;
     }
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .update({
         owner_user_id: toUserId,
         updated_at: new Date().toISOString()
       })
-      .eq('owner_user_id', fromUserId)
-      .throwOnError();
+      .eq('owner_user_id', fromUserId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async reassignRefreshTokensUserId(
@@ -144,12 +140,12 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       return;
     }
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__refresh_tokens')
       .update({ user_id: toUserId })
       .eq('user_id', fromUserId)
-      .eq('revoked', false)
-      .throwOnError();
+      .eq('revoked', false);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -159,13 +155,13 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     tokenHash: string
   ): Promise<OAuthRefreshTokenRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__refresh_tokens')
       .select('*')
       .eq('refresh_token', tokenHash)
-      .maybeSingle()
-      .throwOnError();
-    return (data as OAuthRefreshTokenRow | null) ?? null;
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
+    return (result.data as OAuthRefreshTokenRow | null) ?? null;
   }
 
   /**
@@ -178,16 +174,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     expires_at: string;
   }): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
-      .upsert(
-        {
-          ...input,
-          revoked: false
-        },
-        { onConflict: 'refresh_token' }
-      )
-      .throwOnError();
+    const result = await supabase.from('n_oauth_wrapper__refresh_tokens').upsert(
+      {
+        ...input,
+        revoked: false
+      },
+      { onConflict: 'refresh_token' }
+    );
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -195,11 +189,11 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
    */
   public async revokeRefreshToken(tokenHash: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__refresh_tokens')
       .update({ revoked: true })
-      .eq('refresh_token', tokenHash)
-      .throwOnError();
+      .eq('refresh_token', tokenHash);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -209,14 +203,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     tokenHash: string
   ): Promise<OAuthRefreshTokenRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__refresh_tokens')
       .select('*')
       .eq('refresh_token', tokenHash)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as OAuthRefreshTokenRow | null) ?? null;
+    return (result.data as OAuthRefreshTokenRow | null) ?? null;
   }
 
   /**
@@ -226,16 +220,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     input: CreateOAuthRefreshTokenInput
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
-      .insert({
-        refresh_token: input.refresh_token,
-        client_id: input.client_id,
-        user_id: input.user_id,
-        expires_at: input.expires_at,
-        revoked: false
-      })
-      .throwOnError();
+    const result = await supabase.from('n_oauth_wrapper__refresh_tokens').insert({
+      refresh_token: input.refresh_token,
+      client_id: input.client_id,
+      user_id: input.user_id,
+      expires_at: input.expires_at,
+      revoked: false
+    });
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -243,11 +235,11 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
    */
   public async revokeByTokenHash(tokenHash: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__refresh_tokens')
       .update({ revoked: true })
-      .eq('refresh_token', tokenHash)
-      .throwOnError();
+      .eq('refresh_token', tokenHash);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -255,12 +247,12 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
    */
   public async revokeRefreshTokensByUserId(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__refresh_tokens')
       .update({ revoked: true })
       .eq('user_id', userId)
-      .eq('revoked', false)
-      .throwOnError();
+      .eq('revoked', false);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -270,14 +262,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     clientId: string
   ): Promise<OAuthClientRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .select('*')
       .eq('client_id', clientId)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as OAuthClientRow | null) ?? null;
+    return (result.data as OAuthClientRow | null) ?? null;
   }
 
   /**
@@ -287,16 +279,16 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     ownerUserId: string
   ): Promise<OAuthClientListItem[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .select(
         'client_id, client_name, client_uri, logo_uri, redirect_uris, confidential, created_at, updated_at'
       )
       .eq('owner_user_id', ownerUserId)
-      .order('created_at', { ascending: false })
-      .throwOnError();
+      .order('created_at', { ascending: false });
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as OAuthClientListItem[]) ?? [];
+    return (result.data as OAuthClientListItem[]) ?? [];
   }
 
   /**
@@ -322,7 +314,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       clientSecretHash = await hashClientSecret(clientSecret);
     }
 
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .insert({
         client_id: clientId,
@@ -337,11 +329,11 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
         owner_user_id: ownerUserId
       })
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
     return {
-      client: data as OAuthClientRow,
+      client: result.data as OAuthClientRow,
       clientSecret
     };
   }
@@ -357,7 +349,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const logoUri = normalizeLogoUri((input as OAuthClientWriteInput).logo_uri);
 
-    const { data } = await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .update({
         client_name: input.client_name,
@@ -369,14 +361,14 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       .eq('client_id', clientId)
       .eq('owner_user_id', ownerUserId)
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (!data) {
+    if (!result.data) {
       throw new Error('Client not found or access denied');
     }
 
-    return this.mapToDetail(data as OAuthClientRow);
+    return this.mapToDetail(result.data as OAuthClientRow);
   }
 
   /**
@@ -399,15 +391,15 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       Math.random().toString(36).substring(2, 20);
     const clientSecretHash = await hashClientSecret(clientSecret);
 
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .update({
         client_secret_hash: clientSecretHash,
         updated_at: new Date().toISOString()
       })
       .eq('client_id', clientId)
-      .eq('owner_user_id', ownerUserId)
-      .throwOnError();
+      .eq('owner_user_id', ownerUserId);
+    this.supabaseBridge.throwIfError(result);
 
     return { clientSecret };
   }
@@ -421,12 +413,12 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
 
-    await supabase
+    const result = await supabase
       .from('n_oauth_wrapper__clients')
       .delete()
       .eq('client_id', clientId)
-      .eq('owner_user_id', ownerUserId)
-      .throwOnError();
+      .eq('owner_user_id', ownerUserId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**

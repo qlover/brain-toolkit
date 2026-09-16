@@ -61,14 +61,14 @@ export class PamRolePermissionsRepo {
 
   public async listRoles(): Promise<PamRoleRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(ROLES_TABLE)
       .select('id, key, name, kind, description, is_system')
       .order('kind', { ascending: true })
-      .order('key', { ascending: true })
-      .throwOnError();
+      .order('key', { ascending: true });
+    this.supabaseBridge.throwIfError(result);
 
-    return (data ?? []) as PamRoleRow[];
+    return (result.data ?? []) as PamRoleRow[];
   }
 
   /** Fresh DB read (also refreshes process-level id/key cache via MemoryKv). */
@@ -83,14 +83,14 @@ export class PamRolePermissionsRepo {
 
   public async findRoleById(roleId: string): Promise<PamRoleRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(ROLES_TABLE)
       .select('id, key, name, kind, description, is_system')
       .eq('id', roleId)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    const row = (data as PamRoleRow | null) ?? null;
+    const row = (result.data as PamRoleRow | null) ?? null;
     if (row) {
       await this.rememberRoleMapping(row.id, row.key);
     }
@@ -99,14 +99,14 @@ export class PamRolePermissionsRepo {
 
   public async findRoleByKey(key: string): Promise<PamRoleRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(ROLES_TABLE)
       .select('id, key, name, kind, description, is_system')
       .eq('key', key)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    const row = (data as PamRoleRow | null) ?? null;
+    const row = (result.data as PamRoleRow | null) ?? null;
     if (row) {
       await this.rememberRoleMapping(row.id, row.key);
     }
@@ -160,37 +160,37 @@ export class PamRolePermissionsRepo {
 
   public async listAllRolePermissions(): Promise<PamRoleAssignmentJoinRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
-      .select('role_id, permission_key, pam_roles ( id, key, kind )')
-      .throwOnError();
+      .select('role_id, permission_key, pam_roles ( id, key, kind )');
+    this.supabaseBridge.throwIfError(result);
 
-    return (data ?? []) as unknown as PamRoleAssignmentJoinRow[];
+    return (result.data ?? []) as unknown as PamRoleAssignmentJoinRow[];
   }
 
   public async listPermissions(): Promise<PamPermissionRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .select('permission_key, type, method, path, description')
-      .order('permission_key', { ascending: true })
-      .throwOnError();
+      .order('permission_key', { ascending: true });
+    this.supabaseBridge.throwIfError(result);
 
-    return (data ?? []) as PamPermissionRow[];
+    return (result.data ?? []) as PamPermissionRow[];
   }
 
   public async findPermissionByKey(
     permissionKey: string
   ): Promise<PamPermissionRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .select('permission_key, type, method, path, description')
       .eq('permission_key', permissionKey)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamPermissionRow | null) ?? null;
+    return (result.data as PamPermissionRow | null) ?? null;
   }
 
   public async insertPermission(input: {
@@ -201,7 +201,7 @@ export class PamRolePermissionsRepo {
     description: string | null;
   }): Promise<PamPermissionRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .insert({
         permission_key: input.permissionKey,
@@ -211,10 +211,10 @@ export class PamRolePermissionsRepo {
         description: input.description
       })
       .select('permission_key, type, method, path, description')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamPermissionRow;
+    return result.data as PamPermissionRow;
   }
 
   public async updatePermission(input: {
@@ -231,15 +231,15 @@ export class PamRolePermissionsRepo {
     if (input.description !== undefined) patch.description = input.description;
 
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .update(patch)
       .eq('permission_key', input.permissionKey)
       .select('permission_key, type, method, path, description')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamPermissionRow;
+    return result.data as PamPermissionRow;
   }
 
   public async replaceRoleAssignments(input: {
@@ -249,11 +249,11 @@ export class PamRolePermissionsRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const uniqueKeys = [...new Set(input.permissionKeys)];
 
-    await supabase
+    const deleteResult = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
       .delete()
-      .eq('role_id', input.roleId)
-      .throwOnError();
+      .eq('role_id', input.roleId);
+    this.supabaseBridge.throwIfError(deleteResult);
 
     if (uniqueKeys.length === 0) {
       return;
@@ -264,6 +264,9 @@ export class PamRolePermissionsRepo {
       permission_key
     }));
 
-    await supabase.from(ROLE_ASSIGNMENTS_TABLE).insert(rows).throwOnError();
+    const insertResult = await supabase
+      .from(ROLE_ASSIGNMENTS_TABLE)
+      .insert(rows);
+    this.supabaseBridge.throwIfError(insertResult);
   }
 }

@@ -77,11 +77,9 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
   }
 
   public async getAll(): Promise<LocalesSchema[]> {
-    const { data } = await this.getAdminSupabase()
-      .from(TABLE)
-      .select('*')
-      .throwOnError();
-    return (data ?? []) as LocalesSchema[];
+    const result = await this.getAdminSupabase().from(TABLE).select('*');
+    this.throwIfError(result);
+    return (result.data ?? []) as LocalesSchema[];
   }
 
   public async getLocales(_localeName: string): Promise<LocalesSchema[]> {
@@ -90,14 +88,14 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
 
   /** Distinct namespaces for exact filter dropdown (sorted). */
   public async listNamespaces(): Promise<string[]> {
-    const { data } = await this.getAdminSupabase()
+    const result = await this.getAdminSupabase()
       .from(TABLE)
       .select('namespace')
-      .order('namespace', { ascending: true })
-      .throwOnError();
+      .order('namespace', { ascending: true });
+    this.throwIfError(result);
 
     const set = new Set<string>();
-    for (const row of data ?? []) {
+    for (const row of result.data ?? []) {
       const ns = (row as { namespace?: unknown }).namespace;
       if (typeof ns === 'string' && ns.trim()) {
         set.add(ns.trim());
@@ -118,12 +116,12 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
       updated_at: now
     };
 
-    const { data } = await this.getAdminSupabase()
+    const result = await this.getAdminSupabase()
       .from(TABLE)
       .insert(payload)
-      .select('*')
-      .throwOnError();
-    return (data ?? null) as LocalesSchema[] | null;
+      .select('*');
+    this.throwIfError(result);
+    return (result.data ?? null) as LocalesSchema[] | null;
   }
 
   public async updateById(
@@ -143,11 +141,11 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
       }
     }
 
-    await this.getAdminSupabase()
+    const result = await this.getAdminSupabase()
       .from(TABLE)
       .update(payload)
-      .eq('id', id)
-      .throwOnError();
+      .eq('id', id);
+    this.throwIfError(result);
   }
 
   public async pagination<T = LocalesSchema>(
@@ -205,13 +203,11 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
       }
     }
 
-    const { data, count } = await query
-      .order(orderBy, { ascending })
-      .range(from, to)
-      .throwOnError();
+    const result = await query.order(orderBy, { ascending }).range(from, to);
+    this.throwIfError(result);
 
-    const items = (data ?? []) as T[];
-    const total = count ?? items.length;
+    const items = (result.data ?? []) as T[];
+    const total = result.count ?? items.length;
 
     return {
       items,
@@ -249,13 +245,13 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
       }));
 
       try {
-        const { data } = await this.getAdminSupabase()
+        const result = await this.getAdminSupabase()
           .from(TABLE)
           .upsert(inputData, { onConflict: 'value' })
-          .select('*')
-          .throwOnError();
+          .select('*');
+        this.throwIfError(result);
 
-        const returnedData = (data ?? []) as LocalesSchema[];
+        const returnedData = (result.data ?? []) as LocalesSchema[];
         return {
           success: true as const,
           chunkIndex,

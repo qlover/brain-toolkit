@@ -23,14 +23,14 @@ export class PamProjectCollaboratorsRepo {
 
   public async listActiveProjectIdsForUser(userId: string): Promise<string[]> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .select('project_id')
       .eq('user_id', userId)
-      .eq('status', 'active')
-      .throwOnError();
+      .eq('status', 'active');
+    this.supabaseBridge.throwIfError(result);
 
-    return (data ?? [])
+    return (result.data ?? [])
       .map((row) => (typeof row.project_id === 'string' ? row.project_id : ''))
       .filter(Boolean);
   }
@@ -40,16 +40,16 @@ export class PamProjectCollaboratorsRepo {
     userId: string
   ): Promise<PAMProjectCollaboratorRole | null> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .select('role')
       .eq('project_id', projectId)
       .eq('user_id', userId)
       .eq('status', 'active')
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    const role = data?.role;
+    const role = result.data?.role;
     if (role === 'admin' || role === 'member') {
       return role;
     }
@@ -69,15 +69,15 @@ export class PamProjectCollaboratorsRepo {
     }
 
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .select('project_id,role')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .in('project_id', projectIds)
-      .throwOnError();
+      .in('project_id', projectIds);
+    this.supabaseBridge.throwIfError(result);
 
-    for (const row of data ?? []) {
+    for (const row of result.data ?? []) {
       const projectId =
         typeof row.project_id === 'string' ? row.project_id : '';
       const role = row.role;
@@ -93,17 +93,17 @@ export class PamProjectCollaboratorsRepo {
     projectId: string
   ): Promise<PAMProjectCollaboratorItem[]> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .select(
         'id,project_id,user_id,role,status,invited_by,created_at,updated_at'
       )
       .eq('project_id', projectId)
       .eq('status', 'active')
-      .order('created_at', { ascending: true })
-      .throwOnError();
+      .order('created_at', { ascending: true });
+    this.supabaseBridge.throwIfError(result);
 
-    const rows = (data ?? []) as PAMProjectCollaboratorRow[];
+    const rows = (result.data ?? []) as PAMProjectCollaboratorRow[];
     if (rows.length === 0) {
       return [];
     }
@@ -135,13 +135,13 @@ export class PamProjectCollaboratorsRepo {
     }
 
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .select('id,project_id,role')
-      .eq('user_id', fromUserId)
-      .throwOnError();
+      .eq('user_id', fromUserId);
+    this.supabaseBridge.throwIfError(result);
 
-    for (const row of data ?? []) {
+    for (const row of result.data ?? []) {
       const projectId =
         typeof row.project_id === 'string' ? row.project_id : '';
       if (!projectId) {
@@ -159,14 +159,14 @@ export class PamProjectCollaboratorsRepo {
         continue;
       }
 
-      await admin
+      const updateResult = await admin
         .from(TABLE)
         .update({
           user_id: toUserId,
           updated_at: new Date().toISOString()
         })
-        .eq('id', row.id)
-        .throwOnError();
+        .eq('id', row.id);
+      this.supabaseBridge.throwIfError(updateResult);
     }
   }
 
@@ -177,7 +177,7 @@ export class PamProjectCollaboratorsRepo {
     invitedBy: string | null;
   }): Promise<PAMProjectCollaboratorRow> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .insert({
         project_id: input.projectId,
@@ -187,10 +187,10 @@ export class PamProjectCollaboratorsRepo {
         invited_by: input.invitedBy
       })
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PAMProjectCollaboratorRow;
+    return result.data as PAMProjectCollaboratorRow;
   }
 
   public async updateRole(
@@ -199,41 +199,42 @@ export class PamProjectCollaboratorsRepo {
     role: PAMProjectCollaboratorRole
   ): Promise<PAMProjectCollaboratorRow> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .update({ role })
       .eq('project_id', projectId)
       .eq('user_id', userId)
       .eq('status', 'active')
       .select('*')
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (!data) {
+    if (!result.data) {
       throw new ExecutorError(API_PAM_COLLABORATOR_NOT_FOUND);
     }
 
-    return data as PAMProjectCollaboratorRow;
+    return result.data as PAMProjectCollaboratorRow;
   }
 
   public async remove(projectId: string, userId: string): Promise<void> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    const { data } = await admin
+    const result = await admin
       .from(TABLE)
       .delete()
       .eq('project_id', projectId)
       .eq('user_id', userId)
-      .select('id')
-      .throwOnError();
+      .select('id');
+    this.supabaseBridge.throwIfError(result);
 
-    if (!data?.length) {
+    if (!result.data?.length) {
       throw new ExecutorError(API_PAM_COLLABORATOR_NOT_FOUND);
     }
   }
 
   public async deleteAllForProject(projectId: string): Promise<void> {
     const admin = this.supabaseBridge.getAdminSupabase();
-    await admin.from(TABLE).delete().eq('project_id', projectId).throwOnError();
+    const result = await admin.from(TABLE).delete().eq('project_id', projectId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   protected async loadProfilesByUserIds(
@@ -254,13 +255,13 @@ export class PamProjectCollaboratorsRepo {
 
     const admin = this.supabaseBridge.getAdminSupabase();
 
-    const { data: pamUsersData } = await admin
+    const pamUsersResult = await admin
       .from('pam_users')
       .select('id,email,phone,display_name')
-      .in('id', userIds)
-      .throwOnError();
+      .in('id', userIds);
+    this.supabaseBridge.throwIfError(pamUsersResult);
 
-    for (const row of pamUsersData ?? []) {
+    for (const row of pamUsersResult.data ?? []) {
       if (typeof row.id !== 'string') {
         continue;
       }

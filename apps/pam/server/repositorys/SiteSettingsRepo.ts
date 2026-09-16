@@ -19,12 +19,12 @@ export class SiteSettingsRepo {
   ) {}
 
   public async getAll(): Promise<PamSiteSettingRow[]> {
-    const { data } = await this.supabaseBridge
+    const result = await this.supabaseBridge
       .getAdminSupabase()
       .from(TABLE)
-      .select('*')
-      .throwOnError();
-    return (data ?? []) as PamSiteSettingRow[];
+      .select('*');
+    this.supabaseBridge.throwIfError(result);
+    return (result.data ?? []) as PamSiteSettingRow[];
   }
 
   public async upsertMany(rows: PamSiteSettingUpsertInput[]): Promise<void> {
@@ -40,10 +40,10 @@ export class SiteSettingsRepo {
       updated_at: new Date().toISOString()
     }));
 
-    await this.supabaseBridge
+    const result = await this.supabaseBridge
       .getAdminSupabase()
       .from(TABLE)
-      .upsert(payload, { onConflict: 'key' })
-      .throwOnError();
+      .upsert(payload, { onConflict: 'key' });
+    this.supabaseBridge.throwIfError(result);
   }
 }

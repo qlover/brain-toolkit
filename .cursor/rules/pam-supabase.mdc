@@ -1,30 +1,31 @@
 ---
-description: PAM PostgREST 优先 throwOnError；Auth/例外用 throwIfError
+description: PAM Supabase 统一用 throwIfError 处理错误
 globs: apps/pam/server/**/*.ts
 alwaysApply: false
 ---
 
 # PAM Supabase 查询错误约定
 
-## 默认（PostgREST）
+**统一** `await` 后 `throwIfError(result)`（PostgREST 与 Auth 相同写法）。
 
-`from` / `rpc` 等 builder：**`.throwOnError()`**。错误由 `NextApiHandler` + `toExecutorErrorFromThrown` 收成 `api:server__error`（production 不回传诊断 `data`）。
+不主推 `.throwOnError()`（Auth 无此链式 API，避免两套风格）。
 
 ```ts
-const { data } = await this.getAdminSupabase()
-  .from('pam_locales')
-  .select('*')
-  .throwOnError();
+const result = await this.getAdminSupabase().from('pam_locales').select('*');
+this.throwIfError(result);
+
+const result = await admin.auth.admin.getUserById(id);
+this.supabaseBridge.throwIfError(result);
 ```
 
-## 例外（不用 throwOnError）
+- 禁止：`if (error) throw new Error(error.message)`。
+- production 下 `api:server__error` 不回传诊断 `data`（见 `toClientFacingExecutorError`）。
 
-1. **Auth SDK**（`auth.*`）：`throwIfError(result)`。
-2. **可恢复错误**：`try/catch` 后 fallback。
-3. **fail-closed 探测**：如 `checkPlatformAdmin`。
-4. **业务 `api:*`**：OTP 等继续抛业务 `ExecutorError`。
-5. **批量部分失败 / 可选 Auth enrichment**。
+## 例外
 
-禁止：`if (error) throw new Error(error.message)`。
+1. 可恢复错误：`try/catch` 后 fallback。
+2. fail-closed：`checkPlatformAdmin`。
+3. 业务 `api:*`：OTP 等。
+4. 批量部分失败 / 可选 Auth enrichment。
 
 详见 `apps/pam/docs/supabase-errors.md`。

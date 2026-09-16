@@ -34,26 +34,26 @@ export class PamUsersRepo {
 
   public async findById(id: string): Promise<PamUserRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('id', id)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamUserRow | null) ?? null;
+    return (result.data as PamUserRow | null) ?? null;
   }
 
   public async findByPhone(phone: string): Promise<PamUserRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('phone', phone)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamUserRow | null) ?? null;
+    return (result.data as PamUserRow | null) ?? null;
   }
 
   public async findByEmail(email: string): Promise<PamUserRow | null> {
@@ -63,14 +63,14 @@ export class PamUsersRepo {
     }
 
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .ilike('email', normalized)
-      .maybeSingle()
-      .throwOnError();
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    return (data as PamUserRow | null) ?? null;
+    return (result.data as PamUserRow | null) ?? null;
   }
 
   /**
@@ -93,7 +93,7 @@ export class PamUsersRepo {
       const nextPhone =
         input.phone !== undefined ? input.phone : (existing.phone ?? null);
 
-      const { data } = await supabase
+      const result = await supabase
         .from(TABLE)
         .update({
           email: nextEmail,
@@ -103,17 +103,17 @@ export class PamUsersRepo {
         })
         .eq('id', input.id)
         .select('*')
-        .single()
-        .throwOnError();
+        .single();
+      this.supabaseBridge.throwIfError(result);
 
-      return data as PamUserRow;
+      return result.data as PamUserRow;
     }
 
     const defaultRoleId = await this.roles.requireRoleIdByKey(
       PlatformRoleKey.User
     );
 
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .insert({
         id: input.id,
@@ -125,10 +125,10 @@ export class PamUsersRepo {
         status: 'active'
       })
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamUserRow;
+    return result.data as PamUserRow;
   }
 
   public async updateEmailAndPhone(params: {
@@ -151,20 +151,21 @@ export class PamUsersRepo {
       patch.display_name = params.displayName;
     }
 
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update(patch)
       .eq('id', params.userId)
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamUserRow;
+    return result.data as PamUserRow;
   }
 
   public async deleteById(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    await supabase.from(TABLE).delete().eq('id', userId).throwOnError();
+    const result = await supabase.from(TABLE).delete().eq('id', userId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -229,7 +230,7 @@ export class PamUsersRepo {
 
     const nextRoleId = await this.roles.requireRoleIdByKey(nextRole);
 
-    const { data } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update({
         role_id: nextRoleId,
@@ -237,10 +238,10 @@ export class PamUsersRepo {
       })
       .eq('id', userId)
       .select('*')
-      .single()
-      .throwOnError();
+      .single();
+    this.supabaseBridge.throwIfError(result);
 
-    return data as PamUserRow;
+    return result.data as PamUserRow;
   }
 
   /** Counts users with platform admin role key. */
@@ -249,13 +250,13 @@ export class PamUsersRepo {
       PlatformRoleKey.Admin
     );
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { count } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('id', { count: 'exact', head: true })
-      .eq('role_id', adminRoleId)
-      .throwOnError();
+      .eq('role_id', adminRoleId);
+    this.supabaseBridge.throwIfError(result);
 
-    return count ?? 0;
+    return result.count ?? 0;
   }
 
   public async searchForAdmin(params: {
@@ -275,16 +276,15 @@ export class PamUsersRepo {
     }>
   > {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data: authData } = await supabase
-      .rpc('pam_auth_users_search', {
-        p_query: params.query?.trim() || '',
-        p_exclude_id: null,
-        p_limit: params.limit ?? 20,
-        p_offset: params.offset ?? 0
-      })
-      .throwOnError();
+    const authResult = await supabase.rpc('pam_auth_users_search', {
+      p_query: params.query?.trim() || '',
+      p_exclude_id: null,
+      p_limit: params.limit ?? 20,
+      p_offset: params.offset ?? 0
+    });
+    this.supabaseBridge.throwIfError(authResult);
 
-    const users = Array.isArray(authData) ? authData : [];
+    const users = Array.isArray(authResult.data) ? authResult.data : [];
     if (users.length === 0) {
       return [];
     }
@@ -293,16 +293,16 @@ export class PamUsersRepo {
       .map((row) => String((row as { id?: string }).id ?? ''))
       .filter(Boolean);
 
-    const { data: pamData } = await supabase
+    const pamResult = await supabase
       .from(TABLE)
       .select(
         'id, role_id, is_platform_admin, status, created_at, display_name, email, phone'
       )
-      .in('id', ids)
-      .throwOnError();
+      .in('id', ids);
+    this.supabaseBridge.throwIfError(pamResult);
 
     const pamById = new Map(
-      (pamData ?? []).map((row) => [String(row.id), row as PamUserRow])
+      (pamResult.data ?? []).map((row) => [String(row.id), row as PamUserRow])
     );
 
     const results = [];
