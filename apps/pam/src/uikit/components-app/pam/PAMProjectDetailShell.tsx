@@ -2,11 +2,7 @@
 
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { isAbortError } from '@qlover/fe-corekit/aborter';
-import {
-  Loading,
-  useStrictEffect,
-  usePageI18nMapping
-} from '@qlover/next-kit/client';
+import { useStrictEffect, usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, {
   createContext,
@@ -22,6 +18,7 @@ import React, {
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { PAMFacade } from '@/impls/PAMfacade';
+import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { PAMProjectForkButton } from '@/uikit/components-app/pam/PAMProjectForkButton';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
@@ -384,7 +381,7 @@ export function PAMProjectDetailShell({
 
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-tertiary-text">
-              <Loading />
+              <PamLoadingIndicator />
               {tt.loadingText}
             </div>
           ) : error ? (

@@ -1,7 +1,10 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import type { SystemRoleType } from '@shared/auth/systemRole';
 import { inject, injectable } from '@shared/container';
-import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
+import {
+  API_ADMIN_USERS_CANNOT_CHANGE_SELF,
+  API_NOT_AUTHORIZED
+} from '@config/i18n-identifier/api';
 import type { PamAdminUserListItem, PamUserRow } from '@schemas/PamUserSchema';
 import {
   pamPlatformAdminPatchSchema,
@@ -42,6 +45,7 @@ export class AdminUsersController {
     body: unknown
   ): Promise<PamUserRow> {
     const actor = await this.requireActorId();
+    this.assertNotSelf(targetUserId, actor);
     const parsed = pamPlatformAdminPatchSchema.parse(body);
     return this.pamUsers.setPlatformAdmin(targetUserId, parsed.enabled, actor);
   }
@@ -51,12 +55,22 @@ export class AdminUsersController {
     body: unknown
   ): Promise<PamUserRow> {
     const actor = await this.requireActorId();
+    this.assertNotSelf(targetUserId, actor);
     const parsed = pamSystemRolePatchSchema.parse(body);
     return this.pamUsers.setSystemRole(
       targetUserId,
       parsed.systemRole as SystemRoleType,
       actor
     );
+  }
+
+  protected assertNotSelf(targetUserId: string, actorUserId: string): void {
+    if (targetUserId === actorUserId) {
+      throw new ExecutorError(
+        API_ADMIN_USERS_CANNOT_CHANGE_SELF,
+        'Cannot change your own system role'
+      );
+    }
   }
 
   protected async requireActorId(): Promise<string> {

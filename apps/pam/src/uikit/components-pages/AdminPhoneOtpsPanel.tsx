@@ -4,6 +4,7 @@ import { useStrictEffect } from '@qlover/next-kit/client';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPhoneOtpsApi } from '@/impls/appApi/AdminPhoneOtpsApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
+import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminPhoneOtpsI18nInterface } from '@config/i18n-mapping/admin18n';
 import type { PamPhoneOtpAdminItem } from '@schemas/PamPhoneOtpSchema';
@@ -147,13 +148,17 @@ export function AdminPhoneOtpsPanel({
         </p>
       ) : null}
 
-      <Table
-        rowKey="id"
-        loading={loading}
-        columns={columns}
-        dataSource={rows}
-        emptyText={tt.empty}
-      />
+      {loading && rows.length === 0 ? (
+        <AdminPanelLoading testId="AdminPhoneOtpsLoading" />
+      ) : (
+        <Table
+          rowKey="id"
+          loading={loading}
+          columns={columns}
+          dataSource={rows}
+          emptyText={tt.empty}
+        />
+      )}
     </div>
   );
 }

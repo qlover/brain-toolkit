@@ -7,7 +7,6 @@ import {
   useStore,
   useStrictEffect
 } from '@qlover/next-kit/client';
-import dynamic from 'next/dynamic';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo } from 'react';
 import { RequestLogsApi } from '@/impls/appApi/RequestLogsApi';
@@ -15,21 +14,12 @@ import { AdminPageShell } from '@/uikit/components-pages/AdminPageShell';
 import { RequestLogsTable } from '@/uikit/components-pages/RequestLogsTable';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
-import { defaultNavItems } from '@config/adminNavs';
 import { defaultSearchParams } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import { adminRequestLogs18n } from '@config/i18n-mapping/admin18n';
 import type { PagesRouteParamsType } from '@server/render/PagesRouteParams';
 import { PagesRouteParams } from '@server/render/PagesRouteParams';
 import type { GetStaticPropsContext } from 'next';
-
-const AdminLayout = dynamic(
-  () =>
-    import('@/uikit/components-pages/AdminLayout').then(
-      (mod) => mod.AdminLayout
-    ),
-  { ssr: false }
-);
 
 interface AdminRequestLogsProps {
   messages: Record<string, string>;
@@ -43,6 +33,10 @@ const requestLogsSearchDefaultCriteria: ResourceSearchParams = {
   sort: [...defaultSearchParams.sort]
 };
 
+/**
+ * Admin request logs (Pages Router / CSR).
+ * Shell chrome comes from `_app` {@link AdminPagesAppShell}.
+ */
 export default function AdminRequestLogsPage({}: AdminRequestLogsProps) {
   const locale = useLocale();
   const pageI18n = useMemo(() => adminRequestLogs18n, []);
@@ -95,19 +89,18 @@ export default function AdminRequestLogsPage({}: AdminRequestLogsProps) {
 
   return (
     <PageI18nProvider value={seoMetadata}>
-      <AdminLayout seoMetadata={seoMetadata} navItems={defaultNavItems}>
-        <AdminPageShell
-          title={seoMetadata.title}
-          description={seoMetadata.description}
-        >
-          <RequestLogsTable
-            rows={rows}
-            locale={locale}
-            loading={loading}
-            pagination={tablePagination}
-          />
-        </AdminPageShell>
-      </AdminLayout>
+      <AdminPageShell
+        title={seoMetadata.title}
+        description={seoMetadata.description}
+        seoMetadata={seoMetadata}
+      >
+        <RequestLogsTable
+          rows={rows}
+          locale={locale}
+          loading={loading}
+          pagination={tablePagination}
+        />
+      </AdminPageShell>
     </PageI18nProvider>
   );
 }

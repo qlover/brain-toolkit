@@ -2,11 +2,20 @@ import { SupabaseRepo } from '@qlover/next-kit/server';
 import type { RoleKindType } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
+import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import type { LoggerInterface } from '@qlover/logger';
 
 const ROLES_TABLE = 'pam_roles';
 const PERMISSIONS_TABLE = 'pam_role_permissions';
 const ROLE_ASSIGNMENTS_TABLE = 'pam_role_assignments';
+
+const ROLE_MAPS_KV_KEY = 'pam:roles:idKeyMaps';
+const ROLE_MAPS_TTL_MS = 60_000;
+
+type RoleIdKeyMaps = {
+  byId: Record<string, string>;
+  byKey: Record<string, string>;
+};
 
 export type PamPermissionRow = {
   permission_key: string;
@@ -31,17 +40,27 @@ export type PamRoleAssignmentJoinRow = {
   pam_roles: { id: string; key: string; kind: string } | null;
 };
 
+function mapsFromRows(
+  rows: ReadonlyArray<{ id: string; key: string }>
+): RoleIdKeyMaps {
+  const byId: Record<string, string> = {};
+  const byKey: Record<string, string> = {};
+  for (const row of rows) {
+    byId[row.id] = row.key;
+    byKey[row.key] = row.id;
+  }
+  return { byId, byKey };
+}
+
 @injectable()
 export class PamRolePermissionsRepo {
-  protected roleByKey = new Map<string, PamRoleRow>();
-  protected roleById = new Map<string, PamRoleRow>();
-  protected roleCacheLoaded = false;
-
   constructor(
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
     @inject(I.Logger)
-    protected readonly logger: LoggerInterface
+    protected readonly logger: LoggerInterface,
+    @inject(MemoryKvCacheService)
+    protected readonly kv: MemoryKvCacheService
   ) {}
 
   public async listRoles(): Promise<PamRoleRow[]> {
@@ -60,24 +79,17 @@ export class PamRolePermissionsRepo {
     return (data ?? []) as PamRoleRow[];
   }
 
-  /** Fresh DB read (also refreshes id/key cache). */
+  /** Fresh DB read (also refreshes process-level id/key cache via MemoryKv). */
   public async reloadRoles(): Promise<PamRoleRow[]> {
-    this.invalidateRoleCache();
+    await this.invalidateRoleCache();
     const roles = await this.listRoles();
-    for (const role of roles) {
-      this.roleByKey.set(role.key, role);
-      this.roleById.set(role.id, role);
-    }
-    this.roleCacheLoaded = true;
+    await this.kv.setItem(ROLE_MAPS_KV_KEY, mapsFromRows(roles), {
+      ttlMs: ROLE_MAPS_TTL_MS
+    });
     return roles;
   }
 
   public async findRoleById(roleId: string): Promise<PamRoleRow | null> {
-    await this.ensureRoleCache();
-    const cached = this.roleById.get(roleId);
-    if (cached) {
-      return cached;
-    }
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { data, error } = await supabase
       .from(ROLES_TABLE)
@@ -92,23 +104,37 @@ export class PamRolePermissionsRepo {
 
     const row = (data as PamRoleRow | null) ?? null;
     if (row) {
-      this.roleByKey.set(row.key, row);
-      this.roleById.set(row.id, row);
+      await this.rememberRoleMapping(row.id, row.key);
     }
     return row;
   }
 
   public async findRoleByKey(key: string): Promise<PamRoleRow | null> {
-    await this.ensureRoleCache();
-    return this.roleByKey.get(key) ?? null;
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(ROLES_TABLE)
+      .select('id, key, name, kind, description, is_system')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error('findRoleByKey failed', error);
+      throw error;
+    }
+    const row = (data as PamRoleRow | null) ?? null;
+    if (row) {
+      await this.rememberRoleMapping(row.id, row.key);
+    }
+    return row;
   }
 
   public async requireRoleIdByKey(key: string): Promise<string> {
-    const row = await this.findRoleByKey(key);
-    if (!row) {
+    const maps = await this.ensureRoleMaps();
+    const id = maps.byKey[key];
+    if (!id) {
       throw new Error(`Unknown pam_roles.key: ${key}`);
     }
-    return row.id;
+    return id;
   }
 
   public async getRoleKeyById(
@@ -117,28 +143,34 @@ export class PamRolePermissionsRepo {
     if (!roleId) {
       return null;
     }
-    await this.ensureRoleCache();
-    return this.roleById.get(roleId)?.key ?? null;
+    const maps = await this.ensureRoleMaps();
+    return maps.byId[roleId] ?? null;
   }
 
-  public invalidateRoleCache(): void {
-    this.roleByKey.clear();
-    this.roleById.clear();
-    this.roleCacheLoaded = false;
+  public async invalidateRoleCache(): Promise<void> {
+    await this.kv.removeItem(ROLE_MAPS_KV_KEY);
   }
 
-  protected async ensureRoleCache(): Promise<void> {
-    if (this.roleCacheLoaded) {
-      return;
-    }
-    const roles = await this.listRoles();
-    this.roleByKey.clear();
-    this.roleById.clear();
-    for (const role of roles) {
-      this.roleByKey.set(role.key, role);
-      this.roleById.set(role.id, role);
-    }
-    this.roleCacheLoaded = true;
+  protected async ensureRoleMaps(): Promise<RoleIdKeyMaps> {
+    return this.kv.getOrSet(
+      ROLE_MAPS_KV_KEY,
+      async () => mapsFromRows(await this.listRoles()),
+      { ttlMs: ROLE_MAPS_TTL_MS }
+    );
+  }
+
+  protected async rememberRoleMapping(id: string, key: string): Promise<void> {
+    const current = (await this.kv.getItem<RoleIdKeyMaps>(
+      ROLE_MAPS_KV_KEY
+    )) ?? {
+      byId: {},
+      byKey: {}
+    };
+    current.byId[id] = key;
+    current.byKey[key] = id;
+    await this.kv.setItem(ROLE_MAPS_KV_KEY, current, {
+      ttlMs: ROLE_MAPS_TTL_MS
+    });
   }
 
   public async listAllRolePermissions(): Promise<PamRoleAssignmentJoinRow[]> {

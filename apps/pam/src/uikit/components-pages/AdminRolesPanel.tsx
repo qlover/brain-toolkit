@@ -4,6 +4,7 @@ import { useStrictEffect } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { useCallback, useMemo, useState } from 'react';
 import { AdminRolesApi } from '@/impls/appApi/AdminRolesApi';
+import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import {
@@ -315,7 +316,7 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
       ) : null}
 
       {loading && !data ? (
-        <p className="text-sm text-secondary-text">{tt.description}</p>
+        <AdminPanelLoading testId="AdminRolesLoading" />
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]">
           <aside className="rounded-lg border border-primary-border bg-surface p-3">

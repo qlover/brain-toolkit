@@ -4,7 +4,10 @@ import { useStrictEffect } from '@qlover/next-kit/client';
 import { useCallback, useState } from 'react';
 import { AdminUsersApi } from '@/impls/appApi/AdminUsersApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
+import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import { PermissionKey, useCan } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { SystemRole, type SystemRoleType } from '@shared/auth/systemRole';
 import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { AdminUsersI18nInterface } from '@config/i18n-mapping/admin18n';
@@ -18,6 +21,11 @@ const SYSTEM_ROLES: SystemRoleType[] = [
 
 export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const adminUsersApi = useIOC(AdminUsersApi);
+  const { user } = useUserAuth();
+  const currentUserId = user?.id;
+  const { allowed: canChangeRole } = useCan(
+    PermissionKey.admin_users_system_role
+  );
   const [rows, setRows] = useState<PamAdminUserListItem[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -54,7 +62,11 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
 
   const handleRoleChange = useCallback(
     async (row: PamAdminUserListItem, systemRole: SystemRoleType) => {
-      if (row.systemRole === systemRole) {
+      if (
+        !canChangeRole ||
+        row.id === currentUserId ||
+        row.systemRole === systemRole
+      ) {
         return;
       }
       setPendingId(row.id);
@@ -78,43 +90,76 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
         setPendingId(null);
       }
     },
-    [adminUsersApi, tt.description]
+    [adminUsersApi, canChangeRole, currentUserId, tt.description]
   );
 
   const columns: TableColumn<PamAdminUserListItem>[] = [
     {
       title: tt.emailLabel,
       key: 'identity',
-      render: (_, row) =>
-        resolveUserDisplayLabel({
+      render: (_, row) => {
+        const label = resolveUserDisplayLabel({
           displayName: row.displayName,
           phone: row.phone,
           email: row.email,
           userId: row.id
-        })
+        });
+        if (row.id !== currentUserId) {
+          return label;
+        }
+        return (
+          <span
+            data-testid="columns"
+            className="inline-flex flex-wrap items-center gap-1.5"
+          >
+            <span>{label}</span>
+            <span className="rounded bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand">
+              {tt.you}
+            </span>
+          </span>
+        );
+      }
     },
     {
       title: tt.systemRoleLabel,
       key: 'systemRole',
       width: 180,
-      render: (_, row) => (
-        <select
-          data-testid="AdminUsersSystemRoleSelect"
-          value={row.systemRole}
-          disabled={pendingId === row.id}
-          onChange={(event) =>
-            void handleRoleChange(row, event.target.value as SystemRoleType)
-          }
-          className="w-full rounded-lg border border-primary-border bg-surface px-2 py-1.5 text-sm text-primary-text disabled:opacity-50"
-          aria-label={tt.systemRoleLabel}
-        >
-          {SYSTEM_ROLES.map((role) => (
-            <option data-testid="columns" key={role} value={role}>
-              {roleLabel(role)}
-            </option>
-          ))}
-        </select>
-      )
+      render: (_, row) => {
+        const isSelf = row.id === currentUserId;
+        if (!canChangeRole || isSelf) {
+          return (
+            <span
+              className="text-sm text-secondary-text"
+              title={isSelf ? tt.cannotChangeSelf : tt.roleChangeForbidden}
+              data-testid={
+                isSelf ? 'AdminUsersSelfRoleReadonly' : 'AdminUsersRoleReadonly'
+              }
+            >
+              {roleLabel(row.systemRole)}
+            </span>
+          );
+        }
+
+        return (
+          <select
+            data-testid="AdminUsersSystemRoleSelect"
+            data-permission={PermissionKey.admin_users_system_role}
+            value={row.systemRole}
+            disabled={pendingId === row.id}
+            onChange={(event) =>
+              void handleRoleChange(row, event.target.value as SystemRoleType)
+            }
+            className="w-full rounded-lg border border-primary-border bg-surface px-2 py-1.5 text-sm text-primary-text disabled:opacity-50"
+            aria-label={tt.systemRoleLabel}
+          >
+            {SYSTEM_ROLES.map((role) => (
+              <option data-testid="columns" key={role} value={role}>
+                {roleLabel(role)}
+              </option>
+            ))}
+          </select>
+        );
+      }
     }
   ];
 
@@ -142,13 +187,17 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
         <p className="text-sm text-(--fe-color-error)">{error}</p>
       ) : null}
 
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={rows}
-        loading={loading}
-        emptyText={tt.empty}
-      />
+      {loading && rows.length === 0 ? (
+        <AdminPanelLoading testId="AdminUsersLoading" />
+      ) : (
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={rows}
+          loading={loading}
+          emptyText={tt.empty}
+        />
+      )}
     </div>
   );
 }

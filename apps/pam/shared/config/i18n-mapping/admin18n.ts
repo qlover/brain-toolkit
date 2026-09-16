@@ -196,5 +196,8 @@ export const adminUsers18n = Object.freeze({
   searchPlaceholder: userKeys.ADMIN_USERS_SEARCH_PLACEHOLDER,
   empty: userKeys.ADMIN_USERS_EMPTY,
   emailLabel: userKeys.ADMIN_USERS_EMAIL_LABEL,
-  searchButton: commonTablesKeys.COMMON_ADMIN_TABLE_SEARCH
+  searchButton: commonTablesKeys.COMMON_ADMIN_TABLE_SEARCH,
+  cannotChangeSelf: userKeys.ADMIN_USERS_CANNOT_CHANGE_SELF,
+  you: userKeys.ADMIN_USERS_YOU,
+  roleChangeForbidden: userKeys.ADMIN_USERS_ROLE_CHANGE_FORBIDDEN
 });

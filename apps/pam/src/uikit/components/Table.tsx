@@ -1,8 +1,9 @@
 'use client';
 
-import { Button, Loading } from '@qlover/next-kit/client';
+import { Button } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { type Key, type ReactNode } from 'react';
+import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { adminTableI18n } from '@config/i18n-mapping/admin18n';
 
@@ -136,7 +137,15 @@ export function Table<T extends object>({
             </tr>
           </thead>
           <tbody className="divide-primary-border divide-y">
-            {!loading && dataSource.length === 0 ? (
+            {loading && dataSource.length === 0 ? (
+              <tr data-testid="TableLoadingRow">
+                <td colSpan={columns.length} className="px-4 py-12">
+                  <div className="flex min-h-32 items-center justify-center">
+                    <PamLoadingIndicator />
+                  </div>
+                </td>
+              </tr>
+            ) : !loading && dataSource.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
@@ -189,11 +198,14 @@ export function Table<T extends object>({
         </table>
       </div>
 
-      {loading && (
-        <div className="bg-primary/60 absolute inset-0 flex items-center justify-center rounded-xl">
-          <Loading />
+      {loading && dataSource.length > 0 ? (
+        <div
+          data-testid="TableLoadingOverlay"
+          className="bg-primary/60 absolute inset-0 flex items-center justify-center rounded-xl"
+        >
+          <PamLoadingIndicator />
         </div>
-      )}
+      ) : null}
 
       {showPagination && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-secondary-text">

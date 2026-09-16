@@ -1,6 +1,9 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import type { PamPermissionKey } from '@shared/auth/permissionKeys';
-import { hasSystemPermission } from '@shared/auth/systemRole';
+import {
+  hasSystemPermission,
+  sessionHasSystemPermission
+} from '@shared/auth/systemRole';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { PamPermissionService } from '@server/services/PamPermissionService';
@@ -45,7 +48,6 @@ export class RequirePermissionPlugin implements BootstrapServerPlugin {
   public async onBefore({
     parameters: { IOC }
   }: BootstrapServerContext): Promise<void> {
-    await IOC(OAuthUserService).throwIfNotAuth();
     await IOC(PamPermissionService).ensureLoaded();
 
     const projectId = this.options.projectId?.trim();
@@ -54,8 +56,17 @@ export class RequirePermissionPlugin implements BootstrapServerPlugin {
       return;
     }
 
-    const user = await IOC(OAuthUserService).getSessionUser();
+    const oauth = IOC(OAuthUserService);
+    const user = (await oauth.getSessionUser()) ?? (await oauth.getUser(false));
     if (!user?.id) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const fromSession = sessionHasSystemPermission(user, this.permissionKey);
+    if (fromSession === true) {
+      return;
+    }
+    if (fromSession === false) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
