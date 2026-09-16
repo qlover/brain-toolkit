@@ -171,17 +171,35 @@ export class PAMProjectRepo extends BaseRepository<
       where.push(['category', Operators.eq, categoryFilter]);
     }
 
+    const teamIds = user_id
+      ? await this.listActiveTeamIdsForUserAdmin(user_id)
+      : [];
+
     let whereOr: FilterTriple<PAMProjectRaw>[] | undefined;
 
     if (visibilityFilter === 'public') {
       where.push(['is_public', Operators.eq, PAMPublicType.public]);
     } else if (visibilityFilter === 'private') {
       where.push(['is_public', Operators.eq, PAMPublicType.private]);
-      where.push(['owner_id', Operators.eq, user_id!]);
+      whereOr = [['owner_id', Operators.eq, user_id!]];
+      if (teamIds.length > 0) {
+        whereOr.push([
+          'team_id',
+          Operators.in,
+          teamIds
+        ] as FilterTriple<PAMProjectRaw>);
+      }
     } else {
       whereOr = [['is_public', Operators.eq, PAMPublicType.public]];
       if (user_id) {
         whereOr.push(['owner_id', Operators.eq, user_id]);
+        if (teamIds.length > 0) {
+          whereOr.push([
+            'team_id',
+            Operators.in,
+            teamIds
+          ] as FilterTriple<PAMProjectRaw>);
+        }
       }
     }
 
@@ -210,6 +228,22 @@ export class PAMProjectRepo extends BaseRepository<
       where,
       whereOr
     });
+  }
+
+  /**
+   * Active team ids for a user (admin; used by legacy search fallback).
+   */
+  protected async listActiveTeamIdsForUserAdmin(
+    userId: string
+  ): Promise<string[]> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from('pam_role_team_members')
+      .select('team_id')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+    this.supabaseRepo.throwIfError(result);
+    return (result.data ?? []).map((row) => row.team_id as string);
   }
 
   /**
@@ -563,17 +597,17 @@ export class PAMProjectRepo extends BaseRepository<
 
   /**
    * Distinct non-empty categories from visible projects
-   * (public + owned + collaborated).
+   * (public + owned + team-shared).
    *
    * Single admin select of `category` only — no env join, no exact count,
    * no paginated `searchProjects` (that path was 2s+ for a few strings).
    *
    * @param userId - Optional authenticated user id
-   * @param collaboratorProjectIds - Project ids where user is an active collaborator
+   * @param teamProjectIds - Project ids on teams the user belongs to
    */
   public async listDistinctCategories(
     userId?: string,
-    collaboratorProjectIds: string[] = []
+    teamProjectIds: string[] = []
   ): Promise<string[]> {
     const supabase = this.supabaseRepo.getAdminSupabase();
     let query = supabase
@@ -584,8 +618,8 @@ export class PAMProjectRepo extends BaseRepository<
 
     if (userId) {
       const parts = [`is_public.eq.1`, `owner_id.eq.${userId}`];
-      if (collaboratorProjectIds.length > 0) {
-        parts.push(`id.in.(${collaboratorProjectIds.join(',')})`);
+      if (teamProjectIds.length > 0) {
+        parts.push(`id.in.(${teamProjectIds.join(',')})`);
       }
       query = query.or(parts.join(','));
     } else {
@@ -600,6 +634,24 @@ export class PAMProjectRepo extends BaseRepository<
         typeof row.category === 'string' ? row.category : ''
       )
     );
+  }
+
+  /**
+   * Project ids attached to any of the given teams (admin).
+   */
+  public async listIdsByTeamIdsAdmin(teamIds: string[]): Promise<string[]> {
+    if (teamIds.length === 0) {
+      return [];
+    }
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id')
+      .in('team_id', teamIds)
+      .eq('is_deleted', DeleteStatus.UNDELETE);
+
+    this.supabaseRepo.throwIfError(result);
+    return (result.data ?? []).map((row) => row.id as string);
   }
 
   /**
@@ -621,15 +673,20 @@ export class PAMProjectRepo extends BaseRepository<
 
   /**
    * Minimal project row for read-access checks (admin).
+   * Accepts UUID or slug.
    */
   public async getProjectAccessAdmin(
     projectId: string
-  ): Promise<Pick<PAMProjectRaw, 'id' | 'is_public' | 'owner_id'> | null> {
+  ): Promise<Pick<
+    PAMProjectRaw,
+    'id' | 'slug' | 'is_public' | 'owner_id' | 'team_id'
+  > | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
+    const column = uuidSchema.safeParse(projectId).success ? 'id' : 'slug';
     const result = await admin
       .from(this.getRepoName())
-      .select('id,is_public,owner_id')
-      .eq('id', projectId)
+      .select('id,slug,is_public,owner_id,team_id')
+      .eq(column, projectId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
       .maybeSingle();
 
@@ -637,8 +694,45 @@ export class PAMProjectRepo extends BaseRepository<
 
     return result.data as Pick<
       PAMProjectRaw,
-      'id' | 'is_public' | 'owner_id'
+      'id' | 'slug' | 'is_public' | 'owner_id' | 'team_id'
     > | null;
+  }
+
+  public async setProjectTeamIdAdmin(
+    projectId: string,
+    teamId: string | null
+  ): Promise<void> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .update({ team_id: teamId })
+      .eq('id', projectId)
+      .eq('is_deleted', DeleteStatus.UNDELETE);
+
+    this.supabaseRepo.throwIfError(result);
+  }
+
+  /**
+   * Projects currently attached to a team (admin client).
+   */
+  public async listByTeamIdAdmin(
+    teamId: string
+  ): Promise<
+    Array<Pick<PAMProjectRaw, 'id' | 'name' | 'slug' | 'owner_id' | 'team_id'>>
+  > {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id,name,slug,owner_id,team_id')
+      .eq('team_id', teamId)
+      .eq('is_deleted', DeleteStatus.UNDELETE)
+      .order('updated_at', { ascending: false });
+
+    this.supabaseRepo.throwIfError(result);
+
+    return (result.data ?? []) as Array<
+      Pick<PAMProjectRaw, 'id' | 'name' | 'slug' | 'owner_id' | 'team_id'>
+    >;
   }
 
   /**
@@ -1311,6 +1405,7 @@ export class PAMProjectRepo extends BaseRepository<
     params: PAMProjectCreate & {
       owner_id: string;
       create_source: PAMProjectRaw['create_source'];
+      team_id?: string | null;
     }
   ): Promise<PAMProjectDetail> {
     const admin = this.supabaseRepo.getAdminSupabase();

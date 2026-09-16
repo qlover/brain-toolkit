@@ -208,7 +208,7 @@ export class PamCliApp {
 
     const remove = program
       .command('remove')
-      .description('Delete a PAM environment from a project (owner only)')
+      .description('Delete a PAM environment from a project (admin+)')
       .argument('<slug|id>', 'Project slug or project id')
       .requiredOption('-e, --env <name>', 'Environment name to delete')
       .option('-y, --yes', 'Skip confirmation prompts')

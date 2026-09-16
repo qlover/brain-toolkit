@@ -10,9 +10,11 @@ import { clsx } from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { PAMApi } from '@/impls/appApi/PAMApi';
+import { PamTeamsApi } from '@/impls/appApi/PamTeamsApi';
 import { PAMFacade } from '@/impls/PAMfacade';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_PROJECT_GENERAL, ROUTE_PROJECTS } from '@config/route';
@@ -22,7 +24,7 @@ import {
   type PAMProjectUpdate
 } from '@schemas/PAMProjectSchema';
 import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
-import { PAMProjectCollaboratorsPanel } from './PAMProjectCollaboratorsPanel';
+import { isPersonalTeamSlug } from '@schemas/PamTeamSchema';
 import {
   PAMProjectTransferPicker,
   prefetchTransferUsers
@@ -95,6 +97,7 @@ export function PAMProjectGeneralPanel({
   const tt = usePageI18nMapping<PAMGeneralI18nInterface>();
   const router = useRouter();
   const pamApi = useIOC(PAMApi);
+  const teamsApi = useIOC(PamTeamsApi);
   const pamFacade = useIOC(PAMFacade);
   const dialogHandler = useIOC(I.DialogHandler);
   const {
@@ -102,12 +105,21 @@ export function PAMProjectGeneralPanel({
     projectId,
     loading,
     error: loadError,
-    canEdit,
-    canManageCollaborators,
+    hasPermission,
     deleting,
     requestDeleteProject,
     setProject
   } = usePAMProjectDetail();
+
+  const canEdit = hasPermission(PermissionKey.pam_project_edit);
+  const canPreviewWrite = hasPermission(
+    PermissionKey.pam_project_preview_write
+  );
+  const canTransfer = hasPermission(PermissionKey.pam_project_transfer);
+  const canDelete = hasPermission(PermissionKey.pam_project_delete);
+  const isOwner = !!project?.is_owner;
+  const canTransferAsOwner = canTransfer && isOwner;
+  const canDeleteAsOwner = canDelete && isOwner;
 
   const [savingField, setSavingField] = useState<GeneralFieldKeyType | null>(
     null
@@ -120,6 +132,11 @@ export function PAMProjectGeneralPanel({
   const [description, setDescription] = useState('');
   const [stack, setStack] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
+  const [teamIdDraft, setTeamIdDraft] = useState('');
+  const [teamOptions, setTeamOptions] = useState<
+    { id: string; label: string }[]
+  >([]);
+  const [savingTeam, setSavingTeam] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferUsersWarm, setTransferUsersWarm] = useState<
@@ -150,7 +167,49 @@ export function PAMProjectGeneralPanel({
       setStack,
       setRepoUrl
     });
+    setTeamIdDraft(project.team_id ?? '');
   }, [project]);
+
+  useEffect(() => {
+    if (!isOwner) {
+      setTeamOptions([]);
+      return;
+    }
+    void teamsApi
+      .listMine()
+      .then((teams) => {
+        setTeamOptions(
+          teams
+            .filter((team) =>
+              team.permissions.includes(PermissionKey.pam_teams_projects_attach)
+            )
+            .map((team) => ({
+              id: team.id,
+              label: isPersonalTeamSlug(team.slug) ? tt.teamPersonal : team.name
+            }))
+        );
+      })
+      .catch(() => setTeamOptions([]));
+  }, [isOwner, teamsApi, tt.teamPersonal]);
+
+  const saveTeamAttachment = async (): Promise<void> => {
+    if (!project || !projectId || !isOwner || !teamIdDraft) {
+      return;
+    }
+    if (teamIdDraft === (project.team_id ?? '')) {
+      return;
+    }
+    setSavingTeam(true);
+    try {
+      await teamsApi.attachProject(teamIdDraft, { project_id: projectId });
+      setProject({ ...project, team_id: teamIdDraft });
+      dialogHandler.success(tt.teamSuccess);
+    } catch {
+      // DialogErrorPlugin toasts
+    } finally {
+      setSavingTeam(false);
+    }
+  };
 
   const saveField = async (
     field: GeneralFieldKeyType,
@@ -210,6 +269,7 @@ export function PAMProjectGeneralPanel({
   }
 
   const ready = !loading && project != null;
+  const showOwnerOnlyHint = ready && !isOwner && canEdit;
   const publicValue = isPublic === PAMPublicType.public;
   const fieldReadOnly = !canEdit;
 
@@ -249,10 +309,11 @@ export function PAMProjectGeneralPanel({
                   tt.previewNoUrl}
               </span>
             </p>
-            {canEdit ? (
+            {canPreviewWrite ? (
               <button
                 type="button"
                 data-testid="PAMProjectPreviewCapture"
+                data-permission={PermissionKey.pam_project_preview_write}
                 disabled={
                   capturingPreview ||
                   !getPAMPrimaryUrl(project.environments, project.repo_url)
@@ -325,6 +386,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'name'}
         saveDisabled={!ready || name.trim() === '' || name === project.name}
         onSave={() => void saveField('name', { name: name.trim() })}
@@ -353,6 +415,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'slug'}
         saveDisabled={!ready || slug.trim() === '' || slug === project.slug}
         onSave={() => void saveField('slug', { slug: slug.trim() })}
@@ -382,6 +445,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'is_public'}
         saveDisabled={!ready || isPublic === project.is_public}
         onSave={() => void saveField('is_public', { is_public: isPublic })}
@@ -422,6 +486,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'category'}
         saveDisabled={!ready || category === (project.category ?? '')}
         onSave={() => void saveField('category', { category })}
@@ -450,6 +515,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'description'}
         saveDisabled={
           !ready || (description || '') === (project.description || '')
@@ -482,6 +548,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'stack'}
         saveDisabled={!ready || (stack || '') === (project.stack || '')}
         onSave={() => void saveField('stack', { stack: stack || '' })}
@@ -510,6 +577,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'repo_url'}
         saveDisabled={!ready || (repoUrl || '') === (project.repo_url || '')}
         onSave={() => void saveField('repo_url', { repo_url: repoUrl || '' })}
@@ -531,11 +599,44 @@ export function PAMProjectGeneralPanel({
         )}
       </PAMSettingsCard>
 
-      {project?.can_edit && ready ? (
-        <PAMProjectCollaboratorsPanel tt={tt} />
+      {isOwner && ready ? (
+        <PAMSettingsCard
+          testId="PAMSettingsCard-team"
+          title={tt.teamTitle}
+          description={tt.teamDesc}
+          saveLabel={tt.teamSave}
+          savingLabel={tt.formSaveing}
+          showSave
+          saving={savingTeam}
+          saveDisabled={
+            !teamIdDraft || teamIdDraft === (project?.team_id ?? '')
+          }
+          onSave={() => void saveTeamAttachment()}
+        >
+          <select
+            value={teamIdDraft}
+            onChange={(e) => setTeamIdDraft(e.target.value)}
+            className={pamFormFieldClass}
+            aria-label={tt.teamTitle}
+          >
+            {teamOptions.length === 0 ? (
+              <option value={teamIdDraft || ''}>{tt.teamPersonal}</option>
+            ) : (
+              teamOptions.map((team) => (
+                <option
+                  data-testid="PAMProjectGeneralPanel"
+                  key={team.id}
+                  value={team.id}
+                >
+                  {team.label}
+                </option>
+              ))
+            )}
+          </select>
+        </PAMSettingsCard>
       ) : null}
 
-      {canManageCollaborators && ready ? (
+      {canTransferAsOwner && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-transfer"
           title={tt.transferZoneTitle}
@@ -545,6 +646,7 @@ export function PAMProjectGeneralPanel({
           <button
             type="button"
             data-testid="PAMProjectGeneralTransferButton"
+            data-permission={PermissionKey.pam_project_transfer}
             disabled={transferring}
             onMouseEnter={warmTransferUsers}
             onFocus={warmTransferUsers}
@@ -590,7 +692,16 @@ export function PAMProjectGeneralPanel({
         </PAMSettingsCard>
       ) : null}
 
-      {canManageCollaborators && ready ? (
+      {showOwnerOnlyHint ? (
+        <PAMSettingsCard
+          testId="PAMSettingsCard-transfer-owner-only"
+          title={tt.transferZoneTitle}
+          description={tt.transferOwnerOnly}
+          showSave={false}
+        />
+      ) : null}
+
+      {canDeleteAsOwner && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-delete"
           title={tt.deleteZoneTitle}
@@ -600,6 +711,7 @@ export function PAMProjectGeneralPanel({
           <button
             type="button"
             data-testid="PAMProjectGeneralDeleteButton"
+            data-permission={PermissionKey.pam_project_delete}
             disabled={deleting}
             onClick={requestDeleteProject}
             className={clsx(
@@ -610,6 +722,15 @@ export function PAMProjectGeneralPanel({
             {tt.deleteProject}
           </button>
         </PAMSettingsCard>
+      ) : null}
+
+      {showOwnerOnlyHint ? (
+        <PAMSettingsCard
+          testId="PAMSettingsCard-delete-owner-only"
+          title={tt.deleteZoneTitle}
+          description={tt.deleteOwnerOnly}
+          showSave={false}
+        />
       ) : null}
     </div>
   );

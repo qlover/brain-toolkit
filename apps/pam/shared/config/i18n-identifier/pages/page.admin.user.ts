@@ -293,12 +293,41 @@ export const ADMIN_USERS_UPDATED_AT_PLACEHOLDER =
   'admin_users:updated_at__placeholder';
 
 /**
- * @description Platform admin toggle label
+ * @description Platform admin toggle label (legacy)
  * @localZh 平台管理员
  * @localEn Platform admin
  */
 export const ADMIN_USERS_PLATFORM_ADMIN_LABEL =
   'admin_users:platform_admin__label';
+
+/**
+ * @description System role column label
+ * @localZh 系统角色
+ * @localEn System role
+ */
+export const ADMIN_USERS_SYSTEM_ROLE_LABEL = 'admin_users:system_role__label';
+
+/**
+ * @description System role: user
+ * @localZh 普通用户
+ * @localEn User
+ */
+export const ADMIN_USERS_SYSTEM_ROLE_USER = 'admin_users:system_role__user';
+
+/**
+ * @description System role: operator
+ * @localZh 运营
+ * @localEn Operator
+ */
+export const ADMIN_USERS_SYSTEM_ROLE_OPERATOR =
+  'admin_users:system_role__operator';
+
+/**
+ * @description System role: admin
+ * @localZh 管理员
+ * @localEn Admin
+ */
+export const ADMIN_USERS_SYSTEM_ROLE_ADMIN = 'admin_users:system_role__admin';
 
 /**
  * @description User search placeholder
@@ -313,3 +342,25 @@ export const ADMIN_USERS_SEARCH_PLACEHOLDER = 'admin_users:search__placeholder';
  * @localEn No users found
  */
 export const ADMIN_USERS_EMPTY = 'admin_users:empty';
+
+/**
+ * @description Current user row — system role is read-only
+ * @localZh 不能修改自己的系统角色
+ * @localEn You cannot change your own system role
+ */
+export const ADMIN_USERS_CANNOT_CHANGE_SELF = 'admin_users:cannot_change_self';
+
+/**
+ * @description Marker for the signed-in user in the admin users table
+ * @localZh 我
+ * @localEn You
+ */
+export const ADMIN_USERS_YOU = 'admin_users:you';
+
+/**
+ * @description System role select disabled — super-admin only
+ * @localZh 仅超级管理员可修改系统角色
+ * @localEn Only super admins can change system roles
+ */
+export const ADMIN_USERS_ROLE_CHANGE_FORBIDDEN =
+  'admin_users:role_change_forbidden';

@@ -1,8 +1,10 @@
 import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
+import * as permissionsKeys from '../i18n-identifier/pages/page.admin.permissions';
 import * as phoneOtpsKeys from '../i18n-identifier/pages/page.admin.phone-otps';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
+import * as rolesKeys from '../i18n-identifier/pages/page.admin.roles';
 import * as settingsKeys from '../i18n-identifier/pages/page.admin.settings';
 import * as userKeys from '../i18n-identifier/pages/page.admin.user';
 
@@ -39,11 +41,68 @@ export const admin18n = Object.freeze({
 
 export type AdminUsersI18nInterface = typeof adminUsers18n;
 
+export type AdminRolesI18nInterface = typeof adminRoles18n;
+
+export type AdminPermissionsI18nInterface = typeof adminPermissions18n;
+
 export type AdminRequestLogsI18nInterface = typeof adminRequestLogs18n;
 
 export type AdminSettingsI18nInterface = typeof adminSettings18n;
 
 export type AdminPhoneOtpsI18nInterface = typeof adminPhoneOtps18n;
+
+export const adminRoles18n = Object.freeze({
+  title: rolesKeys.ADMIN_ROLES_TITLE,
+  description: rolesKeys.ADMIN_ROLES_DESCRIPTION,
+  content: rolesKeys.ADMIN_ROLES_DESCRIPTION,
+  keywords: rolesKeys.ADMIN_ROLES_KEYWORDS,
+  sectionSystem: rolesKeys.ADMIN_ROLES_SECTION_SYSTEM,
+  sectionOrg: rolesKeys.ADMIN_ROLES_SECTION_ORG,
+  permissionLabel: rolesKeys.ADMIN_ROLES_PERMISSION_LABEL,
+  selectedCount: rolesKeys.ADMIN_ROLES_SELECTED_COUNT,
+  sectionGranted: rolesKeys.ADMIN_ROLES_SECTION_GRANTED,
+  sectionAvailable: rolesKeys.ADMIN_ROLES_SECTION_AVAILABLE,
+  hintPlatform: rolesKeys.ADMIN_ROLES_HINT_PLATFORM,
+  hintTeam: rolesKeys.ADMIN_ROLES_HINT_TEAM,
+  save: rolesKeys.ADMIN_ROLES_SAVE,
+  saving: rolesKeys.ADMIN_ROLES_SAVING,
+  loadFailed: rolesKeys.ADMIN_ROLES_LOAD_FAILED,
+  saveFailed: rolesKeys.ADMIN_ROLES_SAVE_FAILED,
+  saveSuccess: rolesKeys.ADMIN_ROLES_SAVE_SUCCESS,
+  empty: rolesKeys.ADMIN_ROLES_EMPTY,
+  systemUser: rolesKeys.ADMIN_ROLES_SYSTEM_USER,
+  systemOperator: rolesKeys.ADMIN_ROLES_SYSTEM_OPERATOR,
+  systemAdmin: rolesKeys.ADMIN_ROLES_SYSTEM_ADMIN,
+  orgMember: rolesKeys.ADMIN_ROLES_ORG_MEMBER,
+  orgAdmin: rolesKeys.ADMIN_ROLES_ORG_ADMIN,
+  orgOwner: rolesKeys.ADMIN_ROLES_ORG_OWNER,
+  saveButton: commonKeys.COMMON_SAVE
+});
+
+export const adminPermissions18n = Object.freeze({
+  title: permissionsKeys.ADMIN_PERMISSIONS_TITLE,
+  description: permissionsKeys.ADMIN_PERMISSIONS_DESCRIPTION,
+  content: permissionsKeys.ADMIN_PERMISSIONS_DESCRIPTION,
+  keywords: permissionsKeys.ADMIN_PERMISSIONS_KEYWORDS,
+  create: permissionsKeys.ADMIN_PERMISSIONS_CREATE,
+  save: permissionsKeys.ADMIN_PERMISSIONS_SAVE,
+  saving: permissionsKeys.ADMIN_PERMISSIONS_SAVING,
+  cancel: permissionsKeys.ADMIN_PERMISSIONS_CANCEL,
+  edit: permissionsKeys.ADMIN_PERMISSIONS_EDIT,
+  fieldKey: permissionsKeys.ADMIN_PERMISSIONS_FIELD_KEY,
+  fieldType: permissionsKeys.ADMIN_PERMISSIONS_FIELD_TYPE,
+  fieldMethod: permissionsKeys.ADMIN_PERMISSIONS_FIELD_METHOD,
+  fieldPath: permissionsKeys.ADMIN_PERMISSIONS_FIELD_PATH,
+  fieldDescription: permissionsKeys.ADMIN_PERMISSIONS_FIELD_DESCRIPTION,
+  keyHint: permissionsKeys.ADMIN_PERMISSIONS_KEY_HINT,
+  loadFailed: permissionsKeys.ADMIN_PERMISSIONS_LOAD_FAILED,
+  saveFailed: permissionsKeys.ADMIN_PERMISSIONS_SAVE_FAILED,
+  createSuccess: permissionsKeys.ADMIN_PERMISSIONS_CREATE_SUCCESS,
+  updateSuccess: permissionsKeys.ADMIN_PERMISSIONS_UPDATE_SUCCESS,
+  empty: permissionsKeys.ADMIN_PERMISSIONS_EMPTY,
+  forbidden: permissionsKeys.ADMIN_PERMISSIONS_FORBIDDEN,
+  search: permissionsKeys.ADMIN_PERMISSIONS_SEARCH
+});
 
 export const adminPhoneOtps18n = Object.freeze({
   title: phoneOtpsKeys.ADMIN_PHONE_OTPS_TITLE,
@@ -130,8 +189,15 @@ export const adminUsers18n = Object.freeze({
   cancelButton: commonKeys.COMMON_CANCEL,
   createButton: commonKeys.COMMON_CREATE,
   platformAdminLabel: userKeys.ADMIN_USERS_PLATFORM_ADMIN_LABEL,
+  systemRoleLabel: userKeys.ADMIN_USERS_SYSTEM_ROLE_LABEL,
+  systemRoleUser: userKeys.ADMIN_USERS_SYSTEM_ROLE_USER,
+  systemRoleOperator: userKeys.ADMIN_USERS_SYSTEM_ROLE_OPERATOR,
+  systemRoleAdmin: userKeys.ADMIN_USERS_SYSTEM_ROLE_ADMIN,
   searchPlaceholder: userKeys.ADMIN_USERS_SEARCH_PLACEHOLDER,
   empty: userKeys.ADMIN_USERS_EMPTY,
   emailLabel: userKeys.ADMIN_USERS_EMAIL_LABEL,
-  searchButton: commonTablesKeys.COMMON_ADMIN_TABLE_SEARCH
+  searchButton: commonTablesKeys.COMMON_ADMIN_TABLE_SEARCH,
+  cannotChangeSelf: userKeys.ADMIN_USERS_CANNOT_CHANGE_SELF,
+  you: userKeys.ADMIN_USERS_YOU,
+  roleChangeForbidden: userKeys.ADMIN_USERS_ROLE_CHANGE_FORBIDDEN
 });

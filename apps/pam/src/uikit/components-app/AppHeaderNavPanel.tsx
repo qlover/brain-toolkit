@@ -7,7 +7,8 @@ import {
   ROUTE_DEVELOPER_APPS,
   ROUTE_DOCS_CLI,
   ROUTE_DOCS_OAUTH,
-  ROUTE_PROJECTS
+  ROUTE_PROJECTS,
+  ROUTE_TEAMS
 } from '@config/route';
 import {
   headerIconButtonClass,
@@ -18,6 +19,7 @@ import type { ReactNode } from 'react';
 
 export interface AppHeaderNavTT {
   navProjects: string;
+  navTeams: string;
   navDocs: string;
   navCli: string;
   navAbout: string;
@@ -26,6 +28,7 @@ export interface AppHeaderNavTT {
 
 type HeaderNavHref =
   | typeof ROUTE_PROJECTS
+  | typeof ROUTE_TEAMS
   | typeof ROUTE_DOCS_OAUTH
   | typeof ROUTE_DOCS_CLI
   | '/about'
@@ -53,6 +56,9 @@ function isActivePath(pathname: string, href: string): boolean {
       pathname === ROUTE_PROJECTS || pathname.startsWith(`${ROUTE_PROJECTS}/`)
     );
   }
+  if (href === ROUTE_TEAMS) {
+    return pathname === ROUTE_TEAMS || pathname.startsWith(`${ROUTE_TEAMS}/`);
+  }
   if (href === '/about') {
     return pathname === '/about' || pathname.endsWith('/about');
   }
@@ -76,6 +82,7 @@ export function AppHeaderNavPanel({
 
   const links: { href: HeaderNavHref; label: string }[] = [
     { href: ROUTE_PROJECTS, label: tt.navProjects },
+    { href: ROUTE_TEAMS, label: tt.navTeams },
     { href: ROUTE_DOCS_OAUTH, label: tt.navDocs },
     { href: ROUTE_DOCS_CLI, label: tt.navCli },
     { href: '/about', label: tt.navAbout },

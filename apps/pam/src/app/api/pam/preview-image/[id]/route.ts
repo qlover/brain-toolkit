@@ -1,19 +1,25 @@
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_PREVIEW_IMAGE } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 /**
  * POST /api/pam/preview-image/:id — capture cover from primary URL and store.
  */
-export function POST(
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   return new NextApiServer(API_PAM_PREVIEW_IMAGE, req)
-    .use(new ServerAuthPlugin())
+    .use(
+      new RequirePermissionPlugin(PermissionKey.pam_project_preview_write, {
+        projectId: id
+      })
+    )
     .runWithJson(async ({ parameters: { IOC } }) =>
-      IOC(PAMController).refreshPreviewImage((await params).id)
+      IOC(PAMController).refreshPreviewImage(id)
     );
 }

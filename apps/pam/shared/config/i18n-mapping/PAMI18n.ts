@@ -108,5 +108,8 @@ export const pamI18n = Object.freeze({
   envUrlTitle: i18nKeys.PAGE_PAM_ENV_URL_TITLE,
   envDelete: i18nKeys.PAGE_PAM_ENV_DELETE,
 
+  labelTeam: i18nKeys.PAGE_PAM_LABEL_TEAM,
+  teamPersonalDefault: i18nKeys.PAGE_PAM_TEAM_PERSONAL_DEFAULT,
+
   adminTitle: COMMON_ADMIN_TITLE
 });

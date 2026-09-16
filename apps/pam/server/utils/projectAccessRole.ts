@@ -1,33 +1,45 @@
+/**
+ * Project access helpers.
+ *
+ * Alias of institution (org) roles: PAM project === org container.
+ * Prefer importing from `@shared/auth/orgRole` for new code.
+ */
+
+import {
+  hasMinOrgRole,
+  orgAccessFlags,
+  orgRoleRank,
+  type OrgRoleType
+} from '@shared/auth/orgRole';
 import type { PAMProjectAccessRole } from '@schemas/PAMProjectCollaboratorSchema';
 
-const ROLE_RANK: Record<PAMProjectAccessRole, number> = {
-  none: 0,
-  member: 1,
-  admin: 2,
-  owner: 3
-};
-
 export function projectAccessRoleRank(role: PAMProjectAccessRole): number {
-  return ROLE_RANK[role] ?? 0;
+  return orgRoleRank(role);
 }
 
 export function hasMinProjectAccess(
   role: PAMProjectAccessRole,
   minRole: Exclude<PAMProjectAccessRole, 'none'>
 ): boolean {
-  return projectAccessRoleRank(role) >= projectAccessRoleRank(minRole);
+  return hasMinOrgRole(role, minRole as OrgRoleType);
 }
 
-export function projectAccessFlags(role: PAMProjectAccessRole): {
+export function projectAccessFlags(
+  role: PAMProjectAccessRole,
+  /** True only when current user id === project.owner_id (not team_owner). */
+  isProjectOwner: boolean
+): {
   my_role: PAMProjectAccessRole;
   is_owner: boolean;
   can_edit: boolean;
   can_manage_collaborators: boolean;
+  can_delete: boolean;
+  /** @deprecated Prefer `permissions` */
+  org_permissions: string[];
+  permissions: string[];
 } {
   return {
-    my_role: role,
-    is_owner: role === 'owner',
-    can_edit: hasMinProjectAccess(role, 'member'),
-    can_manage_collaborators: hasMinProjectAccess(role, 'admin')
+    ...orgAccessFlags(role),
+    is_owner: isProjectOwner
   };
 }

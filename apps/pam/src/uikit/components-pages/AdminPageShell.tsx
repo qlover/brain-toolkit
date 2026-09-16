@@ -1,4 +1,6 @@
+import { ClientSeo } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
+import type { PageI18nInterface } from '@qlover/next-kit/common';
 import type { ReactNode } from 'react';
 
 export interface AdminPageShellProps {
@@ -7,6 +9,8 @@ export interface AdminPageShellProps {
   readonly children: ReactNode;
   readonly className?: string;
   readonly contentClassName?: string;
+  /** When set, updates document title for this admin page body */
+  readonly seoMetadata?: PageI18nInterface;
 }
 
 /**
@@ -17,10 +21,12 @@ export function AdminPageShell({
   description,
   children,
   className,
-  contentClassName
+  contentClassName,
+  seoMetadata
 }: AdminPageShellProps) {
   return (
     <div data-testid="AdminPageShell" className={clsx('w-full', className)}>
+      {seoMetadata ? <ClientSeo i18nInterface={seoMetadata} /> : null}
       <header className="mb-5 border-b border-primary-border/70 pb-4 sm:mb-8 sm:pb-6">
         <h1 className="text-xl font-semibold tracking-tight text-primary-text sm:text-2xl lg:text-3xl">
           {title}

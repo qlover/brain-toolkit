@@ -9,7 +9,11 @@ type MemoryKvEntryType = {
   readonly expiresAtMs: number | null;
 };
 
+/** Process-wide store — survives per-request IOC instances. */
 const sharedKvStore = new Map<string, MemoryKvEntryType>();
+
+/** Coalesce concurrent getOrSet factories for the same key. */
+const sharedInflight = new Map<string, Promise<unknown>>();
 
 @injectable()
 export class MemoryKvCacheService implements KvCacheInterface {
@@ -66,11 +70,41 @@ export class MemoryKvCacheService implements KvCacheInterface {
       }
       sharedKvStore.delete(key);
     }
-    // If a default value was provided (non-options object), return it.
     if (arg2 !== undefined && !this.isKvOpt(arg2)) {
       return arg2 as T;
     }
     return null;
+  }
+
+  /**
+   * Cache-aside: return cached value, or run `factory` once (coalesced) and store.
+   */
+  public async getOrSet<T>(
+    key: string,
+    factory: () => Promise<T>,
+    options?: KvCacheSetOptionsInterface
+  ): Promise<T> {
+    this.assertKey(key);
+    const hit = await this.getItem<T>(key);
+    if (hit !== null) {
+      return hit;
+    }
+
+    const existing = sharedInflight.get(key) as Promise<T> | undefined;
+    if (existing) {
+      return existing;
+    }
+
+    const pending = (async () => {
+      const value = await factory();
+      await this.setItem(key, value, options);
+      return value;
+    })().finally(() => {
+      sharedInflight.delete(key);
+    });
+
+    sharedInflight.set(key, pending);
+    return pending;
   }
 
   /**
@@ -82,6 +116,25 @@ export class MemoryKvCacheService implements KvCacheInterface {
   ): Promise<void> {
     this.assertKey(key);
     sharedKvStore.delete(key);
+    sharedInflight.delete(key);
+  }
+
+  /**
+   * Drop keys that start with `prefix` (process store only).
+   */
+  public async removeByPrefix(prefix: string): Promise<number> {
+    if (!prefix.trim()) {
+      throw new Error('KvCache prefix must be non-empty');
+    }
+    let removed = 0;
+    for (const key of [...sharedKvStore.keys()]) {
+      if (key.startsWith(prefix)) {
+        sharedKvStore.delete(key);
+        sharedInflight.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
   }
 
   /**
@@ -89,6 +142,7 @@ export class MemoryKvCacheService implements KvCacheInterface {
    */
   public async clear(): Promise<void> {
     sharedKvStore.clear();
+    sharedInflight.clear();
   }
 
   protected assertKey(key: string): void {

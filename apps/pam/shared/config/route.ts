@@ -8,8 +8,6 @@ import {
   API_PAM_ENVIRONMENTS_DELETE,
   API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_VARIABLES,
-  API_PAM_COLLABORATORS,
-  API_PAM_COLLABORATORS_2,
   API_PAM_FORK,
   API_PAM_TRANSFER,
   API_PAM_PREVIEW_IMAGE
@@ -47,6 +45,16 @@ export const ROUTE_ADMIN = '/admin' as const;
  * Admin users management. Pages Router: `src/pages/[locale]/admin/users.tsx`.
  */
 export const ROUTE_ADMIN_USERS = '/admin/users' as const;
+
+/**
+ * Admin role → permission assignments. Pages Router: `src/pages/[locale]/admin/roles.tsx`.
+ */
+export const ROUTE_ADMIN_ROLES = '/admin/roles' as const;
+
+/**
+ * Admin permission catalog (super admin). Pages Router: `src/pages/[locale]/admin/permissions.tsx`.
+ */
+export const ROUTE_ADMIN_PERMISSIONS = '/admin/permissions' as const;
 
 /**
  * Admin phone OTP monitor. Pages Router: `src/pages/[locale]/admin/phone-otps.tsx`.
@@ -90,6 +98,15 @@ export const ROUTE_PROJECT_GENERAL = '/projects/[projectId]/general' as const;
 /** next-intl pathname template — segment value is slug (legacy UUID ok). */
 export const ROUTE_PROJECT_ENVIRONMENTS =
   '/projects/[projectId]/environments' as const;
+
+/**
+ * PAM teams (App Router under `src/app/[locale]/teams/...`).
+ * Requires login ({@link LOGINED_PAGES} + {@link isLoginRequiredTeamsPath}).
+ */
+export const ROUTE_TEAMS = '/teams' as const;
+
+/** next-intl pathname template — team UUID. */
+export const ROUTE_TEAM_DETAIL = '/teams/[teamId]' as const;
 
 /** Developer console app list (PRD default post-login redirect). */
 export const ROUTE_DEVELOPER_APPS = '/developer/apps' as const;
@@ -178,6 +195,8 @@ export const AUTH_ROUTES = [
 export const LOGINED_PAGES = [
   ROUTE_ADMIN,
   ROUTE_ADMIN_USERS,
+  ROUTE_ADMIN_ROLES,
+  ROUTE_ADMIN_PERMISSIONS,
   ROUTE_ADMIN_PHONE_OTPS,
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,
@@ -188,7 +207,8 @@ export const LOGINED_PAGES = [
   // are sent to login with `?redirect=<full authorize URL>` via redirectToPath.
   ROUTE_OAUTH_AUTHORIZE,
   // pamenv browser login approve page.
-  ROUTE_PAMENV_DEVICE
+  ROUTE_PAMENV_DEVICE,
+  ROUTE_TEAMS
 ] as const;
 
 /**
@@ -334,6 +354,13 @@ export function projectEnvironmentsPath(slug: string): string {
 }
 
 /**
+ * Builds `/teams/:teamId`.
+ */
+export function teamPath(teamId: string): string {
+  return ROUTE_TEAM_DETAIL.replace('[teamId]', encodeURIComponent(teamId));
+}
+
+/**
  * Whether pathname is under PAM project **detail** routes
  * (e.g. `/en/projects/:id/general`).
  *
@@ -349,6 +376,20 @@ export function isLoginRequiredProjectsPath(pathname: string): boolean {
     ''
   );
   return withoutLocale.startsWith(`${ROUTE_PROJECTS}/`);
+}
+
+/**
+ * Teams list + detail (`/teams`, `/teams/:id`) require login.
+ */
+export function isLoginRequiredTeamsPath(pathname: string): boolean {
+  const localeAlt = i18nConfig.supportedLngs.join('|');
+  const withoutLocale = pathname.replace(
+    new RegExp(`^\\/(${localeAlt})(?=\\/|$)`),
+    ''
+  );
+  return (
+    withoutLocale === ROUTE_TEAMS || withoutLocale.startsWith(`${ROUTE_TEAMS}/`)
+  );
 }
 
 /**
@@ -382,7 +423,9 @@ export function hasSessionPath(pathname: string): boolean {
   ) {
     return true;
   }
-  return isLoginRequiredProjectsPath(pathname);
+  return (
+    isLoginRequiredProjectsPath(pathname) || isLoginRequiredTeamsPath(pathname)
+  );
 }
 
 /**
@@ -533,23 +576,6 @@ export function buildApiPamPreviewImage(id: string): string {
  */
 export function buildApiPamEnvironments(projectId: string): string {
   return buildApiWithPath(API_PAM_ENVIRONMENTS, { projectId });
-}
-
-/**
- * @see {@link API_PAM_COLLABORATORS}
- */
-export function buildApiPamCollaborators(projectId: string): string {
-  return buildApiWithPath(API_PAM_COLLABORATORS, { projectId });
-}
-
-/**
- * @see {@link API_PAM_COLLABORATORS_2}
- */
-export function buildApiPamCollaboratorUser(
-  projectId: string,
-  userId: string
-): string {
-  return buildApiWithPath(API_PAM_COLLABORATORS_2, { projectId, userId });
 }
 
 /**

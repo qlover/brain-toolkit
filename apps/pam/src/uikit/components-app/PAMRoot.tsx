@@ -13,7 +13,9 @@ import {
   usePageI18nMapping
 } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
+import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';
+import { PamTeamsApi } from '@/impls/appApi/PamTeamsApi';
 import { PAMFacade, ProjectsStrategy } from '@/impls/PAMfacade';
 import { PAMFacadeInfinite } from '@/impls/PAMFacadeInfinite';
 import { PAMViewMode } from '@/interface/PAMFacadeInterface';
@@ -25,11 +27,13 @@ import {
 } from '@config/pamListSort';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
+import { isPersonalTeamSlug } from '@schemas/PamTeamSchema';
 import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
+import { PermissionKey, useCan } from '../hook/useHasPermission';
 import { useIOC } from '../hook/useIOC';
 import { useUserAuth } from '../hook/useUserAuth';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
@@ -76,6 +80,9 @@ export function PAMRoot({
 }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
+  const { allowed: canCreateProject } = useCan(
+    PermissionKey.pam_project_create
+  );
   const {
     success: isAuthenticated,
     loading: authLoading,
@@ -85,10 +92,14 @@ export function PAMRoot({
 
   const pamFacade = useIOC(PAMFacade);
   const pamFacadeInfinite = useIOC(PAMFacadeInfinite);
+  const teamsApi = useIOC(PamTeamsApi);
   const pamFacadeStore = pamFacade.getFacadeStore();
   const createState = useStore(pamFacade.getCreateStore());
   const isSubmitting = createState.loading;
   const openDialog = useStore(pamFacadeStore, (state) => state.openDialog);
+  const [teamOptions, setTeamOptions] = useState<
+    { id: string; label: string }[]
+  >([]);
 
   const storeProjects = useStore(
     pamFacadeStore,
@@ -183,6 +194,29 @@ export function PAMRoot({
     void pamFacade.searchProjectWithVisibility('');
   }, [authLoading, user?.id, visibilityValue, pamFacade]);
 
+  useStrictEffect(() => {
+    if (authLoading || !user?.id || !canCreateProject) {
+      setTeamOptions([]);
+      return;
+    }
+    void teamsApi
+      .listMine()
+      .then((teams) => {
+        setTeamOptions(
+          teams
+            .filter(
+              (team) =>
+                !isPersonalTeamSlug(team.slug) &&
+                team.permissions.includes(
+                  PermissionKey.pam_teams_projects_attach
+                )
+            )
+            .map((team) => ({ id: team.id, label: team.name }))
+        );
+      })
+      .catch(() => setTeamOptions([]));
+  }, [authLoading, user?.id, canCreateProject, teamsApi]);
+
   const closeDialog = () => pamFacade.closeDialog();
 
   const clearFilters = () => {
@@ -269,10 +303,10 @@ export function PAMRoot({
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
         categories={categories}
-        canCreate={isAuthenticated}
+        canCreate={canCreateProject}
         searching={listLoading}
         onCreate={() => {
-          if (!isAuthenticated) return;
+          if (!canCreateProject) return;
           pamFacade.openDialog();
         }}
       />
@@ -317,7 +351,7 @@ export function PAMRoot({
       />
 
       <ResponsiveModal
-        open={isAuthenticated && openDialog}
+        open={canCreateProject && openDialog}
         title={tt.createProjectTitle}
         onClose={closeDialog}
         footer={
@@ -357,6 +391,7 @@ export function PAMRoot({
           showActions={false}
           isSubmitting={isSubmitting}
           categories={categories}
+          teamOptions={teamOptions}
           onCancel={closeDialog}
           onSubmit={async (data) => {
             const result = await pamFacade.createProject(data);

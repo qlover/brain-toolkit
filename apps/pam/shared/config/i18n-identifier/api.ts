@@ -172,6 +172,20 @@ export const API_PAM_TRANSFER_USER_NOT_FOUND =
 export const API_PAM_TRANSFER_TO_SELF = 'api:pam_transfer_to_self';
 
 /**
+ * @description Only the project owner can transfer ownership
+ * @localZh 只有项目拥有者可以转让项目
+ * @localEn Only the project owner can transfer this project
+ */
+export const API_PAM_TRANSFER_OWNER_ONLY = 'api:pam_transfer_owner_only';
+
+/**
+ * @description Only the project owner can delete the project
+ * @localZh 只有项目拥有者可以删除项目
+ * @localEn Only the project owner can delete this project
+ */
+export const API_PAM_DELETE_OWNER_ONLY = 'api:pam_delete_owner_only';
+
+/**
  * @description Collaborator was not found on the project
  * @localZh 未找到该协作者
  * @localEn Collaborator not found on this project
@@ -325,3 +339,11 @@ export const API_BIND_EMAIL_PHONE_CONFLICT = 'api:bind_email_phone_conflict';
  * @localEn Cannot bind email to the same account
  */
 export const API_BIND_EMAIL_SAME_USER = 'api:bind_email_same_user';
+
+/**
+ * @description Admin cannot change their own system role
+ * @localZh 不能修改自己的系统角色
+ * @localEn You cannot change your own system role
+ */
+export const API_ADMIN_USERS_CANNOT_CHANGE_SELF =
+  'api:admin_users_cannot_change_self';

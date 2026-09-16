@@ -1,7 +1,6 @@
 import { PageI18nProvider } from '@qlover/next-kit/client';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { PAMProjectDetailShell } from '@/uikit/components-app/pam/PAMProjectDetailShell';
-import { i18nConfig } from '@config/i18n';
 import {
   pamProjectI18n,
   pamProjectI18nNamespace
@@ -62,6 +61,5 @@ export default async function ProjectDetailLayout({
   );
 }
 
-export function generateStaticParams() {
-  return i18nConfig.supportedLngs.map((locale) => ({ locale }));
-}
+/** Allow any project slug/id at runtime; locale params come from [locale]/layout. */
+export const dynamicParams = true;

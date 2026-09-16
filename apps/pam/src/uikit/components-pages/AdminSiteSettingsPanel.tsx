@@ -7,6 +7,7 @@ import { SiteSettingsApi } from '@/impls/appApi/SiteSettingsApi';
 import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
+import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminSettingsI18nInterface } from '@config/i18n-mapping/admin18n';
 import { I } from '@config/ioc-identifiter';
@@ -254,14 +255,7 @@ export function AdminSiteSettingsPanel({
   );
 
   if (loading) {
-    return (
-      <p
-        className="text-sm text-secondary-text"
-        data-testid="AdminSiteSettingsLoading"
-      >
-        {tt.loading}
-      </p>
-    );
+    return <AdminPanelLoading testId="AdminSiteSettingsLoading" />;
   }
 
   const cliKey = PAM_SITE_SETTING_KEYS.AUTH_CLI_TOKEN_EXPIRES_IN;

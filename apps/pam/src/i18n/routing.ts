@@ -18,7 +18,9 @@ import {
   ROUTE_PROJECT_GENERAL,
   ROUTE_PROJECTS,
   ROUTE_REGISTER,
-  ROUTE_REQUEST_LOGS
+  ROUTE_REQUEST_LOGS,
+  ROUTE_TEAM_DETAIL,
+  ROUTE_TEAMS
 } from '@config/route';
 
 const locales = i18nConfig.supportedLngs;
@@ -104,6 +106,14 @@ export const routing = defineRouting({
     [ROUTE_PROJECT_ENVIRONMENTS]: {
       en: ROUTE_PROJECT_ENVIRONMENTS,
       zh: ROUTE_PROJECT_ENVIRONMENTS
+    },
+    [ROUTE_TEAMS]: {
+      en: '/teams',
+      zh: '/teams'
+    },
+    [ROUTE_TEAM_DETAIL]: {
+      en: ROUTE_TEAM_DETAIL,
+      zh: ROUTE_TEAM_DETAIL
     }
   }
 });

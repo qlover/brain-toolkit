@@ -1,7 +1,8 @@
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_ENVIRONMENTS_VARIABLES } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 type EnvironmentVariablesRouteContext = {
@@ -11,18 +12,19 @@ type EnvironmentVariablesRouteContext = {
 /**
  * POST /api/pam/:projectId/environments/:envId/variables — replace variables.
  */
-export function POST(
+export async function POST(
   req: NextRequest,
   context: EnvironmentVariablesRouteContext
 ) {
+  const { projectId, envId } = await context.params;
   return new NextApiServer(API_PAM_ENVIRONMENTS_VARIABLES, req)
-    .use(new ServerAuthPlugin())
-    .runWithJson(async ({ parameters: { IOC } }) => {
-      const { projectId, envId } = await context.params;
-      return IOC(PAMController).replaceEnvironmentVariables(
-        projectId,
-        envId,
-        req
-      );
-    });
+    .use(
+      new RequirePermissionPlugin(
+        PermissionKey.pam_environments_variables_write,
+        { projectId }
+      )
+    )
+    .runWithJson(async ({ parameters: { IOC } }) =>
+      IOC(PAMController).replaceEnvironmentVariables(projectId, envId, req)
+    );
 }

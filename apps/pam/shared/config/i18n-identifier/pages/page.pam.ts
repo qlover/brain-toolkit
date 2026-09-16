@@ -617,3 +617,17 @@ export const PAGE_PAM_ENV_VAR_IMPORT_EMPTY = 'page_pam:envVarImportEmpty';
  * @localEn Only .env / .txt files with KEY=VALUE content are supported
  */
 export const PAGE_PAM_ENV_VAR_IMPORT_INVALID = 'page_pam:envVarImportInvalid';
+
+/**
+ * @description Team field on create project form
+ * @localZh 所属团队
+ * @localEn Team
+ */
+export const PAGE_PAM_LABEL_TEAM = 'page_pam:labelTeam';
+
+/**
+ * @description Default personal team option
+ * @localZh 个人（默认）
+ * @localEn Personal (default)
+ */
+export const PAGE_PAM_TEAM_PERSONAL_DEFAULT = 'page_pam:teamPersonalDefault';

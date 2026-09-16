@@ -37,11 +37,17 @@ export type PamCliProjectType = {
   readonly slug: string;
   readonly name: string;
   readonly is_owner?: boolean;
-  /** Owner / admin / member may edit (from PAM collaborators). */
+  /** Team role may edit project / environments (from PAM access flags). */
   readonly can_edit?: boolean;
-  /** Owner / admin may manage collaborators and delete environments. */
+  /**
+   * @deprecated Prefer `permissions` / `my_role`. Kept for older PAM payloads.
+   */
   readonly can_manage_collaborators?: boolean;
   readonly my_role?: 'owner' | 'admin' | 'member' | 'none';
+  /** Effective permission_key list when PAM includes it on search/detail. */
+  readonly permissions?: readonly string[];
+  /** @deprecated Prefer `permissions`. */
+  readonly org_permissions?: readonly string[];
   readonly environments?: readonly PamCliEnvironmentSummaryType[];
 };
 

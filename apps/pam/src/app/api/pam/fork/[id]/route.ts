@@ -1,7 +1,8 @@
-import { API_PAM_FORK } from '@config/route';
+import { PermissionKey } from '@shared/auth/permissionKeys';
+import { API_PAM_FORK } from '@config/apiRoutes';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -21,7 +22,7 @@ export function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return new NextApiServer(API_PAM_FORK, req)
-    .use(new ServerAuthPlugin())
+    .use(new RequirePermissionPlugin(PermissionKey.pam_project_fork))
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).forkProject((await params).id, req)
     );

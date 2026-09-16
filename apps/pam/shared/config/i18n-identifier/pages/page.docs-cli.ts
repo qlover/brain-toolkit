@@ -141,8 +141,8 @@ export const PAGE_DOCS_CLI_SECTION_NOTES = 'page_docs_cli:section__notes';
 
 /**
  * @description Notes body
- * @localZh 项目协作权限：owner / admin / member 均可 `pull` 与 `push`（解密导出）；删除环境（Web 与 `pamenv remove`）、转让项目与管理协作者需 admin（含 owner）。本地 `~/.pam/config.json`、`~/.pam/sync/...` 与写出的 `.env.<env>` 在 POSIX 上按 0600 落盘。改 CLI 源码后需先 build 再执行。旧版无 `jti` 的 Token 会失效，需重新 `pamenv login`。
- * @localEn Collaborator access: owner / admin / member can `pull` and `push` (decrypted export). Deleting environments (web and `pamenv remove`), transferring the project, and managing collaborators require admin (including owner). Local `~/.pam/config.json`, `~/.pam/sync/...`, and written `.env.<env>` files use mode 0600 on POSIX. Rebuild the CLI after source changes before running. Legacy tokens without `jti` are rejected; run `pamenv login` again.
+ * @localZh 项目团队权限：owner / admin / member 均可 `pull` 与 `push`（解密导出）；`pamenv remove` 删除环境需 admin（含项目拥有者）。项目转让/删除仅项目拥有者（owner_id），请在 Web General 操作。本地 `~/.pam/config.json`、`~/.pam/sync/...` 与写出的 `.env.<env>` 在 POSIX 上按 0600 落盘。改 CLI 源码后需先 build 再执行。旧版无 `jti` 的 Token 会失效，需重新 `pamenv login`。
+ * @localEn Team access: owner / admin / member can `pull` and `push` (decrypted export). `pamenv remove` requires admin (including project owner). Project transfer/delete is owner_id only via Web General. Local `~/.pam/config.json`, `~/.pam/sync/...`, and written `.env.<env>` files use mode 0600 on POSIX. Rebuild the CLI after source changes before running. Legacy tokens without `jti` are rejected; run `pamenv login` again.
  */
 export const PAGE_DOCS_CLI_NOTES_BODY = 'page_docs_cli:notes__body';
 

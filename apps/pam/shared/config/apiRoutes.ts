@@ -6,6 +6,15 @@
  */
 
 /**
+ * API path: `/api/admin/permissions`
+ *
+ * @see [src/app/api/admin/permissions/route.ts](../../src/app/api/admin/permissions/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/permissions/route.ts`
+ */
+export const API_ADMIN_PERMISSIONS = '/api/admin/permissions' as const;
+
+/**
  * API path: `/api/admin/phone-otps`
  *
  * @see [src/app/api/admin/phone-otps/route.ts](../../src/app/api/admin/phone-otps/route.ts)
@@ -22,6 +31,15 @@ export const API_ADMIN_PHONE_OTPS = '/api/admin/phone-otps' as const;
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/request-logs/route.ts`
  */
 export const API_ADMIN_REQUEST_LOGS = '/api/admin/request-logs' as const;
+
+/**
+ * API path: `/api/admin/roles`
+ *
+ * @see [src/app/api/admin/roles/route.ts](../../src/app/api/admin/roles/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/roles/route.ts`
+ */
+export const API_ADMIN_ROLES = '/api/admin/roles' as const;
 
 /**
  * API path: `/api/admin/site-settings`
@@ -50,6 +68,16 @@ export const API_ADMIN_USERS = '/api/admin/users' as const;
  */
 export const API_ADMIN_USERS_PLATFORM_ADMIN =
   '/api/admin/users/:userId/platform-admin' as const;
+
+/**
+ * API path: `/api/admin/users/:userId/system-role`
+ *
+ * @see [src/app/api/admin/users/[userId]/system-role/route.ts](../../src/app/api/admin/users/[userId]/system-role/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/users/[userId]/system-role/route.ts`
+ */
+export const API_ADMIN_USERS_SYSTEM_ROLE =
+  '/api/admin/users/:userId/system-role' as const;
 
 /**
  * API path: `/api/callback/brain-oauth`
@@ -143,26 +171,6 @@ export const API_OAUTH_PLAYGROUND_VALIDATE =
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/oauth/verify/route.ts`
  */
 export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
-
-/**
- * API path: `/api/pam/:projectId/collaborators`
- *
- * @see [src/app/api/pam/[projectId]/collaborators/route.ts](../../src/app/api/pam/[projectId]/collaborators/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/collaborators/route.ts`
- */
-export const API_PAM_COLLABORATORS =
-  '/api/pam/:projectId/collaborators' as const;
-
-/**
- * API path: `/api/pam/:projectId/collaborators/:userId`
- *
- * @see [src/app/api/pam/[projectId]/collaborators/[userId]/route.ts](../../src/app/api/pam/[projectId]/collaborators/[userId]/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/collaborators/[userId]/route.ts`
- */
-export const API_PAM_COLLABORATORS_2 =
-  '/api/pam/:projectId/collaborators/:userId' as const;
 
 /**
  * API path: `/api/pam/:projectId/environments`
@@ -331,6 +339,53 @@ export const API_PAM_SEARCH = '/api/pam/search' as const;
 export const API_PAM_SITE_LOGO = '/api/pam/site-logo' as const;
 
 /**
+ * API path: `/api/pam/teams`
+ *
+ * @see [src/app/api/pam/teams/route.ts](../../src/app/api/pam/teams/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/teams/route.ts`
+ */
+export const API_PAM_TEAMS = '/api/pam/teams' as const;
+
+/**
+ * API path: `/api/pam/teams/:teamId`
+ *
+ * @see [src/app/api/pam/teams/[teamId]/route.ts](../../src/app/api/pam/teams/[teamId]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/teams/[teamId]/route.ts`
+ */
+export const API_PAM_TEAMS_2 = '/api/pam/teams/:teamId' as const;
+
+/**
+ * API path: `/api/pam/teams/:teamId/members`
+ *
+ * @see [src/app/api/pam/teams/[teamId]/members/route.ts](../../src/app/api/pam/teams/[teamId]/members/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/teams/[teamId]/members/route.ts`
+ */
+export const API_PAM_TEAMS_MEMBERS = '/api/pam/teams/:teamId/members' as const;
+
+/**
+ * API path: `/api/pam/teams/:teamId/members/:userId`
+ *
+ * @see [src/app/api/pam/teams/[teamId]/members/[userId]/route.ts](../../src/app/api/pam/teams/[teamId]/members/[userId]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/teams/[teamId]/members/[userId]/route.ts`
+ */
+export const API_PAM_TEAMS_MEMBERS_2 =
+  '/api/pam/teams/:teamId/members/:userId' as const;
+
+/**
+ * API path: `/api/pam/teams/:teamId/projects`
+ *
+ * @see [src/app/api/pam/teams/[teamId]/projects/route.ts](../../src/app/api/pam/teams/[teamId]/projects/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/teams/[teamId]/projects/route.ts`
+ */
+export const API_PAM_TEAMS_PROJECTS =
+  '/api/pam/teams/:teamId/projects' as const;
+
+/**
  * API path: `/api/pam/transfer/:id`
  *
  * @see [src/app/api/pam/transfer/[id]/route.ts](../../src/app/api/pam/transfer/[id]/route.ts)
@@ -476,11 +531,14 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
+  | typeof API_ADMIN_PERMISSIONS
   | typeof API_ADMIN_PHONE_OTPS
   | typeof API_ADMIN_REQUEST_LOGS
+  | typeof API_ADMIN_ROLES
   | typeof API_ADMIN_SITE_SETTINGS
   | typeof API_ADMIN_USERS
   | typeof API_ADMIN_USERS_PLATFORM_ADMIN
+  | typeof API_ADMIN_USERS_SYSTEM_ROLE
   | typeof API_CALLBACK_BRAIN_OAUTH
   | typeof API_CALLBACK_EMAIL_LOGIN
   | typeof API_CALLBACK_PROVIDER_LOGIN
@@ -491,8 +549,6 @@ export type ApiRoutePath =
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
-  | typeof API_PAM_COLLABORATORS
-  | typeof API_PAM_COLLABORATORS_2
   | typeof API_PAM_ENVIRONMENTS
   | typeof API_PAM_ENVIRONMENTS_DELETE
   | typeof API_PAM_ENVIRONMENTS_EXPORT
@@ -511,6 +567,11 @@ export type ApiRoutePath =
   | typeof API_PAM_PREVIEW_IMAGE
   | typeof API_PAM_SEARCH
   | typeof API_PAM_SITE_LOGO
+  | typeof API_PAM_TEAMS
+  | typeof API_PAM_TEAMS_2
+  | typeof API_PAM_TEAMS_MEMBERS
+  | typeof API_PAM_TEAMS_MEMBERS_2
+  | typeof API_PAM_TEAMS_PROJECTS
   | typeof API_PAM_TRANSFER
   | typeof API_PAM_USERS_SEARCH
   | typeof API_PUBLIC_CONFIG

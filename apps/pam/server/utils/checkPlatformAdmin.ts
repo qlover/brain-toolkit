@@ -1,3 +1,7 @@
+import {
+  isPlatformAdminRole,
+  normalizeSystemRole
+} from '@shared/auth/systemRole';
 import { createAdminClient } from '@shared/supabase/server';
 import {
   getPlatformAdminCache,
@@ -5,6 +9,7 @@ import {
   setPlatformAdminCache
 } from '@server/utils/platformAdminCache';
 
+/** Uses pam_users.role_id → pam_roles.key (no hardcoded UUIDs). */
 export async function checkPlatformAdmin(userId: string): Promise<boolean> {
   const cached = getPlatformAdminCache(userId);
   if (cached !== undefined) {
@@ -15,7 +20,7 @@ export async function checkPlatformAdmin(userId: string): Promise<boolean> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('pam_users')
-      .select('is_platform_admin')
+      .select('pam_roles ( key )')
       .eq('id', id)
       .maybeSingle();
 
@@ -23,8 +28,9 @@ export async function checkPlatformAdmin(userId: string): Promise<boolean> {
       return false;
     }
 
-    const row = data as { is_platform_admin?: boolean } | null;
-    const value = Boolean(row?.is_platform_admin);
+    const row = data as { pam_roles?: { key?: string } | null } | null;
+    const key = row?.pam_roles?.key;
+    const value = isPlatformAdminRole(normalizeSystemRole(key));
     setPlatformAdminCache(id, value);
     return value;
   });
