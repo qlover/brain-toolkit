@@ -1,5 +1,60 @@
 # pam
 
+## 2.9.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 团队管理 UI 与项目仅拥有者转让/删除 ([70eb90e](https://github.com/qlover/brain-toolkit/commit/70eb90e0a1c9b79b21f428991195130ab5b04030)) ([#145](https://github.com/qlover/brain-toolkit/pull/145))
+
+  团队列表/详情、挂载解散；下线写作者；is_owner 按 owner_id。
+  基于已重建的 polish 分支，避免 squash 后 add/add 冲突。
+
+- **pam:** 角色权限核心（permission_key 与后台角色） ([ecf96f2](https://github.com/qlover/brain-toolkit/commit/ecf96f245ab5c5ea2484478e966add67f2187240)) ([#143](https://github.com/qlover/brain-toolkit/pull/143))
+
+  含 session、RequirePermissionPlugin、角色 SQL 种子与后台角色/权限目录。
+
+- **pam:** 持久化语言偏好并支持 OAuth ui_locales ([fcc2488](https://github.com/qlover/brain-toolkit/commit/fcc2488a6cfebe3b0bbd00ecf38857323df84d74)) ([#140](https://github.com/qlover/brain-toolkit/pull/140))
+
+  NEXT_LOCALE 一年有效；authorize 识别 ui_locales/locale 并落到 /{locale}；匹配 supportedLngs。
+
+- **pam:** 接入 next-kit 1.4，Session 邮箱可空并带 name/phone ([f728dd6](https://github.com/qlover/brain-toolkit/commit/f728dd660005fe6dac33c3a614683fd1cc7c0f47)) ([#139](https://github.com/qlover/brain-toolkit/pull/139))
+
+  升级 next-kit/oauth-wrapper；业务邮箱进 session，占位邮箱仅用于 mint 修复。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 搜索按团队成员可见，修复 pamenv 解析私有项目 ([9a9b437](https://github.com/qlover/brain-toolkit/commit/9a9b437ef2ff391c354fe5d05431d1416660d579)) ([#147](https://github.com/qlover/brain-toolkit/pull/147))
+
+  新增 022 重写 pam_search_projects；legacy search 同步 team_id；CLI 文档对齐。
+
+- **pam:** Admin SPA 壳、Loading 与鉴权热路径打磨 ([ce33db2](https://github.com/qlover/brain-toolkit/commit/ce33db29c9d83eaea646c8268ae6cd1278548064)) ([#145](https://github.com/qlover/brain-toolkit/pull/145))
+
+  含 MemoryKv 缓存、AdminPagesAppShell，以及禁改自己系统角色。
+  基于已合入的角色核心（squash）重建，避免 add/add 冲突。
+
+- **pam:** PamTeamMembersRepo join 断言经 unknown 转换 ([cbd10e2](https://github.com/qlover/brain-toolkit/commit/cbd10e2cd5ca1f392cea9605c0aaff9cf00a3cb4)) ([#145](https://github.com/qlover/brain-toolkit/pull/145))
+
+  重建 teams 时误用了未含该修复的快照，现补回。
+
+- **pam:** 补齐 teams adminTitle，SettingsCard children 可选 ([1e5b0fc](https://github.com/qlover/brain-toolkit/commit/1e5b0fc326be02bc2b709e578b8373e5f11464e5)) ([#145](https://github.com/qlover/brain-toolkit/pull/145))
+
+  AppRoutePage 需要 adminTitle；拥有者提示卡可不传 children。
+
+- **pam:** Admin SPA 壳、Loading 与鉴权热路径打磨 ([ce33db2](https://github.com/qlover/brain-toolkit/commit/ce33db29c9d83eaea646c8268ae6cd1278548064)) ([#144](https://github.com/qlover/brain-toolkit/pull/144))
+
+  含 MemoryKv 缓存、AdminPagesAppShell，以及禁改自己系统角色。
+  基于已合入的角色核心（squash）重建，避免 add/add 冲突。
+
+- **pam:** PamTeamMembersRepo join 断言经 unknown 转换 ([2661597](https://github.com/qlover/brain-toolkit/commit/2661597221b947adbdb3949b1cb728e49358aa39)) ([#143](https://github.com/qlover/brain-toolkit/pull/143))
+
+  Supabase 嵌套 select 将 pam_roles 推成数组类型，直接断言会报 TS 错。
+
+- **pam:** OAuth userinfo 用 display_name，不再返回手机占位邮箱 ([1bf6f47](https://github.com/qlover/brain-toolkit/commit/1bf6f478ccbf1f54059a9f08d54ac8ab008572f1)) ([#138](https://github.com/qlover/brain-toolkit/pull/138))
+
+  从 pam_users 组装出站 claims：name 优先 display_name，email 仅业务邮箱，可选 phone_number。
+
 ## 2.8.0
 
 ### Minor Changes
@@ -127,7 +182,6 @@
 #### ♻️ Refactors
 
 - **pam:** 请求日志 API 迁至 /api/admin/request-logs 并支持全量查询 ([21475a0](https://github.com/qlover/brain-toolkit/commit/21475a0ca54bffd5c7b8ad06e2993951e1a0864d)) ([#130](https://github.com/qlover/brain-toolkit/pull/130))
-
 
 ## 2.7.0
 
