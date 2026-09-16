@@ -60,7 +60,9 @@ export function toStableApiExecutorError(error: ExecutorError): ExecutorError {
  * Client envelope form: keep business `api:*` causes; strip infrastructure
  * diagnostics on {@link API_SERVER_ERROR} unless diagnostics are enabled.
  */
-export function toClientFacingExecutorError(error: ExecutorError): ExecutorError {
+export function toClientFacingExecutorError(
+  error: ExecutorError
+): ExecutorError {
   const stable = toStableApiExecutorError(error);
   if (stable.id !== API_SERVER_ERROR) {
     return stable;

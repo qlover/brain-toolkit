@@ -778,10 +778,7 @@ export class PAMProjectRepo extends BaseRepository<
     this.supabaseRepo.throwIfError(r17);
     const data = r17.data;
 
-    return data as Pick<
-      PAMEnvRaw,
-      'id' | 'name' | 'url' | 'variables'
-    > | null;
+    return data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null;
   }
 
   /**
@@ -836,10 +833,7 @@ export class PAMProjectRepo extends BaseRepository<
     this.supabaseRepo.throwIfError(r19);
     const data = r19.data;
 
-    return data as Pick<
-      PAMEnvRaw,
-      'id' | 'name' | 'url' | 'variables'
-    > | null;
+    return data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null;
   }
 
   /**
@@ -1243,10 +1237,7 @@ export class PAMProjectRepo extends BaseRepository<
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    this.logger.info(
-      `[PAMProjectRepo] update project ${id} success`,
-      data
-    );
+    this.logger.info(`[PAMProjectRepo] update project ${id} success`, data);
 
     return data as never;
   }
@@ -1273,12 +1264,11 @@ export class PAMProjectRepo extends BaseRepository<
     const envJson = envUpdates ? envUpdates : null;
 
     // 调用 RPC
-    const r34 = await supabase
-      .rpc(PAMUpdateSQLFunctionName, {
-        p_project_id: id,
-        p_updates: projectUpdates,
-        p_environments: envJson
-      });
+    const r34 = await supabase.rpc(PAMUpdateSQLFunctionName, {
+      p_project_id: id,
+      p_updates: projectUpdates,
+      p_environments: envJson
+    });
     this.supabaseRepo.throwIfError(r34);
     const data = r34.data;
 
@@ -1572,10 +1562,9 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async findAuthUserIdByEmail(email: string): Promise<string | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const r44 = await admin
-      .rpc('pam_auth_user_id_by_email', {
-        p_email: email
-      });
+    const r44 = await admin.rpc('pam_auth_user_id_by_email', {
+      p_email: email
+    });
     this.supabaseRepo.throwIfError(r44);
     const data = r44.data;
     if (typeof data !== 'string' || !data) {
@@ -1626,13 +1615,12 @@ export class PAMProjectRepo extends BaseRepository<
     offset?: number;
   }): Promise<{ id: string; email: string }[]> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const r45 = await admin
-      .rpc('pam_auth_users_search', {
-        p_query: params.query?.trim() || '',
-        p_exclude_id: params.excludeUserId || null,
-        p_limit: params.limit ?? 20,
-        p_offset: params.offset ?? 0
-      });
+    const r45 = await admin.rpc('pam_auth_users_search', {
+      p_query: params.query?.trim() || '',
+      p_exclude_id: params.excludeUserId || null,
+      p_limit: params.limit ?? 20,
+      p_offset: params.offset ?? 0
+    });
     this.supabaseRepo.throwIfError(r45);
     const data = r45.data;
     if (!Array.isArray(data)) {

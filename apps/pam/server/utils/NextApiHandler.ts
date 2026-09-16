@@ -6,8 +6,8 @@ import {
   type ResultHandlerInterface
 } from '@qlover/next-kit/server';
 import { OAuthWrapperError } from '@qlover/oauth-wrapper';
-import { oauthWrapperI18n } from '@config/i18n-mapping/oauthWrapperI18n';
 import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
+import { oauthWrapperI18n } from '@config/i18n-mapping/oauthWrapperI18n';
 import {
   toClientFacingExecutorError,
   toExecutorErrorFromThrown

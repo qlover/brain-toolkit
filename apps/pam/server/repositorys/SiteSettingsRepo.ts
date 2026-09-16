@@ -1,6 +1,6 @@
 import { inject, injectable } from '@shared/container';
-import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { PamSiteSettingRow } from '@schemas/PamSiteSettingsSchema';
+import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 
 const TABLE = 'pam_site_settings';
 

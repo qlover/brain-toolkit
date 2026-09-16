@@ -31,17 +31,19 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
    */
   public async create(input: CreateAuthorizationCodeInput): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase.from('n_oauth_wrapper__authorization_codes').insert({
-      code: input.code,
-      client_id: input.client_id,
-      user_id: input.user_id,
-      redirect_uri: input.redirect_uri,
-      scope: input.scope,
-      code_challenge: input.code_challenge,
-      code_challenge_method: input.code_challenge_method,
-      expires_at: input.expires_at,
-      used: false
-    });
+    const result = await supabase
+      .from('n_oauth_wrapper__authorization_codes')
+      .insert({
+        code: input.code,
+        client_id: input.client_id,
+        user_id: input.user_id,
+        redirect_uri: input.redirect_uri,
+        scope: input.scope,
+        code_challenge: input.code_challenge,
+        code_challenge_method: input.code_challenge_method,
+        expires_at: input.expires_at,
+        used: false
+      });
     this.supabaseBridge.throwIfError(result);
   }
 
@@ -94,14 +96,16 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase.from('n_oauth_wrapper__user_credentials').upsert(
-      {
-        user_id: userId,
-        ...fields,
-        updated_at: new Date().toISOString()
-      },
-      { onConflict: 'user_id' }
-    );
+    const result = await supabase
+      .from('n_oauth_wrapper__user_credentials')
+      .upsert(
+        {
+          user_id: userId,
+          ...fields,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'user_id' }
+      );
     this.supabaseBridge.throwIfError(result);
   }
 
@@ -174,13 +178,15 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     expires_at: string;
   }): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase.from('n_oauth_wrapper__refresh_tokens').upsert(
-      {
-        ...input,
-        revoked: false
-      },
-      { onConflict: 'refresh_token' }
-    );
+    const result = await supabase
+      .from('n_oauth_wrapper__refresh_tokens')
+      .upsert(
+        {
+          ...input,
+          revoked: false
+        },
+        { onConflict: 'refresh_token' }
+      );
     this.supabaseBridge.throwIfError(result);
   }
 
@@ -220,13 +226,15 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     input: CreateOAuthRefreshTokenInput
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase.from('n_oauth_wrapper__refresh_tokens').insert({
-      refresh_token: input.refresh_token,
-      client_id: input.client_id,
-      user_id: input.user_id,
-      expires_at: input.expires_at,
-      revoked: false
-    });
+    const result = await supabase
+      .from('n_oauth_wrapper__refresh_tokens')
+      .insert({
+        refresh_token: input.refresh_token,
+        client_id: input.client_id,
+        user_id: input.user_id,
+        expires_at: input.expires_at,
+        revoked: false
+      });
     this.supabaseBridge.throwIfError(result);
   }
 
