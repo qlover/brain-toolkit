@@ -166,6 +166,9 @@ export const API_CLIENTS_ROTATE_SECRET =
 /**
  * API path: `/api/locales/json`
  *
+ * Query: `locale` (required), `namespaces` (optional comma-separated),
+ * `orderBy` (optional).
+ *
  * @see [src/app/api/locales/json/route.ts](../../src/app/api/locales/json/route.ts)
  *
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/locales/json/route.ts`

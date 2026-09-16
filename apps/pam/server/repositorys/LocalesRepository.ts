@@ -82,8 +82,54 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
     return (result.data ?? []) as LocalesSchema[];
   }
 
+  /**
+   * Full-row fetch (admin / legacy). Prefer {@link getLocaleTextMap} for the
+   * public JSON dictionary path.
+   */
   public async getLocales(_localeName: string): Promise<LocalesSchema[]> {
     return this.getAll();
+  }
+
+  /**
+   * Slim dictionary for `/api/locales/json`: only `value` + one locale column.
+   * Pages through PostgREST's default 1000-row window so large tables are complete.
+   */
+  public async getLocaleTextMap(
+    localeName: string
+  ): Promise<Record<string, string>> {
+    if (localeName !== 'en' && localeName !== 'zh') {
+      return {};
+    }
+
+    const pageSize = 1000;
+    const map: Record<string, string> = {};
+    let from = 0;
+
+    for (;;) {
+      const to = from + pageSize - 1;
+      const result = await this.getAdminSupabase()
+        .from(TABLE)
+        .select(`value,${localeName}`)
+        .range(from, to);
+      this.throwIfError(result);
+
+      const rows = (result.data ?? []) as Array<Record<string, unknown>>;
+      for (const row of rows) {
+        const value = row.value;
+        if (typeof value !== 'string' || !value) {
+          continue;
+        }
+        const text = row[localeName];
+        map[value] = typeof text === 'string' ? text : '';
+      }
+
+      if (rows.length < pageSize) {
+        break;
+      }
+      from += pageSize;
+    }
+
+    return map;
   }
 
   /** Distinct namespaces for exact filter dropdown (sorted). */

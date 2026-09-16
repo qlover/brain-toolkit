@@ -38,7 +38,7 @@ export const revalidate = 60; // Cache time in seconds (matches i18nConfig.local
  *           type: string
  *         description: >
  *           Optional comma-separated namespaces to include
- *           (e.g. `api,common`). Omitting returns all keys.
+ *           (e.g. `api,common` or `admin_locales`). Omitting returns all keys.
  *     responses:
  *       200:
  *         description: Locale key-value map or empty object.
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
   const response = NextResponse.json(result.data);
   response.headers.set(
     'Cache-Control',
-    `s-maxage=${i18nConfig.localeCacheTime}`
+    `public, s-maxage=${i18nConfig.localeCacheTime}, stale-while-revalidate=${i18nConfig.localeCacheTime * 5}`
   );
   response.headers.set('x-cache-tag', `i18n-${locale}`);
   return response;
