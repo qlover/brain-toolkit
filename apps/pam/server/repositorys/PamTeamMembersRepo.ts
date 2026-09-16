@@ -49,7 +49,7 @@ export class PamTeamMembersRepo {
       this.logger.error('PamTeamMembersRepo.getActiveRole', error);
       throw error;
     }
-    const row = data as unknown as MemberRoleJoin | null;
+    const row = data as MemberRoleJoin | null;
     return legacyTeamRoleFromKey(row?.pam_roles?.key);
   }
 
@@ -82,7 +82,7 @@ export class PamTeamMembersRepo {
       throw error;
     }
 
-    const rows = (data ?? []) as unknown as Array<
+    const rows = (data ?? []) as Array<
       PamTeamMemberRow & { pam_roles: { key: string } | null }
     >;
     if (rows.length === 0) {
@@ -261,7 +261,7 @@ export class PamTeamMembersRepo {
     const roleByTeam = new Map(
       (members ?? [])
         .map((m) => {
-          const join = m as unknown as MemberRoleJoin & { team_id: string };
+          const join = m as MemberRoleJoin & { team_id: string };
           const legacy = legacyTeamRoleFromKey(join.pam_roles?.key);
           return legacy ? ([join.team_id, legacy] as const) : null;
         })

@@ -39,6 +39,8 @@ export interface PAMFormProps {
   showActions?: boolean;
   /** Categories from API for the select options. */
   categories?: readonly string[];
+  /** Teams the user can attach a new project to (optional team_id). */
+  teamOptions?: readonly { id: string; label: string }[];
 }
 
 function generateSlug(name: string): string {
@@ -57,7 +59,8 @@ export const PAMForm: React.FC<PAMFormProps> = ({
   className = '',
   formId = PAM_PROJECT_FORM_ID,
   showActions = false,
-  categories
+  categories,
+  teamOptions
 }) => {
   const zodResolverInstance = useMemo(() => PAMProjectCreateSchema, []);
 
@@ -72,6 +75,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       preview_image_url: initialData?.preview_image_url,
       category: initialData?.category,
       is_public: initialData?.is_public ?? PAMPublicType.private,
+      team_id: initialData?.team_id,
       [PAMProjectEnvKey]: initialData?.environments || []
     }
   });
@@ -98,6 +102,7 @@ export const PAMForm: React.FC<PAMFormProps> = ({
       preview_image_url: initialData?.preview_image_url ?? '',
       category: initialData?.category ?? '',
       is_public: initialData?.is_public ?? PAMPublicType.private,
+      team_id: initialData?.team_id,
       environments: initialData?.environments || []
     });
   }, [initialData, reset]);
@@ -214,6 +219,25 @@ export const PAMForm: React.FC<PAMFormProps> = ({
               className={pamFormFieldClass}
             />
           </div>
+
+          {teamOptions && teamOptions.length > 0 ? (
+            <div>
+              <label className={pamFormLabelClass}>{tt.labelTeam}</label>
+              <select
+                {...register('team_id', {
+                  setValueAs: (v) => (v === '' || v == null ? undefined : v)
+                })}
+                className={pamFormFieldClass}
+              >
+                <option value="">{tt.teamPersonalDefault}</option>
+                {teamOptions.map((team) => (
+                  <option data-testid="PAMForm" key={team.id} value={team.id}>
+                    {team.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
           <div>
             <label className={pamFormLabelClass}>{tt.labelDesc}</label>

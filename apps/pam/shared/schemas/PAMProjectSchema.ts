@@ -155,6 +155,8 @@ export const PAMProjectCreateSchema = PAMProjectRawSchema.omit({
   create_source: true,
   team_id: true
 }).extend({
+  /** Optional team to attach on create; defaults to personal team. */
+  team_id: z.uuid().optional(),
   [PAMProjectEnvKey]: z
     .array(
       PAMEnvWriteableSchema.omit({

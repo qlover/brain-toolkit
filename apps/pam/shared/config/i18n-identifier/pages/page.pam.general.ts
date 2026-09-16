@@ -318,11 +318,19 @@ export const PAGE_PAM_GENERAL_DELETE_ZONE_TITLE =
 
 /**
  * @description Danger zone section description
- * @localZh 永久删除此项目及其环境变量，此操作不可恢复。
- * @localEn Permanently delete this project and its environments. This cannot be undone.
+ * @localZh 仅项目拥有者可永久删除此项目及其环境变量，此操作不可恢复
+ * @localEn Only the project owner can permanently delete this project and its environments; this cannot be undone
  */
 export const PAGE_PAM_GENERAL_DELETE_ZONE_DESC =
   'page_pam_general:deleteZoneDesc';
+
+/**
+ * @description Tip when viewer is not the owner
+ * @localZh 只有项目拥有者可以删除此项目
+ * @localEn Only the project owner can delete this project
+ */
+export const PAGE_PAM_GENERAL_DELETE_OWNER_ONLY =
+  'page_pam_general:deleteOwnerOnly';
 
 /**
  * @description Delete project button in danger zone
@@ -355,11 +363,19 @@ export const PAGE_PAM_GENERAL_TRANSFER_ZONE_TITLE =
 
 /**
  * @description Transfer project section description
- * @localZh 选择其他 PAM 用户接收所有权；转让后你将失去管理权限
- * @localEn Pick another PAM user as the new owner; you will lose admin access
+ * @localZh 仅项目拥有者可将所有权转让给其他 PAM 用户；转让后你将失去管理权限
+ * @localEn Only the project owner can transfer ownership to another PAM user; you will lose admin access afterward
  */
 export const PAGE_PAM_GENERAL_TRANSFER_ZONE_DESC =
   'page_pam_general:transferZoneDesc';
+
+/**
+ * @description Tip when viewer is not the owner
+ * @localZh 只有项目拥有者可以转让此项目
+ * @localEn Only the project owner can transfer this project
+ */
+export const PAGE_PAM_GENERAL_TRANSFER_OWNER_ONLY =
+  'page_pam_general:transferOwnerOnly';
 
 /**
  * @description Open transfer picker
@@ -575,3 +591,38 @@ export const PAGE_PAM_GENERAL_COLLAB_PICKER_TITLE =
  * @localEn Loading…
  */
 export const PAGE_PAM_GENERAL_COLLAB_LOADING = 'page_pam_general:collabLoading';
+
+/**
+ * @description Team settings card title
+ * @localZh 所属团队
+ * @localEn Team
+ */
+export const PAGE_PAM_GENERAL_TEAM_TITLE = 'page_pam_general:teamTitle';
+
+/**
+ * @description Team settings description
+ * @localZh 挂载到团队后，团队成员按角色共享访问（不复制项目）
+ * @localEn Attach to a team so members share access by role (no project copy)
+ */
+export const PAGE_PAM_GENERAL_TEAM_DESC = 'page_pam_general:teamDesc';
+
+/**
+ * @description Save team attachment
+ * @localZh 更新团队
+ * @localEn Update team
+ */
+export const PAGE_PAM_GENERAL_TEAM_SAVE = 'page_pam_general:teamSave';
+
+/**
+ * @description Team updated
+ * @localZh 已更新所属团队
+ * @localEn Team updated
+ */
+export const PAGE_PAM_GENERAL_TEAM_SUCCESS = 'page_pam_general:teamSuccess';
+
+/**
+ * @description Personal team option label
+ * @localZh 个人
+ * @localEn Personal
+ */
+export const PAGE_PAM_GENERAL_TEAM_PERSONAL = 'page_pam_general:teamPersonal';

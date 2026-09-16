@@ -256,3 +256,10 @@ export const PERMISSION_PAM_TEAMS_MEMBERS_DELETE =
  */
 export const PERMISSION_PAM_TEAMS_PROJECTS_ATTACH =
   'permission:pam_teams_projects_attach';
+
+/**
+ * @description Dissolve team
+ * @localZh 解散团队
+ * @localEn Dissolve team
+ */
+export const PERMISSION_PAM_TEAMS_DELETE = 'permission:pam_teams_delete';

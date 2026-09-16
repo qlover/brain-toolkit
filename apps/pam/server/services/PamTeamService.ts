@@ -9,15 +9,17 @@ import {
   API_PAM_TRANSFER_USER_NOT_FOUND,
   API_SERVER_ERROR
 } from '@config/i18n-identifier/api';
-import type {
-  PamTeamAttachProject,
-  PamTeamCreate,
-  PamTeamDetail,
-  PamTeamMemberAdd,
-  PamTeamMemberItem,
-  PamTeamMemberUpdate,
-  PamTeamRole,
-  PamTeamRow
+import {
+  isPersonalTeamSlug,
+  type PamTeamAttachProject,
+  type PamTeamCreate,
+  type PamTeamDetail,
+  type PamTeamMemberAdd,
+  type PamTeamMemberItem,
+  type PamTeamMemberUpdate,
+  type PamTeamProjectItem,
+  type PamTeamRole,
+  type PamTeamRow
 } from '@schemas/PamTeamSchema';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamTeamMembersRepo } from '@server/repositorys/PamTeamMembersRepo';
@@ -258,6 +260,70 @@ export class PamTeamService {
     }
 
     await this.projectRepo.setProjectTeamIdAdmin(input.project_id, teamId);
+  }
+
+  public async listProjects(teamId: string): Promise<PamTeamProjectItem[]> {
+    await this.assertTeamPermission(teamId, PermissionKey.pam_teams_read);
+    const rows = await this.projectRepo.listByTeamIdAdmin(teamId);
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      owner_id: row.owner_id,
+      team_id: row.team_id ?? null
+    }));
+  }
+
+  /**
+   * Dissolves a named team: rehomes projects to each owner's personal team,
+   * then soft-deletes the team. Personal teams cannot be dissolved.
+   */
+  public async dissolveTeam(teamId: string): Promise<void> {
+    const { userId, role } = await this.assertTeamPermission(
+      teamId,
+      PermissionKey.pam_teams_delete
+    );
+
+    const team = await this.teamsRepo.findById(teamId);
+    if (!team) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+    if (isPersonalTeamSlug(team.slug)) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    if (role !== 'owner' || team.owner_id !== userId) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const projects = await this.projectRepo.listByTeamIdAdmin(teamId);
+    const personalTeamByOwner = new Map<string, string>();
+    for (const project of projects) {
+      let personalTeamId = personalTeamByOwner.get(project.owner_id);
+      if (!personalTeamId) {
+        const personal = await this.ensurePersonalTeam(project.owner_id);
+        personalTeamId = personal.id;
+        personalTeamByOwner.set(project.owner_id, personalTeamId);
+      }
+      if (project.team_id !== personalTeamId) {
+        await this.projectRepo.setProjectTeamIdAdmin(
+          project.id,
+          personalTeamId
+        );
+      }
+    }
+
+    await this.teamsRepo.softDelete(teamId);
+  }
+
+  /**
+   * Ensures the caller can attach projects to the team (team admin/owner).
+   */
+  public async assertMemberCanAttach(teamId: string): Promise<string> {
+    const { userId } = await this.assertTeamPermission(
+      teamId,
+      PermissionKey.pam_teams_projects_attach
+    );
+    return userId;
   }
 
   public async resolveTeamRoleForProject(

@@ -55,8 +55,6 @@ export type PAMProjectDetailValue = {
   readonly hasPermission: (permissionKey: string) => boolean;
   /** Owner / admin / member may edit project content (`pam_project_edit`). */
   readonly canEdit: boolean;
-  /** Owner / admin may manage collaborators (`pam_collaborators_create`). */
-  readonly canManageCollaborators: boolean;
   readonly deleting: boolean;
   /** Opens the delete confirmation dialog (admin+). */
   readonly requestDeleteProject: () => void;
@@ -237,13 +235,10 @@ export function PAMProjectDetailShell({
         case PermissionKey.pam_environments_create:
         case PermissionKey.pam_environments_variables_write:
         case PermissionKey.pam_environments_export:
-        case PermissionKey.pam_collaborators_read:
           return canEditLegacy;
         case PermissionKey.pam_project_delete:
         case PermissionKey.pam_project_transfer:
-        case PermissionKey.pam_collaborators_create:
-        case PermissionKey.pam_collaborators_update:
-        case PermissionKey.pam_collaborators_delete:
+          return Boolean(project?.is_owner);
         case PermissionKey.pam_environments_delete:
           return canManageLegacy;
         default:
@@ -254,9 +249,6 @@ export function PAMProjectDetailShell({
   );
 
   const canEdit = hasPermission(PermissionKey.pam_project_edit);
-  const canManageCollaborators = hasPermission(
-    PermissionKey.pam_collaborators_create
-  );
   /** Env tab: requires pam_environments_read (not create/write). */
   const canAccessEnvironments = hasPermission(
     PermissionKey.pam_environments_read
@@ -289,11 +281,10 @@ export function PAMProjectDetailShell({
   ]);
 
   const onDelete = useCallback((): void => {
-    if (
-      !project ||
-      !hasPermission(PermissionKey.pam_project_delete) ||
-      deleting
-    ) {
+    if (!project || !project.is_owner || deleting) {
+      return;
+    }
+    if (!hasPermission(PermissionKey.pam_project_delete)) {
       return;
     }
     dialog.confirm({
@@ -330,7 +321,6 @@ export function PAMProjectDetailShell({
       permissions,
       hasPermission,
       canEdit,
-      canManageCollaborators,
       deleting,
       requestDeleteProject: onDelete,
       setProject,
@@ -347,7 +337,6 @@ export function PAMProjectDetailShell({
       permissions,
       hasPermission,
       canEdit,
-      canManageCollaborators,
       deleting,
       onDelete,
       environments,

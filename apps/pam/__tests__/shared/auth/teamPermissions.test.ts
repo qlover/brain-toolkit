@@ -23,4 +23,16 @@ describe('teamPermissions', () => {
       hasOrgPermission('member', PermissionKey.pam_environments_delete)
     ).toBe(false);
   });
+
+  it('only team owner can dissolve a team', () => {
+    expect(hasOrgPermission('owner', PermissionKey.pam_teams_delete)).toBe(
+      true
+    );
+    expect(hasOrgPermission('admin', PermissionKey.pam_teams_delete)).toBe(
+      false
+    );
+    expect(hasOrgPermission('member', PermissionKey.pam_teams_delete)).toBe(
+      false
+    );
+  });
 });
