@@ -28,6 +28,7 @@ import type {
   PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
 import { ResponsiveModal } from '@/uikit/components/ResponsiveModal';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { mergePamCategories } from '@config/pamCategories';
 import {
@@ -570,6 +571,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
             <button
               type="button"
               id="addProjectBtn"
+              data-permission={PermissionKey.pam_project_create}
               title={tt.addPam}
               onClick={onCreate}
               className="bg-brand hover:bg-brand-hover active:bg-brand-active text-on-brand hidden h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-medium shadow-sm transition sm:inline-flex sm:h-11"
@@ -616,6 +618,7 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
         <button
           type="button"
           id="fabCreateBtn"
+          data-permission={PermissionKey.pam_project_create}
           title={tt.addPam}
           aria-label={tt.addPam}
           onClick={onCreate}

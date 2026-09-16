@@ -24,6 +24,7 @@ import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { PAMFacade } from '@/impls/PAMfacade';
 import { PAMProjectForkButton } from '@/uikit/components-app/pam/PAMProjectForkButton';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
 import { I } from '@config/ioc-identifiter';
 import {
@@ -51,9 +52,13 @@ export type PAMProjectDetailValue = {
   readonly project: PAMProjectDetail | null;
   readonly loading: boolean;
   readonly error: string | null;
-  /** Owner / admin / member may edit project content. */
+  /** Team/project permission_keys from detail API (empty while loading). */
+  readonly permissions: readonly string[];
+  /** Check a project-scoped permission_key (falls back to legacy can_* flags). */
+  readonly hasPermission: (permissionKey: string) => boolean;
+  /** Owner / admin / member may edit project content (`pam_project_edit`). */
   readonly canEdit: boolean;
-  /** Owner / admin may manage collaborators, transfer, and delete. */
+  /** Owner / admin may manage collaborators (`pam_collaborators_create`). */
   readonly canManageCollaborators: boolean;
   readonly deleting: boolean;
   /** Opens the delete confirmation dialog (admin+). */
@@ -213,17 +218,85 @@ export function PAMProjectDetailShell({
     });
   }, [project, routeKey, activeTab, router]);
 
-  const canEdit = Boolean(project?.can_edit ?? project?.is_owner);
-  const canManageCollaborators = Boolean(
-    project?.can_manage_collaborators ?? project?.is_owner
+  const permissions = useMemo(
+    () => project?.permissions ?? project?.org_permissions ?? [],
+    [project]
+  );
+
+  const hasPermission = useCallback(
+    (permissionKey: string): boolean => {
+      if (permissions.length > 0) {
+        return permissions.includes(permissionKey);
+      }
+      // Legacy fallback when detail API omitted permissions[].
+      const canEditLegacy = Boolean(project?.can_edit ?? project?.is_owner);
+      const canManageLegacy = Boolean(
+        project?.can_manage_collaborators ?? project?.is_owner
+      );
+      switch (permissionKey) {
+        case PermissionKey.pam_project_edit:
+        case PermissionKey.pam_project_preview_write:
+        case PermissionKey.pam_environments_read:
+        case PermissionKey.pam_environments_create:
+        case PermissionKey.pam_environments_variables_write:
+        case PermissionKey.pam_environments_export:
+        case PermissionKey.pam_collaborators_read:
+          return canEditLegacy;
+        case PermissionKey.pam_project_delete:
+        case PermissionKey.pam_project_transfer:
+        case PermissionKey.pam_collaborators_create:
+        case PermissionKey.pam_collaborators_update:
+        case PermissionKey.pam_collaborators_delete:
+        case PermissionKey.pam_environments_delete:
+          return canManageLegacy;
+        default:
+          return false;
+      }
+    },
+    [permissions, project]
+  );
+
+  const canEdit = hasPermission(PermissionKey.pam_project_edit);
+  const canManageCollaborators = hasPermission(
+    PermissionKey.pam_collaborators_create
+  );
+  /** Env tab: requires pam_environments_read (not create/write). */
+  const canAccessEnvironments = hasPermission(
+    PermissionKey.pam_environments_read
   );
   const canFork =
     Boolean(project) && !canEdit && project?.is_public === PAMPublicType.public;
   const routeSlug = project?.slug || routeKey;
   const resolvedProjectId = project?.id ?? '';
 
+  // Read-only / no env rights: Environments tab is hidden; bounce deep links.
+  useEffect(() => {
+    if (loading || error || !project) {
+      return;
+    }
+    if (activeTab !== 'environments' || canAccessEnvironments) {
+      return;
+    }
+    router.replace({
+      pathname: ROUTE_PROJECT_GENERAL,
+      params: { projectId: routeSlug }
+    });
+  }, [
+    loading,
+    error,
+    project,
+    activeTab,
+    canAccessEnvironments,
+    router,
+    routeSlug
+  ]);
+
   const onDelete = useCallback((): void => {
-    if (!project || !canManageCollaborators || deleting) {
+    if (
+      !project ||
+      !hasPermission(PermissionKey.pam_project_delete) ||
+      deleting
+    ) {
       return;
     }
     dialog.confirm({
@@ -242,7 +315,7 @@ export function PAMProjectDetailShell({
     });
   }, [
     project,
-    canManageCollaborators,
+    hasPermission,
     deleting,
     dialog,
     tt.deleteTitle,
@@ -257,6 +330,8 @@ export function PAMProjectDetailShell({
       project,
       loading,
       error,
+      permissions,
+      hasPermission,
       canEdit,
       canManageCollaborators,
       deleting,
@@ -272,6 +347,8 @@ export function PAMProjectDetailShell({
       project,
       loading,
       error,
+      permissions,
+      hasPermission,
       canEdit,
       canManageCollaborators,
       deleting,
@@ -341,19 +418,23 @@ export function PAMProjectDetailShell({
             >
               {tt.tabGeneral}
             </Link>
-            <Link
-              href={{
-                pathname: ROUTE_PROJECT_ENVIRONMENTS,
-                params: { projectId: routeSlug }
-              }}
-              className={tabClass('environments')}
-            >
-              {tt.tabEnvironments}
-            </Link>
+            {canAccessEnvironments ? (
+              <Link
+                href={{
+                  pathname: ROUTE_PROJECT_ENVIRONMENTS,
+                  params: { projectId: routeSlug }
+                }}
+                className={tabClass('environments')}
+              >
+                {tt.tabEnvironments}
+              </Link>
+            ) : null}
           </nav>
         </div>
 
-        {!error ? children : null}
+        {!error && !(activeTab === 'environments' && !canAccessEnvironments)
+          ? children
+          : null}
       </div>
     </PAMProjectDetailContext.Provider>
   );

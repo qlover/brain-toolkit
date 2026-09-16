@@ -84,6 +84,20 @@ export const COMMON_ADMIN_NAV_USER_MANAGEMENT =
   'common:admin_nav__user_management';
 
 /**
+ * @description Admin sidebar nav - Roles
+ * @localZh 角色管理
+ * @localEn Roles
+ */
+export const COMMON_ADMIN_NAV_ROLES = 'common:admin_nav__roles';
+
+/**
+ * @description Admin sidebar nav - Permissions
+ * @localZh 权限管理
+ * @localEn Permissions
+ */
+export const COMMON_ADMIN_NAV_PERMISSIONS = 'common:admin_nav__permissions';
+
+/**
  * @description Admin sidebar nav - Locales
  * @localZh 国际化
  * @localEn Locales

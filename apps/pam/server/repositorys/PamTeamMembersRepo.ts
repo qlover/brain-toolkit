@@ -1,0 +1,309 @@
+import { SupabaseRepo } from '@qlover/next-kit/server';
+import {
+  legacyTeamRoleFromKey,
+  teamRoleKeyFromLegacy,
+  TeamRoleKey
+} from '@shared/auth/roleKeys';
+import { inject, injectable } from '@shared/container';
+import { I } from '@config/ioc-identifiter';
+import type {
+  PamTeamMemberItem,
+  PamTeamMemberRow,
+  PamTeamRole
+} from '@schemas/PamTeamSchema';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
+import type { LoggerInterface } from '@qlover/logger';
+
+const TABLE = 'pam_role_team_members';
+
+type MemberRoleJoin = {
+  role_id: string;
+  pam_roles: { key: string } | null;
+};
+
+@injectable()
+export class PamTeamMembersRepo {
+  constructor(
+    @inject(SupabaseRepo)
+    protected readonly supabaseBridge: SupabaseRepo<unknown>,
+    @inject(PamRolePermissionsRepo)
+    protected readonly roles: PamRolePermissionsRepo,
+    @inject(I.Logger)
+    protected readonly logger: LoggerInterface
+  ) {}
+
+  public async getActiveRole(
+    teamId: string,
+    userId: string
+  ): Promise<PamTeamRole | null> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('role_id, pam_roles ( key )')
+      .eq('team_id', teamId)
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.getActiveRole', error);
+      throw error;
+    }
+    const row = data as MemberRoleJoin | null;
+    return legacyTeamRoleFromKey(row?.pam_roles?.key);
+  }
+
+  public async listActiveTeamIdsForUser(userId: string): Promise<string[]> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('team_id')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.listActiveTeamIdsForUser', error);
+      throw error;
+    }
+    return (data ?? []).map((row) => row.team_id as string);
+  }
+
+  public async listByTeamId(teamId: string): Promise<PamTeamMemberItem[]> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*, pam_roles ( key )')
+      .eq('team_id', teamId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.listByTeamId', error);
+      throw error;
+    }
+
+    const rows = (data ?? []) as Array<
+      PamTeamMemberRow & { pam_roles: { key: string } | null }
+    >;
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const userIds = rows.map((r) => r.user_id);
+    const { data: users, error: usersError } = await supabase
+      .from('pam_users')
+      .select('id, email, phone, display_name')
+      .in('id', userIds);
+
+    if (usersError) {
+      this.logger.warn(
+        'PamTeamMembersRepo.listByTeamId users lookup',
+        usersError
+      );
+    }
+
+    const byId = new Map(
+      (users ?? []).map((u) => [
+        u.id as string,
+        u as {
+          email?: string | null;
+          phone?: string | null;
+          display_name?: string | null;
+        }
+      ])
+    );
+
+    return rows.map((row) => {
+      const u = byId.get(row.user_id);
+      const { pam_roles: _join, ...member } = row;
+      return {
+        ...member,
+        role: legacyTeamRoleFromKey(row.pam_roles?.key) ?? 'member',
+        email: u?.email ?? '',
+        phone: u?.phone ?? null,
+        display_name: u?.display_name ?? null
+      };
+    });
+  }
+
+  public async upsertMember(input: {
+    teamId: string;
+    userId: string;
+    role: Exclude<PamTeamRole, 'owner'>;
+    invitedBy: string;
+  }): Promise<PamTeamMemberRow> {
+    const roleId = await this.roles.requireRoleIdByKey(
+      teamRoleKeyFromLegacy(input.role)
+    );
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .upsert(
+        {
+          team_id: input.teamId,
+          user_id: input.userId,
+          role_id: roleId,
+          status: 'active',
+          invited_by: input.invitedBy
+        },
+        { onConflict: 'team_id,user_id' }
+      )
+      .select('*')
+      .single();
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.upsertMember', error);
+      throw error;
+    }
+    return data as PamTeamMemberRow;
+  }
+
+  public async updateRole(
+    teamId: string,
+    userId: string,
+    role: Exclude<PamTeamRole, 'owner'>
+  ): Promise<void> {
+    const roleId = await this.roles.requireRoleIdByKey(
+      teamRoleKeyFromLegacy(role)
+    );
+    const ownerRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.Owner);
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase
+      .from(TABLE)
+      .update({ role_id: roleId })
+      .eq('team_id', teamId)
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .neq('role_id', ownerRoleId);
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.updateRole', error);
+      throw error;
+    }
+  }
+
+  public async remove(teamId: string, userId: string): Promise<void> {
+    const ownerRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.Owner);
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .eq('team_id', teamId)
+      .eq('user_id', userId)
+      .neq('role_id', ownerRoleId);
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.remove', error);
+      throw error;
+    }
+  }
+
+  public async listActiveRolesForProjects(
+    userId: string,
+    projectIds: string[]
+  ): Promise<{
+    roleByProject: Map<string, PamTeamRole>;
+    projectIdsWithTeam: Set<string>;
+  }> {
+    const roleByProject = new Map<string, PamTeamRole>();
+    const projectIdsWithTeam = new Set<string>();
+    if (projectIds.length === 0) {
+      return { roleByProject, projectIdsWithTeam };
+    }
+
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { data: projects, error: projectsError } = await supabase
+      .from('pam_projects')
+      .select('id, team_id')
+      .in('id', projectIds)
+      .eq('is_deleted', 0);
+
+    if (projectsError) {
+      this.logger.error(
+        'PamTeamMembersRepo.listActiveRolesForProjects projects',
+        projectsError
+      );
+      throw projectsError;
+    }
+
+    const teamIds = [
+      ...new Set(
+        (projects ?? [])
+          .map((p) => {
+            const teamId = p.team_id as string | null;
+            if (teamId) {
+              projectIdsWithTeam.add(p.id as string);
+            }
+            return teamId;
+          })
+          .filter((id): id is string => Boolean(id))
+      )
+    ];
+    if (teamIds.length === 0) {
+      return { roleByProject, projectIdsWithTeam };
+    }
+
+    const { data: members, error: membersError } = await supabase
+      .from(TABLE)
+      .select('team_id, role_id, pam_roles ( key )')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .in('team_id', teamIds);
+
+    if (membersError) {
+      this.logger.error(
+        'PamTeamMembersRepo.listActiveRolesForProjects members',
+        membersError
+      );
+      throw membersError;
+    }
+
+    const roleByTeam = new Map(
+      (members ?? [])
+        .map((m) => {
+          const join = m as MemberRoleJoin & { team_id: string };
+          const legacy = legacyTeamRoleFromKey(join.pam_roles?.key);
+          return legacy ? ([join.team_id, legacy] as const) : null;
+        })
+        .filter((entry): entry is readonly [string, PamTeamRole] =>
+          Boolean(entry)
+        )
+    );
+
+    for (const p of projects ?? []) {
+      const teamId = p.team_id as string | null;
+      if (!teamId) {
+        continue;
+      }
+      const role = roleByTeam.get(teamId);
+      if (role) {
+        roleByProject.set(p.id as string, role);
+      }
+    }
+
+    return { roleByProject, projectIdsWithTeam };
+  }
+
+  public async ensureOwnerMember(
+    teamId: string,
+    ownerId: string
+  ): Promise<void> {
+    const ownerRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.Owner);
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const { error } = await supabase.from(TABLE).upsert(
+      {
+        team_id: teamId,
+        user_id: ownerId,
+        role_id: ownerRoleId,
+        status: 'active',
+        invited_by: ownerId
+      },
+      { onConflict: 'team_id,user_id' }
+    );
+
+    if (error) {
+      this.logger.error('PamTeamMembersRepo.ensureOwnerMember', error);
+      throw error;
+    }
+  }
+}

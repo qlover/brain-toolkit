@@ -1,7 +1,8 @@
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_COLLABORATORS } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 type CollaboratorsRouteContext = {
@@ -11,23 +12,37 @@ type CollaboratorsRouteContext = {
 /**
  * GET /api/pam/:projectId/collaborators — list collaborators.
  */
-export function GET(req: NextRequest, context: CollaboratorsRouteContext) {
+export async function GET(
+  req: NextRequest,
+  context: CollaboratorsRouteContext
+) {
+  const { projectId } = await context.params;
   return new NextApiServer(API_PAM_COLLABORATORS, req)
-    .use(new ServerAuthPlugin())
-    .runWithJson(async ({ parameters: { IOC } }) => {
-      const { projectId } = await context.params;
-      return IOC(PAMController).listCollaborators(projectId);
-    });
+    .use(
+      new RequirePermissionPlugin(PermissionKey.pam_collaborators_read, {
+        projectId
+      })
+    )
+    .runWithJson(async ({ parameters: { IOC } }) =>
+      IOC(PAMController).listCollaborators(projectId)
+    );
 }
 
 /**
  * POST /api/pam/:projectId/collaborators — add collaborator.
  */
-export function POST(req: NextRequest, context: CollaboratorsRouteContext) {
+export async function POST(
+  req: NextRequest,
+  context: CollaboratorsRouteContext
+) {
+  const { projectId } = await context.params;
   return new NextApiServer(API_PAM_COLLABORATORS, req)
-    .use(new ServerAuthPlugin())
-    .runWithJson(async ({ parameters: { IOC } }) => {
-      const { projectId } = await context.params;
-      return IOC(PAMController).addCollaborator(projectId, req);
-    });
+    .use(
+      new RequirePermissionPlugin(PermissionKey.pam_collaborators_create, {
+        projectId
+      })
+    )
+    .runWithJson(async ({ parameters: { IOC } }) =>
+      IOC(PAMController).addCollaborator(projectId, req)
+    );
 }

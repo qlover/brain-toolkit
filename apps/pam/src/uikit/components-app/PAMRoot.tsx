@@ -30,6 +30,7 @@ import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
 import { ResponsiveModal } from '../components/ResponsiveModal';
+import { PermissionKey, useCan } from '../hook/useHasPermission';
 import { useIOC } from '../hook/useIOC';
 import { useUserAuth } from '../hook/useUserAuth';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
@@ -76,6 +77,9 @@ export function PAMRoot({
 }: PAMRootProps) {
   const tt = usePageI18nMapping<PAMI18nInterface>();
   const mounted = useMountedClient();
+  const { allowed: canCreateProject } = useCan(
+    PermissionKey.pam_project_create
+  );
   const {
     success: isAuthenticated,
     loading: authLoading,
@@ -269,10 +273,10 @@ export function PAMRoot({
         viewMode={viewMode}
         onViewModeChange={(mode) => pamFacade.changeViewMode(mode)}
         categories={categories}
-        canCreate={isAuthenticated}
+        canCreate={canCreateProject}
         searching={listLoading}
         onCreate={() => {
-          if (!isAuthenticated) return;
+          if (!canCreateProject) return;
           pamFacade.openDialog();
         }}
       />
@@ -317,7 +321,7 @@ export function PAMRoot({
       />
 
       <ResponsiveModal
-        open={isAuthenticated && openDialog}
+        open={canCreateProject && openDialog}
         title={tt.createProjectTitle}
         onClose={closeDialog}
         footer={

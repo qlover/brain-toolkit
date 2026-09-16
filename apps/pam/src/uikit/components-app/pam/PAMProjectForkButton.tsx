@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from '@/i18n/routing';
 import { PAMApi } from '@/impls/appApi/PAMApi';
+import { PermissionKey, useCan } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
-import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
 
@@ -33,10 +33,10 @@ export function PAMProjectForkButton({
 }: PAMProjectForkButtonProps) {
   const pamApi = useIOC(PAMApi);
   const router = useRouter();
-  const { success: isAuthenticated } = useUserAuth();
+  const { allowed: canFork } = useCan(PermissionKey.pam_project_fork);
   const [forking, setForking] = useState(false);
 
-  if (!isAuthenticated) {
+  if (!canFork) {
     return null;
   }
 
@@ -63,6 +63,7 @@ export function PAMProjectForkButton({
   return (
     <button
       data-testid="PAMProjectForkButton"
+      data-permission={PermissionKey.pam_project_fork}
       type="button"
       disabled={forking}
       onClick={() => {
