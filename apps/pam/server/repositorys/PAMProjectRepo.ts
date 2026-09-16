@@ -171,17 +171,35 @@ export class PAMProjectRepo extends BaseRepository<
       where.push(['category', Operators.eq, categoryFilter]);
     }
 
+    const teamIds = user_id
+      ? await this.listActiveTeamIdsForUserAdmin(user_id)
+      : [];
+
     let whereOr: FilterTriple<PAMProjectRaw>[] | undefined;
 
     if (visibilityFilter === 'public') {
       where.push(['is_public', Operators.eq, PAMPublicType.public]);
     } else if (visibilityFilter === 'private') {
       where.push(['is_public', Operators.eq, PAMPublicType.private]);
-      where.push(['owner_id', Operators.eq, user_id!]);
+      whereOr = [['owner_id', Operators.eq, user_id!]];
+      if (teamIds.length > 0) {
+        whereOr.push([
+          'team_id',
+          Operators.in,
+          teamIds
+        ] as FilterTriple<PAMProjectRaw>);
+      }
     } else {
       whereOr = [['is_public', Operators.eq, PAMPublicType.public]];
       if (user_id) {
         whereOr.push(['owner_id', Operators.eq, user_id]);
+        if (teamIds.length > 0) {
+          whereOr.push([
+            'team_id',
+            Operators.in,
+            teamIds
+          ] as FilterTriple<PAMProjectRaw>);
+        }
       }
     }
 
@@ -210,6 +228,22 @@ export class PAMProjectRepo extends BaseRepository<
       where,
       whereOr
     });
+  }
+
+  /**
+   * Active team ids for a user (admin; used by legacy search fallback).
+   */
+  protected async listActiveTeamIdsForUserAdmin(
+    userId: string
+  ): Promise<string[]> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from('pam_role_team_members')
+      .select('team_id')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+    this.supabaseRepo.throwIfError(result);
+    return (result.data ?? []).map((row) => row.team_id as string);
   }
 
   /**

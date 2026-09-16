@@ -135,7 +135,8 @@ Mark secrets with `# pam:sensitive` above the key. Header and inline comments ar
 
 Auth/sync/`.env.*` use mode `0600` on POSIX. `pamenv logout` revokes the server token then clears local auth and `~/.pam/sync`. CLI tokens last **30d** by default (`PAM_CLI_TOKEN_EXPIRES_IN`, e.g. `21d`) and are revocable via `jti`.
 
-Collaborator access:
+Team / project access (from PAM team role on the project; manage teams in the Web UI):
 - **owner / admin / member**: `pull` and `push` (decrypted export)
-- **admin** (including owner): `remove` environments, transfer project, manage collaborators
-- **member**: cannot delete environments or manage collaborators
+- **admin** (including project owner): `remove` environments
+- **member**: cannot delete environments
+- Project transfer / delete is **project owner (`owner_id`) only** via Web General (CLI has no transfer command)

@@ -175,7 +175,8 @@ NORMAL=1
 `pamenv logout` 会先请求服务端吊销当前 Token，再清除本地 token，并删除整个 `~/.pam/sync`。  
 CLI Token 默认 **30d**（`PAM_CLI_TOKEN_EXPIRES_IN` 可改，如 `21d`），带 `jti` 登记，可服务端吊销；旧版无 `jti` 的 Token 将失效，需重新 `login`。
 
-项目协作权限：
+项目团队权限（由 PAM 项目上的团队角色决定；团队管理在 Web）：
 - **owner / admin / member**：均可 `pull`、`push`（解密导出）
-- **admin**（含 owner）：可 `remove` 环境、转让项目、管理协作者
-- **member**：不可删除环境或管理协作者
+- **admin**（含项目拥有者）：可 `remove` 环境
+- **member**：不可删除环境
+- 项目转让 / 删除仅 **项目拥有者（owner_id）**，请在 Web General 操作（CLI 无转让命令）
