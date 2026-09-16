@@ -1,5 +1,21 @@
 # pamenv-cli
 
+## 1.8.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **pam:** 搜索按团队成员可见，修复 pamenv 解析私有项目 ([9a9b437](https://github.com/qlover/brain-toolkit/commit/9a9b437ef2ff391c354fe5d05431d1416660d579)) ([#147](https://github.com/qlover/brain-toolkit/pull/147))
+
+  新增 022 重写 pam_search_projects；legacy search 同步 team_id；CLI 文档对齐。
+
+#### 📝 Documentation
+
+- **pam:** 同步角色设计文档，并对齐 pamenv 团队权限语义 ([894a1ee](https://github.com/qlover/brain-toolkit/commit/894a1eee585f3764eb4ed45aae32a1eff9b6e47e)) ([#147](https://github.com/qlover/brain-toolkit/pull/147))
+
+  去掉协作者表述；access util 优先 permissions；文档改为 permission_key。
+
 ## 1.7.0
 
 ### Minor Changes
