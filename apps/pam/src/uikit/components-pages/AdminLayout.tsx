@@ -6,6 +6,7 @@ import {
   Cog6ToothIcon,
   DevicePhoneMobileIcon,
   DocumentTextIcon,
+  KeyIcon,
   UsersIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
@@ -13,13 +14,14 @@ import { ClientSeo } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { NavItemInterface } from '@config/adminNavs';
 import { ROUTE_ADMIN } from '@config/route';
 import { AdminUserPanel } from './AdminUserPanel';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { LocaleLink } from '../components/LocaleLink';
 import { ThemeSwitcher } from '../components-app/ThemeSwitcher';
+import { useSessionPermissionKeys } from '../hook/useHasPermission';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 import type { PageI18nInterface } from '@qlover/next-kit/common';
 import type { ComponentType, SVGProps } from 'react';
@@ -47,6 +49,8 @@ type NavIcon = ComponentType<SVGProps<SVGSVGElement>>;
 const NAV_ICONS: Record<string, NavIcon> = {
   dashboard: ChartBarSquareIcon,
   users: UsersIcon,
+  roles: KeyIcon,
+  permissions: KeyIcon,
   'phone-otps': DevicePhoneMobileIcon,
   'request-logs': DocumentTextIcon,
   settings: Cog6ToothIcon
@@ -73,6 +77,16 @@ export function AdminLayout({
   const pathname = usePathname();
   const locale = useLocale();
   const t = useWarnTranslations();
+  const { permissions, success: sessionReady } = useSessionPermissionKeys();
+
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter((item) => {
+        if (!item.permissionKey) return true;
+        return sessionReady && permissions.includes(item.permissionKey);
+      }),
+    [navItems, permissions, sessionReady]
+  );
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [internalCollapsed, setInternalCollapsed] = useState(false);
@@ -200,7 +214,7 @@ export function AdminLayout({
           )}
         >
           <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const active = isActive(item);
               const href = linkHref(item);
               const label = t(item.i18nKey);

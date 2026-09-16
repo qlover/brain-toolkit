@@ -1,4 +1,10 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
+import { PlatformRoleKey } from '@shared/auth/roleKeys';
+import {
+  normalizeSystemRole,
+  SystemRole,
+  type SystemRoleType
+} from '@shared/auth/systemRole';
 import { inject, injectable } from '@shared/container';
 import {
   isPhonePlaceholderEmail,
@@ -6,6 +12,7 @@ import {
 } from '@shared/utils/pamUserIdentity';
 import { I } from '@config/ioc-identifiter';
 import type { PamUserRow } from '@schemas/PamUserSchema';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
 const TABLE = 'pam_users';
@@ -23,6 +30,8 @@ export class PamUsersRepo {
   constructor(
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
+    @inject(PamRolePermissionsRepo)
+    protected readonly roles: PamRolePermissionsRepo,
     @inject(I.Logger)
     protected readonly logger: LoggerInterface
   ) {}
@@ -84,8 +93,9 @@ export class PamUsersRepo {
   }
 
   /**
-   * Upsert profile fields; never clears an existing platform admin flag.
+   * Upsert profile fields; never clears an existing role_id.
    * Never overwrites a real email with null/placeholder.
+   * Does not touch legacy is_platform_admin except on insert default.
    */
   public async ensureProfile(input: PamUserUpsertInput): Promise<PamUserRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
@@ -125,6 +135,10 @@ export class PamUsersRepo {
       return data as PamUserRow;
     }
 
+    const defaultRoleId = await this.roles.requireRoleIdByKey(
+      PlatformRoleKey.User
+    );
+
     const { data, error } = await supabase
       .from(TABLE)
       .insert({
@@ -133,6 +147,7 @@ export class PamUsersRepo {
         display_name: input.displayName ?? null,
         phone: input.phone ?? null,
         is_platform_admin: false,
+        role_id: defaultRoleId,
         status: 'active'
       })
       .select('*')
@@ -196,9 +211,25 @@ export class PamUsersRepo {
     }
   }
 
+  /**
+   * Set platform admin via role_id.
+   * Does not modify legacy is_platform_admin.
+   */
   public async setPlatformAdmin(
     userId: string,
     enabled: boolean,
+    actorUserId: string
+  ): Promise<PamUserRow> {
+    return this.setSystemRole(
+      userId,
+      enabled ? SystemRole.Admin : SystemRole.User,
+      actorUserId
+    );
+  }
+
+  public async setSystemRole(
+    userId: string,
+    systemRole: SystemRoleType,
     actorUserId: string
   ): Promise<PamUserRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
@@ -219,22 +250,33 @@ export class PamUsersRepo {
       });
     }
 
-    if (!enabled && userId === actorUserId) {
+    const nextRole = normalizeSystemRole(systemRole);
+    const target = await this.findById(userId);
+    const prevRole = normalizeSystemRole(
+      await this.roles.getRoleKeyById(target?.role_id)
+    );
+
+    if (
+      prevRole === SystemRole.Admin &&
+      nextRole !== SystemRole.Admin &&
+      userId === actorUserId
+    ) {
       throw new Error('Cannot revoke your own platform admin access');
     }
 
-    if (!enabled) {
+    if (prevRole === SystemRole.Admin && nextRole !== SystemRole.Admin) {
       const adminCount = await this.countPlatformAdmins();
-      const target = await this.findById(userId);
-      if (target?.is_platform_admin && adminCount <= 1) {
+      if (adminCount <= 1) {
         throw new Error('At least one platform admin is required');
       }
     }
 
+    const nextRoleId = await this.roles.requireRoleIdByKey(nextRole);
+
     const { data, error } = await supabase
       .from(TABLE)
       .update({
-        is_platform_admin: enabled,
+        role_id: nextRoleId,
         updated_at: new Date().toISOString()
       })
       .eq('id', userId)
@@ -242,10 +284,10 @@ export class PamUsersRepo {
       .single();
 
     if (error) {
-      this.logger.error('PamUsersRepo.setPlatformAdmin failed', {
+      this.logger.error('PamUsersRepo.setSystemRole failed', {
         error,
         userId,
-        enabled
+        systemRole: nextRole
       });
       throw new Error(error.message);
     }
@@ -253,12 +295,16 @@ export class PamUsersRepo {
     return data as PamUserRow;
   }
 
+  /** Counts users with platform admin role key. */
   public async countPlatformAdmins(): Promise<number> {
+    const adminRoleId = await this.roles.requireRoleIdByKey(
+      PlatformRoleKey.Admin
+    );
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const { count, error } = await supabase
       .from(TABLE)
       .select('id', { count: 'exact', head: true })
-      .eq('is_platform_admin', true);
+      .eq('role_id', adminRoleId);
 
     if (error) {
       this.logger.error('PamUsersRepo.countPlatformAdmins failed', { error });
@@ -278,6 +324,7 @@ export class PamUsersRepo {
       email: string | null;
       phone: string | null;
       isPlatformAdmin: boolean;
+      systemRole: SystemRoleType;
       status: string;
       createdAt: string;
       displayName: string | null;
@@ -313,7 +360,7 @@ export class PamUsersRepo {
     const { data: pamRows, error: pamError } = await supabase
       .from(TABLE)
       .select(
-        'id, is_platform_admin, status, created_at, display_name, email, phone'
+        'id, role_id, is_platform_admin, status, created_at, display_name, email, phone'
       )
       .in('id', ids);
 
@@ -328,19 +375,25 @@ export class PamUsersRepo {
       (pamRows ?? []).map((row) => [String(row.id), row as PamUserRow])
     );
 
-    return users.map((row) => {
+    const results = [];
+    for (const row of users) {
       const id = String((row as { id?: string }).id ?? '');
       const authEmail = String((row as { email?: string }).email ?? '');
       const pam = pamById.get(id);
-      return {
+      const systemRole = normalizeSystemRole(
+        await this.roles.getRoleKeyById(pam?.role_id)
+      );
+      results.push({
         id,
         email: toBusinessEmail(pam?.email ?? authEmail),
         phone: pam?.phone ?? null,
         displayName: pam?.display_name ?? null,
-        isPlatformAdmin: pam?.is_platform_admin ?? false,
+        systemRole,
+        isPlatformAdmin: systemRole === SystemRole.Admin,
         status: pam?.status ?? 'active',
         createdAt: pam?.created_at ?? new Date().toISOString()
-      };
-    });
+      });
+    }
+    return results;
   }
 }

@@ -23,6 +23,7 @@ import { v4 as uuid } from 'uuid';
 import { PAMApi } from '@/impls/appApi/PAMApi';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
 import type { PAMEnvironmentsI18nInterface } from '@config/i18n-mapping/PAMEnvironmentsI18n';
 import { I } from '@config/ioc-identifiter';
@@ -71,12 +72,16 @@ export function PAMProjectEnvironmentsPanel({
   const dialogHandler = useIOC(I.DialogHandler);
   const {
     projectId,
-    canEdit,
-    canManageCollaborators,
+    hasPermission,
     environments,
     ensureEnvironments,
     setEnvironments
   } = usePAMProjectDetail();
+  const canCreateEnv = hasPermission(PermissionKey.pam_environments_create);
+  const canDeleteEnv = hasPermission(PermissionKey.pam_environments_delete);
+  const canWriteVars = hasPermission(
+    PermissionKey.pam_environments_variables_write
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
@@ -158,7 +163,7 @@ export function PAMProjectEnvironmentsPanel({
     environmentId: string,
     variables: PAMVariable[]
   ): Promise<void> => {
-    if (!canEdit) {
+    if (!canWriteVars) {
       return;
     }
     setSaving(true);
@@ -178,7 +183,7 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onAddVariable = (): void => {
-    if (!canEdit) {
+    if (!canWriteVars) {
       return;
     }
     const hasIncomplete = draftVariables.some((item) => {
@@ -319,7 +324,7 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onCreateEnvironment = async (): Promise<void> => {
-    if (!canEdit) {
+    if (!canCreateEnv) {
       return;
     }
     const name = newEnvName.trim();
@@ -346,7 +351,7 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onDeleteEnvironment = (env: PAMEnvWriteable): void => {
-    if (!canManageCollaborators) {
+    if (!canDeleteEnv) {
       return;
     }
     dialogHandler.confirm({
@@ -422,9 +427,10 @@ export function PAMProjectEnvironmentsPanel({
               >
                 {env.name}
               </button>
-              {canManageCollaborators ? (
+              {canDeleteEnv ? (
                 <button
                   type="button"
+                  data-permission={PermissionKey.pam_environments_delete}
                   title={tt.envDelete}
                   aria-label={tt.envDelete}
                   onClick={() => onDeleteEnvironment(env)}
@@ -437,7 +443,7 @@ export function PAMProjectEnvironmentsPanel({
           ))}
         </ul>
 
-        {canEdit ? (
+        {canCreateEnv ? (
           <div className="space-y-2 border-t border-primary-border pt-3">
             <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
             <input
@@ -455,6 +461,7 @@ export function PAMProjectEnvironmentsPanel({
             />
             <button
               type="button"
+              data-permission={PermissionKey.pam_environments_create}
               disabled={saving}
               onClick={() => void onCreateEnvironment()}
               className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-brand/10 px-3 py-2 text-xs font-medium text-brand transition hover:bg-brand/15 disabled:opacity-50 sm:text-sm"
@@ -491,10 +498,13 @@ export function PAMProjectEnvironmentsPanel({
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {canEdit ? (
+                {canWriteVars ? (
                   <>
                     <button
                       type="button"
+                      data-permission={
+                        PermissionKey.pam_environments_variables_write
+                      }
                       onClick={() => setShowImport((prev) => !prev)}
                       className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
                     >
@@ -502,6 +512,9 @@ export function PAMProjectEnvironmentsPanel({
                     </button>
                     <button
                       type="button"
+                      data-permission={
+                        PermissionKey.pam_environments_variables_write
+                      }
                       onClick={() => fileInputRef.current?.click()}
                       className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
                     >
@@ -516,6 +529,9 @@ export function PAMProjectEnvironmentsPanel({
                     />
                     <button
                       type="button"
+                      data-permission={
+                        PermissionKey.pam_environments_variables_write
+                      }
                       onClick={onAddVariable}
                       className="flex cursor-pointer items-center gap-1 rounded-lg bg-brand/10 px-2.5 py-1.5 text-xs text-brand transition hover:bg-brand/15 sm:text-sm"
                     >
@@ -527,7 +543,7 @@ export function PAMProjectEnvironmentsPanel({
               </div>
             </div>
 
-            {canEdit && showImport ? (
+            {canWriteVars && showImport ? (
               <PAMFormEnvImportPanel
                 tt={tt}
                 onImport={onImportText}
@@ -549,7 +565,7 @@ export function PAMProjectEnvironmentsPanel({
                       envIndex={0}
                       item={item}
                       tt={tt}
-                      readOnly={!canEdit}
+                      readOnly={!canWriteVars}
                       sensitiveLocked={Boolean(
                         item.id && lockedSensitiveIds.has(item.id)
                       )}
@@ -561,10 +577,13 @@ export function PAMProjectEnvironmentsPanel({
               )}
             </div>
 
-            {canEdit ? (
+            {canWriteVars ? (
               <div className="flex justify-end border-t border-primary-border pt-3">
                 <button
                   type="button"
+                  data-permission={
+                    PermissionKey.pam_environments_variables_write
+                  }
                   disabled={saving || !selectedEnvId}
                   onClick={() => {
                     if (selectedEnvId) {

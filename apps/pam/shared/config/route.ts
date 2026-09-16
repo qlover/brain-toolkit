@@ -49,6 +49,16 @@ export const ROUTE_ADMIN = '/admin' as const;
 export const ROUTE_ADMIN_USERS = '/admin/users' as const;
 
 /**
+ * Admin role → permission assignments. Pages Router: `src/pages/[locale]/admin/roles.tsx`.
+ */
+export const ROUTE_ADMIN_ROLES = '/admin/roles' as const;
+
+/**
+ * Admin permission catalog (super admin). Pages Router: `src/pages/[locale]/admin/permissions.tsx`.
+ */
+export const ROUTE_ADMIN_PERMISSIONS = '/admin/permissions' as const;
+
+/**
  * Admin phone OTP monitor. Pages Router: `src/pages/[locale]/admin/phone-otps.tsx`.
  */
 export const ROUTE_ADMIN_PHONE_OTPS = '/admin/phone-otps' as const;
@@ -178,6 +188,8 @@ export const AUTH_ROUTES = [
 export const LOGINED_PAGES = [
   ROUTE_ADMIN,
   ROUTE_ADMIN_USERS,
+  ROUTE_ADMIN_ROLES,
+  ROUTE_ADMIN_PERMISSIONS,
   ROUTE_ADMIN_PHONE_OTPS,
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,

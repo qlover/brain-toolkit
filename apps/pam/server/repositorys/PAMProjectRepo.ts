@@ -624,11 +624,14 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async getProjectAccessAdmin(
     projectId: string
-  ): Promise<Pick<PAMProjectRaw, 'id' | 'is_public' | 'owner_id'> | null> {
+  ): Promise<Pick<
+    PAMProjectRaw,
+    'id' | 'is_public' | 'owner_id' | 'team_id'
+  > | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const result = await admin
       .from(this.getRepoName())
-      .select('id,is_public,owner_id')
+      .select('id,is_public,owner_id,team_id')
       .eq('id', projectId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
       .maybeSingle();
@@ -637,8 +640,22 @@ export class PAMProjectRepo extends BaseRepository<
 
     return result.data as Pick<
       PAMProjectRaw,
-      'id' | 'is_public' | 'owner_id'
+      'id' | 'is_public' | 'owner_id' | 'team_id'
     > | null;
+  }
+
+  public async setProjectTeamIdAdmin(
+    projectId: string,
+    teamId: string | null
+  ): Promise<void> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .update({ team_id: teamId })
+      .eq('id', projectId)
+      .eq('is_deleted', DeleteStatus.UNDELETE);
+
+    this.supabaseRepo.throwIfError(result);
   }
 
   /**
@@ -1311,6 +1328,7 @@ export class PAMProjectRepo extends BaseRepository<
     params: PAMProjectCreate & {
       owner_id: string;
       create_source: PAMProjectRaw['create_source'];
+      team_id?: string | null;
     }
   ): Promise<PAMProjectDetail> {
     const admin = this.supabaseRepo.getAdminSupabase();

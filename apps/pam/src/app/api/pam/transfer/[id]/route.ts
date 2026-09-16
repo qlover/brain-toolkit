@@ -1,21 +1,27 @@
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { API_PAM_TRANSFER } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerAuthPlugin } from '@server/plugins/ServerAuthPlugin';
+import { RequirePermissionPlugin } from '@server/plugins/RequirePermissionPlugin';
 import type { NextRequest } from 'next/server';
 
 /**
- * POST /api/pam/transfer/:id — transfer project ownership (owner only).
+ * POST /api/pam/transfer/:id — transfer project ownership (admin+).
  *
  * Body: `{ email?: string, user_id?: string }` (at least one required).
  */
-export function POST(
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   return new NextApiServer(API_PAM_TRANSFER, req)
-    .use(new ServerAuthPlugin())
+    .use(
+      new RequirePermissionPlugin(PermissionKey.pam_project_transfer, {
+        projectId: id
+      })
+    )
     .runWithJson(async ({ parameters: { IOC } }) =>
-      IOC(PAMController).transferProject((await params).id, req)
+      IOC(PAMController).transferProject(id, req)
     );
 }

@@ -1,11 +1,21 @@
 import { z } from 'zod';
+import { SystemRole } from '@shared/auth/systemRole';
+
+const systemRoleSchema = z.enum([
+  SystemRole.User,
+  SystemRole.Operator,
+  SystemRole.Admin
+]);
 
 export const pamUserRowSchema = z.object({
   id: z.string().uuid(),
   email: z.string().nullable(),
   phone: z.string().nullable().optional(),
   display_name: z.string().nullable().optional(),
-  is_platform_admin: z.boolean(),
+  /** Legacy column — kept until separate cleanup. */
+  is_platform_admin: z.boolean().optional().default(false),
+  /** FK to pam_roles (platform). */
+  role_id: z.string().uuid(),
   status: z.enum(['active', 'suspended']),
   created_at: z.string(),
   updated_at: z.string()
@@ -18,15 +28,22 @@ export const pamAdminUserListItemSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable().optional(),
   displayName: z.string().nullable(),
+  /** @deprecated Prefer systemRole; true when system_role === admin */
   isPlatformAdmin: z.boolean(),
+  systemRole: systemRoleSchema,
   status: z.enum(['active', 'suspended']),
   createdAt: z.string()
 });
 
 export type PamAdminUserListItem = z.infer<typeof pamAdminUserListItemSchema>;
 
+/**
+ * @deprecated Session is a flat PamSessionUser; keep for older clients only.
+ */
 export const pamSessionCapabilitiesSchema = z.object({
-  platformAdmin: z.boolean()
+  platformAdmin: z.boolean(),
+  roles: z.array(systemRoleSchema).optional().default([]),
+  permissions: z.array(z.string()).optional().default([])
 });
 
 export type PamSessionCapabilities = z.infer<
@@ -39,23 +56,31 @@ export const pamSessionUserSchema = z.object({
   email: z.string(),
   phone: z.string().nullable().optional(),
   display_name: z.string().nullable().optional(),
+  /** next-kit UserRole enum number (not PAM system role). */
   role: z.number(),
+  /** PAM platform role key: user | operator | admin */
+  system_role: systemRoleSchema.default(SystemRole.User),
+  /** Platform API permission uids for the current system_role (FE checks). */
+  permissions: z.array(z.string()).default([]),
   credential_token: z.string().optional(),
   created_at: z.string().optional()
 });
 
 export type PamSessionUser = z.infer<typeof pamSessionUserSchema>;
 
-export const pamSessionResponseSchema = z.object({
-  user: pamSessionUserSchema.nullable(),
-  capabilities: pamSessionCapabilitiesSchema
-});
-
-export type PamSessionResponse = z.infer<typeof pamSessionResponseSchema>;
+/** GET /api/user/session — flat user or null (no { user, capabilities } wrap). */
+export type PamSessionResponse = PamSessionUser | null;
 
 export const pamPlatformAdminPatchSchema = z.object({
   enabled: z.boolean()
 });
+
+/** PATCH /api/admin/users/:userId/system-role */
+export const pamSystemRolePatchSchema = z.object({
+  systemRole: systemRoleSchema
+});
+
+export type PamSystemRolePatch = z.infer<typeof pamSystemRolePatchSchema>;
 
 export const pamBindEmailSendSchema = z.object({
   email: z.string().email()

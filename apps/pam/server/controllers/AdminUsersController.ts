@@ -1,8 +1,12 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
+import type { SystemRoleType } from '@shared/auth/systemRole';
 import { inject, injectable } from '@shared/container';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import type { PamAdminUserListItem, PamUserRow } from '@schemas/PamUserSchema';
-import { pamPlatformAdminPatchSchema } from '@schemas/PamUserSchema';
+import {
+  pamPlatformAdminPatchSchema,
+  pamSystemRolePatchSchema
+} from '@schemas/PamUserSchema';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { PamUserService } from '@server/services/PamUserService';
 
@@ -32,20 +36,34 @@ export class AdminUsersController {
     });
   }
 
+  /** @deprecated Prefer setSystemRole */
   public async setPlatformAdmin(
     targetUserId: string,
     body: unknown
   ): Promise<PamUserRow> {
+    const actor = await this.requireActorId();
+    const parsed = pamPlatformAdminPatchSchema.parse(body);
+    return this.pamUsers.setPlatformAdmin(targetUserId, parsed.enabled, actor);
+  }
+
+  public async setSystemRole(
+    targetUserId: string,
+    body: unknown
+  ): Promise<PamUserRow> {
+    const actor = await this.requireActorId();
+    const parsed = pamSystemRolePatchSchema.parse(body);
+    return this.pamUsers.setSystemRole(
+      targetUserId,
+      parsed.systemRole as SystemRoleType,
+      actor
+    );
+  }
+
+  protected async requireActorId(): Promise<string> {
     const actor = await this.oauthUserService.getSessionUser();
     if (!actor?.id) {
       throw new ExecutorError(API_NOT_AUTHORIZED, 'Not authorized');
     }
-
-    const parsed = pamPlatformAdminPatchSchema.parse(body);
-    return this.pamUsers.setPlatformAdmin(
-      targetUserId,
-      parsed.enabled,
-      actor.id
-    );
+    return actor.id;
   }
 }

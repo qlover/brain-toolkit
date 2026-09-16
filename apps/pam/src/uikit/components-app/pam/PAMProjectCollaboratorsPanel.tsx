@@ -10,6 +10,7 @@ import {
   prefetchTransferUsers
 } from '@/uikit/components-app/pam/PAMProjectTransferPicker';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
 import { I } from '@config/ioc-identifiter';
@@ -30,6 +31,7 @@ function RoleToggle({
   memberLabel,
   adminLabel,
   updatingLabel,
+  permissionKey,
   onChange
 }: {
   value: PAMProjectCollaboratorRole;
@@ -38,6 +40,7 @@ function RoleToggle({
   memberLabel: string;
   adminLabel: string;
   updatingLabel: string;
+  permissionKey?: string;
   onChange: (role: PAMProjectCollaboratorRole) => void;
 }) {
   const btnClass = (active: boolean) =>
@@ -50,7 +53,11 @@ function RoleToggle({
     );
 
   return (
-    <div data-testid="RoleToggle" className="inline-flex items-center gap-2">
+    <div
+      data-testid="RoleToggle"
+      data-permission={permissionKey}
+      className="inline-flex items-center gap-2"
+    >
       <div
         role="group"
         aria-label="role"
@@ -101,7 +108,11 @@ export function PAMProjectCollaboratorsPanel({
 }: PAMProjectCollaboratorsPanelProps) {
   const pamApi = useIOC(PAMApi);
   const dialog = useIOC(I.DialogHandler);
-  const { projectId, project, canManageCollaborators } = usePAMProjectDetail();
+  const { projectId, project, hasPermission } = usePAMProjectDetail();
+  const canCreate = hasPermission(PermissionKey.pam_collaborators_create);
+  const canUpdate = hasPermission(PermissionKey.pam_collaborators_update);
+  const canDelete = hasPermission(PermissionKey.pam_collaborators_delete);
+  const canRead = hasPermission(PermissionKey.pam_collaborators_read);
 
   const [items, setItems] = useState<PAMProjectCollaboratorItem[]>([]);
   const [initialLoading, setInitialLoading] = useState(false);
@@ -125,11 +136,11 @@ export function PAMProjectCollaboratorsPanel({
   }, [pamApi, projectId]);
 
   useEffect(() => {
-    if (!projectId || !project?.can_edit) {
+    if (!projectId || !canRead) {
       return;
     }
     void loadList();
-  }, [projectId, project?.can_edit, loadList]);
+  }, [projectId, canRead, loadList]);
 
   const warmUsersList = useCallback(() => {
     void prefetchTransferUsers(pamApi).then(setWarmUsers);
@@ -180,7 +191,7 @@ export function PAMProjectCollaboratorsPanel({
     ]
   );
 
-  if (!project?.can_edit) {
+  if (!canRead) {
     return null;
   }
 
@@ -234,7 +245,7 @@ export function PAMProjectCollaboratorsPanel({
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {canManageCollaborators ? (
+                    {canUpdate ? (
                       <RoleToggle
                         value={item.role}
                         busy={rowBusy}
@@ -242,6 +253,7 @@ export function PAMProjectCollaboratorsPanel({
                         memberLabel={tt.collabRoleMember}
                         adminLabel={tt.collabRoleAdmin}
                         updatingLabel={tt.collabRoleUpdating}
+                        permissionKey={PermissionKey.pam_collaborators_update}
                         onChange={(role) => {
                           void onRoleChange(item.user_id, role);
                         }}
@@ -253,9 +265,10 @@ export function PAMProjectCollaboratorsPanel({
                           : tt.collabRoleMember}
                       </span>
                     )}
-                    {canManageCollaborators ? (
+                    {canDelete ? (
                       <button
                         type="button"
+                        data-permission={PermissionKey.pam_collaborators_delete}
                         disabled={anyBusy}
                         className="text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
                         onClick={() => {
@@ -301,7 +314,7 @@ export function PAMProjectCollaboratorsPanel({
           </ul>
         )}
 
-        {canManageCollaborators ? (
+        {canCreate ? (
           <div className="flex flex-wrap items-center gap-2 border-t border-primary-border pt-3">
             <RoleToggle
               value={addRole}
@@ -314,6 +327,7 @@ export function PAMProjectCollaboratorsPanel({
             <button
               type="button"
               data-testid="PAMProjectCollaboratorsAddButton"
+              data-permission={PermissionKey.pam_collaborators_create}
               disabled={anyBusy}
               onMouseEnter={warmUsersList}
               onFocus={warmUsersList}
@@ -340,7 +354,7 @@ export function PAMProjectCollaboratorsPanel({
         loadingText={tt.transferLoading}
         emptyText={tt.transferEmpty}
         confirmText={tt.collabAdd}
-        projectName={project.name}
+        projectName={project?.name ?? ''}
         transferring={adding}
         initialUsers={warmUsers}
         onConfirm={async (user: PAMAuthUserSummary) => {

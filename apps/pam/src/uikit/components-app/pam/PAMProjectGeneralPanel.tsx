@@ -13,6 +13,7 @@ import { PAMApi } from '@/impls/appApi/PAMApi';
 import { PAMFacade } from '@/impls/PAMfacade';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMGeneralI18nInterface } from '@config/i18n-mapping/PAMGeneralI18n';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_PROJECT_GENERAL, ROUTE_PROJECTS } from '@config/route';
@@ -102,12 +103,21 @@ export function PAMProjectGeneralPanel({
     projectId,
     loading,
     error: loadError,
-    canEdit,
-    canManageCollaborators,
+    hasPermission,
     deleting,
     requestDeleteProject,
     setProject
   } = usePAMProjectDetail();
+
+  const canEdit = hasPermission(PermissionKey.pam_project_edit);
+  const canPreviewWrite = hasPermission(
+    PermissionKey.pam_project_preview_write
+  );
+  const canTransfer = hasPermission(PermissionKey.pam_project_transfer);
+  const canDelete = hasPermission(PermissionKey.pam_project_delete);
+  const canReadCollaborators = hasPermission(
+    PermissionKey.pam_collaborators_read
+  );
 
   const [savingField, setSavingField] = useState<GeneralFieldKeyType | null>(
     null
@@ -249,10 +259,11 @@ export function PAMProjectGeneralPanel({
                   tt.previewNoUrl}
               </span>
             </p>
-            {canEdit ? (
+            {canPreviewWrite ? (
               <button
                 type="button"
                 data-testid="PAMProjectPreviewCapture"
+                data-permission={PermissionKey.pam_project_preview_write}
                 disabled={
                   capturingPreview ||
                   !getPAMPrimaryUrl(project.environments, project.repo_url)
@@ -325,6 +336,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'name'}
         saveDisabled={!ready || name.trim() === '' || name === project.name}
         onSave={() => void saveField('name', { name: name.trim() })}
@@ -353,6 +365,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'slug'}
         saveDisabled={!ready || slug.trim() === '' || slug === project.slug}
         onSave={() => void saveField('slug', { slug: slug.trim() })}
@@ -382,6 +395,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'is_public'}
         saveDisabled={!ready || isPublic === project.is_public}
         onSave={() => void saveField('is_public', { is_public: isPublic })}
@@ -422,6 +436,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'category'}
         saveDisabled={!ready || category === (project.category ?? '')}
         onSave={() => void saveField('category', { category })}
@@ -450,6 +465,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'description'}
         saveDisabled={
           !ready || (description || '') === (project.description || '')
@@ -482,6 +498,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'stack'}
         saveDisabled={!ready || (stack || '') === (project.stack || '')}
         onSave={() => void saveField('stack', { stack: stack || '' })}
@@ -510,6 +527,7 @@ export function PAMProjectGeneralPanel({
         saveLabel={tt.settingsSave}
         savingLabel={tt.formSaveing}
         showSave={canEdit}
+        savePermission={PermissionKey.pam_project_edit}
         saving={savingField === 'repo_url'}
         saveDisabled={!ready || (repoUrl || '') === (project.repo_url || '')}
         onSave={() => void saveField('repo_url', { repo_url: repoUrl || '' })}
@@ -531,11 +549,11 @@ export function PAMProjectGeneralPanel({
         )}
       </PAMSettingsCard>
 
-      {project?.can_edit && ready ? (
+      {canReadCollaborators && ready ? (
         <PAMProjectCollaboratorsPanel tt={tt} />
       ) : null}
 
-      {canManageCollaborators && ready ? (
+      {canTransfer && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-transfer"
           title={tt.transferZoneTitle}
@@ -545,6 +563,7 @@ export function PAMProjectGeneralPanel({
           <button
             type="button"
             data-testid="PAMProjectGeneralTransferButton"
+            data-permission={PermissionKey.pam_project_transfer}
             disabled={transferring}
             onMouseEnter={warmTransferUsers}
             onFocus={warmTransferUsers}
@@ -590,7 +609,7 @@ export function PAMProjectGeneralPanel({
         </PAMSettingsCard>
       ) : null}
 
-      {canManageCollaborators && ready ? (
+      {canDelete && ready ? (
         <PAMSettingsCard
           testId="PAMSettingsCard-delete"
           title={tt.deleteZoneTitle}
@@ -600,6 +619,7 @@ export function PAMProjectGeneralPanel({
           <button
             type="button"
             data-testid="PAMProjectGeneralDeleteButton"
+            data-permission={PermissionKey.pam_project_delete}
             disabled={deleting}
             onClick={requestDeleteProject}
             className={clsx(

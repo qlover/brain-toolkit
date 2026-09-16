@@ -1,47 +1,20 @@
 'use client';
 
 import { useStrictEffect } from '@qlover/next-kit/client';
-import clsx from 'clsx';
 import { useCallback, useState } from 'react';
 import { AdminUsersApi } from '@/impls/appApi/AdminUsersApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
 import { useIOC } from '@/uikit/hook/useIOC';
+import { SystemRole, type SystemRoleType } from '@shared/auth/systemRole';
 import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { AdminUsersI18nInterface } from '@config/i18n-mapping/admin18n';
 import type { PamAdminUserListItem } from '@schemas/PamUserSchema';
 
-function ToggleSwitch({
-  checked,
-  disabled,
-  onChange
-}: {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <button
-      data-testid="AdminUsersToggleSwitch"
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={clsx(
-        'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200',
-        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-        checked ? 'bg-brand' : 'bg-elevated'
-      )}
-    >
-      <span
-        className={clsx(
-          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-          checked ? 'translate-x-5' : 'translate-x-0'
-        )}
-      />
-    </button>
-  );
-}
+const SYSTEM_ROLES: SystemRoleType[] = [
+  SystemRole.User,
+  SystemRole.Operator,
+  SystemRole.Admin
+];
 
 export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const adminUsersApi = useIOC(AdminUsersApi);
@@ -50,6 +23,15 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const [loading, setLoading] = useState(true);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const roleLabel = useCallback(
+    (role: SystemRoleType) => {
+      if (role === SystemRole.Admin) return tt.systemRoleAdmin;
+      if (role === SystemRole.Operator) return tt.systemRoleOperator;
+      return tt.systemRoleUser;
+    },
+    [tt.systemRoleAdmin, tt.systemRoleOperator, tt.systemRoleUser]
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,15 +52,24 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
     void load();
   }, [load]);
 
-  const handleToggle = useCallback(
-    async (row: PamAdminUserListItem, enabled: boolean) => {
+  const handleRoleChange = useCallback(
+    async (row: PamAdminUserListItem, systemRole: SystemRoleType) => {
+      if (row.systemRole === systemRole) {
+        return;
+      }
       setPendingId(row.id);
       setError(null);
       try {
-        await adminUsersApi.setPlatformAdmin(row.id, enabled);
+        await adminUsersApi.setSystemRole(row.id, systemRole);
         setRows((prev) =>
           prev.map((item) =>
-            item.id === row.id ? { ...item, isPlatformAdmin: enabled } : item
+            item.id === row.id
+              ? {
+                  ...item,
+                  systemRole,
+                  isPlatformAdmin: systemRole === SystemRole.Admin
+                }
+              : item
           )
         );
       } catch {
@@ -103,15 +94,26 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
         })
     },
     {
-      title: tt.platformAdminLabel,
-      key: 'isPlatformAdmin',
-      width: 160,
+      title: tt.systemRoleLabel,
+      key: 'systemRole',
+      width: 180,
       render: (_, row) => (
-        <ToggleSwitch
-          checked={row.isPlatformAdmin}
+        <select
+          data-testid="AdminUsersSystemRoleSelect"
+          value={row.systemRole}
           disabled={pendingId === row.id}
-          onChange={(enabled) => void handleToggle(row, enabled)}
-        />
+          onChange={(event) =>
+            void handleRoleChange(row, event.target.value as SystemRoleType)
+          }
+          className="w-full rounded-lg border border-primary-border bg-surface px-2 py-1.5 text-sm text-primary-text disabled:opacity-50"
+          aria-label={tt.systemRoleLabel}
+        >
+          {SYSTEM_ROLES.map((role) => (
+            <option data-testid="columns" key={role} value={role}>
+              {roleLabel(role)}
+            </option>
+          ))}
+        </select>
       )
     }
   ];
