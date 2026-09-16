@@ -621,18 +621,20 @@ export class PAMProjectRepo extends BaseRepository<
 
   /**
    * Minimal project row for read-access checks (admin).
+   * Accepts UUID or slug.
    */
   public async getProjectAccessAdmin(
     projectId: string
   ): Promise<Pick<
     PAMProjectRaw,
-    'id' | 'is_public' | 'owner_id' | 'team_id'
+    'id' | 'slug' | 'is_public' | 'owner_id' | 'team_id'
   > | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
+    const column = uuidSchema.safeParse(projectId).success ? 'id' : 'slug';
     const result = await admin
       .from(this.getRepoName())
-      .select('id,is_public,owner_id,team_id')
-      .eq('id', projectId)
+      .select('id,slug,is_public,owner_id,team_id')
+      .eq(column, projectId)
       .eq('is_deleted', DeleteStatus.UNDELETE)
       .maybeSingle();
 
@@ -640,7 +642,7 @@ export class PAMProjectRepo extends BaseRepository<
 
     return result.data as Pick<
       PAMProjectRaw,
-      'id' | 'is_public' | 'owner_id' | 'team_id'
+      'id' | 'slug' | 'is_public' | 'owner_id' | 'team_id'
     > | null;
   }
 

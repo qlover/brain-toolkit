@@ -1,7 +1,13 @@
+import {
+  isPlatformAdminRole,
+  type SystemRoleType
+} from '@shared/auth/systemRole';
+
 const CACHE_TTL_MS = 30_000;
 
 type CacheEntry = {
   value: boolean;
+  systemRole?: SystemRoleType;
   expires: number;
 };
 
@@ -21,10 +27,36 @@ export function getPlatformAdminCache(userId: string): boolean | undefined {
 
 export function setPlatformAdminCache(
   userId: string,
-  isPlatformAdmin: boolean
+  isPlatformAdmin: boolean,
+  systemRole?: SystemRoleType
 ): void {
+  const prev = cache.get(userId);
   cache.set(userId, {
     value: isPlatformAdmin,
+    systemRole: systemRole ?? prev?.systemRole,
+    expires: Date.now() + CACHE_TTL_MS
+  });
+}
+
+export function getSystemRoleCache(userId: string): SystemRoleType | undefined {
+  const entry = cache.get(userId);
+  if (!entry) {
+    return undefined;
+  }
+  if (entry.expires <= Date.now()) {
+    cache.delete(userId);
+    return undefined;
+  }
+  return entry.systemRole;
+}
+
+export function setSystemRoleCache(
+  userId: string,
+  systemRole: SystemRoleType
+): void {
+  cache.set(userId, {
+    value: isPlatformAdminRole(systemRole),
+    systemRole,
     expires: Date.now() + CACHE_TTL_MS
   });
 }

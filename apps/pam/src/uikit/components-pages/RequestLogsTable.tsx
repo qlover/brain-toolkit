@@ -6,6 +6,7 @@ import {
   type TableColumn,
   type TablePaginationConfig
 } from '@/uikit/components/Table';
+import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import type { AdminRequestLogsI18nInterface } from '@config/i18n-mapping/admin18n';
 import type { RequestLogRow } from '@qlover/next-kit/common';
 
@@ -155,7 +156,9 @@ export function RequestLogsTable(props: {
     }
   ];
 
-  return (
+  return loading && rows.length === 0 ? (
+    <AdminPanelLoading testId="AdminRequestLogsLoading" />
+  ) : (
     <Table<RequestLogRow>
       rowKey="id"
       columns={columns}

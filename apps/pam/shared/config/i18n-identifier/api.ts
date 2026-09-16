@@ -325,3 +325,11 @@ export const API_BIND_EMAIL_PHONE_CONFLICT = 'api:bind_email_phone_conflict';
  * @localEn Cannot bind email to the same account
  */
 export const API_BIND_EMAIL_SAME_USER = 'api:bind_email_same_user';
+
+/**
+ * @description Admin cannot change their own system role
+ * @localZh 不能修改自己的系统角色
+ * @localEn You cannot change your own system role
+ */
+export const API_ADMIN_USERS_CANNOT_CHANGE_SELF =
+  'api:admin_users_cannot_change_self';

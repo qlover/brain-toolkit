@@ -342,3 +342,25 @@ export const ADMIN_USERS_SEARCH_PLACEHOLDER = 'admin_users:search__placeholder';
  * @localEn No users found
  */
 export const ADMIN_USERS_EMPTY = 'admin_users:empty';
+
+/**
+ * @description Current user row — system role is read-only
+ * @localZh 不能修改自己的系统角色
+ * @localEn You cannot change your own system role
+ */
+export const ADMIN_USERS_CANNOT_CHANGE_SELF = 'admin_users:cannot_change_self';
+
+/**
+ * @description Marker for the signed-in user in the admin users table
+ * @localZh 我
+ * @localEn You
+ */
+export const ADMIN_USERS_YOU = 'admin_users:you';
+
+/**
+ * @description System role select disabled — super-admin only
+ * @localZh 仅超级管理员可修改系统角色
+ * @localEn Only super admins can change system roles
+ */
+export const ADMIN_USERS_ROLE_CHANGE_FORBIDDEN =
+  'admin_users:role_change_forbidden';

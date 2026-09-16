@@ -6,11 +6,7 @@ import {
   PlusIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
-import {
-  Loading,
-  useStrictEffect,
-  usePageI18nMapping
-} from '@qlover/next-kit/client';
+import { useStrictEffect, usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, {
   useCallback,
@@ -21,6 +17,7 @@ import React, {
 } from 'react';
 import { v4 as uuid } from 'uuid';
 import { PAMApi } from '@/impls/appApi/PAMApi';
+import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
@@ -388,7 +385,7 @@ export function PAMProjectEnvironmentsPanel({
         data-testid="PAMProjectEnvironmentsPanel"
         className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-primary-border bg-secondary py-10"
       >
-        <Loading />
+        <PamLoadingIndicator />
         <span className="text-sm text-tertiary-text">{tt.loadingText}</span>
       </div>
     );

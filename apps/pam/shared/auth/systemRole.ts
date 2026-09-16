@@ -45,6 +45,31 @@ export function hasSystemPermission(
   return expandSystemPermissions(role).includes(permissionKey);
 }
 
+/**
+ * Resolve a platform permission from the cookie/JWT session when present.
+ * `null` means the session is too thin — caller should hit DB.
+ */
+export function sessionHasSystemPermission(
+  user: unknown,
+  permissionKey: string
+): boolean | null {
+  if (!user || typeof user !== 'object') {
+    return null;
+  }
+  const rec = user as Record<string, unknown>;
+  const permissions = rec.permissions;
+  if (Array.isArray(permissions) && permissions.length > 0) {
+    return permissions.includes(permissionKey);
+  }
+  if (typeof rec.system_role === 'string' && rec.system_role.length > 0) {
+    return hasSystemPermission(
+      normalizeSystemRole(rec.system_role),
+      permissionKey
+    );
+  }
+  return null;
+}
+
 /** /admin gate: operator or admin (has admin_site_settings_read). */
 export function isPlatformAdminRole(role: SystemRoleType): boolean {
   return hasSystemPermission(role, SYSTEM_ADMIN_GATE_KEY);

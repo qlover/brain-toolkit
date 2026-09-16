@@ -38,8 +38,8 @@ export interface AdminLayoutProps {
   collapsedSidebar?: boolean;
   /** Called when sidebar toggle is clicked (optional; uses internal state if not provided) */
   onToggleSidebar?: () => void;
-  /** Header title and i18n */
-  seoMetadata: PageI18nInterface;
+  /** Document title / SEO; optional when a parent shell owns chrome only */
+  seoMetadata?: PageI18nInterface;
   /** Extra class for the root container */
   className?: string;
 }
@@ -149,7 +149,7 @@ export function AdminLayout({
       data-testid="AdminLayout"
       className={clsx('flex min-h-screen flex-col bg-primary', className)}
     >
-      <ClientSeo i18nInterface={seoMetadata} />
+      {seoMetadata ? <ClientSeo i18nInterface={seoMetadata} /> : null}
       <header
         data-testid="AdminLayoutHeader"
         className="sticky top-0 z-50 shrink-0 border-b border-primary-border bg-secondary/90 backdrop-blur-md"

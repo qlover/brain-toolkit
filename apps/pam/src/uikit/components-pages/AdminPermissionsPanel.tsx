@@ -4,6 +4,7 @@ import { useStrictEffect } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { useCallback, useMemo, useState } from 'react';
 import { AdminPermissionsApi } from '@/impls/appApi/AdminPermissionsApi';
+import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useCan, PermissionKey } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
@@ -159,14 +160,7 @@ export function AdminPermissionsPanel({
   };
 
   if (authLoading || loading) {
-    return (
-      <p
-        className="text-sm text-secondary-text"
-        data-testid="AdminPermissionsLoading"
-      >
-        …
-      </p>
-    );
+    return <AdminPanelLoading testId="AdminPermissionsLoading" />;
   }
 
   if (!canRead) {
