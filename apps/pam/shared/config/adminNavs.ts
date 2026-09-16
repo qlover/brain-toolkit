@@ -1,6 +1,7 @@
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import {
   COMMON_ADMIN_NAV_DASHBOARD,
+  COMMON_ADMIN_NAV_LOCALES,
   COMMON_ADMIN_NAV_PERMISSIONS,
   COMMON_ADMIN_NAV_PHONE_OTPS,
   COMMON_ADMIN_NAV_REQUEST_LOGS,
@@ -9,6 +10,7 @@ import {
   COMMON_ADMIN_NAV_USER_MANAGEMENT
 } from '@config/i18n-identifier/common/common';
 import {
+  ROUTE_ADMIN_LOCALES,
   ROUTE_ADMIN_PERMISSIONS,
   ROUTE_ADMIN_PHONE_OTPS,
   ROUTE_ADMIN_ROLES,
@@ -23,7 +25,8 @@ export type NavItemPaths =
   | 'admin/permissions'
   | 'admin/phone-otps'
   | 'admin/request-logs'
-  | 'admin/settings';
+  | 'admin/settings'
+  | 'admin/locales';
 
 export interface NavItemInterface {
   key: string;
@@ -64,6 +67,12 @@ export const defaultNavItems: NavItemInterface[] = [
     key: 'request-logs',
     i18nKey: COMMON_ADMIN_NAV_REQUEST_LOGS,
     pathname: ROUTE_REQUEST_LOGS
+  },
+  {
+    key: 'locales',
+    i18nKey: COMMON_ADMIN_NAV_LOCALES,
+    pathname: ROUTE_ADMIN_LOCALES,
+    permissionKey: PermissionKey.admin_locales_read
   },
   {
     key: 'settings',

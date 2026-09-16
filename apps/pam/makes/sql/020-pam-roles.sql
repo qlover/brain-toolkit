@@ -105,6 +105,8 @@ INSERT INTO public.pam_role_permissions (permission_key, type, method, path, des
   ('admin_phone_otps_read', 'api', 'get', '/api/admin/phone-otps', 'List phone OTP records'),
   ('admin_site_settings_read', 'api', 'get', '/api/admin/site-settings', 'Read site settings'),
   ('admin_site_settings_write', 'api', 'patch', '/api/admin/site-settings', 'Update site settings'),
+  ('admin_locales_read', 'api', 'get', '/api/admin/locales', 'List locale dictionary rows'),
+  ('admin_locales_write', 'api', 'post', '/api/admin/locales', 'Create / update / import locales'),
   ('pam_collaborators_read', 'api', 'get', '/api/pam/:projectId/collaborators', 'List project collaborators'),
   ('pam_collaborators_create', 'api', 'post', '/api/pam/:projectId/collaborators', 'Add project collaborator'),
   ('pam_collaborators_update', 'api', 'patch', '/api/pam/:projectId/collaborators/:userId', 'Update collaborator role'),
@@ -156,7 +158,8 @@ JOIN (VALUES
   ('admin_roles_read'),
   ('admin_request_logs_read'),
   ('admin_phone_otps_read'),
-  ('admin_site_settings_read')
+  ('admin_site_settings_read'),
+  ('admin_locales_read')
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'operator';
 
@@ -178,7 +181,9 @@ JOIN (VALUES
   ('admin_request_logs_read'),
   ('admin_phone_otps_read'),
   ('admin_site_settings_read'),
-  ('admin_site_settings_write')
+  ('admin_site_settings_write'),
+  ('admin_locales_read'),
+  ('admin_locales_write')
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'admin';
 

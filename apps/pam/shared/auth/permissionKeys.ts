@@ -23,6 +23,8 @@ export const PermissionKey = {
   admin_phone_otps_read: 'admin_phone_otps_read',
   admin_site_settings_read: 'admin_site_settings_read',
   admin_site_settings_write: 'admin_site_settings_write',
+  admin_locales_read: 'admin_locales_read',
+  admin_locales_write: 'admin_locales_write',
 
   // —— platform app ——
   pam_project_create: 'pam_project_create',

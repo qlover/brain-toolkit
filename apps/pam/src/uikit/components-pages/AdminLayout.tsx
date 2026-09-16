@@ -7,6 +7,7 @@ import {
   DevicePhoneMobileIcon,
   DocumentTextIcon,
   KeyIcon,
+  LanguageIcon,
   UsersIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
@@ -53,6 +54,7 @@ const NAV_ICONS: Record<string, NavIcon> = {
   permissions: KeyIcon,
   'phone-otps': DevicePhoneMobileIcon,
   'request-logs': DocumentTextIcon,
+  locales: LanguageIcon,
   settings: Cog6ToothIcon
 };
 

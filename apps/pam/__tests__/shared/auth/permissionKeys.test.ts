@@ -109,18 +109,18 @@ describe('role permission maps', () => {
     expect(flags.permissions).toEqual([...perms]);
   });
 
-  it('only platform admin role gets permission catalog management', () => {
+  it('grants locales read to operator and write to admin only', () => {
     expect(
-      hasSystemPermission('admin', PermissionKey.admin_permissions_read)
+      hasSystemPermission('operator', PermissionKey.admin_locales_read)
     ).toBe(true);
     expect(
-      hasSystemPermission('admin', PermissionKey.admin_permissions_write)
+      hasSystemPermission('operator', PermissionKey.admin_locales_write)
+    ).toBe(false);
+    expect(hasSystemPermission('admin', PermissionKey.admin_locales_read)).toBe(
+      true
+    );
+    expect(
+      hasSystemPermission('admin', PermissionKey.admin_locales_write)
     ).toBe(true);
-    expect(
-      hasSystemPermission('operator', PermissionKey.admin_permissions_read)
-    ).toBe(false);
-    expect(
-      hasSystemPermission('operator', PermissionKey.admin_permissions_write)
-    ).toBe(false);
   });
 });
