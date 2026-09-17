@@ -1,0 +1,29 @@
+---
+description: PAM 客户端异步操作用 AsyncStore，勿手写 loading/error 套件
+globs: apps/pam/src/uikit/**/*.{ts,tsx},apps/pam/src/impls/**/*.ts
+alwaysApply: false
+---
+
+# PAM AsyncStore
+
+异步操作生命周期用 `@qlover/corekit-bridge` 的 **`AsyncStore`**（`loading` / `error` / `status` / `result`）。
+
+面板内：`useAsyncStore` + `runAsyncStore` + `useAsyncStoreState`（见 `apps/pam/src/uikit/hook/useAsyncStore.ts`）。
+
+## 必须
+
+- **一操作一 store**（list / save / import 分开）。
+- 面板内：`const [state, store] = useAsyncStore(...)` / `usePendingAsyncStore(...)`（列表首屏）。
+- 对象 patch 合并进 `defaultState`，或传子类 Ctor；不接受 factory 函数。
+- 已有 IOC store：`useAsyncStoreState(store)`（可选 selector / omit）。
+- `runAsyncStore(store, promise | () => promise, { keep?, mapError? })`：失败写 `error` 并返回 `undefined`，不抛。
+
+## 不要
+
+- 弹窗 / draft / 编辑 mode 用 AsyncStore。
+- 在 `useCan` / `useUserAuth` 上再叠一层 loading store。
+- list+save 揉进同一个 store 的多个 boolean。
+- `useAsyncStore<Item[]>`（应 `useAsyncStore<AsyncState<Item[]>>`）。
+- 对同一 store 连写多行 selector 只取 `loading` / `error` / `result`。
+
+详见 `apps/pam/docs/async-store.md`。

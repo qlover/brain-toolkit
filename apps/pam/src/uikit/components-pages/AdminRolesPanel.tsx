@@ -5,6 +5,13 @@ import { clsx } from 'clsx';
 import { useCallback, useMemo, useState } from 'react';
 import { AdminRolesApi } from '@/impls/appApi/AdminRolesApi';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import {
@@ -30,6 +37,10 @@ const TEAM_ORDER = [
   TeamRoleKey.Admin,
   TeamRoleKey.Member
 ] as const;
+
+type RoleSaveState = AsyncState<PamAdminRolesResponse> & {
+  targetId: string | null;
+};
 
 function sortByKeyOrder(
   roles: PamAdminRoleItem[],
@@ -61,13 +72,17 @@ function catalogForRoleKind(
 export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
   const adminRolesApi = useIOC(AdminRolesApi);
   const t = useWarnTranslations();
-  const [data, setData] = useState<PamAdminRolesResponse | null>(null);
   const [draft, setDraft] = useState<Record<string, string[]>>({});
-  const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>('');
+
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<PamAdminRolesResponse>>();
+  const [save, saveStore] = useAsyncStore<RoleSaveState>({ targetId: null });
+  const data = list.result;
+  const loading = list.loading;
+  const savingId = save.targetId;
+  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(save.error);
 
   const roleLabel = useCallback(
     (role: PamAdminRoleItem) => {
@@ -107,35 +122,36 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
     [t]
   );
 
-  const applyResponse = useCallback((next: PamAdminRolesResponse) => {
-    setData(next);
-    const nextDraft: Record<string, string[]> = {};
-    for (const role of next.roles ?? []) {
-      nextDraft[role.id] = [...role.permissionKeys];
-    }
-    setDraft(nextDraft);
-    setSelectedId((prev) => {
-      if (prev && next.roles?.some((r) => r.id === prev)) return prev;
-      const admin =
-        next.roles?.find((r) => r.key === PlatformRoleKey.Admin) ??
-        next.roles?.[0];
-      return admin?.id ?? '';
-    });
-  }, []);
+  const applyResponse = useCallback(
+    (next: PamAdminRolesResponse) => {
+      listStore.success(next);
+      const nextDraft: Record<string, string[]> = {};
+      for (const role of next.roles ?? []) {
+        nextDraft[role.id] = [...role.permissionKeys];
+      }
+      setDraft(nextDraft);
+      setSelectedId((prev) => {
+        if (prev && next.roles?.some((r) => r.id === prev)) return prev;
+        const admin =
+          next.roles?.find((r) => r.key === PlatformRoleKey.Admin) ??
+          next.roles?.[0];
+        return admin?.id ?? '';
+      });
+    },
+    [listStore]
+  );
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     setSuccess(null);
-    try {
-      const next = await adminRolesApi.list();
-      applyResponse(next);
-    } catch {
-      setError(tt.loadFailed);
-    } finally {
-      setLoading(false);
+    const next = await runAsyncStore(listStore, adminRolesApi.list(), {
+      keep: true,
+      mapError: () => tt.loadFailed
+    });
+    if (next === undefined) {
+      return;
     }
-  }, [adminRolesApi, applyResponse, tt.loadFailed]);
+    applyResponse(next);
+  }, [adminRolesApi, applyResponse, listStore, tt.loadFailed]);
 
   useStrictEffect(() => {
     void load();
@@ -216,20 +232,24 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
   };
 
   const handleSave = async (role: PamAdminRoleItem) => {
-    setSavingId(role.id);
-    setError(null);
+    saveStore.emit({ targetId: role.id });
     setSuccess(null);
     try {
-      const next = await adminRolesApi.replaceAssignments({
-        roleId: role.id,
-        permissionKeys: draft[role.id] ?? []
-      });
+      const next = await runAsyncStore(
+        saveStore,
+        adminRolesApi.replaceAssignments({
+          roleId: role.id,
+          permissionKeys: draft[role.id] ?? []
+        }),
+        { mapError: () => tt.saveFailed }
+      );
+      if (next === undefined) {
+        return;
+      }
       applyResponse(next);
       setSuccess(tt.saveSuccess);
-    } catch {
-      setError(tt.saveFailed);
     } finally {
-      setSavingId(null);
+      saveStore.emit({ targetId: null });
     }
   };
 

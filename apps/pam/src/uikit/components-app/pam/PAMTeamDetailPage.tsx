@@ -13,6 +13,12 @@ import {
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { ResponsiveModal } from '@/uikit/components/ResponsiveModal';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
@@ -41,9 +47,8 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const router = useRouter();
   const teamsApi = useIOC(PamTeamsApi);
   const pamApi = useIOC(PAMApi);
-  const [detail, setDetail] = useState<PamTeamDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [detailState, detailStore] =
+    usePendingAsyncStore<AsyncState<PamTeamDetail>>();
   const [success, setSuccess] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [memberBusy, setMemberBusy] = useState(false);
@@ -55,6 +60,10 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const [attaching, setAttaching] = useState(false);
   const [dissolveOpen, setDissolveOpen] = useState(false);
   const [dissolving, setDissolving] = useState(false);
+
+  const detail = detailState.result;
+  const loading = detailState.loading;
+  const error = asyncErrorMessage(detailState.error);
 
   const permissions = detail?.permissions ?? [];
   const canAddMember = permissions.includes(
@@ -84,28 +93,28 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
 
   const patchMembers = useCallback(
     (updater: (members: PamTeamMemberItem[]) => PamTeamMemberItem[]) => {
-      setDetail((prev) =>
-        prev ? { ...prev, members: updater(prev.members ?? []) } : prev
-      );
+      const current = detailStore.getResult();
+      if (!current) return;
+      detailStore.success({
+        ...current,
+        members: updater(current.members ?? [])
+      });
     },
-    []
+    [detailStore]
   );
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const next = await teamsApi.detail(teamId);
-      setDetail(next);
-      await loadAttachedProjects();
-    } catch {
-      setError(tt.error);
-      setDetail(null);
+    setSuccess(null);
+    const next = await runAsyncStore(detailStore, teamsApi.detail(teamId), {
+      keep: true,
+      mapError: () => tt.error
+    });
+    if (next === undefined) {
       setAttachedProjects([]);
-    } finally {
-      setLoading(false);
+      return;
     }
-  }, [loadAttachedProjects, teamId, teamsApi, tt.error]);
+    await loadAttachedProjects();
+  }, [detailStore, loadAttachedProjects, teamId, teamsApi, tt.error]);
 
   useStrictEffect(() => {
     void load();
@@ -132,7 +141,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const handleAddMember = async (user: { id: string }) => {
     if (memberBusy) return;
     setMemberBusy(true);
-    setError(null);
+    detailStore.emit({ error: null });
     try {
       const member = await teamsApi.addMember(teamId, {
         user_id: user.id,
@@ -145,7 +154,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
           : [...members, member]
       );
     } catch {
-      setError(tt.error);
+      detailStore.failed(tt.error);
     } finally {
       setMemberBusy(false);
     }
@@ -159,7 +168,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
       return;
     }
     setMemberBusy(true);
-    setError(null);
+    detailStore.emit({ error: null });
     try {
       const updated = await teamsApi.updateMember(teamId, member.user_id, {
         role
@@ -168,7 +177,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
         members.map((m) => (m.user_id === updated.user_id ? updated : m))
       );
     } catch {
-      setError(tt.error);
+      detailStore.failed(tt.error);
     } finally {
       setMemberBusy(false);
     }
@@ -177,14 +186,14 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const handleRemove = async (member: PamTeamMemberItem) => {
     if (!canRemoveMember || member.role === 'owner') return;
     setMemberBusy(true);
-    setError(null);
+    detailStore.emit({ error: null });
     try {
       await teamsApi.removeMember(teamId, member.user_id);
       patchMembers((members) =>
         members.filter((m) => m.user_id !== member.user_id)
       );
     } catch {
-      setError(tt.error);
+      detailStore.failed(tt.error);
     } finally {
       setMemberBusy(false);
     }
@@ -195,7 +204,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
     const projectId = attachProjectId;
     const candidate = ownedProjects.find((p) => p.id === projectId);
     setAttaching(true);
-    setError(null);
+    detailStore.emit({ error: null });
     setSuccess(null);
     try {
       await teamsApi.attachProject(teamId, { project_id: projectId });
@@ -221,7 +230,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
         await loadAttachedProjects();
       }
     } catch {
-      setError(tt.error);
+      detailStore.failed(tt.error);
     } finally {
       setAttaching(false);
     }
@@ -230,13 +239,13 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const handleDissolve = async () => {
     if (!canDissolve || dissolving) return;
     setDissolving(true);
-    setError(null);
+    detailStore.emit({ error: null });
     try {
       await teamsApi.dissolve(teamId);
       setDissolveOpen(false);
       router.push(ROUTE_TEAMS);
     } catch {
-      setError(tt.error);
+      detailStore.failed(tt.error);
       setDissolving(false);
     }
   };

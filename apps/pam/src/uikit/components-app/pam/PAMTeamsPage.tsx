@@ -11,6 +11,13 @@ import {
 } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { ResponsiveModal } from '@/uikit/components/ResponsiveModal';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { PermissionKey, useCan } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { PAMTeamsI18nInterface } from '@config/i18n-mapping/PAMTeamsI18n';
@@ -27,25 +34,25 @@ export function PAMTeamsPage() {
   const tt = usePageI18nMapping<PAMTeamsI18nInterface>();
   const teamsApi = useIOC(PamTeamsApi);
   const { allowed: canCreate } = useCan(PermissionKey.pam_teams_create);
-  const [teams, setTeams] = useState<PamTeamListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<PamTeamListItem[]>>();
+  const [create, createStore] = useAsyncStore<AsyncState<PamTeamListItem>>();
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [saving, setSaving] = useState(false);
+
+  const teams = useMemo(() => list.result ?? [], [list.result]);
+  const loading = list.loading;
+  const saving = create.loading;
+  const error =
+    asyncErrorMessage(list.error) ?? asyncErrorMessage(create.error);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setTeams(await teamsApi.listMine());
-    } catch {
-      setError(tt.error);
-    } finally {
-      setLoading(false);
-    }
-  }, [teamsApi, tt.error]);
+    await runAsyncStore(listStore, teamsApi.listMine(), {
+      keep: true,
+      mapError: () => tt.error
+    });
+  }, [listStore, teamsApi, tt.error]);
 
   useStrictEffect(() => {
     void load();
@@ -63,34 +70,33 @@ export function PAMTeamsPage() {
   const handleCreate = async () => {
     const trimmed = name.trim();
     if (!trimmed || saving) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const created = await teamsApi.create({
+    listStore.emit({ error: null });
+    const created = await runAsyncStore(
+      createStore,
+      teamsApi.create({
         name: trimmed,
         slug: slug.trim() || undefined
-      });
-      setCreateOpen(false);
-      setName('');
-      setSlug('');
-      setTeams((prev) => {
-        if (prev.some((t) => t.id === created.id)) {
-          return prev;
-        }
-        return [
-          {
-            ...created,
-            my_role: created.my_role === 'none' ? 'owner' : created.my_role,
-            permissions: created.permissions
-          },
-          ...prev
-        ];
-      });
-    } catch {
-      setError(tt.error);
-    } finally {
-      setSaving(false);
+      }),
+      { mapError: () => tt.error }
+    );
+    if (created === undefined) {
+      return;
     }
+    setCreateOpen(false);
+    setName('');
+    setSlug('');
+    const current = listStore.getResult() ?? [];
+    if (current.some((t) => t.id === created.id)) {
+      return;
+    }
+    listStore.success([
+      {
+        ...created,
+        my_role: created.my_role === 'none' ? 'owner' : created.my_role,
+        permissions: created.permissions
+      },
+      ...current
+    ]);
   };
 
   const renderTeamCard = (team: PamTeamListItem) => {

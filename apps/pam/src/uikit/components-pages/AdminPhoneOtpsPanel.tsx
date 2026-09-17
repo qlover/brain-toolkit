@@ -5,6 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { AdminPhoneOtpsApi } from '@/impls/appApi/AdminPhoneOtpsApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminPhoneOtpsI18nInterface } from '@config/i18n-mapping/admin18n';
 import type { PamPhoneOtpAdminItem } from '@schemas/PamPhoneOtpSchema';
@@ -28,28 +34,28 @@ export function AdminPhoneOtpsPanel({
   tt: AdminPhoneOtpsI18nInterface;
 }) {
   const api = useIOC(AdminPhoneOtpsApi);
-  const [rows, setRows] = useState<PamPhoneOtpAdminItem[]>([]);
   const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<PamPhoneOtpAdminItem[]>>();
+  const rows = list.result ?? [];
+  const loading = list.loading;
+  const error = asyncErrorMessage(list.error);
 
   const load = useCallback(async () => {
-    setError(null);
-    try {
-      const items = await api.list({
+    await runAsyncStore(
+      listStore,
+      api.list({
         phone: phone.trim() || undefined,
         limit: 80
-      });
-      setRows(items);
-    } catch {
-      setError(tt.description);
-    } finally {
-      setLoading(false);
-    }
-  }, [api, phone, tt.description]);
+      }),
+      {
+        keep: true,
+        mapError: () => tt.description
+      }
+    );
+  }, [api, listStore, phone, tt.description]);
 
   useStrictEffect(() => {
-    setLoading(true);
     void load();
   }, [load]);
 
@@ -129,10 +135,7 @@ export function AdminPhoneOtpsPanel({
         />
         <button
           type="button"
-          onClick={() => {
-            setLoading(true);
-            void load();
-          }}
+          onClick={() => void load()}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-on-brand"
         >
           {tt.refresh}
