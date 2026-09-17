@@ -17,7 +17,7 @@ interface CounterState {
 
 class CounterStore extends SliceStoreAdapter<CounterState> {
   constructor() {
-    super(() => ({
+    super((): CounterState => ({
       count: 0,
       lastUpdated: Date.now()
     }));
