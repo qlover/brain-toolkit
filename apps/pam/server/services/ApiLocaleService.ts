@@ -66,10 +66,21 @@ export class ApiLocaleService {
   protected async loadStaticLocaleJson(
     localeName: string
   ): Promise<Record<string, string>> {
-    if (localeName === 'zh') {
-      return (await import('@locales/zh.json')).default;
+    if (!i18nConfig.supportedLngs.includes(localeName as LocaleType)) {
+      return {};
     }
-    return (await import('@locales/en.json')).default;
+
+    // Static imports keep the bundler able to resolve locale JSON modules.
+    const loaders: Record<
+      LocaleType,
+      () => Promise<{ default: Record<string, string> }>
+    > = {
+      en: () => import('@locales/en.json'),
+      zh: () => import('@locales/zh.json')
+    };
+
+    const mod = await loaders[localeName as LocaleType]();
+    return mod.default;
   }
 
   public async getLocales(
