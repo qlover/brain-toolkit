@@ -1,5 +1,37 @@
 # @brain-toolkit/react-kit
 
+## 0.5.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **react-kit:** useStore 改 ReadableStore，并迁出 next-kit 引用 ([8e100de](https://github.com/qlover/brain-toolkit/commit/8e100de477dffe97335d2e04e0a666ecb3f028a8)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  避免与 pam 双份 corekit-bridge 类型冲突；corekit 相关改为 peer。
+  pam / brain-oauth 的 useStore 统一从 @brain-toolkit/react-kit 导入。
+
+- **react-kit:** workspace 导出源码，修复 Next 找不到模块 ([24ed42e](https://github.com/qlover/brain-toolkit/commit/24ed42e035b28b8d06dd650cf1d154d4cb82a8a7)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  monorepo / CI 未先 build dist 时，指向 src + transpilePackages；
+  publishConfig 仍发 dist。nx build 增加 dependsOn ^build。
+
+- **react-kit:** 修复 type-check 中 StoreExample 与 ts-build 报错 ([82aeddf](https://github.com/qlover/brain-toolkit/commit/82aeddf4b78646c68c259d9fe9e8edb46614092e)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  TodoStore 显式标注 TodoState；example 移出 composite include，
+  并排除 packages/\*\*/example，避免 TS6305。
+
+- **react-kit:** 为 example 补 tsconfig，并排除类型感知 lint ([b870ea2](https://github.com/qlover/brain-toolkit/commit/b870ea293845a13e86abfd368b438db633138e7f)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  避免 projectService 找不到 example；type-check / eslint 本地已过。
+
+#### ♻️ Refactors
+
+- **react-kit:** 迁入 useAsyncStore 并用 next-kit 风格重写 useStore ([116fdad](https://github.com/qlover/brain-toolkit/commit/116fdad53533f6d9924cf05147be3a74c8fba0d1)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  将 pam 面板本地 hook 提升到 @brain-toolkit/react-kit；useStore 改为
+  useSyncExternalStore + StoreInterface；pam 改为 workspace 依赖并 transpile。
+
 ## 0.3.0
 
 ### Minor Changes
