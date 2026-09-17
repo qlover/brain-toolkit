@@ -35,6 +35,21 @@ import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 const OTP_TTL_MS = 5 * 60_000;
 
+/**
+ * Auth admin getUserById returns an error when the user id does not exist;
+ * that is not a transport failure and callers may soft-handle it.
+ */
+function isAuthUserMissingError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const err = error as { status?: number; code?: string; message?: string };
+  if (err.status === 404 || err.code === 'user_not_found') {
+    return true;
+  }
+  return /user not found/i.test(String(err.message ?? ''));
+}
+
 function normalizePhoneE164(raw: string): string {
   const trimmed = raw.trim().replace(/[\s-]/g, '');
   if (!trimmed) {
@@ -243,6 +258,9 @@ export class PhoneOtpService {
     if (existingPam) {
       const admin = await this.supabaseBridge.getAdminSupabase();
       const authUser = await admin.auth.admin.getUserById(existingPam.id);
+      if (authUser.error && !isAuthUserMissingError(authUser.error)) {
+        this.supabaseBridge.throwIfError(authUser);
+      }
       const mintEmail = authUser.data.user?.email?.trim() || authEmail;
       return {
         id: existingPam.id,
@@ -281,7 +299,10 @@ export class PhoneOtpService {
       phone,
       error: created.error
     });
-    throw new Error(created.error?.message || 'Failed to create phone user');
+    if (created.error) {
+      this.supabaseBridge.throwIfError(created);
+    }
+    throw new Error('Failed to create phone user');
   }
 
   protected async findAuthUserByEmailOrPhone(
@@ -293,6 +314,7 @@ export class PhoneOtpService {
 
     for (let page = 1; page <= 5; page += 1) {
       const listed = await admin.auth.admin.listUsers({ page, perPage: 200 });
+      this.supabaseBridge.throwIfError(listed);
       const users = listed.data?.users ?? [];
       const match = users.find((user) => {
         const userPhone = (user.phone ?? '').replace(/\D/g, '');

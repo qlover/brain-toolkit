@@ -10,10 +10,8 @@ import {
   isPhonePlaceholderEmail,
   toBusinessEmail
 } from '@shared/utils/pamUserIdentity';
-import { I } from '@config/ioc-identifiter';
 import type { PamUserRow } from '@schemas/PamUserSchema';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
-import type { LoggerInterface } from '@qlover/logger';
 
 const TABLE = 'pam_users';
 
@@ -31,41 +29,31 @@ export class PamUsersRepo {
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
     @inject(PamRolePermissionsRepo)
-    protected readonly roles: PamRolePermissionsRepo,
-    @inject(I.Logger)
-    protected readonly logger: LoggerInterface
+    protected readonly roles: PamRolePermissionsRepo
   ) {}
 
   public async findById(id: string): Promise<PamUserRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('id', id)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.findById failed', { error, id });
-      throw new Error(error.message);
-    }
-
-    return (data as PamUserRow | null) ?? null;
+    return (result.data as PamUserRow | null) ?? null;
   }
 
   public async findByPhone(phone: string): Promise<PamUserRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('phone', phone)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.findByPhone failed', { error, phone });
-      throw new Error(error.message);
-    }
-
-    return (data as PamUserRow | null) ?? null;
+    return (result.data as PamUserRow | null) ?? null;
   }
 
   public async findByEmail(email: string): Promise<PamUserRow | null> {
@@ -75,21 +63,14 @@ export class PamUsersRepo {
     }
 
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .ilike('email', normalized)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.findByEmail failed', {
-        error,
-        email: normalized
-      });
-      throw new Error(error.message);
-    }
-
-    return (data as PamUserRow | null) ?? null;
+    return (result.data as PamUserRow | null) ?? null;
   }
 
   /**
@@ -112,7 +93,7 @@ export class PamUsersRepo {
       const nextPhone =
         input.phone !== undefined ? input.phone : (existing.phone ?? null);
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from(TABLE)
         .update({
           email: nextEmail,
@@ -123,23 +104,16 @@ export class PamUsersRepo {
         .eq('id', input.id)
         .select('*')
         .single();
+      this.supabaseBridge.throwIfError(result);
 
-      if (error) {
-        this.logger.error('PamUsersRepo.ensureProfile update failed', {
-          error,
-          id: input.id
-        });
-        throw new Error(error.message);
-      }
-
-      return data as PamUserRow;
+      return result.data as PamUserRow;
     }
 
     const defaultRoleId = await this.roles.requireRoleIdByKey(
       PlatformRoleKey.User
     );
 
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .insert({
         id: input.id,
@@ -152,16 +126,9 @@ export class PamUsersRepo {
       })
       .select('*')
       .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.ensureProfile insert failed', {
-        error,
-        id: input.id
-      });
-      throw new Error(error.message);
-    }
-
-    return data as PamUserRow;
+    return result.data as PamUserRow;
   }
 
   public async updateEmailAndPhone(params: {
@@ -184,31 +151,21 @@ export class PamUsersRepo {
       patch.display_name = params.displayName;
     }
 
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update(patch)
       .eq('id', params.userId)
       .select('*')
       .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.updateEmailAndPhone failed', {
-        error,
-        userId: params.userId
-      });
-      throw new Error(error.message);
-    }
-
-    return data as PamUserRow;
+    return result.data as PamUserRow;
   }
 
   public async deleteById(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { error } = await supabase.from(TABLE).delete().eq('id', userId);
-    if (error) {
-      this.logger.error('PamUsersRepo.deleteById failed', { error, userId });
-      throw new Error(error.message);
-    }
+    const result = await supabase.from(TABLE).delete().eq('id', userId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -236,17 +193,17 @@ export class PamUsersRepo {
     const existing = await this.findById(userId);
 
     if (!existing) {
-      const { data: authData, error: authError } =
-        await supabase.auth.admin.getUserById(userId);
+      const authResult = await supabase.auth.admin.getUserById(userId);
+      this.supabaseBridge.throwIfError(authResult);
 
-      if (authError || !authData.user?.id) {
+      if (!authResult.data.user?.id) {
         throw new Error('User not found');
       }
 
       await this.ensureProfile({
-        id: authData.user.id,
-        email: toBusinessEmail(authData.user.email),
-        phone: authData.user.phone ?? null
+        id: authResult.data.user.id,
+        email: toBusinessEmail(authResult.data.user.email),
+        phone: authResult.data.user.phone ?? null
       });
     }
 
@@ -273,7 +230,7 @@ export class PamUsersRepo {
 
     const nextRoleId = await this.roles.requireRoleIdByKey(nextRole);
 
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update({
         role_id: nextRoleId,
@@ -282,17 +239,9 @@ export class PamUsersRepo {
       .eq('id', userId)
       .select('*')
       .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.setSystemRole failed', {
-        error,
-        userId,
-        systemRole: nextRole
-      });
-      throw new Error(error.message);
-    }
-
-    return data as PamUserRow;
+    return result.data as PamUserRow;
   }
 
   /** Counts users with platform admin role key. */
@@ -301,17 +250,13 @@ export class PamUsersRepo {
       PlatformRoleKey.Admin
     );
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { count, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('id', { count: 'exact', head: true })
       .eq('role_id', adminRoleId);
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamUsersRepo.countPlatformAdmins failed', { error });
-      throw new Error(error.message);
-    }
-
-    return count ?? 0;
+    return result.count ?? 0;
   }
 
   public async searchForAdmin(params: {
@@ -331,24 +276,15 @@ export class PamUsersRepo {
     }>
   > {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data: authRows, error: authError } = await supabase.rpc(
-      'pam_auth_users_search',
-      {
-        p_query: params.query?.trim() || '',
-        p_exclude_id: null,
-        p_limit: params.limit ?? 20,
-        p_offset: params.offset ?? 0
-      }
-    );
+    const authResult = await supabase.rpc('pam_auth_users_search', {
+      p_query: params.query?.trim() || '',
+      p_exclude_id: null,
+      p_limit: params.limit ?? 20,
+      p_offset: params.offset ?? 0
+    });
+    this.supabaseBridge.throwIfError(authResult);
 
-    if (authError) {
-      this.logger.error('PamUsersRepo.searchForAdmin auth search failed', {
-        error: authError
-      });
-      throw new Error(authError.message);
-    }
-
-    const users = Array.isArray(authRows) ? authRows : [];
+    const users = Array.isArray(authResult.data) ? authResult.data : [];
     if (users.length === 0) {
       return [];
     }
@@ -357,22 +293,16 @@ export class PamUsersRepo {
       .map((row) => String((row as { id?: string }).id ?? ''))
       .filter(Boolean);
 
-    const { data: pamRows, error: pamError } = await supabase
+    const pamResult = await supabase
       .from(TABLE)
       .select(
         'id, role_id, is_platform_admin, status, created_at, display_name, email, phone'
       )
       .in('id', ids);
-
-    if (pamError) {
-      this.logger.error('PamUsersRepo.searchForAdmin pam lookup failed', {
-        error: pamError
-      });
-      throw new Error(pamError.message);
-    }
+    this.supabaseBridge.throwIfError(pamResult);
 
     const pamById = new Map(
-      (pamRows ?? []).map((row) => [String(row.id), row as PamUserRow])
+      (pamResult.data ?? []).map((row) => [String(row.id), row as PamUserRow])
     );
 
     const results = [];

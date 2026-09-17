@@ -34,7 +34,7 @@ export class PamCliTokenRepo {
    */
   public async insert(input: PamCliTokenInsertType): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { error } = await supabase.from(PamCliTokenTableName).insert({
+    const result = await supabase.from(PamCliTokenTableName).insert({
       jti: input.jti,
       user_id: input.userId,
       expires_at: input.expiresAt,
@@ -43,10 +43,7 @@ export class PamCliTokenRepo {
       ip_address: input.ipAddress ?? null,
       revoked: false
     });
-
-    if (error) {
-      throw new Error(error.message);
-    }
+    this.supabaseBridge.throwIfError(result);
   }
 
   /**
@@ -55,19 +52,16 @@ export class PamCliTokenRepo {
    */
   public async isActive(jti: string): Promise<boolean> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PamCliTokenTableName)
       .select('jti')
       .eq('jti', jti)
       .eq('revoked', false)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data != null;
+    return result.data != null;
   }
 
   /**
@@ -78,7 +72,7 @@ export class PamCliTokenRepo {
    */
   public async revoke(jti: string): Promise<boolean> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PamCliTokenTableName)
       .update({
         revoked: true,
@@ -87,12 +81,9 @@ export class PamCliTokenRepo {
       .eq('jti', jti)
       .eq('revoked', false)
       .select('jti');
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return Array.isArray(data) && data.length > 0;
+    return Array.isArray(result.data) && result.data.length > 0;
   }
 
   /**
@@ -103,7 +94,7 @@ export class PamCliTokenRepo {
    */
   public async revokeAllForUser(userId: string): Promise<number> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PamCliTokenTableName)
       .update({
         revoked: true,
@@ -112,12 +103,9 @@ export class PamCliTokenRepo {
       .eq('user_id', userId)
       .eq('revoked', false)
       .select('jti');
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return Array.isArray(data) ? data.length : 0;
+    return Array.isArray(result.data) ? result.data.length : 0;
   }
 
   /**
@@ -131,17 +119,14 @@ export class PamCliTokenRepo {
       return 0;
     }
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PamCliTokenTableName)
       .update({ user_id: toUserId })
       .eq('user_id', fromUserId)
       .eq('revoked', false)
       .select('jti');
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return Array.isArray(data) ? data.length : 0;
+    return Array.isArray(result.data) ? result.data.length : 0;
   }
 }

@@ -261,23 +261,12 @@ export class PamBindEmailService {
         phone,
         phone_confirm: true
       });
-      if (phoneUpdate.error) {
-        this.logger.warn('PamBindEmailService: failed attaching phone to B', {
-          error: phoneUpdate.error,
-          userId: B.id
-        });
-      }
+      this.supabaseBridge.throwIfError(phoneUpdate);
     }
 
     await this.pamUsersRepo.deleteById(A.id);
     const deleted = await admin.auth.admin.deleteUser(A.id);
-    if (deleted.error) {
-      this.logger.error('PamBindEmailService: failed deleting phone user A', {
-        error: deleted.error,
-        userId: A.id
-      });
-      throw new Error(deleted.error.message);
-    }
+    this.supabaseBridge.throwIfError(deleted);
 
     await this.reloginAsUser({
       userId: B.id,

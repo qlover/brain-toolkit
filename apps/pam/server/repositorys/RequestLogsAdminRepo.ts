@@ -53,16 +53,19 @@ export class RequestLogsAdminRepo {
       );
     }
 
-    const { data, error, count } = await query
-      .order(orderBy, { ascending })
-      .range(from, to);
-
-    if (error) {
+    let data: RequestLogRow[] | null;
+    let count: number | null;
+    try {
+      const result = await query.order(orderBy, { ascending }).range(from, to);
+      this.supabaseBridge.throwIfError(result);
+      data = (result.data ?? null) as RequestLogRow[] | null;
+      count = result.count ?? null;
+    } catch (error) {
       this.logger.error('RequestLogsAdminRepo.searchAll failed', { error });
-      throw new Error(error.message);
+      throw error;
     }
 
-    const items = (data ?? []) as RequestLogRow[];
+    const items = data ?? [];
     const total = count ?? items.length;
 
     return {

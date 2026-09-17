@@ -98,9 +98,7 @@ export class PamSupabaseSessionMintService {
       token_hash: hashedToken,
       type: 'email'
     });
-    if (verified.error) {
-      throw new Error(verified.error.message);
-    }
+    this.supabaseBridge.throwIfError(verified);
 
     const session = verified.data.session;
     if (!session?.refresh_token) {
@@ -130,9 +128,7 @@ export class PamSupabaseSessionMintService {
       email,
       password
     });
-    if (signedIn.error) {
-      throw new Error(signedIn.error.message);
-    }
+    this.supabaseBridge.throwIfError(signedIn);
 
     const session = signedIn.data.session;
     if (!session?.refresh_token) {

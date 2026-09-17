@@ -1,14 +1,12 @@
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
-import { I } from '@config/ioc-identifiter';
 import type {
   PamPhoneOtpAdminItem,
   PamPhoneOtpProvider,
   PamPhoneOtpRow,
   PamPhoneOtpStatus
 } from '@schemas/PamPhoneOtpSchema';
-import type { LoggerInterface } from '@qlover/logger';
 
 const TABLE = 'pam_phone_otps';
 
@@ -50,9 +48,7 @@ function mapAdminItem(row: PamPhoneOtpRow): PamPhoneOtpAdminItem {
 export class PamPhoneOtpsRepo {
   constructor(
     @inject(SupabaseRepo)
-    protected readonly supabaseBridge: SupabaseRepo<unknown>,
-    @inject(I.Logger)
-    protected readonly logger: LoggerInterface
+    protected readonly supabaseBridge: SupabaseRepo<unknown>
   ) {}
 
   public async insert(input: {
@@ -65,7 +61,7 @@ export class PamPhoneOtpsRepo {
     maxAttempts?: number;
   }): Promise<PamPhoneOtpRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .insert({
         phone: input.phone,
@@ -79,37 +75,26 @@ export class PamPhoneOtpsRepo {
       })
       .select('*')
       .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.insert failed', { error });
-      throw new Error(error.message);
-    }
-
-    return data as PamPhoneOtpRow;
+    return result.data as PamPhoneOtpRow;
   }
 
   public async revokePendingByPhone(phone: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update({ status: 'revoked' satisfies PamPhoneOtpStatus })
       .eq('phone', phone)
       .eq('status', 'pending');
-
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.revokePendingByPhone failed', {
-        error,
-        phone
-      });
-      throw new Error(error.message);
-    }
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async findLatestPending(
     phone: string
   ): Promise<PamPhoneOtpRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('*')
       .eq('phone', phone)
@@ -117,45 +102,30 @@ export class PamPhoneOtpsRepo {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.findLatestPending failed', {
-        error,
-        phone
-      });
-      throw new Error(error.message);
-    }
-
-    return (data as PamPhoneOtpRow | null) ?? null;
+    return (result.data as PamPhoneOtpRow | null) ?? null;
   }
 
   public async markVerified(id: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update({
         status: 'verified' satisfies PamPhoneOtpStatus,
         verified_at: new Date().toISOString()
       })
       .eq('id', id);
-
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.markVerified failed', { error, id });
-      throw new Error(error.message);
-    }
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async markExpired(id: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update({ status: 'expired' satisfies PamPhoneOtpStatus })
       .eq('id', id);
-
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.markExpired failed', { error, id });
-      throw new Error(error.message);
-    }
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async incrementAttempts(
@@ -166,21 +136,14 @@ export class PamPhoneOtpsRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const nextStatus: PamPhoneOtpStatus | undefined =
       attempts >= maxAttempts ? 'revoked' : undefined;
-    const { error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .update({
         attempts,
         ...(nextStatus ? { status: nextStatus } : {})
       })
       .eq('id', id);
-
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.incrementAttempts failed', {
-        error,
-        id
-      });
-      throw new Error(error.message);
-    }
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async listRecent(params: {
@@ -200,33 +163,23 @@ export class PamPhoneOtpsRepo {
       query = query.ilike('phone', `%${phone}%`);
     }
 
-    const { data, error } = await query;
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.listRecent failed', { error });
-      throw new Error(error.message);
-    }
+    const result = await query;
+    this.supabaseBridge.throwIfError(result);
 
-    return ((data as PamPhoneOtpRow[]) ?? []).map(mapAdminItem);
+    return ((result.data as PamPhoneOtpRow[]) ?? []).map(mapAdminItem);
   }
 
   public async findLatestSendAt(phone: string): Promise<string | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(TABLE)
       .select('created_at')
       .eq('phone', phone)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('PamPhoneOtpsRepo.findLatestSendAt failed', {
-        error,
-        phone
-      });
-      throw new Error(error.message);
-    }
-
-    return (data as { created_at?: string } | null)?.created_at ?? null;
+    return (result.data as { created_at?: string } | null)?.created_at ?? null;
   }
 }

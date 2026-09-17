@@ -1,9 +1,7 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import type { RoleKindType } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
-import { I } from '@config/ioc-identifiter';
 import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
-import type { LoggerInterface } from '@qlover/logger';
 
 const ROLES_TABLE = 'pam_roles';
 const PERMISSIONS_TABLE = 'pam_role_permissions';
@@ -57,26 +55,20 @@ export class PamRolePermissionsRepo {
   constructor(
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
-    @inject(I.Logger)
-    protected readonly logger: LoggerInterface,
     @inject(MemoryKvCacheService)
     protected readonly kv: MemoryKvCacheService
   ) {}
 
   public async listRoles(): Promise<PamRoleRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(ROLES_TABLE)
       .select('id, key, name, kind, description, is_system')
       .order('kind', { ascending: true })
       .order('key', { ascending: true });
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('listRoles failed', error);
-      throw error;
-    }
-
-    return (data ?? []) as PamRoleRow[];
+    return (result.data ?? []) as PamRoleRow[];
   }
 
   /** Fresh DB read (also refreshes process-level id/key cache via MemoryKv). */
@@ -91,18 +83,14 @@ export class PamRolePermissionsRepo {
 
   public async findRoleById(roleId: string): Promise<PamRoleRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(ROLES_TABLE)
       .select('id, key, name, kind, description, is_system')
       .eq('id', roleId)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('findRoleById failed', error);
-      throw error;
-    }
-
-    const row = (data as PamRoleRow | null) ?? null;
+    const row = (result.data as PamRoleRow | null) ?? null;
     if (row) {
       await this.rememberRoleMapping(row.id, row.key);
     }
@@ -111,17 +99,14 @@ export class PamRolePermissionsRepo {
 
   public async findRoleByKey(key: string): Promise<PamRoleRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(ROLES_TABLE)
       .select('id, key, name, kind, description, is_system')
       .eq('key', key)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('findRoleByKey failed', error);
-      throw error;
-    }
-    const row = (data as PamRoleRow | null) ?? null;
+    const row = (result.data as PamRoleRow | null) ?? null;
     if (row) {
       await this.rememberRoleMapping(row.id, row.key);
     }
@@ -175,49 +160,37 @@ export class PamRolePermissionsRepo {
 
   public async listAllRolePermissions(): Promise<PamRoleAssignmentJoinRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
       .select('role_id, permission_key, pam_roles ( id, key, kind )');
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('listAllRolePermissions failed', error);
-      throw error;
-    }
-
-    return (data ?? []) as unknown as PamRoleAssignmentJoinRow[];
+    return (result.data ?? []) as unknown as PamRoleAssignmentJoinRow[];
   }
 
   public async listPermissions(): Promise<PamPermissionRow[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .select('permission_key, type, method, path, description')
       .order('permission_key', { ascending: true });
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('listPermissions failed', error);
-      throw error;
-    }
-
-    return (data ?? []) as PamPermissionRow[];
+    return (result.data ?? []) as PamPermissionRow[];
   }
 
   public async findPermissionByKey(
     permissionKey: string
   ): Promise<PamPermissionRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .select('permission_key, type, method, path, description')
       .eq('permission_key', permissionKey)
       .maybeSingle();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('findPermissionByKey failed', error);
-      throw error;
-    }
-
-    return (data as PamPermissionRow | null) ?? null;
+    return (result.data as PamPermissionRow | null) ?? null;
   }
 
   public async insertPermission(input: {
@@ -228,7 +201,7 @@ export class PamRolePermissionsRepo {
     description: string | null;
   }): Promise<PamPermissionRow> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .insert({
         permission_key: input.permissionKey,
@@ -239,13 +212,9 @@ export class PamRolePermissionsRepo {
       })
       .select('permission_key, type, method, path, description')
       .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('insertPermission failed', error);
-      throw error;
-    }
-
-    return data as PamPermissionRow;
+    return result.data as PamPermissionRow;
   }
 
   public async updatePermission(input: {
@@ -262,19 +231,15 @@ export class PamRolePermissionsRepo {
     if (input.description !== undefined) patch.description = input.description;
 
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const { data, error } = await supabase
+    const result = await supabase
       .from(PERMISSIONS_TABLE)
       .update(patch)
       .eq('permission_key', input.permissionKey)
       .select('permission_key, type, method, path, description')
       .single();
+    this.supabaseBridge.throwIfError(result);
 
-    if (error) {
-      this.logger.error('updatePermission failed', error);
-      throw error;
-    }
-
-    return data as PamPermissionRow;
+    return result.data as PamPermissionRow;
   }
 
   public async replaceRoleAssignments(input: {
@@ -284,15 +249,11 @@ export class PamRolePermissionsRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const uniqueKeys = [...new Set(input.permissionKeys)];
 
-    const { error: deleteError } = await supabase
+    const deleteResult = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
       .delete()
       .eq('role_id', input.roleId);
-
-    if (deleteError) {
-      this.logger.error('replaceRoleAssignments delete failed', deleteError);
-      throw deleteError;
-    }
+    this.supabaseBridge.throwIfError(deleteResult);
 
     if (uniqueKeys.length === 0) {
       return;
@@ -303,13 +264,9 @@ export class PamRolePermissionsRepo {
       permission_key
     }));
 
-    const { error: insertError } = await supabase
+    const insertResult = await supabase
       .from(ROLE_ASSIGNMENTS_TABLE)
       .insert(rows);
-
-    if (insertError) {
-      this.logger.error('replaceRoleAssignments insert failed', insertError);
-      throw insertError;
-    }
+    this.supabaseBridge.throwIfError(insertResult);
   }
 }
