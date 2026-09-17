@@ -63,7 +63,7 @@ interface TodoState {
 
 class TodoStore extends SliceStoreAdapter<TodoState> {
   constructor() {
-    super(() => ({
+    super((): TodoState => ({
       todos: [],
       filter: 'all'
     }));
