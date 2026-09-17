@@ -1,5 +1,54 @@
 # pam
 
+## 2.10.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** locales/json 支持 namespaces，并加速词典加载 ([b7e6fbb](https://github.com/qlover/brain-toolkit/commit/b7e6fbb046b5cfda44156ddd144346df764ef798)) ([#151](https://github.com/qlover/brain-toolkit/pull/151))
+
+  loadMessages 以静态 JSON 为底合并 API；DB 覆盖改为精简列查询并用 MemoryKvCacheService 缓存。
+
+- **pam:** 新增 Locales CMS 后台管理 ([6331240](https://github.com/qlover/brain-toolkit/commit/6331240a39a60964c4492c16e9fe48de370ac1b7)) ([#149](https://github.com/qlover/brain-toolkit/pull/149))
+
+  落地 pam_locales 表与 admin_locales 权限；实现仓储与单语 CRUD/导入；
+  开启 useApiLocales（静态底稿+DB 覆盖）；命名空间改为精确下拉筛选。
+
+#### 🐞 Bug Fixes
+
+- **react-kit:** useStore 改 ReadableStore，并迁出 next-kit 引用 ([8e100de](https://github.com/qlover/brain-toolkit/commit/8e100de477dffe97335d2e04e0a666ecb3f028a8)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  避免与 pam 双份 corekit-bridge 类型冲突；corekit 相关改为 peer。
+  pam / brain-oauth 的 useStore 统一从 @brain-toolkit/react-kit 导入。
+
+- **pam:** locales 语言判断改用 i18nConfig.supportedLngs ([f14fc10](https://github.com/qlover/brain-toolkit/commit/f14fc10cbe128f3587869bbb40c07082a8db0f0f)) ([#151](https://github.com/qlover/brain-toolkit/pull/151))
+
+  去掉 en/zh 硬编码，统一以 supportedLngs 校验与拼装查询列。
+
+#### ♻️ Refactors
+
+- **react-kit:** 迁入 useAsyncStore 并用 next-kit 风格重写 useStore ([116fdad](https://github.com/qlover/brain-toolkit/commit/116fdad53533f6d9924cf05147be3a74c8fba0d1)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  将 pam 面板本地 hook 提升到 @brain-toolkit/react-kit；useStore 改为
+  useSyncExternalStore + StoreInterface；pam 改为 workspace 依赖并 transpile。
+
+- **pam:** 引入 useAsyncStore 约定并迁移 Admin/Teams 面板 ([715bee3](https://github.com/qlover/brain-toolkit/commit/715bee3ce2ddbd28cb5d45efc8a21fcfd739c574)) ([#152](https://github.com/qlover/brain-toolkit/pull/152))
+
+  新增 [state, store] / usePendingAsyncStore / runAsyncStore；Admin
+  面板与 Teams、项目详情改用 AsyncStore 生命周期，去掉手写 loading/error。
+
+  lint:fix 后稳定 list.result ?? [] 的 useMemo 依赖。
+
+- **pam:** PostgREST 统一 throwOnError，并由 handler 收口错误 ([09c463c](https://github.com/qlover/brain-toolkit/commit/09c463c8955b82b37ac819e208f6d66e24ab122b)) ([#150](https://github.com/qlover/brain-toolkit/pull/150))
+
+  默认用 .throwOnError()；Auth/可恢复路径仍 throwIfError。
+  NextApiHandler 将原生错误映射为 api:server\_\_error，生产环境剥离诊断 data。
+
+- **pam:** 统一改回 throwIfError，避免与 Auth 双写法 ([c3f840e](https://github.com/qlover/brain-toolkit/commit/c3f840ef01294142a90d8cedae5f9221f3661248)) ([#150](https://github.com/qlover/brain-toolkit/pull/150))
+
+  PostgREST 与 Auth 均 await 后 throwIfError；保留 handler 对原生错误的兜底与生产剥离诊断 data。
+
 ## 2.9.0
 
 ### Minor Changes

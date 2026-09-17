@@ -1,5 +1,47 @@
 # apps/brain-oauth
 
+## 2.2.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 接入 next-kit 1.4，Session 邮箱可空并带 name/phone ([f728dd6](https://github.com/qlover/brain-toolkit/commit/f728dd660005fe6dac33c3a614683fd1cc7c0f47)) ([#139](https://github.com/qlover/brain-toolkit/pull/139))
+
+  升级 next-kit/oauth-wrapper；业务邮箱进 session，占位邮箱仅用于 mint 修复。
+
+- **pam:** 删除项目移至通用设置危险区 ([014ea86](https://github.com/qlover/brain-toolkit/commit/014ea86862a4c117d1b514c88c56bc4715921a21)) ([#120](https://github.com/qlover/brain-toolkit/pull/120))
+
+  详情页顶栏去掉删除按钮，改到 General 危险区域；确认框默认文案走 i18n；升级 next-kit 至 ^1.1.0。
+
+- **pam,brain-oauth:** create/update 支持 logo_uri 落库 ([ba126b4](https://github.com/qlover/brain-toolkit/commit/ba126b458bb7a6a2f06cce66fee3fb1e1632e610)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  本地扩展 Create/Update schema，Repo insert/update 写入 logo_uri（空串存 null）。
+
+- **pam,brain-oauth:** developer apps 补齐 logo 预览与列表展示 ([c57a9dd](https://github.com/qlover/brain-toolkit/commit/c57a9dd76642c7ab61dfb055f79a4b02f883465e)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  表单增加 logo URL 与预览；列表展示头像与可点击 client_uri，并补充 i18n。
+
+#### 🐞 Bug Fixes
+
+- **react-kit:** useStore 改 ReadableStore，并迁出 next-kit 引用 ([8e100de](https://github.com/qlover/brain-toolkit/commit/8e100de477dffe97335d2e04e0a666ecb3f028a8)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  避免与 pam 双份 corekit-bridge 类型冲突；corekit 相关改为 peer。
+  pam / brain-oauth 的 useStore 统一从 @brain-toolkit/react-kit 导入。
+
+- **react-kit:** workspace 导出源码，修复 Next 找不到模块 ([24ed42e](https://github.com/qlover/brain-toolkit/commit/24ed42e035b28b8d06dd650cf1d154d4cb82a8a7)) ([#153](https://github.com/qlover/brain-toolkit/pull/153))
+
+  monorepo / CI 未先 build dist 时，指向 src + transpilePackages；
+  publishConfig 仍发 dist。nx build 增加 dependsOn ^build。
+
+- **pam,brain-oauth:** 修复 rotate-secret URL 拼错导致 405 ([ef87e65](https://github.com/qlover/brain-toolkit/commit/ef87e65976403981978830408066cb0be7e8c071)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  apiClientRotateSecret 改为基于 API_CLIENTS_ROTATE_SECRET 生成路径，避免 POST 打到 detail 路由。
+
+- **pam,brain-oauth:** 优化 developer apps 弹窗交互并修校验 ([1ebc86e](https://github.com/qlover/brain-toolkit/commit/1ebc86e983b72995cc89fb8014270c7dccdb435b)) ([#118](https://github.com/qlover/brain-toolkit/pull/118))
+
+  编辑弹窗改为可滚动 sheet 与单行底栏；修正空 redirect URI 校验文案、详情加载竞态与 logo 破损态。
+
 ## 2.1.0
 
 ### Minor Changes
