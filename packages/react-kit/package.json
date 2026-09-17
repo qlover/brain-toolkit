@@ -1,6 +1,6 @@
 {
   "name": "@brain-toolkit/react-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "private": false,
   "main": "./dist/index.cjs",
@@ -56,9 +56,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@qlover/corekit-bridge": "^2",
+    "@qlover/corekit-bridge": "^3.4.0",
     "@qlover/slice-store-react": "^1.4.2",
-    "@qlover/fe-corekit": "^3"
+    "@qlover/fe-corekit": "^3.4.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.6",

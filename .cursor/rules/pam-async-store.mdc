@@ -8,7 +8,7 @@ alwaysApply: false
 
 异步操作生命周期用 `@qlover/corekit-bridge` 的 **`AsyncStore`**（`loading` / `error` / `status` / `result`）。
 
-面板内：`useAsyncStore` + `runAsyncStore` + `useAsyncStoreState`（见 `apps/pam/src/uikit/hook/useAsyncStore.ts`）。
+面板内：从 `@brain-toolkit/react-kit` 使用 `useAsyncStore` + `runAsyncStore` + `useAsyncStoreState`（见 `packages/react-kit/src/hooks/useAsyncStore.ts`）。
 
 ## 必须
 

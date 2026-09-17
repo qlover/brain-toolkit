@@ -9,8 +9,23 @@ export {
 // Factory hook
 export { useFactory } from './hooks/useFactory';
 
-// Store hook
-export { useStore } from './hooks/useStore';
+// Store hooks
+export {
+  isSliceStoreAdapter,
+  useSliceStoreAdapter,
+  useStore
+} from './hooks/useStore';
+export {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  useAsyncStoreState,
+  usePendingAsyncStore,
+  type AsyncState,
+  type RunAsyncStoreOptions,
+  type RunAsyncStoreTask,
+  type UseAsyncStoreStateOmitOptions
+} from './hooks/useAsyncStore';
 
 // Client mounting hook
 export { useMountedClient } from './hooks/useMountedClient';

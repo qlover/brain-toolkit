@@ -36,7 +36,8 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     '@qlover/fe-corekit',
     '@qlover/corekit-bridge',
-    '@qlover/next-kit'
+    '@qlover/next-kit',
+    '@brain-toolkit/react-kit'
   ],
   /** Avoid bundling Node HTTP proxy stack into Route handlers (CJS + native deps). */
   serverExternalPackages: ['node-fetch', 'https-proxy-agent'],

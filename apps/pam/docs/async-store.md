@@ -4,7 +4,7 @@
 
 已有范例：[`PAMFacade`](../src/impls/PAMfacade.ts)、[`UserService.capabilitiesStore`](../src/impls/UserService.ts)、[`useUserAuth`](../src/uikit/hook/useUserAuth.ts)。
 
-面板侧优先用 [`useAsyncStore`](../src/uikit/hook/useAsyncStore.ts) + [`runAsyncStore`](../src/uikit/hook/useAsyncStore.ts) + [`useAsyncStoreState`](../src/uikit/hook/useAsyncStore.ts)。
+面板侧优先用 `@brain-toolkit/react-kit` 的 `useAsyncStore` + `runAsyncStore` + `useAsyncStoreState`（实现见 [`packages/react-kit/src/hooks/useAsyncStore.ts`](../../../packages/react-kit/src/hooks/useAsyncStore.ts)）。
 
 ## 适合 vs 不适合
 
@@ -33,6 +33,13 @@
 ## 推荐写法
 
 ```ts
+import {
+  useAsyncStore,
+  usePendingAsyncStore,
+  runAsyncStore,
+  type AsyncState
+} from '@brain-toolkit/react-kit';
+
 const [list, listStore] = usePendingAsyncStore<AsyncState<Item[]>>();
 const [save, saveStore] = useAsyncStore<AsyncState<Item[]>>();
 

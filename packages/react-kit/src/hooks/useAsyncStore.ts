@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
 
 import {
   AsyncStore,
@@ -8,10 +7,10 @@ import {
   createAsyncState,
   type AsyncStoreInterface,
   type AsyncStoreStateInterface
-} from '@qlover/corekit-bridge';
+} from '@qlover/corekit-bridge/store-state';
 import { isAbortError } from '@qlover/fe-corekit/aborter';
-import { useStore } from '@qlover/next-kit/client';
 import { useMemo, useState } from 'react';
+import { useStore } from './useStore';
 
 type AsyncStoreCtor<TStore> = new () => TStore;
 
