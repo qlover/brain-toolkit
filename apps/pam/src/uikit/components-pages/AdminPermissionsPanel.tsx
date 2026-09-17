@@ -5,6 +5,13 @@ import { clsx } from 'clsx';
 import { useCallback, useMemo, useState } from 'react';
 import { AdminPermissionsApi } from '@/impls/appApi/AdminPermissionsApi';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { useCan, PermissionKey } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
@@ -58,10 +65,15 @@ export function AdminPermissionsPanel({
   );
   const { allowed: canWrite } = useCan(PermissionKey.admin_permissions_write);
 
-  const [catalog, setCatalog] = useState<PamAdminPermissionItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<PamAdminPermissionItem[]>>();
+  const [save, saveStore] =
+    useAsyncStore<AsyncState<PamAdminPermissionItem[]>>();
+  const catalog = useMemo(() => list.result ?? [], [list.result]);
+  const loading = list.loading;
+  const saving = save.loading;
+  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(save.error);
+
   const [success, setSuccess] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<EditorMode>('idle');
@@ -77,26 +89,23 @@ export function AdminPermissionsPanel({
   );
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const next = await api.list();
-      setCatalog(next.catalog);
-    } catch {
-      setError(tt.loadFailed);
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [api, tt.loadFailed]);
+    await runAsyncStore(
+      listStore,
+      api.list().then((next) => next.catalog),
+      {
+        keep: true,
+        mapError: () => tt.loadFailed
+      }
+    );
+  }, [api, listStore, tt.loadFailed]);
 
   useStrictEffect(() => {
     if (!canRead) {
-      setLoading(false);
+      listStore.success([]);
       return;
     }
     void load();
-  }, [canRead, load]);
+  }, [canRead, listStore, load]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -113,14 +122,16 @@ export function AdminPermissionsPanel({
     setMode('create');
     setDraft(EMPTY_DRAFT);
     setSuccess(null);
-    setError(null);
+    listStore.emit({ error: null });
+    saveStore.emit({ error: null });
   };
 
   const startEdit = (item: PamAdminPermissionItem): void => {
     setMode('edit');
     setDraft(toDraft(item));
     setSuccess(null);
-    setError(null);
+    listStore.emit({ error: null });
+    saveStore.emit({ error: null });
   };
 
   const cancelEditor = (): void => {
@@ -132,31 +143,31 @@ export function AdminPermissionsPanel({
     if (!canWrite || saving) return;
     const key = draft.permissionKey.trim();
     if (!PERMISSION_KEY_PATTERN.test(key)) {
-      setError(tt.keyHint);
+      saveStore.failed(tt.keyHint);
       return;
     }
-    setSaving(true);
-    setError(null);
     setSuccess(null);
-    try {
-      const body = {
-        permissionKey: key,
-        type: draft.type,
-        method: draft.method.trim() || null,
-        path: draft.path.trim() || null,
-        description: draft.description.trim() || null
-      };
-      const next =
-        mode === 'create' ? await api.create(body) : await api.update(body);
-      setCatalog(next.catalog);
-      setSuccess(mode === 'create' ? tt.createSuccess : tt.updateSuccess);
-      setMode('idle');
-      setDraft(EMPTY_DRAFT);
-    } catch {
-      setError(tt.saveFailed);
-    } finally {
-      setSaving(false);
+    const body = {
+      permissionKey: key,
+      type: draft.type,
+      method: draft.method.trim() || null,
+      path: draft.path.trim() || null,
+      description: draft.description.trim() || null
+    };
+    const catalogNext = await runAsyncStore(
+      saveStore,
+      (mode === 'create' ? api.create(body) : api.update(body)).then(
+        (next) => next.catalog
+      ),
+      { mapError: () => tt.saveFailed }
+    );
+    if (catalogNext === undefined) {
+      return;
     }
+    listStore.success(catalogNext);
+    setSuccess(mode === 'create' ? tt.createSuccess : tt.updateSuccess);
+    setMode('idle');
+    setDraft(EMPTY_DRAFT);
   };
 
   if (authLoading || loading) {

@@ -20,6 +20,12 @@ import { PAMAbortId, PAMApi } from '@/impls/appApi/PAMApi';
 import { PAMFacade } from '@/impls/PAMfacade';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { PAMProjectForkButton } from '@/uikit/components-app/pam/PAMProjectForkButton';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
@@ -108,9 +114,8 @@ export function PAMProjectDetailShell({
   const pamApi = useIOC(PAMApi);
   const pamFacade = useIOC(PAMFacade);
   const dialog = useIOC(I.DialogHandler);
-  const [project, setProject] = useState<PAMProjectDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [detailState, detailStore] =
+    usePendingAsyncStore<AsyncState<PAMProjectDetail>>();
   const [deleting, setDeleting] = useState(false);
   const [environments, setEnvironments] = useState<PAMEnvWriteable[] | null>(
     null
@@ -118,6 +123,25 @@ export function PAMProjectDetailShell({
   const [environmentsLoading, setEnvironmentsLoading] = useState(false);
   const envLoadedForProjectRef = useRef('');
   const envLoadInflightRef = useRef<Promise<void> | null>(null);
+
+  const project = detailState.result;
+  const loading = detailState.loading;
+  const error = asyncErrorMessage(detailState.error);
+
+  const setProject = useCallback<
+    Dispatch<SetStateAction<PAMProjectDetail | null>>
+  >(
+    (action) => {
+      const prev = detailStore.getResult();
+      const next = typeof action === 'function' ? action(prev) : action;
+      if (next == null) {
+        detailStore.emit({ result: null });
+        return;
+      }
+      detailStore.success(next);
+    },
+    [detailStore]
+  );
 
   const activeTab: PAMProjectDetailTabType = useMemo(() => {
     if (pathname.includes('/environments')) {
@@ -127,28 +151,14 @@ export function PAMProjectDetailShell({
   }, [pathname]);
 
   useStrictEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    void pamApi
-      .getProjectDetail({ id: routeKey })
-      .then((detail) => {
-        setProject(detail);
-        setLoading(false);
-      })
-      .catch((caught) => {
-        if (isAbortError(caught)) {
-          return;
-        }
-        setError(tt.projectNotFound);
-        setProject(null);
-        setLoading(false);
-      });
+    void runAsyncStore(detailStore, pamApi.getProjectDetail({ id: routeKey }), {
+      mapError: () => tt.projectNotFound
+    });
 
     return () => {
       pamApi.stop(PAMAbortId.projectDetail(routeKey));
     };
-  }, [pamApi, routeKey, tt.projectNotFound]);
+  }, [detailStore, pamApi, routeKey, tt.projectNotFound]);
 
   useStrictEffect(() => {
     void pamFacade.pullCategories();
@@ -339,6 +349,7 @@ export function PAMProjectDetailShell({
       canEdit,
       deleting,
       onDelete,
+      setProject,
       environments,
       environmentsLoading,
       ensureEnvironments

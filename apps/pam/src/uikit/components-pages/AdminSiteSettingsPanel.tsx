@@ -8,6 +8,13 @@ import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminSettingsI18nInterface } from '@config/i18n-mapping/admin18n';
 import { I } from '@config/ioc-identifiter';
@@ -21,6 +28,10 @@ import type { PamAdminSiteSettingEntry } from '@schemas/PamSiteSettingsSchema';
 type DraftState = Partial<
   Record<PamSiteSettingKey, string | boolean | string[]>
 >;
+
+type SettingsSaveState = AsyncState<PamAdminSiteSettingEntry[]> & {
+  targetId: string | null;
+};
 
 function entryMap(
   entries: PamAdminSiteSettingEntry[]
@@ -176,27 +187,30 @@ export function AdminSiteSettingsPanel({
 }) {
   const siteSettingsApi = useIOC(SiteSettingsApi);
   const dialogHandler = useIOC(I.DialogHandler);
-  const [entries, setEntries] = useState<PamAdminSiteSettingEntry[]>([]);
   const [draft, setDraft] = useState<DraftState>({});
-  const [loading, setLoading] = useState(true);
-  const [savingSection, setSavingSection] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<PamAdminSiteSettingEntry[]>>();
+  const [save, saveStore] = useAsyncStore<SettingsSaveState>({
+    targetId: null
+  });
+  const entries = useMemo(() => list.result ?? [], [list.result]);
+  const loading = list.loading;
+  const savingSection = save.targetId;
+  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(save.error);
 
   const byKey = useMemo(() => entryMap(entries), [entries]);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const rows = await siteSettingsApi.list();
-      setEntries(rows);
-      setDraft({});
-    } catch {
-      setError(tt.loadFailed);
-    } finally {
-      setLoading(false);
+    const rows = await runAsyncStore(listStore, siteSettingsApi.list(), {
+      keep: true,
+      mapError: () => tt.loadFailed
+    });
+    if (rows === undefined) {
+      return;
     }
-  }, [siteSettingsApi, tt.loadFailed]);
+    setDraft({});
+  }, [listStore, siteSettingsApi, tt.loadFailed]);
 
   useStrictEffect(() => {
     void load();
@@ -204,8 +218,7 @@ export function AdminSiteSettingsPanel({
 
   const patchSection = useCallback(
     async (section: string, keys: PamSiteSettingKey[]) => {
-      setSavingSection(section);
-      setError(null);
+      saveStore.emit({ targetId: section });
       const payload: DraftState = {};
       for (const key of keys) {
         const value = getDraftValue(draft, byKey.get(key), key);
@@ -218,8 +231,15 @@ export function AdminSiteSettingsPanel({
         payload[key] = value;
       }
       try {
-        const rows = await siteSettingsApi.patch(payload);
-        setEntries(rows);
+        const rows = await runAsyncStore(
+          saveStore,
+          siteSettingsApi.patch(payload),
+          { mapError: () => tt.saveFailed }
+        );
+        if (rows === undefined) {
+          return;
+        }
+        listStore.success(rows);
         setDraft((current) => {
           const next = { ...current };
           for (const key of keys) {
@@ -231,16 +251,16 @@ export function AdminSiteSettingsPanel({
           invalidatePublicConfigCache();
         }
         dialogHandler.success(tt.saveSuccess);
-      } catch {
-        setError(tt.saveFailed);
       } finally {
-        setSavingSection(null);
+        saveStore.emit({ targetId: null });
       }
     },
     [
       byKey,
       dialogHandler,
       draft,
+      listStore,
+      saveStore,
       siteSettingsApi,
       tt.saveFailed,
       tt.saveSuccess
@@ -254,7 +274,7 @@ export function AdminSiteSettingsPanel({
     []
   );
 
-  if (loading) {
+  if (loading && entries.length === 0) {
     return <AdminPanelLoading testId="AdminSiteSettingsLoading" />;
   }
 

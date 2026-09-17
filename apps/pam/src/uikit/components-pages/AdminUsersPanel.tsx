@@ -5,6 +5,13 @@ import { useCallback, useState } from 'react';
 import { AdminUsersApi } from '@/impls/appApi/AdminUsersApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { PermissionKey, useCan } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
@@ -19,6 +26,10 @@ const SYSTEM_ROLES: SystemRoleType[] = [
   SystemRole.Admin
 ];
 
+type RoleMutationState = AsyncState<true> & {
+  targetId: string | null;
+};
+
 export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const adminUsersApi = useIOC(AdminUsersApi);
   const { user } = useUserAuth();
@@ -26,11 +37,17 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const { allowed: canChangeRole } = useCan(
     PermissionKey.admin_users_system_role
   );
-  const [rows, setRows] = useState<PamAdminUserListItem[]>([]);
   const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<PamAdminUserListItem[]>>();
+  const [role, roleStore] = useAsyncStore<RoleMutationState>({
+    targetId: null
+  });
+  const rows = list.result ?? [];
+  const loading = list.loading;
+  const pendingId = role.targetId;
+  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(role.error);
 
   const roleLabel = useCallback(
     (role: SystemRoleType) => {
@@ -42,19 +59,17 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   );
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const items = await adminUsersApi.search({
+    await runAsyncStore(
+      listStore,
+      adminUsersApi.search({
         q: query.trim() || undefined
-      });
-      setRows(items);
-    } catch {
-      setError(tt.description);
-    } finally {
-      setLoading(false);
-    }
-  }, [adminUsersApi, query, tt.description]);
+      }),
+      {
+        keep: true,
+        mapError: () => tt.description
+      }
+    );
+  }, [adminUsersApi, listStore, query, tt.description]);
 
   useStrictEffect(() => {
     void load();
@@ -69,12 +84,21 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
       ) {
         return;
       }
-      setPendingId(row.id);
-      setError(null);
+      roleStore.emit({ targetId: row.id });
       try {
-        await adminUsersApi.setSystemRole(row.id, systemRole);
-        setRows((prev) =>
-          prev.map((item) =>
+        const ok = await runAsyncStore(
+          roleStore,
+          adminUsersApi
+            .setSystemRole(row.id, systemRole)
+            .then(() => true as const),
+          { mapError: () => tt.description }
+        );
+        if (ok === undefined) {
+          return;
+        }
+        const current = listStore.getResult() ?? [];
+        listStore.success(
+          current.map((item) =>
             item.id === row.id
               ? {
                   ...item,
@@ -84,13 +108,18 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
               : item
           )
         );
-      } catch {
-        setError(tt.description);
       } finally {
-        setPendingId(null);
+        roleStore.emit({ targetId: null });
       }
     },
-    [adminUsersApi, canChangeRole, currentUserId, tt.description]
+    [
+      adminUsersApi,
+      canChangeRole,
+      currentUserId,
+      listStore,
+      roleStore,
+      tt.description
+    ]
   );
 
   const columns: TableColumn<PamAdminUserListItem>[] = [

@@ -8,13 +8,21 @@ import { useCallback, useMemo, useState } from 'react';
 import { AdminLocalesApi } from '@/impls/appApi/AdminLocalesApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
+import {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  usePendingAsyncStore,
+  type AsyncState
+} from '@/uikit/hook/useAsyncStore';
 import { PermissionKey, useCan } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { i18nConfig, type LocaleType } from '@config/i18n';
 import type { AdminLocalesI18nInterface } from '@config/i18n-mapping/admin18n';
 import {
   isSupportedAdminLocale,
-  type PamAdminLocaleItem
+  type PamAdminLocaleItem,
+  type PamAdminLocalesImportResult
 } from '@schemas/PamLocalesSchema';
 
 type EditorMode = 'idle' | 'create' | 'edit';
@@ -25,6 +33,11 @@ type DraftLocale = {
   namespace: string;
   text: string;
   description: string;
+};
+
+type LocalesListResult = {
+  items: PamAdminLocaleItem[];
+  total: number;
 };
 
 const EMPTY_DRAFT: DraftLocale = {
@@ -83,19 +96,29 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
     resolveInitialLocale(uiLocale)
   );
   const [namespaces, setNamespaces] = useState<string[]>([]);
-  const [rows, setRows] = useState<PamAdminLocaleItem[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [keyword, setKeyword] = useState('');
   const [namespace, setNamespace] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [mode, setMode] = useState<EditorMode>('idle');
   const [draft, setDraft] = useState<DraftLocale>(EMPTY_DRAFT);
+
+  const [list, listStore] =
+    usePendingAsyncStore<AsyncState<LocalesListResult>>();
+  const [save, saveStore] = useAsyncStore<AsyncState<true>>();
+  const [importingState, importStore] =
+    useAsyncStore<AsyncState<PamAdminLocalesImportResult>>();
+  const loading = list.loading;
+  const saving = save.loading;
+  const importing = importingState.loading;
+  const error =
+    asyncErrorMessage(list.error) ??
+    asyncErrorMessage(save.error) ??
+    asyncErrorMessage(importingState.error);
+
+  const rows = list.result?.items ?? [];
+  const total = list.result?.total ?? 0;
 
   const loadNamespaces = useCallback(async () => {
     try {
@@ -107,49 +130,66 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
   }, [api]);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await api.search({
-        locale,
-        keyword: keyword.trim() || undefined,
-        namespace: namespace || undefined,
-        page,
-        pageSize
-      });
-      setRows([...result.items]);
-      setTotal(result.total ?? 0);
-    } catch {
-      setError(tt.loadFailed);
-      setRows([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [api, keyword, locale, namespace, page, pageSize, tt.loadFailed]);
+    await runAsyncStore(
+      listStore,
+      async () => {
+        const result = await api.search({
+          locale,
+          keyword: keyword.trim() || undefined,
+          namespace: namespace || undefined,
+          page,
+          pageSize
+        });
+        return {
+          items: [...result.items],
+          total: result.total ?? 0
+        };
+      },
+      {
+        keep: true,
+        mapError: () => tt.loadFailed
+      }
+    );
+  }, [
+    api,
+    keyword,
+    listStore,
+    locale,
+    namespace,
+    page,
+    pageSize,
+    tt.loadFailed
+  ]);
 
   useStrictEffect(() => {
     if (!canRead) {
-      setLoading(false);
+      listStore.success({ items: [], total: 0 });
       return;
     }
     void loadNamespaces();
     void load();
-  }, [canRead, load, loadNamespaces]);
+  }, [canRead, listStore, load, loadNamespaces]);
 
   const startCreate = (): void => {
     setMode('create');
     setDraft(EMPTY_DRAFT);
     setSuccess(null);
-    setError(null);
+    listStore.emit({ error: null });
+    saveStore.emit({ error: null });
+    importStore.emit({ error: null });
   };
 
-  const startEdit = (item: PamAdminLocaleItem): void => {
-    setMode('edit');
-    setDraft(toDraft(item));
-    setSuccess(null);
-    setError(null);
-  };
+  const startEdit = useCallback(
+    (item: PamAdminLocaleItem): void => {
+      setMode('edit');
+      setDraft(toDraft(item));
+      setSuccess(null);
+      listStore.emit({ error: null });
+      saveStore.emit({ error: null });
+      importStore.emit({ error: null });
+    },
+    [importStore, listStore, saveStore]
+  );
 
   const onValueChange = (nextValue: string): void => {
     const { namespace: fromKey } = splitI18nKeySafe(nextValue);
@@ -169,62 +209,61 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
     if (!canWrite || saving) return;
     const value = draft.value.trim();
     if (mode === 'create' && !isI18nKey(value)) {
-      setError(tt.keyInvalid);
+      saveStore.failed(tt.keyInvalid);
       return;
     }
-    setSaving(true);
-    setError(null);
     setSuccess(null);
-    try {
-      if (mode === 'create') {
-        await api.create({
-          value,
-          locale,
-          text: draft.text,
-          description: draft.description
-        });
-      } else if (draft.id != null) {
-        await api.update({
-          id: draft.id,
-          locale,
-          text: draft.text,
-          description: draft.description
-        });
-      }
-      setSuccess(tt.saveSuccess);
-      setMode('idle');
-      setDraft(EMPTY_DRAFT);
-      await loadNamespaces();
-      await load();
-    } catch {
-      setError(tt.saveFailed);
-    } finally {
-      setSaving(false);
+    const ok = await runAsyncStore(
+      saveStore,
+      async () => {
+        if (mode === 'create') {
+          await api.create({
+            value,
+            locale,
+            text: draft.text,
+            description: draft.description
+          });
+        } else if (draft.id != null) {
+          await api.update({
+            id: draft.id,
+            locale,
+            text: draft.text,
+            description: draft.description
+          });
+        }
+        return true as const;
+      },
+      { mapError: () => tt.saveFailed }
+    );
+    if (ok === undefined) {
+      return;
     }
+    setSuccess(tt.saveSuccess);
+    setMode('idle');
+    setDraft(EMPTY_DRAFT);
+    await loadNamespaces();
+    await load();
   };
 
   const onImport = async (): Promise<void> => {
     if (!canWrite || importing) return;
-    setImporting(true);
-    setError(null);
     setSuccess(null);
-    try {
-      const result = await api.importFromStatic();
-      setSuccess(
-        formatImportSuccess(
-          tt.importSuccess,
-          result.successCount,
-          result.totalCount
-        )
-      );
-      setPage(1);
-      await loadNamespaces();
-      await load();
-    } catch {
-      setError(tt.importFailed);
-    } finally {
-      setImporting(false);
+    const result = await runAsyncStore(importStore, api.importFromStatic(), {
+      mapError: () => tt.importFailed
+    });
+    if (result === undefined) {
+      return;
     }
+    setSuccess(
+      formatImportSuccess(
+        tt.importSuccess,
+        result.successCount,
+        result.totalCount
+      )
+    );
+    setPage(1);
+    await loadNamespaces();
+    await load();
   };
 
   const onLocaleChange = (next: LocaleType): void => {
@@ -278,7 +317,15 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
           ) : null
       }
     ],
-    [canWrite, tt.colActions, tt.colNamespace, tt.colText, tt.colValue, tt.edit]
+    [
+      canWrite,
+      startEdit,
+      tt.colActions,
+      tt.colNamespace,
+      tt.colText,
+      tt.colValue,
+      tt.edit
+    ]
   );
 
   if (authLoading) {
