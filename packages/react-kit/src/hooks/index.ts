@@ -10,7 +10,8 @@ export { useMountedClient } from './useMountedClient';
 export {
   isSliceStoreAdapter,
   useSliceStoreAdapter,
-  useStore
+  useStore,
+  type ReadableStore
 } from './useStore';
 export {
   asyncErrorMessage,

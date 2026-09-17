@@ -55,12 +55,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@qlover/corekit-bridge": "^3.4.0",
-    "@qlover/slice-store-react": "^1.4.2",
-    "@qlover/fe-corekit": "^3.4.0"
-  },
   "devDependencies": {
+    "@qlover/corekit-bridge": "^3.4.0",
+    "@qlover/fe-corekit": "^3.4.0",
+    "@qlover/slice-store-react": "^1.4.2",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
@@ -71,6 +69,9 @@
     "vite-plugin-dts": "^4.5.4"
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": ">=18.0.0",
+    "@qlover/corekit-bridge": "^3.4.0",
+    "@qlover/fe-corekit": "^3.4.0",
+    "@qlover/slice-store-react": "^1.4.2"
   }
 }

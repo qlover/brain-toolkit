@@ -7,6 +7,18 @@ import { useSliceStore, type SliceStore } from '@qlover/slice-store-react';
 import { useSyncExternalStore } from 'react';
 
 /**
+ * Minimal store port for {@link useStore}.
+ *
+ * Prefer this over importing `StoreInterface` at call sites so pam / next-kit /
+ * react-kit do not need identical `@qlover/corekit-bridge` package instances
+ * for TypeScript assignability.
+ */
+export type ReadableStore<S> = {
+  getState: () => S;
+  subscribe: (listener: (state: S, prevState: S) => void) => () => void;
+};
+
+/**
  * Runtime narrow for {@link SliceStoreAdapter}-backed {@link StoreInterface} ports.
  */
 export function isSliceStoreAdapter<S extends StoreStateInterface>(
@@ -30,10 +42,10 @@ export function useSliceStoreAdapter<S extends StoreStateInterface, R = S>(
 }
 
 /**
- * React hook for any {@link StoreInterface} using `subscribe` / `getState`.
+ * React hook for any readable store using `subscribe` / `getState`.
  */
-export function useStore<S extends StoreStateInterface, R = S>(
-  store: StoreInterface<S>,
+export function useStore<S, R = S>(
+  store: ReadableStore<S>,
   selector?: (state: S) => R
 ): R {
   const select = (selector ?? ((s: S) => s as unknown as R)) as (state: S) => R;

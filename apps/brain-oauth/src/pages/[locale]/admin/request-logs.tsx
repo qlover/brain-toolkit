@@ -1,12 +1,9 @@
+import { useStore } from '@brain-toolkit/react-kit';
 import {
   ResourceSearch,
   type ResourceSearchParams
 } from '@qlover/corekit-bridge';
-import {
-  PageI18nProvider,
-  useStore,
-  useStrictEffect
-} from '@qlover/next-kit/client';
+import { PageI18nProvider, useStrictEffect } from '@qlover/next-kit/client';
 import dynamic from 'next/dynamic';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo } from 'react';

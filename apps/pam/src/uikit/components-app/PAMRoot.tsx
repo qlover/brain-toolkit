@@ -1,17 +1,13 @@
 'use client';
 
-import { useMountedClient } from '@brain-toolkit/react-kit';
+import { useMountedClient, useStore } from '@brain-toolkit/react-kit';
 import {
   ArrowPathIcon,
   CheckIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { AsyncStoreStatus } from '@qlover/corekit-bridge';
-import {
-  useStore,
-  useStrictEffect,
-  usePageI18nMapping
-} from '@qlover/next-kit/client';
+import { useStrictEffect, usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';

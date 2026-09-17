@@ -1,3 +1,4 @@
+import { useStore } from '@brain-toolkit/react-kit';
 import {
   AdjustmentsHorizontalIcon,
   ListBulletIcon,
@@ -7,7 +8,6 @@ import {
   XMarkIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { useStore } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { debounce } from 'lodash-es';
 import {

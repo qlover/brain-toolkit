@@ -13,7 +13,8 @@ export { useFactory } from './hooks/useFactory';
 export {
   isSliceStoreAdapter,
   useSliceStoreAdapter,
-  useStore
+  useStore,
+  type ReadableStore
 } from './hooks/useStore';
 export {
   asyncErrorMessage,

@@ -27,7 +27,7 @@
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@brain-toolkit/antd-blocks": "^0.1.2",
     "@brain-toolkit/antd-theme-override": "^0.0.3",
-    "@brain-toolkit/react-kit": "^0.2.2",
+    "@brain-toolkit/react-kit": "workspace:*",
     "@heroicons/react": "^2.2.0",
     "@qlover/corekit-bridge": "3.4.0",
     "@qlover/fe-corekit": "3.4.6",

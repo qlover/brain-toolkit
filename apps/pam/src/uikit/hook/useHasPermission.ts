@@ -1,6 +1,6 @@
 'use client';
 
-import { useStore } from '@qlover/next-kit/client';
+import { useStore } from '@brain-toolkit/react-kit';
 import {
   PermissionKey,
   type PamPermissionKey
