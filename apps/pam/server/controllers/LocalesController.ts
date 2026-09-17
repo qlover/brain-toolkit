@@ -8,7 +8,7 @@ import { ApiLocaleService } from '../services/ApiLocaleService';
 export interface LocalesControllerJsonQuery {
   locale: string;
   orderBy?: ResourceSortClause;
-  /** Comma-separated namespaces, e.g. `api,common`. */
+  /** Comma-separated namespaces, e.g. `api,common` or `admin_locales`. */
   namespaces?: string;
 }
 
@@ -32,12 +32,14 @@ export class LocalesController {
       parsed.orderBy
     );
 
-    const namespaces = this.parseNamespaces(parsed.namespaces);
-    return filterMessagesByNamespace(result, namespaces);
+    return filterMessagesByNamespace(
+      result,
+      this.parseNamespaces(parsed.namespaces)
+    );
   }
 
   /**
-   * @param raw - `api,common` or undefined (all namespaces)
+   * @param raw - `api,common` / `admin_locales` or undefined (all namespaces)
    */
   protected parseNamespaces(raw: string | undefined): string[] | undefined {
     if (!raw?.trim()) {

@@ -10,6 +10,7 @@ import { inject, injectable } from '@shared/container';
 import { useApiLocales } from '@config/common';
 import type { LocaleType } from '@config/i18n';
 import { i18nConfig } from '@config/i18n';
+import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import {
   LocalesRepository,
   UpsertResult
@@ -23,11 +24,16 @@ export type ImportLocalesData = {
   };
 };
 
+const LOCALE_DB_CACHE_PREFIX = 'pam:locales:db:';
+const LOCALE_DB_CACHE_TTL_MS = i18nConfig.localeCacheTime * 1000;
+
 @injectable()
 export class ApiLocaleService {
   constructor(
     @inject(LocalesRepository)
-    protected localesRepository: LocalesRepository
+    protected localesRepository: LocalesRepository,
+    @inject(MemoryKvCacheService)
+    protected readonly kv: MemoryKvCacheService
   ) {}
 
   public async getLocalesJson(
@@ -41,16 +47,11 @@ export class ApiLocaleService {
     }
 
     try {
-      const locales = await this.localesRepository.getLocales(localeName);
-      const fromDb = locales.reduce(
-        (acc, locale) => {
-          // @ts-expect-error localeName is valid
-          acc[locale.value] = locale[localeName];
-          return acc;
-        },
-        {} as Record<string, string>
+      const fromDb = await this.kv.getOrSet(
+        `${LOCALE_DB_CACHE_PREFIX}${localeName}`,
+        () => this.localesRepository.getLocaleTextMap(localeName),
+        { ttlMs: LOCALE_DB_CACHE_TTL_MS }
       );
-      // Static base + DB overrides (CMS edits win; missing DB keys stay from JSON).
       return { ...staticJson, ...fromDb };
     } catch {
       return staticJson;
@@ -65,10 +66,21 @@ export class ApiLocaleService {
   protected async loadStaticLocaleJson(
     localeName: string
   ): Promise<Record<string, string>> {
-    if (localeName === 'zh') {
-      return (await import('@locales/zh.json')).default;
+    if (!i18nConfig.supportedLngs.includes(localeName as LocaleType)) {
+      return {};
     }
-    return (await import('@locales/en.json')).default;
+
+    // Static imports keep the bundler able to resolve locale JSON modules.
+    const loaders: Record<
+      LocaleType,
+      () => Promise<{ default: Record<string, string> }>
+    > = {
+      en: () => import('@locales/en.json'),
+      zh: () => import('@locales/zh.json')
+    };
+
+    const mod = await loaders[localeName as LocaleType]();
+    return mod.default;
   }
 
   public async getLocales(
@@ -93,21 +105,13 @@ export class ApiLocaleService {
       omit(data, ['id', 'created_at'])
     );
 
-    // 清除所有支持的语言的缓存
-    const revalidatePromises = i18nConfig.supportedLngs.map(async (locale) => {
-      await revalidateTag(`i18n-${locale}`, 'default');
-    });
-    await Promise.all(revalidatePromises);
+    await this.invalidateLocaleCaches();
   }
 
   public async create(data: Partial<LocalesSchema>): Promise<void> {
     await this.localesRepository.add(data as LocalesSchema);
 
-    // 清除所有支持的语言的缓存
-    const revalidatePromises = i18nConfig.supportedLngs.map(async (locale) => {
-      await revalidateTag(`i18n-${locale}`, 'default');
-    });
-    await Promise.all(revalidatePromises);
+    await this.invalidateLocaleCaches();
   }
 
   public async importLocales(data: ImportLocalesData): Promise<UpsertResult> {
@@ -141,16 +145,22 @@ export class ApiLocaleService {
       concurrency: 3 // max 3 concurrent requests
     });
 
-    // Clear cache for all supported languages if any data was successfully imported
     if (upsertResult.successCount > 0) {
-      const revalidatePromises = i18nConfig.supportedLngs.map(
-        async (locale) => {
-          await revalidateTag(`i18n-${locale}`, 'default');
-        }
-      );
-      await Promise.all(revalidatePromises);
+      await this.invalidateLocaleCaches();
     }
 
     return upsertResult;
+  }
+
+  /**
+   * Clears MemoryKv locale overrides + Next data-cache tags (CDN / route).
+   */
+  protected async invalidateLocaleCaches(): Promise<void> {
+    await this.kv.removeByPrefix(LOCALE_DB_CACHE_PREFIX);
+    await Promise.all(
+      i18nConfig.supportedLngs.map((locale) =>
+        revalidateTag(`i18n-${locale}`, 'default')
+      )
+    );
   }
 }

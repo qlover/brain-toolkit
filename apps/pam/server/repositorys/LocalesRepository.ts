@@ -6,6 +6,7 @@ import { localesSchema, type LocalesSchema } from '@qlover/next-kit/common';
 import { inject, injectable } from '@shared/container';
 import { createAdminClient, createServerClient } from '@shared/supabase/server';
 import { defaultSearchParams } from '@config/common';
+import { i18nConfig, type LocaleType } from '@config/i18n';
 import { I } from '@config/ioc-identifiter';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
@@ -82,8 +83,57 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
     return (result.data ?? []) as LocalesSchema[];
   }
 
+  /**
+   * Full-row fetch (admin / legacy). Prefer {@link getLocaleTextMap} for the
+   * public JSON dictionary path.
+   */
   public async getLocales(_localeName: string): Promise<LocalesSchema[]> {
     return this.getAll();
+  }
+
+  /**
+   * Slim dictionary for `/api/locales/json`: only `value` + one locale column.
+   * Pages through PostgREST's default 1000-row window so large tables are complete.
+   */
+  public async getLocaleTextMap(
+    localeName: string
+  ): Promise<Record<string, string>> {
+    if (!i18nConfig.supportedLngs.includes(localeName as LocaleType)) {
+      return {};
+    }
+
+    const pageSize = 1000;
+    const map: Record<string, string> = {};
+    let from = 0;
+
+    for (;;) {
+      const to = from + pageSize - 1;
+      const result = await this.getAdminSupabase()
+        .from(TABLE)
+        .select(`value,${localeName}`)
+        .range(from, to);
+      this.throwIfError(result);
+
+      const rawRows: unknown = result.data ?? [];
+      const rows = (Array.isArray(rawRows) ? rawRows : []) as Array<
+        Record<string, unknown>
+      >;
+      for (const row of rows) {
+        const value = row.value;
+        if (typeof value !== 'string' || !value) {
+          continue;
+        }
+        const text = row[localeName];
+        map[value] = typeof text === 'string' ? text : '';
+      }
+
+      if (rows.length < pageSize) {
+        break;
+      }
+      from += pageSize;
+    }
+
+    return map;
   }
 
   /** Distinct namespaces for exact filter dropdown (sorted). */
@@ -181,24 +231,30 @@ export class LocalesRepository extends PAMSupabaseRepo<LocalesSchema> {
 
     if (params.keyword?.trim()) {
       const kw = params.keyword.trim();
-      const localeCol =
+      const filterLocale =
         filters != null &&
         typeof filters === 'object' &&
         !Array.isArray(filters) &&
         'locale' in filters &&
-        typeof (filters as { locale?: unknown }).locale === 'string' &&
-        ((filters as { locale: string }).locale === 'en' ||
-          (filters as { locale: string }).locale === 'zh')
-          ? (filters as { locale: 'en' | 'zh' }).locale
-          : null;
+        typeof (filters as { locale?: unknown }).locale === 'string'
+          ? (filters as { locale: string }).locale.trim()
+          : '';
+      const localeCol = i18nConfig.supportedLngs.includes(
+        filterLocale as LocaleType
+      )
+        ? filterLocale
+        : null;
 
       if (localeCol) {
         query = query.or(
           `value.ilike.%${kw}%,${localeCol}.ilike.%${kw}%,description.ilike.%${kw}%,namespace.ilike.%${kw}%`
         );
       } else {
+        const localeIlikes = i18nConfig.supportedLngs
+          .map((locale) => `${locale}.ilike.%${kw}%`)
+          .join(',');
         query = query.or(
-          `value.ilike.%${kw}%,en.ilike.%${kw}%,zh.ilike.%${kw}%,description.ilike.%${kw}%,namespace.ilike.%${kw}%`
+          `value.ilike.%${kw}%,${localeIlikes},description.ilike.%${kw}%,namespace.ilike.%${kw}%`
         );
       }
     }
