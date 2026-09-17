@@ -92,6 +92,11 @@ export default defineConfig({
       '**/.husky/**',
       '**/.vscode/**',
       '**/.nx/**'
-    ]
+    ],
+    server: {
+      deps: {
+        inline: ['@qlover/corekit-bridge']
+      }
+    }
   }
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useStore } from '@qlover/next-kit/client';
+import { useStore } from '@brain-toolkit/react-kit';
 import { I } from '@config/ioc-identifiter';
 import type { PamSessionCapabilitiesStateInterface } from '@interfaces/PamSessionCapabilitiesInterface';
 import { useIOC } from './useIOC';

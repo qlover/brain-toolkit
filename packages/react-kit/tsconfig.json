@@ -14,7 +14,7 @@
       "@brain-toolkit/react-kit/*": ["./src/*"]
     }
   },
-  "include": ["src", "package.json", "example/src"],
-  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__"],
+  "include": ["src", "package.json"],
+  "exclude": ["dist", "node_modules", "ts-build", "__tests__", "__mocks__", "example"],
   "references": []
 }

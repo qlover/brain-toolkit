@@ -128,7 +128,9 @@ export default tseslint.config([
       '**/*.test.ts',
       '**/__mocks__/**',
       '**/__tests__/**',
-      '**/*.spec.ts'
+      '**/*.spec.ts',
+      // Demo apps; covered by packages/*/example/tsconfig.json + general TS lint
+      '**/example/**'
     ],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {

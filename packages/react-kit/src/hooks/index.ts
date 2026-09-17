@@ -7,4 +7,20 @@ export {
   useLifecycleDestroyed
 } from './useLifecycle';
 export { useMountedClient } from './useMountedClient';
-export { useStore } from './useStore';
+export {
+  isSliceStoreAdapter,
+  useSliceStoreAdapter,
+  useStore,
+  type ReadableStore
+} from './useStore';
+export {
+  asyncErrorMessage,
+  runAsyncStore,
+  useAsyncStore,
+  useAsyncStoreState,
+  usePendingAsyncStore,
+  type AsyncState,
+  type RunAsyncStoreOptions,
+  type RunAsyncStoreTask,
+  type UseAsyncStoreStateOmitOptions
+} from './useAsyncStore';

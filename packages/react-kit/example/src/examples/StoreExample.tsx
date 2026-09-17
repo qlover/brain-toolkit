@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { useFactory, useStore } from '@brain-toolkit/react-kit';
-import { StoreInterface } from '@qlover/corekit-bridge';
+import { SliceStoreAdapter } from '@qlover/corekit-bridge/store-state';
 
 /**
  * Simple Counter Store
@@ -15,32 +15,32 @@ interface CounterState {
   lastUpdated: number;
 }
 
-class CounterStore extends StoreInterface<CounterState> {
+class CounterStore extends SliceStoreAdapter<CounterState> {
   constructor() {
-    super(() => ({
+    super((): CounterState => ({
       count: 0,
       lastUpdated: Date.now()
     }));
   }
 
   public increment(): void {
-    this.emit({
-      ...this.state,
-      count: this.state.count + 1,
+    const { count } = this.getState();
+    this.update({
+      count: count + 1,
       lastUpdated: Date.now()
     });
   }
 
   public decrement(): void {
-    this.emit({
-      ...this.state,
-      count: this.state.count - 1,
+    const { count } = this.getState();
+    this.update({
+      count: count - 1,
       lastUpdated: Date.now()
     });
   }
 
   public reset(): void {
-    this.emit({
+    this.update({
       count: 0,
       lastUpdated: Date.now()
     });
@@ -61,9 +61,9 @@ interface TodoState {
   filter: 'all' | 'active' | 'completed';
 }
 
-class TodoStore extends StoreInterface<TodoState> {
+class TodoStore extends SliceStoreAdapter<TodoState> {
   constructor() {
-    super(() => ({
+    super((): TodoState => ({
       todos: [],
       filter: 'all'
     }));
@@ -75,33 +75,27 @@ class TodoStore extends StoreInterface<TodoState> {
       text,
       completed: false
     };
-    this.emit({
-      ...this.state,
-      todos: [...this.state.todos, newTodo]
+    this.update({
+      todos: [...this.getState().todos, newTodo]
     });
   }
 
   public toggleTodo(id: string): void {
-    this.emit({
-      ...this.state,
-      todos: this.state.todos.map((todo) =>
+    this.update({
+      todos: this.getState().todos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
     });
   }
 
   public deleteTodo(id: string): void {
-    this.emit({
-      ...this.state,
-      todos: this.state.todos.filter((todo) => todo.id !== id)
+    this.update({
+      todos: this.getState().todos.filter((todo) => todo.id !== id)
     });
   }
 
   public setFilter(filter: 'all' | 'active' | 'completed'): void {
-    this.emit({
-      ...this.state,
-      filter
-    });
+    this.update({ filter });
   }
 }
 
@@ -160,7 +154,7 @@ function SelectorExample() {
       <div className="demo-section">
         <div className="counter-display">{count}</div>
         <p style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
-          This component won't re-render if only lastUpdated changes
+          This component won&apos;t re-render if only lastUpdated changes
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
           <button className="button primary" onClick={() => store.increment()}>
@@ -210,7 +204,6 @@ function TodoStoreExample() {
         Add, toggle, and delete todos with reactive updates.
       </p>
       <div className="demo-section">
-        {/* Add Todo */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
             <input
@@ -232,7 +225,6 @@ function TodoStoreExample() {
           </div>
         </div>
 
-        {/* Stats */}
         <div
           style={{
             display: 'flex',
@@ -249,7 +241,6 @@ function TodoStoreExample() {
           <span>Completed: {stats.completed}</span>
         </div>
 
-        {/* Filters */}
         <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
           <button
             className={`button ${state.filter === 'all' ? 'primary' : ''}`}
@@ -271,7 +262,6 @@ function TodoStoreExample() {
           </button>
         </div>
 
-        {/* Todo List */}
         <div>
           {filteredTodos.length === 0 ? (
             <p style={{ color: '#999', textAlign: 'center', padding: '24px' }}>
@@ -346,24 +336,18 @@ export function StoreExample() {
         <h3 className="example-title">Key Features</h3>
         <ul className="feature-list">
           <li>
-            🔄 <strong>Reactive Updates</strong>: Automatic re-renders on state
-            changes
+            Reactive Updates: Automatic re-renders on state changes
           </li>
           <li>
-            🎯 <strong>Selective Subscription</strong>: Use selectors to
-            optimize performance
+            Selective Subscription: Use selectors to optimize performance
+          </li>
+          <li>Type Safe: Full TypeScript support with inference</li>
+          <li>
+            Store Interface: Compatible with @qlover/corekit-bridge
+            SliceStoreAdapter
           </li>
           <li>
-            📦 <strong>Type Safe</strong>: Full TypeScript support with
-            inference
-          </li>
-          <li>
-            🏪 <strong>Store Interface</strong>: Compatible with
-            @qlover/corekit-bridge
-          </li>
-          <li>
-            ⚡ <strong>Performance</strong>: Only re-renders when selected state
-            changes
+            Performance: Only re-renders when selected state changes
           </li>
         </ul>
       </div>

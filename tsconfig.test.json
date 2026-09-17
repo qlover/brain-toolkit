@@ -16,7 +16,7 @@
     "packages/**/src/**/*.ts",
     "packages/**/src/**/*.tsx"
   ],
-  "exclude": ["**/node_modules/*", "**/dist", "**/build"],
+  "exclude": ["**/node_modules/*", "**/dist", "**/build", "**/example/**"],
   "references": [
     { "path": "./packages/react-kit" },
     { "path": "./packages/antd-blocks" },

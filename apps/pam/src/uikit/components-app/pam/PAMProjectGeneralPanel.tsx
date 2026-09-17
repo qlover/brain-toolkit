@@ -1,11 +1,12 @@
 'use client';
 
+import { useStore } from '@brain-toolkit/react-kit';
 import {
   ClipboardDocumentIcon,
   LockClosedIcon,
   LockOpenIcon
 } from '@heroicons/react/24/outline';
-import { useStore, usePageI18nMapping } from '@qlover/next-kit/client';
+import { usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/routing';

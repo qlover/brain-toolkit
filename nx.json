@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "master",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/js/typescript",
