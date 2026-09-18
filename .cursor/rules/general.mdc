@@ -65,3 +65,8 @@ alwaysApply: false
 25. **测试驱动**：核心逻辑必须伴随单元测试，演示如何通过 Mock 接口隔离测试。
 26. **错误冒泡**：下层只抛出不捕获，仅在上层边界统一处理异常（资源清理除外）。
 27. **异常标准化**：优先自定义类继承 `Error`（携带业务码），严禁抛出字符串，无分类时可用原生 `Error`。
+
+## 七、PAM 专项（简要）
+
+28. **AsyncStore**：客户端异步生命周期用 `AsyncStore`；面板用 `@brain-toolkit/react-kit` 的 `useAsyncStore` / `usePendingAsyncStore` + `runAsyncStore`。一操作一 store；成功看返回值，失败 / abort 用 `isFailed()` / `isStopped()`；文案在渲染层按 `status === 'failed'` 映射。详见 `apps/pam/docs/async-store.md`。
+29. **Supabase 错误**：`await` 后统一 `throwIfError(result)`（PostgREST / Auth 同写法），不主推 `.throwOnError()`；禁止 `if (error) throw new Error(error.message)`。详见 `apps/pam/docs/supabase-errors.md`。
