@@ -2,14 +2,16 @@ import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { RequestLogsRepository } from '@qlover/next-kit/server';
 import { isEmpty } from 'lodash-es';
 import { inject, injectable } from '@shared/container';
+import { i18nConfig, type LocaleType } from '@config/i18n';
 import {
   API_NOT_AUTHORIZED,
   API_OAUTH_WRAPPER_AUTH_FAILED,
   API_REQUEST_BODY_EMPTY
 } from '@config/i18n-identifier/api';
-import { ROUTE_PAMENV_DEVICE } from '@config/route';
+import { ROUTE_PAMENV_DEVICE, withLocalePrefix } from '@config/route';
 import {
   PamCliDeviceApproveRequestSchema,
+  PamCliDeviceCodeRequestSchema,
   PamCliDeviceTokenRequestSchema,
   PamCliTokenRequestSchema,
   type PamCliDeviceCodeResponse,
@@ -113,10 +115,13 @@ export class PamCliController {
    * @param request - Used to derive verification origin (local vs SITE_URL)
    * @returns Device/user codes and verification URLs
    */
-  public createDeviceCode(request: NextRequest): PamCliDeviceCodeResponse {
+  public async createDeviceCode(
+    request: NextRequest
+  ): Promise<PamCliDeviceCodeResponse> {
     const record = PamCliDeviceCodeStore.create();
     const origin = this.resolvePublicOrigin(request);
-    const verificationUri = `${origin}${ROUTE_PAMENV_DEVICE}`;
+    const locale = await this.resolveDevicePageLocale(request);
+    const verificationUri = `${origin}${withLocalePrefix(ROUTE_PAMENV_DEVICE, locale)}`;
     const verificationUriComplete = `${verificationUri}?user_code=${encodeURIComponent(record.userCode)}`;
 
     return {
@@ -127,6 +132,33 @@ export class PamCliController {
       expires_in: Math.floor((record.expiresAt - Date.now()) / 1000),
       interval: record.intervalSeconds
     };
+  }
+
+  /**
+   * Prefers body.locale（CLI 当前语言），其次 Accept-Language，最后 fallback。
+   */
+  protected async resolveDevicePageLocale(
+    request: NextRequest
+  ): Promise<LocaleType> {
+    try {
+      const text = await request.clone().text();
+      if (text.trim()) {
+        const parsed = PamCliDeviceCodeRequestSchema.safeParse(
+          JSON.parse(text) as unknown
+        );
+        if (parsed.success && parsed.data.locale) {
+          return parsed.data.locale;
+        }
+      }
+    } catch {
+      // ignore body parse errors
+    }
+
+    const accept = request.headers.get('accept-language')?.toLowerCase() || '';
+    if (accept.includes('zh')) {
+      return 'zh';
+    }
+    return i18nConfig.fallbackLng;
   }
 
   /**

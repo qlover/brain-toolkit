@@ -67,13 +67,16 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   /**
    * @override
    */
-  public async createDeviceCode(baseUrl: string): Promise<PamCliDeviceCodeType> {
+  public async createDeviceCode(
+    baseUrl: string,
+    locale?: 'en' | 'zh'
+  ): Promise<PamCliDeviceCodeType> {
     return this.requestJson<PamCliDeviceCodeType>(
       `${PamCliConfig.normalizeOrigin(baseUrl)}/api/pam/cli/device/code`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}'
+        body: JSON.stringify(locale ? { locale } : {})
       }
     );
   }

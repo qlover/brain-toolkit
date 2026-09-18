@@ -56,8 +56,12 @@ export interface PamCliApiClientInterface {
    * Starts browser device authorization.
    *
    * @param baseUrl - PAM origin
+   * @param locale - Optional CLI UI locale for verification_uri prefix
    */
-  createDeviceCode(baseUrl: string): Promise<PamCliDeviceCodeType>;
+  createDeviceCode(
+    baseUrl: string,
+    locale?: 'en' | 'zh'
+  ): Promise<PamCliDeviceCodeType>;
 
   /**
    * Polls device authorization until approved / denied / expired.
