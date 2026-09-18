@@ -7,11 +7,10 @@ import { useSliceStore, type SliceStore } from '@qlover/slice-store-react';
 import { useSyncExternalStore } from 'react';
 
 /**
- * Minimal store port for {@link useStore}.
+ * {@link useStore} 的最小可读 store 端口。
  *
- * Prefer this over importing `StoreInterface` at call sites so pam / next-kit /
- * react-kit do not need identical `@qlover/corekit-bridge` package instances
- * for TypeScript assignability.
+ * 调用方优先用本类型，而不是直接依赖 `StoreInterface`，避免 pam / next-kit /
+ * react-kit 因 `@qlover/corekit-bridge` 多实例导致 TypeScript 赋值不兼容。
  */
 export type ReadableStore<S> = {
   getState: () => S;
@@ -19,7 +18,7 @@ export type ReadableStore<S> = {
 };
 
 /**
- * Runtime narrow for {@link SliceStoreAdapter}-backed {@link StoreInterface} ports.
+ * 运行时收窄：是否为 {@link SliceStoreAdapter} 承载的 {@link StoreInterface}。
  */
 export function isSliceStoreAdapter<S extends StoreStateInterface>(
   store: StoreInterface<S>
@@ -28,8 +27,8 @@ export function isSliceStoreAdapter<S extends StoreStateInterface>(
 }
 
 /**
- * Subscribe via `useSliceStore` when the target is a {@link SliceStore} or
- * {@link SliceStoreAdapter} (inner store is used).
+ * 目标为 {@link SliceStore} 或 {@link SliceStoreAdapter}（取其内部 store）时，
+ * 通过 `useSliceStore` 订阅。
  */
 export function useSliceStoreAdapter<S extends StoreStateInterface, R = S>(
   store: SliceStoreAdapter<S> | SliceStore<S>,
@@ -42,7 +41,7 @@ export function useSliceStoreAdapter<S extends StoreStateInterface, R = S>(
 }
 
 /**
- * React hook for any readable store using `subscribe` / `getState`.
+ * 任意可读 store 的 React hook（基于 `subscribe` / `getState`）。
  */
 export function useStore<S, R = S>(
   store: ReadableStore<S>,

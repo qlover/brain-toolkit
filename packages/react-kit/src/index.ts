@@ -17,7 +17,6 @@ export {
   type ReadableStore
 } from './hooks/useStore';
 export {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   useAsyncStoreState,

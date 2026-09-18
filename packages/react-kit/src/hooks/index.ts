@@ -14,7 +14,6 @@ export {
   type ReadableStore
 } from './useStore';
 export {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   useAsyncStoreState,

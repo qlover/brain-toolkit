@@ -14,14 +14,14 @@ import { useStore } from './useStore';
 
 type AsyncStoreCtor<TStore> = new () => TStore;
 
-/** Prefer `getState()` so subclass / patch meta (e.g. `targetId`) is kept. */
+/** 优先用 `getState()`，以便保留子类 / patch 上的 meta（如 `targetId`）。 */
 type InferAsyncState<TStore extends AsyncStoreInterface<any>> = ReturnType<
   TStore['getState']
 >;
 
 /**
- * Async store **state** with typed `result`. Prefer this over passing result as
- * the `useAsyncStore` type arg — always type the state, extend it for meta.
+ * 带类型化 `result` 的 AsyncStore **状态**。请始终把 state 作为泛型参数，
+ * 需要 meta 时再交叉扩展；不要把 result 类型直接当作 `useAsyncStore` 的泛型。
  *
  * @example
  * ```ts
@@ -65,23 +65,21 @@ function createDefaultAsyncStore<S extends AsyncStoreStateInterface<any>>(
 }
 
 /**
- * Mount-stable AsyncStore + reactive state as `[state, store]` (like `useState`).
+ * 挂载期内稳定的 AsyncStore + 响应式 state，返回 `[state, store]`（类似 `useState`）。
  *
- * - no arg / object → default `AsyncStore` (`draft`, `loading: false`); object
- *   is merged into `defaultState`
- * - subclass ctor → `new Ctor()` (ctor owns default state; no factory fn)
+ * - 无参 / 对象 → 默认 `AsyncStore`（`draft`，`loading: false`）；对象合并进 `defaultState`
+ * - 子类构造函数 → `new Ctor()`（默认状态由 ctor 负责；不接受 factory 函数）
  *
- * For list panels that should show a spinner before the first fetch, use
- * {@link usePendingAsyncStore} instead.
+ * 列表面板若希望首屏就显示 loading，请用 {@link usePendingAsyncStore}。
  *
- * Subscribe-only to an existing IOC/facade store: {@link useAsyncStoreState}.
+ * 已有 IOC / facade store 只订阅：{@link useAsyncStoreState}。
  *
  * ```ts
  * const [role, roleStore] = useAsyncStore<RoleSaveState>({ targetId: null });
  * const [state, store] = useAsyncStore(RoleSaveStore);
  * ```
  *
- * Only the first render's arg is used (`useState` initializer).
+ * 仅首次渲染的参数生效（`useState` 初始化器）。
  */
 export function useAsyncStore<TStore extends AsyncStoreInterface<any>>(
   Store: AsyncStoreCtor<TStore>
@@ -118,8 +116,8 @@ export function useAsyncStore(
 }
 
 /**
- * Like {@link useAsyncStore}, but mounts already `loading` / `pending`
- * (avoids empty flash before the first `runAsyncStore`).
+ * 同 {@link useAsyncStore}，但挂载时已是 `loading` / `pending`
+ *（避免首次 `runAsyncStore` 前闪空）。
  *
  * ```ts
  * const [list, listStore] = usePendingAsyncStore<AsyncState<Item[]>>();
@@ -151,20 +149,18 @@ export function usePendingAsyncStore(
 
 export type RunAsyncStoreOptions<T> = {
   /**
-   * Pass previous `result` into `start` so UI can keep showing stale data
-   * while refreshing (e.g. OTP auto-refresh).
+   * `start` 时带上已有 `result`，刷新时 UI 可继续展示旧数据
+   *（如 OTP 自动刷新）。
    *
-   * `keep` is a short alias for `keepResultOnStart`.
+   * `keep` 是 `keepResultOnStart` 的短别名。
    */
   keepResultOnStart?: boolean;
   keep?: boolean;
-  /** Map thrown errors before `failed` (e.g. to an i18n string). */
-  mapError?: (error: unknown) => unknown;
-  /** Optional optimistic / seed result passed to `start`. */
+  /** 传给 `start` 的乐观 / 种子 result。 */
   startResult?: T;
 };
 
-/** Promise already in flight, or a deferred factory. */
+/** 已在飞行中的 Promise，或延迟执行的 factory。 */
 export type RunAsyncStoreTask<T> = Promise<T> | (() => Promise<T>);
 
 function resolveRunTask<T>(task: RunAsyncStoreTask<T>): Promise<T> {
@@ -172,14 +168,13 @@ function resolveRunTask<T>(task: RunAsyncStoreTask<T>): Promise<T> {
 }
 
 /**
- * `start` → await task → `success` / `failed`.
+ * `start` → await 任务 → `success` / `failed` / `stopped`。
  *
- * Errors are written to `store` via `failed` and **not** rethrown — returns
- * `undefined` on failure so callers can skip success side-effects without
- * empty `catch` blocks.
+ * 成功时返回任务结果；失败或 abort 返回 `undefined` 且**不抛出** —
+ * 可以使用 `store.isFailed()` / `store.isStopped()` / `store.isSuccess()` 判断
+ *（展示文案放在渲染层映射，不要在这里写）。
  *
- * Accepts `Promise<T>` or `() => Promise<T>`. Prefer a factory when you need
- * `start()` to run before the work begins.
+ * 接受 `Promise<T>` 或 `() => Promise<T>`。若需要先 `start()` 再开跑，优先用 factory。
  */
 export async function runAsyncStore<
   T,
@@ -204,11 +199,11 @@ export async function runAsyncStore<
     store.success(result as S['result']);
     return result;
   } catch (error) {
-    // Abort is cancellation, not a failed load — leave UI as-is.
     if (isAbortError(error)) {
+      store.stopped(error);
       return undefined;
     }
-    store.failed(options?.mapError?.(error) ?? error);
+    store.failed(error);
     return undefined;
   }
 }
@@ -217,7 +212,7 @@ export type UseAsyncStoreStateOmitOptions<
   S extends AsyncStoreStateInterface<any>,
   K extends keyof S
 > = {
-  /** Prefer a module-level `as const` array so the selector stays stable. */
+  /** 建议用模块级 `as const` 数组，保证 selector 引用稳定。 */
   omit: readonly K[];
 };
 
@@ -233,13 +228,13 @@ function omitStateKeys<S extends object, K extends keyof S>(
 }
 
 /**
- * Subscribe to an **existing** AsyncStore (IOC / facade / shared instance).
- * Panel-local stores: prefer {@link useAsyncStore} / {@link usePendingAsyncStore}
- * which already return `[state, store]`.
+ * 订阅**已有** AsyncStore（IOC / facade / 共享实例）。
+ * 面板本地 store 优先用 {@link useAsyncStore} / {@link usePendingAsyncStore}，
+ * 它们已返回 `[state, store]`。
  *
- * - No 2nd arg → full state (recommended default)
- * - Selector → derived slice
- * - `{ omit }` → full state minus fields
+ * - 无第二参 → 全量 state（推荐默认）
+ * - selector → 派生切片
+ * - `{ omit }` → 全量 state 去掉指定字段
  */
 export function useAsyncStoreState<TStore extends AsyncStoreInterface<any>>(
   store: TStore
@@ -280,17 +275,4 @@ export function useAsyncStoreState<TStore extends AsyncStoreInterface<any>>(
     store.getStore(),
     selector as ((state: S) => unknown) | undefined
   );
-}
-
-export function asyncErrorMessage(error: unknown): string | null {
-  if (error == null) {
-    return null;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return String(error);
 }
