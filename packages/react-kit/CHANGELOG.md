@@ -1,5 +1,15 @@
 # @brain-toolkit/react-kit
 
+## 0.6.1
+
+### Patch Changes
+
+#### ♻️ Refactors
+
+- **react-kit:** 精简 runAsyncStore，错误交由调用方判断 ([04b92f7](https://github.com/qlover/brain-toolkit/commit/04b92f76dc42187994e6a9b05a29e4e5b71365ec)) ([#155](https://github.com/qlover/brain-toolkit/pull/155))
+
+  去掉 mapError / asyncErrorMessage；abort 调用 stopped(error)；成功返回任务结果；公开注释改为中文；版本 0.6.0。
+
 ## 0.5.0
 
 ### Minor Changes

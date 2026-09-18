@@ -1,5 +1,15 @@
 # pam
 
+## 2.10.1
+
+### Patch Changes
+
+#### ♻️ Refactors
+
+- **pam:** 面板按 failed 状态展示错误，对齐新 runAsyncStore ([6092407](https://github.com/qlover/brain-toolkit/commit/609240752fe117c8d99eedfe9b5fcf73b1475a95)) ([#155](https://github.com/qlover/brain-toolkit/pull/155))
+
+  用 store.isSuccess() 判断后续逻辑；渲染层 status === 'failed' 映射 i18n；更新 async-store 文档。
+
 ## 2.10.0
 
 ### Minor Changes
