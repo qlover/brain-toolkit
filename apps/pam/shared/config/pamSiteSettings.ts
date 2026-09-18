@@ -24,8 +24,11 @@
   ALIYUN_SMS_REGION_ID: 'aliyun_sms.region_id',
   ALIYUN_SMS_ENDPOINT: 'aliyun_sms.endpoint',
 
-  API_CORS_ORIGINS: 'api.cors_origins',
-  API_CORS_METHODS: 'api.cors_methods',
+  /**
+   * CORS 规则：origin × path × methods。
+   * 每条：`{ origin, path, methods }`，任一分量可用 `*`。
+   */
+  API_CORS_RULES: 'api.cors_rules',
 
   STORAGE_PREVIEW_BUCKET: 'storage.preview_bucket',
   STORAGE_SCREENSHOT_URL_TEMPLATE: 'storage.screenshot_url_template'
@@ -34,7 +37,18 @@
 export type PamSiteSettingKey =
   (typeof PAM_SITE_SETTING_KEYS)[keyof typeof PAM_SITE_SETTING_KEYS];
 
-export type PamSiteSettingPrimitive = string | boolean | string[];
+/** 存于站点设置的一条 CORS 放行规则。 */
+export type PamCorsRule = {
+  readonly origin: string;
+  readonly path: string;
+  readonly methods: readonly string[];
+};
+
+export type PamSiteSettingPrimitive =
+  | string
+  | boolean
+  | string[]
+  | PamCorsRule[];
 
 export type PamSiteSettingDefinition = {
   readonly key: PamSiteSettingKey;
@@ -48,6 +62,15 @@ export type PamSiteSettingDefinition = {
 
 /** Sentinel: admin PATCH omits secret change when value equals this. */
 export const PAM_SITE_SETTING_SECRET_UNCHANGED = '__UNCHANGED__' as const;
+
+/** 本地开发默认：放行 pam 本机前端。 */
+export const PAM_DEFAULT_CORS_RULES: readonly PamCorsRule[] = Object.freeze([
+  {
+    origin: 'http://localhost:3102',
+    path: '*',
+    methods: ['*']
+  }
+]);
 
 export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
   Object.freeze([
@@ -202,19 +225,12 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       defaultValue: 'https://dysmsapi.aliyuncs.com'
     },
     {
-      key: PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS,
-      label: 'CORS 允许来源',
+      key: PAM_SITE_SETTING_KEYS.API_CORS_RULES,
+      label: 'CORS 规则',
       description:
-        '逗号分隔的跨域白名单 Origin。用于 /oauth/token 等机器端点。留空表示不启用 CORS。',
+        '每条规则选择或填写：来源 Origin、API 路径、HTTP 方法。均可选 *；路径支持 /oauth/*。',
       isSensitive: false,
-      defaultValue: []
-    },
-    {
-      key: PAM_SITE_SETTING_KEYS.API_CORS_METHODS,
-      label: 'CORS 允许方法',
-      description: '逗号分隔的 HTTP 方法列表。默认 GET,POST,OPTIONS。',
-      isSensitive: false,
-      defaultValue: ['GET', 'POST', 'OPTIONS']
+      defaultValue: [...PAM_DEFAULT_CORS_RULES]
     },
     {
       key: PAM_SITE_SETTING_KEYS.STORAGE_PREVIEW_BUCKET,

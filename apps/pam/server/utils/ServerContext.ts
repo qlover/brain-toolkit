@@ -13,6 +13,8 @@ export class ServerContext implements ServerContextInterface {
   protected request?: NextRequest | Request;
   // TODO:
   protected state: ServerState;
+  /** 可选响应头（如 CORS），由 NextApiServer 合并。 */
+  protected responseHeaders?: HeadersInit;
 
   constructor() {
     this.state = {
@@ -52,8 +54,18 @@ export class ServerContext implements ServerContextInterface {
       uid: '',
       name: ''
     };
+    this.responseHeaders = undefined;
 
     return this.changeState(params);
+  }
+
+  /** 供 ApiCorsPlugin 等写入，随后由 NextApiServer 合并进响应。 */
+  public setResponseHeaders(headers: HeadersInit | undefined): void {
+    this.responseHeaders = headers;
+  }
+
+  public getResponseHeaders(): HeadersInit | undefined {
+    return this.responseHeaders;
   }
 
   /**

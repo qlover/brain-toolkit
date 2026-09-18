@@ -1,7 +1,3 @@
-import {
-  apiCorsPreflightResponse,
-  buildApiCorsHeaders
-} from '@qlover/next-kit/server';
 import { OAuthWrapperError } from '@qlover/oauth-wrapper';
 import { isEmpty } from 'lodash-es';
 import {
@@ -11,8 +7,8 @@ import {
 import { ROUTE_OAUTH_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
+import { ApiCorsPlugin } from '@server/plugins/ApiCorsPlugin';
 import { PamUserService } from '@server/services/PamUserService';
-import { loadRuntimeCorsConfig } from '@server/utils/loadRuntimeCorsConfig';
 import type { NextRequest } from 'next/server';
 
 export function parseBearerAuthorization(
@@ -31,8 +27,7 @@ export function parseBearerAuthorization(
  * CORS preflight for cross-origin userinfo requests.
  */
 export async function OPTIONS(req: NextRequest) {
-  const corsConfig = await loadRuntimeCorsConfig(req);
-  return apiCorsPreflightResponse(req, corsConfig);
+  return new ApiCorsPlugin({ path: ROUTE_OAUTH_USERINFO }).preflight(req);
 }
 
 /**
@@ -45,15 +40,13 @@ export async function OPTIONS(req: NextRequest) {
  * minting, but outbound claims use `pam_users` (business email + display_name).
  */
 export async function GET(req: NextRequest) {
-  const corsConfig = await loadRuntimeCorsConfig(req);
-  const corsHeaders = buildApiCorsHeaders(req, corsConfig);
-
   return await new NextApiServer({
     name: ROUTE_OAUTH_USERINFO,
     nextRequest: req,
     event_type: 'oauth-wrapper'
-  }).runWithOAuthJson(
-    async ({ parameters: { IOC } }) => {
+  })
+    .use(new ApiCorsPlugin({ path: ROUTE_OAUTH_USERINFO, request: req }))
+    .runWithOAuthJson(async ({ parameters: { IOC } }) => {
       const accessToken = parseBearerAuthorization(
         req.headers.get('authorization')
       );
@@ -88,10 +81,5 @@ export async function GET(req: NextRequest) {
         name,
         ...(phone ? { phone_number: phone } : {})
       };
-    },
-    {
-      successHeaders: corsHeaders,
-      errorHeaders: corsHeaders
-    }
-  );
+    });
 }

@@ -1,11 +1,7 @@
-import {
-  apiCorsPreflightResponse,
-  buildApiCorsHeaders
-} from '@qlover/next-kit/server';
 import { ROUTE_OAUTH_TOKEN } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
-import { loadRuntimeCorsConfig } from '@server/utils/loadRuntimeCorsConfig';
+import { ApiCorsPlugin } from '@server/plugins/ApiCorsPlugin';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -80,8 +76,7 @@ function parseBasicAuth(header: string | null): {
  * CORS preflight for cross-origin OAuth token requests.
  */
 export async function OPTIONS(req: NextRequest) {
-  const corsConfig = await loadRuntimeCorsConfig(req);
-  return apiCorsPreflightResponse(req, corsConfig);
+  return new ApiCorsPlugin({ path: ROUTE_OAUTH_TOKEN }).preflight(req);
 }
 
 /**
@@ -94,20 +89,15 @@ export async function OPTIONS(req: NextRequest) {
  * so standard OAuth clients (e.g. Supabase Custom Providers) can parse it.
  */
 export async function POST(req: NextRequest) {
-  const corsConfig = await loadRuntimeCorsConfig(req);
-  const corsHeaders = buildApiCorsHeaders(req, corsConfig);
-
   return await new NextApiServer({
     name: ROUTE_OAUTH_TOKEN,
     nextRequest: req,
     event_type: 'oauth-wrapper'
-  }).runWithOAuthJson(
-    async ({ parameters: { IOC } }) =>
+  })
+    .use(new ApiCorsPlugin({ path: ROUTE_OAUTH_TOKEN, request: req }))
+    .runWithOAuthJson(async ({ parameters: { IOC } }) =>
       IOC(OAuthWrapperController).exchangeToken(
         await parseOAuthTokenRequest(req)
-      ),
-    corsHeaders
-      ? { successHeaders: corsHeaders, errorHeaders: corsHeaders }
-      : undefined
-  );
+      )
+    );
 }
