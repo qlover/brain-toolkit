@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
@@ -82,7 +81,12 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
   const data = list.result;
   const loading = list.loading;
   const savingId = save.targetId;
-  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(save.error);
+  const error =
+    list.status === 'failed'
+      ? tt.loadFailed
+      : save.status === 'failed'
+        ? tt.saveFailed
+        : null;
 
   const roleLabel = useCallback(
     (role: PamAdminRoleItem) => {
@@ -144,14 +148,13 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
   const load = useCallback(async () => {
     setSuccess(null);
     const next = await runAsyncStore(listStore, adminRolesApi.list(), {
-      keep: true,
-      mapError: () => tt.loadFailed
+      keep: true
     });
-    if (next === undefined) {
+    if (!listStore.isSuccess() || next === undefined) {
       return;
     }
     applyResponse(next);
-  }, [adminRolesApi, applyResponse, listStore, tt.loadFailed]);
+  }, [adminRolesApi, applyResponse, listStore]);
 
   useStrictEffect(() => {
     void load();
@@ -240,10 +243,9 @@ export function AdminRolesPanel({ tt }: { tt: AdminRolesI18nInterface }) {
         adminRolesApi.replaceAssignments({
           roleId: role.id,
           permissionKeys: draft[role.id] ?? []
-        }),
-        { mapError: () => tt.saveFailed }
+        })
       );
-      if (next === undefined) {
+      if (!saveStore.isSuccess() || next === undefined) {
         return;
       }
       applyResponse(next);

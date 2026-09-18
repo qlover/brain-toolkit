@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   usePendingAsyncStore,
   type AsyncState
@@ -63,7 +62,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
 
   const detail = detailState.result;
   const loading = detailState.loading;
-  const error = asyncErrorMessage(detailState.error);
+  const error = detailState.status === 'failed' ? tt.error : null;
 
   const permissions = detail?.permissions ?? [];
   const canAddMember = permissions.includes(
@@ -106,15 +105,14 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const load = useCallback(async () => {
     setSuccess(null);
     const next = await runAsyncStore(detailStore, teamsApi.detail(teamId), {
-      keep: true,
-      mapError: () => tt.error
+      keep: true
     });
-    if (next === undefined) {
+    if (!detailStore.isSuccess() || next === undefined) {
       setAttachedProjects([]);
       return;
     }
     await loadAttachedProjects();
-  }, [detailStore, loadAttachedProjects, teamId, teamsApi, tt.error]);
+  }, [detailStore, loadAttachedProjects, teamId, teamsApi]);
 
   useStrictEffect(() => {
     void load();

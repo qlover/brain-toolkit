@@ -1,6 +1,6 @@
 # PAM AsyncStore 约定
 
-客户端异步操作（拉列表、保存、导入等）统一用 `@qlover/corekit-bridge` 的 **`AsyncStore`** 管理生命周期（`loading` / `error` / `status` / `result` / `stop`），不要再手写一套 `setLoading` + `setError` + `try/finally`。
+客户端异步操作（拉列表、保存、导入等）统一用 `@qlover/corekit-bridge` 的 **`AsyncStore`** 管理生命周期（`loading` / `error` / `status` / `result` / `stopped`），不要再手写一套 `setLoading` + `setError` + `try/finally`。
 
 已有范例：[`PAMFacade`](../src/impls/PAMfacade.ts)、[`UserService.capabilitiesStore`](../src/impls/UserService.ts)、[`useUserAuth`](../src/uikit/hook/useUserAuth.ts)。
 
@@ -25,9 +25,9 @@
    - 已有 IOC/facade store 只订阅：`useAsyncStoreState(store)`
    - 不接受 factory 函数；禁止 render 时 `new AsyncStore()`
 3. **订阅**：tuple 已含全量 state；切片 / omit 仍可用 `useAsyncStoreState(store, selector | { omit })`。
-4. **跑异步**：`runAsyncStore(store, promise | () => promise, { keep?, mapError? })`；失败只写 `store.error`，返回 `undefined`，不抛。
+4. **跑异步**：`runAsyncStore(store, promise | () => promise, { keep? })`；成功返回任务结果；失败 / abort 写 `failed` / `stopped` 并返回 `undefined`，不抛。后续用 `store.isSuccess()` / `isFailed()` / `isStopped()` 判断。
 5. **成功后的列表**：写入 list store 的 `result`，或 mutation 成功后再 `runAsyncStore(listStore, …)`。
-6. **错误展示**：`failed` 时写入可读文案；短暂 success toast 可用 `useState`。
+6. **错误展示**：渲染层用 `status === 'failed'`（或 `store.isFailed()`）再映射 i18n；不要用 `error` 真值（`stopped` 也会带 abort error）。校验失败可直接 `store.failed(tt.keyHint)`。
 7. **静默刷新**：`runAsyncStore(..., { keep: true })`，避免表格闪空。
 
 ## 推荐写法
@@ -46,11 +46,10 @@ const [save, saveStore] = useAsyncStore<AsyncState<Item[]>>();
 type RoleSaveState = AsyncState<true> & { targetId: string | null };
 const [role, roleStore] = useAsyncStore<RoleSaveState>({ targetId: null });
 
-const next = await runAsyncStore(listStore, api.list(), {
-  keep: true,
-  mapError: () => msg
-});
-if (next === undefined) return;
+const error = list.status === 'failed' ? tt.loadFailed : save.status === 'failed' ? tt.saveFailed : null;
+
+const next = await runAsyncStore(listStore, api.list(), { keep: true });
+if (!listStore.isSuccess() || next === undefined) return;
 ```
 
 ## 反例
@@ -60,3 +59,4 @@ if (next === undefined) return;
 - 在已订阅 User store 的组件上再包一层 AsyncStore 表示「鉴权 loading」。
 - 把 result 类型直接当 `useAsyncStore<Item[]>`（应写 `useAsyncStore<AsyncState<Item[]>>`）。
 - 对同一 store 连写多行 selector 只取 `loading` / `error` / `result`。
+- 在 `runAsyncStore` 里 `mapError` 成文案（文案留给渲染层）。

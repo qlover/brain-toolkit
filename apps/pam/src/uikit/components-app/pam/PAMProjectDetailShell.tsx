@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   usePendingAsyncStore,
   type AsyncState
@@ -126,7 +125,7 @@ export function PAMProjectDetailShell({
 
   const project = detailState.result;
   const loading = detailState.loading;
-  const error = asyncErrorMessage(detailState.error);
+  const error = detailState.status === 'failed' ? tt.projectNotFound : null;
 
   const setProject = useCallback<
     Dispatch<SetStateAction<PAMProjectDetail | null>>
@@ -151,14 +150,12 @@ export function PAMProjectDetailShell({
   }, [pathname]);
 
   useStrictEffect(() => {
-    void runAsyncStore(detailStore, pamApi.getProjectDetail({ id: routeKey }), {
-      mapError: () => tt.projectNotFound
-    });
+    void runAsyncStore(detailStore, pamApi.getProjectDetail({ id: routeKey }));
 
     return () => {
       pamApi.stop(PAMAbortId.projectDetail(routeKey));
     };
-  }, [detailStore, pamApi, routeKey, tt.projectNotFound]);
+  }, [detailStore, pamApi, routeKey]);
 
   useStrictEffect(() => {
     void pamFacade.pullCategories();

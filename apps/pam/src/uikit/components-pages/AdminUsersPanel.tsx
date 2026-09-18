@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
@@ -47,7 +46,10 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
   const rows = list.result ?? [];
   const loading = list.loading;
   const pendingId = role.targetId;
-  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(role.error);
+  const error =
+    list.status === 'failed' || role.status === 'failed'
+      ? tt.description
+      : null;
 
   const roleLabel = useCallback(
     (role: SystemRoleType) => {
@@ -64,12 +66,9 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
       adminUsersApi.search({
         q: query.trim() || undefined
       }),
-      {
-        keep: true,
-        mapError: () => tt.description
-      }
+      { keep: true }
     );
-  }, [adminUsersApi, listStore, query, tt.description]);
+  }, [adminUsersApi, listStore, query]);
 
   useStrictEffect(() => {
     void load();
@@ -90,10 +89,9 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
           roleStore,
           adminUsersApi
             .setSystemRole(row.id, systemRole)
-            .then(() => true as const),
-          { mapError: () => tt.description }
+            .then(() => true as const)
         );
-        if (ok === undefined) {
+        if (!roleStore.isSuccess() || ok === undefined) {
           return;
         }
         const current = listStore.getResult() ?? [];
@@ -112,14 +110,7 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
         roleStore.emit({ targetId: null });
       }
     },
-    [
-      adminUsersApi,
-      canChangeRole,
-      currentUserId,
-      listStore,
-      roleStore,
-      tt.description
-    ]
+    [adminUsersApi, canChangeRole, currentUserId, listStore, roleStore]
   );
 
   const columns: TableColumn<PamAdminUserListItem>[] = [
