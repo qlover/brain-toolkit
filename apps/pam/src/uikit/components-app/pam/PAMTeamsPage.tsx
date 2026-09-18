@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
@@ -45,14 +44,11 @@ export function PAMTeamsPage() {
   const loading = list.loading;
   const saving = create.loading;
   const error =
-    asyncErrorMessage(list.error) ?? asyncErrorMessage(create.error);
+    list.status === 'failed' || create.status === 'failed' ? tt.error : null;
 
   const load = useCallback(async () => {
-    await runAsyncStore(listStore, teamsApi.listMine(), {
-      keep: true,
-      mapError: () => tt.error
-    });
-  }, [listStore, teamsApi, tt.error]);
+    await runAsyncStore(listStore, teamsApi.listMine(), { keep: true });
+  }, [listStore, teamsApi]);
 
   useStrictEffect(() => {
     void load();
@@ -76,10 +72,9 @@ export function PAMTeamsPage() {
       teamsApi.create({
         name: trimmed,
         slug: slug.trim() || undefined
-      }),
-      { mapError: () => tt.error }
+      })
     );
-    if (created === undefined) {
+    if (!createStore.isSuccess() || created === undefined) {
       return;
     }
     setCreateOpen(false);

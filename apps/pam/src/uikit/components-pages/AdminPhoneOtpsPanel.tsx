@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   usePendingAsyncStore,
   type AsyncState
@@ -39,7 +38,7 @@ export function AdminPhoneOtpsPanel({
     usePendingAsyncStore<AsyncState<PamPhoneOtpAdminItem[]>>();
   const rows = list.result ?? [];
   const loading = list.loading;
-  const error = asyncErrorMessage(list.error);
+  const error = list.status === 'failed' ? tt.description : null;
 
   const load = useCallback(async () => {
     await runAsyncStore(
@@ -48,12 +47,9 @@ export function AdminPhoneOtpsPanel({
         phone: phone.trim() || undefined,
         limit: 80
       }),
-      {
-        keep: true,
-        mapError: () => tt.description
-      }
+      { keep: true }
     );
-  }, [api, listStore, phone, tt.description]);
+  }, [api, listStore, phone]);
 
   useStrictEffect(() => {
     void load();

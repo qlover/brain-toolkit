@@ -1,33 +1,35 @@
 ---
-description: 
+description:
 globs: **/**/*.ts,**/**/*.tsx,**/**/*.js
 alwaysApply: false
 ---
-## Code Comment Standards
+## 代码注释规范
 
-### TSDoc/JSDoc Requirements
+与 `general.mdc` 一致：**新增注释用中文**。存量英文注释可暂不改。
 
-- Each class/interface comment must include:
-  - Significance of existence
-  - Core idea
-  - Main function
-  - Main purpose
-  - Code example
-- For methods/functions:
-  - `@param`: type, purpose, constraints
-  - `@returns`: type and description
-- All comments must be in English
+### TSDoc/JSDoc 要求
 
-### Example
+- 类 / 接口注释应说明：
+  - 存在意义
+  - 核心思路
+  - 主要能力
+  - 主要用途
+  - 必要时给代码示例
+- 方法 / 函数：
+  - `@param`：类型、用途、约束
+  - `@returns`：类型与含义
+- **新增注释必须使用中文**（标识符、类型名、代码示例中的 API 名保持英文）
+
+### 示例
 
 ```typescript
 /**
- * User authentication service
+ * 用户认证服务
  *
- * Significance: Central authentication management
- * Core idea: Single responsibility for user auth
- * Main function: Handle user login/logout
- * Main purpose: Secure user authentication
+ * 存在意义：集中管理认证状态
+ * 核心思路：认证相关职责单一收敛
+ * 主要能力：处理登录 / 登出
+ * 主要用途：保证用户认证安全
  *
  * @example
  * const authService = new AuthService();

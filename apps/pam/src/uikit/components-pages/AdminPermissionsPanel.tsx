@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
@@ -72,7 +71,14 @@ export function AdminPermissionsPanel({
   const catalog = useMemo(() => list.result ?? [], [list.result]);
   const loading = list.loading;
   const saving = save.loading;
-  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(save.error);
+  const error =
+    list.status === 'failed'
+      ? tt.loadFailed
+      : save.status === 'failed'
+        ? typeof save.error === 'string'
+          ? save.error
+          : tt.saveFailed
+        : null;
 
   const [success, setSuccess] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -92,12 +98,9 @@ export function AdminPermissionsPanel({
     await runAsyncStore(
       listStore,
       api.list().then((next) => next.catalog),
-      {
-        keep: true,
-        mapError: () => tt.loadFailed
-      }
+      { keep: true }
     );
-  }, [api, listStore, tt.loadFailed]);
+  }, [api, listStore]);
 
   useStrictEffect(() => {
     if (!canRead) {
@@ -158,10 +161,9 @@ export function AdminPermissionsPanel({
       saveStore,
       (mode === 'create' ? api.create(body) : api.update(body)).then(
         (next) => next.catalog
-      ),
-      { mapError: () => tt.saveFailed }
+      )
     );
-    if (catalogNext === undefined) {
+    if (!saveStore.isSuccess() || catalogNext === undefined) {
       return;
     }
     listStore.success(catalogNext);

@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
@@ -113,9 +112,15 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
   const saving = save.loading;
   const importing = importingState.loading;
   const error =
-    asyncErrorMessage(list.error) ??
-    asyncErrorMessage(save.error) ??
-    asyncErrorMessage(importingState.error);
+    list.status === 'failed'
+      ? tt.loadFailed
+      : save.status === 'failed'
+        ? typeof save.error === 'string'
+          ? save.error
+          : tt.saveFailed
+        : importingState.status === 'failed'
+          ? tt.importFailed
+          : null;
 
   const rows = list.result?.items ?? [];
   const total = list.result?.total ?? 0;
@@ -146,20 +151,10 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
         };
       },
       {
-        keep: true,
-        mapError: () => tt.loadFailed
+        keep: true
       }
     );
-  }, [
-    api,
-    keyword,
-    listStore,
-    locale,
-    namespace,
-    page,
-    pageSize,
-    tt.loadFailed
-  ]);
+  }, [api, keyword, listStore, locale, namespace, page, pageSize]);
 
   useStrictEffect(() => {
     if (!canRead) {
@@ -213,29 +208,25 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
       return;
     }
     setSuccess(null);
-    const ok = await runAsyncStore(
-      saveStore,
-      async () => {
-        if (mode === 'create') {
-          await api.create({
-            value,
-            locale,
-            text: draft.text,
-            description: draft.description
-          });
-        } else if (draft.id != null) {
-          await api.update({
-            id: draft.id,
-            locale,
-            text: draft.text,
-            description: draft.description
-          });
-        }
-        return true as const;
-      },
-      { mapError: () => tt.saveFailed }
-    );
-    if (ok === undefined) {
+    const ok = await runAsyncStore(saveStore, async () => {
+      if (mode === 'create') {
+        await api.create({
+          value,
+          locale,
+          text: draft.text,
+          description: draft.description
+        });
+      } else if (draft.id != null) {
+        await api.update({
+          id: draft.id,
+          locale,
+          text: draft.text,
+          description: draft.description
+        });
+      }
+      return true as const;
+    });
+    if (!saveStore.isSuccess() || ok === undefined) {
       return;
     }
     setSuccess(tt.saveSuccess);
@@ -248,10 +239,8 @@ export function AdminLocalesPanel({ tt }: { tt: AdminLocalesI18nInterface }) {
   const onImport = async (): Promise<void> => {
     if (!canWrite || importing) return;
     setSuccess(null);
-    const result = await runAsyncStore(importStore, api.importFromStatic(), {
-      mapError: () => tt.importFailed
-    });
-    if (result === undefined) {
+    const result = await runAsyncStore(importStore, api.importFromStatic());
+    if (!importStore.isSuccess() || result === undefined) {
       return;
     }
     setSuccess(

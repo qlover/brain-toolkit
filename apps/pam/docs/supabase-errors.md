@@ -32,4 +32,4 @@ this.supabaseBridge.throwIfError(result);
 | 业务语义映射（如 OTP 无效 → 固定 `api:*`） | 抛带业务 id 的 `ExecutorError` |
 | 批量部分失败 / Auth 可选 enrichment | 按产品语义 soft-handle |
 
-Cursor rule：`.cursor/rules/pam-supabase.mdc`。
+Cursor rule：见 `.cursor/rules/general.mdc` §七（PAM 专项）。

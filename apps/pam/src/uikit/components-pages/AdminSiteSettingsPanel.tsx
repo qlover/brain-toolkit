@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  asyncErrorMessage,
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
@@ -197,20 +196,24 @@ export function AdminSiteSettingsPanel({
   const entries = useMemo(() => list.result ?? [], [list.result]);
   const loading = list.loading;
   const savingSection = save.targetId;
-  const error = asyncErrorMessage(list.error) ?? asyncErrorMessage(save.error);
+  const error =
+    list.status === 'failed'
+      ? tt.loadFailed
+      : save.status === 'failed'
+        ? tt.saveFailed
+        : null;
 
   const byKey = useMemo(() => entryMap(entries), [entries]);
 
   const load = useCallback(async () => {
     const rows = await runAsyncStore(listStore, siteSettingsApi.list(), {
-      keep: true,
-      mapError: () => tt.loadFailed
+      keep: true
     });
-    if (rows === undefined) {
+    if (!listStore.isSuccess() || rows === undefined) {
       return;
     }
     setDraft({});
-  }, [listStore, siteSettingsApi, tt.loadFailed]);
+  }, [listStore, siteSettingsApi]);
 
   useStrictEffect(() => {
     void load();
@@ -233,10 +236,9 @@ export function AdminSiteSettingsPanel({
       try {
         const rows = await runAsyncStore(
           saveStore,
-          siteSettingsApi.patch(payload),
-          { mapError: () => tt.saveFailed }
+          siteSettingsApi.patch(payload)
         );
-        if (rows === undefined) {
+        if (!saveStore.isSuccess() || rows === undefined) {
           return;
         }
         listStore.success(rows);
@@ -262,7 +264,6 @@ export function AdminSiteSettingsPanel({
       listStore,
       saveStore,
       siteSettingsApi,
-      tt.saveFailed,
       tt.saveSuccess
     ]
   );
