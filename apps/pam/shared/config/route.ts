@@ -62,6 +62,11 @@ export const ROUTE_ADMIN_PERMISSIONS = '/admin/permissions' as const;
 export const ROUTE_ADMIN_PHONE_OTPS = '/admin/phone-otps' as const;
 
 /**
+ * Admin Memory KV inspect (super admin). Pages Router: `src/pages/[locale]/admin/memory-kv.tsx`.
+ */
+export const ROUTE_ADMIN_MEMORY_KV = '/admin/memory-kv' as const;
+
+/**
  * Current-user request / activity log viewer (requires auth). Pages Router: `src/pages/[locale]/admin/request-logs.tsx`.
  */
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
@@ -203,6 +208,7 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN_ROLES,
   ROUTE_ADMIN_PERMISSIONS,
   ROUTE_ADMIN_PHONE_OTPS,
+  ROUTE_ADMIN_MEMORY_KV,
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,
   ROUTE_ADMIN_LOCALES,

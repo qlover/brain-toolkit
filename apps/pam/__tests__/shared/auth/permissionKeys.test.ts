@@ -123,4 +123,19 @@ describe('role permission maps', () => {
       hasSystemPermission('admin', PermissionKey.admin_locales_write)
     ).toBe(true);
   });
+
+  it('grants Memory KV inspect only to admin, not operator', () => {
+    expect(
+      hasSystemPermission('operator', PermissionKey.admin_memory_kv_read)
+    ).toBe(false);
+    expect(
+      hasSystemPermission('operator', PermissionKey.admin_memory_kv_write)
+    ).toBe(false);
+    expect(
+      hasSystemPermission('admin', PermissionKey.admin_memory_kv_read)
+    ).toBe(true);
+    expect(
+      hasSystemPermission('admin', PermissionKey.admin_memory_kv_write)
+    ).toBe(true);
+  });
 });

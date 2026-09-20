@@ -3,6 +3,7 @@
 import {
   Bars3Icon,
   ChartBarSquareIcon,
+  CircleStackIcon,
   Cog6ToothIcon,
   DevicePhoneMobileIcon,
   DocumentTextIcon,
@@ -53,6 +54,7 @@ const NAV_ICONS: Record<string, NavIcon> = {
   roles: KeyIcon,
   permissions: KeyIcon,
   'phone-otps': DevicePhoneMobileIcon,
+  'memory-kv': CircleStackIcon,
   'request-logs': DocumentTextIcon,
   locales: LanguageIcon,
   settings: Cog6ToothIcon

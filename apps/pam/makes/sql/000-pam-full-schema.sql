@@ -1433,6 +1433,8 @@ INSERT INTO public.pam_role_permissions (permission_key, type, method, path, des
   ('admin_site_settings_write', 'api', 'patch', '/api/admin/site-settings', 'Update site settings'),
   ('admin_locales_read', 'api', 'get', '/api/admin/locales', 'List locale dictionary rows'),
   ('admin_locales_write', 'api', 'post', '/api/admin/locales', 'Create / update / import locales'),
+  ('admin_memory_kv_read', 'api', 'get', '/api/admin/memory-kv', 'List process Memory KV cache entries'),
+  ('admin_memory_kv_write', 'api', 'post', '/api/admin/memory-kv', 'Delete process Memory KV cache entries'),
   ('pam_collaborators_read', 'api', 'get', '/api/pam/:projectId/collaborators', 'List project collaborators'),
   ('pam_collaborators_create', 'api', 'post', '/api/pam/:projectId/collaborators', 'Add project collaborator'),
   ('pam_collaborators_update', 'api', 'patch', '/api/pam/:projectId/collaborators/:userId', 'Update collaborator role'),
@@ -1509,7 +1511,9 @@ JOIN (VALUES
   ('admin_site_settings_read'),
   ('admin_site_settings_write'),
   ('admin_locales_read'),
-  ('admin_locales_write')
+  ('admin_locales_write'),
+  ('admin_memory_kv_read'),
+  ('admin_memory_kv_write')
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'admin';
 

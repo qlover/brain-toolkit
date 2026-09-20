@@ -9,6 +9,14 @@ type MemoryKvEntryType = {
   readonly expiresAtMs: number | null;
 };
 
+export type MemoryKvListEntryType = {
+  readonly key: string;
+  readonly value: unknown;
+  readonly bytes: number;
+  readonly expiresAtMs: number | null;
+  readonly ttlMs: number | null;
+};
+
 /** Process-wide store — survives per-request IOC instances. */
 const sharedKvStore = new Map<string, MemoryKvEntryType>();
 
@@ -138,11 +146,59 @@ export class MemoryKvCacheService implements KvCacheInterface {
   }
 
   /**
+   * Inspect live entries (drops expired keys while iterating).
+   * Admin console only — values can be large (locale maps).
+   */
+  public async listEntries(prefix?: string): Promise<MemoryKvListEntryType[]> {
+    const now = Date.now();
+    this.purgeExpired(now);
+    const needle = prefix?.trim() ?? '';
+    const items: MemoryKvListEntryType[] = [];
+    for (const [key, entry] of sharedKvStore) {
+      if (needle && !key.startsWith(needle)) {
+        continue;
+      }
+      let value: unknown;
+      try {
+        value = JSON.parse(entry.json) as unknown;
+      } catch {
+        value = entry.json;
+      }
+      items.push({
+        key,
+        value,
+        bytes: new TextEncoder().encode(entry.json).length,
+        expiresAtMs: entry.expiresAtMs,
+        ttlMs:
+          entry.expiresAtMs == null
+            ? null
+            : Math.max(0, entry.expiresAtMs - now)
+      });
+    }
+    items.sort((a, b) => a.key.localeCompare(b.key));
+    return items;
+  }
+
+  public async count(): Promise<number> {
+    this.purgeExpired();
+    return sharedKvStore.size;
+  }
+
+  /**
    * @override
    */
   public async clear(): Promise<void> {
     sharedKvStore.clear();
     sharedInflight.clear();
+  }
+
+  private purgeExpired(now = Date.now()): void {
+    for (const [key, entry] of sharedKvStore) {
+      if (entry.expiresAtMs != null && now >= entry.expiresAtMs) {
+        sharedKvStore.delete(key);
+        sharedInflight.delete(key);
+      }
+    }
   }
 
   protected assertKey(key: string): void {

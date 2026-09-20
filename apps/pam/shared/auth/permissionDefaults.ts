@@ -38,6 +38,12 @@ const ADMIN_PERMISSIONS_CATALOG = [
   PermissionKey.admin_permissions_write
 ] as const;
 
+/** Super-admin only: inspect / mutate process Memory KV (not granted to operator). */
+const ADMIN_MEMORY_KV = [
+  PermissionKey.admin_memory_kv_read,
+  PermissionKey.admin_memory_kv_write
+] as const;
+
 const TEAM_MEMBER = [PermissionKey.pam_teams_read] as const;
 
 const TEAM_ADMIN = [
@@ -81,7 +87,8 @@ export const DEFAULT_SYSTEM_ROLE_PERMISSIONS: Record<
     ...PLATFORM_USER,
     ...ADMIN_READ,
     ...ADMIN_WRITE,
-    ...ADMIN_PERMISSIONS_CATALOG
+    ...ADMIN_PERMISSIONS_CATALOG,
+    ...ADMIN_MEMORY_KV
   ]
 };
 

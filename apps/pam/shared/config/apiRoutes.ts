@@ -34,6 +34,15 @@ export const API_ADMIN_LOCALES_NAMESPACES =
   '/api/admin/locales/namespaces' as const;
 
 /**
+ * API path: `/api/admin/memory-kv`
+ *
+ * @see [src/app/api/admin/memory-kv/route.ts](../../src/app/api/admin/memory-kv/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/memory-kv/route.ts`
+ */
+export const API_ADMIN_MEMORY_KV = '/api/admin/memory-kv' as const;
+
+/**
  * API path: `/api/admin/permissions`
  *
  * @see [src/app/api/admin/permissions/route.ts](../../src/app/api/admin/permissions/route.ts)
@@ -165,9 +174,6 @@ export const API_CLIENTS_ROTATE_SECRET =
 
 /**
  * API path: `/api/locales/json`
- *
- * Query: `locale` (required), `namespaces` (optional comma-separated),
- * `orderBy` (optional).
  *
  * @see [src/app/api/locales/json/route.ts](../../src/app/api/locales/json/route.ts)
  *
@@ -565,6 +571,7 @@ export type ApiRoutePath =
   | typeof API_ADMIN_LOCALES
   | typeof API_ADMIN_LOCALES_IMPORT
   | typeof API_ADMIN_LOCALES_NAMESPACES
+  | typeof API_ADMIN_MEMORY_KV
   | typeof API_ADMIN_PERMISSIONS
   | typeof API_ADMIN_PHONE_OTPS
   | typeof API_ADMIN_REQUEST_LOGS

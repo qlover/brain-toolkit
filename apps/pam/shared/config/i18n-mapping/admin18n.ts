@@ -2,6 +2,7 @@ import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
 import * as localesKeys from '../i18n-identifier/pages/page.admin.locales';
+import * as memoryKvKeys from '../i18n-identifier/pages/page.admin.memory-kv';
 import * as permissionsKeys from '../i18n-identifier/pages/page.admin.permissions';
 import * as phoneOtpsKeys from '../i18n-identifier/pages/page.admin.phone-otps';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
@@ -51,6 +52,8 @@ export type AdminRequestLogsI18nInterface = typeof adminRequestLogs18n;
 export type AdminSettingsI18nInterface = typeof adminSettings18n;
 
 export type AdminPhoneOtpsI18nInterface = typeof adminPhoneOtps18n;
+
+export type AdminMemoryKvI18nInterface = typeof adminMemoryKv18n;
 
 export type AdminLocalesI18nInterface = typeof adminLocales18n;
 
@@ -125,6 +128,36 @@ export const adminPhoneOtps18n = Object.freeze({
   colIp: phoneOtpsKeys.ADMIN_PHONE_OTPS_COL_IP,
   empty: phoneOtpsKeys.ADMIN_PHONE_OTPS_EMPTY,
   codeHidden: phoneOtpsKeys.ADMIN_PHONE_OTPS_CODE_HIDDEN
+});
+
+export const adminMemoryKv18n = Object.freeze({
+  title: memoryKvKeys.ADMIN_MEMORY_KV_TITLE,
+  description: memoryKvKeys.ADMIN_MEMORY_KV_DESCRIPTION,
+  content: memoryKvKeys.ADMIN_MEMORY_KV_DESCRIPTION,
+  keywords: memoryKvKeys.ADMIN_MEMORY_KV_KEYWORDS,
+  hint: memoryKvKeys.ADMIN_MEMORY_KV_HINT,
+  prefixPlaceholder: memoryKvKeys.ADMIN_MEMORY_KV_PREFIX_PLACEHOLDER,
+  refresh: memoryKvKeys.ADMIN_MEMORY_KV_REFRESH,
+  deletePrefix: memoryKvKeys.ADMIN_MEMORY_KV_DELETE_PREFIX,
+  clearAll: memoryKvKeys.ADMIN_MEMORY_KV_CLEAR_ALL,
+  count: memoryKvKeys.ADMIN_MEMORY_KV_COUNT,
+  colKey: memoryKvKeys.ADMIN_MEMORY_KV_COL_KEY,
+  colTtl: memoryKvKeys.ADMIN_MEMORY_KV_COL_TTL,
+  colBytes: memoryKvKeys.ADMIN_MEMORY_KV_COL_BYTES,
+  colValue: memoryKvKeys.ADMIN_MEMORY_KV_COL_VALUE,
+  colActions: memoryKvKeys.ADMIN_MEMORY_KV_COL_ACTIONS,
+  ttlNever: memoryKvKeys.ADMIN_MEMORY_KV_TTL_NEVER,
+  delete: memoryKvKeys.ADMIN_MEMORY_KV_DELETE,
+  expand: memoryKvKeys.ADMIN_MEMORY_KV_EXPAND,
+  collapse: memoryKvKeys.ADMIN_MEMORY_KV_COLLAPSE,
+  empty: memoryKvKeys.ADMIN_MEMORY_KV_EMPTY,
+  forbidden: memoryKvKeys.ADMIN_MEMORY_KV_FORBIDDEN,
+  loadFailed: memoryKvKeys.ADMIN_MEMORY_KV_LOAD_FAILED,
+  deleteFailed: memoryKvKeys.ADMIN_MEMORY_KV_DELETE_FAILED,
+  confirmDelete: memoryKvKeys.ADMIN_MEMORY_KV_CONFIRM_DELETE,
+  confirmPrefix: memoryKvKeys.ADMIN_MEMORY_KV_CONFIRM_PREFIX,
+  confirmClear: memoryKvKeys.ADMIN_MEMORY_KV_CONFIRM_CLEAR,
+  prefixRequired: memoryKvKeys.ADMIN_MEMORY_KV_PREFIX_REQUIRED
 });
 
 export const adminSettings18n = Object.freeze({
