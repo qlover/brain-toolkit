@@ -1,4 +1,9 @@
 import { checkbox } from '@inquirer/prompts';
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_SENSITIVE_SELECT_KEYS,
+  PAMENV_CLI_SENSITIVE_UNMARKED_CONFIRM
+} from '../i18n/identifier/pamenv_cli';
 import { PamCliConfirmUtil } from './PamCliConfirmUtil';
 
 /**
@@ -27,14 +32,16 @@ export class PamCliSensitivePromptUtil {
     }
 
     const wants = await PamCliConfirmUtil.ask(
-      `${candidateKeys.length} new variable(s) are not marked sensitive. Choose some now?`
+      PamCliI18n.t(PAMENV_CLI_SENSITIVE_UNMARKED_CONFIRM, {
+        count: candidateKeys.length
+      })
     );
     if (!wants) {
       return [];
     }
 
     return checkbox({
-      message: 'Select new keys to mark as sensitive',
+      message: PamCliI18n.t(PAMENV_CLI_SENSITIVE_SELECT_KEYS),
       choices: candidateKeys.map((key) => ({ name: key, value: key }))
     });
   }

@@ -1,4 +1,6 @@
 import { resolve } from 'node:path';
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import { PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE } from '../i18n/identifier/pamenv_cli';
 
 /**
  * Local working-directory env file naming for pull / push.
@@ -21,7 +23,7 @@ export class PamCliLocalEnvFileUtil {
   public static toFileName(environmentName: string): string {
     const envName = environmentName.trim();
     if (!envName) {
-      throw new Error('Environment name is required to build the local file');
+      throw new Error(PamCliI18n.t(PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE));
     }
     return `.env.${envName}`;
   }

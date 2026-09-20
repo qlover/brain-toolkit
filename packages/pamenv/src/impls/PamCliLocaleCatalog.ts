@@ -2,72 +2,41 @@ import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInte
 import type { PamCliLocaleType } from '../interfaces/PamCliTypes';
 
 /**
- * Namespaces cached for CLI API error translation.
- * Matches PAM `/api/locales/json?namespaces=…`.
+ * CLI 从 PAM 拉取的 i18n 命名空间（仅 API 错误）。
+ * 与 `/api/locales/json?namespaces=…` 对齐。
  */
 export const PAMENV_LOCALE_NAMESPACES = ['api'] as const;
 
 /**
- * Loads and caches PAM locale JSON for translating API `id` keys in the CLI.
+ * 从 PAM 拉取 `api:*` locale JSON（仅内存，不写 config）。
  *
- * Significance: Turns `api:not_authorized` into localized human text.
- * Core idea: Fetch `{baseUrl}/api/locales/json?locale=&namespaces=api`
- * and store under `config.json` → `localeMessages`.
- * Main function: ensureLoaded / pull / t(id).
- * Main purpose: Readable CLI errors when locale is configured.
+ * 存在意义：把 `api:not_authorized` 等译成当前语言。
+ * 核心思路：请求 `{baseUrl}/api/locales/json?locale=&namespaces=api`。
+ * 主要能力：fetch(locale)。
+ * 主要用途：供 PamCliI18n 在命令开始时灌入 API 错误目录。
  *
  * @example
  * const catalog = new PamCliLocaleCatalog(authStore);
- * await catalog.ensureLoaded();
- * catalog.t('api:not_authorized');
+ * const messages = await catalog.fetch('zh');
  */
 export class PamCliLocaleCatalog {
-  protected messages: Record<string, string> | null = null;
-  protected loadedLocale: PamCliLocaleType | null = null;
-
   constructor(protected readonly authStore: PamCliAuthStoreInterface) {}
 
   /**
-   * Loads messages from config, or fetches once when missing / empty.
-   */
-  public async ensureLoaded(): Promise<void> {
-    const locale = await this.authStore.getLocale();
-    if (this.messages && this.loadedLocale === locale) {
-      return;
-    }
-
-    const config = await this.authStore.getConfig();
-    if (
-      config.locale === locale &&
-      config.localeMessages &&
-      Object.keys(config.localeMessages).length > 0
-    ) {
-      this.messages = { ...config.localeMessages };
-      this.loadedLocale = locale;
-      return;
-    }
-
-    try {
-      await this.pull();
-    } catch {
-      this.messages = {};
-      this.loadedLocale = locale;
-    }
-  }
-
-  /**
-   * Force-refresh locale JSON from the active PAM base URL into config.json.
-   * Only keeps `api:` keys.
+   * 从当前 PAM origin 拉取指定语言的 API 文案。
    *
-   * @returns Number of keys written
+   * @param locale - 语言；缺省用 config.locale
+   * @returns 过滤后的 key → 文案
    */
-  public async pull(): Promise<number> {
-    const locale = await this.authStore.getLocale();
+  public async fetch(
+    locale?: PamCliLocaleType
+  ): Promise<Record<string, string>> {
+    const resolvedLocale = locale ?? (await this.authStore.getLocale());
     const baseUrl = await this.authStore.getBaseUrl();
     const namespaces = PAMENV_LOCALE_NAMESPACES.join(',');
     const url =
       `${baseUrl}/api/locales/json` +
-      `?locale=${encodeURIComponent(locale)}` +
+      `?locale=${encodeURIComponent(resolvedLocale)}` +
       `&namespaces=${encodeURIComponent(namespaces)}`;
     const response = await fetch(url);
     if (!response.ok) {
@@ -81,36 +50,13 @@ export class PamCliLocaleCatalog {
       throw new Error(`Invalid locales payload from ${url}`);
     }
 
-    const messages = this.filterCliNamespaces(body as Record<string, unknown>);
-    const count = Object.keys(messages).length;
-    if (count === 0) {
-      throw new Error(
-        `PAM returned no api locale keys from ${url}. Is PAM running with generated public/locales?`
-      );
-    }
-
-    await this.authStore.setLocaleMessages(messages);
-    await this.removeLegacyLocalesDir();
-    this.messages = messages;
-    this.loadedLocale = locale;
-    return count;
+    return this.filterCliNamespaces(body as Record<string, unknown>);
   }
 
   /**
-   * @param id - i18n / API error id
-   * @returns Localized string or undefined
-   */
-  public t(id: string): string | undefined {
-    if (!id || !this.messages) {
-      return undefined;
-    }
-    return this.messages[id];
-  }
-
-  /**
-   * Keeps only CLI-relevant namespaces (`api:…`).
+   * 只保留 CLI 需要的命名空间（`api:`）。
    *
-   * @param body - Raw locale map from PAM
+   * @param body - PAM 返回的扁平 locale map
    */
   protected filterCliNamespaces(
     body: Record<string, unknown>
@@ -128,21 +74,5 @@ export class PamCliLocaleCatalog {
       }
     }
     return messages;
-  }
-
-  /**
-   * Best-effort cleanup of the former `{pamRoot}/locales` directory.
-   */
-  protected async removeLegacyLocalesDir(): Promise<void> {
-    try {
-      const { rm } = await import('node:fs/promises');
-      const { join } = await import('node:path');
-      await rm(join(this.authStore.getActivePamRoot(), 'locales'), {
-        recursive: true,
-        force: true
-      });
-    } catch {
-      // ignore
-    }
   }
 }

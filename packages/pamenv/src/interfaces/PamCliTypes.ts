@@ -23,10 +23,6 @@ export type PamCliConfigFileType = {
   readonly localeLocked: boolean;
   /** Last writer of {@link locale}. */
   readonly localeSource: PamCliLocaleSourceType;
-  /** Cached `api:` messages for the active locale. */
-  readonly localeMessages: Readonly<Record<string, string>>;
-  /** ISO time when {@link localeMessages} was last pulled. */
-  readonly localePulledAt: string | null;
 };
 
 /**

@@ -1,4 +1,19 @@
 import { confirm, input } from '@inquirer/prompts';
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_CANCELLED,
+  PAMENV_CLI_FORKED,
+  PAMENV_CLI_FORK_CONFIRM,
+  PAMENV_CLI_FORK_FILL_SECRETS,
+  PAMENV_CLI_FORK_NAME_REQUIRED,
+  PAMENV_CLI_FORK_NO_ENVS,
+  PAMENV_CLI_FORK_PROMPT_NAME,
+  PAMENV_CLI_FORK_PROMPT_SLUG,
+  PAMENV_CLI_FORK_SENSITIVE_CLEARED,
+  PAMENV_CLI_FORK_SOURCE,
+  PAMENV_CLI_PROJECT_EXISTS_ENVS,
+  PAMENV_CLI_SLUG_REQUIRED
+} from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliForkProjectInputType } from '../interfaces/PamCliTypes';
 import { PamCliLocalProjectScanUtil } from '../impls/PamCliLocalProjectScanUtil';
@@ -45,19 +60,22 @@ export class ForkCommand {
     let name = options.name?.trim() || '';
 
     if (!options.yes) {
-      console.log(`Source: ${source.slug} (${source.name})`);
       console.log(
-        'Sensitive variable values will be cleared on the forked project.'
+        PamCliI18n.t(PAMENV_CLI_FORK_SOURCE, {
+          slug: source.slug,
+          name: source.name
+        })
       );
+      console.log(PamCliI18n.t(PAMENV_CLI_FORK_SENSITIVE_CLEARED));
 
       if (!slug) {
         slug = await input({
-          message: 'fork slug',
+          message: PamCliI18n.t(PAMENV_CLI_FORK_PROMPT_SLUG),
           default: defaultSlug,
           validate: (value: string): true | string => {
             const normalized = PamCliLocalProjectScanUtil.toSlug(value);
             if (!normalized) {
-              return 'Slug is required (letters, numbers, dashes)';
+              return PamCliI18n.t(PAMENV_CLI_SLUG_REQUIRED);
             }
             return true;
           }
@@ -67,11 +85,11 @@ export class ForkCommand {
 
       if (!name) {
         name = await input({
-          message: 'fork name',
+          message: PamCliI18n.t(PAMENV_CLI_FORK_PROMPT_NAME),
           default: defaultName,
           validate: (value: string): true | string => {
             if (!value.trim()) {
-              return 'Name is required';
+              return PamCliI18n.t(PAMENV_CLI_FORK_NAME_REQUIRED);
             }
             return true;
           }
@@ -80,11 +98,11 @@ export class ForkCommand {
       }
 
       const ok = await confirm({
-        message: `Fork into "${slug}" / "${name}"?`,
+        message: PamCliI18n.t(PAMENV_CLI_FORK_CONFIRM, { slug, name }),
         default: true
       });
       if (!ok) {
-        console.log('Cancelled.');
+        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
         return;
       }
     } else {
@@ -101,15 +119,23 @@ export class ForkCommand {
     const envNames =
       created.environments?.map((env) => env.name).filter(Boolean) || [];
 
-    console.log(`Forked "${source.slug}" → "${created.slug}" (${created.id}).`);
+    console.log(
+      PamCliI18n.t(PAMENV_CLI_FORKED, {
+        source: source.slug,
+        slug: created.slug,
+        id: created.id
+      })
+    );
     if (envNames.length > 0) {
-      console.log(`Environments: ${envNames.join(', ')}`);
-      console.log('Fill secrets then push, for example:');
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_PROJECT_EXISTS_ENVS, {
+          envs: envNames.join(', ')
+        })
+      );
+      console.log(PamCliI18n.t(PAMENV_CLI_FORK_FILL_SECRETS));
       console.log(`  pamenv push ${created.slug} -e ${envNames[0]}`);
     } else {
-      console.log(
-        `No environments on the fork. Add some in the PAM UI or via init elsewhere.`
-      );
+      console.log(PamCliI18n.t(PAMENV_CLI_FORK_NO_ENVS));
     }
   }
 

@@ -5,7 +5,6 @@ import { PamCliConfig } from '../config/PamCliConfig';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_EMAIL_PASSWORD_REQUIRED,
-  PAMENV_CLI_LOCALES_CACHED,
   PAMENV_CLI_LOCALES_PULL_FAILED,
   PAMENV_CLI_LOGIN_BROWSER_OPEN_FAILED,
   PAMENV_CLI_LOGIN_CONFIG_SAVED,
@@ -26,7 +25,6 @@ import {
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type { PamCliLocaleType } from '../interfaces/PamCliTypes';
-import type { PamCliLocaleCatalog } from '../impls/PamCliLocaleCatalog';
 
 const execFileAsync = promisify(execFile);
 
@@ -41,8 +39,7 @@ const execFileAsync = promisify(execFile);
 export class LoginCommand {
   constructor(
     protected readonly authStore: PamCliAuthStoreInterface,
-    protected readonly apiClient: PamCliApiClientInterface,
-    protected readonly localeCatalog?: PamCliLocaleCatalog
+    protected readonly apiClient: PamCliApiClientInterface
   ) {}
 
   /**
@@ -73,6 +70,7 @@ export class LoginCommand {
     );
 
     await this.authStore.setBaseUrl(baseUrl);
+    await this.hydrateLocalesBestEffort();
 
     const usePassword =
       options?.password === true ||
@@ -82,7 +80,7 @@ export class LoginCommand {
 
     if (usePassword) {
       await this.runPasswordLogin(baseUrl, options);
-      await this.pullApiLocalesBestEffort();
+      await this.hydrateLocalesBestEffort();
       return;
     }
 
@@ -169,7 +167,7 @@ export class LoginCommand {
           polled.email,
           polled.expiresAt
         );
-        await this.pullApiLocalesBestEffort();
+        await this.hydrateLocalesBestEffort();
         return;
       }
     }
@@ -201,23 +199,15 @@ export class LoginCommand {
       source: 'browser'
     });
     PamCliI18n.setLocale(locale);
+    await this.hydrateLocalesBestEffort();
     console.log(
       PamCliI18n.t(PAMENV_CLI_LOGIN_LOCALE_SYNCED, { locale })
     );
   }
 
-  protected async pullApiLocalesBestEffort(): Promise<void> {
-    if (!this.localeCatalog) {
-      return;
-    }
+  protected async hydrateLocalesBestEffort(): Promise<void> {
     try {
-      const count = await this.localeCatalog.pull();
-      console.log(
-        PamCliI18n.t(PAMENV_CLI_LOCALES_CACHED, {
-          count,
-          path: this.authStore.getActiveConfigPath()
-        })
-      );
+      await PamCliI18n.hydrateFromApi(this.authStore);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(

@@ -1,3 +1,11 @@
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_DIFF_CREATED,
+  PAMENV_CLI_DIFF_DELETED,
+  PAMENV_CLI_DIFF_MODIFIED,
+  PAMENV_CLI_DIFF_NONE
+} from '../i18n/identifier/pamenv_cli';
+
 /**
  * Diff entry for push safety review.
  */
@@ -191,25 +199,25 @@ export class PamCliEnvDiffUtil {
 
     if (diff.created.length > 0) {
       sections.push(
-        `Created (${diff.created.length}):`,
+        PamCliI18n.t(PAMENV_CLI_DIFF_CREATED, { count: diff.created.length }),
         ...diff.created.map((entry) => `  ${this.formatLine(entry, options)}`)
       );
     }
     if (diff.modified.length > 0) {
       sections.push(
-        `Modified (${diff.modified.length}):`,
+        PamCliI18n.t(PAMENV_CLI_DIFF_MODIFIED, { count: diff.modified.length }),
         ...diff.modified.map((entry) => `  ${this.formatLine(entry, options)}`)
       );
     }
     if (diff.deleted.length > 0) {
       sections.push(
-        `Deleted (${diff.deleted.length}):`,
+        PamCliI18n.t(PAMENV_CLI_DIFF_DELETED, { count: diff.deleted.length }),
         ...diff.deleted.map((entry) => `  ${this.formatLine(entry, options)}`)
       );
     }
 
     if (sections.length === 0) {
-      return 'No variable changes detected.';
+      return PamCliI18n.t(PAMENV_CLI_DIFF_NONE);
     }
 
     return sections.join('\n');

@@ -4,16 +4,12 @@ import {
   PAMENV_CLI_LOCALES_PULLING
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
-import type { PamCliLocaleCatalog } from '../impls/PamCliLocaleCatalog';
 
 /**
- * `pamenv locales pull` — refresh PAM `api:` locale messages in config.json.
+ * `pamenv locales pull` — 从 PAM 重新拉取 `api:*` 错误文案到内存（不写本地）。
  */
 export class LocalesCommand {
-  constructor(
-    protected readonly authStore: PamCliAuthStoreInterface,
-    protected readonly localeCatalog: PamCliLocaleCatalog
-  ) {}
+  constructor(protected readonly authStore: PamCliAuthStoreInterface) {}
 
   public async pull(): Promise<void> {
     await PamCliI18n.syncFromStore(this.authStore);
@@ -22,11 +18,12 @@ export class LocalesCommand {
     console.log(
       PamCliI18n.t(PAMENV_CLI_LOCALES_PULLING, { locale, baseUrl })
     );
-    const count = await this.localeCatalog.pull();
+    const count = await PamCliI18n.hydrateFromApi(this.authStore);
     console.log(
       PamCliI18n.t(PAMENV_CLI_LOCALES_PULLED, {
         count,
-        path: this.authStore.getActiveConfigPath()
+        locale,
+        baseUrl
       })
     );
   }
