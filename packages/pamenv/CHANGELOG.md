@@ -1,5 +1,15 @@
 # pamenv-cli
 
+## Unreleased
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** CLI 文案保持本地 i18n；PAM `api:*` 改为请求 `/api/locales`
+
+  `pamenv_cli` 仍由 ts2locales 生成 `dist/locales`。API 错误每次从 PAM 拉取到内存，不再写入 `config.localeMessages`。补齐 push 敏感变量等硬编码英文提示。
+
 ## 1.8.0
 
 ### Minor Changes
