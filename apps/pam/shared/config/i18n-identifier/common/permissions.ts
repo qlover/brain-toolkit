@@ -103,6 +103,22 @@ export const PERMISSION_ADMIN_LOCALES_READ = 'permission:admin_locales_read';
 export const PERMISSION_ADMIN_LOCALES_WRITE = 'permission:admin_locales_write';
 
 /**
+ * @description List process Memory KV cache entries (super admin)
+ * @localZh 查看进程内 Memory KV 缓存
+ * @localEn List process Memory KV cache entries
+ */
+export const PERMISSION_ADMIN_MEMORY_KV_READ =
+  'permission:admin_memory_kv_read';
+
+/**
+ * @description Delete process Memory KV cache entries (super admin)
+ * @localZh 删除进程内 Memory KV 缓存
+ * @localEn Delete process Memory KV cache entries
+ */
+export const PERMISSION_ADMIN_MEMORY_KV_WRITE =
+  'permission:admin_memory_kv_write';
+
+/**
  * @description List project collaborators
  * @localZh 查看项目协作者
  * @localEn List project collaborators

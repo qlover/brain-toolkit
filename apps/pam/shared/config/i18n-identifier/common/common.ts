@@ -126,6 +126,13 @@ export const COMMON_ADMIN_NAV_SITE_SETTINGS = 'common:admin_nav__site_settings';
 export const COMMON_ADMIN_NAV_PHONE_OTPS = 'common:admin_nav__phone_otps';
 
 /**
+ * @description Admin sidebar nav - Memory KV cache
+ * @localZh Memory KV
+ * @localEn Memory KV
+ */
+export const COMMON_ADMIN_NAV_MEMORY_KV = 'common:admin_nav__memory_kv';
+
+/**
  * @description logout dialog title
  * @localZh 登出
  * @localEn Logout
