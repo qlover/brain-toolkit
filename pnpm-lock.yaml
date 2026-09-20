@@ -445,10 +445,10 @@ importers:
         version: 1.2.1
       '@qlover/next-kit':
         specifier: ^1.5.0
-        version: 1.5.0(76669ba361d5f70d1bd7fba6693ec54e)
+        version: 1.5.0(bae066511dcf74558c788d78b2525c75)
       '@qlover/oauth-wrapper':
-        specifier: 0.10.0
-        version: 0.10.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+        specifier: 0.11.1
+        version: 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/slice-store-react':
         specifier: ^1.4.2
         version: 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3228,6 +3228,11 @@ packages:
 
   '@qlover/oauth-wrapper@0.10.0':
     resolution: {integrity: sha512-+Qz3CWc1oQpjepAeD33cj9c64dtrXg8yj3UwEFJV2QPSQhBFuLx0ZTLA+At5DZ4JtgR66PHInr7FGYv83GKMVw==}
+    peerDependencies:
+      zod: ^3.0.0 || ^4.0.0
+
+  '@qlover/oauth-wrapper@0.11.1':
+    resolution: {integrity: sha512-A9j4LqRCM0ZRHSZWjIEvRPhCSTipwPE1L9ugs/dFOtx68P8qXSNSphdkz9+AFXsfd6+U/fF/xNsTa2ZsFu7FDg==}
     peerDependencies:
       zod: ^3.0.0 || ^4.0.0
 
@@ -11660,7 +11665,7 @@ snapshots:
       - yaml
       - zustand
 
-  '@qlover/next-kit@1.5.0(76669ba361d5f70d1bd7fba6693ec54e)':
+  '@qlover/next-kit@1.5.0(bae066511dcf74558c788d78b2525c75)':
     dependencies:
       '@qlover/corekit-bridge': 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -11673,7 +11678,7 @@ snapshots:
       uuid: 13.0.2
       zod: 4.4.3
     optionalDependencies:
-      '@qlover/oauth-wrapper': 0.10.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+      '@qlover/oauth-wrapper': 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@supabase/supabase-js': 2.106.1
       next: 16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-intl: 4.12.0(@swc/helpers@0.5.17)(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
@@ -11696,6 +11701,28 @@ snapshots:
       - zustand
 
   '@qlover/oauth-wrapper@0.10.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
+    dependencies:
+      '@qlover/corekit-bridge': 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+      '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@qlover/logger': 1.2.1
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@types/node'
+      - debug
+      - less
+      - lightningcss
+      - reflect-metadata
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+      - zustand
+
+  '@qlover/oauth-wrapper@0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
     dependencies:
       '@qlover/corekit-bridge': 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.32.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
