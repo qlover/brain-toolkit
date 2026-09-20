@@ -165,7 +165,9 @@ export class SupabaseOAuthProvider
   }
 
   protected async retrieveNewSession(refreshToken: string): Promise<Session> {
-    const supabase = await this.supabaseRepo.getSupabase();
+    // 机器端点（token exchange）无 cookie 会话；走缓存 admin client，
+    // 避免每请求 createServerClient 的 TLS 重握手。
+    const supabase = await this.supabaseRepo.getAdminSupabase();
 
     try {
       const result = await supabase.auth.refreshSession({
@@ -323,7 +325,8 @@ export class SupabaseOAuthProvider
       throw new Error('Supabase access token is required');
     }
 
-    const supabase = await this.supabaseRepo.getSupabase();
+    // Bearer access_token 校验不依赖 cookie；复用缓存 admin client。
+    const supabase = await this.supabaseRepo.getAdminSupabase();
     const result = await supabase.auth.getUser(token);
     this.supabaseRepo.throwIfError(result);
 

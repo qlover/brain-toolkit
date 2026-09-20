@@ -1,12 +1,10 @@
 import {
   apiCorsPreflightResponse,
-  buildApiCorsHeaders,
-  createLogger
+  buildApiCorsHeaders
 } from '@qlover/next-kit/server';
 import { I } from '@config/ioc-identifiter';
 import type { PamServerIocMap } from '@server/BootstrapServer';
 import { ServerConfig } from '@server/ServerConfig';
-import { createServerIoc } from '@server/serverIoc';
 import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import {
   PAM_RUNTIME_CORS_CACHE_KEY,
@@ -46,9 +44,13 @@ export class ApiCorsPlugin implements BootstrapServerPlugin<PamServerIocMap> {
 
   constructor(private readonly options: ApiCorsPluginOptions = {}) {}
 
-  /** 独立 OPTIONS（不经 NextApiServer）。 */
+  /**
+   * 独立 OPTIONS（不经 NextApiServer）。
+   * 只读进程级 MemoryKv；未命中则用 env，不创建 IOC（对齐 brain-oauth 轻量 preflight）。
+   * DB 规则由后续 POST/GET 经 IOC 加载并写穿缓存。
+   */
   public async preflight(req: NextRequest): Promise<NextResponse> {
-    const config = await this.loadConfig();
+    const config = await this.loadConfigForPreflight();
     return apiCorsPreflightResponse(req, config, {
       path: this.options.path,
       credentials: this.options.credentials
@@ -91,9 +93,21 @@ export class ApiCorsPlugin implements BootstrapServerPlugin<PamServerIocMap> {
     }
   }
 
+  /** OPTIONS：MemoryKv → env，绝不 createServerIoc。 */
+  protected async loadConfigForPreflight(): Promise<RuntimeCorsConfig> {
+    const kv = new MemoryKvCacheService();
+    const cached = await kv.getItem<RuntimeCorsConfig>(
+      PAM_RUNTIME_CORS_CACHE_KEY
+    );
+    if (cached) {
+      return cached;
+    }
+    return ApiCorsPlugin.envFallbackConfig();
+  }
+
   /**
    * 优先 SiteSettingsService（MemoryKv 写穿）。
-   * 独立调用（OPTIONS）先读进程级 CORS 缓存，命中则不创建 IOC。
+   * 无 IOC 时仅读缓存，未命中回退 env（不建 throwaway IOC）。
    */
   protected async loadConfig(
     IOC?: BootstrapServerContext<PamServerIocMap>['parameters']['IOC']
@@ -102,26 +116,7 @@ export class ApiCorsPlugin implements BootstrapServerPlugin<PamServerIocMap> {
       return IOC(SiteSettingsService).getCorsConfig();
     }
 
-    const kv = new MemoryKvCacheService();
-    const cached = await kv.getItem<RuntimeCorsConfig>(
-      PAM_RUNTIME_CORS_CACHE_KEY
-    );
-    if (cached) {
-      return cached;
-    }
-
-    try {
-      const serverConfig = new ServerConfig();
-      const logger = createLogger('api-cors', serverConfig);
-      const ioc = createServerIoc(logger, serverConfig);
-      return await ioc(SiteSettingsService).getCorsConfig();
-    } catch {
-      // ignore and fall back to env
-    }
-
-    const fallback = ApiCorsPlugin.envFallbackConfig();
-    await kv.setItem(PAM_RUNTIME_CORS_CACHE_KEY, fallback);
-    return fallback;
+    return this.loadConfigForPreflight();
   }
 
   protected static envFallbackConfig(): RuntimeCorsConfig {

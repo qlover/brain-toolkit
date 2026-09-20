@@ -60,10 +60,16 @@ export async function GET(req: NextRequest) {
       }
 
       const user = await IOC(OAuthWrapperController).getUserInfo(accessToken!);
-      const pam = await IOC(PamUserService).ensurePamUser({
-        id: String(user.id),
-        email: user.email ?? null
-      });
+      const pamUserService = IOC(PamUserService);
+      const userId = String(user.id);
+      // claims 不需要 role；先读再按需 ensure，避免每请求角色查询。
+      let pam = await pamUserService.findById(userId);
+      if (!pam) {
+        pam = await pamUserService.ensurePamUser({
+          id: userId,
+          email: user.email ?? null
+        });
+      }
 
       const businessEmail = toBusinessEmail(pam.email ?? user.email);
       const phone = pam.phone?.trim() || null;
@@ -75,7 +81,7 @@ export async function GET(req: NextRequest) {
       });
 
       return {
-        sub: String(user.id),
+        sub: userId,
         email: businessEmail ?? '',
         email_verified: Boolean(businessEmail),
         name,
