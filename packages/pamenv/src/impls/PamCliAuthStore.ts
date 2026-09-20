@@ -19,7 +19,7 @@ import { PamCliPrivateFsUtil } from './PamCliPrivateFsUtil';
  * File-backed auth store under `~/.pam/config.json` or `{cwd}/.pam` with `--local`.
  *
  * Significance: Persists CLI credentials between invocations.
- * Core idea: JSON file with baseUrl + token + locale + localeMessages (`0600`).
+ * Core idea: JSON file with baseUrl + token + locale (`0600`).
  * Main function: Load and mutate CLI config; honor url override.
  * Main purpose: Enable login once, reuse token for pull/export.
  *
@@ -100,7 +100,6 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
     options?: PamCliSetLocaleOptionsType
   ): Promise<void> {
     const current = await this.getConfig();
-    const localeChanged = current.locale !== locale;
     const locked =
       options?.locked === true
         ? true
@@ -115,9 +114,6 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
       locale,
       localeLocked: locked,
       localeSource: source,
-      ...(localeChanged
-        ? { localeMessages: {}, localePulledAt: null }
-        : {}),
       updatedAt: new Date().toISOString()
     });
   }
@@ -128,21 +124,6 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
   public async getLocale(): Promise<PamCliLocaleType> {
     const config = await this.getConfig();
     return config.locale;
-  }
-
-  /**
-   * @override
-   */
-  public async setLocaleMessages(
-    messages: Readonly<Record<string, string>>
-  ): Promise<void> {
-    const current = await this.getConfig();
-    await this.writeConfig({
-      ...current,
-      localeMessages: { ...messages },
-      localePulledAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
   }
 
   /**
@@ -197,16 +178,6 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
       typeof parsed.locale === 'string'
         ? PamCliConfig.parseLocale(parsed.locale)
         : null;
-    const localeMessages =
-      parsed.localeMessages &&
-      typeof parsed.localeMessages === 'object' &&
-      !Array.isArray(parsed.localeMessages)
-        ? Object.fromEntries(
-            Object.entries(parsed.localeMessages).filter(
-              ([, value]) => typeof value === 'string'
-            )
-          )
-        : {};
     const localeSource: PamCliLocaleSourceType =
       parsed.localeSource === 'manual' ||
       parsed.localeSource === 'browser' ||
@@ -220,10 +191,7 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
       updatedAt: parsed.updatedAt || new Date(0).toISOString(),
       locale: locale || PamCliConfig.DEFAULT_LOCALE,
       localeLocked: parsed.localeLocked === true,
-      localeSource,
-      localeMessages,
-      localePulledAt:
-        typeof parsed.localePulledAt === 'string' ? parsed.localePulledAt : null
+      localeSource
     };
   }
 

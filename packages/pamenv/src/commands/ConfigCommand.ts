@@ -7,8 +7,6 @@ import {
   PAMENV_CLI_CONFIG_LIST_EMAIL,
   PAMENV_CLI_CONFIG_LIST_LOCALE,
   PAMENV_CLI_CONFIG_LIST_LOCALE_LOCKED,
-  PAMENV_CLI_CONFIG_LIST_MESSAGES,
-  PAMENV_CLI_CONFIG_LIST_MESSAGES_PULLED,
   PAMENV_CLI_CONFIG_LIST_PATH,
   PAMENV_CLI_CONFIG_LIST_TOKEN_NONE,
   PAMENV_CLI_CONFIG_LIST_TOKEN_SET,
@@ -17,11 +15,9 @@ import {
   PAMENV_CLI_CONFIG_PATH,
   PAMENV_CLI_CONFIG_UNKNOWN_KEY,
   PAMENV_CLI_CONFIG_UNSUPPORTED_LOCALE,
-  PAMENV_CLI_LOCALES_CACHED,
   PAMENV_CLI_LOCALES_PULL_FAILED
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
-import type { PamCliLocaleCatalog } from '../impls/PamCliLocaleCatalog';
 
 /**
  * `pamenv config` — get/set/list persisted CLI settings.
@@ -32,24 +28,15 @@ import type { PamCliLocaleCatalog } from '../impls/PamCliLocaleCatalog';
  * Main purpose: Local PAM testing and localized API errors.
  */
 export class ConfigCommand {
-  constructor(
-    protected readonly authStore: PamCliAuthStoreInterface,
-    protected readonly localeCatalog: PamCliLocaleCatalog
-  ) {}
+  constructor(protected readonly authStore: PamCliAuthStoreInterface) {}
 
   /**
-   * Best-effort pull of locale messages for the active locale.
-   * Logs success or a warning; never throws.
+   * Best-effort refresh of locale messages from PAM into memory.
+   * Logs a warning on failure; never throws.
    */
-  protected async pullLocalesBestEffort(): Promise<void> {
+  protected async hydrateLocalesBestEffort(): Promise<void> {
     try {
-      const count = await this.localeCatalog.pull();
-      console.log(
-        PamCliI18n.t(PAMENV_CLI_LOCALES_CACHED, {
-          count,
-          path: this.authStore.getActiveConfigPath()
-        })
-      );
+      await PamCliI18n.hydrateFromApi(this.authStore);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(
@@ -86,7 +73,7 @@ export class ConfigCommand {
             path: this.authStore.getActiveConfigPath()
           })
         );
-        await this.pullLocalesBestEffort();
+        await this.hydrateLocalesBestEffort();
         return;
       }
       case 'locale':
@@ -106,8 +93,8 @@ export class ConfigCommand {
           source: 'manual'
         });
         PamCliI18n.setLocale(locale);
+        await this.hydrateLocalesBestEffort();
         console.log(PamCliI18n.t(PAMENV_CLI_CONFIG_LOCALE_SET, { locale }));
-        await this.pullLocalesBestEffort();
         return;
       }
       default:
@@ -175,16 +162,6 @@ export class ConfigCommand {
         locale: config.locale,
         locked: config.localeLocked
           ? ` ${PamCliI18n.t(PAMENV_CLI_CONFIG_LIST_LOCALE_LOCKED).trim()}`
-          : ''
-      })
-    );
-    console.log(
-      PamCliI18n.t(PAMENV_CLI_CONFIG_LIST_MESSAGES, {
-        count: Object.keys(config.localeMessages).length,
-        pulled: config.localePulledAt
-          ? ` ${PamCliI18n.t(PAMENV_CLI_CONFIG_LIST_MESSAGES_PULLED, {
-              at: config.localePulledAt
-            }).trim()}`
           : ''
       })
     );

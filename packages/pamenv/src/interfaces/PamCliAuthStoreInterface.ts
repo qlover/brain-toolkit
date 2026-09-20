@@ -16,9 +16,9 @@ export type PamCliSetLocaleOptionsType = {
 /**
  * Local auth / config persistence for pamenv.
  *
- * Significance: Stores base URL, locale, locale messages, and CLI bearer token.
+ * Significance: Stores base URL, locale, and CLI bearer token.
  * Core idea: Everything lives in the active `.pam/config.json`.
- * Main function: Read/write CLI credentials and error-message catalog.
+ * Main function: Read/write CLI credentials.
  * Main purpose: Support interactive login and authenticated API calls.
  */
 export interface PamCliAuthStoreInterface {
@@ -45,13 +45,6 @@ export interface PamCliAuthStoreInterface {
    * @returns Configured CLI locale
    */
   getLocale(): Promise<PamCliLocaleType>;
-
-  /**
-   * Persists pulled locale messages for the current locale.
-   *
-   * @param messages - Filtered `api:` map
-   */
-  setLocaleMessages(messages: Readonly<Record<string, string>>): Promise<void>;
 
   /**
    * @param token - CLI bearer token

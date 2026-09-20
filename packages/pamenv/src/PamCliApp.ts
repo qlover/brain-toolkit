@@ -13,9 +13,14 @@ import { PamCliConfig } from './config/PamCliConfig';
 import { PamCliApiClient } from './impls/PamCliApiClient';
 import { PamCliApiError } from './impls/PamCliApiError';
 import { PamCliAuthStore } from './impls/PamCliAuthStore';
-import { PamCliLocaleCatalog } from './impls/PamCliLocaleCatalog';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
 import { PamCliI18n } from './i18n/PamCliI18n';
+import {
+  PAMENV_CLI_LOGOUT_DONE,
+  PAMENV_CLI_LOGOUT_REVOKE_FAILED,
+  PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE,
+  PAMENV_CLI_USING_LOCAL_ROOT
+} from './i18n/identifier/pamenv_cli';
 import { name, version } from '../package.json';
 
 type PamCliGlobalOptionsType = {
@@ -39,7 +44,6 @@ export class PamCliApp {
   protected authStore = new PamCliAuthStore();
   protected syncStore = new PamCliSyncStore();
   protected apiClient = new PamCliApiClient(this.authStore);
-  protected localeCatalog = new PamCliLocaleCatalog(this.authStore);
 
   /**
    * Parses argv and runs the selected command.
@@ -61,6 +65,13 @@ export class PamCliApp {
         local: Boolean(leaf.local || root.local)
       });
       await PamCliI18n.syncFromStore(this.authStore);
+      if (leaf.local || root.local) {
+        console.log(
+          PamCliI18n.t(PAMENV_CLI_USING_LOCAL_ROOT, {
+            path: PamCliConfig.getLocalRoot(process.cwd())
+          })
+        );
+      }
     });
 
     this.registerLogin(program);
@@ -232,14 +243,13 @@ export class PamCliApp {
   }
 
   /**
-   * Formats an error for stderr, translating API `id` when locale cache exists.
+   * Formats an error for stderr, translating API `id` when locale catalog exists.
    *
    * @param error - Thrown value
    */
   public async formatCliError(error: unknown): Promise<string> {
     if (error instanceof PamCliApiError) {
-      await this.localeCatalog.ensureLoaded();
-      return error.formatForCli((id) => this.localeCatalog.t(id));
+      return error.formatForCli((id) => PamCliI18n.lookup(id));
     }
     return error instanceof Error ? error.message : String(error);
   }
@@ -269,11 +279,7 @@ export class PamCliApp {
         const url =
           options.url?.trim() ||
           this.resolveHostOverride(undefined, options.domain);
-        await new LoginCommand(
-          this.authStore,
-          this.apiClient,
-          this.localeCatalog
-        ).run({
+        await new LoginCommand(this.authStore, this.apiClient).run({
           url,
           email: options.email,
           browser: options.password ? false : options.browser,
@@ -302,13 +308,17 @@ export class PamCliApp {
           await this.apiClient.revokeCliToken();
         } catch (error) {
           console.warn(
-            `Server token revoke failed (continuing local logout):\n${await this.formatCliError(error)}`
+            PamCliI18n.t(PAMENV_CLI_LOGOUT_REVOKE_FAILED, {
+              message: await this.formatCliError(error)
+            })
           );
         }
         await this.authStore.clearToken();
         await this.syncStore.clearAll();
         console.log(
-          `Logged out (server revoke + local token/sync cleared).\nConfig: ${this.authStore.getActiveConfigPath()}`
+          PamCliI18n.t(PAMENV_CLI_LOGOUT_DONE, {
+            path: this.authStore.getActiveConfigPath()
+          })
         );
       });
     this.addRuntimeOptions(logout);
@@ -325,7 +335,7 @@ export class PamCliApp {
       .argument('<key>', 'domain | url | locale')
       .argument('<value>', 'Config value')
       .action(async (key: string, value: string) => {
-        await new ConfigCommand(this.authStore, this.localeCatalog).set(
+        await new ConfigCommand(this.authStore).set(
           key,
           value
         );
@@ -337,7 +347,7 @@ export class PamCliApp {
       .description('Get a config value')
       .argument('<key>', 'domain | url | locale | email | path')
       .action(async (key: string) => {
-        await new ConfigCommand(this.authStore, this.localeCatalog).get(key);
+        await new ConfigCommand(this.authStore).get(key);
       });
     this.addRuntimeOptions(getCmd);
 
@@ -345,7 +355,7 @@ export class PamCliApp {
       .command('list')
       .description('List non-secret config values')
       .action(async () => {
-        await new ConfigCommand(this.authStore, this.localeCatalog).list();
+        await new ConfigCommand(this.authStore).list();
       });
     this.addRuntimeOptions(listCmd);
 
@@ -355,15 +365,15 @@ export class PamCliApp {
   protected registerLocales(program: Command): void {
     const locales = program
       .command('locales')
-      .description('Manage PAM locale messages cached in config.json');
+      .description('Refresh PAM API error messages (memory only)');
 
     const pull = locales
       .command('pull')
       .description(
-        'Download api/common locale messages into config.json localeMessages'
+        'Fetch api:* messages from /api/locales/json (not saved locally)'
       )
       .action(async () => {
-        await new LocalesCommand(this.authStore, this.localeCatalog).pull();
+        await new LocalesCommand(this.authStore).pull();
       });
     this.addRuntimeOptions(pull);
     this.addRuntimeOptions(locales);
@@ -384,7 +394,7 @@ export class PamCliApp {
 
   protected applyRuntime(globals: PamCliGlobalOptionsType): void {
     if (globals.url?.trim() && globals.domain?.trim()) {
-      throw new Error('Use only one of --url or --domain, not both.');
+      throw new Error(PamCliI18n.t(PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE));
     }
 
     const urlOverride = this.resolveHostOverride(globals.url, globals.domain);
@@ -401,13 +411,6 @@ export class PamCliApp {
       workingDir
     });
     this.apiClient = new PamCliApiClient(this.authStore);
-    this.localeCatalog = new PamCliLocaleCatalog(this.authStore);
-
-    if (preferLocal) {
-      console.log(
-        `Using local PAM config root: ${PamCliConfig.getLocalRoot(workingDir)}`
-      );
-    }
   }
 
   protected bindOutDir(outDir?: string): void {

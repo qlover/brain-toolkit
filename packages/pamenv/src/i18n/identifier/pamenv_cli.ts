@@ -2,7 +2,8 @@
  * pamenv CLI UX i18n identifiers (consumed by ts2locales).
  *
  * Significance: Typed keys for interactive CLI copy.
- * Core idea: JSDoc @localZh/@localEn → dist/locales via Ts2Locales.
+ * Core idea: JSDoc @localZh/@localEn → dist/locales via Ts2Locales。
+ * CLI 运行时加载本地 JSON；PAM `api:*` 错误另从 `/api/locales/json` 请求。
  * Main purpose: Avoid stringly-typed PamCliI18n.t keys.
  */
 
@@ -119,9 +120,9 @@ export const PAMENV_CLI_LOGIN_CONFIG_SAVED = 'pamenv_cli:login_config_saved';
 export const PAMENV_CLI_LOGIN_LOCALE_SYNCED = 'pamenv_cli:login_locale_synced';
 
 /**
- * @description 已缓存文案（{{count}} 条）→ {{path}}
- * @localZh 已缓存文案（{{count}} 条）→ {{path}}
- * @localEn Locales cached ({{count}} keys) → {{path}}
+ * @description 已从 PAM 加载 {{count}} 条文案
+ * @localZh 已从 PAM 加载 {{count}} 条文案
+ * @localEn Loaded {{count}} locale messages from PAM
  */
 export const PAMENV_CLI_LOCALES_CACHED = 'pamenv_cli:locales_cached';
 
@@ -252,9 +253,9 @@ export const PAMENV_CLI_CONFIG_EMAIL_NONE = 'pamenv_cli:config_email_none';
 export const PAMENV_CLI_LOCALES_PULLING = 'pamenv_cli:locales_pulling';
 
 /**
- * @description 已写入 {{count}} 条 → {{path}}
- * @localZh 已写入 {{count}} 条 → {{path}}
- * @localEn Wrote {{count}} keys → {{path}}
+ * @description 已加载 {{count}} 条（{{locale}}）← {{baseUrl}}
+ * @localZh 已加载 {{count}} 条（{{locale}}）← {{baseUrl}}
+ * @localEn Loaded {{count}} keys ({{locale}}) ← {{baseUrl}}
  */
 export const PAMENV_CLI_LOCALES_PULLED = 'pamenv_cli:locales_pulled';
 
@@ -727,4 +728,284 @@ export const PAMENV_CLI_PUSH_LARGE_WARNING = 'pamenv_cli:push_large_warning';
  * @localEn Pushed {{path}} → {{slug}}/{{env}} ({{count}} vars)
  */
 export const PAMENV_CLI_PUSHED_DETAIL = 'pamenv_cli:pushed_detail';
+
+/**
+ * @description {{count}} 个新变量未标记为敏感。现在选择？
+ * @localZh {{count}} 个新变量未标记为敏感。现在选择？
+ * @localEn {{count}} new variable(s) are not marked sensitive. Choose some now?
+ */
+export const PAMENV_CLI_SENSITIVE_UNMARKED_CONFIRM =
+  'pamenv_cli:sensitive_unmarked_confirm';
+
+/**
+ * @description 选择要标记为敏感的新键
+ * @localZh 选择要标记为敏感的新键
+ * @localEn Select new keys to mark as sensitive
+ */
+export const PAMENV_CLI_SENSITIVE_SELECT_KEYS =
+  'pamenv_cli:sensitive_select_keys';
+
+/**
+ * @description 推送前，环境 "{{env}}" 中的敏感变量必须有值: {{keys}}
+ * @localZh 推送前，环境 "{{env}}" 中的敏感变量必须有值: {{keys}}
+ * @localEn Sensitive variable(s) in "{{env}}" require a value before push: {{keys}}
+ */
+export const PAMENV_CLI_SENSITIVE_VALUES_REQUIRED =
+  'pamenv_cli:sensitive_values_required';
+
+/**
+ * @description 项目 {{slug}} 上找不到环境 "{{env}}"
+ * @localZh 项目 {{slug}} 上找不到环境 "{{env}}"
+ * @localEn Environment "{{env}}" not found on project {{slug}}
+ */
+export const PAMENV_CLI_ENV_NOT_FOUND_ON_PROJECT =
+  'pamenv_cli:env_not_found_on_project';
+
+/**
+ * @description 校验后创建环境 "{{env}}" 并推送本地变量？
+ * @localZh 校验后创建环境 "{{env}}" 并推送本地变量？
+ * @localEn Create environment "{{env}}" after validation and push local variables?
+ */
+export const PAMENV_CLI_ENV_CREATE_CONFIRM = 'pamenv_cli:env_create_confirm';
+
+/**
+ * @description 找不到环境 "{{env}}"。请去掉 -y 以交互创建，或设置 package.json homepage / git origin 作为默认 URL。
+ * @localZh 找不到环境 "{{env}}"。请去掉 -y 以交互创建，或设置 package.json homepage / git origin 作为默认 URL。
+ * @localEn Environment "{{env}}" not found. Re-run without -y to create it interactively, or set package.json homepage / git origin for a default URL.
+ */
+export const PAMENV_CLI_ENV_NOT_FOUND_YES_HINT =
+  'pamenv_cli:env_not_found_yes_hint';
+
+/**
+ * @description 找不到本地文件: {{path}}。{{hint}}
+ * @localZh 找不到本地文件: {{path}}。{{hint}}
+ * @localEn Local file not found: {{path}}. {{hint}}
+ */
+export const PAMENV_CLI_LOCAL_FILE_NOT_FOUND =
+  'pamenv_cli:local_file_not_found';
+
+/**
+ * @description 请创建 {{path}} 或改用其他 --file。
+ * @localZh 请创建 {{path}} 或改用其他 --file。
+ * @localEn Create {{path}} or choose another --file.
+ */
+export const PAMENV_CLI_LOCAL_FILE_HINT_CUSTOM =
+  'pamenv_cli:local_file_hint_custom';
+
+/**
+ * @description 请先运行 `pamenv pull {{slug}} -e {{env}}`，或创建 {{fileName}}（也可传 --file .env）。
+ * @localZh 请先运行 `pamenv pull {{slug}} -e {{env}}`，或创建 {{fileName}}（也可传 --file .env）。
+ * @localEn Run `pamenv pull {{slug}} -e {{env}}` first, or create {{fileName}} (or pass --file .env).
+ */
+export const PAMENV_CLI_LOCAL_FILE_HINT_PULL =
+  'pamenv_cli:local_file_hint_pull';
+
+/**
+ * @description 必须指定环境名。例如: pamenv remove <slug> -e local
+ * @localZh 必须指定环境名。例如: pamenv remove <slug> -e local
+ * @localEn Environment name is required. Use `-e <name>`, for example: pamenv remove <slug> -e local
+ */
+export const PAMENV_CLI_REMOVE_ENV_REQUIRED = 'pamenv_cli:remove_env_required';
+
+/**
+ * @description 你没有项目 "{{slug}}" 的管理权限。删除环境需要 admin。
+ * @localZh 你没有项目 "{{slug}}" 的管理权限。删除环境需要 admin。
+ * @localEn You do not have admin access to project "{{slug}}". Removing an environment requires admin.
+ */
+export const PAMENV_CLI_REMOVE_NOT_ADMIN = 'pamenv_cli:remove_not_admin';
+
+/**
+ * @description 删除项目 {{slug}} 上的环境 "{{env}}"？此操作无法撤销。
+ * @localZh 删除项目 {{slug}} 上的环境 "{{env}}"？此操作无法撤销。
+ * @localEn Delete environment "{{env}}" on project {{slug}}? This cannot be undone.
+ */
+export const PAMENV_CLI_REMOVE_CONFIRM = 'pamenv_cli:remove_confirm';
+
+/**
+ * @description 确认删除 {{slug}}/{{env}}？
+ * @localZh 确认删除 {{slug}}/{{env}}？
+ * @localEn Really delete {{slug}}/{{env}}?
+ */
+export const PAMENV_CLI_REMOVE_CONFIRM_AGAIN =
+  'pamenv_cli:remove_confirm_again';
+
+/**
+ * @description 已删除: {{slug}}/{{env}}
+ * @localZh 已删除: {{slug}}/{{env}}
+ * @localEn Deleted successfully: {{slug}}/{{env}}
+ */
+export const PAMENV_CLI_REMOVE_DELETED = 'pamenv_cli:remove_deleted';
+
+/**
+ * @description 源项目: {{slug}} ({{name}})
+ * @localZh 源项目: {{slug}} ({{name}})
+ * @localEn Source: {{slug}} ({{name}})
+ */
+export const PAMENV_CLI_FORK_SOURCE = 'pamenv_cli:fork_source';
+
+/**
+ * @description Fork 后的项目会清空敏感变量的值。
+ * @localZh Fork 后的项目会清空敏感变量的值。
+ * @localEn Sensitive variable values will be cleared on the forked project.
+ */
+export const PAMENV_CLI_FORK_SENSITIVE_CLEARED =
+  'pamenv_cli:fork_sensitive_cleared';
+
+/**
+ * @description fork slug
+ * @localZh fork slug
+ * @localEn fork slug
+ */
+export const PAMENV_CLI_FORK_PROMPT_SLUG = 'pamenv_cli:fork_prompt_slug';
+
+/**
+ * @description fork 名称
+ * @localZh fork 名称
+ * @localEn fork name
+ */
+export const PAMENV_CLI_FORK_PROMPT_NAME = 'pamenv_cli:fork_prompt_name';
+
+/**
+ * @description 名称不能为空
+ * @localZh 名称不能为空
+ * @localEn Name is required
+ */
+export const PAMENV_CLI_FORK_NAME_REQUIRED = 'pamenv_cli:fork_name_required';
+
+/**
+ * @description Fork 到 "{{slug}}" / "{{name}}"？
+ * @localZh Fork 到 "{{slug}}" / "{{name}}"？
+ * @localEn Fork into "{{slug}}" / "{{name}}"?
+ */
+export const PAMENV_CLI_FORK_CONFIRM = 'pamenv_cli:fork_confirm';
+
+/**
+ * @description 已 Fork "{{source}}" → "{{slug}}" ({{id}})。
+ * @localZh 已 Fork "{{source}}" → "{{slug}}" ({{id}})。
+ * @localEn Forked "{{source}}" → "{{slug}}" ({{id}}).
+ */
+export const PAMENV_CLI_FORKED = 'pamenv_cli:forked';
+
+/**
+ * @description 请先填写密钥再推送，例如：
+ * @localZh 请先填写密钥再推送，例如：
+ * @localEn Fill secrets then push, for example:
+ */
+export const PAMENV_CLI_FORK_FILL_SECRETS = 'pamenv_cli:fork_fill_secrets';
+
+/**
+ * @description Fork 结果没有环境。请在 PAM 网页添加，或在其他目录 init。
+ * @localZh Fork 结果没有环境。请在 PAM 网页添加，或在其他目录 init。
+ * @localEn No environments on the fork. Add some in the PAM UI or via init elsewhere.
+ */
+export const PAMENV_CLI_FORK_NO_ENVS = 'pamenv_cli:fork_no_envs';
+
+/**
+ * @description 未找到项目。
+ * @localZh 未找到项目。
+ * @localEn No projects found.
+ */
+export const PAMENV_CLI_NO_PROJECTS = 'pamenv_cli:no_projects';
+
+/**
+ * @description {{slug}}\t{{name}}{{role}}\tenvs: {{envs}}\tid: {{id}}
+ * @localZh {{slug}}\t{{name}}{{role}}\tenvs: {{envs}}\tid: {{id}}
+ * @localEn {{slug}}\t{{name}}{{role}}\tenvs: {{envs}}\tid: {{id}}
+ */
+export const PAMENV_CLI_PROJECTS_LINE = 'pamenv_cli:projects_line';
+
+/**
+ * @description 已退出登录（服务端吊销 + 本地 token/sync 已清除）。配置: {{path}}
+ * @localZh 已退出登录（服务端吊销 + 本地 token/sync 已清除）。配置: {{path}}
+ * @localEn Logged out (server revoke + local token/sync cleared). Config: {{path}}
+ */
+export const PAMENV_CLI_LOGOUT_DONE = 'pamenv_cli:logout_done';
+
+/**
+ * @description 服务端吊销 token 失败（仍继续本地退出）: {{message}}
+ * @localZh 服务端吊销 token 失败（仍继续本地退出）: {{message}}
+ * @localEn Server token revoke failed (continuing local logout): {{message}}
+ */
+export const PAMENV_CLI_LOGOUT_REVOKE_FAILED =
+  'pamenv_cli:logout_revoke_failed';
+
+/**
+ * @description 使用本地 PAM 配置目录: {{path}}
+ * @localZh 使用本地 PAM 配置目录: {{path}}
+ * @localEn Using local PAM config root: {{path}}
+ */
+export const PAMENV_CLI_USING_LOCAL_ROOT = 'pamenv_cli:using_local_root';
+
+/**
+ * @description 请只使用 --url 或 --domain 其中一个。
+ * @localZh 请只使用 --url 或 --domain 其中一个。
+ * @localEn Use only one of --url or --domain, not both.
+ */
+export const PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE =
+  'pamenv_cli:url_and_domain_exclusive';
+
+/**
+ * @description 新增 ({{count}}):
+ * @localZh 新增 ({{count}}):
+ * @localEn Created ({{count}}):
+ */
+export const PAMENV_CLI_DIFF_CREATED = 'pamenv_cli:diff_created';
+
+/**
+ * @description 修改 ({{count}}):
+ * @localZh 修改 ({{count}}):
+ * @localEn Modified ({{count}}):
+ */
+export const PAMENV_CLI_DIFF_MODIFIED = 'pamenv_cli:diff_modified';
+
+/**
+ * @description 删除 ({{count}}):
+ * @localZh 删除 ({{count}}):
+ * @localEn Deleted ({{count}}):
+ */
+export const PAMENV_CLI_DIFF_DELETED = 'pamenv_cli:diff_deleted';
+
+/**
+ * @description 未检测到变量变更。
+ * @localZh 未检测到变量变更。
+ * @localEn No variable changes detected.
+ */
+export const PAMENV_CLI_DIFF_NONE = 'pamenv_cli:diff_none';
+
+/**
+ * @description 项目 {{slug}} 没有环境
+ * @localZh 项目 {{slug}} 没有环境
+ * @localEn Project {{slug}} has no environments
+ */
+export const PAMENV_CLI_PROJECT_NO_ENVS = 'pamenv_cli:project_no_envs';
+
+/**
+ * @description 必须提供项目 slug 或 id
+ * @localZh 必须提供项目 slug 或 id
+ * @localEn Project slug or id is required
+ */
+export const PAMENV_CLI_PROJECT_REF_REQUIRED =
+  'pamenv_cli:project_ref_required';
+
+/**
+ * @description 找不到项目（slug 或 id）: {{ref}}
+ * @localZh 找不到项目（slug 或 id）: {{ref}}
+ * @localEn Project not found for slug or id: {{ref}}
+ */
+export const PAMENV_CLI_PROJECT_NOT_FOUND = 'pamenv_cli:project_not_found';
+
+/**
+ * @description 构建本地文件需要环境名
+ * @localZh 构建本地文件需要环境名
+ * @localEn Environment name is required to build the local file
+ */
+export const PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE =
+  'pamenv_cli:env_name_required_for_file';
+
+/**
+ * @description 尚未登录。请先运行 `pamenv login`。
+ * @localZh 尚未登录。请先运行 `pamenv login`。
+ * @localEn Not logged in. Run `pamenv login` first.
+ */
+export const PAMENV_CLI_NOT_LOGGED_IN = 'pamenv_cli:not_logged_in';
 
