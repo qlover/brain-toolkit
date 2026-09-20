@@ -14,6 +14,8 @@ import type {
   PamCliVariableInputType
 } from '../interfaces/PamCliTypes';
 import { PamCliConfig } from '../config/PamCliConfig';
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import { PAMENV_CLI_NOT_LOGGED_IN } from '../i18n/identifier/pamenv_cli';
 import { PamCliApiError } from './PamCliApiError';
 
 type ApiEnvelopeType<T> = {
@@ -393,8 +395,8 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     const token = await this.authStore.getToken();
     if (!token) {
       throw new PamCliApiError({
-        id: 'pamenv:not_logged_in',
-        message: 'Not logged in. Run `pamenv login` first.',
+        id: PAMENV_CLI_NOT_LOGGED_IN,
+        message: PamCliI18n.t(PAMENV_CLI_NOT_LOGGED_IN),
         httpStatus: 401
       });
     }

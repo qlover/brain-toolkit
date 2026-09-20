@@ -1,3 +1,8 @@
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_ENV_NOT_FOUND_ON_PROJECT,
+  PAMENV_CLI_PROJECT_NO_ENVS
+} from '../i18n/identifier/pamenv_cli';
 import type { PamCliEnvironmentSummaryType } from '../interfaces/PamCliTypes';
 
 /**
@@ -25,7 +30,9 @@ export class PamCliEnvironmentSelectUtil {
   ): PamCliEnvironmentSummaryType {
     const list = environments || [];
     if (list.length === 0) {
-      throw new Error(`Project ${projectSlug} has no environments`);
+      throw new Error(
+        PamCliI18n.t(PAMENV_CLI_PROJECT_NO_ENVS, { slug: projectSlug })
+      );
     }
 
     const wanted = envName?.trim();
@@ -33,7 +40,10 @@ export class PamCliEnvironmentSelectUtil {
       const found = list.find((env) => env.name === wanted);
       if (!found) {
         throw new Error(
-          `Environment "${wanted}" not found on project ${projectSlug}`
+          PamCliI18n.t(PAMENV_CLI_ENV_NOT_FOUND_ON_PROJECT, {
+            env: wanted,
+            slug: projectSlug
+          })
         );
       }
       return found;

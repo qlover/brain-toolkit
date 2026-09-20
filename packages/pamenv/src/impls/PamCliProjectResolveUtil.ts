@@ -1,3 +1,8 @@
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_PROJECT_NOT_FOUND,
+  PAMENV_CLI_PROJECT_REF_REQUIRED
+} from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliProjectType } from '../interfaces/PamCliTypes';
 
@@ -79,7 +84,7 @@ export class PamCliProjectResolveUtil {
   ): Promise<PamCliProjectType> {
     const ref = projectRef.trim();
     if (!ref) {
-      throw new Error('Project slug or id is required');
+      throw new Error(PamCliI18n.t(PAMENV_CLI_PROJECT_REF_REQUIRED));
     }
 
     const searched = await apiClient.listProjects(ref);
@@ -91,7 +96,9 @@ export class PamCliProjectResolveUtil {
     }
 
     if (!project) {
-      throw new Error(`Project not found for slug or id: ${ref}`);
+      throw new Error(
+        PamCliI18n.t(PAMENV_CLI_PROJECT_NOT_FOUND, { ref })
+      );
     }
 
     return project;

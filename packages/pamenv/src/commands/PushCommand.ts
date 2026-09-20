@@ -6,8 +6,14 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_CANCELLED,
   PAMENV_CLI_CREATED_ENVIRONMENT,
+  PAMENV_CLI_ENV_CREATE_CONFIRM,
+  PAMENV_CLI_ENV_NOT_FOUND_ON_PROJECT,
+  PAMENV_CLI_ENV_NOT_FOUND_YES_HINT,
   PAMENV_CLI_ENV_URL_REQUIRED,
   PAMENV_CLI_LOCAL_FILE,
+  PAMENV_CLI_LOCAL_FILE_HINT_CUSTOM,
+  PAMENV_CLI_LOCAL_FILE_HINT_PULL,
+  PAMENV_CLI_LOCAL_FILE_NOT_FOUND,
   PAMENV_CLI_NOT_OWNER_PUSH,
   PAMENV_CLI_OPEN_PROJECT_DETAIL,
   PAMENV_CLI_PROMPT_ENV_URL,
@@ -25,6 +31,7 @@ import {
   PAMENV_CLI_PUSH_OVERWRITE_REMOTE,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
+  PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
@@ -122,9 +129,15 @@ export class PushCommand {
       localDoc = PamCliDotenvUtil.parseDocument(await readFile(target, 'utf8'));
     } catch {
       const hint = options.file?.trim()
-        ? `Create ${target} or choose another --file.`
-        : `Run \`pamenv pull ${project.slug} -e ${targetEnv.name}\` first, or create ${PamCliLocalEnvFileUtil.toFileName(targetEnv.name)} (or pass --file .env).`;
-      throw new Error(`Local file not found: ${target}. ${hint}`);
+        ? PamCliI18n.t(PAMENV_CLI_LOCAL_FILE_HINT_CUSTOM, { path: target })
+        : PamCliI18n.t(PAMENV_CLI_LOCAL_FILE_HINT_PULL, {
+            slug: project.slug,
+            env: targetEnv.name,
+            fileName: PamCliLocalEnvFileUtil.toFileName(targetEnv.name)
+          });
+      throw new Error(
+        PamCliI18n.t(PAMENV_CLI_LOCAL_FILE_NOT_FOUND, { path: target, hint })
+      );
     }
 
     let localVars: PamCliParsedVarType[] = [...localDoc.variables];
@@ -424,16 +437,22 @@ export class PushCommand {
     cwd: string
   ): Promise<Extract<PamCliPushEnvTargetType, { mode: 'create' }>> {
     console.log(
-      `Environment "${envName}" not found on project ${project.slug}.`
+      PamCliI18n.t(PAMENV_CLI_ENV_NOT_FOUND_ON_PROJECT, {
+        env: envName,
+        slug: project.slug
+      })
     );
 
     if (!options.yes) {
       const ok = await PamCliConfirmUtil.ask(
-        `Create environment "${envName}" after validation and push local variables?`
+        PamCliI18n.t(PAMENV_CLI_ENV_CREATE_CONFIRM, { env: envName })
       );
       if (!ok) {
         throw new Error(
-          `Environment "${envName}" not found on project ${project.slug}`
+          PamCliI18n.t(PAMENV_CLI_ENV_NOT_FOUND_ON_PROJECT, {
+            env: envName,
+            slug: project.slug
+          })
         );
       }
     }
@@ -445,7 +464,7 @@ export class PushCommand {
     if (options.yes) {
       if (!defaultUrl) {
         throw new Error(
-          `Environment "${envName}" not found. Re-run without -y to create it interactively, or set package.json homepage / git origin for a default URL.`
+          PamCliI18n.t(PAMENV_CLI_ENV_NOT_FOUND_YES_HINT, { env: envName })
         );
       }
       url = defaultUrl;
@@ -491,7 +510,10 @@ export class PushCommand {
     }
 
     throw new Error(
-      `Sensitive variable(s) in "${envName}" require a value before push: ${missing.join(', ')}`
+      PamCliI18n.t(PAMENV_CLI_SENSITIVE_VALUES_REQUIRED, {
+        env: envName,
+        keys: missing.join(', ')
+      })
     );
   }
 }

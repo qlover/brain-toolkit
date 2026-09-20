@@ -1,3 +1,12 @@
+import { PamCliI18n } from '../i18n/PamCliI18n';
+import {
+  PAMENV_CLI_CANCELLED,
+  PAMENV_CLI_REMOVE_CONFIRM,
+  PAMENV_CLI_REMOVE_CONFIRM_AGAIN,
+  PAMENV_CLI_REMOVE_DELETED,
+  PAMENV_CLI_REMOVE_ENV_REQUIRED,
+  PAMENV_CLI_REMOVE_NOT_ADMIN
+} from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import { PamCliConfirmUtil } from '../impls/PamCliConfirmUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
@@ -38,9 +47,7 @@ export class RemoveCommand {
   ): Promise<void> {
     const envName = options.envName?.trim();
     if (!envName) {
-      throw new Error(
-        'Environment name is required. Use `-e <name>`, for example: pamenv remove <slug> -e local'
-      );
+      throw new Error(PamCliI18n.t(PAMENV_CLI_REMOVE_ENV_REQUIRED));
     }
 
     const project = await PamCliProjectResolveUtil.resolve(
@@ -50,7 +57,7 @@ export class RemoveCommand {
 
     if (!PamCliProjectAccessUtil.canManage(project)) {
       throw new Error(
-        `You do not have admin access to project "${project.slug}". Removing an environment requires admin.`
+        PamCliI18n.t(PAMENV_CLI_REMOVE_NOT_ADMIN, { slug: project.slug })
       );
     }
 
@@ -62,18 +69,24 @@ export class RemoveCommand {
 
     if (!options.yes) {
       const first = await PamCliConfirmUtil.ask(
-        `Delete environment "${env.name}" on project ${project.slug}? This cannot be undone.`
+        PamCliI18n.t(PAMENV_CLI_REMOVE_CONFIRM, {
+          env: env.name,
+          slug: project.slug
+        })
       );
       if (!first) {
-        console.log('Cancelled.');
+        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
         return;
       }
 
       const second = await PamCliConfirmUtil.ask(
-        `Really delete ${project.slug}/${env.name}?`
+        PamCliI18n.t(PAMENV_CLI_REMOVE_CONFIRM_AGAIN, {
+          slug: project.slug,
+          env: env.name
+        })
       );
       if (!second) {
-        console.log('Cancelled.');
+        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
         return;
       }
     }
@@ -81,6 +94,11 @@ export class RemoveCommand {
     await this.apiClient.deleteEnvironment(project.id, env.id);
     await this.syncStore.clearSnapshot(project.id, env.name);
 
-    console.log(`Deleted successfully: ${project.slug}/${env.name}`);
+    console.log(
+      PamCliI18n.t(PAMENV_CLI_REMOVE_DELETED, {
+        slug: project.slug,
+        env: env.name
+      })
+    );
   }
 }
