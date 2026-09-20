@@ -35,4 +35,23 @@ describe('MemoryKvCacheService', () => {
     expect(await kv.getItem('pam:roles:idKeyMaps')).toBeNull();
     expect(await kv.getItem<string[]>('pam:categories:v1')).toEqual(['a']);
   });
+
+  it('listEntries returns live keys, prefix filter, and drops expired', async () => {
+    const kv = new MemoryKvCacheService();
+    await kv.setItem('pam:keep:a', { n: 1 }, { ttlMs: 5_000 });
+    await kv.setItem('pam:skip:b', { n: 2 }, { ttlMs: 5_000 });
+    await kv.setItem('pam:expired:c', { n: 3 }, { ttlMs: 1 });
+    await new Promise((r) => setTimeout(r, 15));
+
+    const prefixed = await kv.listEntries('pam:keep:');
+    expect(prefixed).toHaveLength(1);
+    expect(prefixed[0]?.key).toBe('pam:keep:a');
+    expect(prefixed[0]?.value).toEqual({ n: 1 });
+    expect(prefixed[0]?.bytes).toBeGreaterThan(0);
+    expect(prefixed[0]?.ttlMs).toBeGreaterThan(0);
+
+    const all = await kv.listEntries();
+    expect(all.map((item) => item.key)).toEqual(['pam:keep:a', 'pam:skip:b']);
+    expect(await kv.count()).toBe(2);
+  });
 });
