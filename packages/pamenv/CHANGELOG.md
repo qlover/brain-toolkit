@@ -1,5 +1,32 @@
 # pamenv-cli
 
+## 1.9.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** API 错误改为请求 /api/locales，不再写入 config ([94590da](https://github.com/qlover/brain-toolkit/commit/94590daafc3c7dfb6d25c8097d1a20355000a646)) ([#160](https://github.com/qlover/brain-toolkit/pull/160))
+
+  命令开始时拉取 api 命名空间到内存；去掉 localeMessages 缓存。
+  CLI 交互文案仍使用本地 dist/locales。
+
+#### 🐞 Bug Fixes
+
+- **pamenv:** 补齐 push/fork/remove 等硬编码英文提示 ([b2f3a29](https://github.com/qlover/brain-toolkit/commit/b2f3a29fbfdd1b2662b5013dd5e9eeb79d4597b9)) ([#160](https://github.com/qlover/brain-toolkit/pull/160))
+
+  敏感变量确认、缺值报错、diff 分区与 fork/remove 文案改走 pamenv_cli i18n。
+
+- **pam,pamenv:** device 登录页 i18n 与 verification URI locale ([2220913](https://github.com/qlover/brain-toolkit/commit/2220913bfe20a4899fcc61fd51c378976183c9b6)) ([#157](https://github.com/qlover/brain-toolkit/pull/157))
+
+  设备授权页接入 PageI18n；createDeviceCode 带 locale，verification_uri 加语言前缀。
+
+#### 📝 Documentation
+
+- **pamenv:** 说明 CLI 本地文案与 API 错误两套来源 ([414bf5b](https://github.com/qlover/brain-toolkit/commit/414bf5bc7bd8096181b94437bc5a9d21c0778a5a)) ([#160](https://github.com/qlover/brain-toolkit/pull/160))
+
+  CLI 交互仍走 dist/locales；api 错误从 /api/locales 请求，不写入 config。
+
 ## Unreleased
 
 ### Minor Changes
