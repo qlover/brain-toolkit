@@ -2,7 +2,7 @@
 
 > English: [README.en.md](./README.en.md)
 
-**TL;DR**：`npm install` → 将 `.env.template` 复制为 `.env` 并按注释填写（OAuth 相关变量见下文）→ 在 Supabase 执行 `makes/sql/` 脚本 → `npm run dev`（默认端口 **3102**，`APP_ENV=localhost`）→ 生产：`npm run build` 后 `npm start`（默认端口 **3101**）。
+**TL;DR**：`npm install` → 将 `.env.template` 复制为 `.env` 并按注释填写（OAuth 相关变量见下文）→ 在 Supabase 执行 `makes/sql/000-pam-full-schema.sql` → `npm run dev`（默认端口 **3102**，`APP_ENV=localhost`）→ 生产：`npm run build` 后 `npm start`（默认端口 **3101**）。
 
 **文档**：站内 OAuth 集成说明见 [`/[locale]/docs/oauth`](./src/app/[locale]/docs/oauth/page.tsx)（开发环境如 `http://localhost:3102/zh/docs/oauth`）；国际化约定见 [docs/i18n.md](./docs/i18n.md)。
 
@@ -166,19 +166,22 @@ cp .env.template .env   # Windows 下手动复制亦可
 
 ### 2. 数据库
 
-在 Supabase SQL Editor（或等价环境）按顺序执行：
+在 Supabase SQL Editor（或等价环境）执行**一份**全量脚本：
 
-1. `makes/sql/001-base-tables.sql` — 基础表（`request_logs` 等，可按需启用 RLS）
-2. `makes/sql/002-oauth-clients.sql` — OAuth 客户端、授权码、refresh token、用户凭证（表前缀 `n_oauth_wrapper__*`）
-3. `makes/sql/003-pam-base.sql` / `004-update_project_with_environments.sql` — PAM 项目与环境
-4. `makes/sql/005-pam-cli-tokens.sql` — CLI Token `jti` 登记与吊销（`n_pam_cli_tokens`）
+1. `makes/sql/000-pam-full-schema.sql` — PAM 全量 schema（dev 可重复执行）
+   - 审计表：`pam_request_logs`（不再使用 `request_logs` / `fe_request_logs`）
+   - OAuth：`pam_oauth_*`（clients / authorization_codes / refresh_tokens / user_credentials）
+   - 业务：`pam_*`（项目、环境、用户、角色、团队、站点设置、locales 等）
+   - CLI：`pam_cli_tokens`
+   - 与其它应用共库时用表名前缀区分即可（如 fe-base 用 `fe_oauth_*` / `fe_request_logs`）
+   - RPC：`pam_search_projects`、`pam_auth_users_search`、`update_project_with_environments` 等
 
 **RLS 与密钥：**
 
 - 若 OAuth 相关表 **未启用 RLS**（或已对 `anon` / 服务端角色开放读写策略），配置 **`SUPABASE_URL` + `SUPABASE_ANON_KEY`** 即可；**不必**配置 `SUPABASE_SERVICE_ROLE_KEY`。
-- 仓库自带 `002-oauth-clients.sql` 末尾包含 `enable row level security`（默认无公开 policy）。仅在这种 **已启用 RLS 且不允许 anon 直写** 的部署下，才需要 **service role**，或改为自行添加合适的 RLS policy 而继续用 anon。
+- 仓库自带 `000-pam-full-schema.sql` 中 OAuth 表包含 `enable row level security`（默认无公开 policy）。仅在这种 **已启用 RLS 且不允许 anon 直写** 的部署下，才需要 **service role**，或改为自行添加合适的 RLS policy 而继续用 anon。
 
-`OAuthWrapperRepository` 通过 `shared/supabase/admin.ts` 的 `createAdminClient()` 连接数据库：优先 `SUPABASE_SERVICE_ROLE_KEY`，未配置时回退 `SUPABASE_ANON_KEY`。
+`OAuthWrapperRepository` / 角色与业务表通过 `shared/supabase/server.ts` 的 `createAdminClient()`（**必须** `SUPABASE_SERVICE_ROLE_KEY`）访问数据库；勿在该 client 上调用 `auth.refreshSession`。
 
 ### 3. 启动
 

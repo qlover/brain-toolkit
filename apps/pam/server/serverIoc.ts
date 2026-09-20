@@ -10,6 +10,7 @@ import { createAdminClient, createServerClient } from '@shared/supabase/server';
 import { defaultSearchParams } from '@config/common';
 import type { IOCIdentifierMapServer } from '@config/ioc-identifiter';
 import { I } from '@config/ioc-identifiter';
+import { PamTables } from '@config/pamTables';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { SupabaseOAuthProvider } from './providers/SupabaseOAuthProvider';
 import { PAMSupabaseRepo } from './repositorys/PAMSupabaseRepo';
@@ -70,7 +71,8 @@ const ServerIocRegister: IOCRegisterInterface<
       RequestLogsRepository,
       new RequestLogsRepository({
         ...supabaseDeps,
-        serverContext: ioc.get(I.ServerContextInterface)
+        serverContext: ioc.get(I.ServerContextInterface),
+        tableName: PamTables.requestLogs
       })
     );
 

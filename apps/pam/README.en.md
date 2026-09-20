@@ -2,7 +2,7 @@
 
 > 中文: [README.md](./README.md)
 
-**TL;DR**: `npm install` → copy `.env.template` to `.env` (OAuth variables below) → run `makes/sql/` on Supabase → `npm run dev` (port **3102**, `APP_ENV=localhost`) → production: `npm run build` then `npm start` (port **3101**).
+**TL;DR**: `npm install` → copy `.env.template` to `.env` (OAuth variables below) → run `makes/sql/000-pam-full-schema.sql` on Supabase → `npm run dev` (port **3102**, `APP_ENV=localhost`) → production: `npm run build` then `npm start` (port **3101**).
 
 **Docs**: In-app OAuth guide at `/[locale]/docs/oauth` (e.g. `http://localhost:3102/en/docs/oauth`); i18n conventions in [docs/i18n.en.md](./docs/i18n.en.md).
 
@@ -92,7 +92,7 @@ cp .env.template .env
 | `OAUTH_WRAPPER_API_BASE` | Upstream user API base (Brain User in the default adapter) |
 | `OAUTH_WRAPPER_API_TIMEOUT` | Upstream timeout ms (default `10000`) |
 
-**Database:** run `makes/sql/001-base-tables.sql` then `002-oauth-clients.sql` in Supabase. If OAuth tables have **no RLS**, `SUPABASE_ANON_KEY` is enough; `SUPABASE_SERVICE_ROLE_KEY` is only needed when RLS blocks anon writes (the bundled `002` script enables RLS by default—skip or adjust if that does not match your deployment). `createAdminClient()` prefers service role, then falls back to anon.
+**Database:** run `makes/sql/000-pam-full-schema.sql` once in Supabase (full PAM schema, including `pam_request_logs`, `pam_oauth_*`, and `pam_cli_tokens`). OAuth / roles / business repos use `createAdminClient()` which **requires** `SUPABASE_SERVICE_ROLE_KEY` (do not call `auth.refreshSession` on that client). Shared DBs can coexist via table prefixes (e.g. fe-base: `fe_oauth_*` / `fe_request_logs`).
 
 **Run:** `npm run dev` → `http://localhost:3102`.
 

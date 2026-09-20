@@ -1,7 +1,8 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
+import { PamTables } from '@shared/config/pamTables';
 import { inject, injectable } from '@shared/container';
 
-export const PamCliTokenTableName = 'n_pam_cli_tokens' as const;
+export const PamCliTokenTableName = PamTables.cliTokens;
 
 export type PamCliTokenInsertType = {
   readonly jti: string;
@@ -17,7 +18,7 @@ export type PamCliTokenInsertType = {
  *
  * Significance: Makes CLI bearer tokens revocable server-side.
  * Core idea: Allowlist by jti until expiry or revoked flag.
- * Main function: Insert and query `n_pam_cli_tokens` via service role.
+ * Main function: Insert and query `pam_cli_tokens` via service role.
  * Main purpose: Support short-lived CLI tokens with logout revoke.
  */
 @injectable()

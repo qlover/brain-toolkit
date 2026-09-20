@@ -2,6 +2,7 @@ import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
 import { defaultSearchParams } from '@config/common';
 import { I } from '@config/ioc-identifiter';
+import { PamTables } from '@config/pamTables';
 import type {
   ResourceSearchParams,
   ResourceSearchResult
@@ -9,7 +10,7 @@ import type {
 import type { LoggerInterface } from '@qlover/logger';
 import type { RequestLogRow } from '@qlover/next-kit/common';
 
-const TABLE = 'request_logs';
+const TABLE = PamTables.requestLogs;
 
 @injectable()
 export class RequestLogsAdminRepo {

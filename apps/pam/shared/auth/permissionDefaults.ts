@@ -1,6 +1,6 @@
 /**
  * Default role → permission_key maps (seed / fallback when DB not loaded).
- * Keep in sync with apps/pam/makes/sql/020-pam-roles.sql
+ * Keep in sync with apps/pam/makes/sql/000-pam-full-schema.sql
  */
 
 import { PermissionKey } from './permissionKeys';
