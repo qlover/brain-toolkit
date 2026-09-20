@@ -1,6 +1,7 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import type { RoleKindType } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
+import { resetAdminSupabaseClient } from '@shared/supabase/server';
 import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 
 const ROLES_TABLE = 'pam_roles';
@@ -68,7 +69,43 @@ export class PamRolePermissionsRepo {
       .order('key', { ascending: true });
     this.supabaseBridge.throwIfError(result);
 
-    return (result.data ?? []) as PamRoleRow[];
+    const rows = (result.data ?? []) as PamRoleRow[];
+    if (rows.length > 0) {
+      return rows;
+    }
+
+    // Fallback: admin client may have been polluted by auth.refreshSession
+    // (user JWT + RLS → []). Raw service_role REST still sees rows.
+    const url = process.env.SUPABASE_URL?.trim();
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (url && serviceKey) {
+      resetAdminSupabaseClient();
+
+      const res = await fetch(
+        `${url}/rest/v1/${ROLES_TABLE}?select=id,key,name,kind,description,is_system&order=kind.asc,key.asc`,
+        {
+          headers: {
+            apikey: serviceKey,
+            Authorization: `Bearer ${serviceKey}`,
+            Accept: 'application/json'
+          },
+          cache: 'no-store'
+        }
+      );
+      if (res.ok) {
+        const raw = (await res.json()) as PamRoleRow[];
+        if (Array.isArray(raw) && raw.length > 0) {
+          return raw;
+        }
+      } else {
+        const body = await res.text();
+        throw new Error(
+          `pam_roles empty via supabase-js; raw REST also failed HTTP ${res.status}: ${body.slice(0, 200)}`
+        );
+      }
+    }
+
+    return rows;
   }
 
   /** Fresh DB read (also refreshes process-level id/key cache via MemoryKv). */
@@ -114,10 +151,20 @@ export class PamRolePermissionsRepo {
   }
 
   public async requireRoleIdByKey(key: string): Promise<string> {
-    const maps = await this.ensureRoleMaps();
-    const id = maps.byKey[key];
+    let maps = await this.ensureRoleMaps();
+    let id = maps.byKey[key];
     if (!id) {
-      throw new Error(`Unknown pam_roles.key: ${key}`);
+      // 可能被 rememberRoleMapping 写成「半份」map，强制重载全表。
+      await this.invalidateRoleCache();
+      maps = await this.ensureRoleMaps();
+      id = maps.byKey[key];
+    }
+    if (!id) {
+      const row = await this.findRoleByKey(key);
+      if (!row) {
+        throw new Error(`Unknown pam_roles.key: ${key}`);
+      }
+      return row.id;
     }
     return id;
   }
@@ -137,20 +184,36 @@ export class PamRolePermissionsRepo {
   }
 
   protected async ensureRoleMaps(): Promise<RoleIdKeyMaps> {
-    return this.kv.getOrSet(
-      ROLE_MAPS_KV_KEY,
-      async () => mapsFromRows(await this.listRoles()),
-      { ttlMs: ROLE_MAPS_TTL_MS }
-    );
+    const cached = await this.kv.getItem<RoleIdKeyMaps>(ROLE_MAPS_KV_KEY);
+    if (cached && Object.keys(cached.byKey).length > 0) {
+      return cached;
+    }
+    if (cached) {
+      await this.invalidateRoleCache();
+    }
+
+    const rows = await this.listRoles();
+    const maps = mapsFromRows(rows);
+    if (Object.keys(maps.byKey).length === 0) {
+      const dbHint = process.env.SUPABASE_URL ?? '(SUPABASE_URL unset)';
+      throw new Error(
+        `pam_roles is empty (0 rows via admin client @ ${dbHint}). ` +
+          'Run apps/pam/makes/sql/000-pam-full-schema.sql on a fresh/dev DB, ' +
+          'or INSERT the system role seeds into public.pam_roles on this project.'
+      );
+    }
+    await this.kv.setItem(ROLE_MAPS_KV_KEY, maps, {
+      ttlMs: ROLE_MAPS_TTL_MS
+    });
+    return maps;
   }
 
   protected async rememberRoleMapping(id: string, key: string): Promise<void> {
-    const current = (await this.kv.getItem<RoleIdKeyMaps>(
-      ROLE_MAPS_KV_KEY
-    )) ?? {
-      byId: {},
-      byKey: {}
-    };
+    const current = await this.kv.getItem<RoleIdKeyMaps>(ROLE_MAPS_KV_KEY);
+    // 禁止在全量 map 尚未建立时写入「只有一条」的半份缓存。
+    if (!current || Object.keys(current.byKey).length === 0) {
+      return;
+    }
     current.byId[id] = key;
     current.byKey[key] = id;
     await this.kv.setItem(ROLE_MAPS_KV_KEY, current, {

@@ -1,5 +1,6 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { verifyClientSecret, hashClientSecret } from '@qlover/oauth-wrapper';
+import { PamTables } from '@shared/config/pamTables';
 import { inject, injectable } from '@shared/container';
 import { normalizeLogoUri } from '@config/oauthClientLogoSchema';
 import type {
@@ -32,7 +33,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   public async create(input: CreateAuthorizationCodeInput): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__authorization_codes')
+      .from(PamTables.oauthAuthorizationCodes)
       .insert({
         code: input.code,
         client_id: input.client_id,
@@ -57,7 +58,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<OAuthAuthorizationCodeRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__authorization_codes')
+      .from(PamTables.oauthAuthorizationCodes)
       .update({ used: true })
       .eq('code', code)
       .eq('used', false)
@@ -77,7 +78,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<OAuthUserCredentialsRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__user_credentials')
+      .from(PamTables.oauthUserCredentials)
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
@@ -96,23 +97,21 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase
-      .from('n_oauth_wrapper__user_credentials')
-      .upsert(
-        {
-          user_id: userId,
-          ...fields,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id' }
-      );
+    const result = await supabase.from(PamTables.oauthUserCredentials).upsert(
+      {
+        user_id: userId,
+        ...fields,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: 'user_id' }
+    );
     this.supabaseBridge.throwIfError(result);
   }
 
   public async deleteUserCredentials(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__user_credentials')
+      .from(PamTables.oauthUserCredentials)
       .delete()
       .eq('user_id', userId);
     this.supabaseBridge.throwIfError(result);
@@ -127,7 +126,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .update({
         owner_user_id: toUserId,
         updated_at: new Date().toISOString()
@@ -145,7 +144,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
+      .from(PamTables.oauthRefreshTokens)
       .update({ user_id: toUserId })
       .eq('user_id', fromUserId)
       .eq('revoked', false);
@@ -160,7 +159,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<OAuthRefreshTokenRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
+      .from(PamTables.oauthRefreshTokens)
       .select('*')
       .eq('refresh_token', tokenHash)
       .maybeSingle();
@@ -178,15 +177,13 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     expires_at: string;
   }): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
-      .upsert(
-        {
-          ...input,
-          revoked: false
-        },
-        { onConflict: 'refresh_token' }
-      );
+    const result = await supabase.from(PamTables.oauthRefreshTokens).upsert(
+      {
+        ...input,
+        revoked: false
+      },
+      { onConflict: 'refresh_token' }
+    );
     this.supabaseBridge.throwIfError(result);
   }
 
@@ -196,7 +193,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   public async revokeRefreshToken(tokenHash: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
+      .from(PamTables.oauthRefreshTokens)
       .update({ revoked: true })
       .eq('refresh_token', tokenHash);
     this.supabaseBridge.throwIfError(result);
@@ -210,7 +207,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<OAuthRefreshTokenRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
+      .from(PamTables.oauthRefreshTokens)
       .select('*')
       .eq('refresh_token', tokenHash)
       .maybeSingle();
@@ -226,15 +223,13 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     input: CreateOAuthRefreshTokenInput
   ): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
-      .insert({
-        refresh_token: input.refresh_token,
-        client_id: input.client_id,
-        user_id: input.user_id,
-        expires_at: input.expires_at,
-        revoked: false
-      });
+    const result = await supabase.from(PamTables.oauthRefreshTokens).insert({
+      refresh_token: input.refresh_token,
+      client_id: input.client_id,
+      user_id: input.user_id,
+      expires_at: input.expires_at,
+      revoked: false
+    });
     this.supabaseBridge.throwIfError(result);
   }
 
@@ -244,7 +239,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   public async revokeByTokenHash(tokenHash: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
+      .from(PamTables.oauthRefreshTokens)
       .update({ revoked: true })
       .eq('refresh_token', tokenHash);
     this.supabaseBridge.throwIfError(result);
@@ -256,7 +251,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   public async revokeRefreshTokensByUserId(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__refresh_tokens')
+      .from(PamTables.oauthRefreshTokens)
       .update({ revoked: true })
       .eq('user_id', userId)
       .eq('revoked', false);
@@ -271,7 +266,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<OAuthClientRow | null> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .select('*')
       .eq('client_id', clientId)
       .maybeSingle();
@@ -288,7 +283,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   ): Promise<OAuthClientListItem[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .select(
         'client_id, client_name, client_uri, logo_uri, redirect_uris, confidential, created_at, updated_at'
       )
@@ -323,7 +318,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     }
 
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .insert({
         client_id: clientId,
         client_secret_hash: clientSecretHash,
@@ -358,7 +353,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     const logoUri = normalizeLogoUri((input as OAuthClientWriteInput).logo_uri);
 
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .update({
         client_name: input.client_name,
         client_uri: input.client_uri || null,
@@ -400,7 +395,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     const clientSecretHash = await hashClientSecret(clientSecret);
 
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .update({
         client_secret_hash: clientSecretHash,
         updated_at: new Date().toISOString()
@@ -422,7 +417,7 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
     const supabase = await this.supabaseBridge.getAdminSupabase();
 
     const result = await supabase
-      .from('n_oauth_wrapper__clients')
+      .from(PamTables.oauthClients)
       .delete()
       .eq('client_id', clientId)
       .eq('owner_user_id', ownerUserId);

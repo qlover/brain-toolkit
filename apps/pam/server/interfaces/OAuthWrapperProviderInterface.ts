@@ -40,7 +40,7 @@ export interface OAuthWrapperProviderInterface
   loginWithSession?(session: SupabaseSession): Promise<void>;
 
   /**
-   * Ensure `n_oauth_wrapper__user_credentials.provider_session_token` exists for
+   * Ensure `pam_oauth_user_credentials.provider_session_token` exists for
    * the current app session before issuing an authorization code. Phone-OTP
    * (and similar) users may have a browseable cookie without credentials.
    */

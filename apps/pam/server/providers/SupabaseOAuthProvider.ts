@@ -8,6 +8,7 @@ import {
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { OAuthWrapperService } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import { createEphemeralAuthClient } from '@shared/supabase/server';
 import {
   resolveUserDisplayLabel,
   toBusinessEmail
@@ -165,9 +166,10 @@ export class SupabaseOAuthProvider
   }
 
   protected async retrieveNewSession(refreshToken: string): Promise<Session> {
-    // 机器端点（token exchange）无 cookie 会话；走缓存 admin client，
-    // 避免每请求 createServerClient 的 TLS 重握手。
-    const supabase = await this.supabaseRepo.getAdminSupabase();
+    // Ephemeral anon client — NEVER refreshSession on the cached admin client.
+    // refreshSession installs a user JWT on that client; later PostgREST calls
+    // then run as the user (RLS → empty pam_roles / failed writes).
+    const supabase = createEphemeralAuthClient();
 
     try {
       const result = await supabase.auth.refreshSession({
@@ -325,8 +327,8 @@ export class SupabaseOAuthProvider
       throw new Error('Supabase access token is required');
     }
 
-    // Bearer access_token 校验不依赖 cookie；复用缓存 admin client。
-    const supabase = await this.supabaseRepo.getAdminSupabase();
+    // Bearer access_token 校验：用 ephemeral client，勿污染 admin。
+    const supabase = createEphemeralAuthClient();
     const result = await supabase.auth.getUser(token);
     this.supabaseRepo.throwIfError(result);
 
@@ -411,7 +413,7 @@ export class SupabaseOAuthProvider
   /**
    * Repair missing OAuth AS credentials before consent issues an auth code.
    * Phone OTP users may still hold an old cookie session with empty
-   * `providerRefreshToken` and no `n_oauth_wrapper__user_credentials` row.
+   * `providerRefreshToken` and no `pam_oauth_user_credentials` row.
    *
    * Throws if credentials still cannot be established — better to fail on
    * consent than issue a code that burns on /oauth/token.

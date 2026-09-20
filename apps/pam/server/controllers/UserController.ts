@@ -164,7 +164,7 @@ export class UserController {
   }
 
   /**
-   * Paged `request_logs` for the current  session user.
+   * Paged `pam_request_logs` for the current session user.
    * Response shape matches {@link ResourceSearchResult}.
    */
   public async searchRequestLogsForCurrentUser(

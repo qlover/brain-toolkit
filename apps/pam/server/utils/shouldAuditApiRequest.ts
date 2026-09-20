@@ -1,5 +1,5 @@
 /**
- * Decide whether an HTTP API call should write a `request_logs` row.
+ * Decide whether an HTTP API call should write a `pam_request_logs` row.
  *
  * Default is **deny** (allowlist). High-frequency reads (session / search /
  * categories / detail / locales / request-logs paging / CLI device polls)
@@ -81,7 +81,7 @@ function pathMatches(pathname: string, rulePath: string | RegExp): boolean {
 }
 
 /**
- * Returns true when this request should be persisted to `request_logs`.
+ * Returns true when this request should be persisted to `pam_request_logs`.
  */
 export function shouldAuditApiRequest(
   method: string,
