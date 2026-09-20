@@ -13,6 +13,7 @@ import { SiteSettingsApi } from '@/impls/appApi/SiteSettingsApi';
 import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
+import { CorsRulesEditor } from '@/uikit/components-pages/AdminCorsRulesEditor';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminSettingsI18nInterface } from '@config/i18n-mapping/admin18n';
@@ -20,17 +21,35 @@ import { I } from '@config/ioc-identifiter';
 import {
   PAM_SITE_SETTING_KEYS,
   PAM_SITE_SETTING_SECRET_UNCHANGED,
+  type PamCorsRule,
   type PamSiteSettingKey
 } from '@config/pamSiteSettings';
-import type { PamAdminSiteSettingEntry } from '@schemas/PamSiteSettingsSchema';
+import {
+  corsValueSchema,
+  type PamAdminSiteSettingEntry
+} from '@schemas/PamSiteSettingsSchema';
 
-type DraftState = Partial<
-  Record<PamSiteSettingKey, string | boolean | string[]>
->;
+type DraftValue = string | boolean | string[] | PamCorsRule[];
+
+type DraftState = Partial<Record<PamSiteSettingKey, DraftValue>>;
 
 type SettingsSaveState = AsyncState<PamAdminSiteSettingEntry[]> & {
   targetId: string | null;
 };
+
+function isPamCorsRuleArray(value: unknown): value is PamCorsRule[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        item != null &&
+        typeof item === 'object' &&
+        'origin' in item &&
+        'path' in item &&
+        'methods' in item
+    )
+  );
+}
 
 function entryMap(
   entries: PamAdminSiteSettingEntry[]
@@ -42,23 +61,11 @@ function getDraftValue(
   draft: DraftState,
   entry: PamAdminSiteSettingEntry | undefined,
   key: PamSiteSettingKey
-): string | boolean | string[] {
+): DraftValue {
   if (draft[key] !== undefined) {
-    return draft[key] as string | boolean | string[];
+    return draft[key] as DraftValue;
   }
   return entry?.value ?? '';
-}
-
-function formatDraftValue(
-  value: string | boolean | string[] | undefined
-): string {
-  if (Array.isArray(value)) {
-    return value.join(',');
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'true' : 'false';
-  }
-  return value ?? '';
 }
 
 function sourceLabel(
@@ -137,22 +144,26 @@ function SettingRow({
   tt: AdminSettingsI18nInterface;
   children: ReactNode;
   controlClassName?: string;
-  layout?: 'stacked' | 'inline';
+  /** stacked: 标签左、控件右（大屏约 20rem）；block: 标签在上、控件占满行。 */
+  layout?: 'stacked' | 'inline' | 'block';
 }) {
   if (!entry) {
     return null;
   }
 
   const isInline = layout === 'inline';
+  const isBlock = layout === 'block';
 
   return (
     <div
       data-testid="SettingRow"
       className={clsx(
         'gap-3 border-b border-primary-border/50 py-4 last:border-b-0',
-        isInline
-          ? 'flex items-start justify-between'
-          : 'flex flex-col md:flex-row md:items-start md:justify-between md:gap-8'
+        isInline && 'flex items-start justify-between',
+        isBlock && 'flex flex-col',
+        !isInline &&
+          !isBlock &&
+          'flex flex-col md:flex-row md:items-start md:justify-between md:gap-8'
       )}
     >
       <div className={clsx('min-w-0', isInline ? 'flex-1 pr-3' : 'flex-1')}>
@@ -168,8 +179,9 @@ function SettingRow({
       </div>
       <div
         className={clsx(
-          'shrink-0',
-          isInline ? 'pt-0.5' : 'w-full md:w-72 lg:w-80',
+          isInline && 'shrink-0 pt-0.5',
+          isBlock && 'w-full min-w-0',
+          !isInline && !isBlock && 'w-full shrink-0 md:w-72 lg:w-80',
           controlClassName
         )}
       >
@@ -231,6 +243,25 @@ export function AdminSiteSettingsPanel({
           }
           continue;
         }
+        if (key === PAM_SITE_SETTING_KEYS.API_CORS_RULES) {
+          if (!isPamCorsRuleArray(value)) {
+            payload[key] = [];
+            continue;
+          }
+          const parsed = corsValueSchema.safeParse(value);
+          if (!parsed.success) {
+            saveStore.emit({ targetId: null });
+            const isDuplicate = parsed.error.issues.some((issue) =>
+              issue.message.toLowerCase().includes('duplicate')
+            );
+            dialogHandler.error(
+              isDuplicate ? tt.corsDuplicate : tt.corsOriginInvalid
+            );
+            return;
+          }
+          payload[key] = parsed.data;
+          continue;
+        }
         payload[key] = value;
       }
       try {
@@ -264,12 +295,14 @@ export function AdminSiteSettingsPanel({
       listStore,
       saveStore,
       siteSettingsApi,
+      tt.corsDuplicate,
+      tt.corsOriginInvalid,
       tt.saveSuccess
     ]
   );
 
   const setDraftValue = useCallback(
-    (key: PamSiteSettingKey, value: string | boolean | string[]) => {
+    (key: PamSiteSettingKey, value: DraftValue) => {
       setDraft((current) => ({ ...current, [key]: value }));
     },
     []
@@ -313,10 +346,7 @@ export function AdminSiteSettingsPanel({
     PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ENDPOINT
   ] as const;
 
-  const apiKeys = [
-    PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS,
-    PAM_SITE_SETTING_KEYS.API_CORS_METHODS
-  ] as const;
+  const apiKeys = [PAM_SITE_SETTING_KEYS.API_CORS_RULES] as const;
 
   const storageKeys = [
     PAM_SITE_SETTING_KEYS.STORAGE_PREVIEW_BUCKET,
@@ -509,58 +539,54 @@ export function AdminSiteSettingsPanel({
         savingLabel={tt.saving}
         saving={savingSection === 'api'}
         onSave={() => patchSection('api', [...apiKeys])}
+        footerActions={
+          <button
+            type="button"
+            onClick={() => {
+              const value = getDraftValue(
+                draft,
+                byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES),
+                PAM_SITE_SETTING_KEYS.API_CORS_RULES
+              );
+              const rules = isPamCorsRuleArray(value) ? value : [];
+              setDraftValue(PAM_SITE_SETTING_KEYS.API_CORS_RULES, [
+                ...rules,
+                { origin: '', path: '', methods: [] }
+              ]);
+            }}
+            className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-primary-border px-3.5 py-2.5 text-sm font-medium text-primary-text transition hover:bg-elevated"
+          >
+            {tt.corsAdd}
+          </button>
+        }
       >
         <div>
           <SettingRow
-            entry={byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS)}
+            layout="block"
+            entry={byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES)}
             tt={tt}
           >
-            <input
-              type="text"
-              value={formatDraftValue(
-                getDraftValue(
+            <CorsRulesEditor
+              rules={(() => {
+                const value = getDraftValue(
                   draft,
-                  byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS),
-                  PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS
-                )
-              )}
-              onChange={(event) =>
-                setDraftValue(
-                  PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS,
-                  event.target.value
-                    .split(',')
-                    .map((item) => item.trim())
-                    .filter(Boolean)
-                )
+                  byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES),
+                  PAM_SITE_SETTING_KEYS.API_CORS_RULES
+                );
+                return isPamCorsRuleArray(value) ? value : [];
+              })()}
+              onChange={(rules) =>
+                setDraftValue(PAM_SITE_SETTING_KEYS.API_CORS_RULES, rules)
               }
-              placeholder="https://example.com,https://app.example.com"
-              className={pamFormFieldClass}
-            />
-          </SettingRow>
-          <SettingRow
-            entry={byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_METHODS)}
-            tt={tt}
-          >
-            <input
-              type="text"
-              value={formatDraftValue(
-                getDraftValue(
-                  draft,
-                  byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_METHODS),
-                  PAM_SITE_SETTING_KEYS.API_CORS_METHODS
-                )
-              )}
-              onChange={(event) =>
-                setDraftValue(
-                  PAM_SITE_SETTING_KEYS.API_CORS_METHODS,
-                  event.target.value
-                    .split(',')
-                    .map((item) => item.trim())
-                    .filter(Boolean)
-                )
-              }
-              placeholder="GET,POST,OPTIONS"
-              className={pamFormFieldClass}
+              labels={{
+                origin: tt.corsOrigin,
+                path: tt.corsPath,
+                methods: tt.corsMethods,
+                remove: tt.corsRemove,
+                empty: tt.corsEmpty,
+                originInvalid: tt.corsOriginInvalid,
+                duplicate: tt.corsDuplicate
+              }}
             />
           </SettingRow>
         </div>

@@ -153,7 +153,15 @@ export const adminSettings18n = Object.freeze({
   saveSuccess: settingsKeys.ADMIN_SETTINGS_SAVE_SUCCESS,
   sourceDb: settingsKeys.ADMIN_SETTINGS_SOURCE_DB,
   sourceEnv: settingsKeys.ADMIN_SETTINGS_SOURCE_ENV,
-  sourceDefault: settingsKeys.ADMIN_SETTINGS_SOURCE_DEFAULT
+  sourceDefault: settingsKeys.ADMIN_SETTINGS_SOURCE_DEFAULT,
+  corsOrigin: settingsKeys.ADMIN_SETTINGS_CORS_ORIGIN,
+  corsPath: settingsKeys.ADMIN_SETTINGS_CORS_PATH,
+  corsMethods: settingsKeys.ADMIN_SETTINGS_CORS_METHODS,
+  corsAdd: settingsKeys.ADMIN_SETTINGS_CORS_ADD,
+  corsRemove: settingsKeys.ADMIN_SETTINGS_CORS_REMOVE,
+  corsEmpty: settingsKeys.ADMIN_SETTINGS_CORS_EMPTY,
+  corsOriginInvalid: settingsKeys.ADMIN_SETTINGS_CORS_ORIGIN_INVALID,
+  corsDuplicate: settingsKeys.ADMIN_SETTINGS_CORS_DUPLICATE
 });
 
 export const adminLocales18n = Object.freeze({

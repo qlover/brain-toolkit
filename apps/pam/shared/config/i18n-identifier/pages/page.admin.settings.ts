@@ -90,8 +90,8 @@ export const ADMIN_SETTINGS_SECTION_API = 'admin_settings:section__api';
 
 /**
  * @description API / CORS section description
- * @localZh OAuth 机器端点等 API 的跨域（CORS）策略。
- * @localEn Cross-origin (CORS) policy for OAuth machine endpoints and other APIs.
+ * @localZh OAuth 机器端点等 API 的跨域（CORS）规则：Origin × 路径 × 方法。
+ * @localEn Cross-origin (CORS) rules for OAuth machine endpoints: Origin × path × methods.
  */
 export const ADMIN_SETTINGS_SECTION_API_DESC =
   'admin_settings:section__api_desc';
@@ -180,3 +180,60 @@ export const ADMIN_SETTINGS_SOURCE_ENV = 'admin_settings:source__env';
  * @localEn Default
  */
 export const ADMIN_SETTINGS_SOURCE_DEFAULT = 'admin_settings:source__default';
+
+/**
+ * @description CORS rule origin field label
+ * @localZh 来源 Origin
+ * @localEn Origin
+ */
+export const ADMIN_SETTINGS_CORS_ORIGIN = 'admin_settings:cors__origin';
+
+/**
+ * @description CORS rule API path field label
+ * @localZh API 路径
+ * @localEn API path
+ */
+export const ADMIN_SETTINGS_CORS_PATH = 'admin_settings:cors__path';
+
+/**
+ * @description CORS rule HTTP methods field label
+ * @localZh HTTP 方法
+ * @localEn HTTP methods
+ */
+export const ADMIN_SETTINGS_CORS_METHODS = 'admin_settings:cors__methods';
+
+/**
+ * @description Add CORS rule button
+ * @localZh 添加规则
+ * @localEn Add rule
+ */
+export const ADMIN_SETTINGS_CORS_ADD = 'admin_settings:cors__add';
+
+/**
+ * @description Remove CORS rule button
+ * @localZh 删除
+ * @localEn Remove
+ */
+export const ADMIN_SETTINGS_CORS_REMOVE = 'admin_settings:cors__remove';
+
+/**
+ * @description Empty CORS rules hint
+ * @localZh 暂无规则，点击下方添加一条（origin × path × methods）。
+ * @localEn No rules yet. Add one below (origin × path × methods).
+ */
+export const ADMIN_SETTINGS_CORS_EMPTY = 'admin_settings:cors__empty';
+
+/**
+ * @description Invalid CORS origin validation message
+ * @localZh Origin 须为 * 或有效的 http(s) 地址（不含路径），如 https://spa.example.com
+ * @localEn Origin must be * or a valid http(s) origin without path, e.g. https://spa.example.com
+ */
+export const ADMIN_SETTINGS_CORS_ORIGIN_INVALID =
+  'admin_settings:cors__origin_invalid';
+
+/**
+ * @description Duplicate CORS rule validation message
+ * @localZh 存在重复规则（Origin + Path + Methods 完全相同）
+ * @localEn Duplicate rule (same Origin + Path + Methods)
+ */
+export const ADMIN_SETTINGS_CORS_DUPLICATE = 'admin_settings:cors__duplicate';

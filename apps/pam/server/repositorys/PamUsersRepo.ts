@@ -93,6 +93,16 @@ export class PamUsersRepo {
       const nextPhone =
         input.phone !== undefined ? input.phone : (existing.phone ?? null);
 
+      const emailUnchanged = (nextEmail ?? null) === (existingBusiness ?? null);
+      const displayUnchanged =
+        (nextDisplayName ?? null) === (existing.display_name ?? null);
+      const phoneUnchanged = (nextPhone ?? null) === (existing.phone ?? null);
+
+      // userinfo / 热路径：无字段变化则跳过 UPDATE，省一次 PostgREST RTT。
+      if (emailUnchanged && displayUnchanged && phoneUnchanged) {
+        return existing;
+      }
+
       const result = await supabase
         .from(TABLE)
         .update({

@@ -120,7 +120,8 @@ export class LoginCommand {
   }
 
   protected async runBrowserLogin(baseUrl: string): Promise<void> {
-    const device = await this.apiClient.createDeviceCode(baseUrl);
+    const locale = await this.authStore.getLocale();
+    const device = await this.apiClient.createDeviceCode(baseUrl, locale);
 
     console.log('');
     console.log(PamCliI18n.t(PAMENV_CLI_LOGIN_OPEN_BROWSER));

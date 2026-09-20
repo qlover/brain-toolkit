@@ -1,21 +1,19 @@
 'use client';
 
+import { usePageI18nMapping } from '@qlover/next-kit/client';
 import clsx from 'clsx';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
+import type { PamenvDeviceI18nInterface } from '@config/i18n-mapping/PamenvDeviceI18n';
 
 type ApproveStateType = 'idle' | 'loading' | 'success' | 'error';
 
 /**
- * Browser UI for approving a PAM CLI device login.
- *
- * Significance: Completes the CLI browser auth handshake.
- * Core idea: Logged-in user confirms a user_code from the terminal.
- * Main function: Call approve API and show result.
- * Main purpose: Let `pam login` finish without typing password in CLI.
+ * 浏览器端批准 PAM CLI 设备登录。
  */
 export function PamCliDeviceApprovePanel() {
+  const tt = usePageI18nMapping<PamenvDeviceI18nInterface>();
   const searchParams = useSearchParams();
   const locale = useLocale();
   const initialCode = useMemo(
@@ -31,9 +29,7 @@ export function PamCliDeviceApprovePanel() {
     const code = userCode.trim();
     if (!code) {
       setState('error');
-      setMessage(
-        '请输入终端显示的 user code / Enter the code from your terminal'
-      );
+      setMessage(tt.codeRequired);
       return;
     }
 
@@ -56,19 +52,17 @@ export function PamCliDeviceApprovePanel() {
       };
 
       if (!response.ok || !body.success) {
-        throw new Error(body.message || body.id || 'Approve failed / 授权失败');
+        throw new Error(body.message || body.id || tt.approveFailed);
       }
 
       setEmail(body.data?.email || '');
       setState('success');
-      setMessage(
-        '已授权，可返回终端继续。Authorized — return to your terminal.'
-      );
+      setMessage(tt.success);
     } catch (error) {
       setState('error');
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [locale, userCode]);
+  }, [locale, tt.approveFailed, tt.codeRequired, tt.success, userCode]);
 
   return (
     <div
@@ -77,22 +71,21 @@ export function PamCliDeviceApprovePanel() {
     >
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight text-primary-text">
-          Authorize PAM CLI
+          {tt.heading}
         </h1>
         <p className="text-sm leading-relaxed text-secondary-text">
-          确认终端中的验证码，以完成 CLI 登录。Confirm the code shown in your
-          terminal to finish CLI login.
+          {tt.subtitle}
         </p>
       </div>
 
       <label className="flex flex-col gap-2 text-sm text-secondary-text">
-        <span>User code</span>
+        <span>{tt.codeLabel}</span>
         <input
           data-testid="PamCliDeviceUserCodeInput"
           className="rounded-md border border-primary-border bg-secondary px-3 py-2 font-mono tracking-widest text-primary-text uppercase placeholder-tertiary-text focus:outline-none focus:ring-2 focus:ring-brand"
           value={userCode}
           onChange={(event) => setUserCode(event.target.value.toUpperCase())}
-          placeholder="ABCD-EFGH"
+          placeholder={tt.codePlaceholder}
           autoComplete="one-time-code"
         />
       </label>
@@ -112,10 +105,10 @@ export function PamCliDeviceApprovePanel() {
         )}
       >
         {state === 'loading'
-          ? 'Authorizing…'
+          ? tt.approving
           : state === 'success'
-            ? 'Authorized'
-            : 'Authorize CLI'}
+            ? tt.authorized
+            : tt.approve}
       </button>
 
       {message ? (

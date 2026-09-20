@@ -47,6 +47,18 @@ export const PamCliExportResponseSchema = z.object({
 export type PamCliExportResponse = z.infer<typeof PamCliExportResponseSchema>;
 
 /**
+ * Body for `POST /api/pam/cli/device/code` (CLI start).
+ */
+export const PamCliDeviceCodeRequestSchema = z.object({
+  /** CLI UI locale — used to build verification_uri with `/{locale}` prefix. */
+  locale: PamCliLocaleSchema.optional()
+});
+
+export type PamCliDeviceCodeRequest = z.infer<
+  typeof PamCliDeviceCodeRequestSchema
+>;
+
+/**
  * Body for `POST /api/pam/cli/device/token` (CLI poll).
  */
 export const PamCliDeviceTokenRequestSchema = z.object({

@@ -16,6 +16,7 @@ import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
 import { ServerConfig } from './ServerConfig';
 import { createServerIoc } from './serverIoc';
 import { NextApiHandler } from './utils/NextApiHandler';
+import { ServerContext } from './utils/ServerContext';
 import { shouldAuditApiRequest } from './utils/shouldAuditApiRequest';
 import type { PamServerIocMap } from './BootstrapServer';
 import type { SeedConfigInterface } from '@qlover/corekit-bridge/bootstrap';
@@ -97,6 +98,32 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
     return this.IOC(I.ServerContextInterface);
   }
 
+  /** ApiCorsPlugin 等在 onBefore 写入的响应头。 */
+  protected getPluginResponseHeaders(): HeadersInit | undefined {
+    if (this.serverContext instanceof ServerContext) {
+      return this.serverContext.getResponseHeaders();
+    }
+    return undefined;
+  }
+
+  protected mergeResponseInit(init?: RunWithInit): RunWithInit | undefined {
+    const pluginHeaders = this.getPluginResponseHeaders();
+    if (!pluginHeaders && !init) {
+      return undefined;
+    }
+    return {
+      ...init,
+      successHeaders: {
+        ...pluginHeaders,
+        ...init?.successHeaders
+      },
+      errorHeaders: {
+        ...pluginHeaders,
+        ...init?.errorHeaders
+      }
+    };
+  }
+
   /**
    * @override
    *
@@ -121,14 +148,17 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
   }
 
   /**
-   * @override
+   * @override — 合并 ApiCorsPlugin 响应头。
    */
   public override async runWithJson<Result>(
     task?: RunWithTask<Result>,
     init?: RunWithInit
   ): Promise<NextResponse> {
     const started = performance.now();
-    const response = await super.runWithJson(task, init);
+    const response = await super.runWithJson(
+      task,
+      this.mergeResponseInit(init)
+    );
     response.headers.set(
       'Server-Timing',
       `app;dur=${Math.round(performance.now() - started)}`
@@ -196,6 +226,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
     init?: RunWithInit
   ): Promise<NextResponse> {
     const result = await this.run(task);
+    const merged = this.mergeResponseInit(init);
     const contextHttpStatus = this.serverContext.getState('httpStatus');
     const noStoreHeaders = {
       'Cache-Control': 'no-store',
@@ -213,7 +244,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
           status: contextHttpStatus ?? 400,
           headers: {
             ...noStoreHeaders,
-            ...init?.errorHeaders
+            ...merged?.errorHeaders
           }
         }
       );
@@ -226,7 +257,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
       status: contextHttpStatus ?? 200,
       headers: {
         ...noStoreHeaders,
-        ...init?.successHeaders
+        ...merged?.successHeaders
       }
     });
   }

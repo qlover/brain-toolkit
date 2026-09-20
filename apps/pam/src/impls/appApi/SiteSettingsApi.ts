@@ -1,5 +1,5 @@
 import { inject, injectable } from '@shared/container';
-import type { PamSiteSettingKey } from '@config/pamSiteSettings';
+import type { PamCorsRule, PamSiteSettingKey } from '@config/pamSiteSettings';
 import { API_ADMIN_SITE_SETTINGS } from '@config/route';
 import type { PamAdminSiteSettingEntry } from '@schemas/PamSiteSettingsSchema';
 import { AppApiRequester } from './AppApiRequester';
@@ -20,7 +20,9 @@ export class SiteSettingsApi {
   }
 
   public async patch(
-    settings: Partial<Record<PamSiteSettingKey, string | boolean | string[]>>
+    settings: Partial<
+      Record<PamSiteSettingKey, string | boolean | string[] | PamCorsRule[]>
+    >
   ): Promise<PamAdminSiteSettingEntry[]> {
     const response = await this.appApiRequester.put(API_ADMIN_SITE_SETTINGS, {
       settings

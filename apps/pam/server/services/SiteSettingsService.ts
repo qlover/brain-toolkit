@@ -2,9 +2,11 @@ import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import {
   getPamSiteSettingDefinition,
+  PAM_DEFAULT_CORS_RULES,
   PAM_SITE_SETTING_DEFINITIONS,
   PAM_SITE_SETTING_KEYS,
   PAM_SITE_SETTING_SECRET_UNCHANGED,
+  type PamCorsRule,
   type PamSiteSettingDefinition,
   type PamSiteSettingKey,
   type PamSiteSettingPrimitive
@@ -14,7 +16,11 @@ import type {
   PamAdminSiteSettingsPatch,
   PamPublicConfig
 } from '@schemas/PamSiteSettingsSchema';
-import { isPamSiteSettingKey } from '@schemas/PamSiteSettingsSchema';
+import {
+  isPamSiteSettingKey,
+  parseCorsValue,
+  safeParseCorsValue
+} from '@schemas/PamSiteSettingsSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { SiteSettingsRepo } from '@server/repositorys/SiteSettingsRepo';
 import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
@@ -23,10 +29,20 @@ import {
   buildPamSiteSettingSeedRows,
   resolvePamSiteSettingDefaultValue
 } from '@server/utils/pamSiteSettingDefaults';
+import {
+  buildRuntimeCorsConfig,
+  type RuntimeCorsConfig
+} from '@server/utils/resolveRuntimeCorsConfig';
 import type { LoggerInterface } from '@qlover/logger';
 
 const CACHE_KEY = 'pam:site-settings:snapshot';
 const CACHE_TTL_MS = 60_000;
+/** CORS 运行时配置缓存键（无 TTL，写穿失效）。 */
+export const PAM_RUNTIME_CORS_CACHE_KEY = 'pam:runtime-cors-config';
+
+/** 旧版扁平 CORS 站点键（仅用于读库迁移）。 */
+const LEGACY_CORS_ORIGINS_KEY = 'api.cors_origins';
+const LEGACY_CORS_METHODS_KEY = 'api.cors_methods';
 
 function parseCsvEnv(value: string | undefined): string[] {
   if (!value?.trim()) {
@@ -99,6 +115,7 @@ export class SiteSettingsService {
 
   public async invalidateCache(): Promise<void> {
     await this.cache.removeItem(CACHE_KEY);
+    await this.cache.removeItem(PAM_RUNTIME_CORS_CACHE_KEY);
   }
 
   public async getBoolean(key: PamSiteSettingKey): Promise<boolean> {
@@ -135,7 +152,7 @@ export class SiteSettingsService {
   public async getStringArray(key: PamSiteSettingKey): Promise<string[]> {
     const value = await this.getValue(key);
     if (Array.isArray(value)) {
-      return [...value];
+      return value.filter((item): item is string => typeof item === 'string');
     }
     if (typeof value === 'string' && value.trim()) {
       return parseCsvEnv(value);
@@ -175,21 +192,96 @@ export class SiteSettingsService {
     return resolveCodeDefault(definition);
   }
 
-  public async getCorsConfig(): Promise<{
-    apiCorsAllowedOrigins: readonly string[];
-    apiCorsAllowedMethods: readonly string[];
-  }> {
-    const [origins, methods] = await Promise.all([
-      this.getStringArray(PAM_SITE_SETTING_KEYS.API_CORS_ORIGINS),
-      this.getStringArray(PAM_SITE_SETTING_KEYS.API_CORS_METHODS)
-    ]);
+  public async getCorsConfig(): Promise<RuntimeCorsConfig> {
+    return this.cache.getOrSet(PAM_RUNTIME_CORS_CACHE_KEY, () =>
+      this.loadCorsConfigFromStore()
+    );
+  }
 
-    return {
-      apiCorsAllowedOrigins: Object.freeze(origins),
-      apiCorsAllowedMethods: Object.freeze(
-        methods.length > 0 ? methods : ['GET', 'POST', 'OPTIONS']
-      )
-    };
+  protected resolveDefaultCorsMethods(): readonly string[] {
+    return this.serverConfig.apiCorsAllowedMethods.length > 0
+      ? this.serverConfig.apiCorsAllowedMethods
+      : Object.freeze(['GET', 'POST', 'OPTIONS']);
+  }
+
+  protected async loadCorsConfigFromStore(): Promise<RuntimeCorsConfig> {
+    const rulesRaw = await this.getValue(PAM_SITE_SETTING_KEYS.API_CORS_RULES);
+    const apiCorsAllowedMethods = this.resolveDefaultCorsMethods();
+    const parsedRules = this.normalizeCorsRules(rulesRaw);
+
+    if (parsedRules.length > 0) {
+      return buildRuntimeCorsConfig(parsedRules, apiCorsAllowedMethods);
+    }
+
+    const legacyRules = await this.loadLegacyCorsRulesFromRepo();
+    if (legacyRules.length > 0) {
+      return buildRuntimeCorsConfig(legacyRules, apiCorsAllowedMethods);
+    }
+
+    const envOrigins = this.serverConfig.apiCorsAllowedOrigins;
+    const envRules: PamCorsRule[] = envOrigins.map((origin) => ({
+      origin,
+      path: '*',
+      methods: ['*']
+    }));
+
+    return buildRuntimeCorsConfig(
+      envRules.length > 0 ? envRules : [...PAM_DEFAULT_CORS_RULES],
+      apiCorsAllowedMethods
+    );
+  }
+
+  protected normalizeCorsRules(value: PamSiteSettingPrimitive): PamCorsRule[] {
+    const parsed = safeParseCorsValue(value);
+    if (parsed) {
+      return parsed;
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      this.logger.warn('Invalid api.cors_rules in store; falling back', {
+        sample: value[0]
+      });
+    }
+    return [];
+  }
+
+  /**
+   * 兼容旧 `api.cors_origins` / `api.cors_methods` 行（定义已移除后仍可能残留在 DB）。
+   */
+  protected async loadLegacyCorsRulesFromRepo(): Promise<PamCorsRule[]> {
+    const rows = await this.repo.getAll();
+    const originsRow = rows.find((row) => row.key === LEGACY_CORS_ORIGINS_KEY);
+    if (!originsRow) {
+      return [];
+    }
+
+    const origins = this.coerceStringArray(originsRow.value);
+    if (origins.length === 0) {
+      return [];
+    }
+
+    const methodsRow = rows.find((row) => row.key === LEGACY_CORS_METHODS_KEY);
+    const methods = this.coerceStringArray(methodsRow?.value);
+    const ruleMethods =
+      methods.length > 0 ? methods.map((m) => m.toUpperCase()) : ['*'];
+
+    return origins.map((origin) => ({
+      origin,
+      path: '*',
+      methods: ruleMethods
+    }));
+  }
+
+  protected coerceStringArray(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    if (typeof value === 'string' && value.trim()) {
+      return parseCsvEnv(value);
+    }
+    return [];
   }
 
   public async getPublicConfig(): Promise<PamPublicConfig> {
@@ -274,6 +366,7 @@ export class SiteSettingsService {
       description: string;
       isSensitive: boolean;
     }[] = [];
+    let corsRulesForCache: PamCorsRule[] | undefined;
 
     for (const [rawKey, rawValue] of Object.entries(patch.settings)) {
       if (!isPamSiteSettingKey(rawKey)) {
@@ -299,6 +392,18 @@ export class SiteSettingsService {
         continue;
       }
 
+      if (rawKey === PAM_SITE_SETTING_KEYS.API_CORS_RULES) {
+        const parsed = parseCorsValue(rawValue);
+        rows.push({
+          key: rawKey,
+          value: parsed,
+          description: definition.description,
+          isSensitive: false
+        });
+        corsRulesForCache = parsed;
+        continue;
+      }
+
       rows.push({
         key: rawKey,
         value: rawValue,
@@ -309,6 +414,17 @@ export class SiteSettingsService {
 
     await this.repo.upsertMany(rows);
     await this.invalidateCache();
+
+    if (corsRulesForCache) {
+      await this.cache.setItem(
+        PAM_RUNTIME_CORS_CACHE_KEY,
+        buildRuntimeCorsConfig(
+          corsRulesForCache,
+          this.resolveDefaultCorsMethods()
+        )
+      );
+    }
+
     return this.getAdminSettings();
   }
 

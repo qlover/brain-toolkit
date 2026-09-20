@@ -168,6 +168,40 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
     tt.updatedAt
   ]);
 
+  const coverMedia = (
+    <>
+      <div
+        className={clsx(
+          'absolute inset-0 flex items-center justify-center transition-opacity',
+          previewLoaded ? 'pointer-events-none opacity-0' : 'opacity-100'
+        )}
+        aria-hidden={previewLoaded}
+      >
+        <PAMProjectAvatar
+          name={project.name}
+          primaryUrl={primaryUrl}
+          repoUrl={project.repo_url}
+          allowPreview={false}
+          variant="cover"
+        />
+      </div>
+      {
+        // eslint-disable-next-line @next/next/no-img-element -- arbitrary project preview URLs
+        <img
+          ref={syncPreviewLoaded}
+          src={previewImageUrl}
+          alt=""
+          className={clsx(
+            'absolute inset-0 h-full w-full object-cover transition-opacity',
+            previewLoaded ? 'opacity-100' : 'opacity-0'
+          )}
+          onLoad={() => setPreviewLoaded(true)}
+          onError={() => setPreviewFailed(true)}
+        />
+      }
+    </>
+  );
+
   return (
     <div
       data-testid="PAMProjectCard"
@@ -175,35 +209,28 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
     >
       {showCover ? (
         <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-brand/6">
-          <div
-            className={clsx(
-              'absolute inset-0 flex items-center justify-center transition-opacity',
-              previewLoaded ? 'pointer-events-none opacity-0' : 'opacity-100'
-            )}
-            aria-hidden={previewLoaded}
-          >
-            <PAMProjectAvatar
-              name={project.name}
-              primaryUrl={primaryUrl}
-              repoUrl={project.repo_url}
-              allowPreview={false}
-              variant="cover"
-            />
-          </div>
-          {
-            // eslint-disable-next-line @next/next/no-img-element -- arbitrary project preview URLs
-            <img
-              ref={syncPreviewLoaded}
-              src={previewImageUrl}
-              alt=""
-              className={clsx(
-                'absolute inset-0 h-full w-full object-cover transition-opacity',
-                previewLoaded ? 'opacity-100' : 'opacity-0'
-              )}
-              onLoad={() => setPreviewLoaded(true)}
-              onError={() => setPreviewFailed(true)}
-            />
-          }
+          {primaryUrl ? (
+            <a
+              href={primaryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={primaryUrl}
+              className="absolute inset-0 block"
+            >
+              {coverMedia}
+            </a>
+          ) : (
+            <Link
+              href={{
+                pathname: ROUTE_PROJECT_GENERAL,
+                params: { projectId: project.slug }
+              }}
+              title={project.name}
+              className="absolute inset-0 block"
+            >
+              {coverMedia}
+            </Link>
+          )}
         </div>
       ) : (
         <div className="flex h-18 shrink-0 items-center gap-3 border-b border-primary-border bg-brand/6 px-3 sm:h-20 sm:gap-3.5 sm:px-3.5">
