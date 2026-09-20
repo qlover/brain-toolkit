@@ -15,6 +15,8 @@ export type PAMSettingsCardProps = {
   /** When set, Save button gets `data-permission` for permission UI tests. */
   readonly savePermission?: string;
   readonly footerLeft?: React.ReactNode;
+  /** 与保存按钮同一侧、紧挨在保存左侧。 */
+  readonly footerActions?: React.ReactNode;
   readonly testId?: string;
   readonly className?: string;
 };
@@ -44,6 +46,7 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
   onSave,
   savePermission,
   footerLeft,
+  footerActions,
   testId = 'PAMSettingsCard',
   className
 }) => {
@@ -66,33 +69,37 @@ export const PAMSettingsCard: React.FC<PAMSettingsCardProps> = ({
         </div>
         {children != null ? <div>{children}</div> : null}
       </div>
-      {(showSave || footerLeft) && (
+      {(showSave || footerLeft || footerActions) && (
         <div className="flex flex-col gap-3 border-t border-primary-border bg-elevated/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="min-w-0 text-xs text-tertiary-text sm:text-sm">
             {footerLeft}
           </div>
-          {showSave && onSave ? (
-            <button
-              type="button"
-              data-permission={savePermission}
-              onClick={onSave}
-              disabled={saveDisabled || saving}
-              className={clsx(
-                'inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand px-3.5 py-2.5 text-sm font-medium text-on-brand transition sm:w-auto',
-                'hover:bg-brand-hover active:bg-brand-active',
-                'disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation'
-              )}
-            >
-              {saving ? (
-                <>
-                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                  {savingLabel}
-                </>
-              ) : (
-                saveLabel
-              )}
-            </button>
-          ) : null}
+          <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+            {footerActions}
+            {showSave && onSave ? (
+              <button
+                type="button"
+                data-permission={savePermission}
+                onClick={onSave}
+                disabled={saveDisabled || saving}
+                className={clsx(
+                  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand px-3.5 py-2.5 text-sm font-medium text-on-brand transition',
+                  footerActions ? 'w-auto' : 'w-full sm:w-auto',
+                  'hover:bg-brand-hover active:bg-brand-active',
+                  'disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation'
+                )}
+              >
+                {saving ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                    {savingLabel}
+                  </>
+                ) : (
+                  saveLabel
+                )}
+              </button>
+            ) : null}
+          </div>
         </div>
       )}
     </section>

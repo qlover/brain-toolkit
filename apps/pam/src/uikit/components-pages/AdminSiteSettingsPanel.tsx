@@ -144,22 +144,26 @@ function SettingRow({
   tt: AdminSettingsI18nInterface;
   children: ReactNode;
   controlClassName?: string;
-  layout?: 'stacked' | 'inline';
+  /** stacked: 标签左、控件右（大屏约 20rem）；block: 标签在上、控件占满行。 */
+  layout?: 'stacked' | 'inline' | 'block';
 }) {
   if (!entry) {
     return null;
   }
 
   const isInline = layout === 'inline';
+  const isBlock = layout === 'block';
 
   return (
     <div
       data-testid="SettingRow"
       className={clsx(
         'gap-3 border-b border-primary-border/50 py-4 last:border-b-0',
-        isInline
-          ? 'flex items-start justify-between'
-          : 'flex flex-col md:flex-row md:items-start md:justify-between md:gap-8'
+        isInline && 'flex items-start justify-between',
+        isBlock && 'flex flex-col',
+        !isInline &&
+          !isBlock &&
+          'flex flex-col md:flex-row md:items-start md:justify-between md:gap-8'
       )}
     >
       <div className={clsx('min-w-0', isInline ? 'flex-1 pr-3' : 'flex-1')}>
@@ -175,8 +179,9 @@ function SettingRow({
       </div>
       <div
         className={clsx(
-          'shrink-0',
-          isInline ? 'pt-0.5' : 'w-full md:w-72 lg:w-80',
+          isInline && 'shrink-0 pt-0.5',
+          isBlock && 'w-full min-w-0',
+          !isInline && !isBlock && 'w-full shrink-0 md:w-72 lg:w-80',
           controlClassName
         )}
       >
@@ -534,9 +539,30 @@ export function AdminSiteSettingsPanel({
         savingLabel={tt.saving}
         saving={savingSection === 'api'}
         onSave={() => patchSection('api', [...apiKeys])}
+        footerActions={
+          <button
+            type="button"
+            onClick={() => {
+              const value = getDraftValue(
+                draft,
+                byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES),
+                PAM_SITE_SETTING_KEYS.API_CORS_RULES
+              );
+              const rules = isPamCorsRuleArray(value) ? value : [];
+              setDraftValue(PAM_SITE_SETTING_KEYS.API_CORS_RULES, [
+                ...rules,
+                { origin: '', path: '', methods: [] }
+              ]);
+            }}
+            className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-primary-border px-3.5 py-2.5 text-sm font-medium text-primary-text transition hover:bg-elevated"
+          >
+            {tt.corsAdd}
+          </button>
+        }
       >
         <div>
           <SettingRow
+            layout="block"
             entry={byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES)}
             tt={tt}
           >
@@ -556,7 +582,6 @@ export function AdminSiteSettingsPanel({
                 origin: tt.corsOrigin,
                 path: tt.corsPath,
                 methods: tt.corsMethods,
-                add: tt.corsAdd,
                 remove: tt.corsRemove,
                 empty: tt.corsEmpty,
                 originInvalid: tt.corsOriginInvalid,

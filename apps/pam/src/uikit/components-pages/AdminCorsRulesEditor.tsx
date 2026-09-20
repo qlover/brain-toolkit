@@ -83,7 +83,7 @@ function InputWithStar({
     <div
       data-testid="InputWithStar"
       className={clsx(
-        'flex min-w-[12rem] flex-1 overflow-hidden rounded-lg border bg-bg-container focus-within:ring-2 sm:min-w-[14rem]',
+        'flex min-w-[10rem] flex-1 overflow-hidden rounded-lg border bg-bg-container focus-within:ring-2',
         invalid
           ? 'border-red-400 focus-within:ring-red-300'
           : 'border-primary-border focus-within:ring-brand/40'
@@ -119,7 +119,6 @@ export type CorsRulesEditorLabels = {
   origin: string;
   path: string;
   methods: string;
-  add: string;
   remove: string;
   empty: string;
   originInvalid: string;
@@ -160,17 +159,6 @@ export function CorsRulesEditor({
     onChange(rows.filter((_, i) => i !== index));
   };
 
-  const addRow = () => {
-    onChange([
-      ...rows,
-      {
-        origin: '',
-        path: '',
-        methods: []
-      }
-    ]);
-  };
-
   return (
     <div data-testid="CorsRulesEditor" className="flex flex-col gap-2">
       {rows.length === 0 ? (
@@ -197,7 +185,7 @@ export function CorsRulesEditor({
                   isDuplicate ? 'border-red-400' : 'border-primary-border'
                 )}
               >
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
                   <InputWithStar
                     value={rule.origin}
                     placeholder="https://spa.example.com"
@@ -219,7 +207,7 @@ export function CorsRulesEditor({
                   />
 
                   <div
-                    className="inline-flex flex-wrap overflow-hidden rounded-lg border border-primary-border"
+                    className="inline-flex shrink-0 flex-wrap overflow-hidden rounded-lg border border-primary-border"
                     aria-label={labels.methods}
                   >
                     {METHOD_OPTIONS.map((method, methodIndex) => {
@@ -297,14 +285,6 @@ export function CorsRulesEditor({
           })}
         </ul>
       )}
-
-      <button
-        type="button"
-        onClick={addRow}
-        className="self-start rounded-lg border border-dashed border-primary-border px-3 py-2 text-sm font-medium text-primary-text transition hover:bg-elevated"
-      >
-        {labels.add}
-      </button>
     </div>
   );
 }
