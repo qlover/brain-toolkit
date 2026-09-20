@@ -1,5 +1,57 @@
 # pam
 
+## 2.11.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** MemoryKvCacheService 支持列出与计数 ([3128e0c](https://github.com/qlover/brain-toolkit/commit/3128e0c0d938304c31f66b5dd8e05e8a78be0063)) ([#161](https://github.com/qlover/brain-toolkit/pull/161))
+
+  供后台巡检进程内缓存；过期 key 在列举时清理。
+
+- **pam:** 后台增加 Memory KV 管理，仅管理员可见 ([cb92340](https://github.com/qlover/brain-toolkit/commit/cb9234024fd0ffcfa003b4834c4bab45c4a41c1d)) ([#161](https://github.com/qlover/brain-toolkit/pull/161))
+
+  侧栏与 API 走 admin_memory_kv_read/write；支持筛选、删除与清空。已有库需执行 patch-admin-memory-kv.sql。
+
+- **pam:** 站点 CORS 规则编辑与 ApiCorsPlugin ([942dce0](https://github.com/qlover/brain-toolkit/commit/942dce04e31ff80fcc97e18a5b39434b4aea6df1)) ([#157](https://github.com/qlover/brain-toolkit/pull/157))
+
+  支持 api.cors_rules 站点配置；OAuth/logout 改走 ApiCorsPlugin，
+  OPTIONS 可走 MemoryKv 缓存；next-kit 升至 1.5.0。
+
+- **pam:** 项目卡片封面图可跳转详情 ([a691f9f](https://github.com/qlover/brain-toolkit/commit/a691f9f8ac41b1ba32764885f7d9cdf7c9c266e8)) ([#157](https://github.com/qlover/brain-toolkit/pull/157))
+
+  封面优先走 primaryUrl，否则落到项目详情页。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 禁止在 admin client 上 refreshSession ([581a3e5](https://github.com/qlover/brain-toolkit/commit/581a3e5e6783b4095aedf8ce5d3f93f847d5545b)) ([#159](https://github.com/qlover/brain-toolkit/pull/159))
+
+  缓存的 service_role client 若被 refreshSession 写入用户 JWT，
+  随后 PostgREST 会按用户身份走 RLS（pam_roles 读成空）。
+  改用 ephemeral anon client 做会话刷新，并加固角色 map 缓存。
+
+- **pam,pamenv:** device 登录页 i18n 与 verification URI locale ([2220913](https://github.com/qlover/brain-toolkit/commit/2220913bfe20a4899fcc61fd51c378976183c9b6)) ([#157](https://github.com/qlover/brain-toolkit/pull/157))
+
+  设备授权页接入 PageI18n；createDeviceCode 带 locale，verification_uri 加语言前缀。
+
+- **pam:** CORS 规则编辑铺满宽度 ([12c1211](https://github.com/qlover/brain-toolkit/commit/12c1211e0ce68c5c6fe610a25dd33d0a007a4c84)) ([#157](https://github.com/qlover/brain-toolkit/pull/157))
+
+  规则编辑不再锁在窄列；「添加规则」移到卡片底栏、紧挨保存按钮。
+
+#### ♻️ Refactors
+
+- **pam:** 合并 SQL 为 000 全量脚本并统一 pam\_ 表前缀 ([04b5b58](https://github.com/qlover/brain-toolkit/commit/04b5b58ddf978c9485041a0502f08c5b2e736133)) ([#159](https://github.com/qlover/brain-toolkit/pull/159))
+  - 001–023 合并为 000-pam-full-schema.sql（dev 可重复执行）
+  - 审计/OAuth/CLI：pam*request_logs、pam_oauth*\*、pam_cli_tokens
+  - 代码经 PamTables 引用表名；README / .env.template 同步
+
+#### 🚀 Performance
+
+- **pam:** 加速 OAuth 机器端点 ([7511da3](https://github.com/qlover/brain-toolkit/commit/7511da3c99f7a607b37774ae23a86e6098cdb37b)) ([#157](https://github.com/qlover/brain-toolkit/pull/157))
+
+  Auth refresh/getUser 走缓存 admin client，避免每请求 TLS 重握手；OPTIONS CORS 未命中缓存时回退 env，不再建 IOC；userinfo 先读档案，无字段变化则跳过 UPDATE。
+
 ## 2.10.1
 
 ### Patch Changes
