@@ -1,5 +1,8 @@
+import type { OAuthConsentDeviceContext } from '@server/utils/oauthConsentDevice';
 import type { UserSchema } from '@qlover/next-kit/common';
 import type {
+  OAuthAuthorizePageData,
+  OAuthConsentResult,
   OAuthProviderInterface,
   OAuthSessionPayload,
   OAuthOTPProviderInterface
@@ -45,4 +48,23 @@ export interface OAuthWrapperProviderInterface
    * (and similar) users may have a browseable cookie without credentials.
    */
   ensureProviderCredentials?(): Promise<void>;
+
+  /**
+   * `device` enables "trust this app" on this device when the body has
+   * `trust: true`.
+   */
+  processConsent(
+    requestBody: unknown,
+    device?: OAuthConsentDeviceContext
+  ): Promise<OAuthConsentResult>;
+
+  /**
+   * Skip consent when the user trusted this client on this device for all
+   * requested scopes and the trust has not expired. Returns `null` when the
+   * consent page must be shown.
+   */
+  tryAutoConsent?(
+    data: OAuthAuthorizePageData,
+    device?: OAuthConsentDeviceContext
+  ): Promise<OAuthConsentResult | null>;
 }
