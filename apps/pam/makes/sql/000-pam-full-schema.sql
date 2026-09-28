@@ -76,6 +76,7 @@ create policy "pam_request_logs_insert_self_or_anon" on public.pam_request_logs
 drop table if exists public.pam_oauth_authorization_codes cascade;
 drop table if exists public.pam_oauth_refresh_tokens cascade;
 drop table if exists public.pam_oauth_user_credentials cascade;
+drop table if exists public.pam_oauth_consent_grants cascade;
 drop table if exists public.pam_oauth_clients cascade;
 -- Legacy names (pre pam_oauth_* rename)
 drop table if exists public.n_oauth_wrapper__authorization_codes cascade;
@@ -169,6 +170,30 @@ create table public.pam_oauth_user_credentials (
 comment on column public.pam_oauth_user_credentials.provider_refresh_token is 'Encrypted upstream provider refresh_token for long-lived user credentials.';
 
 alter table public.pam_oauth_user_credentials enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- pam_oauth_consent_grants — remembered "trust this app" per user + client + device
+-- ---------------------------------------------------------------------------
+
+create table public.pam_oauth_consent_grants (
+  user_id text not null,
+  client_id text not null references public.pam_oauth_clients (client_id) on delete cascade,
+  device_id text not null,
+  scopes text[] not null default '{}',
+  user_agent text,
+  expires_at timestamptz not null,
+  last_used_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, client_id, device_id)
+);
+
+create index idx_pam_oauth_consent_grants_user on public.pam_oauth_consent_grants (user_id);
+
+comment on table public.pam_oauth_consent_grants is 'Remembered consent ("trust this app") per user + client + device; skip the authorize page for these scopes until expires_at.';
+comment on column public.pam_oauth_consent_grants.device_id is 'Random id from the httpOnly pam_oauth_device cookie.';
+
+alter table public.pam_oauth_consent_grants enable row level security;
 
 
 -- #############################################################################

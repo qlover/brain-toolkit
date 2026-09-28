@@ -11,5 +11,6 @@ export const PamTables = {
   oauthAuthorizationCodes: 'pam_oauth_authorization_codes',
   oauthRefreshTokens: 'pam_oauth_refresh_tokens',
   oauthUserCredentials: 'pam_oauth_user_credentials',
+  oauthConsentGrants: 'pam_oauth_consent_grants',
   cliTokens: 'pam_cli_tokens'
 } as const;
