@@ -10,6 +10,7 @@ import { LoginProviderType } from '@config/common';
 import * as apiRoutes from '@config/route';
 import type {
   PamBindEmailVerifyResult,
+  PamChangePasswordInput,
   PamSessionResponse,
   PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -375,5 +376,25 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     }
 
     return response.data.data;
+  }
+
+  /**
+   * @override
+   */
+  public async changePassword(params: PamChangePasswordInput): Promise<void> {
+    const response = await this.client.request<
+      NextKitApiResult<void>,
+      PamChangePasswordInput
+    >({
+      url: apiRoutes.API_USER_PASSWORD,
+      method: HttpMethods.POST,
+      data: params,
+      encryptProps: ['current_password', 'new_password'],
+      disabledDialogError: true
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Change password failed');
+    }
   }
 }

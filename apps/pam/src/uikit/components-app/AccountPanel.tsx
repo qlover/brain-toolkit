@@ -14,6 +14,7 @@ import {
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import type { UserService } from '@/impls/UserService';
 import { BindEmailForm } from '@/uikit/components-app/BindEmailForm';
+import { ChangePasswordForm } from '@/uikit/components-app/ChangePasswordForm';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
@@ -191,7 +192,7 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
       className={
         needsBindEmail
           ? 'grid w-full gap-6 lg:grid-cols-2 lg:items-start'
-          : 'w-full max-w-3xl'
+          : 'flex w-full max-w-3xl flex-col gap-6'
       }
     >
       <section className="rounded-2xl border border-primary-border bg-primary p-5 sm:p-6">
@@ -299,7 +300,28 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
             }}
           />
         </section>
-      ) : null}
+      ) : (
+        <section className="rounded-2xl border border-primary-border bg-primary p-5 sm:p-6">
+          <h2 className="mb-4 text-base font-semibold text-primary-text">
+            {tt.passwordSectionTitle}
+          </h2>
+          <ChangePasswordForm
+            labels={{
+              description: tt.passwordDescription,
+              noPasswordHint: tt.passwordNoPasswordHint,
+              currentPlaceholder: tt.passwordCurrentPlaceholder,
+              newPlaceholder: tt.passwordNewPlaceholder,
+              confirmPlaceholder: tt.passwordConfirmPlaceholder,
+              submit: tt.passwordSubmit,
+              success: tt.passwordSuccess,
+              errorFallback: tt.passwordError,
+              invalid: tt.passwordInvalid,
+              mismatch: tt.passwordMismatch,
+              same: tt.passwordSame
+            }}
+          />
+        </section>
+      )}
     </div>
   );
 }

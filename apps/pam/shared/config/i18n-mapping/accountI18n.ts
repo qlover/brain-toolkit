@@ -24,6 +24,21 @@ export const accountI18n = Object.freeze({
   emailBound: accountKeys.PAGE_ACCOUNT_EMAIL_BOUND,
   bindSectionTitle: accountKeys.PAGE_ACCOUNT_BIND_SECTION_TITLE,
 
+  passwordSectionTitle: accountKeys.PAGE_ACCOUNT_PASSWORD_SECTION_TITLE,
+  passwordDescription: accountKeys.PAGE_ACCOUNT_PASSWORD_DESCRIPTION,
+  passwordNoPasswordHint: accountKeys.PAGE_ACCOUNT_PASSWORD_NO_PASSWORD_HINT,
+  passwordCurrentPlaceholder:
+    accountKeys.PAGE_ACCOUNT_PASSWORD_CURRENT_PLACEHOLDER,
+  passwordNewPlaceholder: accountKeys.PAGE_ACCOUNT_PASSWORD_NEW_PLACEHOLDER,
+  passwordConfirmPlaceholder:
+    accountKeys.PAGE_ACCOUNT_PASSWORD_CONFIRM_PLACEHOLDER,
+  passwordSubmit: accountKeys.PAGE_ACCOUNT_PASSWORD_SUBMIT,
+  passwordSuccess: accountKeys.PAGE_ACCOUNT_PASSWORD_SUCCESS,
+  passwordError: accountKeys.PAGE_ACCOUNT_PASSWORD_ERROR,
+  passwordInvalid: accountKeys.PAGE_ACCOUNT_PASSWORD_INVALID,
+  passwordMismatch: accountKeys.PAGE_ACCOUNT_PASSWORD_MISMATCH,
+  passwordSame: accountKeys.PAGE_ACCOUNT_PASSWORD_SAME,
+
   save: commonKeys.COMMON_SAVE,
   cancel: commonKeys.COMMON_CANCEL,
 
