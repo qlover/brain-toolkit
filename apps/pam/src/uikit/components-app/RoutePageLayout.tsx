@@ -2,7 +2,10 @@
 
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
+import { githubRepoUrl } from '@config/common';
+import { headerIconButtonClass } from './headerChrome';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { GithubIcon } from '../components/icons';
 import { LocaleLink } from '../components/LocaleLink';
 import { PAMLogo } from '../components/PAMLogo';
 import type { AppRoutePageTT } from './AppRoutePage';
@@ -99,6 +102,17 @@ export function RoutePageLayout({
 
           <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             {trailingSlot}
+            <a
+              data-testid="BaseHeaderGithub"
+              href={githubRepoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="GitHub"
+              aria-label="GitHub"
+              className={headerIconButtonClass}
+            >
+              <GithubIcon className="h-5 w-5" />
+            </a>
             <ThemeSwitcher key="theme-switcher" />
             {languageSlot}
             {authSlot ? (

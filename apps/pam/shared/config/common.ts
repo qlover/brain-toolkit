@@ -1,8 +1,14 @@
+import { repository } from '../../package.json';
 import type { ValueOf } from '@qlover/fe-corekit/common';
 
 export const envPrefix = 'NEXT_PUBLIC_';
 
 export const browserGlobalsName = 'feGlobals';
+
+/**
+ * 项目 GitHub 仓库地址（头部 GitHub 图标），取自 package.json `repository.url`
+ */
+export const githubRepoUrl = repository.url;
 
 export const loggerStyles = {
   fatal: { color: '#ff0000', fontWeight: 'bold' },
