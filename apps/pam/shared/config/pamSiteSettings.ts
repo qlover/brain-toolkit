@@ -1,4 +1,13 @@
-﻿export const PAM_SITE_SETTING_KEYS = {
+﻿import {
+  SITE_SETTING_CORS_RULES_KEY,
+  SITE_SETTING_SECRET_UNCHANGED,
+  SiteSettingRegistry,
+  type CorsRule,
+  type SiteSettingDefinition,
+  type SiteSettingPrimitive
+} from '@brain-toolkit/next-app-kit/shared';
+
+export const PAM_SITE_SETTING_KEYS = {
   AUTH_PHONE_LOGIN_ENABLED: 'auth.phone_login_enabled',
   AUTH_PHONE_OTP_PROVIDER: 'auth.phone_otp_provider',
   AUTH_GOOGLE_OAUTH_ENABLED: 'auth.google_oauth_enabled',
@@ -36,7 +45,7 @@
    * CORS 规则：origin × path × methods。
    * 每条：`{ origin, path, methods }`，任一分量可用 `*`。
    */
-  API_CORS_RULES: 'api.cors_rules',
+  API_CORS_RULES: SITE_SETTING_CORS_RULES_KEY,
 
   STORAGE_PREVIEW_BUCKET: 'storage.preview_bucket',
   STORAGE_SCREENSHOT_URL_TEMPLATE: 'storage.screenshot_url_template'
@@ -46,30 +55,14 @@ export type PamSiteSettingKey =
   (typeof PAM_SITE_SETTING_KEYS)[keyof typeof PAM_SITE_SETTING_KEYS];
 
 /** 存于站点设置的一条 CORS 放行规则。 */
-export type PamCorsRule = {
-  readonly origin: string;
-  readonly path: string;
-  readonly methods: readonly string[];
-};
+export type PamCorsRule = CorsRule;
 
-export type PamSiteSettingPrimitive =
-  | string
-  | boolean
-  | string[]
-  | PamCorsRule[];
+export type PamSiteSettingPrimitive = SiteSettingPrimitive;
 
-export type PamSiteSettingDefinition = {
-  readonly key: PamSiteSettingKey;
-  /** Short title shown in Admin UI. */
-  readonly label: string;
-  /** Help text for operators (Chinese). */
-  readonly description: string;
-  readonly isSensitive: boolean;
-  readonly defaultValue?: PamSiteSettingPrimitive;
-};
+export type PamSiteSettingDefinition = SiteSettingDefinition<PamSiteSettingKey>;
 
 /** Sentinel: admin PATCH omits secret change when value equals this. */
-export const PAM_SITE_SETTING_SECRET_UNCHANGED = '__UNCHANGED__' as const;
+export const PAM_SITE_SETTING_SECRET_UNCHANGED = SITE_SETTING_SECRET_UNCHANGED;
 
 /** 本地开发默认：放行 pam 本机前端。 */
 export const PAM_DEFAULT_CORS_RULES: readonly PamCorsRule[] = Object.freeze([
@@ -308,18 +301,14 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
     }
   ]);
 
-const definitionByKey = new Map(
-  PAM_SITE_SETTING_DEFINITIONS.map((definition) => [definition.key, definition])
+export const pamSiteSettingRegistry = new SiteSettingRegistry(
+  PAM_SITE_SETTING_DEFINITIONS
 );
 
 export function getPamSiteSettingDefinition(
   key: PamSiteSettingKey
 ): PamSiteSettingDefinition {
-  const definition = definitionByKey.get(key);
-  if (!definition) {
-    throw new Error(`Unknown site setting key: ${key}`);
-  }
-  return definition;
+  return pamSiteSettingRegistry.get(key);
 }
 
 export const PAM_PUBLIC_SITE_SETTING_KEYS = [
