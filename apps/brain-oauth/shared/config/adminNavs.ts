@@ -11,6 +11,8 @@ export interface NavItemInterface {
   key: string;
   i18nKey: string;
   pathname: `/${NavItemPaths}`;
+  /** Only shown to Brain admins (see ADMIN_ONLY_PAGES). */
+  adminOnly?: boolean;
 }
 
 export const defaultNavItems: NavItemInterface[] = [
@@ -22,7 +24,8 @@ export const defaultNavItems: NavItemInterface[] = [
   {
     key: 'users',
     i18nKey: COMMON_ADMIN_NAV_USER_MANAGEMENT,
-    pathname: '/admin/users'
+    pathname: '/admin/users',
+    adminOnly: true
   },
   {
     key: 'request-logs',

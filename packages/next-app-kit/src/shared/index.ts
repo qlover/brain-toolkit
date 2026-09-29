@@ -1,1 +1,2 @@
-export * from './postgrestError';
+﻿export * from './postgrestError';
+export * from './permissions';

@@ -94,6 +94,19 @@ export const LOGINED_PAGES = [
 ] as const;
 
 /**
+ * Session pages that additionally require a Brain admin account.
+ * `/admin` and the personal request log stay open to every logged-in user.
+ */
+export const ADMIN_ONLY_PAGES = [ROUTE_ADMIN_USERS] as const;
+
+export function isAdminOnlyPath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '');
+  return ADMIN_ONLY_PAGES.some(
+    (route) => normalized === route || normalized.endsWith(route)
+  );
+}
+
+/**
  * Returns true if pathname is an OAuth machine endpoint (token, userinfo, etc.).
  */
 export function isOAuthMachinePath(pathname: string): boolean {

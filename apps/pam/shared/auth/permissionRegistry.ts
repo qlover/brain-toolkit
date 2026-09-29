@@ -4,77 +4,61 @@
  */
 
 import {
+  PermissionRegistry,
+  type RolePermissionMap
+} from '@brain-toolkit/next-app-kit/shared';
+import {
   DEFAULT_ORG_ROLE_PERMISSIONS,
   DEFAULT_SYSTEM_ROLE_PERMISSIONS
 } from './permissionDefaults';
 import { TeamRoleKey, teamRoleKeyFromLegacy } from './roleKeys';
 
-type StringMap = Record<string, readonly string[]>;
-
-let roleMaps: StringMap | null = null;
+/** Process-wide registry shared by server IOC instances. */
+export const pamPermissionRegistry = new PermissionRegistry({
+  defaults: {
+    ...DEFAULT_SYSTEM_ROLE_PERMISSIONS,
+    [TeamRoleKey.Owner]: DEFAULT_ORG_ROLE_PERMISSIONS.owner ?? [],
+    [TeamRoleKey.Admin]: DEFAULT_ORG_ROLE_PERMISSIONS.admin ?? [],
+    [TeamRoleKey.Member]: DEFAULT_ORG_ROLE_PERMISSIONS.member ?? []
+  },
+  aliases: {
+    owner: TeamRoleKey.Owner,
+    member: TeamRoleKey.Member
+  }
+});
 
 export function setPermissionMaps(input: {
   /** @deprecated prefer `roles` */
-  system?: StringMap;
+  system?: RolePermissionMap;
   /** @deprecated prefer `roles` */
-  org?: StringMap;
-  roles?: StringMap;
+  org?: RolePermissionMap;
+  roles?: RolePermissionMap;
 }): void {
   if (input.roles) {
-    roleMaps = { ...input.roles };
+    pamPermissionRegistry.setRoleMaps(input.roles);
     return;
   }
-  const next: StringMap = {};
-  if (input.system) {
-    Object.assign(next, input.system);
-  }
-  if (input.org) {
-    for (const [key, uids] of Object.entries(input.org)) {
-      if (key === 'owner' || key === 'admin' || key === 'member') {
-        next[teamRoleKeyFromLegacy(key)] = uids;
-      } else {
-        next[key] = uids;
-      }
+  const next: Record<string, readonly string[]> = { ...input.system };
+  for (const [key, uids] of Object.entries(input.org ?? {})) {
+    if (key === 'owner' || key === 'admin' || key === 'member') {
+      next[teamRoleKeyFromLegacy(key)] = uids;
+    } else {
+      next[key] = uids;
     }
   }
-  roleMaps = next;
+  pamPermissionRegistry.setRoleMaps(next);
 }
 
 export function clearPermissionMaps(): void {
-  roleMaps = null;
+  pamPermissionRegistry.clear();
 }
 
 export function arePermissionMapsLoaded(): boolean {
-  return roleMaps != null;
+  return pamPermissionRegistry.isLoaded();
 }
 
 export function resolveRolePermissions(roleKey: string): readonly string[] {
-  if (roleMaps?.[roleKey]) {
-    return roleMaps[roleKey];
-  }
-  if (roleKey in DEFAULT_SYSTEM_ROLE_PERMISSIONS) {
-    return DEFAULT_SYSTEM_ROLE_PERMISSIONS[roleKey] ?? [];
-  }
-  if (roleKey === TeamRoleKey.Owner || roleKey === 'owner') {
-    return (
-      roleMaps?.[TeamRoleKey.Owner] ?? DEFAULT_ORG_ROLE_PERMISSIONS.owner ?? []
-    );
-  }
-  if (roleKey === TeamRoleKey.Admin || roleKey === 'admin') {
-    // Prefer team_admin over platform admin when resolving team context
-    if (roleMaps?.[TeamRoleKey.Admin]) {
-      return roleMaps[TeamRoleKey.Admin];
-    }
-    return DEFAULT_ORG_ROLE_PERMISSIONS.admin ?? [];
-  }
-  if (roleKey === TeamRoleKey.Member || roleKey === 'member') {
-    return (
-      roleMaps?.[TeamRoleKey.Member] ??
-      DEFAULT_ORG_ROLE_PERMISSIONS.member ??
-      []
-    );
-  }
-  return [];
+  return pamPermissionRegistry.resolve(roleKey);
 }
 
 export function resolveSystemPermissions(role: string): readonly string[] {

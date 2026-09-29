@@ -10,5 +10,8 @@ export {
   UserScopedRequestLogsRepository,
   type AuthLogParams
 } from './repositorys/UserScopedRequestLogsRepository';
+export * from './repositorys/RolePermissionsRepository';
+export * from './services/PermissionService';
+export * from './plugins/RequirePermissionPluginBase';
 export * from './utils/createApiAuditMatcher';
 export * from './utils/createApiErrorNormalizer';

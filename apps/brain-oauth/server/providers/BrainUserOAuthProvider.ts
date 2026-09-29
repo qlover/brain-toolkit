@@ -195,16 +195,13 @@ export class BrainUserOAuthProvider
   protected override toLocalUserDraft(
     upstream: UserSchema
   ): OAuthLocalUserDraft {
-    const extra: Record<string, unknown> = {};
-    if (upstream.role) {
-      extra.role = upstream.role;
-    }
     return {
       provider: oauthLocalUserConfig.provider,
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
       name: upstream.email || String(upstream.id),
-      extra: Object.keys(extra).length > 0 ? extra : null
+      // UserRole.ADMIN is 0, so compare explicitly instead of truthiness.
+      extra: { brainAdmin: upstream.role === UserRole.ADMIN }
     };
   }
 
