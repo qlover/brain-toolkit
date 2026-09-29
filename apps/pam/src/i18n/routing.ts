@@ -8,6 +8,7 @@ import {
   ROUTE_AUTH_FORGOT_PASSWORD,
   ROUTE_AUTH_RESET_PASSWORD,
   ROUTE_CALLBACK_EMAIL_LOGIN,
+  ROUTE_CHANGELOG,
   ROUTE_PAMENV_DEVICE,
   ROUTE_DEVELOPER_APPS,
   ROUTE_LOGIN,
@@ -92,6 +93,10 @@ export const routing = defineRouting({
     [ROUTE_DOCS_CLI]: {
       en: '/docs/cli',
       zh: '/docs/cli'
+    },
+    [ROUTE_CHANGELOG]: {
+      en: ROUTE_CHANGELOG,
+      zh: ROUTE_CHANGELOG
     },
     '/about': {
       en: '/about',

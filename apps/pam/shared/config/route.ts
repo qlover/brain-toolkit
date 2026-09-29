@@ -152,6 +152,9 @@ export const ROUTE_DOCS_OAUTH = '/docs/oauth' as const;
 /** pamenv CLI usage guide (public documentation). */
 export const ROUTE_DOCS_CLI = '/docs/cli' as const;
 
+/** PAM release notes rendered from CHANGELOG.md (public). */
+export const ROUTE_CHANGELOG = '/changelog' as const;
+
 /** OAuth 2.0 token endpoint (machine-to-machine, no locale prefix). */
 export const ROUTE_OAUTH_TOKEN = '/oauth/token' as const;
 
@@ -200,6 +203,7 @@ export const AUTH_ROUTES = [
   ROUTE_CALLBACK_EMAIL_LOGIN,
   ROUTE_DOCS_OAUTH,
   ROUTE_DOCS_CLI,
+  ROUTE_CHANGELOG,
   ROUTE_ABOUT
 ] as const;
 

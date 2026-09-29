@@ -9,6 +9,7 @@ import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
 import type { HomeI18nInterface } from '@config/i18n-mapping/homeI18n';
 import {
+  ROUTE_CHANGELOG,
   ROUTE_DOCS_CLI,
   ROUTE_DOCS_OAUTH,
   ROUTE_LOGIN,
@@ -302,9 +303,12 @@ export function HomeLanding({
             <span className="text-tertiary-text"> · </span>
             {tt.footerTagline}
           </p>
-          <p className="font-mono text-xs text-tertiary-text">
+          <Link
+            href={ROUTE_CHANGELOG}
+            className="font-mono text-xs text-tertiary-text transition-colors hover:text-brand"
+          >
             PAM{appVersion ? ` v${appVersion}` : ''}
-          </p>
+          </Link>
         </div>
       </footer>
     </div>

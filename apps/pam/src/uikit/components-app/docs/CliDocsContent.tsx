@@ -1,7 +1,7 @@
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const components: Components = {
+export const docsMarkdownComponents: Components = {
   h1: ({ children }) => (
     <h1
       data-testid="components"
@@ -25,6 +25,14 @@ const components: Components = {
     >
       {children}
     </h3>
+  ),
+  h4: ({ children }) => (
+    <h4
+      data-testid="components"
+      className="mb-2 mt-5 text-sm font-semibold text-primary-text"
+    >
+      {children}
+    </h4>
   ),
   p: ({ children }) => (
     <p
@@ -119,7 +127,10 @@ export function CliDocsContent({ markdown }: { markdown: string }) {
       data-testid="CliDocsContent"
       className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12"
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={docsMarkdownComponents}
+      >
         {markdown}
       </ReactMarkdown>
     </article>
