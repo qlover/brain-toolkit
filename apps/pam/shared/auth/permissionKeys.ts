@@ -8,7 +8,12 @@
  * method/path on pam_role_permissions are catalog metadata only.
  */
 
-export const PERMISSION_KEY_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+import {
+  PERMISSION_KEY_PATTERN,
+  permissionI18nKey
+} from '@brain-toolkit/next-app-kit/shared';
+
+export { PERMISSION_KEY_PATTERN, permissionI18nKey };
 
 export const PermissionKey = {
   // —— platform / admin ——
@@ -78,11 +83,6 @@ export function assertPermissionKey(value: string): PamPermissionKey {
     throw new Error(`Invalid permission_key format: ${value}`);
   }
   return value as PamPermissionKey;
-}
-
-/** next-intl / ts2locales: `permission:{permission_key}` */
-export function permissionI18nKey(permissionKey: string): string {
-  return `permission:${permissionKey}`;
 }
 
 /** Platform-console / create-project style keys (admin roles UI filter). */

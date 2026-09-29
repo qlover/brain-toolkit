@@ -1,7 +1,12 @@
+import {
+  RequirePermissionPluginBase,
+  type PermissionPluginIOC,
+  type PermissionSessionUser
+} from '@brain-toolkit/next-app-kit/server';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import type { PamPermissionKey } from '@shared/auth/permissionKeys';
 import {
-  hasSystemPermission,
+  expandSystemPermissions,
   sessionHasSystemPermission
 } from '@shared/auth/systemRole';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
@@ -9,10 +14,6 @@ import { OAuthUserService } from '@server/services/OAuthUserService';
 import { PamPermissionService } from '@server/services/PamPermissionService';
 import { PAMService } from '@server/services/PAMService';
 import { PamUserService } from '@server/services/PamUserService';
-import type {
-  BootstrapServerContext,
-  BootstrapServerPlugin
-} from '@qlover/next-kit/server';
 
 export type RequirePermissionOptions = {
   /**
@@ -34,45 +35,71 @@ export type RequirePermissionOptions = {
  * ))
  * ```
  */
-export class RequirePermissionPlugin implements BootstrapServerPlugin {
-  public readonly pluginName = 'RequirePermissionPlugin';
-
+export class RequirePermissionPlugin extends RequirePermissionPluginBase {
   constructor(
-    private readonly permissionKey: PamPermissionKey,
+    permissionKey: PamPermissionKey,
     private readonly options: RequirePermissionOptions = {}
-  ) {}
+  ) {
+    super(permissionKey);
+  }
 
   /**
    * @override
    */
-  public async onBefore({
-    parameters: { IOC }
-  }: BootstrapServerContext): Promise<void> {
-    await IOC(PamPermissionService).ensureLoaded();
+  protected getPermissionService(
+    IOC: PermissionPluginIOC
+  ): PamPermissionService {
+    return IOC(PamPermissionService);
+  }
 
-    const projectId = this.options.projectId?.trim();
-    if (projectId) {
-      await IOC(PAMService).assertOrgPermission(projectId, this.permissionKey);
-      return;
-    }
-
+  /**
+   * @override
+   */
+  protected async getSessionUser(
+    IOC: PermissionPluginIOC
+  ): Promise<PermissionSessionUser | null> {
     const oauth = IOC(OAuthUserService);
     const user = (await oauth.getSessionUser()) ?? (await oauth.getUser(false));
-    if (!user?.id) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
+    return (user as PermissionSessionUser | null) ?? null;
+  }
 
-    const fromSession = sessionHasSystemPermission(user, this.permissionKey);
-    if (fromSession === true) {
-      return;
-    }
-    if (fromSession === false) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
+  /**
+   * @override
+   */
+  protected async resolveUserPermissions(
+    IOC: PermissionPluginIOC,
+    userId: string
+  ): Promise<readonly string[]> {
+    return expandSystemPermissions(
+      await IOC(PamUserService).getSystemRole(userId)
+    );
+  }
 
-    const role = await IOC(PamUserService).getSystemRole(user.id);
-    if (!hasSystemPermission(role, this.permissionKey)) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
+  /**
+   * @override
+   */
+  protected createNotAuthorizedError(): Error {
+    return new ExecutorError(API_NOT_AUTHORIZED);
+  }
+
+  /**
+   * @override
+   */
+  protected override async checkScoped(
+    IOC: PermissionPluginIOC
+  ): Promise<boolean> {
+    const projectId = this.options.projectId?.trim();
+    if (!projectId) {
+      return false;
     }
+    await IOC(PAMService).assertOrgPermission(projectId, this.permissionKey);
+    return true;
+  }
+
+  /**
+   * @override
+   */
+  protected override checkSession(user: PermissionSessionUser): boolean | null {
+    return sessionHasSystemPermission(user, this.permissionKey);
   }
 }

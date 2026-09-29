@@ -6,6 +6,7 @@
  * Permission identifiers are immutable permission_key values.
  */
 
+import { sessionHasPermission } from '@brain-toolkit/next-app-kit/shared';
 import { SYSTEM_ADMIN_GATE_KEY } from './permissionDefaults';
 import { resolveSystemPermissions } from './permissionRegistry';
 
@@ -53,21 +54,9 @@ export function sessionHasSystemPermission(
   user: unknown,
   permissionKey: string
 ): boolean | null {
-  if (!user || typeof user !== 'object') {
-    return null;
-  }
-  const rec = user as Record<string, unknown>;
-  const permissions = rec.permissions;
-  if (Array.isArray(permissions) && permissions.length > 0) {
-    return permissions.includes(permissionKey);
-  }
-  if (typeof rec.system_role === 'string' && rec.system_role.length > 0) {
-    return hasSystemPermission(
-      normalizeSystemRole(rec.system_role),
-      permissionKey
-    );
-  }
-  return null;
+  return sessionHasPermission(user, permissionKey, (role) =>
+    expandSystemPermissions(normalizeSystemRole(role))
+  );
 }
 
 /** /admin gate: operator or admin (has admin_site_settings_read). */
