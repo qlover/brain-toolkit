@@ -6,7 +6,7 @@ import {
 import { localesSchema, type LocalesSchema } from '@qlover/next-kit/common';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
-import { createAdminClient, createServerClient } from '@shared/supabase/server';
+import { createAdminClient } from '@shared/supabase/server';
 import { I } from '@config/ioc-identifiter';
 import type { LoggerInterface } from '@qlover/logger';
 
@@ -42,7 +42,7 @@ export class LocalesRepository extends SupabaseRepo<LocalesSchema> {
   constructor(@inject(I.Logger) logger: LoggerInterface) {
     super(TABLE, {
       logger,
-      getUserClient: createServerClient,
+      getUserClient: async () => createAdminClient(),
       getAdminClient: createAdminClient
     });
   }

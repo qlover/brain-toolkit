@@ -6,9 +6,12 @@
 --   2) create/upgrade brain_oauth_user_links (provider, external_user_id, extra)
 --   3) remap OAuth rows external id → auth.users UUID when links already exist
 --
--- If you still have Brain-id owners and no links yet: run
---   makes/scripts/migrate-brain-user-ids.ts
--- then re-run THIS file (step 3 is idempotent).
+-- Then run 004-brain-oauth-users.sql (moves users off auth.users).
+--
+-- If you still have Brain-id owners and no links yet: let each owner sign in
+-- once via Brain (creates the link), then re-run step 3 below — it is
+-- idempotent. Step 3 expects links.auth_user_id; after 004, replace
+-- `l.auth_user_id` with `l.user_id`.
 
 -- ---------------------------------------------------------------------------
 -- 1) integer → text

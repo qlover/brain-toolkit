@@ -39,7 +39,6 @@
     "@qlover/oauth-wrapper": "0.10.0",
     "@scalar/nextjs-api-reference": "^0.9.24",
     "@supabase/postgrest-js": "^2.87.1",
-    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.2",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.10",

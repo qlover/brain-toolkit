@@ -97,9 +97,11 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
     request?: NextRequest
   ): void {
     if (request) {
-      this.IOC(RequestLogsRepository).insertWithApiResult(envelope, {
-        request
-      });
+      this.IOC(RequestLogsRepository)
+        .insertWithApiResult(envelope, { request })
+        .catch((error: unknown) => {
+          this.IOC(I.Logger).warn('Failed to write request log', error);
+        });
     }
   }
 

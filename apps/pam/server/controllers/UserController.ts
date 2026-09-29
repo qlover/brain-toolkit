@@ -1,3 +1,4 @@
+import { UserScopedRequestLogsRepository } from '@brain-toolkit/next-app-kit/server';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { Base64Serializer } from '@qlover/fe-corekit/serializer';
 import {
@@ -10,10 +11,7 @@ import {
   type UserSchema,
   type ValidatorInterface
 } from '@qlover/next-kit/common';
-import {
-  RequestLogsRepository,
-  type ServerContextInterface
-} from '@qlover/next-kit/server';
+import { type ServerContextInterface } from '@qlover/next-kit/server';
 import {
   SignOtpResult,
   signWithPhoneOtpSchema,
@@ -78,8 +76,8 @@ export class UserController {
     @inject(OAuthUserService) protected userService: UserServiceInterface,
     @inject(BrainOAuthLoginService)
     protected brainOAuthLoginService: BrainOAuthLoginService,
-    @inject(RequestLogsRepository)
-    protected requestLogsRepository: RequestLogsRepository,
+    @inject(UserScopedRequestLogsRepository)
+    protected requestLogsRepository: UserScopedRequestLogsRepository,
     @inject(OtpSendRateLimitService)
     protected otpSendRateLimit: OtpSendRateLimitService,
     @inject(PamUserService)
@@ -191,8 +189,15 @@ export class UserController {
     query: unknown
   ): Promise<ResourceSearchResult<RequestLogRow>> {
     const criteria = await this.searchParamsValidator.getThrow(query);
+    const user = await this.userService.getSessionUser();
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
 
-    return await this.requestLogsRepository.search(criteria);
+    return await this.requestLogsRepository.searchForUser(
+      String(user.id),
+      criteria
+    );
   }
 
   public async signWithOtp(
