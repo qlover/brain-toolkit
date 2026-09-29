@@ -53,13 +53,6 @@ export const COMMON_THEME_LIGHT = 'common:theme__light';
 export const COMMON_THEME_DARK = 'common:theme__dark';
 
 /**
- * @description Theme switcher pink theme label
- * @localZh 粉色主题
- * @localEn Pink Theme
- */
-export const COMMON_THEME_PINK = 'common:theme__pink';
-
-/**
  * @description Brain OAuth admin backend — page title
  * @localZh 管理后台
  * @localEn Admin Backend
