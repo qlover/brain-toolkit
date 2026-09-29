@@ -133,6 +133,13 @@ export const COMMON_ADMIN_NAV_PHONE_OTPS = 'common:admin_nav__phone_otps';
 export const COMMON_ADMIN_NAV_MEMORY_KV = 'common:admin_nav__memory_kv';
 
 /**
+ * @description Admin sidebar nav - Mail logs
+ * @localZh 邮件记录
+ * @localEn Mail logs
+ */
+export const COMMON_ADMIN_NAV_MAIL_LOGS = 'common:admin_nav__mail_logs';
+
+/**
  * @description logout dialog title
  * @localZh 登出
  * @localEn Logout

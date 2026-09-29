@@ -29,12 +29,14 @@ export class PamPasswordService {
   /**
    * Verify the current password against Supabase Auth, then set the new one.
    * Other sessions are left untouched.
+   *
+   * @returns The account email the password belongs to
    */
   public async changePassword(params: {
     userId: string;
     currentPassword: string;
     newPassword: string;
-  }): Promise<void> {
+  }): Promise<{ email: string }> {
     const { userId, currentPassword, newPassword } = params;
     if (!isValidPassword(newPassword)) {
       throw new ExecutorError(API_CHANGE_PASSWORD_INVALID);
@@ -60,6 +62,7 @@ export class PamPasswordService {
     });
     this.supabaseBridge.throwIfError(updated);
     this.logger.info('PamPasswordService: password changed', { userId });
+    return { email };
   }
 
   protected async verifyCurrentPassword(

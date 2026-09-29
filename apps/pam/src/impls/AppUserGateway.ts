@@ -11,6 +11,8 @@ import * as apiRoutes from '@config/route';
 import type {
   PamBindEmailVerifyResult,
   PamChangePasswordInput,
+  PamForgotPasswordInput,
+  PamResetPasswordInput,
   PamSessionResponse,
   PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -395,6 +397,64 @@ export class AppUserGateway implements UserServiceGatewayInterface {
 
     if (!response.data.success) {
       throw new Error(response.data.message || 'Change password failed');
+    }
+  }
+
+  /**
+   * @override
+   */
+  public async forgotPassword(params: PamForgotPasswordInput): Promise<void> {
+    const response = await this.client.request<
+      NextKitApiResult<void>,
+      PamForgotPasswordInput
+    >({
+      url: apiRoutes.API_USER_PASSWORD_FORGOT,
+      method: HttpMethods.POST,
+      data: params,
+      disabledDialogError: true
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Forgot password failed');
+    }
+  }
+
+  /**
+   * @override
+   */
+  public async verifyResetToken(token: string): Promise<{ valid: boolean }> {
+    const response = await this.client.request<
+      NextKitApiResult<{ valid: boolean }>,
+      { token: string }
+    >({
+      url: apiRoutes.API_USER_PASSWORD_RESET,
+      method: HttpMethods.GET,
+      params: { token },
+      disabledDialogError: true
+    });
+
+    return response.data.success && response.data.data
+      ? response.data.data
+      : { valid: false };
+  }
+
+  /**
+   * @override
+   */
+  public async resetPassword(params: PamResetPasswordInput): Promise<void> {
+    const response = await this.client.request<
+      NextKitApiResult<void>,
+      PamResetPasswordInput
+    >({
+      url: apiRoutes.API_USER_PASSWORD_RESET,
+      method: HttpMethods.POST,
+      data: params,
+      encryptProps: 'new_password',
+      disabledDialogError: true
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Reset password failed');
     }
   }
 }

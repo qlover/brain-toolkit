@@ -10,6 +10,7 @@ import {
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthSessionServiceInterface } from '@server/interfaces/OAuthSessionServiceInterface';
 import { checkPlatformAdmin } from '@server/utils/checkPlatformAdmin';
+import { isSessionPayloadRevoked } from '@server/utils/sessionRevocation';
 import type { UserSchema } from '@qlover/next-kit/common';
 import type {
   OAuthSessionInterface,
@@ -103,6 +104,13 @@ export class OAuthSessionService
       return NextResponse.redirect(redirectToPath(request));
     }
 
+    // 已被「撤销所有会话」（如重置密码）作废的 session：清 cookie 后去登录
+    if (await isSessionPayloadRevoked(payload)) {
+      const response = NextResponse.redirect(redirectToPath(request));
+      response.cookies.delete(this.sessionKey);
+      return response;
+    }
+
     const pathname = request.nextUrl.pathname;
     if (isPlatformAdminPath(pathname)) {
       const userId = String(
@@ -176,7 +184,7 @@ export class OAuthSessionService
     if (raw) {
       const fromCookie = this.parseJWT(raw, this.sessionSecret);
       if (fromCookie) {
-        return fromCookie;
+        return (await isSessionPayloadRevoked(fromCookie)) ? null : fromCookie;
       }
     }
 

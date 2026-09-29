@@ -27,6 +27,8 @@ export const PermissionKey = {
   admin_locales_write: 'admin_locales_write',
   admin_memory_kv_read: 'admin_memory_kv_read',
   admin_memory_kv_write: 'admin_memory_kv_write',
+  admin_mail_logs_read: 'admin_mail_logs_read',
+  admin_mail_test: 'admin_mail_test',
 
   // —— platform app ——
   pam_project_create: 'pam_project_create',

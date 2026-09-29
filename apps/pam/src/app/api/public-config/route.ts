@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
         phoneOtpProvider: 'memory',
         googleOauthEnabled: false,
         brainPkceEnabled: false,
-        brainSupabaseEnabled: false
+        brainSupabaseEnabled: false,
+        passwordResetEnabled: false
       }
     });
   }

@@ -290,14 +290,22 @@ export class SiteSettingsService {
       phoneOtpProviderRaw,
       googleOauthEnabled,
       brainPkceEnabled,
-      brainSupabaseEnabled
+      brainSupabaseEnabled,
+      passwordResetSwitch,
+      mailProviderRaw
     ] = await Promise.all([
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_PHONE_LOGIN_ENABLED),
       this.getString(PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER),
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_GOOGLE_OAUTH_ENABLED),
       this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_BRAIN_PKCE_ENABLED),
-      this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_BRAIN_SUPABASE_ENABLED)
+      this.getBoolean(PAM_SITE_SETTING_KEYS.AUTH_BRAIN_SUPABASE_ENABLED),
+      this.getBoolean(PAM_SITE_SETTING_KEYS.MAIL_PASSWORD_RESET_ENABLED),
+      this.getString(PAM_SITE_SETTING_KEYS.MAIL_PROVIDER)
     ]);
+
+    const mailProvider = mailProviderRaw.trim().toLowerCase();
+    const passwordResetEnabled =
+      passwordResetSwitch && mailProvider !== '' && mailProvider !== 'disabled';
 
     const phoneOtpProvider =
       phoneOtpProviderRaw.trim().toLowerCase() === 'aliyun'
@@ -310,7 +318,8 @@ export class SiteSettingsService {
         phoneOtpProvider,
         googleOauthEnabled,
         brainPkceEnabled,
-        brainSupabaseEnabled
+        brainSupabaseEnabled,
+        passwordResetEnabled
       }
     };
   }

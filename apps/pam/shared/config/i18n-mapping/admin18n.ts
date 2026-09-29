@@ -2,6 +2,7 @@ import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
 import * as localesKeys from '../i18n-identifier/pages/page.admin.locales';
+import * as mailLogsKeys from '../i18n-identifier/pages/page.admin.mail-logs';
 import * as memoryKvKeys from '../i18n-identifier/pages/page.admin.memory-kv';
 import * as permissionsKeys from '../i18n-identifier/pages/page.admin.permissions';
 import * as phoneOtpsKeys from '../i18n-identifier/pages/page.admin.phone-otps';
@@ -54,6 +55,8 @@ export type AdminSettingsI18nInterface = typeof adminSettings18n;
 export type AdminPhoneOtpsI18nInterface = typeof adminPhoneOtps18n;
 
 export type AdminMemoryKvI18nInterface = typeof adminMemoryKv18n;
+
+export type AdminMailLogsI18nInterface = typeof adminMailLogs18n;
 
 export type AdminLocalesI18nInterface = typeof adminLocales18n;
 
@@ -160,6 +163,32 @@ export const adminMemoryKv18n = Object.freeze({
   prefixRequired: memoryKvKeys.ADMIN_MEMORY_KV_PREFIX_REQUIRED
 });
 
+export const adminMailLogs18n = Object.freeze({
+  title: mailLogsKeys.ADMIN_MAIL_LOGS_TITLE,
+  description: mailLogsKeys.ADMIN_MAIL_LOGS_DESCRIPTION,
+  content: mailLogsKeys.ADMIN_MAIL_LOGS_DESCRIPTION,
+  keywords: mailLogsKeys.ADMIN_MAIL_LOGS_KEYWORDS,
+  searchPlaceholder: mailLogsKeys.ADMIN_MAIL_LOGS_SEARCH_PLACEHOLDER,
+  templateAll: mailLogsKeys.ADMIN_MAIL_LOGS_TEMPLATE_ALL,
+  templateTest: mailLogsKeys.ADMIN_MAIL_LOGS_TEMPLATE_TEST,
+  templatePasswordReset: mailLogsKeys.ADMIN_MAIL_LOGS_TEMPLATE_PASSWORD_RESET,
+  templatePasswordChanged:
+    mailLogsKeys.ADMIN_MAIL_LOGS_TEMPLATE_PASSWORD_CHANGED,
+  refresh: mailLogsKeys.ADMIN_MAIL_LOGS_REFRESH,
+  colCreated: mailLogsKeys.ADMIN_MAIL_LOGS_COL_CREATED,
+  colTo: mailLogsKeys.ADMIN_MAIL_LOGS_COL_TO,
+  colTemplate: mailLogsKeys.ADMIN_MAIL_LOGS_COL_TEMPLATE,
+  colSubject: mailLogsKeys.ADMIN_MAIL_LOGS_COL_SUBJECT,
+  colProvider: mailLogsKeys.ADMIN_MAIL_LOGS_COL_PROVIDER,
+  colStatus: mailLogsKeys.ADMIN_MAIL_LOGS_COL_STATUS,
+  colIp: mailLogsKeys.ADMIN_MAIL_LOGS_COL_IP,
+  colDetail: mailLogsKeys.ADMIN_MAIL_LOGS_COL_DETAIL,
+  viewBody: mailLogsKeys.ADMIN_MAIL_LOGS_VIEW_BODY,
+  hideBody: mailLogsKeys.ADMIN_MAIL_LOGS_HIDE_BODY,
+  empty: mailLogsKeys.ADMIN_MAIL_LOGS_EMPTY,
+  loadFailed: mailLogsKeys.ADMIN_MAIL_LOGS_LOAD_FAILED
+});
+
 export const adminSettings18n = Object.freeze({
   title: settingsKeys.ADMIN_SETTINGS_TITLE,
   description: settingsKeys.ADMIN_SETTINGS_DESCRIPTION,
@@ -173,6 +202,13 @@ export const adminSettings18n = Object.freeze({
   sectionOpenaiDesc: settingsKeys.ADMIN_SETTINGS_SECTION_OPENAI_DESC,
   sectionAliyunSms: settingsKeys.ADMIN_SETTINGS_SECTION_ALIYUN_SMS,
   sectionAliyunSmsDesc: settingsKeys.ADMIN_SETTINGS_SECTION_ALIYUN_SMS_DESC,
+  sectionMail: settingsKeys.ADMIN_SETTINGS_SECTION_MAIL,
+  sectionMailDesc: settingsKeys.ADMIN_SETTINGS_SECTION_MAIL_DESC,
+  mailTestPlaceholder: settingsKeys.ADMIN_SETTINGS_MAIL_TEST_PLACEHOLDER,
+  mailTestSend: settingsKeys.ADMIN_SETTINGS_MAIL_TEST_SEND,
+  mailTestSending: settingsKeys.ADMIN_SETTINGS_MAIL_TEST_SENDING,
+  mailTestSuccess: settingsKeys.ADMIN_SETTINGS_MAIL_TEST_SUCCESS,
+  mailTestUnsaved: settingsKeys.ADMIN_SETTINGS_MAIL_TEST_UNSAVED,
   sectionApi: settingsKeys.ADMIN_SETTINGS_SECTION_API,
   sectionApiDesc: settingsKeys.ADMIN_SETTINGS_SECTION_API_DESC,
   sectionStorage: settingsKeys.ADMIN_SETTINGS_SECTION_STORAGE,

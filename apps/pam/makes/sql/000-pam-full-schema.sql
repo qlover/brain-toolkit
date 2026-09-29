@@ -1460,6 +1460,8 @@ INSERT INTO public.pam_role_permissions (permission_key, type, method, path, des
   ('admin_locales_write', 'api', 'post', '/api/admin/locales', 'Create / update / import locales'),
   ('admin_memory_kv_read', 'api', 'get', '/api/admin/memory-kv', 'List process Memory KV cache entries'),
   ('admin_memory_kv_write', 'api', 'post', '/api/admin/memory-kv', 'Delete process Memory KV cache entries'),
+  ('admin_mail_logs_read', 'api', 'get', '/api/admin/mail-logs', 'List mail send logs'),
+  ('admin_mail_test', 'api', 'post', '/api/admin/mail/test', 'Send test email'),
   ('pam_collaborators_read', 'api', 'get', '/api/pam/:projectId/collaborators', 'List project collaborators'),
   ('pam_collaborators_create', 'api', 'post', '/api/pam/:projectId/collaborators', 'Add project collaborator'),
   ('pam_collaborators_update', 'api', 'patch', '/api/pam/:projectId/collaborators/:userId', 'Update collaborator role'),
@@ -1512,7 +1514,8 @@ JOIN (VALUES
   ('admin_request_logs_read'),
   ('admin_phone_otps_read'),
   ('admin_site_settings_read'),
-  ('admin_locales_read')
+  ('admin_locales_read'),
+  ('admin_mail_logs_read')
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'operator';
 
@@ -1538,7 +1541,9 @@ JOIN (VALUES
   ('admin_locales_read'),
   ('admin_locales_write'),
   ('admin_memory_kv_read'),
-  ('admin_memory_kv_write')
+  ('admin_memory_kv_write'),
+  ('admin_mail_logs_read'),
+  ('admin_mail_test')
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'admin';
 
@@ -2208,4 +2213,78 @@ JOIN (VALUES
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'admin'
 ON CONFLICT (role_id, permission_key) DO NOTHING;
+
+
+
+-- #############################################################################
+-- SOURCE: 024-pam-mail-service.sql
+-- #############################################################################
+
+-- Transactional mail (memory | resend) + forgot password; independent from Supabase Auth mails.
+
+-- ---------------------------------------------------------------------------
+-- 1) Mail send audit
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.pam_mail_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  to_email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  template TEXT NOT NULL
+    CHECK (template IN ('test', 'password_reset', 'password_changed')),
+  provider TEXT NOT NULL CHECK (provider IN ('memory', 'resend')),
+  status TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
+  provider_message_id TEXT,
+  error TEXT,
+  body_text TEXT,
+  user_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  created_ip TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE public.pam_mail_logs IS
+  'Transactional mail audit (memory | resend). Admin mail logs page reads this.';
+COMMENT ON COLUMN public.pam_mail_logs.body_text IS
+  'Plain-text body, only stored for memory provider (dev/test). Null for real providers.';
+
+CREATE INDEX IF NOT EXISTS idx_pam_mail_logs_created
+  ON public.pam_mail_logs (created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_pam_mail_logs_email_template_created
+  ON public.pam_mail_logs (to_email, template, created_at DESC);
+
+ALTER TABLE public.pam_mail_logs ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- 2) Password reset tokens (link flow; only SHA-256 hash is stored)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.pam_password_reset_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_ip TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE public.pam_password_reset_tokens IS
+  'Forgot-password reset links. Single use; unused tokens are invalidated after a successful reset.';
+
+CREATE INDEX IF NOT EXISTS idx_pam_password_reset_tokens_user_created
+  ON public.pam_password_reset_tokens (user_id, created_at DESC);
+
+ALTER TABLE public.pam_password_reset_tokens ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- 3) Revoke all browser sessions (pam_session JWT issued before this is rejected)
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE public.pam_users
+  ADD COLUMN IF NOT EXISTS sessions_revoked_at TIMESTAMPTZ;
+
+COMMENT ON COLUMN public.pam_users.sessions_revoked_at IS
+  'Session JWTs with iat before this time are rejected (set after password reset).';
 

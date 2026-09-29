@@ -39,7 +39,8 @@ export const pamPublicConfigSchema = z.object({
     phoneOtpProvider: z.enum(['memory', 'aliyun']).optional(),
     googleOauthEnabled: z.boolean(),
     brainPkceEnabled: z.boolean(),
-    brainSupabaseEnabled: z.boolean()
+    brainSupabaseEnabled: z.boolean(),
+    passwordResetEnabled: z.boolean().optional()
   })
 });
 

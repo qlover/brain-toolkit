@@ -5,6 +5,8 @@ import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import {
   ROUTE_ADMIN,
+  ROUTE_AUTH_FORGOT_PASSWORD,
+  ROUTE_AUTH_RESET_PASSWORD,
   ROUTE_CALLBACK_EMAIL_LOGIN,
   ROUTE_PAMENV_DEVICE,
   ROUTE_DEVELOPER_APPS,
@@ -50,6 +52,14 @@ export const routing = defineRouting({
     [ROUTE_REGISTER]: {
       en: '/auth/register',
       zh: '/auth/register'
+    },
+    [ROUTE_AUTH_FORGOT_PASSWORD]: {
+      en: ROUTE_AUTH_FORGOT_PASSWORD,
+      zh: ROUTE_AUTH_FORGOT_PASSWORD
+    },
+    [ROUTE_AUTH_RESET_PASSWORD]: {
+      en: ROUTE_AUTH_RESET_PASSWORD,
+      zh: ROUTE_AUTH_RESET_PASSWORD
     },
     [ROUTE_CALLBACK_EMAIL_LOGIN]: {
       en: '/callback/email-login',

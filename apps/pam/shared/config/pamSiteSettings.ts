@@ -24,6 +24,14 @@
   ALIYUN_SMS_REGION_ID: 'aliyun_sms.region_id',
   ALIYUN_SMS_ENDPOINT: 'aliyun_sms.endpoint',
 
+  MAIL_PROVIDER: 'mail.provider',
+  MAIL_RESEND_API_KEY: 'mail.resend_api_key',
+  MAIL_FROM_ADDRESS: 'mail.from_address',
+  MAIL_FROM_NAME: 'mail.from_name',
+  MAIL_REPLY_TO: 'mail.reply_to',
+  MAIL_PASSWORD_RESET_ENABLED: 'mail.password_reset_enabled',
+  MAIL_PASSWORD_CHANGED_NOTIFY_ENABLED: 'mail.password_changed_notify_enabled',
+
   /**
    * CORS 规则：origin × path × methods。
    * 每条：`{ origin, path, methods }`，任一分量可用 `*`。
@@ -225,6 +233,57 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       defaultValue: 'https://dysmsapi.aliyuncs.com'
     },
     {
+      key: PAM_SITE_SETTING_KEYS.MAIL_PROVIDER,
+      label: '邮件发送通道',
+      description:
+        'disabled=不发送；memory=不真实发送，仅写入 pam_mail_logs 供 Admin 查看；resend=通过 Resend API 发送。',
+      isSensitive: false,
+      defaultValue: 'disabled'
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.MAIL_RESEND_API_KEY,
+      label: 'Resend API Key',
+      description:
+        'Resend 控制台创建的 API Key（re_ 开头）。加密存储，界面不回显明文。',
+      isSensitive: true
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.MAIL_FROM_ADDRESS,
+      label: '发件人邮箱',
+      description:
+        '须为邮件服务商已验证域名下的地址。示例：no-reply@example.com',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.MAIL_FROM_NAME,
+      label: '发件人名称',
+      description: '收件人看到的发件人显示名。默认 PAM。',
+      isSensitive: false,
+      defaultValue: 'PAM'
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.MAIL_REPLY_TO,
+      label: '回复地址',
+      description: '收件人点击「回复」时的目标邮箱。留空则不设置。',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.MAIL_PASSWORD_RESET_ENABLED,
+      label: '忘记密码（邮件重置）',
+      description:
+        '是否在登录页展示「忘记密码」并通过邮件发送重置链接。需邮件通道不为 disabled。',
+      isSensitive: false,
+      defaultValue: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.MAIL_PASSWORD_CHANGED_NOTIFY_ENABLED,
+      label: '密码变更通知',
+      description:
+        '修改或重置密码成功后，向账号邮箱发送安全通知邮件。发送失败不影响改密结果。',
+      isSensitive: false,
+      defaultValue: false
+    },
+    {
       key: PAM_SITE_SETTING_KEYS.API_CORS_RULES,
       label: 'CORS 规则',
       description:
@@ -268,7 +327,8 @@ export const PAM_PUBLIC_SITE_SETTING_KEYS = [
   PAM_SITE_SETTING_KEYS.AUTH_PHONE_OTP_PROVIDER,
   PAM_SITE_SETTING_KEYS.AUTH_GOOGLE_OAUTH_ENABLED,
   PAM_SITE_SETTING_KEYS.AUTH_BRAIN_PKCE_ENABLED,
-  PAM_SITE_SETTING_KEYS.AUTH_BRAIN_SUPABASE_ENABLED
+  PAM_SITE_SETTING_KEYS.AUTH_BRAIN_SUPABASE_ENABLED,
+  PAM_SITE_SETTING_KEYS.MAIL_PASSWORD_RESET_ENABLED
 ] as const;
 
 export type PamPublicSiteSettingKey =

@@ -10,28 +10,37 @@ import {
   type UserSchema,
   type ValidatorInterface
 } from '@qlover/next-kit/common';
-import { RequestLogsRepository } from '@qlover/next-kit/server';
+import {
+  RequestLogsRepository,
+  type ServerContextInterface
+} from '@qlover/next-kit/server';
 import {
   SignOtpResult,
   signWithPhoneOtpSchema,
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import type { LocaleType } from '@config/i18n';
 import {
   API_CHANGE_PASSWORD_INVALID,
   API_ENCRYPT_PASSWORD_FAILED,
+  API_MAIL_RECIPIENT_INVALID,
   API_NOT_AUTHORIZED,
   API_OTP_SIGN_INVALID,
   API_OTP_VERIFY_INVALID
 } from '@config/i18n-identifier/api';
+import { I } from '@config/ioc-identifiter';
 import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import {
   pamBindEmailSendSchema,
   pamBindEmailVerifySchema,
   pamChangePasswordSchema,
   pamDisplayNameUpdateSchema,
+  pamForgotPasswordSchema,
+  pamResetPasswordSchema,
   type PamBindEmailVerifyResult,
   type PamChangePasswordInput,
+  type PamResetPasswordInput,
   type PamSessionResponse,
   type PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -43,6 +52,7 @@ import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLogin
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { OtpSendRateLimitService } from '@server/services/OtpSendRateLimitService';
 import { PamBindEmailService } from '@server/services/PamBindEmailService';
+import { PamPasswordResetService } from '@server/services/PamPasswordResetService';
 import { PamPasswordService } from '@server/services/PamPasswordService';
 import { PamUserService } from '@server/services/PamUserService';
 import { getClientIpFromRequest } from '@server/utils/getClientIpFromRequest';
@@ -78,6 +88,10 @@ export class UserController {
     protected pamBindEmailService: PamBindEmailService,
     @inject(PamPasswordService)
     protected pamPasswordService: PamPasswordService,
+    @inject(PamPasswordResetService)
+    protected passwordResetService: PamPasswordResetService,
+    @inject(I.ServerContextInterface)
+    protected serverContext: ServerContextInterface,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer) base64Serializer: Base64Serializer
   ) {
@@ -309,7 +323,10 @@ export class UserController {
     });
   }
 
-  public async changePassword(body: unknown): Promise<void> {
+  public async changePassword(
+    body: unknown,
+    request?: NextRequest
+  ): Promise<void> {
     const user = await this.userService.getSessionUser();
     if (!user) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
@@ -333,10 +350,69 @@ export class UserController {
     if (!parsed.success) {
       throw new ExecutorError(API_CHANGE_PASSWORD_INVALID);
     }
-    await this.pamPasswordService.changePassword({
+    const { email } = await this.pamPasswordService.changePassword({
       userId: user.id,
       currentPassword: parsed.data.current_password,
       newPassword: parsed.data.new_password
+    });
+    await this.passwordResetService.notifyPasswordChanged({
+      userId: user.id,
+      email,
+      locale: (await this.serverContext.getLocale()) as LocaleType,
+      clientIp: request ? getClientIpFromRequest(request) : null,
+      userAgent: request?.headers.get('user-agent') ?? null
+    });
+  }
+
+  /** Uniform response whether or not the email is registered. */
+  public async forgotPassword(
+    body: unknown,
+    request?: NextRequest
+  ): Promise<void> {
+    const parsed = pamForgotPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new ExecutorError(API_MAIL_RECIPIENT_INVALID);
+    }
+    await this.passwordResetService.requestReset({
+      email: parsed.data.email,
+      locale: (await this.serverContext.getLocale()) as LocaleType,
+      clientIp: request ? getClientIpFromRequest(request) : null
+    });
+  }
+
+  public verifyResetToken(token: unknown): Promise<{ valid: boolean }> {
+    return this.passwordResetService.verifyToken(
+      typeof token === 'string' ? token : ''
+    );
+  }
+
+  public async resetPassword(
+    body: unknown,
+    request?: NextRequest
+  ): Promise<void> {
+    const raw = body as Partial<PamResetPasswordInput> | null;
+    let decrypted: PamResetPasswordInput;
+    try {
+      decrypted = {
+        token: typeof raw?.token === 'string' ? raw.token : '',
+        new_password: this.stringEncryptor.decrypt(raw?.new_password ?? '')
+      };
+    } catch {
+      throw new ExecutorError(
+        API_ENCRYPT_PASSWORD_FAILED,
+        'Encrypt password failed'
+      );
+    }
+    const parsed = pamResetPasswordSchema.safeParse(decrypted);
+    if (!parsed.success) {
+      throw new ExecutorError(API_CHANGE_PASSWORD_INVALID);
+    }
+    await this.passwordResetService.resetPassword({
+      token: parsed.data.token,
+      newPassword: parsed.data.new_password,
+      locale: (await this.serverContext.getLocale()) as LocaleType,
+      clientIp: request ? getClientIpFromRequest(request) : null,
+      userAgent: request?.headers.get('user-agent') ?? null
     });
   }
 }

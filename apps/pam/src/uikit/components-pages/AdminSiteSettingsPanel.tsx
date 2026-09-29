@@ -14,6 +14,7 @@ import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
 import { CorsRulesEditor } from '@/uikit/components-pages/AdminCorsRulesEditor';
+import { AdminMailTestAction } from '@/uikit/components-pages/AdminMailTestAction';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { AdminSettingsI18nInterface } from '@config/i18n-mapping/admin18n';
@@ -280,7 +281,7 @@ export function AdminSiteSettingsPanel({
           }
           return next;
         });
-        if (section === 'auth') {
+        if (section === 'auth' || section === 'mail') {
           invalidatePublicConfigCache();
         }
         dialogHandler.success(tt.saveSuccess);
@@ -345,6 +346,23 @@ export function AdminSiteSettingsPanel({
     PAM_SITE_SETTING_KEYS.ALIYUN_SMS_REGION_ID,
     PAM_SITE_SETTING_KEYS.ALIYUN_SMS_ENDPOINT
   ] as const;
+
+  const mailProviderKey = PAM_SITE_SETTING_KEYS.MAIL_PROVIDER;
+
+  const mailTextKeys = [
+    PAM_SITE_SETTING_KEYS.MAIL_RESEND_API_KEY,
+    PAM_SITE_SETTING_KEYS.MAIL_FROM_ADDRESS,
+    PAM_SITE_SETTING_KEYS.MAIL_FROM_NAME,
+    PAM_SITE_SETTING_KEYS.MAIL_REPLY_TO
+  ] as const;
+
+  const mailToggleKeys = [
+    PAM_SITE_SETTING_KEYS.MAIL_PASSWORD_RESET_ENABLED,
+    PAM_SITE_SETTING_KEYS.MAIL_PASSWORD_CHANGED_NOTIFY_ENABLED
+  ] as const;
+
+  const mailKeys = [mailProviderKey, ...mailTextKeys, ...mailToggleKeys];
+  const mailHasUnsaved = mailKeys.some((key) => draft[key] !== undefined);
 
   const apiKeys = [PAM_SITE_SETTING_KEYS.API_CORS_RULES] as const;
 
@@ -529,6 +547,83 @@ export function AdminSiteSettingsPanel({
               </SettingRow>
             );
           })}
+        </div>
+      </PAMSettingsCard>
+
+      <PAMSettingsCard
+        title={tt.sectionMail}
+        description={tt.sectionMailDesc}
+        saveLabel={tt.save}
+        savingLabel={tt.saving}
+        saving={savingSection === 'mail'}
+        onSave={() => patchSection('mail', mailKeys)}
+        footerActions={
+          <AdminMailTestAction tt={tt} hasUnsavedChanges={mailHasUnsaved} />
+        }
+      >
+        <div>
+          <SettingRow entry={byKey.get(mailProviderKey)} tt={tt}>
+            <select
+              value={(() => {
+                const raw = String(
+                  getDraftValue(
+                    draft,
+                    byKey.get(mailProviderKey),
+                    mailProviderKey
+                  )
+                ).trim();
+                return raw === 'memory' || raw === 'resend' ? raw : 'disabled';
+              })()}
+              onChange={(event) =>
+                setDraftValue(mailProviderKey, event.target.value)
+              }
+              className={pamFormFieldClass}
+            >
+              <option value="disabled">disabled（不发送）</option>
+              <option value="memory">memory（仅记录，Admin 查看）</option>
+              <option value="resend">resend（Resend API）</option>
+            </select>
+          </SettingRow>
+          {mailTextKeys.map((key) => {
+            const entry = byKey.get(key);
+            const raw = getDraftValue(draft, entry, key);
+            const isSensitive = entry?.isSensitive;
+            const value =
+              isSensitive && raw === PAM_SITE_SETTING_SECRET_UNCHANGED
+                ? ''
+                : String(raw);
+            const placeholder = isSensitive
+              ? tt.secretHint
+              : key === PAM_SITE_SETTING_KEYS.MAIL_FROM_ADDRESS
+                ? 'no-reply@example.com'
+                : undefined;
+            return (
+              <SettingRow key={key} entry={entry} tt={tt}>
+                <input
+                  type={isSensitive ? 'password' : 'text'}
+                  value={value}
+                  placeholder={placeholder}
+                  onChange={(event) => setDraftValue(key, event.target.value)}
+                  className={pamFormFieldClass}
+                />
+              </SettingRow>
+            );
+          })}
+          {mailToggleKeys.map((key) => (
+            <SettingRow
+              key={key}
+              entry={byKey.get(key)}
+              tt={tt}
+              layout="inline"
+            >
+              <ToggleSwitch
+                checked={Boolean(
+                  getDraftValue(draft, byKey.get(key), key) === true
+                )}
+                onChange={(checked) => setDraftValue(key, checked)}
+              />
+            </SettingRow>
+          ))}
         </div>
       </PAMSettingsCard>
 
