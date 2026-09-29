@@ -1,5 +1,6 @@
 -- =============================================================================
 -- PAM full schema (single script, safe to re-run in DEV)
+-- FRESH INSTALLS ONLY: drops and recreates tables. Existing DB → 001-pam-upgrade.sql
 -- Prefix: pam_ (incl. pam_oauth_* / pam_request_logs / pam_cli_tokens)
 -- Request audit table: pam_request_logs (NOT request_logs / fe_request_logs)
 -- Keep permission_key seeds in sync with apps/pam/shared/auth/permissionKeys.ts
@@ -2289,7 +2290,7 @@ COMMENT ON COLUMN public.pam_users.sessions_revoked_at IS
   'Session JWTs with iat before this time are rejected (set after password reset).';
 
 -- ---------------------------------------------------------------------------
--- External login identities (patch-user-identities.sql)
+-- External login identities (brain-oauth sub → PAM user)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS public.pam_user_identities (
