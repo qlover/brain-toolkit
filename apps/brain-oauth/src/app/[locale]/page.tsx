@@ -1,15 +1,17 @@
 import { PageI18nProvider } from '@qlover/next-kit/client';
+import { BrainFooter } from '@/uikit/components/brain/BrainFooter';
+import { BrainHeaderNav } from '@/uikit/components/brain/BrainHeaderNav';
+import { BrainScene } from '@/uikit/components/brain/BrainScene';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import {
   HomeApiSnippet,
-  HomeArchitecture,
   HomeCta,
   HomeFeatures,
-  HomeFooter,
   HomeHero
 } from '@/uikit/components-app/home/HomeSections';
 import { i18nConfig } from '@config/i18n';
 import { homeI18n, homeI18nNamespace } from '@config/i18n-mapping/HomeI18n';
+import { ROUTE_DOCS_OAUTH } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import {
   getI18nInterface,
@@ -39,13 +41,28 @@ export default async function Home({ params }: PageParamsProps) {
 
   return (
     <PageI18nProvider value={tt}>
-      <AppRoutePage tt={tt} showAuthButton authButtonShowLogoutLabel>
+      <AppRoutePage
+        tt={tt}
+        headerVariant="brain"
+        headerNav={
+          <BrainHeaderNav
+            items={[
+              { href: ROUTE_DOCS_OAUTH, label: tt.navDocs },
+              { href: '/about', label: tt.navAbout }
+            ]}
+          />
+        }
+        showAuthButton
+        authShowConsole
+      >
+        <BrainScene contained />
         <HomeHero tt={tt} />
-        <HomeArchitecture tt={tt} />
-        <HomeFeatures tt={tt} />
-        <HomeApiSnippet tt={tt} />
-        <HomeCta tt={tt} />
-        <HomeFooter tt={tt} />
+        <div className="brain-content">
+          <HomeFeatures tt={tt} />
+          <HomeApiSnippet tt={tt} />
+          <HomeCta tt={tt} />
+        </div>
+        <BrainFooter showAbout />
       </AppRoutePage>
     </PageI18nProvider>
   );
