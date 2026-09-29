@@ -1,7 +1,7 @@
 'use client';
 
+import { headerIconButtonClass } from '@brain-toolkit/next-app-kit/client';
 import { CodeBracketIcon } from '@heroicons/react/24/outline';
-import { headerIconButtonClass } from './headerChrome';
 import { LocaleLink } from '../components/LocaleLink';
 import { useUserAuth } from '../hook/useUserAuth';
 

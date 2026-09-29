@@ -1,12 +1,12 @@
-import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { SupabaseRepo, type RepoSearchParams } from '@qlover/next-kit/server';
-import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
-import { toStableApiExecutorError } from '@server/utils/normalizeApiExecutorError';
 import {
   extractPostgrestError,
   isPostgrestRangeNotSatisfiable,
   parsePostgrestRowCount
-} from '@server/utils/postgrestError';
+} from '@brain-toolkit/next-app-kit/shared';
+import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { SupabaseRepo, type RepoSearchParams } from '@qlover/next-kit/server';
+import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
+import { toStableApiExecutorError } from '@server/utils/normalizeApiExecutorError';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
 /**

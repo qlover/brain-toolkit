@@ -27,6 +27,7 @@
       "@brain-toolkit/antd-blocks/*": ["./packages/antd-blocks/src/*"],
       "@brain-toolkit/react-kit": ["./packages/react-kit/src"],
       "@brain-toolkit/react-kit/*": ["./packages/react-kit/src/*"],
+      "@brain-toolkit/next-app-kit/*": ["./packages/next-app-kit/src/*"],
       "@brain-toolkit/antd-theme-override": [
         "./packages/antd-theme-override/src"
       ],

@@ -1,7 +1,7 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { inject, injectable } from '@shared/container';
 import { API_OTP_SEND_RATE_LIMITED } from '@config/i18n-identifier/api';
-import { MemoryKvCacheService } from './MemoryKvCacheService';
 
 /** Must match frontend resend cooldown. */
 export const OTP_SEND_COOLDOWN_MS = 60_000;

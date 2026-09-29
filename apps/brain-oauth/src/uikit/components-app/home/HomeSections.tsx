@@ -1,5 +1,6 @@
 'use client';
 
+import { GithubIcon } from '@brain-toolkit/next-app-kit/client';
 import {
   ArrowRightIcon,
   BookOpenIcon,
@@ -12,7 +13,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { Link } from '@/i18n/routing';
-import { GithubIcon } from '@/uikit/components/icons';
 import type { HomeI18nInterface } from '@config/i18n-mapping/HomeI18n';
 import {
   API_OAUTH_VERIFY,

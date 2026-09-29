@@ -1,8 +1,8 @@
 'use client';
 
+import { headerIconButtonClass } from '@brain-toolkit/next-app-kit/client';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { ROUTE_ADMIN } from '@config/route';
-import { headerIconButtonClass } from './headerChrome';
 import { LocaleLink } from '../components/LocaleLink';
 import { usePlatformAdmin } from '../hook/usePlatformAdmin';
 import { useUserAuth } from '../hook/useUserAuth';

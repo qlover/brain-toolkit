@@ -1,8 +1,9 @@
-import { injectable } from '@shared/container';
+import 'reflect-metadata';
+import { injectable } from '@qlover/corekit-bridge/ioc';
 import type {
   KvCacheInterface,
   KvCacheSetOptionsInterface
-} from '@server/interfaces/KvCacheInterface';
+} from '../interfaces/KvCacheInterface';
 
 type MemoryKvEntryType = {
   readonly json: string;
