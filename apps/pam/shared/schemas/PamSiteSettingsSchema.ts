@@ -1,14 +1,19 @@
+import {
+  adminSiteSettingsPatchSchema,
+  adminSiteSettingsResponseSchema,
+  adminSiteSettingValueSchema,
+  corsRuleSchema,
+  siteSettingRowSchema,
+  type AdminSiteSettingEntry,
+  type AdminSiteSettingsPatch,
+  type AdminSiteSettingsResponse,
+  type SiteSettingRow
+} from '@brain-toolkit/next-app-kit/shared';
 import { z } from 'zod';
 import {
-  PAM_SITE_SETTING_KEYS,
-  type PamCorsRule,
+  pamSiteSettingRegistry,
   type PamSiteSettingKey
 } from '@config/pamSiteSettings';
-import {
-  corsRuleSchema,
-  corsValueSchema,
-  type CorsValue
-} from '@schemas/corsValueSchema';
 
 export {
   corsOriginSchema,
@@ -19,19 +24,15 @@ export {
   corsRuleIdentity,
   isValidCorsOriginValue,
   isValidCorsPathValue,
+  parseCorsValue,
+  safeParseCorsValue,
   type CorsRuleValue,
   type CorsValue
-} from '@schemas/corsValueSchema';
+} from '@brain-toolkit/next-app-kit/shared';
 
-export const pamSiteSettingRowSchema = z.object({
-  key: z.string(),
-  value: z.unknown(),
-  description: z.string(),
-  is_sensitive: z.boolean(),
-  updated_at: z.string()
-});
+export const pamSiteSettingRowSchema = siteSettingRowSchema;
 
-export type PamSiteSettingRow = z.infer<typeof pamSiteSettingRowSchema>;
+export type PamSiteSettingRow = SiteSettingRow;
 
 export const pamPublicConfigSchema = z.object({
   auth: z.object({
@@ -49,65 +50,19 @@ export type PamPublicConfig = z.infer<typeof pamPublicConfigSchema>;
 /** @deprecated 请用 {@link corsRuleSchema} / {@link corsValueSchema}。 */
 export const pamCorsRuleSchema = corsRuleSchema;
 
-export const pamAdminSiteSettingValueSchema = z.union([
-  z.string(),
-  z.boolean(),
-  z.array(z.string()),
-  corsValueSchema
-]);
+export const pamAdminSiteSettingValueSchema = adminSiteSettingValueSchema;
 
-export const pamAdminSiteSettingsPatchSchema = z.object({
-  settings: z.record(z.string(), pamAdminSiteSettingValueSchema)
-});
+export const pamAdminSiteSettingsPatchSchema = adminSiteSettingsPatchSchema;
 
-export type PamAdminSiteSettingsPatch = z.infer<
-  typeof pamAdminSiteSettingsPatchSchema
->;
+export type PamAdminSiteSettingsPatch = AdminSiteSettingsPatch;
 
-export type PamAdminSiteSettingEntry = {
-  key: PamSiteSettingKey;
-  label: string;
-  description: string;
-  value: string | boolean | string[] | PamCorsRule[];
-  configured: boolean;
-  isSensitive: boolean;
-  source: 'db' | 'default';
-};
+export type PamAdminSiteSettingEntry = AdminSiteSettingEntry<PamSiteSettingKey>;
 
-export const pamAdminSiteSettingsResponseSchema = z.object({
-  settings: z.array(
-    z.object({
-      key: z.string(),
-      label: z.string(),
-      description: z.string(),
-      value: z.union([
-        z.string(),
-        z.boolean(),
-        z.array(z.string()),
-        corsValueSchema
-      ]),
-      configured: z.boolean(),
-      isSensitive: z.boolean(),
-      source: z.enum(['db', 'default'])
-    })
-  )
-});
+export const pamAdminSiteSettingsResponseSchema =
+  adminSiteSettingsResponseSchema;
 
-export type PamAdminSiteSettingsResponse = z.infer<
-  typeof pamAdminSiteSettingsResponseSchema
->;
+export type PamAdminSiteSettingsResponse = AdminSiteSettingsResponse;
 
 export function isPamSiteSettingKey(key: string): key is PamSiteSettingKey {
-  return Object.values(PAM_SITE_SETTING_KEYS).includes(
-    key as PamSiteSettingKey
-  );
-}
-
-export function parseCorsValue(value: unknown): CorsValue {
-  return corsValueSchema.parse(value);
-}
-
-export function safeParseCorsValue(value: unknown): CorsValue | null {
-  const result = corsValueSchema.safeParse(value);
-  return result.success ? result.data : null;
+  return pamSiteSettingRegistry.isKey(key);
 }

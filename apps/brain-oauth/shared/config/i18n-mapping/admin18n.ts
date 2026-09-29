@@ -2,6 +2,7 @@ import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
 import * as requestLogsKeys from '../i18n-identifier/pages/page.admin.request-logs';
+import * as settingsKeys from '../i18n-identifier/pages/page.admin.settings';
 import * as userKeys from '../i18n-identifier/pages/page.admin.user';
 
 export const adminTableHeaderI18n = {
@@ -56,6 +57,32 @@ export const adminRequestLogs18n = Object.freeze({
   colLoginMethod: requestLogsKeys.ADMIN_REQUEST_LOGS_COL_LOGIN_METHOD,
   colError: requestLogsKeys.ADMIN_REQUEST_LOGS_COL_ERROR,
   empty: requestLogsKeys.ADMIN_REQUEST_LOGS_EMPTY
+});
+
+export type AdminSettingsI18nInterface = typeof adminSettings18n;
+
+export const adminSettings18n = Object.freeze({
+  title: settingsKeys.ADMIN_SETTINGS_TITLE,
+  description: settingsKeys.ADMIN_SETTINGS_DESCRIPTION,
+  content: settingsKeys.ADMIN_SETTINGS_DESCRIPTION,
+  keywords: settingsKeys.ADMIN_SETTINGS_KEYWORDS,
+  sectionApi: settingsKeys.ADMIN_SETTINGS_SECTION_API,
+  sectionApiDesc: settingsKeys.ADMIN_SETTINGS_SECTION_API_DESC,
+  save: settingsKeys.ADMIN_SETTINGS_SAVE,
+  saving: settingsKeys.ADMIN_SETTINGS_SAVING,
+  loadFailed: settingsKeys.ADMIN_SETTINGS_LOAD_FAILED,
+  saveFailed: settingsKeys.ADMIN_SETTINGS_SAVE_FAILED,
+  saveSuccess: settingsKeys.ADMIN_SETTINGS_SAVE_SUCCESS,
+  sourceDb: settingsKeys.ADMIN_SETTINGS_SOURCE_DB,
+  sourceDefault: settingsKeys.ADMIN_SETTINGS_SOURCE_DEFAULT,
+  corsOrigin: settingsKeys.ADMIN_SETTINGS_CORS_ORIGIN,
+  corsPath: settingsKeys.ADMIN_SETTINGS_CORS_PATH,
+  corsMethods: settingsKeys.ADMIN_SETTINGS_CORS_METHODS,
+  corsAdd: settingsKeys.ADMIN_SETTINGS_CORS_ADD,
+  corsRemove: settingsKeys.ADMIN_SETTINGS_CORS_REMOVE,
+  corsEmpty: settingsKeys.ADMIN_SETTINGS_CORS_EMPTY,
+  corsOriginInvalid: settingsKeys.ADMIN_SETTINGS_CORS_ORIGIN_INVALID,
+  corsDuplicate: settingsKeys.ADMIN_SETTINGS_CORS_DUPLICATE
 });
 
 export const adminUsers18n = Object.freeze({

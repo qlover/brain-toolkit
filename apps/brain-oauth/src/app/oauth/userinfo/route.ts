@@ -1,16 +1,10 @@
-import {
-  apiCorsPreflightResponse,
-  buildApiCorsHeaders
-} from '@qlover/next-kit/server';
 import { OAuthWrapperError } from '@qlover/oauth-wrapper';
 import { isEmpty } from 'lodash';
 import { ROUTE_OAUTH_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
-import { ServerConfig } from '@server/ServerConfig';
+import { ApiCorsPlugin } from '@server/plugins/ApiCorsPlugin';
 import type { NextRequest } from 'next/server';
-
-const corsConfig = new ServerConfig();
 
 export function parseBearerAuthorization(
   header: string | null
@@ -28,7 +22,7 @@ export function parseBearerAuthorization(
  * CORS preflight for cross-origin userinfo requests.
  */
 export async function OPTIONS(req: NextRequest) {
-  return apiCorsPreflightResponse(req, corsConfig);
+  return new ApiCorsPlugin({ path: ROUTE_OAUTH_USERINFO }).preflight(req);
 }
 
 /**
@@ -38,14 +32,13 @@ export async function OPTIONS(req: NextRequest) {
  * Returns flat OIDC claims (`sub`, `email`, …) without the app API envelope.
  */
 export async function GET(req: NextRequest) {
-  const corsHeaders = buildApiCorsHeaders(req, corsConfig);
-
   return await new NextApiServer({
     name: ROUTE_OAUTH_USERINFO,
     nextRequest: req,
     event_type: 'oauth-wrapper'
-  }).runWithOAuthJson(
-    async ({ parameters: { IOC } }) => {
+  })
+    .use(new ApiCorsPlugin({ path: ROUTE_OAUTH_USERINFO, request: req }))
+    .runWithOAuthJson(async ({ parameters: { IOC } }) => {
       const accessToken = parseBearerAuthorization(
         req.headers.get('authorization')
       );
@@ -69,10 +62,5 @@ export async function GET(req: NextRequest) {
         name: user.name?.trim() || user.email || String(user.id),
         ...(phone ? { phone_number: phone } : {})
       };
-    },
-    {
-      successHeaders: corsHeaders,
-      errorHeaders: corsHeaders
-    }
-  );
+    });
 }

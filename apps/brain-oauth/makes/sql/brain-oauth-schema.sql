@@ -367,3 +367,21 @@ comment on column public.brain_oauth_consent_grants.device_id is
   'Random id from the httpOnly brain_oauth_device cookie.';
 
 alter table public.brain_oauth_consent_grants enable row level security;
+
+
+-- #############################################################################
+-- 5) Site settings (admin-editable runtime config, e.g. CORS rules)
+-- #############################################################################
+
+create table if not exists public.brain_oauth_site_settings (
+  key text primary key,
+  value jsonb not null,
+  description text not null default '',
+  is_sensitive boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+comment on table public.brain_oauth_site_settings is
+  'Runtime site settings. Missing keys are seeded by the app; edit via Admin → Site settings.';
+
+alter table public.brain_oauth_site_settings enable row level security;

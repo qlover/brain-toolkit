@@ -29,6 +29,11 @@ export const ROUTE_ADMIN_USERS = '/admin/users' as const;
  */
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
 
+/**
+ * Admin site settings (CORS etc.). Pages Router: `src/pages/[locale]/admin/settings.tsx`.
+ */
+export const ROUTE_ADMIN_SETTINGS = '/admin/settings' as const;
+
 export const ROUTE_HOME = '/' as const;
 
 /** Developer console app list (PRD default post-login redirect). */
@@ -86,6 +91,7 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN,
   ROUTE_ADMIN_USERS,
   ROUTE_REQUEST_LOGS,
+  ROUTE_ADMIN_SETTINGS,
   ROUTE_DEVELOPER_APPS,
   ROUTE_OAUTH_PLAYGROUND,
   // Consent requires an app session; gate here so unauthenticated users
@@ -97,7 +103,10 @@ export const LOGINED_PAGES = [
  * Session pages that additionally require a Brain admin account.
  * `/admin` and the personal request log stay open to every logged-in user.
  */
-export const ADMIN_ONLY_PAGES = [ROUTE_ADMIN_USERS] as const;
+export const ADMIN_ONLY_PAGES = [
+  ROUTE_ADMIN_USERS,
+  ROUTE_ADMIN_SETTINGS
+] as const;
 
 export function isAdminOnlyPath(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '');

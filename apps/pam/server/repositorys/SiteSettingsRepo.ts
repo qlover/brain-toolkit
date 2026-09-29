@@ -1,49 +1,15 @@
+import { SiteSettingsRepository } from '@brain-toolkit/next-app-kit/server';
 import { inject, injectable } from '@shared/container';
-import type { PamSiteSettingRow } from '@schemas/PamSiteSettingsSchema';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 
-const TABLE = 'pam_site_settings';
-
-export type PamSiteSettingUpsertInput = {
-  readonly key: string;
-  readonly value: unknown;
-  readonly description: string;
-  readonly isSensitive: boolean;
-};
+export type { SiteSettingUpsertInput as PamSiteSettingUpsertInput } from '@brain-toolkit/next-app-kit/shared';
 
 @injectable()
-export class SiteSettingsRepo {
+export class SiteSettingsRepo extends SiteSettingsRepository {
   constructor(
     @inject(PAMSupabaseRepo)
-    protected readonly supabaseBridge: PAMSupabaseRepo<unknown>
-  ) {}
-
-  public async getAll(): Promise<PamSiteSettingRow[]> {
-    const result = await this.supabaseBridge
-      .getAdminSupabase()
-      .from(TABLE)
-      .select('*');
-    this.supabaseBridge.throwIfError(result);
-    return (result.data ?? []) as PamSiteSettingRow[];
-  }
-
-  public async upsertMany(rows: PamSiteSettingUpsertInput[]): Promise<void> {
-    if (rows.length === 0) {
-      return;
-    }
-
-    const payload = rows.map((row) => ({
-      key: row.key,
-      value: row.value,
-      description: row.description,
-      is_sensitive: row.isSensitive,
-      updated_at: new Date().toISOString()
-    }));
-
-    const result = await this.supabaseBridge
-      .getAdminSupabase()
-      .from(TABLE)
-      .upsert(payload, { onConflict: 'key' });
-    this.supabaseBridge.throwIfError(result);
+    supabaseBridge: PAMSupabaseRepo<unknown>
+  ) {
+    super(supabaseBridge, 'pam_site_settings');
   }
 }

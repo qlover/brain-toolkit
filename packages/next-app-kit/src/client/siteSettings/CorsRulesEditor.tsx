@@ -2,12 +2,12 @@
 
 import { clsx } from 'clsx';
 import { useMemo } from 'react';
-import type { PamCorsRule } from '@config/pamSiteSettings';
 import {
   corsRuleIdentity,
   isValidCorsOriginValue,
   isValidCorsPathValue
-} from '@schemas/corsValueSchema';
+} from '../../shared/siteSettings/corsValueSchema';
+import type { CorsRule } from '../../shared/siteSettings/siteSettings';
 
 const METHOD_OPTIONS = [
   'GET',
@@ -26,10 +26,8 @@ export function isValidCorsPath(value: string): boolean {
   return isValidCorsPathValue(value);
 }
 
-export { corsRuleIdentity };
-
 export function findDuplicateCorsRuleIndexes(
-  rules: readonly PamCorsRule[]
+  rules: readonly CorsRule[]
 ): ReadonlySet<number> {
   const seen = new Map<string, number>();
   const duplicates = new Set<number>();
@@ -126,8 +124,8 @@ export type CorsRulesEditorLabels = {
 };
 
 type CorsRulesEditorProps = {
-  rules: readonly PamCorsRule[];
-  onChange: (rules: PamCorsRule[]) => void;
+  rules: readonly CorsRule[];
+  onChange: (rules: CorsRule[]) => void;
   labels: CorsRulesEditorLabels;
 };
 
@@ -145,7 +143,7 @@ export function CorsRulesEditor({
     [rows]
   );
 
-  const updateRow = (index: number, next: PamCorsRule) => {
+  const updateRow = (index: number, next: CorsRule) => {
     const copy = [...rows];
     copy[index] = {
       origin: next.origin,
