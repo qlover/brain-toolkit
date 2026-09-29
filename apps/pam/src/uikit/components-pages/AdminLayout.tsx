@@ -10,6 +10,7 @@ import {
   EnvelopeIcon,
   KeyIcon,
   LanguageIcon,
+  ShieldCheckIcon,
   UsersIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
@@ -53,7 +54,7 @@ const NAV_ICONS: Record<string, NavIcon> = {
   dashboard: ChartBarSquareIcon,
   users: UsersIcon,
   roles: KeyIcon,
-  permissions: KeyIcon,
+  permissions: ShieldCheckIcon,
   'phone-otps': DevicePhoneMobileIcon,
   'mail-logs': EnvelopeIcon,
   'memory-kv': CircleStackIcon,
