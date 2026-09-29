@@ -21,14 +21,6 @@ export const loggerStyles = {
 export const useLocaleRoutes = true;
 
 /**
- * 是否使用API获取本地化数据
- *
- * - true: 使用API获取本地化数据，可以在 /admin/locales 页面中对他进行修改
- * - false: 不使用API获取本地化数据，直接使用 `@brain-toolkit/ts2locales` 生成的json数据
- */
-export const useApiLocales = false;
-
-/**
  * 是否在在 useWarnTranslations 中警告缺失的翻译,而不是抛出错误
  *
  * 如果为 false 则会抛出错误

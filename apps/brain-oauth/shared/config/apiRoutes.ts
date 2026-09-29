@@ -43,15 +43,6 @@ export const API_CLIENTS_ROTATE_SECRET =
   '/api/clients/:clientId/rotate-secret' as const;
 
 /**
- * API path: `/api/locales/json`
- *
- * @see [src/app/api/locales/json/route.ts](../../src/app/api/locales/json/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/locales/json/route.ts`
- */
-export const API_LOCALES_JSON = '/api/locales/json' as const;
-
-/**
  * API path: `/api/oauth/consent`
  *
  * @see [src/app/api/oauth/consent/route.ts](../../src/app/api/oauth/consent/route.ts)
@@ -156,7 +147,6 @@ export type ApiRoutePath =
   | typeof API_CLIENTS
   | typeof API_CLIENTS_2
   | typeof API_CLIENTS_ROTATE_SECRET
-  | typeof API_LOCALES_JSON
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
