@@ -82,13 +82,6 @@ export const COMMON_ADMIN_NAV_USER_MANAGEMENT =
   'common:admin_nav__user_management';
 
 /**
- * @description Brain OAuth admin sidebar — i18n locale management nav item
- * @localZh 国际化
- * @localEn Locales
- */
-export const COMMON_ADMIN_NAV_LOCALES = 'common:admin_nav__locales';
-
-/**
  * @description Brain OAuth admin sidebar — OAuth/API request audit logs nav item
  * @localZh 请求日志
  * @localEn Request logs

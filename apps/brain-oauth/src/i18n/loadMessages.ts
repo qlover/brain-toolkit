@@ -1,5 +1,3 @@
-import { useApiLocales } from '@config/common';
-
 // Static locale loaders so the bundler can resolve the JSON modules
 const localeLoaders: Record<
   string,
@@ -22,7 +20,7 @@ async function loadLocaleFromFile(
 
 /**
  * 加载 i18n 消息的公共方法
- * 支持从 API 加载或从 JSON 文件加载
+ * 只从构建时由 ts2locales 生成的 JSON 文件加载
  *
  * @param locale - 要加载的语言代码
  * @param namespace - 可选的命名空间（单个字符串或字符串数组），如果提供则只返回该命名空间下的消息，保留命名空间前缀
@@ -44,29 +42,7 @@ export async function loadMessages(
   locale: string,
   namespace?: string | string[]
 ): Promise<Record<string, string>> {
-  let allMessages: Record<string, string>;
-
-  // 如果配置了使用 API 加载本地化数据
-  if (useApiLocales) {
-    try {
-      const SITE_URL = process.env.SITE_URL;
-      const localeUrl = `${SITE_URL}/api/locales/json?locale=${locale}`;
-      const response = await fetch(localeUrl);
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch locale from API: ${response.statusText}`
-        );
-      }
-
-      allMessages = await response.json();
-    } catch (error) {
-      console.warn(`Failed to load locale from API for ${locale}`, error);
-      allMessages = await loadLocaleFromFile(locale);
-    }
-  } else {
-    allMessages = await loadLocaleFromFile(locale);
-  }
+  const allMessages = await loadLocaleFromFile(locale);
 
   // 如果指定了命名空间，进行过滤
   return filterMessagesByNamespace(allMessages, namespace);
