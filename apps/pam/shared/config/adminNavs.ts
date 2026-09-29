@@ -2,6 +2,7 @@ import { PermissionKey } from '@shared/auth/permissionKeys';
 import {
   COMMON_ADMIN_NAV_DASHBOARD,
   COMMON_ADMIN_NAV_LOCALES,
+  COMMON_ADMIN_NAV_MAIL_LOGS,
   COMMON_ADMIN_NAV_MEMORY_KV,
   COMMON_ADMIN_NAV_PERMISSIONS,
   COMMON_ADMIN_NAV_PHONE_OTPS,
@@ -12,6 +13,7 @@ import {
 } from '@config/i18n-identifier/common/common';
 import {
   ROUTE_ADMIN_LOCALES,
+  ROUTE_ADMIN_MAIL_LOGS,
   ROUTE_ADMIN_MEMORY_KV,
   ROUTE_ADMIN_PERMISSIONS,
   ROUTE_ADMIN_PHONE_OTPS,
@@ -26,6 +28,7 @@ export type NavItemPaths =
   | 'admin/roles'
   | 'admin/permissions'
   | 'admin/phone-otps'
+  | 'admin/mail-logs'
   | 'admin/memory-kv'
   | 'admin/request-logs'
   | 'admin/settings'
@@ -65,6 +68,12 @@ export const defaultNavItems: NavItemInterface[] = [
     key: 'phone-otps',
     i18nKey: COMMON_ADMIN_NAV_PHONE_OTPS,
     pathname: ROUTE_ADMIN_PHONE_OTPS
+  },
+  {
+    key: 'mail-logs',
+    i18nKey: COMMON_ADMIN_NAV_MAIL_LOGS,
+    pathname: ROUTE_ADMIN_MAIL_LOGS,
+    permissionKey: PermissionKey.admin_mail_logs_read
   },
   {
     key: 'memory-kv',

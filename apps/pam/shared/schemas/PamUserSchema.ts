@@ -140,3 +140,18 @@ export const pamChangePasswordSchema = z.object({
 });
 
 export type PamChangePasswordInput = z.infer<typeof pamChangePasswordSchema>;
+
+/** POST /api/user/password/forgot */
+export const pamForgotPasswordSchema = z.object({
+  email: z.string().trim().email()
+});
+
+export type PamForgotPasswordInput = z.infer<typeof pamForgotPasswordSchema>;
+
+/** POST /api/user/password/reset — `new_password` arrives encrypted. */
+export const pamResetPasswordSchema = z.object({
+  token: z.string().min(16).max(256),
+  new_password: z.string().regex(PASSWORD_PATTERN)
+});
+
+export type PamResetPasswordInput = z.infer<typeof pamResetPasswordSchema>;

@@ -1,8 +1,14 @@
+import { repository } from '../../package.json';
 import type { ValueOf } from '@qlover/fe-corekit/common';
 
 export const envPrefix = 'NEXT_PUBLIC_';
 
 export const browserGlobalsName = 'feGlobals';
+
+/**
+ * 项目 GitHub 仓库地址（头部 GitHub 图标），取自 package.json `repository.url`
+ */
+export const githubRepoUrl = repository.url;
 
 export const loggerStyles = {
   fatal: { color: '#ff0000', fontWeight: 'bold' },
@@ -88,7 +94,12 @@ export const URLParamsKeys = {
   /**
    * supabase 回调授权 id 的参数 key
    */
-  oAuthQueryAuthId: 'authorization_id'
+  oAuthQueryAuthId: 'authorization_id',
+
+  /**
+   * 登录页带到忘记密码页的邮箱参数 key
+   */
+  email: 'email'
 } as const;
 
 /**

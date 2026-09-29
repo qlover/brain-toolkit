@@ -10,7 +10,7 @@ import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_HOME } from '@config/route';
+import { ROUTE_AUTH_FORGOT_PASSWORD, ROUTE_HOME } from '@config/route';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 
 const inputClass =
@@ -20,8 +20,9 @@ export function LoginForm(props: {
   tt: LoginI18nInterface;
   email: string;
   onEmailChange: (email: string) => void;
+  forgotPasswordEnabled?: boolean;
 }) {
-  const { tt, email, onEmailChange } = props;
+  const { tt, email, onEmailChange, forgotPasswordEnabled = false } = props;
   const t = useWarnTranslations();
   const userGateway = useIOC(AppUserGateway);
   const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
@@ -143,13 +144,20 @@ export function LoginForm(props: {
           >
             {tt.password}
           </label>
-          <LocaleLink
-            href="#"
-            title={tt.forgotPasswordTitle}
-            className="text-secondary-text bg-bg-container text-sm hover:text-primary-text cursor-pointer"
-          >
-            {tt.forgotPassword}
-          </LocaleLink>
+          {forgotPasswordEnabled ? (
+            <LocaleLink
+              href={{
+                pathname: ROUTE_AUTH_FORGOT_PASSWORD,
+                query: email.trim()
+                  ? { [URLParamsKeys.email]: email.trim() }
+                  : undefined
+              }}
+              title={tt.forgotPasswordTitle}
+              className="text-secondary-text bg-bg-container text-sm hover:text-primary-text cursor-pointer"
+            >
+              {tt.forgotPassword}
+            </LocaleLink>
+          ) : null}
         </div>
         <input
           id="login-password"

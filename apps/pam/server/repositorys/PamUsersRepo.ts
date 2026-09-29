@@ -172,6 +172,18 @@ export class PamUsersRepo {
     return result.data as PamUserRow;
   }
 
+  public async setSessionsRevokedAt(
+    userId: string,
+    revokedAtIso: string
+  ): Promise<void> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const result = await supabase
+      .from(TABLE)
+      .update({ sessions_revoked_at: revokedAtIso })
+      .eq('id', userId);
+    this.supabaseBridge.throwIfError(result);
+  }
+
   public async deleteById(userId: string): Promise<void> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase.from(TABLE).delete().eq('id', userId);

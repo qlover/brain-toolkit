@@ -87,6 +87,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const brainSupabaseEnabled = publicConfig?.auth.brainSupabaseEnabled ?? false;
   const brainPkceEnabled = publicConfig?.auth.brainPkceEnabled ?? false;
   const googleEnabled = publicConfig?.auth.googleOauthEnabled ?? false;
+  const passwordResetEnabled = publicConfig?.auth.passwordResetEnabled ?? false;
 
   const tabBaseClass =
     'flex-1 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer border-b-2 outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-secondary-text disabled:hover:border-transparent';
@@ -278,7 +279,12 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
           </>
         ) : (
           <>
-            <LoginForm tt={tt} email={email} onEmailChange={setEmail} />
+            <LoginForm
+              tt={tt}
+              email={email}
+              onEmailChange={setEmail}
+              forgotPasswordEnabled={passwordResetEnabled}
+            />
             <p className="mt-4 text-center">
               <button
                 type="button"

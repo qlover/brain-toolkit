@@ -2,6 +2,8 @@ import type { LoginProviderType } from '@config/common';
 import type {
   PamBindEmailVerifyResult,
   PamChangePasswordInput,
+  PamForgotPasswordInput,
+  PamResetPasswordInput,
   PamSessionResponse,
   PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -89,4 +91,10 @@ export interface UserServiceGatewayInterface
   updateDisplayName(params: { display_name: string }): Promise<PamSessionUser>;
 
   changePassword(params: PamChangePasswordInput): Promise<void>;
+
+  forgotPassword(params: PamForgotPasswordInput): Promise<void>;
+
+  verifyResetToken(token: string): Promise<{ valid: boolean }>;
+
+  resetPassword(params: PamResetPasswordInput): Promise<void>;
 }

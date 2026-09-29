@@ -7,7 +7,8 @@ const defaultPublicConfig: PamPublicConfig = {
     phoneOtpProvider: 'memory',
     googleOauthEnabled: false,
     brainPkceEnabled: false,
-    brainSupabaseEnabled: false
+    brainSupabaseEnabled: false,
+    passwordResetEnabled: false
   }
 };
 

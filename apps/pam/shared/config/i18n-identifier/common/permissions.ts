@@ -119,6 +119,21 @@ export const PERMISSION_ADMIN_MEMORY_KV_WRITE =
   'permission:admin_memory_kv_write';
 
 /**
+ * @description List transactional mail send logs
+ * @localZh 查看邮件发送记录
+ * @localEn List mail send logs
+ */
+export const PERMISSION_ADMIN_MAIL_LOGS_READ =
+  'permission:admin_mail_logs_read';
+
+/**
+ * @description Send a test email via the configured mail provider
+ * @localZh 发送测试邮件
+ * @localEn Send test email
+ */
+export const PERMISSION_ADMIN_MAIL_TEST = 'permission:admin_mail_test';
+
+/**
  * @description List project collaborators
  * @localZh 查看项目协作者
  * @localEn List project collaborators

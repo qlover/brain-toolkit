@@ -8,6 +8,6 @@ export async function POST(req: NextRequest) {
 
   return await new NextApiServer(API_USER_PASSWORD, req).runWithJson(
     async ({ parameters: { IOC } }) =>
-      IOC(UserController).changePassword(requestBody)
+      IOC(UserController).changePassword(requestBody, req)
   );
 }

@@ -82,6 +82,60 @@ export const ADMIN_SETTINGS_SECTION_ALIYUN_SMS_DESC =
   'admin_settings:section__aliyun_sms_desc';
 
 /**
+ * @description Mail service section title
+ * @localZh 邮件服务
+ * @localEn Mail service
+ */
+export const ADMIN_SETTINGS_SECTION_MAIL = 'admin_settings:section__mail';
+
+/**
+ * @description Mail service section description
+ * @localZh 独立于 Supabase 的事务邮件通道（忘记密码、密码变更通知等）。当前支持 Resend。
+ * @localEn Transactional mail channel independent from Supabase (password reset, change notifications). Resend is supported.
+ */
+export const ADMIN_SETTINGS_SECTION_MAIL_DESC =
+  'admin_settings:section__mail_desc';
+
+/**
+ * @description Test mail recipient placeholder
+ * @localZh 测试收件邮箱
+ * @localEn Test recipient email
+ */
+export const ADMIN_SETTINGS_MAIL_TEST_PLACEHOLDER =
+  'admin_settings:mail__test_placeholder';
+
+/**
+ * @description Send test mail button
+ * @localZh 发送测试邮件
+ * @localEn Send test email
+ */
+export const ADMIN_SETTINGS_MAIL_TEST_SEND = 'admin_settings:mail__test_send';
+
+/**
+ * @description Test mail sending state
+ * @localZh 发送中…
+ * @localEn Sending…
+ */
+export const ADMIN_SETTINGS_MAIL_TEST_SENDING =
+  'admin_settings:mail__test_sending';
+
+/**
+ * @description Test mail sent
+ * @localZh 测试邮件已发送，请查收（也可在「邮件记录」查看）
+ * @localEn Test email sent. Check the inbox or the Mail logs page
+ */
+export const ADMIN_SETTINGS_MAIL_TEST_SUCCESS =
+  'admin_settings:mail__test_success';
+
+/**
+ * @description Hint: save settings before testing
+ * @localZh 请先保存邮件配置再发送测试邮件
+ * @localEn Save mail settings before sending a test email
+ */
+export const ADMIN_SETTINGS_MAIL_TEST_UNSAVED =
+  'admin_settings:mail__test_unsaved';
+
+/**
  * @description API / CORS section title
  * @localZh API 与 CORS
  * @localEn API & CORS
