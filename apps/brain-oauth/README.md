@@ -168,10 +168,7 @@ cp .env.template .env   # Windows 下手动复制亦可
 
 在 Supabase SQL Editor（或等价环境）按顺序执行：
 
-1. `makes/sql/001-base-tables.sql` — 基础表（`brain_oauth_request_logs`）
-2. `makes/sql/002-oauth-clients.sql` — OAuth 全表（含 `brain_oauth_users`、`brain_oauth_user_links`；**会 drop 重建**，仅适合新库/可清空的开发库）
-3. 已有旧库（integer id、缺 links）：执行 `makes/sql/003-migrate-existing.sql`
-4. 已有旧库（用户仍在 `auth.users`）：执行 `makes/sql/004-brain-oauth-users.sql`，把用户迁到 `brain_oauth_users`（保留 UUID）并新建 `brain_oauth_request_logs`；可重复执行
+执行 [`makes/sql/brain-oauth-schema.sql`](makes/sql/brain-oauth-schema.sql)。只操作 `brain_oauth_*` 表，不删表，可重复执行：新库直接建表；旧库原地升级（用户从 `auth.users` 迁到 `brain_oauth_users`，保留 UUID）。
 
 brain-oauth 有自己的用户表，**不使用 Supabase Auth**。登录成功后在 `brain_oauth_users` 创建/更新本地用户，session / `owner_user_id` 使用 **brain_oauth_users.id（UUID）**。上游 id 存在 `brain_oauth_user_links.external_user_id`，可选资料在 `links.extra` / `users.extra`。移植 fe-base next-oauth 时改 [`shared/config/oauthLocalUser.ts`](shared/config/oauthLocalUser.ts) 的 `provider` / 表名即可。
 
