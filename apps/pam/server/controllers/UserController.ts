@@ -18,6 +18,7 @@ import {
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import {
+  API_CHANGE_PASSWORD_INVALID,
   API_ENCRYPT_PASSWORD_FAILED,
   API_NOT_AUTHORIZED,
   API_OTP_SIGN_INVALID,
@@ -27,8 +28,10 @@ import { loginWithProviderSchema } from '@schemas/LoginSchema';
 import {
   pamBindEmailSendSchema,
   pamBindEmailVerifySchema,
+  pamChangePasswordSchema,
   pamDisplayNameUpdateSchema,
   type PamBindEmailVerifyResult,
+  type PamChangePasswordInput,
   type PamSessionResponse,
   type PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -40,6 +43,7 @@ import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLogin
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { OtpSendRateLimitService } from '@server/services/OtpSendRateLimitService';
 import { PamBindEmailService } from '@server/services/PamBindEmailService';
+import { PamPasswordService } from '@server/services/PamPasswordService';
 import { PamUserService } from '@server/services/PamUserService';
 import { getClientIpFromRequest } from '@server/utils/getClientIpFromRequest';
 import { ResultHandlerContext } from '@server/utils/NextApiHandler';
@@ -72,6 +76,8 @@ export class UserController {
     protected pamUserService: PamUserService,
     @inject(PamBindEmailService)
     protected pamBindEmailService: PamBindEmailService,
+    @inject(PamPasswordService)
+    protected pamPasswordService: PamPasswordService,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer) base64Serializer: Base64Serializer
   ) {
@@ -300,6 +306,37 @@ export class UserController {
     return this.pamUserService.toSessionUser(pam, {
       role: user.role,
       created_at: user.created_at ?? pam.created_at
+    });
+  }
+
+  public async changePassword(body: unknown): Promise<void> {
+    const user = await this.userService.getSessionUser();
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    const raw = body as Partial<PamChangePasswordInput> | null;
+    let decrypted: PamChangePasswordInput;
+    try {
+      decrypted = {
+        current_password: this.stringEncryptor.decrypt(
+          raw?.current_password ?? ''
+        ),
+        new_password: this.stringEncryptor.decrypt(raw?.new_password ?? '')
+      };
+    } catch {
+      throw new ExecutorError(
+        API_ENCRYPT_PASSWORD_FAILED,
+        'Encrypt password failed'
+      );
+    }
+    const parsed = pamChangePasswordSchema.safeParse(decrypted);
+    if (!parsed.success) {
+      throw new ExecutorError(API_CHANGE_PASSWORD_INVALID);
+    }
+    await this.pamPasswordService.changePassword({
+      userId: user.id,
+      currentPassword: parsed.data.current_password,
+      newPassword: parsed.data.new_password
     });
   }
 }

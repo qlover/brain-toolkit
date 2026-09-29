@@ -30,6 +30,7 @@ import { PamCliTokenService } from '@server/services/PamCliTokenService';
 import { PamSupabaseSessionMintService } from '@server/services/PamSupabaseSessionMintService';
 import { PamUserService } from '@server/services/PamUserService';
 import type { OAuthConsentDeviceContext } from '@server/utils/oauthConsentDevice';
+import { resolveSupabaseLoginPassword } from '@server/utils/supabaseLoginPassword';
 import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
 import type { LoggerInterface } from '@qlover/logger';
 import type {
@@ -49,11 +50,6 @@ const CONSENT_GRANT_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 function isConsentGrantActive(grant: OAuthConsentGrantRow): boolean {
   return new Date(grant.expires_at).getTime() > Date.now();
-}
-
-function shouldMd5Password(): boolean {
-  const flag = process.env.SUPABASE_LOGIN_PASSWORD_MD5?.trim().toLowerCase();
-  return flag === '1' || flag === 'true' || flag === 'yes';
 }
 
 function requireSupabaseRefreshToken(
@@ -157,7 +153,7 @@ export class SupabaseOAuthProvider
   }
 
   protected resolvePassword(password: string): string {
-    return shouldMd5Password() ? this.encryptor.encrypt(password) : password;
+    return resolveSupabaseLoginPassword(this.encryptor, password);
   }
 
   protected getErrorCode(error: unknown): string | undefined {

@@ -1,6 +1,7 @@
 import type { LoginProviderType } from '@config/common';
 import type {
   PamBindEmailVerifyResult,
+  PamChangePasswordInput,
   PamSessionResponse,
   PamSessionUser
 } from '@schemas/PamUserSchema';
@@ -86,4 +87,6 @@ export interface UserServiceGatewayInterface
   }): Promise<PamBindEmailVerifyResult>;
 
   updateDisplayName(params: { display_name: string }): Promise<PamSessionUser>;
+
+  changePassword(params: PamChangePasswordInput): Promise<void>;
 }

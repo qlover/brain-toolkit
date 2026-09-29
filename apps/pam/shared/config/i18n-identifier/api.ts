@@ -341,6 +341,36 @@ export const API_BIND_EMAIL_PHONE_CONFLICT = 'api:bind_email_phone_conflict';
 export const API_BIND_EMAIL_SAME_USER = 'api:bind_email_same_user';
 
 /**
+ * @description Change password requires a bound email (password login is email based)
+ * @localZh 请先绑定邮箱后再修改密码
+ * @localEn Bind an email before changing your password
+ */
+export const API_CHANGE_PASSWORD_EMAIL_REQUIRED =
+  'api:change_password_email_required';
+
+/**
+ * @description Current password is wrong (or the account never set a password)
+ * @localZh 当前密码不正确
+ * @localEn Current password is incorrect
+ */
+export const API_CHANGE_PASSWORD_CURRENT_INCORRECT =
+  'api:change_password_current_incorrect';
+
+/**
+ * @description New password does not meet the rules
+ * @localZh 新密码需为 6–50 位且不能包含空格
+ * @localEn New password must be 6–50 characters with no spaces
+ */
+export const API_CHANGE_PASSWORD_INVALID = 'api:change_password_invalid';
+
+/**
+ * @description New password equals the current one
+ * @localZh 新密码不能与当前密码相同
+ * @localEn New password must differ from the current password
+ */
+export const API_CHANGE_PASSWORD_SAME = 'api:change_password_same';
+
+/**
  * @description Admin cannot change their own system role
  * @localZh 不能修改自己的系统角色
  * @localEn You cannot change your own system role
