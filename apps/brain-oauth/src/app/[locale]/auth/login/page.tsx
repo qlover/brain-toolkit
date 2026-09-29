@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import { BrainFooter } from '@/uikit/components/brain/BrainFooter';
 import { BrainScene } from '@/uikit/components/brain/BrainScene';
 import { BrainLoginForm } from '@/uikit/components/BrainLoginForm';
-import { LocaleLink } from '@/uikit/components/LocaleLink';
+import { LoginOAuthContext } from '@/uikit/components/LoginOAuthContext';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { loginI18n, NS_PAGE_LOGIN } from '@config/i18n-mapping/loginI18n';
-import { ROUTE_DOCS_OAUTH, ROUTE_LOGIN } from '@config/route';
+import { ROUTE_LOGIN } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import {
   AppPageRouteParams,
@@ -63,17 +64,13 @@ export default async function LoginPage(props: PageParamsProps) {
           <h1 className="brain-title">{tt.heading}</h1>
           <p className="brain-desc">{tt.subtitle}</p>
           <Suspense>
+            <LoginOAuthContext tt={tt} />
             <BrainLoginForm tt={tt} />
           </Suspense>
         </div>
       </div>
 
-      <footer className="brain-foot">
-        <span>© {new Date().getFullYear()} Brain</span>
-        <LocaleLink title={tt.linkDocs} href={ROUTE_DOCS_OAUTH}>
-          {tt.linkDocs}
-        </LocaleLink>
-      </footer>
+      <BrainFooter />
     </AppRoutePage>
   );
 }

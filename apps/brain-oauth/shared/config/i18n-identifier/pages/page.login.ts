@@ -148,8 +148,14 @@ export const PAGE_LOGIN_PHONE_SEND_ERROR = 'page_login:phone__send_error';
 export const PAGE_LOGIN_PHONE_ERROR = 'page_login:phone__error';
 
 /**
- * @description Brain OAuth sign-in page — footer link to integration docs
- * @localZh 集成文档
- * @localEn Integration docs
+ * @description Brain OAuth sign-in card — app card subtitle when coming from an authorize request
+ * @localZh 请求使用你的 Brain 账号登录
+ * @localEn wants you to sign in with Brain
  */
-export const PAGE_LOGIN_LINK_DOCS = 'page_login:link__docs';
+export const PAGE_LOGIN_CTX_SUB = 'page_login:ctx__sub';
+/**
+ * @description Brain OAuth sign-in card — app card pill when coming from an authorize request
+ * @localZh 授权
+ * @localEn OAuth
+ */
+export const PAGE_LOGIN_CTX_PILL = 'page_login:ctx__pill';

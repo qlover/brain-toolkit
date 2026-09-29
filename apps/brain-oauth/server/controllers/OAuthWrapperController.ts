@@ -13,6 +13,7 @@ import { injectable, inject } from '@shared/container';
 import { API_OAUTH_WRAPPER_AUTH_FAILED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import type { OAuthAuthorizeClientPreview } from '@interfaces/UserServiceInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { OAuthUserService } from '@server/services/OAuthUserService';
@@ -92,6 +93,24 @@ export class OAuthWrapperController {
     | { ok: false; error: OAuthAuthorizeValidationError; redirectUrl?: string }
   > {
     return this.oauthProvider.resolveAuthorizePage(rawQuery);
+  }
+
+  /**
+   * Public app name / logo for the login page "signing in to <app>" card.
+   * Only answers for a fully valid authorize request, so it exposes nothing
+   * beyond what the consent page itself would show.
+   */
+  public async previewAuthorizeClient(
+    rawQuery: Record<string, string | string[] | undefined>
+  ): Promise<OAuthAuthorizeClientPreview | null> {
+    const result = await this.resolveAuthorizePage(rawQuery);
+    if (!result.ok) {
+      return null;
+    }
+    return {
+      clientName: result.data.clientName,
+      logoUri: result.data.logoUri ?? null
+    };
   }
 
   public async submitConsent(
