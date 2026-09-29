@@ -114,9 +114,10 @@ export class UserService
     return this.gateway.sendOtp(params);
   }
 
-  public async verifyOtp(
-    params: { phone: string; token: string } | { email: string; token: string }
-  ): Promise<SignOtpResult> {
+  public async verifyOtp(params: {
+    phone: string;
+    token: string;
+  }): Promise<UserSchema> {
     return this.gateway.verifyOtp(params);
   }
 }

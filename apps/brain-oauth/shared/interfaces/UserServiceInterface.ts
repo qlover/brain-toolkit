@@ -48,7 +48,6 @@ export interface UserServiceGatewayInterface
   submitOAuthConsent(payload: OAuthConsentPayload): Promise<string>;
 
   sendOtp(params: SignWithOtpParams): Promise<SignOtpResult>;
-  verifyOtp(
-    params: { phone: string; token: string } | { email: string; token: string }
-  ): Promise<SignOtpResult>;
+  /** Phone + code login; resolves with the signed-in user. */
+  verifyOtp(params: { phone: string; token: string }): Promise<UserSchema>;
 }

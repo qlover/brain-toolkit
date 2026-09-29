@@ -386,7 +386,7 @@ app.listen(4000, () => console.log('http://localhost:4000/login'));
 2. `node minimal-oauth-client.mjs` 启动示例客户端（4000）
 3. 浏览器打开 `http://localhost:4000/login` → 在 OAuth 站点登录并同意 → 回调 JSON 中含 `user.sub` / `user.email`
 
-未登录访问授权页时，OAuth 站点中间件会跳到 `/auth/login?redirect=...`，登录成功后回到授权页（`LoginForm` 读取 `redirect` 参数）。
+未登录访问授权页时，OAuth 站点中间件会跳到 `/auth/login?redirect=...`，登录成功后回到授权页（`BrainLoginForm` 读取 `redirect` 参数）。
 
 ### 前端（浏览器）只需做两件事
 

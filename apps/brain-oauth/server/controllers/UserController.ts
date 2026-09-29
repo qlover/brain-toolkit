@@ -15,6 +15,10 @@ import {
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import {
+  API_OTP_SEND_FAILED,
+  API_OTP_VERIFY_FAILED
+} from '@config/i18n-identifier/api';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { OAuthUserService } from '@server/services/OAuthUserService';
@@ -101,10 +105,16 @@ export class UserController {
     );
   }
 
-  public signWithOtp(body: unknown): Promise<SignOtpResult> {
+  public async signWithOtp(body: unknown): Promise<SignOtpResult> {
     const phoneResult = signWithPhoneOtpSchema.safeParse(body);
     if (phoneResult.success) {
-      return this.userService.signWithOtp(phoneResult.data);
+      try {
+        return await this.userService.signWithOtp({
+          phone: phoneResult.data.phone
+        });
+      } catch (error) {
+        throw new ExecutorError(API_OTP_SEND_FAILED, error as Error);
+      }
     }
 
     const emailResult = signWithEmailOtpSchema.safeParse(body);
@@ -115,17 +125,29 @@ export class UserController {
     throw new Error('OTP sign requires a valid phone or email!');
   }
 
-  public verifyOtp(body: unknown): Promise<SignOtpResult> {
+  /**
+   * Phone + code login; creates the session like {@link login}.
+   */
+  public async verifyOtp(
+    body: unknown,
+    serverLoginContext?: UserLoginContext
+  ): Promise<UserSchema> {
     const phoneResult = signWithPhoneOtpSchema.safeParse(body);
-    if (phoneResult.success && phoneResult.data.token) {
-      return this.userService.signWithOtp(phoneResult.data);
+    if (!phoneResult.success || !phoneResult.data.token) {
+      throw new Error('OTP verification requires a valid phone and token!');
     }
 
-    const emailResult = signWithEmailOtpSchema.safeParse(body);
-    if (emailResult.success && emailResult.data.token) {
-      return this.userService.signWithOtp(emailResult.data);
+    try {
+      return await this.userService.login({
+        phone: phoneResult.data.phone,
+        code: phoneResult.data.token,
+        loginContext: serverLoginContext
+      });
+    } catch (error) {
+      if (error instanceof ExecutorError) {
+        throw error;
+      }
+      throw new ExecutorError(API_OTP_VERIFY_FAILED, error as Error);
     }
-
-    throw new Error('OTP verification requires a valid phone/email and token!');
   }
 }
