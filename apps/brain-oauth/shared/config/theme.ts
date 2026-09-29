@@ -14,7 +14,7 @@ export const themeConfig = {
   defaultTheme: 'system',
   enableSystem: true,
   target: 'html',
-  supportedThemes: ['light', 'dark', 'pink'],
+  supportedThemes: ['light', 'dark'],
   storageKey: 'fe_theme',
   init: true,
   prioritizeStore: true,
@@ -80,16 +80,6 @@ export const brainThemeTokens = {
     'color-disc': '22 24 29',
     'color-sphere-hi': '74 78 87',
     'color-sphere-lo': '28 30 35',
-    'color-sphere-shadow': 'rgb(0 0 0 / 0.5)'
-  },
-  pink: {
-    'color-accent': '251 146 199',
-    'color-inverse': '252 232 240',
-    'color-on-inverse': '26 13 20',
-    'color-card': '37 16 27',
-    'color-disc': '48 21 34',
-    'color-sphere-hi': '92 45 66',
-    'color-sphere-lo': '37 16 27',
     'color-sphere-shadow': 'rgb(0 0 0 / 0.5)'
   }
 } satisfies Record<SupportedTheme, Record<string, string>>;

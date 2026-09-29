@@ -2,13 +2,11 @@
 
 import {
   Cog6ToothIcon as Cog6ToothOutlineIcon,
-  HeartIcon as HeartOutlineIcon,
   MoonIcon as MoonOutlineIcon,
   SunIcon as SunOutlineIcon
 } from '@heroicons/react/24/outline';
 import {
   Cog6ToothIcon as Cog6ToothSolidIcon,
-  HeartIcon as HeartSolidIcon,
   MoonIcon as MoonSolidIcon,
   SunIcon as SunSolidIcon
 } from '@heroicons/react/24/solid';
@@ -19,8 +17,7 @@ import { useEffect, useMemo } from 'react';
 import {
   COMMON_THEME_DARK,
   COMMON_THEME_DEFAULT,
-  COMMON_THEME_LIGHT,
-  COMMON_THEME_PINK
+  COMMON_THEME_LIGHT
 } from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
 import { themeConfig, type SupportedTheme } from '@config/theme';
@@ -63,13 +60,6 @@ const colorMap: Record<
     normalColor: 'text-[#a855f7]',
     Icon: MoonOutlineIcon,
     SelectedIcon: MoonSolidIcon
-  },
-  pink: {
-    i18nkey: COMMON_THEME_PINK,
-    selectedColor: 'text-[#f472b6]',
-    normalColor: 'text-[#ec4899]',
-    Icon: HeartOutlineIcon,
-    SelectedIcon: HeartSolidIcon
   }
 };
 

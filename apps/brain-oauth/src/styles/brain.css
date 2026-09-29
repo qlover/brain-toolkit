@@ -2,7 +2,7 @@
  * Brain visual primitives (login / authorize / home / developer).
  * Unlayered on purpose: must win over next-kit `variant="header"` classes,
  * which are composed with clsx (no tailwind-merge).
- * Colors only come from `--fe-color-*` so light / dark / pink all work.
+ * Colors only come from `--fe-color-*` so light and dark both work.
  */
 
 .brain-page {
