@@ -1,5 +1,16 @@
 # pamenv-cli
 
+## 1.10.0
+
+### Minor Changes
+
+#### 📝 Documentation
+
+- **pamenv:** 重构 README，PAM CLI 文档页直接渲染 README ([04261a7](https://github.com/qlover/brain-toolkit/commit/04261a7931e373569f92d3f1c6a6b1a5b30ef5e3)) ([#165](https://github.com/qlover/brain-toolkit/pull/165))
+  - README / README_EN 按使用场景重写：快速开始、命令一览、全局参数、环境与文件、init / fork / pull / push / remove、配置与语言、权限
+  - 去掉本地状态文件路径、文件权限、token 实现、文案生成流程、monorepo 构建等与使用无关的内容
+  - /docs/cli 页面改为构建时读取 pamenv README（zh → README.md，其余 → README_EN.md），用 react-markdown + remark-gfm 渲染，文档只维护一份
+
 ## 1.9.0
 
 ### Minor Changes
