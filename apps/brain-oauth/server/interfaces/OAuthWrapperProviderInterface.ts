@@ -4,8 +4,6 @@ import type {
   OAuthSessionPayload,
   OAuthOTPProviderInterface
 } from '@qlover/oauth-wrapper';
-import type { Session as SupabaseSession } from '@supabase/supabase-js';
-
 export interface OAuthWrapperProviderInterface
   extends OAuthProviderInterface<UserSchema, OAuthSessionPayload>,
     OAuthOTPProviderInterface {
@@ -27,10 +25,4 @@ export interface OAuthWrapperProviderInterface
   hasNeedLogged(): boolean;
 
   clearSession(): Promise<void>;
-
-  /**
-   * Establish app session from an external provider session (e.g. Supabase magic link callback).
-   * Providers that do not support this flow should throw.
-   */
-  loginWithSession?(session: SupabaseSession): Promise<void>;
 }

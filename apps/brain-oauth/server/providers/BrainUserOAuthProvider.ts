@@ -25,8 +25,8 @@ import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
+import { BrainOAuthUserStore } from '@server/services/BrainOAuthUserStore';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
-import { SupabaseOAuthIdentityStore } from '@server/services/SupabaseOAuthIdentityStore';
 import type { LoggerInterface } from '@qlover/logger';
 
 type BrainLoginLike = Record<string, unknown>;
@@ -144,7 +144,7 @@ export interface BrainUserSession
     Partial<BrainCredentials> {}
 
 /**
- * Brain User API as OAuth AS backend. Local identity is auth.users UUID via
+ * Brain User API as OAuth AS backend. Local identity is brain_oauth_users UUID via
  * IdentityStore hooks on OAuthWrapperService.
  */
 @injectable()
@@ -162,8 +162,8 @@ export class BrainUserOAuthProvider
     @inject(OAuthSessionService)
     oauthSession: OAuthSessionService,
     @inject(OAuthWrapperRepository) oauthRepo: OAuthWrapperRepositoryInterface,
-    @inject(SupabaseOAuthIdentityStore)
-    protected readonly identityStore: SupabaseOAuthIdentityStore
+    @inject(BrainOAuthUserStore)
+    protected readonly identityStore: BrainOAuthUserStore
   ) {
     const tokenEncryption = new TokenEncryption(config.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
