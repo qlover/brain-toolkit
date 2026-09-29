@@ -2,6 +2,10 @@ export const envPrefix = 'NEXT_PUBLIC_';
 
 export const browserGlobalsName = 'feGlobals';
 
+/** Source repository (header GitHub link). */
+export const githubRepoUrl =
+  'https://github.com/qlover/brain-toolkit/tree/master/apps/brain-oauth';
+
 export const loggerStyles = {
   fatal: { color: '#ff0000', fontWeight: 'bold' },
   error: { color: '#ff0000' },

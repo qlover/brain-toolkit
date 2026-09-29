@@ -20,7 +20,6 @@ export function AppRoutePageApp({
   showDeveloperButton,
   showHeaderLogo = true,
   showAuthButton,
-  authButtonLoginOnly,
   authButtonShowLogoutLabel,
   showHeaderNav = true,
   headerNav,
@@ -42,10 +41,7 @@ export function AppRoutePageApp({
       authSlot={
         showAuthButton ? (
           <Suspense key="auth-button">
-            <AuthButton
-              loginOnly={authButtonLoginOnly}
-              showLogoutLabel={authButtonShowLogoutLabel}
-            />
+            <AuthButton showLogoutLabel={authButtonShowLogoutLabel} />
           </Suspense>
         ) : undefined
       }

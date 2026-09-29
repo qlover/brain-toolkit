@@ -9,11 +9,6 @@ export * from './apiRoutes';
 export const ROUTE_LOGIN = '/auth/login' as const;
 
 /**
- * 注册页面路由地址
- */
-export const ROUTE_REGISTER = '/auth/register' as const;
-
-/**
  * Admin console home. Pages Router: `src/pages/[locale]/admin/index.tsx`.
  * Entry gate: middleware via LOGINED_PAGES (not a page-level client auth wrapper).
  */
@@ -68,12 +63,7 @@ export const OAUTH_MACHINE_ROUTES = [
 ] as const;
 
 /** Routes that are allowed without authentication (public routes). */
-export const AUTH_ROUTES = [
-  ROUTE_HOME,
-  ROUTE_LOGIN,
-  ROUTE_REGISTER,
-  ROUTE_DOCS_OAUTH
-] as const;
+export const AUTH_ROUTES = [ROUTE_HOME, ROUTE_LOGIN, ROUTE_DOCS_OAUTH] as const;
 
 /**
  * Pages that require a valid session cookie (middleware entry gate).

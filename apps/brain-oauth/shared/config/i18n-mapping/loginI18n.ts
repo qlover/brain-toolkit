@@ -42,17 +42,11 @@ export const loginI18n = Object.freeze({
   passwordRequired: i18nKeys.PAGE_LOGIN_PASSWORD_REQUIRED,
   password: i18nKeys.PAGE_LOGIN_PASSWORD,
   passwordTitle: i18nKeys.PAGE_LOGIN_PASSWORD2,
-  forgotPasswordTitle: i18nKeys.PAGE_LOGIN_FORGOT_PASSWORD2,
-  forgotPassword: i18nKeys.PAGE_LOGIN_FORGOT_PASSWORD,
   buttonTitle: i18nKeys.PAGE_LOGIN_BUTTON,
   button: i18nKeys.PAGE_LOGIN_BUTTON,
   continueWith: i18nKeys.PAGE_LOGIN_CONTINUE_WITH,
   withGoogleTitle: i18nKeys.PAGE_LOGIN_WITH_GOOGLE2,
   withGoogle: i18nKeys.PAGE_LOGIN_WITH_GOOGLE,
-  noAccount: i18nKeys.PAGE_LOGIN_NO_ACCOUNT,
-  createAccountTitle: i18nKeys.PAGE_LOGIN_CREATE_ACCOUNT2,
-  createAccount: i18nKeys.PAGE_LOGIN_CREATE_ACCOUNT,
-
   // login tab switch
   tabEmail: i18nKeys.PAGE_LOGIN_TAB_EMAIL,
   tabPhone: i18nKeys.PAGE_LOGIN_TAB_PHONE,

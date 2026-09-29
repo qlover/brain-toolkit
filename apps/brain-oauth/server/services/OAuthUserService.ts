@@ -21,8 +21,7 @@ import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrap
 import type {
   UserLoginContext,
   UserLoginParams,
-  UserServiceInterface,
-  UserServiceRegisterParams
+  UserServiceInterface
 } from '../interfaces/UserServiceInterface';
 import type { LoggerInterface } from '@qlover/logger';
 import type { UserSchema } from '@qlover/next-kit/common';
@@ -46,18 +45,6 @@ export class OAuthUserService
     @inject(I.OAuthWrapperProviderInterface)
     protected oauthProvider: OAuthWrapperProviderInterface
   ) {}
-
-  /**
-   * @override
-   */
-  public async register(
-    _params: UserServiceRegisterParams
-  ): Promise<UserSchema> {
-    throw new ExecutorError(
-      'registration_not_supported',
-      'Registration is handled by the upstream user provider'
-    );
-  }
 
   /**
    * @override

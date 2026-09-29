@@ -65,12 +65,6 @@ export const PAGE_LOGIN_WELCOME = 'page_login:welcome';
  */
 export const PAGE_LOGIN_SUBTITLE = 'page_login:subtitle';
 /**
- * @description Brain OAuth sign-in page forgot password text
- * @localZh 忘记密码？
- * @localEn Forgot your password?
- */
-export const PAGE_LOGIN_FORGOT_PASSWORD = 'page_login:forgot_password';
-/**
  * @description Brain OAuth sign-in page continue with text
  * @localZh 或继续使用
  * @localEn or continue with
@@ -82,18 +76,6 @@ export const PAGE_LOGIN_CONTINUE_WITH = 'page_login:continue_with';
  * @localEn Sign in with Google
  */
 export const PAGE_LOGIN_WITH_GOOGLE = 'page_login:with_google';
-/**
- * @description Brain OAuth sign-in page no account text
- * @localZh 还没有 Brain 账号？
- * @localEn Don't have a Brain account?
- */
-export const PAGE_LOGIN_NO_ACCOUNT = 'page_login:no_account';
-/**
- * @description Brain OAuth sign-in page create account link text
- * @localZh 立即注册
- * @localEn Register now
- */
-export const PAGE_LOGIN_CREATE_ACCOUNT = 'page_login:create_account';
 /**
  * @description Brain OAuth sign-in page email validation message
  * @localZh 请输入正确的邮箱！
@@ -139,12 +121,6 @@ export const PAGE_LOGIN_EMAIL2 = 'page_login:email2';
 export const PAGE_LOGIN_PASSWORD2 = 'page_login:password2';
 
 /**
- * @description Brain OAuth sign-in page forgot password link title
- * @localZh 重置密码
- * @localEn Reset password
- */
-export const PAGE_LOGIN_FORGOT_PASSWORD2 = 'page_login:forgot_password2';
-/**
  * @description Brain OAuth sign-in form — primary submit button (sign in to Brain account)
  * @localZh 登录 Brain 账号
  * @localEn Sign in to Brain account
@@ -156,12 +132,6 @@ export const PAGE_LOGIN_BUTTON2 = 'page_login:button2';
  * @localEn Sign in with Google account
  */
 export const PAGE_LOGIN_WITH_GOOGLE2 = 'page_login:with_google2';
-/**
- * @description Brain OAuth sign-in page create account link title
- * @localZh 注册 Brain 账号
- * @localEn Register Brain account
- */
-export const PAGE_LOGIN_CREATE_ACCOUNT2 = 'page_login:create_account2';
 
 /**
  * @description Brain OAuth sign-in page — phone login section title

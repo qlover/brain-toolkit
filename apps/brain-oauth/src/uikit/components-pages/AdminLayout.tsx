@@ -1,6 +1,15 @@
 'use client';
 
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BrainIcon } from '@brain-toolkit/next-app-kit/client';
+import {
+  Bars3Icon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  HomeIcon,
+  Squares2X2Icon,
+  UsersIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 import { ClientSeo } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { usePathname } from 'next/navigation';
@@ -14,6 +23,14 @@ import { ThemeSwitcher } from '../components-app/ThemeSwitcher';
 import { useUserAuth } from '../hook/useUserAuth';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 import type { PageI18nInterface } from '@qlover/next-kit/common';
+import type { ComponentType, SVGProps } from 'react';
+
+const NAV_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+  dashboard: HomeIcon,
+  users: UsersIcon,
+  'request-logs': ClipboardDocumentListIcon,
+  settings: Cog6ToothIcon
+};
 
 export interface AdminLayoutTT {
   title: string;
@@ -108,12 +125,23 @@ export function AdminLayout({
                 <Bars3Icon className="h-5 w-5" />
               )}
             </button>
-            <span
-              data-testid="admin-header-title"
-              className="text-lg font-semibold text-primary-text"
+            <LocaleLink
+              href="/admin"
+              locale={locale}
+              title={seoMetadata.title}
+              className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
             >
-              {seoMetadata.title}
-            </span>
+              <BrainIcon
+                data-testid="AdminLayoutBrainIcon"
+                className="h-6 w-auto shrink-0 text-primary-text"
+              />
+              <span
+                data-testid="admin-header-title"
+                className="text-lg font-semibold text-primary-text truncate"
+              >
+                {seoMetadata.title}
+              </span>
+            </LocaleLink>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             <LanguageSwitcher />
@@ -133,6 +161,7 @@ export function AdminLayout({
               const active = isActive(item);
               const href = linkHref(item);
               const label = t(item.i18nKey);
+              const Icon = NAV_ICONS[item.key] ?? Squares2X2Icon;
               return (
                 <LocaleLink
                   key={item.key}
@@ -140,18 +169,15 @@ export function AdminLayout({
                   locale={locale}
                   title={label}
                   className={clsx(
-                    'mx-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'mx-2 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                     'text-primary-text hover:text-primary-text-hover hover:bg-elevated',
+                    collapsed && 'justify-center',
                     active && 'bg-elevated text-primary-text-hover'
                   )}
                 >
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden />
                   {collapsed ? (
-                    <span
-                      className="flex justify-center truncate"
-                      title={label}
-                    >
-                      {label.slice(0, 1)}
-                    </span>
+                    <span className="sr-only">{label}</span>
                   ) : (
                     <span className="truncate">{label}</span>
                   )}

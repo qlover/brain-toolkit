@@ -73,30 +73,6 @@ export class UserController {
     });
   }
 
-  public async register(requestBody: LoginSchema): Promise<UserSchema> {
-    try {
-      if (requestBody.password) {
-        requestBody.password = this.stringEncryptor.decrypt(
-          requestBody.password
-        );
-      }
-    } catch {
-      throw new ExecutorError(
-        'encrypt_password_failed',
-        'Encrypt password failed'
-      );
-    }
-
-    const body = await this.loginValidator.getThrow(requestBody);
-
-    const user = await this.userService.register({
-      email: body.email,
-      password: body.password
-    });
-
-    return user;
-  }
-
   public async logout(serverContext?: UserLoginContext): Promise<void> {
     return await this.userService.logout(serverContext);
   }
