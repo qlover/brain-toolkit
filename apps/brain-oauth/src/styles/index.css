@@ -2,6 +2,7 @@
 /* @import './utils/base-root-10px.css'; */
 @import './utils/zIndex.css';
 @import './utils/scrollbar.css';
+@import './brain.css';
 
 button {
   cursor: pointer;

@@ -3,11 +3,7 @@ import {
   PasswordEncrypt,
   RequestLogsRepository
 } from '@qlover/next-kit/server';
-import {
-  SignOtpResult,
-  SignWithOtpSchema,
-  VerifyOtpParams
-} from '@qlover/oauth-wrapper';
+import { SignOtpResult, SignWithOtpSchema } from '@qlover/oauth-wrapper';
 import { isEmpty } from 'lodash';
 import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
@@ -52,7 +48,11 @@ export class OAuthUserService
   public async login(params: UserLoginParams): Promise<UserSchema> {
     await this.oauthProvider.login(params);
 
-    this.logger.info('OAuth wrapper login success', { email: params.email });
+    const loginMethod = params.phone ? 'phone_otp' : 'password';
+    this.logger.info('OAuth wrapper login success', {
+      method: loginMethod,
+      email: params.email
+    });
 
     const user = await this.oauthProvider.getUserSchema();
     if (!user) {
@@ -67,7 +67,7 @@ export class OAuthUserService
       auth_provider: 'oauth-wrapper',
       userAgent: params.loginContext?.userAgent ?? null,
       ipAddress: params.loginContext?.ipAddress ?? null,
-      login_method: 'password',
+      login_method: loginMethod,
       user_id: String(user.id)
     });
 
@@ -163,13 +163,12 @@ export class OAuthUserService
   }
 
   /**
+   * Sends the OTP. Verification goes through {@link login} with `phone` + `code`
+   * so the session and request log follow the same path as password login.
+   *
    * @override
    */
   public async signWithOtp(body: SignWithOtpSchema): Promise<SignOtpResult> {
-    if (body.token) {
-      return this.oauthProvider.verifyOtp(body as VerifyOtpParams);
-    }
-
     return this.oauthProvider.signWithOtp(body);
   }
 }

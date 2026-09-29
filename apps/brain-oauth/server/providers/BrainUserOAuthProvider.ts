@@ -38,6 +38,9 @@ import type { LoggerInterface } from '@qlover/logger';
 
 type BrainLoginLike = Record<string, unknown>;
 
+/** Seconds; used when Brain omits `OTP_EXP`. */
+const DEFAULT_OTP_EXPIRES = 60;
+
 /**
  * Next.js patches global `fetch` and can drop the body when given a `Request`
  * object (empty POST → Brain API "email/password required"). Unwrap to
@@ -240,10 +243,16 @@ export class BrainUserOAuthProvider
   protected async providerLogin(
     params: LoginParams
   ): Promise<WithUserSession<BrainUserSession, UserSchema>> {
-    const result = await this.gateway.login({
-      email: params.email!,
-      password: params.password!
-    });
+    const result =
+      params.phone && params.code
+        ? await this.gateway.verifySignOtp({
+            phone: params.phone,
+            otp: params.code
+          })
+        : await this.gateway.login({
+            email: params.email!,
+            password: params.password!
+          });
 
     this.logger.debug('BrainUser login', result);
 
@@ -416,15 +425,30 @@ export class BrainUserOAuthProvider
     if ('email' in params) {
       throw new Error('Email is not supported');
     }
-    this.logger.debug('BrainUser send phone otp', params);
-    throw new Error('Phone OTP is not implemented');
+    const result = await this.gateway.verifySignOtp({ phone: params.phone });
+    this.logger.debug('BrainUser send phone otp', result);
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return { expired: Number(result.data?.OTP_EXP) || DEFAULT_OTP_EXPIRES };
   }
 
   /**
+   * Logs in with phone + code and creates the session.
+   *
    * @override
    */
-  public async verifyOtp(_params: VerifyOtpParams): Promise<SignOtpResult> {
-    throw new Error('Phone OTP is not implemented');
+  public async verifyOtp(params: VerifyOtpParams): Promise<SignOtpResult> {
+    if (!('phone' in params)) {
+      throw new Error('Email is not supported');
+    }
+    if (!params.token) {
+      throw new Error('OTP code is required');
+    }
+    await this.login({ phone: params.phone, code: params.token });
+    return { expired: 0 };
   }
 
   /**

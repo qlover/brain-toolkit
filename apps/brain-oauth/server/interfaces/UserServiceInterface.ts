@@ -7,9 +7,12 @@ export type UserLoginContext = {
   ipAddress?: string | null;
 };
 
+/** Email + password, or phone + SMS code (Brain OTP). */
 export type UserLoginParams = {
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
+  phone?: string;
+  code?: string;
   authCode?: string;
   loginContext?: UserLoginContext;
 };

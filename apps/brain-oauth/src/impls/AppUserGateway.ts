@@ -180,14 +180,15 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   }
 
   /**
-   * Verify OTP code (step 2) — supports both phone and email
+   * Phone + code login (step 2); the server creates the session.
    * @override
    */
-  public async verifyOtp(
-    params: { phone: string; token: string } | { email: string; token: string }
-  ): Promise<SignOtpResult> {
+  public async verifyOtp(params: {
+    phone: string;
+    token: string;
+  }): Promise<UserSchema> {
     const response = await this.client.request<
-      NextKitApiResult<SignOtpResult>,
+      NextKitApiResult<UserSchema>,
       typeof params
     >({
       url: API_USER_OTP_VERIFY,

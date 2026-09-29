@@ -23,6 +23,11 @@ export interface RoutePageLayoutProps extends HTMLAttributes<HTMLDivElement> {
   authSlot?: ReactNode;
   languageSlot: ReactNode;
   trailingSlot?: ReactNode;
+  /**
+   * `brain`: transparent header with a large logo and round action buttons,
+   * used over `BrainScene` (login / authorize / home).
+   */
+  headerVariant?: 'default' | 'brain';
 }
 
 /**
@@ -41,12 +46,82 @@ export function RoutePageLayout({
   authSlot,
   languageSlot,
   trailingSlot,
+  headerVariant = 'default',
   ...props
 }: RoutePageLayoutProps) {
   const locale = useLocale();
   const headerSubtitle = tt.headerSubtitle;
   const showHeaderLeading =
     showHeaderLogo || headerNav != null || !!headerSubtitle;
+  const githubLink = (
+    <a
+      data-testid="BaseHeaderGithubLink"
+      data-variant="header"
+      href={githubRepoUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="GitHub"
+      title="GitHub"
+      className={buttonClassName({ variant: 'header' })}
+    >
+      <GithubIcon className="h-4 w-4" aria-hidden />
+    </a>
+  );
+
+  if (headerVariant === 'brain') {
+    return (
+      <div
+        data-testid="AppRoutePage"
+        {...props}
+        className={clsx(
+          'brain-page flex flex-col min-h-screen',
+          props.className
+        )}
+      >
+        {topSlot}
+        <header data-testid="BaseHeader" className="brain-header">
+          <div
+            className={clsx(
+              'flex items-center justify-between gap-4',
+              headerClassName
+            )}
+          >
+            {showHeaderLogo ? (
+              <LocaleLink
+                data-testid="BaseHeaderLogo"
+                title={tt.title}
+                aria-label={tt.title}
+                href={headerHref}
+                locale={locale}
+                className="brain-header-logo text-primary-text"
+              >
+                <BrainIcon data-testid="BaseHeaderBrainIcon" />
+              </LocaleLink>
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-2.5">
+              {authSlot}
+              {githubLink}
+              <ThemeSwitcher key="theme-switcher" />
+              {languageSlot}
+              {trailingSlot}
+            </div>
+          </div>
+        </header>
+
+        <main
+          {...mainProps}
+          className={clsx(
+            'brain-main flex flex-1 flex-col',
+            mainProps?.className
+          )}
+        >
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -104,17 +179,7 @@ export function RoutePageLayout({
           )}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
             {authSlot}
-            <a
-              data-testid="BaseHeaderGithubLink"
-              href={githubRepoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              title="GitHub"
-              className={buttonClassName({ variant: 'header' })}
-            >
-              <GithubIcon className="h-4 w-4" aria-hidden />
-            </a>
+            {githubLink}
             <ThemeSwitcher key="theme-switcher" />
             {languageSlot}
             {trailingSlot}
