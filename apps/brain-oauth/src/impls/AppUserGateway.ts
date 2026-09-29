@@ -2,6 +2,7 @@ import { HttpMethods, RequestExecutor } from '@qlover/fe-corekit';
 import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import {
+  API_OAUTH_AUTHORIZE_PREVIEW,
   API_OAUTH_CONSENT,
   API_OAUTH_VERIFY,
   API_USER_LOGIN,
@@ -15,6 +16,7 @@ import type {
   UserApiLogoutTransaction,
   UserSubmitOAuthConsentTransaction
 } from '@interfaces/AppUserApiInterface';
+import type { OAuthAuthorizeClientPreview } from '@interfaces/UserServiceInterface';
 import { UserServiceGatewayInterface } from '@interfaces/UserServiceInterface';
 import {
   AppApiConfig,
@@ -154,6 +156,23 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     }
 
     return response.data.data!.redirectUrl;
+  }
+
+  /**
+   * @override
+   */
+  public async previewAuthorizeClient(
+    query: string
+  ): Promise<OAuthAuthorizeClientPreview | null> {
+    const response = await this.client.request<
+      NextKitApiResult<OAuthAuthorizeClientPreview | null>,
+      undefined
+    >({
+      url: `${API_OAUTH_AUTHORIZE_PREVIEW}?${query}`,
+      method: HttpMethods.GET
+    });
+
+    return response.data.success ? (response.data.data ?? null) : null;
   }
 
   /**

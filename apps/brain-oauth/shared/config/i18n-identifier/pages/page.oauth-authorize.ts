@@ -41,8 +41,8 @@ export const PAGE_OAUTH_AUTHORIZE_HEADING = 'page_oauth_authorize:heading';
 
 /**
  * @description Brain OAuth consent page — card subtitle (third-party app requests Brain account access)
- * @localZh 正在请求访问您的账户
- * @localEn is requesting access to your account
+ * @localZh 正在请求访问你的 Brain 账户
+ * @localEn wants to access your Brain account
  */
 export const PAGE_OAUTH_AUTHORIZE_SUBTITLE = 'page_oauth_authorize:subtitle';
 
@@ -63,7 +63,7 @@ export const PAGE_OAUTH_AUTHORIZE_PERMISSIONS_LABEL =
 
 /**
  * @description openid scope description
- * @localZh 使用您的身份信息登录
+ * @localZh 使用你的身份信息登录
  * @localEn Authenticate using your identity
  */
 export const PAGE_OAUTH_AUTHORIZE_PERM_OPENID =
@@ -71,7 +71,7 @@ export const PAGE_OAUTH_AUTHORIZE_PERM_OPENID =
 
 /**
  * @description email scope description
- * @localZh 查看您的电子邮件地址
+ * @localZh 查看你的电子邮件地址
  * @localEn View your email address
  */
 export const PAGE_OAUTH_AUTHORIZE_PERM_EMAIL =
@@ -79,7 +79,7 @@ export const PAGE_OAUTH_AUTHORIZE_PERM_EMAIL =
 
 /**
  * @description profile scope description
- * @localZh 查看您的公开个人资料（姓名、头像）
+ * @localZh 查看你的公开个人资料（姓名、头像）
  * @localEn View your public profile (name, avatar)
  */
 export const PAGE_OAUTH_AUTHORIZE_PERM_PROFILE =
@@ -87,8 +87,8 @@ export const PAGE_OAUTH_AUTHORIZE_PERM_PROFILE =
 
 /**
  * @description Brain OAuth consent page — note that Brain password is never shared with OAuth clients
- * @localZh 该应用不会获取您的密码，仅访问您已同意的信息。
- * @localEn This app will never see your password.
+ * @localZh 该应用不会获取你的密码，仅访问你已同意的信息。
+ * @localEn This app never sees your password and only accesses what you approve.
  */
 export const PAGE_OAUTH_AUTHORIZE_EXTRA_PERM_NOTE =
   'page_oauth_authorize:extra__perm__note';
@@ -127,7 +127,7 @@ export const PAGE_OAUTH_AUTHORIZE_SWITCH_ACCOUNT =
 
 /**
  * @description Safety note
- * @localZh 仅授权您信任的应用。您可以随时在账号设置中撤销授权。
+ * @localZh 仅授权你信任的应用。你可以随时在账号设置中撤销授权。
  * @localEn Only authorize apps you trust. You can revoke access anytime.
  */
 export const PAGE_OAUTH_AUTHORIZE_SAFETY_NOTE =
@@ -157,19 +157,48 @@ export const PAGE_OAUTH_AUTHORIZE_OAUTH_BADGE =
 
 /**
  * @description Deny confirmation message
- * @localZh 拒绝授权将导致第三方应用无法访问您的信息。确定拒绝？
- * @localEn Denying will prevent the app from accessing your information. Continue?
+ * @localZh 拒绝授权后，该应用将无法访问你的信息。
+ * @localEn The app will not be able to access your information.
  */
 export const PAGE_OAUTH_AUTHORIZE_DENY_CONFIRM =
   'page_oauth_authorize:deny__confirm';
 
 /**
- * @description Brain OAuth consent page — footer tagline
- * @localZh 安全身份验证服务
- * @localEn Secure identity service
+ * @description Deny confirmation dialog title
+ * @localZh 确定拒绝？
+ * @localEn Deny access?
  */
-export const PAGE_OAUTH_AUTHORIZE_FOOTER_TAGLINE =
-  'page_oauth_authorize:footer__tagline';
+export const PAGE_OAUTH_AUTHORIZE_DENY_TITLE =
+  'page_oauth_authorize:deny__title';
+
+/**
+ * @description Deny confirmation dialog — cancel button
+ * @localZh 取消
+ * @localEn Cancel
+ */
+export const PAGE_OAUTH_AUTHORIZE_CANCEL = 'page_oauth_authorize:cancel';
+
+/**
+ * @description Toggle that reveals the permission note
+ * @localZh 详情
+ * @localEn Details
+ */
+export const PAGE_OAUTH_AUTHORIZE_DETAILS = 'page_oauth_authorize:details';
+
+/**
+ * @description Invalid authorize request card title
+ * @localZh 无法完成授权
+ * @localEn Unable to authorize
+ */
+export const PAGE_OAUTH_AUTHORIZE_INVALID_TITLE =
+  'page_oauth_authorize:invalid__title';
+
+/**
+ * @description Invalid authorize request card — back button
+ * @localZh 返回
+ * @localEn Go back
+ */
+export const PAGE_OAUTH_AUTHORIZE_BACK = 'page_oauth_authorize:back';
 
 /**
  * @description Generic invalid request error

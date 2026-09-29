@@ -2,6 +2,8 @@ import { buildSwitchAccountHref } from '@brain-toolkit/next-app-kit/shared';
 import { PageI18nProvider } from '@qlover/next-kit/client';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
+import { BrainFooter } from '@/uikit/components/brain/BrainFooter';
+import { BrainScene } from '@/uikit/components/brain/BrainScene';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { OAuthAuthorizeCard } from '@/uikit/components-app/oauth/OAuthAuthorizeCard';
 import { OAuthAuthorizeErrorCard } from '@/uikit/components-app/oauth/OAuthAuthorizeErrorCard';
@@ -78,45 +80,43 @@ export default async function OAuthAuthorizePage(
       <AppRoutePage
         data-testid="AppRoute-OAuthAuthorizePage"
         tt={{ title: tt.title, adminTitle: tt.adminTitle }}
+        headerVariant="brain"
+        showHeaderNav={false}
         showAuthButton={false}
       >
-        <div className="flex flex-1 flex-col">
-          <div className="flex flex-1 items-center justify-center px-4 py-12">
-            {authorizeResult.ok ? (
-              <Suspense>
-                <OAuthAuthorizeCard
-                  tt={tt}
-                  authorizeData={authorizeResult.data}
-                  account={
-                    account
-                      ? {
-                          name: account.name,
-                          email: account.email,
-                          phone: account.phone
-                        }
-                      : null
-                  }
-                  switchAccountHref={switchAccountHref}
-                />
-              </Suspense>
-            ) : (
-              <OAuthAuthorizeErrorCard
-                tt={tt}
-                message={resolveAuthorizeErrorMessage(
-                  tt,
-                  authorizeResult.error.errorKey,
-                  authorizeResult.error.message
-                )}
-              />
-            )}
-          </div>
+        <BrainScene />
 
-          <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border">
-            <p>
-              © 2026 {tt.title} · {tt.footerTagline}
-            </p>
-          </footer>
+        <div className="flex flex-1 items-center justify-center px-6 pt-8 pb-16">
+          {authorizeResult.ok ? (
+            <Suspense>
+              <OAuthAuthorizeCard
+                tt={tt}
+                authorizeData={authorizeResult.data}
+                account={
+                  account
+                    ? {
+                        name: account.name,
+                        email: account.email,
+                        phone: account.phone
+                      }
+                    : null
+                }
+                switchAccountHref={switchAccountHref}
+              />
+            </Suspense>
+          ) : (
+            <OAuthAuthorizeErrorCard
+              tt={tt}
+              message={resolveAuthorizeErrorMessage(
+                tt,
+                authorizeResult.error.errorKey,
+                authorizeResult.error.message
+              )}
+            />
+          )}
         </div>
+
+        <BrainFooter />
       </AppRoutePage>
     </PageI18nProvider>
   );

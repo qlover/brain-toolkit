@@ -1,6 +1,7 @@
 'use client';
 
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { BrainButton } from '@/uikit/components/brain/BrainButton';
 import type { OAuthAuthorizeI18nInterface } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 
 export interface OAuthAuthorizeErrorCardProps {
@@ -13,19 +14,23 @@ export function OAuthAuthorizeErrorCard({
   message
 }: OAuthAuthorizeErrorCardProps) {
   return (
-    <div
-      data-testid="OAuthAuthorizeErrorCard"
-      className="max-w-lg w-full bg-primary rounded-2xl shadow-xl border border-primary-border overflow-hidden p-6"
-    >
-      <div className="flex items-start gap-3">
-        <ExclamationCircleIcon className="h-6 w-6 text-red-500 mt-0.5 shrink-0" />
-        <div>
-          <h2 className="text-xl font-semibold text-primary-text mb-2">
-            {tt.heading}
-          </h2>
-          <p className="text-sm text-secondary-text">{message}</p>
-        </div>
+    <div data-testid="OAuthAuthorizeErrorCard" className="brain-card">
+      <h1 className="brain-title">{tt.invalidTitle}</h1>
+      <div
+        role="alert"
+        className="brain-note danger"
+        style={{ margin: '20px 0 28px' }}
+      >
+        <ExclamationTriangleIcon />
+        <span>{message}</span>
       </div>
+      <BrainButton
+        type="button"
+        variant="ghost"
+        onClick={() => window.history.back()}
+      >
+        {tt.back}
+      </BrainButton>
     </div>
   );
 }
