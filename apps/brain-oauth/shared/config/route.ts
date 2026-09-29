@@ -143,6 +143,11 @@ export function hasSessionPath(pathname: string): boolean {
   );
 }
 
+/** Prefixes a page route with the `[locale]` segment. */
+export function localePage(route: string, locale: string): string {
+  return `/${locale}${route}`;
+}
+
 export function apiClientDetail<T extends string>(
   clientId: T
 ): `/api/clients/${T}` {

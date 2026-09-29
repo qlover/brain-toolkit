@@ -36,7 +36,7 @@
     "@qlover/next-kit": "^1.4.0",
     "@qlover/tailwind-theme": "^0.3.0",
     "@qlover/slice-store-react": "^1.4.2",
-    "@qlover/oauth-wrapper": "0.10.0",
+    "@qlover/oauth-wrapper": "0.11.1",
     "@scalar/nextjs-api-reference": "^0.9.24",
     "@supabase/postgrest-js": "^2.87.1",
     "@supabase/supabase-js": "^2.57.2",

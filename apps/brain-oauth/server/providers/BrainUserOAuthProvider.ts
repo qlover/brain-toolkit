@@ -4,11 +4,17 @@ import {
   BrainUserGateway,
   createBrainUserOptions
 } from '@brain-toolkit/brain-user';
+import {
+  OAuthConsentGrantRepository,
+  OAuthConsentTrustService
+} from '@brain-toolkit/next-app-kit/server';
 import { LoginParams } from '@qlover/corekit-bridge';
 import { UserRole, type UserSchema } from '@qlover/next-kit/common';
-import { TokenEncryption } from '@qlover/next-kit/server';
+import { SupabaseRepo, TokenEncryption } from '@qlover/next-kit/server';
 import {
   OAuthWrapperService,
+  type OAuthAuthorizePageData,
+  type OAuthConsentResult,
   type OAuthIdentityStore,
   type OAuthLocalUserDraft,
   type OAuthSessionPayload,
@@ -27,6 +33,7 @@ import { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperPr
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { BrainOAuthUserStore } from '@server/services/BrainOAuthUserStore';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
+import type { OAuthConsentDeviceContext } from '@server/utils/oauthConsentDevice';
 import type { LoggerInterface } from '@qlover/logger';
 
 type BrainLoginLike = Record<string, unknown>;
@@ -123,12 +130,25 @@ function resolveBrainEmail(user: BrainUser): string {
   return '';
 }
 
+function resolveBrainName(user: BrainUser): string | undefined {
+  const name = typeof user.name === 'string' ? user.name.trim() : '';
+  if (name) {
+    return name;
+  }
+  const parts = [user.first_name, user.middle_name, user.last_name]
+    .map((part) => part?.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : undefined;
+}
+
 function brainUserToUserSchema(
   user: BrainUser & Partial<BrainCredentials>
 ): UserSchema {
+  const name = resolveBrainName(user);
   return {
     id: String(user.id),
     email: resolveBrainEmail(user),
+    ...(name ? { name } : {}),
     role: user.roles?.includes('admin') ? UserRole.ADMIN : UserRole.USER,
     credential_token:
       user.token ??
@@ -154,6 +174,7 @@ export class BrainUserOAuthProvider
 {
   protected gateway: BrainUserGateway;
   protected tokenEncryption: TokenEncryption;
+  protected consentTrust: OAuthConsentTrustService;
 
   constructor(
     @inject(I.Logger)
@@ -163,10 +184,18 @@ export class BrainUserOAuthProvider
     oauthSession: OAuthSessionService,
     @inject(OAuthWrapperRepository) oauthRepo: OAuthWrapperRepositoryInterface,
     @inject(BrainOAuthUserStore)
-    protected readonly identityStore: BrainOAuthUserStore
+    protected readonly identityStore: BrainOAuthUserStore,
+    @inject(SupabaseRepo) supabaseRepo: SupabaseRepo<unknown>
   ) {
     const tokenEncryption = new TokenEncryption(config.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
+    this.consentTrust = new OAuthConsentTrustService(
+      new OAuthConsentGrantRepository(
+        supabaseRepo,
+        oauthLocalUserConfig.consentGrantsTable
+      ),
+      logger
+    );
     const options = createBrainUserOptions({
       logger,
       fetcher: nextSafeFetch
@@ -199,7 +228,7 @@ export class BrainUserOAuthProvider
       provider: oauthLocalUserConfig.provider,
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
-      name: upstream.email || String(upstream.id),
+      name: upstream.name?.trim() || upstream.email || String(upstream.id),
       // UserRole.ADMIN is 0, so compare explicitly instead of truthiness.
       extra: { brainAdmin: upstream.role === UserRole.ADMIN }
     };
@@ -324,6 +353,53 @@ export class BrainUserOAuthProvider
       credential_token: session2.providerRefreshToken,
       created_at: new Date().toISOString()
     };
+  }
+
+  /**
+   * @override
+   */
+  public async getEmbeddedUser(): Promise<UserSchema | null> {
+    const payload = (await this.oauthSession.getSession()) as
+      | WithUserSession<BrainUserSession, UserSchema>
+      | null
+      | undefined;
+    return payload?.user?.id ? payload.user : null;
+  }
+
+  /**
+   * Persists "trust this app" for this device so later authorize requests
+   * skip consent until the grant expires.
+   *
+   * @override
+   */
+  public async processConsent(
+    requestBody: unknown,
+    device?: OAuthConsentDeviceContext
+  ): Promise<OAuthConsentResult> {
+    const result = await super.processConsent(requestBody);
+    const session = await this.getSession();
+    await this.consentTrust.remember(
+      String(session?.userId ?? '').trim(),
+      requestBody,
+      device
+    );
+    return result;
+  }
+
+  /**
+   * @override
+   */
+  public async tryAutoConsent(
+    data: OAuthAuthorizePageData,
+    device?: OAuthConsentDeviceContext
+  ): Promise<OAuthConsentResult | null> {
+    const session = await this.getSession();
+    return this.consentTrust.tryAuto(
+      String(session?.userId ?? '').trim(),
+      data,
+      device,
+      (body) => super.processConsent(body)
+    );
   }
 
   /**
