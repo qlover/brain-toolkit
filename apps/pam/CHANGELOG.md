@@ -1,5 +1,37 @@
 # pam
 
+## 2.12.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 个人中心支持修改密码 ([829e8f7](https://github.com/qlover/brain-toolkit/commit/829e8f77962f60fddebc8972ee22fa38ebdf44d2)) ([#164](https://github.com/qlover/brain-toolkit/pull/164))
+  - 新增 POST /api/user/password：校验当前密码后通过 Supabase 管理接口设置新密码，当前登录保持不变
+  - 密码前端加密传输，服务端解密并校验 6-50 位、无空格、不得与当前密码相同
+  - 抽出 resolveSupabaseLoginPassword，登录与改密共用 SUPABASE_LOGIN_PASSWORD_MD5 规则
+  - 个人中心新增修改密码卡片（已绑定邮箱时显示），输入时实时校验
+
+- **pam:** 信任此应用按设备持久化并自动跳过授权页 ([aaa9ed6](https://github.com/qlover/brain-toolkit/commit/aaa9ed6a23158273d3ea3c1e510b423f2e3a7a32)) ([#163](https://github.com/qlover/brain-toolkit/pull/163))
+  - 新增 pam_oauth_consent_grants（用户 + 应用 + 设备，90 天过期）及 patch
+  - 同意并勾选信任时写入 httpOnly 设备 cookie 与信任记录
+  - 授权页命中有效信任且 scope 被覆盖时直接签发 code 跳回应用
+  - 写入/更新信任失败只记日志，不阻断授权
+
+#### 🐞 Bug Fixes
+
+- **pam:** 修复授权页手机端按钮遮挡并展示当前授权账号 ([8629ed1](https://github.com/qlover/brain-toolkit/commit/8629ed16d4bc6a945964de8cb21631e627e221a6)) ([#163](https://github.com/qlover/brain-toolkit/pull/163))
+  - 手机端按钮纵向铺满且同意在上，去掉列布局下的 flex-1
+  - 卡片顶部显示当前授权账号，支持切换账号后回到本次授权
+  - 信任文案改为按设备、90 天有效
+
+#### 📝 Documentation
+
+- **pamenv:** 重构 README，PAM CLI 文档页直接渲染 README ([04261a7](https://github.com/qlover/brain-toolkit/commit/04261a7931e373569f92d3f1c6a6b1a5b30ef5e3)) ([#165](https://github.com/qlover/brain-toolkit/pull/165))
+  - README / README_EN 按使用场景重写：快速开始、命令一览、全局参数、环境与文件、init / fork / pull / push / remove、配置与语言、权限
+  - 去掉本地状态文件路径、文件权限、token 实现、文案生成流程、monorepo 构建等与使用无关的内容
+  - /docs/cli 页面改为构建时读取 pamenv README（zh → README.md，其余 → README_EN.md），用 react-markdown + remark-gfm 渲染，文档只维护一份
+
 ## 2.11.0
 
 ### Minor Changes
