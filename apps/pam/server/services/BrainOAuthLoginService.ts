@@ -14,6 +14,10 @@ import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { UserLoginContext } from '@server/interfaces/UserServiceInterface';
+import {
+  BRAIN_PLACEHOLDER_EMAIL_SUFFIX,
+  BrainIdentityLinkService
+} from '@server/services/BrainIdentityLinkService';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { PamUserService } from '@server/services/PamUserService';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
@@ -54,6 +58,7 @@ type BrainTokenResponse = {
 type BrainUserInfo = {
   sub?: string;
   email?: string;
+  email_verified?: boolean;
   preferred_username?: string;
   name?: string;
 };
@@ -93,7 +98,7 @@ function mapBrainUserToSchema(info: BrainUserInfo): UserSchema {
   const email =
     info.email?.trim() ||
     info.preferred_username?.trim() ||
-    (id ? `${id}@brain.oauth` : '');
+    (id ? `${id}${BRAIN_PLACEHOLDER_EMAIL_SUFFIX}` : '');
 
   if (!id || !email) {
     throw new ExecutorError(
@@ -130,7 +135,9 @@ export class BrainOAuthLoginService {
     @inject(SiteSettingsService)
     protected siteSettings: SiteSettingsService,
     @inject(PamUserService)
-    protected pamUserService: PamUserService
+    protected pamUserService: PamUserService,
+    @inject(BrainIdentityLinkService)
+    protected identityLink: BrainIdentityLinkService
   ) {}
 
   protected async getOAuthSettings(): Promise<{
@@ -330,12 +337,23 @@ export class BrainOAuthLoginService {
     const token = await this.exchangeCode(query.code.trim(), pkce.codeVerifier);
     const accessToken = token.access_token!;
     const userInfo = await this.fetchUserInfo(accessToken);
-    const user = mapBrainUserToSchema(userInfo);
-
-    await this.pamUserService.ensurePamUser({
-      id: user.id,
-      email: user.email
+    const brainUser = mapBrainUserToSchema(userInfo);
+    const identity = await this.identityLink.resolveUser({
+      sub: brainUser.id,
+      email: brainUser.email,
+      emailVerified: userInfo.email_verified === true
     });
+
+    // Existing accounts keep their PAM email; Brain email only seeds new ones.
+    const pamUser = await this.pamUserService.ensurePamUser({
+      id: identity.userId,
+      email: identity.created ? brainUser.email : null
+    });
+    const user: UserSchema = {
+      ...brainUser,
+      id: pamUser.id,
+      email: pamUser.email?.trim() || brainUser.email
+    };
 
     const sessionPayload: PamSessionPayload = {
       userId: user.id,
