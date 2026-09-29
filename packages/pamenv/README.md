@@ -1,117 +1,95 @@
 # pamenv-cli
 
-本地多环境 env 同步工具：用交互式 `init` 从当前目录创建 PAM 项目，再 `pull` / `push` 同步 `.env.<环境名>`。安装后命令名为 `pamenv`。
+`pamenv` 用来把 PAM 上的多环境变量同步到本地 `.env.<环境名>` 文件：`init` 从当前目录创建项目，之后用 `pull` / `push` 在本地与 PAM 之间来回同步。
 
 ## 安装
 
 ```bash
 npm install -g pamenv-cli
-# 或
+# 或临时使用
 npx pamenv --help
-
-# monorepo
-pnpm --filter pamenv-cli build
-pnpm --filter pamenv-cli link --global
-pnpm pamenv --help
 ```
 
-改 CLI 源码后需先 `pnpm --filter pamenv-cli build`，根目录的 `pnpm pamenv` 才会用到最新 `dist`。
-
-## 常用命令
+## 快速开始
 
 ```bash
-pnpm pamenv login
-pnpm pamenv --domain pam.localhost:3400 login          # 指定本地 PAM（裸主机 → http）
-pnpm pamenv --local --domain pam.localhost:3400 login  # 凭证写入 cwd/.pam（与 ~/.pam 隔离）
-pnpm pamenv --local projects
-pnpm pamenv projects
-pnpm pamenv init                       # 交互创建项目（扫描 cwd）
-pnpm pamenv init -o ./packages/app     # 指定工作目录
-pnpm pamenv fork <slug|id>             # Fork 可读项目（敏感值清空）
-pnpm pamenv fork <slug|id> -y          # 使用默认 slug/name，跳过确认
-pnpm pamenv pull <slug|id>             # → ./.env.<环境名>
-pnpm pamenv pull <slug|id> -e staging
-pnpm pamenv pull <slug|id> -e local --file .env   # 写入 ./.env 而非 .env.local
-pnpm pamenv pull <slug|id> -e staging -f   # 仅跳过「覆盖本地」冲突确认
-pnpm pamenv push <slug|id> -e staging      # diff + 同步冲突检测后回写
-pnpm pamenv push <slug|id> -e local --file .env   # 从 ./.env 读取并推到 local 环境
-pnpm pamenv push <slug|id> -e staging -y   # 跳过普通确认（不含冲突覆盖）
-pnpm pamenv push <slug|id> -e staging -f   # 仅跳过同步冲突覆盖确认（不等于 -y）
-pnpm pamenv push <slug|id> -e staging --show-values  # review 显示非敏感明文
-pnpm pamenv remove <slug|id> -e local   # 删除远端环境（需 admin；两次确认）
-pnpm pamenv remove <slug|id> -e local -y
-pnpm pamenv logout
-pnpm pamenv --local logout             # 清理 cwd/.pam 下的 token/sync
-```
-
-### 全局参数（本地联调）
-
-| 参数 | 含义 |
-| --- | --- |
-| `--url <url>` | 本进程覆盖 PAM origin（如 `http://pam.localhost:3400`） |
-| `--domain <host>` | 同 `--url`，可写裸主机；`localhost` / 私网默认 `http`，其余 `https` |
-| `--local` | 配置与 sync 使用 **当前目录**（或命令 `-o`）下的 `.pam/`，**不**回落 `~/.pam` 的 token |
-
-请勿同时传 `--url` 与 `--domain`。项目若使用 `--local`，建议把 `.pam/` 加入 `.gitignore`（内含 token）。
-
-### 持久配置与文案
-
-```bash
-pamenv --local config set domain pam.localhost:3400
-pamenv --local config set locale zh          # 锁定语言
-pamenv --local config list
-pamenv --local locales pull                 # 从 PAM 拉取 api 错误文案（仅内存）
-```
-
-| key | 作用 |
-| --- | --- |
-| `domain` / `url` | 持久化 `baseUrl` |
-| `locale` | `en` \| `zh`；`config set locale` 会**锁定**，之后浏览器登录不再改语言 |
-
-**两套文案来源：**
-
-1. **CLI 交互**（prompt / 状态行）：`src/i18n/identifier` + ts2locales → `dist/locales`，运行时本地加载；代码用常量（如 `PAMENV_CLI_LOGIN_WAITING`）。改文案后 `pnpm build` / `pnpm gen:locales`。
-2. **API 错误**（`api:*`）：命令开始时从 PAM `/api/locales/json?namespaces=api` 请求到内存，**不**写入 `config.json`。
-
-浏览器 device 登录（`/[locale]/pamenv/device`）会把页面语言回传 CLI；若未锁定则写入 `locale` 并重新请求 `api` 文案。
-
-API 失败时 CLI 会打印可读文案（若本次已拉到对应 key），并附带稳定错误码 `id`（如 `api:not_authorized`）与 `requestId`。
-
-本地文件：默认 `.env.<环境名>`（例如 `-e local` → `.env.local`）。可用 `--file .env` 指定其它路径（相对 `-o`/cwd 或绝对路径）。未传 `-e` 时用环境列表**第一个**（`remove` 除外，必须传 `-e`）。
-
----
-
-## `pamenv init`（交互创建）
-
-在项目目录登录后执行，类似 `npm init`：扫描当前目录给默认值，你确认后再创建。
-
-```bash
-pamenv login
+pamenv login                      # 浏览器授权登录
 cd your-project
-pamenv init
+pamenv init                       # 交互创建项目（按当前目录给默认值）
+pamenv push <slug> -e local       # 上传 .env.local
+pamenv pull <slug> -e staging     # 拉取到 .env.staging
 ```
 
-### 扫描默认值
+## 命令一览
 
-| 字段               | 有来源时                                                                              | 无来源时                         |
-| ------------------ | ------------------------------------------------------------------------------------- | -------------------------------- |
-| **name**           | `package.json` 的 `name`；否则 git `origin` 仓库名（URL 最后一段）                    | 手填                             |
-| **slug**           | 由你确认后的 **name** 转成 slug（小写、非字母数字 → `-`；`@scope/foo` → `scope-foo`） | 转不出则无默认，手填             |
-| **description**    | `package.json` 的 `description`                                                       | 可空                             |
-| **category**       | —                                                                                     | 选择 `后端` / `前端`（默认后端） |
-| **repository url** | git `origin`（尽量转成 https）                                                        | 可空                             |
-| **environments**   | 见下方                                                                                | 可能不创建任何环境               |
+| 命令 | 说明 |
+| --- | --- |
+| `pamenv login` | 打开浏览器完成授权登录 |
+| `pamenv logout` | 退出登录，并使当前 CLI 凭证失效 |
+| `pamenv projects` | 列出你可访问的项目 |
+| `pamenv init` | 交互创建项目 |
+| `pamenv fork <slug\|id>` | 把可读项目 fork 为自己的私有项目 |
+| `pamenv pull <slug\|id>` | 把远端环境变量写入本地文件 |
+| `pamenv push <slug\|id>` | 把本地文件的变量推送到远端 |
+| `pamenv remove <slug\|id> -e <env>` | 删除远端环境 |
+| `pamenv config set\|list` | 查看或修改 CLI 配置 |
 
-### 环境（environments）
+`<slug|id>` 可以是项目 slug，也可以是项目 id。
 
-1. 扫描 `.env`、`.env.local`、`.env.<xxx>`（非递归）。
-2. 命名规则：
-   - `.env` / `.env.local` → 环境名 **`local`**（合并为一个）
-   - `.env.xxx` → 环境名 **`xxx`**
-3. **有 env 文件**：多选要创建的环境 → 逐个确认 **env name** 与 **env url**。  
-   url 默认优先用 `package.json` 的 **homepage**（合法 http/https）；没有则需手填。API 要求 url 必须是合法 URL。
-4. **没有 env 文件**：不创建任何 environment（即使有 homepage 也不单独建 env）。
-5. `init` **只建项目与空环境**，不把本地变量上传；变量请随后：
+### 全局参数
+
+| 参数 | 说明 |
+| --- | --- |
+| `--url <url>` | 指定 PAM 地址，如 `https://pam.example.com` |
+| `--domain <host>` | 同 `--url`，可只写主机名；`localhost` 与内网地址默认 `http`，其余 `https` |
+| `--local` | 登录和同步状态只保存在当前目录的 `.pam/`，与全局登录隔离；请把 `.pam/` 加入 `.gitignore` |
+
+`--url` 与 `--domain` 不能同时使用。
+
+```bash
+pamenv --domain pam.localhost:3400 login
+pamenv --local --domain pam.localhost:3400 login
+pamenv --local projects
+```
+
+## 环境与本地文件
+
+- `-e <env>` 指定环境；`-e local` 对应 `.env.local`，`-e staging` 对应 `.env.staging`。
+- 不传 `-e` 时使用项目的第一个环境（`remove` 必须传 `-e`）。
+- `--file <path>` 改用其它文件，相对当前目录（或 `-o` 指定的目录），也可以写绝对路径。
+
+```bash
+pamenv pull <slug> -e local --file .env   # 写入 .env 而不是 .env.local
+pamenv push <slug> -e local --file .env   # 从 .env 读取并推到 local
+```
+
+## `pamenv init`
+
+登录后在项目目录执行，类似 `npm init`：先扫描当前目录给出默认值，你确认后才创建。
+
+```bash
+pamenv init
+pamenv init -o ./packages/app     # 指定工作目录
+```
+
+### 默认值来源
+
+| 字段 | 默认值 | 没有时 |
+| --- | --- | --- |
+| **name** | `package.json` 的 `name`，否则 git `origin` 仓库名 | 手动填写 |
+| **slug** | 由确认后的 name 转换（小写，`@scope/foo` → `scope-foo`） | 手动填写 |
+| **description** | `package.json` 的 `description` | 可留空 |
+| **category** | — | 选择「后端」或「前端」（默认后端） |
+| **repository url** | git `origin`（尽量转为 https） | 可留空 |
+| **environments** | 见下方 | 可能不创建环境 |
+
+### 环境识别
+
+1. 扫描当前目录下的 `.env`、`.env.local`、`.env.<xxx>`（不递归）。
+2. `.env` 与 `.env.local` 合并为环境 **`local`**；`.env.xxx` 对应环境 **`xxx`**。
+3. 有 env 文件时，多选要创建的环境，并逐个确认环境名和环境 URL。URL 默认取 `package.json` 的 `homepage`，没有则需要手填，必须是合法的 http/https 地址。
+4. 没有 env 文件时不创建环境。
+5. `init` 只创建项目和空环境，**不会上传变量**。创建后执行：
 
 ```bash
 pamenv push <slug> -e local
@@ -119,45 +97,50 @@ pamenv push <slug> -e local
 
 ### slug 规则
 
-- **全局唯一**（仅对未软删项目）：表上为「未删除行」唯一索引，软删后可复用同名 slug。
-- 若 slug 已存在且是你的项目：提示已存在，请直接 `push`。
-- 若被他人占用：换 slug 再 `init`。
-
-### 典型流程
-
-```text
-login → init（建项目 + 可选空 env）→ 编辑 .env.* → push → 之后 pull / push 往返
-```
-
----
+- slug 在所有未删除项目中唯一；项目删除后 slug 可以被再次使用。
+- slug 已存在且是你的项目：CLI 会提示直接 `push`。
+- slug 被他人占用：换一个 slug 重新 `init`。
 
 ## `pamenv fork`
 
-Fork 可读项目（自己的或公开的）为私有副本，**敏感变量值会清空**，结构与非敏感值会复制。
+把你可读的项目（自己的或公开的）复制为私有项目。结构和非敏感值会复制，**敏感变量的值会被清空**。
 
 ```bash
 pamenv fork <slug|id>
 pamenv fork <slug|id> --slug my-app-fork --name "My App (fork)"
-pamenv fork <slug|id> -y   # 默认 {slug}-fork / {name} (fork)，跳过确认
+pamenv fork <slug|id> -y          # 使用默认 slug / name 并跳过确认
 ```
 
-成功后提示用 `pamenv push <new-slug> -e <env>` 填入密钥。
+fork 后用 `pamenv push <new-slug> -e <env>` 填入密钥。
 
----
+## `pamenv pull` / `pamenv push`
 
-## Pull / Push 同步
+```bash
+pamenv pull <slug|id> -e staging
+pamenv pull <slug|id> -e staging -f            # 本地有改动时直接覆盖
+pamenv push <slug|id> -e staging
+pamenv push <slug|id> -e staging -y            # 跳过普通确认
+pamenv push <slug|id> -e staging -f            # 冲突时直接用本地覆盖远端
+pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量的值
+```
 
-`pull` 会尽量保留本地注释；语义内容不同时交互选择覆盖/取消。  
-`push` 用 `~/.pam/sync` 基线做三方比较（可发现 Web 端修改）：仅远端变更会提示先 pull；双方都改则冲突交互。
+- `pull` 会尽量保留本地文件里的注释；本地内容与远端不同时会询问是否覆盖。
+- `push` 前会展示差异。如果远端（例如有人在网页上）改过而本地没同步，会提示先 `pull`；两边都改过时会让你选择如何处理冲突。
+- 差异预览默认把所有值显示为 `*****`；`--show-values` 只显示非敏感变量的明文（名称像 `*_SECRET`、`*_TOKEN` 的也按敏感处理）。
+- `-e` 指定的环境不存在时，`push` 会先询问环境 URL，确认无误后再一并创建环境并写入变量。
 
-若 `-e` 指定的环境不存在，会先收集 URL 并走完本地校验/确认，**全部通过后再创建环境并写入变量**（不会先建空环境）。`-y` 时若能解析到默认 URL 则延后创建，否则报错。
+### `-y` 与 `-f`
 
-`pamenv remove <slug> -e <env>` 删除远端环境（需项目 **admin**，含 owner），默认两次确认；`-y` 跳过确认。成功后清除对应 `~/.pam/sync` 基线，不删除本地 `.env.*` 文件。
+| 参数 | 作用 |
+| --- | --- |
+| `-y` | 跳过普通确认：首次推送、最终推送、新变量的敏感标记、创建缺失环境、`remove` 确认 |
+| `-f` | 只跳过冲突覆盖确认 |
 
-**Flags：** `-f` 只跳过冲突覆盖确认；`-y` 跳过普通确认（无基线、最终 push、新 key 敏感标记、创建缺失环境、remove 确认）。两者互不隐含。  
-**Diff：** 默认全部打码为 `*****`；`--show-values` 仅明文显示非敏感（含名称启发式，如 `*_SECRET` / `*_TOKEN`）。
+两者互不包含，需要都跳过时一起传。
 
-敏感标记：`# pam:sensitive`（可紧挨变量上方，中间可夹注释）。变量上方注释与行尾注释会随文件保留。
+### 标记敏感变量
+
+在变量上方写 `# pam:sensitive`（中间可以隔着其它注释）。变量上方的注释和行尾注释都会保留。
 
 ```bash
 # DB password
@@ -166,17 +149,45 @@ API_TOKEN=xxxx # production only
 NORMAL=1
 ```
 
----
+## `pamenv remove`
 
-## 本地状态与权限
+删除远端环境，需要项目 **admin**（包括项目拥有者）权限，默认会确认两次。本地 `.env.*` 文件不会被删除。
 
-本地状态：`~/.pam/config.json`（登录，`0600`）+ `~/.pam/sync/<projectId>/<env>.json`（同步基线，`0600`）。  
-`pull` / `push` 写出的 `.env.<env>` 同样按 `0600` 落盘（POSIX；Windows 权限模型有限）。  
-`pamenv logout` 会先请求服务端吊销当前 Token，再清除本地 token，并删除整个 `~/.pam/sync`。  
-CLI Token 默认 **30d**（`PAM_CLI_TOKEN_EXPIRES_IN` 可改，如 `21d`），带 `jti` 登记，可服务端吊销；旧版无 `jti` 的 Token 将失效，需重新 `login`。
+```bash
+pamenv remove <slug|id> -e local
+pamenv remove <slug|id> -e local -y
+```
 
-项目团队权限（由 PAM 项目上的团队角色决定；团队管理在 Web）：
-- **owner / admin / member**：均可 `pull`、`push`（解密导出）
-- **admin**（含项目拥有者）：可 `remove` 环境
-- **member**：不可删除环境
-- 项目转让 / 删除仅 **项目拥有者（owner_id）**，请在 Web General 操作（CLI 无转让命令）
+## 配置与语言
+
+```bash
+pamenv config set domain pam.example.com   # 保存默认 PAM 地址
+pamenv config set locale zh                 # 固定界面语言（en | zh）
+pamenv config list
+pamenv locales pull                         # 刷新服务端错误提示文案
+```
+
+| key | 说明 |
+| --- | --- |
+| `domain` / `url` | 默认 PAM 地址，之后无需每次传 `--domain` |
+| `locale` | `en` 或 `zh`；设置后浏览器登录不会再改变 CLI 语言 |
+
+未设置 `locale` 时，CLI 会跟随浏览器登录页的语言。
+
+接口出错时，CLI 会显示可读的错误说明，并附带错误码（如 `api:not_authorized`）和 `requestId`，反馈问题时请一并提供。
+
+## 登录有效期
+
+- CLI 登录默认 **30 天**有效，过期后重新 `pamenv login`。
+- `pamenv logout` 会让当前凭证在服务端立即失效，并清除本地的登录和同步记录。
+
+## 项目权限
+
+权限由项目上的团队角色决定，团队在 PAM 网页端管理。
+
+| 角色 | pull / push | remove 环境 |
+| --- | --- | --- |
+| owner / admin | ✓ | ✓ |
+| member | ✓ | — |
+
+项目转让和删除只能由项目拥有者在网页端「General」中操作，CLI 不提供这两个命令。

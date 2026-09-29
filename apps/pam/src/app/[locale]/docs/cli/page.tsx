@@ -11,6 +11,7 @@ import {
   AppPageRouteParams,
   type PageParamsType
 } from '@server/render/AppPageRouteParams';
+import { readPamenvReadme } from '@server/render/readPamenvReadme';
 import type { Metadata } from 'next';
 
 export async function generateStaticParams() {
@@ -35,6 +36,9 @@ export default async function CliDocsPage(props: CliDocsPageProps) {
     cliDocsI18n,
     cliDocsI18nNamespace
   );
+  const markdown = await readPamenvReadme(
+    params.locale || i18nConfig.fallbackLng
+  );
 
   return (
     <PageI18nProvider value={tt}>
@@ -45,7 +49,7 @@ export default async function CliDocsPage(props: CliDocsPageProps) {
         authButtonLoginOnly
         mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
-        <CliDocsContent />
+        <CliDocsContent markdown={markdown} />
       </AppRoutePage>
     </PageI18nProvider>
   );
