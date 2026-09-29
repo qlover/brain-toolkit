@@ -9,7 +9,7 @@ import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { i18nConfig } from '@config/i18n';
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
 import { loginI18n, NS_PAGE_LOGIN } from '@config/i18n-mapping/loginI18n';
-import { ROUTE_DOCS_OAUTH, ROUTE_LOGIN } from '@config/route';
+import { ROUTE_CHANGELOG, ROUTE_DOCS_OAUTH, ROUTE_LOGIN } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import { type PageParamsType } from '@server/render/AppPageRouteParams';
 import { getI18nInterface, getLocale } from '@server/render/pageRouteParams';
@@ -133,7 +133,13 @@ export default async function LoginPage({ params }: PageParamsProps) {
               </LocaleLink>
             </p>
             <p className="text-tertiary-text mt-3 text-center font-mono text-[11px]">
-              {versionLabel}
+              <LocaleLink
+                title={versionLabel}
+                href={ROUTE_CHANGELOG}
+                className="transition-colors hover:text-brand"
+              >
+                {versionLabel}
+              </LocaleLink>
             </p>
           </div>
         </div>
