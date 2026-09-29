@@ -1,6 +1,8 @@
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { PageI18nProvider } from '@qlover/next-kit/client';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
+import { Suspense } from 'react';
 import { ForgotPasswordForm } from '@/uikit/components/ForgotPasswordForm';
 import { AuthCardPage } from '@/uikit/components-app/AuthCardPage';
 import { i18nConfig } from '@config/i18n';
@@ -54,7 +56,15 @@ export default async function ForgotPasswordPage({ params }: PageParamsProps) {
         heading={tt.forgotHeading}
         subtitle={tt.forgotSubtitle}
       >
-        <ForgotPasswordForm tt={tt} />
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-6">
+              <ArrowPathIcon className="h-5 w-5 animate-spin text-tertiary-text" />
+            </div>
+          }
+        >
+          <ForgotPasswordForm tt={tt} />
+        </Suspense>
       </AuthCardPage>
     </PageI18nProvider>
   );

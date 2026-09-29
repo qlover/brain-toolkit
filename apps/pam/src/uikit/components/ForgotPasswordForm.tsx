@@ -4,12 +4,14 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { useStrictEffect } from '@qlover/next-kit/client';
 import { isI18nKey, type TranslateFn } from '@qlover/next-kit/common';
+import { useSearchParams } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import { fetchPublicConfig } from '@/impls/fetchPublicConfig';
 import { LocaleLink } from '@/uikit/components/LocaleLink';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
+import { URLParamsKeys } from '@config/common';
 import type { PasswordResetI18nInterface } from '@config/i18n-mapping/passwordResetI18n';
 import { ROUTE_LOGIN } from '@config/route';
 
@@ -45,8 +47,10 @@ export function ForgotPasswordForm({ tt }: { tt: PasswordResetI18nInterface }) {
   const t = useWarnTranslations();
   const gateway = useIOC(AppUserGateway);
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [email, setEmail] = useState('');
-  const [touched, setTouched] = useState(false);
+  const initialEmail =
+    useSearchParams()?.get(URLParamsKeys.email)?.trim() ?? '';
+  const [email, setEmail] = useState(initialEmail);
+  const [touched, setTouched] = useState(Boolean(initialEmail));
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);

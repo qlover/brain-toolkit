@@ -88,7 +88,12 @@ export const URLParamsKeys = {
   /**
    * supabase 回调授权 id 的参数 key
    */
-  oAuthQueryAuthId: 'authorization_id'
+  oAuthQueryAuthId: 'authorization_id',
+
+  /**
+   * 登录页带到忘记密码页的邮箱参数 key
+   */
+  email: 'email'
 } as const;
 
 /**

@@ -146,7 +146,12 @@ export function LoginForm(props: {
           </label>
           {forgotPasswordEnabled ? (
             <LocaleLink
-              href={ROUTE_AUTH_FORGOT_PASSWORD}
+              href={{
+                pathname: ROUTE_AUTH_FORGOT_PASSWORD,
+                query: email.trim()
+                  ? { [URLParamsKeys.email]: email.trim() }
+                  : undefined
+              }}
               title={tt.forgotPasswordTitle}
               className="text-secondary-text bg-bg-container text-sm hover:text-primary-text cursor-pointer"
             >
