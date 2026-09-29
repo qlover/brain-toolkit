@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>授权确认页原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .section {
+      margin-top: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .perm-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .perm-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text);
+    }
+
+    .perm-list .ok {
+      flex: none;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--blue) 14%, transparent);
+      color: var(--blue);
+    }
+
+    .perm-list .ok svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .perm-more {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .perm-open .perm-more {
+      display: flex;
+    }
+
+    .perm-toggle span {
+      display: inline-flex;
+      transition: transform .2s;
+    }
+
+    .perm-open .perm-toggle span {
+      transform: rotate(180deg);
+    }
+
+    .trust {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text);
+    }
+
+    .trust .hint-icon {
+      display: inline-flex;
+      color: var(--text-light);
+      cursor: help;
+    }
+
+    .trust .hint-icon svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .actions .btn {
+      margin-top: 0;
+    }
+
+    .safety {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .invalid-card,
+    .state-invalid .consent {
+      display: none;
+    }
+
+    .state-invalid .invalid-card {
+      display: block;
+    }
+
+    .invalid-card .note {
+      margin: 8px 0 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <header class="hdr">
+        <a class="hdr-logo" href="#" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+        <div class="hdr-actions" data-std-actions></div>
+      </header>
+
+      <main class="scene">
+        <div class="bg"></div>
+
+        <!-- 授权确认 -->
+        <div class="card wide consent" id="consent">
+          <h1 class="title md" data-i18n="title"></h1>
+          <p class="desc" data-i18n="desc"></p>
+
+          <div class="inner-card">
+            <div class="app-row">
+              <div class="who">
+                <div class="avatar">D</div>
+                <div>
+                  <div class="app-name">Demo App</div>
+                  <div class="app-sub" data-i18n="appDesc"></div>
+                </div>
+              </div>
+              <span class="pill">OAuth 2.0</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head"><span class="label" data-i18n="accountLabel"></span></div>
+            <div class="app-row">
+              <div class="who">
+                <div class="avatar sm">R</div>
+                <div>
+                  <div class="app-name" style="font-size:14px">renjie.qin@brain.im</div>
+                  <div class="app-sub">+86 138 **** 0000</div>
+                </div>
+              </div>
+              <a href="login.html" class="link-btn blue" data-i18n="switchAccount"></a>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head">
+              <span class="label" data-i18n="permLabel"></span>
+              <button type="button" class="link-btn perm-toggle" id="permToggle"><em data-i18n="details" style="font-style:normal"></em><span data-icon="chevron"></span></button>
+            </div>
+            <ul class="perm-list">
+              <li><span class="ok" data-icon="check"></span><span data-i18n="permOpenid"></span></li>
+              <li><span class="ok" data-icon="check"></span><span data-i18n="permEmail"></span></li>
+              <li><span class="ok" data-icon="check"></span><span data-i18n="permProfile"></span></li>
+            </ul>
+            <div class="note perm-more" data-icon="lock"><span data-i18n="permNote"></span></div>
+          </div>
+
+          <div class="section">
+            <label class="trust">
+              <span class="switch"><input type="checkbox" id="trust"><span></span></span>
+              <span data-i18n="trust"></span>
+              <span class="hint-icon" data-icon="info" data-i18n-title="trustHint"></span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn ghost" id="denyBtn" data-i18n="deny"></button>
+            <button type="button" class="btn" id="allowBtn">
+              <span class="spinner"></span>
+              <span data-i18n="allow"></span>
+              <span class="arrow" data-icon="arrow"></span>
+            </button>
+          </div>
+
+          <p class="safety" data-i18n="safety"></p>
+        </div>
+
+        <!-- 授权参数无效 -->
+        <div class="card invalid-card">
+          <h1 class="title md" data-i18n="invalidTitle"></h1>
+          <div class="note danger" data-icon="warn"><span data-i18n="invalidMsg"></span></div>
+          <a class="btn ghost" href="#" data-i18n="back"></a>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="#" data-i18n="docs"></a></span>
+      </footer>
+
+      <!-- 拒绝确认 -->
+      <div class="modal" id="denyModal">
+        <div class="card">
+          <div class="modal-head">
+            <h2 class="title" data-i18n="denyTitle"></h2>
+            <button type="button" class="modal-close" data-close data-icon="close"></button>
+          </div>
+          <p class="desc" style="margin-top:0" data-i18n="denyConfirm"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn ghost sm auto" data-close data-i18n="cancel"></button>
+            <button type="button" class="btn danger sm auto" id="denyOk" data-i18n="deny"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>沿用登录页的整套视觉：圆盘 + 漂浮白球背景、近白色毛玻璃卡片、细体标题、黑色胶囊主按钮。卡片比登录页略宽（460px），信息从上到下按「谁在请求 → 以谁的身份 → 要什么权限 → 是否信任 → 决定」排列。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>应用信息</b>：白色小卡，应用 Logo（没有 Logo 时用首字母渐变头像）+ 名称 + 描述 + 蓝色「OAuth 2.0」胶囊，和登录页「授权跳转」状态的小卡是同一个组件。</li>
+        <li><b>当前授权账号</b>：小头像 + 邮箱 + 打码手机号，右侧蓝色文字「不是你？切换账号」，点击回到登录页。</li>
+        <li><b>请求的权限</b>：蓝色圆形对勾列表；右上角「详情」展开一条浅灰提示「该应用不会获取您的密码」。</li>
+        <li><b>信任此应用</b>：渐变开关，对应现有的按设备记住授权（90 天）；问号图标悬停显示说明。</li>
+        <li><b>按钮</b>：左「拒绝」（描边胶囊），右「同意授权」（黑色胶囊 + 箭头），等宽并排。</li>
+      </ul>
+
+      <h3>状态</h3>
+      <ul>
+        <li><b>加载中</b>：点同意后按钮显示转圈并禁用。</li>
+        <li><b>拒绝确认</b>：点拒绝弹出确认框，确认后带 <code>error=access_denied</code> 回到应用。</li>
+        <li><b>参数无效</b>：client_id 无效、回调地址未注册、scope 超范围等，整张卡换成错误卡片（红色提示条 + 返回按钮），不展示授权表单。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    const proto = BrainProto.init({
+      title: '授权确认页',
+      groups: [
+        { key: 'state', label: '状态', options: [['default', '默认'], ['loading', '加载中'], ['invalid', '参数无效']] }
+      ],
+      state: { state: 'default' },
+      i18n: {
+        zh: {
+          title: '授权请求',
+          desc: 'Demo App 正在请求访问你的 Brain 账户',
+          appDesc: '用于测试 OAuth 流程的演示应用',
+          accountLabel: '当前授权账号',
+          switchAccount: '不是你？切换账号',
+          permLabel: '请求的权限',
+          details: '详情',
+          permOpenid: '使用你的身份信息登录',
+          permEmail: '查看你的电子邮件地址',
+          permProfile: '查看你的公开个人资料（姓名、头像）',
+          permNote: '该应用不会获取你的密码，仅访问你已同意的信息。',
+          trust: '在此设备上信任此应用（90 天内不再询问）',
+          trustHint: '仅对当前浏览器生效：90 天内在此设备上将直接授权该应用；换设备、换浏览器或清除 Cookie 后需重新确认。',
+          deny: '拒绝',
+          allow: '同意授权',
+          safety: '仅授权你信任的应用，你可以随时在账号设置中撤销授权。',
+          denyTitle: '确定拒绝？',
+          denyConfirm: '拒绝授权后，Demo App 将无法访问你的信息。',
+          cancel: '取消',
+          invalidTitle: '无法完成授权',
+          invalidMsg: '回调地址未在该应用中注册，请联系应用开发者。',
+          back: '返回',
+          allowed: '演示：将生成授权码并跳转回应用',
+          denied: '演示：已拒绝，将带 error=access_denied 返回应用'
+        },
+        en: {
+          title: 'Authorization request',
+          desc: 'Demo App wants to access your Brain account',
+          appDesc: 'A demo app for testing the OAuth flow',
+          accountLabel: 'Signed in as',
+          switchAccount: 'Not you? Switch account',
+          permLabel: 'Requested permissions',
+          details: 'Details',
+          permOpenid: 'Sign you in with your identity',
+          permEmail: 'View your email address',
+          permProfile: 'View your public profile (name, avatar)',
+          permNote: 'This app never sees your password and only accesses what you approve.',
+          trust: 'Trust this app on this device (90 days)',
+          trustHint: 'Applies to this browser only. Switching devices or browsers, or clearing cookies, will ask again.',
+          deny: 'Deny',
+          allow: 'Allow',
+          safety: 'Only authorize apps you trust. You can revoke access anytime.',
+          denyTitle: 'Deny access?',
+          denyConfirm: 'Demo App will not be able to access your information.',
+          cancel: 'Cancel',
+          invalidTitle: 'Unable to authorize',
+          invalidMsg: 'The redirect URI is not registered for this app. Please contact the developer.',
+          back: 'Go back',
+          allowed: 'Demo: an authorization code would be issued and you would return to the app',
+          denied: 'Demo: denied, returning error=access_denied to the app'
+        }
+      },
+      onRender(state) {
+        document.getElementById('allowBtn').disabled = state.state === 'loading';
+        document.getElementById('denyBtn').disabled = state.state === 'loading';
+      }
+    });
+
+    const consent = document.getElementById('consent');
+    const denyModal = document.getElementById('denyModal');
+
+    document.getElementById('permToggle').addEventListener('click', () => {
+      consent.classList.toggle('perm-open');
+    });
+
+    document.getElementById('allowBtn').addEventListener('click', () => {
+      proto.state.state = 'loading';
+      proto.render();
+      setTimeout(() => {
+        proto.state.state = 'default';
+        proto.render();
+        proto.toast(proto.dict.allowed);
+      }, 900);
+    });
+
+    document.getElementById('denyBtn').addEventListener('click', () => denyModal.classList.add('open'));
+    denyModal.addEventListener('click', (event) => {
+      if (event.target === denyModal || event.target.closest('[data-close]')) denyModal.classList.remove('open');
+    });
+    document.getElementById('denyOk').addEventListener('click', () => {
+      denyModal.classList.remove('open');
+      proto.toast(proto.dict.denied);
+    });
+  </script>
+</body>
+
+</html>

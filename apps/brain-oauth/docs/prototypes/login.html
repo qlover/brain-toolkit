@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录页原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .oauth-ctx {
+      display: none;
+      margin: -8px 0 28px;
+    }
+
+    .state-oauth .oauth-ctx {
+      display: block;
+    }
+
+    .method-phone .panel-email,
+    .method-email .panel-phone {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <header class="hdr">
+        <a class="hdr-logo" href="#" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+        <div class="hdr-actions" data-std-actions></div>
+      </header>
+
+      <main class="scene">
+        <div class="bg"></div>
+
+        <form class="card" onsubmit="return fakeSubmit(event)">
+          <h1 class="title" data-i18n="title"></h1>
+          <p class="desc" data-i18n="desc"></p>
+
+          <div class="inner-card oauth-ctx">
+            <div class="app-row">
+              <div class="who">
+                <div class="avatar">D</div>
+                <div>
+                  <div class="app-name">Demo App</div>
+                  <div class="app-sub" data-i18n="ctxSub"></div>
+                </div>
+              </div>
+              <span class="pill" data-i18n="ctxPill"></span>
+            </div>
+          </div>
+
+          <div class="tabs" role="tablist">
+            <button type="button" class="tab" role="tab" data-method="phone" data-i18n="tabPhone"></button>
+            <button type="button" class="tab" role="tab" data-method="email" data-i18n="tabEmail"></button>
+          </div>
+
+          <div class="panel-phone">
+            <div class="field">
+              <label for="phone" data-i18n="phone"></label>
+              <div class="inline">
+                <button type="button" class="prefix">+86<span data-icon="chevron"></span></button>
+                <input id="phone" type="tel" value="138 0000 0000" autocomplete="tel-national">
+              </div>
+            </div>
+            <div class="field">
+              <label for="code" data-i18n="code"></label>
+              <div class="inline">
+                <input id="code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+                  data-i18n-placeholder="codePlaceholder">
+                <button type="button" class="send" id="sendCode"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-email">
+            <div class="field">
+              <label for="email" data-i18n="email"></label>
+              <input id="email" type="email" value="renjie.qin@brain.im" autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="password" data-i18n="password"></label>
+              <input id="password" type="password" value="password" autocomplete="current-password">
+            </div>
+          </div>
+
+          <p class="err" role="alert" id="err"></p>
+
+          <button class="btn" type="submit">
+            <span class="spinner"></span>
+            <span data-i18n="submit"></span>
+            <span class="arrow" data-icon="arrow"></span>
+          </button>
+        </form>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="#" data-i18n="docs"></a></span>
+      </footer>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>参考 Brain 官网最新视觉：冷调浅灰底、大圆盘托底、白色哑光立体球、近白色无边框卡片、细体大字、蓝紫色只做点缀。本页是整套原型的基准，共享样式在 <code>assets/brain.css</code>。</p>
+
+      <h3>配色</h3>
+      <div class="swatches">
+        <div class="swatch"><i style="background:#f3f4f7"></i>背景 #F3F4F7</div>
+        <div class="swatch"><i style="background:#e9eaef"></i>圆盘 #E9EAEF</div>
+        <div class="swatch"><i style="background:#2b2f3a"></i>正文 #2B2F3A</div>
+        <div class="swatch"><i style="background:#a3a9b6"></i>浅灰标签 #A3A9B6</div>
+        <div class="swatch"><i style="background:#111317"></i>主按钮 #111317</div>
+        <div class="swatch"><i style="background:#5b8def"></i>点缀蓝 #5B8DEF</div>
+        <div class="swatch"><i style="background:#7b2fe0"></i>点缀紫 #7B2FE0</div>
+      </div>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>logo</b>：左上角，黑色纯图形，不带文字（和官网一致）。</li>
+        <li><b>背景</b>：大圆盘 + 一小一大两颗主球（左上、右下对角）+ 四颗点缀小球。小球以 4–6 秒的周期各自漂浮，圆盘轻微呼吸缩放，并有一道柔光缓慢扫过；系统开启「减少动态效果」时全部停止。手机端只保留四颗球。</li>
+        <li><b>卡片</b>：近白色、24px 圆角、柔和阴影、轻微毛玻璃。标题用 300 细体大字，标签用浅灰小字。</li>
+        <li><b>登录方式</b>：卡片内「手机号 / 邮箱」两个文字标签切换，选中项下方是紫→蓝渐变短线，默认手机号。</li>
+        <li><b>手机号登录</b>：对应 Brain 的短信验证码登录（<code>auth/otp/login</code>）。区号前缀 + 手机号，验证码输入框右侧是蓝色「获取验证码」，点击后变成 60 秒倒计时，结束后显示「重新获取」。</li>
+        <li><b>邮箱登录</b>：邮箱 + 密码，对应 Brain 的密码登录。</li>
+        <li><b>输入框</b>：只有下划线，聚焦时下划线从左到右变成紫→蓝渐变。</li>
+        <li><b>主按钮</b>：黑色胶囊 + 箭头，暗色主题下反转为白色。按钮本身不位移，悬停时箭头左右轻推。</li>
+        <li><b>页脚</b>：只保留版权和集成文档链接；测试台需要登录后才能访问，不放在登录页。卡片里不放注册 / 忘记密码提示。</li>
+      </ul>
+
+      <h3>状态</h3>
+      <ul>
+        <li><b>加载中</b>：按钮箭头换成转圈并禁用，输入框变淡。</li>
+        <li><b>登录失败</b>：下划线变红，按钮上方显示红色提示；手机号方式提示验证码错误或过期，邮箱方式提示账号或密码错误。</li>
+        <li><b>授权跳转</b>：从第三方应用授权链接跳过来时，卡片里嵌一块白色小卡（应用头像 + 名称 + 蓝色胶囊）。</li>
+      </ul>
+
+      <h3>待定 <span class="tag">需要确认</span></h3>
+      <ul>
+        <li>默认登录方式用手机号还是邮箱；区号是否需要可选列表（目前只示意 +86）。</li>
+        <li>实现层面：brain-oauth 服务端的手机验证码登录目前还是占位（<code>BrainUserOAuthProvider.signWithOtp / verifyOtp</code> 直接报未实现），需要接上 brain-user 的 <code>verifySignOtp</code>。</li>
+        <li>现有紫色品牌色 #7C3AED 是否改为官网的点缀紫 #7B2FE0 + 点缀蓝 #5B8DEF。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    let countdown = 0;
+    let codeSent = false;
+    let timer = null;
+
+    const proto = BrainProto.init({
+      title: '登录页',
+      groups: [
+        { key: 'state', label: '状态', options: [['default', '默认'], ['loading', '加载中'], ['error', '登录失败'], ['oauth', '授权跳转']] },
+        { key: 'method', label: '方式', options: [['phone', '手机号'], ['email', '邮箱']] }
+      ],
+      state: { state: 'default', method: 'phone' },
+      i18n: {
+        zh: {
+          title: '登录',
+          desc: '使用你的 Brain 账号继续',
+          ctxSub: '请求使用你的 Brain 账号登录',
+          ctxPill: '授权',
+          tabPhone: '手机号',
+          tabEmail: '邮箱',
+          phone: '手机号',
+          code: '验证码',
+          codePlaceholder: '6 位数字',
+          sendCode: '获取验证码',
+          resend: '重新获取',
+          countdown: (n) => `${n}s 后重发`,
+          email: '邮箱',
+          password: '密码',
+          submit: '登录',
+          errorPhone: '验证码不正确或已过期，请重新获取。',
+          errorEmail: '邮箱或密码不正确，请重试。'
+        },
+        en: {
+          title: 'Sign in',
+          desc: 'Continue with your Brain account',
+          ctxSub: 'wants you to sign in with Brain',
+          ctxPill: 'OAuth',
+          tabPhone: 'Phone',
+          tabEmail: 'Email',
+          phone: 'Phone number',
+          code: 'Verification code',
+          codePlaceholder: '6 digits',
+          sendCode: 'Get code',
+          resend: 'Resend',
+          countdown: (n) => `Resend in ${n}s`,
+          email: 'Email',
+          password: 'Password',
+          submit: 'Sign in',
+          errorPhone: 'The code is incorrect or expired. Please get a new one.',
+          errorEmail: 'Incorrect email or password. Please try again.'
+        }
+      },
+      onRender(state, dict) {
+        document.getElementById('err').textContent =
+          state.method === 'phone' ? dict.errorPhone : dict.errorEmail;
+
+        const send = document.getElementById('sendCode');
+        send.disabled = countdown > 0 || state.state === 'loading';
+        send.textContent = countdown > 0 ? dict.countdown(countdown) : codeSent ? dict.resend : dict.sendCode;
+
+        document.querySelectorAll('.tab').forEach((tab) => {
+          const on = tab.dataset.method === state.method;
+          tab.classList.toggle('on', on);
+          tab.setAttribute('aria-selected', String(on));
+        });
+
+        document.querySelector('.btn').disabled = state.state === 'loading';
+      }
+    });
+
+    document.querySelectorAll('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        proto.state.method = tab.dataset.method;
+        if (proto.state.state === 'error') proto.state.state = 'default';
+        proto.render();
+      });
+    });
+
+    document.getElementById('sendCode').addEventListener('click', () => {
+      codeSent = true;
+      countdown = 60;
+      clearInterval(timer);
+      timer = setInterval(() => {
+        countdown -= 1;
+        if (countdown <= 0) clearInterval(timer);
+        proto.render();
+      }, 1000);
+      proto.render();
+      document.getElementById('code').focus();
+    });
+
+    function fakeSubmit(event) {
+      event.preventDefault();
+      proto.state.state = 'loading';
+      proto.render();
+      setTimeout(() => {
+        proto.state.state = 'error';
+        proto.render();
+      }, 1200);
+      return false;
+    }
+  </script>
+</body>
+
+</html>
