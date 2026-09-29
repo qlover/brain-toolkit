@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>开发者控制台原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .console-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .console-head .desc {
+      margin-bottom: 0;
+    }
+
+    .apps {
+      display: grid;
+      gap: 16px;
+    }
+
+    .app-card .app-row {
+      flex-wrap: wrap;
+    }
+
+    .app-card .app-name {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 17px;
+    }
+
+    .app-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px 16px;
+      align-items: center;
+      margin: 20px 0 0;
+      font-size: 13px;
+    }
+
+    .meta dt {
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .meta dd {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0;
+      min-width: 0;
+      color: var(--text-sub);
+    }
+
+    .empty {
+      display: none;
+      text-align: center;
+      padding: 64px 24px;
+    }
+
+    .empty .sphere-deco {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, var(--sphere-hi) 0%, var(--sphere-hi) 22%, var(--sphere-lo) 100%);
+      box-shadow: 12px 18px 30px var(--sphere-shadow);
+    }
+
+    .empty p {
+      margin: 0 0 24px;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text-sub);
+    }
+
+    .list-empty .apps {
+      display: none;
+    }
+
+    .list-empty .empty {
+      display: block;
+    }
+
+    .cred-row {
+      margin-bottom: 18px;
+    }
+
+    .cred-row .label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .cred-row .code {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .edit-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .edit-foot .left {
+      display: flex;
+      gap: 18px;
+    }
+
+    .type-fixed {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .is-mobile .meta {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .is-mobile .meta dd {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <div class="bg quiet"></div>
+
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="home.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+          <span class="hdr-sub" data-i18n="console"></span>
+          <nav class="hdr-nav">
+            <a href="#" data-i18n="navPlayground"></a>
+            <a href="#" data-i18n="navDocs"></a>
+          </nav>
+        </div>
+        <div class="hdr-actions" data-std-actions>
+          <span class="avatar">R</span>
+          <a class="round-btn" href="login.html" data-icon="logout" data-i18n-title="logout"></a>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="console-head">
+          <div>
+            <h1 class="title" data-i18n="title"></h1>
+            <p class="desc" data-i18n="desc"></p>
+          </div>
+          <button type="button" class="btn sm auto" id="createBtn" data-icon="plus"><span data-i18n="create"></span></button>
+        </div>
+
+        <div class="apps" id="apps"></div>
+
+        <div class="card flat empty">
+          <div class="sphere-deco"></div>
+          <p data-i18n="empty"></p>
+          <button type="button" class="btn sm auto" data-open-create data-icon="plus"><span data-i18n="create"></span></button>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="#" data-i18n="docs"></a></span>
+      </footer>
+
+      <!-- 创建 / 编辑应用 -->
+      <div class="modal" id="formModal">
+        <form class="card wide" id="appForm">
+          <div class="modal-head">
+            <h2 class="title" id="formTitle"></h2>
+            <button type="button" class="modal-close" data-close data-icon="close"></button>
+          </div>
+
+          <div class="field">
+            <label for="fName" data-i18n="fName"></label>
+            <input id="fName" data-i18n-placeholder="fNamePh">
+          </div>
+
+          <div class="field no-line only-create" style="margin-bottom:22px">
+            <label data-i18n="fType"></label>
+            <div class="choice">
+              <label><input type="radio" name="type" value="confidential" checked><span><span data-i18n="typeConfidential"></span><small data-i18n="typeConfidentialHint"></small></span></label>
+              <label><input type="radio" name="type" value="public"><span><span data-i18n="typePublic"></span><small data-i18n="typePublicHint"></small></span></label>
+            </div>
+          </div>
+
+          <div class="field no-line only-edit" style="margin-bottom:22px">
+            <label data-i18n="fType"></label>
+            <div class="type-fixed"><span class="pill purple" id="fTypeFixed"></span><span class="app-sub" data-i18n="typeFixed"></span></div>
+          </div>
+
+          <div class="field has-help">
+            <label for="fUris" data-i18n="fUris"></label>
+            <textarea id="fUris" rows="3" data-i18n-placeholder="fUrisPh"></textarea>
+            <div class="help" data-i18n="fUrisHelp"></div>
+          </div>
+
+          <div class="field">
+            <label for="fHome" data-i18n="fHome"></label>
+            <input id="fHome" type="url" placeholder="https://">
+          </div>
+
+          <div class="field has-help">
+            <label for="fLogo" data-i18n="fLogo"></label>
+            <input id="fLogo" type="url" placeholder="https://">
+            <div class="help" data-i18n="fLogoHelp"></div>
+          </div>
+
+          <div class="modal-actions only-create">
+            <button type="button" class="btn ghost sm auto" data-close data-i18n="cancel"></button>
+            <button type="submit" class="btn sm auto" data-i18n="createSubmit"></button>
+          </div>
+
+          <div class="edit-foot only-edit">
+            <div class="left">
+              <button type="button" class="link-btn" id="editRotate" data-icon="key"><span data-i18n="rotate"></span></button>
+              <button type="button" class="link-btn danger" id="editDelete" data-icon="trash"><span data-i18n="delete"></span></button>
+            </div>
+            <div class="modal-actions" style="margin-top:0">
+              <button type="button" class="btn ghost sm auto" data-close data-i18n="cancel"></button>
+              <button type="submit" class="btn sm auto" data-i18n="save"></button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- 凭据（仅显示一次） -->
+      <div class="modal" id="credModal">
+        <div class="card wide">
+          <div class="modal-head">
+            <h2 class="title" data-i18n="credTitle"></h2>
+          </div>
+          <div class="cred-row">
+            <span class="label">Client ID</span>
+            <span class="code"><span id="credId"></span><button type="button" data-copy="credId" data-icon="copy"></button></span>
+          </div>
+          <div class="cred-row" id="credSecretRow">
+            <span class="label">Client Secret</span>
+            <span class="code"><span id="credSecret"></span><button type="button" data-copy="credSecret" data-icon="copy"></button></span>
+          </div>
+          <div class="note warn" id="credWarn" data-icon="warn"><span data-i18n="credWarn"></span></div>
+          <div class="note" id="credPublic" data-icon="info"><span data-i18n="credPublic"></span></div>
+          <button type="button" class="btn" data-close style="margin-top:24px" data-i18n="credOk"></button>
+        </div>
+      </div>
+
+      <!-- 二次确认 -->
+      <div class="modal" id="confirmModal">
+        <div class="card">
+          <div class="modal-head">
+            <h2 class="title" id="confirmTitle"></h2>
+            <button type="button" class="modal-close" data-close data-icon="close"></button>
+          </div>
+          <p class="desc" style="margin-top:0" id="confirmText"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn ghost sm auto" data-close data-i18n="cancel"></button>
+            <button type="button" class="btn danger sm auto" id="confirmOk"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>控制台是信息密集页面，背景换成「安静版」：圆盘缩小移到右上角，只留三颗小球，内容区全部用近白色卡片承载。整体仍是细体标题 + 黑色胶囊主按钮 + 下划线输入框。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>页头</b>：logo + 竖线 +「开发者控制台」，导航「测试台 / 文档」；右侧 GitHub、主题、语言、头像、退出。</li>
+        <li><b>应用卡片</b>：头像 + 名称 +「已启用」绿色胶囊 + 客户端类型紫色胶囊；右侧文字按钮「编辑 / 重置密钥 / 删除」（公共客户端没有密钥，不显示重置）。下方两列信息：Client ID（带复制）、重定向 URI（每个一枚代码块）、创建时间。</li>
+        <li><b>创建应用</b>：弹窗内全部是下划线输入框；客户端类型用两张白色选择卡（机密客户端 / 公共客户端 PKCE），创建后不可更改。</li>
+        <li><b>凭据弹窗</b>：创建成功或重置密钥后弹出，Client Secret 只显示一次，下方橙色提示；公共客户端没有 secret，改为蓝色说明。</li>
+        <li><b>编辑应用</b>：客户端类型只读显示；左下角「重置密钥」「删除应用」，右下角「取消 / 保存修改」。</li>
+        <li><b>危险操作</b>：重置密钥、删除应用都弹出二次确认，确认按钮为红色胶囊。</li>
+      </ul>
+
+      <h3>状态</h3>
+      <ul>
+        <li><b>有应用 / 空列表</b>：空列表显示一颗白球 + 提示 +「创建新应用」。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    let apps = [
+      { id: 'demo_client_8f3k2', name: 'Demo App', type: 'confidential', uris: ['https://app.example.com/callback', 'http://localhost:3000/callback'], created: '2026-09-20' },
+      { id: 'brain_web_p91xq', name: 'Brain Web', type: 'public', uris: ['https://web.brain.im/oauth/callback'], created: '2026-09-12' }
+    ];
+    let editingId = null;
+    let confirmAction = null;
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const randomId = (len) => Array.from({ length: len }, () => Math.random().toString(36)[2]).join('');
+
+    const proto = BrainProto.init({
+      title: '开发者控制台',
+      groups: [
+        { key: 'list', label: '列表', options: [['filled', '有应用'], ['empty', '空列表']] }
+      ],
+      state: { list: 'filled' },
+      i18n: {
+        zh: {
+          console: '开发者控制台',
+          navPlayground: '测试台',
+          navDocs: '文档',
+          logout: '退出登录',
+          title: '我的 OAuth 应用',
+          desc: '管理你的 OAuth 2.0 应用，创建和管理客户端凭证',
+          create: '创建新应用',
+          empty: '还没有应用，创建一个开始接入 Brain 登录',
+          enabled: '已启用',
+          confidential: '机密客户端',
+          public: '公共客户端',
+          edit: '编辑',
+          rotate: '重置密钥',
+          delete: '删除',
+          redirectUris: '重定向 URI',
+          createdAt: '创建于',
+          createTitle: '创建 OAuth 应用',
+          editTitle: '编辑应用',
+          fName: '应用名称',
+          fNamePh: '例如：我的网站',
+          fType: '客户端类型',
+          typeConfidential: '机密客户端',
+          typeConfidentialHint: '有服务端，可以安全保存 client_secret',
+          typePublic: '公共客户端（PKCE）',
+          typePublicHint: 'SPA / 移动端，不生成 secret，必须使用 PKCE',
+          typeFixed: '创建后不可更改',
+          fUris: '重定向 URI',
+          fUrisPh: 'https://your-app.com/callback',
+          fUrisHelp: '每行一个；必须使用 HTTPS，本地开发可用 http://localhost。',
+          fHome: '应用主页 URL（可选）',
+          fLogo: 'Logo 图片 URL（可选）',
+          fLogoHelp: '将显示在授权页与应用列表。',
+          cancel: '取消',
+          createSubmit: '创建应用',
+          save: '保存修改',
+          credTitle: '新应用凭据',
+          credWarn: '此密钥仅显示一次，请立即保存到安全位置，关闭后无法再次查看。',
+          credPublic: '公共客户端不生成 client_secret，请在前端使用 PKCE 完成授权。',
+          credOk: '我已保存，关闭',
+          copied: '已复制',
+          saved: '应用信息已更新',
+          deleted: '应用已删除',
+          rotateTitle: '重置密钥？',
+          rotateText: '旧密钥会立即失效，使用旧密钥的服务需要同步更新。',
+          deleteTitle: '删除应用？',
+          deleteText: '删除后无法恢复，已授权的用户将无法继续通过该应用登录。',
+          needFields: '请填写应用名称和至少一个重定向 URI'
+        },
+        en: {
+          console: 'Developer console',
+          navPlayground: 'Playground',
+          navDocs: 'Docs',
+          logout: 'Sign out',
+          title: 'My OAuth apps',
+          desc: 'Manage your OAuth 2.0 apps and client credentials',
+          create: 'New app',
+          empty: 'No apps yet. Create one to start using Brain sign-in.',
+          enabled: 'Enabled',
+          confidential: 'Confidential',
+          public: 'Public',
+          edit: 'Edit',
+          rotate: 'Rotate secret',
+          delete: 'Delete',
+          redirectUris: 'Redirect URIs',
+          createdAt: 'Created',
+          createTitle: 'Create OAuth app',
+          editTitle: 'Edit app',
+          fName: 'App name',
+          fNamePh: 'e.g. My website',
+          fType: 'Client type',
+          typeConfidential: 'Confidential client',
+          typeConfidentialHint: 'Has a backend that can keep client_secret safe',
+          typePublic: 'Public client (PKCE)',
+          typePublicHint: 'SPA / mobile, no secret, PKCE required',
+          typeFixed: 'Cannot be changed after creation',
+          fUris: 'Redirect URIs',
+          fUrisPh: 'https://your-app.com/callback',
+          fUrisHelp: 'One per line. HTTPS required; http://localhost is allowed for development.',
+          fHome: 'Homepage URL (optional)',
+          fLogo: 'Logo URL (optional)',
+          fLogoHelp: 'Shown on the consent page and in the app list.',
+          cancel: 'Cancel',
+          createSubmit: 'Create app',
+          save: 'Save',
+          credTitle: 'App credentials',
+          credWarn: 'This secret is shown only once. Store it somewhere safe now.',
+          credPublic: 'Public clients have no client_secret. Use PKCE in your frontend.',
+          credOk: 'I have saved it',
+          copied: 'Copied',
+          saved: 'App updated',
+          deleted: 'App deleted',
+          rotateTitle: 'Rotate secret?',
+          rotateText: 'The old secret stops working immediately. Update any service that uses it.',
+          deleteTitle: 'Delete app?',
+          deleteText: 'This cannot be undone. Users will no longer be able to sign in through this app.',
+          needFields: 'Enter an app name and at least one redirect URI'
+        }
+      },
+      onRender(state, dict) {
+        const list = state.list === 'empty' ? [] : apps;
+        $('apps').innerHTML = list.map((app) => `
+          <div class="card flat app-card">
+            <div class="app-row">
+              <div class="who">
+                <div class="avatar">${esc(app.name[0].toUpperCase())}</div>
+                <div class="app-name">${esc(app.name)}
+                  <span class="pill ok">${dict.enabled}</span>
+                  <span class="pill purple">${dict[app.type]}</span>
+                </div>
+              </div>
+              <div class="app-actions">
+                <button type="button" class="link-btn" data-edit="${app.id}">${BrainProto.icon('edit')}${dict.edit}</button>
+                ${app.type === 'confidential' ? `<button type="button" class="link-btn" data-rotate="${app.id}">${BrainProto.icon('key')}${dict.rotate}</button>` : ''}
+                <button type="button" class="link-btn danger" data-delete="${app.id}">${BrainProto.icon('trash')}${dict.delete}</button>
+              </div>
+            </div>
+            <dl class="meta">
+              <dt>Client ID</dt>
+              <dd><span class="code">${app.id}<button type="button" data-copy-text="${app.id}">${BrainProto.icon('copy')}</button></span></dd>
+              <dt>${dict.redirectUris}</dt>
+              <dd>${app.uris.map((u) => `<span class="code">${esc(u)}</span>`).join('')}</dd>
+              <dt>${dict.createdAt}</dt>
+              <dd>${app.created}</dd>
+            </dl>
+          </div>`).join('');
+
+        $('formTitle').textContent = editingId ? dict.editTitle : dict.createTitle;
+        document.querySelectorAll('.only-create').forEach((el) => (el.style.display = editingId ? 'none' : ''));
+        document.querySelectorAll('.only-edit').forEach((el) => (el.style.display = editingId ? '' : 'none'));
+        const editing = apps.find((a) => a.id === editingId);
+        if (editing) {
+          $('fTypeFixed').textContent = dict[editing.type];
+          $('editRotate').style.display = editing.type === 'confidential' ? '' : 'none';
+        }
+      }
+    });
+
+    const open = (id) => $(id).classList.add('open');
+    const close = (id) => $(id).classList.remove('open');
+
+    document.querySelectorAll('.modal').forEach((modal) => {
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal || event.target.closest('[data-close]')) modal.classList.remove('open');
+      });
+    });
+
+    function openForm(app) {
+      editingId = app ? app.id : null;
+      $('fName').value = app ? app.name : '';
+      $('fUris').value = app ? app.uris.join('\n') : '';
+      $('fHome').value = '';
+      $('fLogo').value = '';
+      proto.render();
+      open('formModal');
+    }
+
+    function showCredentials(id, type) {
+      $('credId').textContent = id;
+      const isPublic = type === 'public';
+      $('credSecret').textContent = isPublic ? '' : randomId(32);
+      $('credSecretRow').style.display = isPublic ? 'none' : '';
+      $('credWarn').style.display = isPublic ? 'none' : '';
+      $('credPublic').style.display = isPublic ? '' : 'none';
+      open('credModal');
+    }
+
+    function askConfirm(titleKey, textKey, okKey, action) {
+      $('confirmTitle').textContent = proto.dict[titleKey];
+      $('confirmText').textContent = proto.dict[textKey];
+      $('confirmOk').textContent = proto.dict[okKey];
+      confirmAction = action;
+      open('confirmModal');
+    }
+
+    function askRotate(app) {
+      askConfirm('rotateTitle', 'rotateText', 'rotate', () => showCredentials(app.id, app.type));
+    }
+
+    function askDelete(app) {
+      askConfirm('deleteTitle', 'deleteText', 'delete', () => {
+        apps = apps.filter((a) => a.id !== app.id);
+        close('formModal');
+        proto.render();
+        proto.toast(proto.dict.deleted);
+      });
+    }
+
+    $('confirmOk').addEventListener('click', () => {
+      close('confirmModal');
+      if (confirmAction) confirmAction();
+    });
+
+    $('createBtn').addEventListener('click', () => openForm(null));
+    document.querySelector('[data-open-create]').addEventListener('click', () => openForm(null));
+
+    $('apps').addEventListener('click', (event) => {
+      const btn = event.target.closest('button');
+      if (!btn) return;
+      const find = (id) => apps.find((a) => a.id === id);
+      if (btn.dataset.edit) openForm(find(btn.dataset.edit));
+      if (btn.dataset.rotate) askRotate(find(btn.dataset.rotate));
+      if (btn.dataset.delete) askDelete(find(btn.dataset.delete));
+      if (btn.dataset.copyText) proto.toast(proto.dict.copied);
+    });
+
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', () => proto.toast(proto.dict.copied));
+    });
+
+    $('editRotate').addEventListener('click', () => askRotate(apps.find((a) => a.id === editingId)));
+    $('editDelete').addEventListener('click', () => askDelete(apps.find((a) => a.id === editingId)));
+
+    $('appForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = $('fName').value.trim();
+      const uris = $('fUris').value.split(/\r?\n/).map((u) => u.trim()).filter(Boolean);
+      if (!name || !uris.length) {
+        proto.toast(proto.dict.needFields);
+        return;
+      }
+
+      if (editingId) {
+        Object.assign(apps.find((a) => a.id === editingId), { name, uris });
+        close('formModal');
+        proto.render();
+        proto.toast(proto.dict.saved);
+        return;
+      }
+
+      const type = document.querySelector('input[name="type"]:checked').value;
+      const app = { id: `client_${randomId(10)}`, name, type, uris, created: new Date().toISOString().slice(0, 10) };
+      apps.unshift(app);
+      proto.state.list = 'filled';
+      close('formModal');
+      proto.render();
+      showCredentials(app.id, app.type);
+    });
+  </script>
+</body>
+
+</html>

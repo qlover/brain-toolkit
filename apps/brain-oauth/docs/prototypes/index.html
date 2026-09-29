@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>原型目录 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .protos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .proto-card {
+      display: block;
+      text-decoration: none;
+      transition: transform .2s;
+    }
+
+    .proto-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .proto-card .app-row {
+      margin-bottom: 12px;
+    }
+
+    .proto-card h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 400;
+    }
+
+    .proto-card p {
+      margin: 0 0 18px;
+      font-size: 13px;
+      font-weight: 300;
+      line-height: 1.7;
+      color: var(--text-sub);
+    }
+
+    .proto-card .link-btn {
+      color: var(--text);
+    }
+
+    .proto-card:hover .arrow {
+      animation: nudge .9s ease-in-out infinite;
+    }
+
+    .proto-card .arrow {
+      display: inline-flex;
+    }
+
+    .is-mobile .protos {
+      grid-template-columns: 1fr;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <div class="bg quiet"></div>
+
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="index.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+          <span class="hdr-sub" data-i18n="sub"></span>
+        </div>
+        <div class="hdr-actions" data-std-actions></div>
+      </header>
+
+      <main class="page">
+        <h1 class="title" data-i18n="title"></h1>
+        <p class="desc" data-i18n="desc"></p>
+
+        <div class="protos">
+          <a class="card flat proto-card" href="login.html">
+            <div class="app-row">
+              <h3 data-i18n="login"></h3>
+              <span class="pill ok" data-i18n="confirmed"></span>
+            </div>
+            <p data-i18n="loginDesc"></p>
+            <span class="link-btn"><span data-i18n="open"></span><span class="arrow" data-icon="arrow"></span></span>
+          </a>
+          <a class="card flat proto-card" href="authorize.html">
+            <div class="app-row">
+              <h3 data-i18n="authorize"></h3>
+              <span class="pill soft" data-i18n="pending"></span>
+            </div>
+            <p data-i18n="authorizeDesc"></p>
+            <span class="link-btn"><span data-i18n="open"></span><span class="arrow" data-icon="arrow"></span></span>
+          </a>
+          <a class="card flat proto-card" href="home.html">
+            <div class="app-row">
+              <h3 data-i18n="home"></h3>
+              <span class="pill soft" data-i18n="pending"></span>
+            </div>
+            <p data-i18n="homeDesc"></p>
+            <span class="link-btn"><span data-i18n="open"></span><span class="arrow" data-icon="arrow"></span></span>
+          </a>
+          <a class="card flat proto-card" href="developer.html">
+            <div class="app-row">
+              <h3 data-i18n="developer"></h3>
+              <span class="pill soft" data-i18n="pending"></span>
+            </div>
+            <p data-i18n="developerDesc"></p>
+            <span class="link-btn"><span data-i18n="open"></span><span class="arrow" data-icon="arrow"></span></span>
+          </a>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+      </footer>
+    </div>
+
+    <section class="notes">
+      <h2>目录结构</h2>
+      <ul>
+        <li><code>assets/brain.css</code>：共享样式——主题变量、圆盘和漂浮白球背景（完整版 / 安静版）、卡片、下划线输入框、标签切换、开关、按钮、代码块、提示条、弹窗、轻提示。</li>
+        <li><code>assets/brain.js</code>：共享脚本——顶部工具栏、主题 / 语言 / 视图切换（跨页面记住）、多语言、logo 和图标注入。页面只需要调用 <code>BrainProto.init()</code> 并写自己的结构和文案。</li>
+        <li>每个页面底部的「设计说明」记录构成、状态和待确认事项；确认后在这里把状态改成「已确认」。</li>
+      </ul>
+      <h3>约定</h3>
+      <ul>
+        <li>直接用浏览器静态打开即可，不需要启动服务。</li>
+        <li>新增页面：复制一个现有页面，替换 <code>main</code> 里的结构和 <code>i18n</code> 文案，再在本页加一张卡片。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    BrainProto.init({
+      title: '原型目录',
+      isIndex: true,
+      i18n: {
+        zh: {
+          sub: '原型',
+          title: '页面原型',
+          desc: '基于 Brain 官网视觉的 brain-oauth 页面原型',
+          confirmed: '已确认',
+          pending: '待确认',
+          open: '打开原型',
+          login: '登录页',
+          loginDesc: '手机号验证码 / 邮箱密码两种登录方式，包含加载、失败和授权跳转状态。',
+          authorize: '授权确认页',
+          authorizeDesc: '第三方应用请求授权：应用信息、当前账号、权限、按设备信任、拒绝确认和参数无效。',
+          home: '首页',
+          homeDesc: '首屏圆盘背景 + 大标题，特性卡片、主要端点和前往控制台。',
+          developer: '开发者控制台',
+          developerDesc: '应用列表、创建 / 编辑、一次性密钥、机密与公共（PKCE）客户端、危险操作确认。'
+        },
+        en: {
+          sub: 'Prototypes',
+          title: 'Page prototypes',
+          desc: 'brain-oauth page prototypes based on the Brain visual style',
+          confirmed: 'Confirmed',
+          pending: 'Pending',
+          open: 'Open',
+          login: 'Sign in',
+          loginDesc: 'Phone code or email password, with loading, error and OAuth redirect states.',
+          authorize: 'Consent',
+          authorizeDesc: 'App info, signed-in account, permissions, trust this device, deny confirmation and invalid request.',
+          home: 'Home',
+          homeDesc: 'Disc hero with a big title, feature cards, endpoints and a call to action.',
+          developer: 'Developer console',
+          developerDesc: 'App list, create / edit, one-time secret, confidential vs public (PKCE) clients, danger confirmations.'
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
