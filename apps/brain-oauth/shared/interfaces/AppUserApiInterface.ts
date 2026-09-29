@@ -7,11 +7,6 @@ export type UserApiLoginTransaction = AppApiTransaction<
   UserSchema
 >;
 
-export type UserApiRegisterTransaction = AppApiTransaction<
-  LoginSchema,
-  UserSchema
->;
-
 export type UserSubmitOAuthConsentTransaction = AppApiTransaction<
   OAuthConsentPayload,
   { redirectUrl: string }
@@ -23,10 +18,6 @@ export interface AppUserApiInterface {
   login(
     params: UserApiLoginTransaction['data']
   ): Promise<UserApiLoginTransaction['response']>;
-
-  register(
-    params: UserApiRegisterTransaction['data']
-  ): Promise<UserApiRegisterTransaction['response']>;
 
   logout(params?: unknown): Promise<UserApiLogoutTransaction['response']>;
 }

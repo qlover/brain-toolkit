@@ -39,12 +39,7 @@ export default async function Home({ params }: PageParamsProps) {
 
   return (
     <PageI18nProvider value={tt}>
-      <AppRoutePage
-        tt={tt}
-        showAuthButton
-        authButtonLoginOnly
-        authButtonShowLogoutLabel
-      >
+      <AppRoutePage tt={tt} showAuthButton authButtonShowLogoutLabel>
         <HomeHero tt={tt} />
         <HomeArchitecture tt={tt} />
         <HomeFeatures tt={tt} />

@@ -147,13 +147,6 @@ export const COMMON_USER_AUTH_FAILED_GO_TO_LOGIN =
   'common:userAuthFailed_goToLogin';
 
 /**
- * @description Brain OAuth portal — nav link to Brain user registration
- * @localZh 注册
- * @localEn Sign up
- */
-export const COMMON_AUTH_NAV_SIGN_UP = 'common:authNav_signUp';
-
-/**
  * @description Brain OAuth portal — signed-in Brain user activity / request logs nav
  * @localZh 请求日志
  * @localEn Activity logs

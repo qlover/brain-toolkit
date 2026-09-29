@@ -42,7 +42,6 @@ export default async function OAuthDocsPage(props: OAuthDocsPageProps) {
         data-testid="AppRoute-OAuthDocsPage"
         tt={{ title: tt.title, adminTitle: tt.adminTitle }}
         showAuthButton
-        authButtonLoginOnly
         mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
         <OAuthDocsContent />

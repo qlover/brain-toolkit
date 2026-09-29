@@ -4,13 +4,12 @@ import { useReturnTo } from '@qlover/next-kit/client';
 import { LoginValidator, type LoginSchema } from '@qlover/next-kit/common';
 import { type FormEvent, useMemo, useState } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
-import { LocaleLink } from '@/uikit/components/LocaleLink';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
-import { ROUTE_DEVELOPER_APPS, ROUTE_REGISTER } from '@config/route';
+import { ROUTE_DEVELOPER_APPS } from '@config/route';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 
 const inputClass =
@@ -133,21 +132,12 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
       </div>
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label
-            htmlFor="login-password"
-            className="text-primary-text text-sm font-medium"
-          >
-            {tt.password}
-          </label>
-          <LocaleLink
-            href="#"
-            title={tt.forgotPasswordTitle}
-            className="text-secondary-text bg-bg-container text-sm hover:text-primary-text cursor-pointer"
-          >
-            {tt.forgotPassword}
-          </LocaleLink>
-        </div>
+        <label
+          htmlFor="login-password"
+          className="text-primary-text mb-1.5 block text-sm font-medium"
+        >
+          {tt.password}
+        </label>
         <input
           id="login-password"
           type="password"
@@ -193,17 +183,6 @@ export function LoginForm(props: { tt: LoginI18nInterface }) {
           tt.button
         )}
       </button>
-
-      <p className="text-secondary-text mt-6 text-center text-sm">
-        {tt.noAccount}{' '}
-        <LocaleLink
-          href={ROUTE_REGISTER}
-          title={tt.createAccountTitle}
-          className="text-brand font-medium hover:underline"
-        >
-          {tt.createAccount}
-        </LocaleLink>
-      </p>
     </form>
   );
 }
