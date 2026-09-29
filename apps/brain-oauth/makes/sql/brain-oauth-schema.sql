@@ -337,3 +337,33 @@ create index if not exists idx_brain_oauth_request_logs_request_id
   on public.brain_oauth_request_logs (request_id);
 
 alter table public.brain_oauth_request_logs enable row level security;
+
+
+-- #############################################################################
+-- 4) Remembered OAuth consent ("trust this app on this device")
+-- #############################################################################
+
+create table if not exists public.brain_oauth_consent_grants (
+  user_id text not null,
+  client_id text not null references public.brain_oauth_clients (client_id) on delete cascade,
+  device_id text not null,
+  scopes text[] not null default '{}',
+  user_agent text,
+  expires_at timestamptz not null,
+  last_used_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, client_id, device_id)
+);
+
+create index if not exists idx_brain_oauth_consent_grants_user
+  on public.brain_oauth_consent_grants (user_id);
+
+comment on table public.brain_oauth_consent_grants is
+  'Per user + client + device consent; authorize skips the consent page while active.';
+comment on column public.brain_oauth_consent_grants.user_id is
+  'Local brain_oauth_users.id (UUID text).';
+comment on column public.brain_oauth_consent_grants.device_id is
+  'Random id from the httpOnly brain_oauth_device cookie.';
+
+alter table public.brain_oauth_consent_grants enable row level security;

@@ -11,6 +11,8 @@ export const oauthLocalUserConfig = {
   linksTable: 'brain_oauth_user_links',
   /** Server-only request / auth log table */
   requestLogsTable: 'brain_oauth_request_logs',
+  /** Remembered consent per user + client + device */
+  consentGrantsTable: 'brain_oauth_consent_grants',
   /**
    * Domain for synthetic emails when upstream has no email.
    * Final address: `{externalUserId}@{provider}.{syntheticEmailDomain}`

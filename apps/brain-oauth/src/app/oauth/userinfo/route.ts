@@ -60,11 +60,14 @@ export async function GET(req: NextRequest) {
 
       const user = await IOC(OAuthWrapperController).getUserInfo(accessToken!);
 
+      const phone = user.phone?.trim() || null;
       return {
         sub: String(user.id),
         email: user.email,
-        email_verified: true,
-        name: user.email
+        // Brain verifies email at registration.
+        email_verified: Boolean(user.email),
+        name: user.name?.trim() || user.email || String(user.id),
+        ...(phone ? { phone_number: phone } : {})
       };
     },
     {

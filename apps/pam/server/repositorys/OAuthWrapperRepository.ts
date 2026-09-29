@@ -21,27 +21,6 @@ type OAuthClientWriteInput = (OAuthClientCreate | OAuthClientUpdate) & {
   logo_uri?: string;
 };
 
-export type OAuthConsentGrantRow = {
-  user_id: string;
-  client_id: string;
-  device_id: string;
-  scopes: string[];
-  expires_at: string;
-  user_agent?: string | null;
-  last_used_at?: string | null;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type UpsertOAuthConsentGrantInput = {
-  user_id: string;
-  client_id: string;
-  device_id: string;
-  scopes: string[];
-  expires_at: string;
-  user_agent?: string | null;
-};
-
 @injectable()
 export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
   constructor(
@@ -276,70 +255,6 @@ export class OAuthWrapperRepository implements OAuthWrapperRepositoryInterface {
       .update({ revoked: true })
       .eq('user_id', userId)
       .eq('revoked', false);
-    this.supabaseBridge.throwIfError(result);
-  }
-
-  public async findConsentGrant(
-    userId: string,
-    clientId: string,
-    deviceId: string
-  ): Promise<OAuthConsentGrantRow | null> {
-    const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase
-      .from(PamTables.oauthConsentGrants)
-      .select('*')
-      .eq('user_id', userId)
-      .eq('client_id', clientId)
-      .eq('device_id', deviceId)
-      .maybeSingle();
-    this.supabaseBridge.throwIfError(result);
-    return (result.data as OAuthConsentGrantRow | null) ?? null;
-  }
-
-  public async upsertConsentGrant(
-    input: UpsertOAuthConsentGrantInput
-  ): Promise<void> {
-    const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase.from(PamTables.oauthConsentGrants).upsert(
-      {
-        ...input,
-        updated_at: new Date().toISOString()
-      },
-      { onConflict: 'user_id,client_id,device_id' }
-    );
-    this.supabaseBridge.throwIfError(result);
-  }
-
-  public async touchConsentGrant(
-    userId: string,
-    clientId: string,
-    deviceId: string
-  ): Promise<void> {
-    const supabase = await this.supabaseBridge.getAdminSupabase();
-    const result = await supabase
-      .from(PamTables.oauthConsentGrants)
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .eq('client_id', clientId)
-      .eq('device_id', deviceId);
-    this.supabaseBridge.throwIfError(result);
-  }
-
-  public async revokeConsentGrant(
-    userId: string,
-    clientId: string,
-    deviceId?: string
-  ): Promise<void> {
-    const supabase = await this.supabaseBridge.getAdminSupabase();
-    let query = supabase
-      .from(PamTables.oauthConsentGrants)
-      .delete()
-      .eq('user_id', userId)
-      .eq('client_id', clientId);
-    if (deviceId) {
-      query = query.eq('device_id', deviceId);
-    }
-    const result = await query;
     this.supabaseBridge.throwIfError(result);
   }
 

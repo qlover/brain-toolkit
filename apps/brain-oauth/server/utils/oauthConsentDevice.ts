@@ -2,7 +2,7 @@ import { createConsentDeviceCookie } from '@brain-toolkit/next-app-kit/server';
 
 export type { OAuthConsentDeviceContext } from '@brain-toolkit/next-app-kit/server';
 
-export const OAUTH_CONSENT_DEVICE_COOKIE = 'pam_oauth_device';
+export const OAUTH_CONSENT_DEVICE_COOKIE = 'brain_oauth_device';
 
 const consentDevice = createConsentDeviceCookie(OAUTH_CONSENT_DEVICE_COOKIE);
 

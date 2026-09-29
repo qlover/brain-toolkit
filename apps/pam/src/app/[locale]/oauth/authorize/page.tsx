@@ -1,3 +1,4 @@
+import { buildSwitchAccountHref } from '@brain-toolkit/next-app-kit/shared';
 import { PageI18nProvider } from '@qlover/next-kit/client';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
@@ -37,20 +38,6 @@ type OAuthAuthorizePageProps = PageParamsProps & {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function toSearchString(
-  query: Record<string, string | string[] | undefined>
-): string {
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (item !== undefined) {
-        search.append(key, item);
-      }
-    }
-  }
-  return search.toString();
-}
-
 export default async function OAuthAuthorizePage(
   props: OAuthAuthorizePageProps
 ) {
@@ -80,8 +67,11 @@ export default async function OAuthAuthorizePage(
     ? await oauthContoller.getAuthorizingUser()
     : null;
   const locale = pageParams.getLocale() as LocaleType;
-  const authorizePath = `${localePage(ROUTE_OAUTH_AUTHORIZE, locale)}?${toSearchString(rawSearchParams)}`;
-  const switchAccountHref = `${localePage(ROUTE_LOGIN, locale)}?redirect=${encodeURIComponent(authorizePath)}`;
+  const switchAccountHref = buildSwitchAccountHref(
+    localePage(ROUTE_LOGIN, locale),
+    localePage(ROUTE_OAUTH_AUTHORIZE, locale),
+    rawSearchParams
+  );
 
   return (
     <PageI18nProvider value={tt}>
