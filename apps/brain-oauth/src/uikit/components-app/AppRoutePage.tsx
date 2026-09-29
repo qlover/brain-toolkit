@@ -29,7 +29,14 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   headerNav?: ReactNode;
   /** Optional class for the header title text (e.g. brand color on console pages). */
   headerTitleClassName?: string;
-  /** See `RoutePageLayoutProps.headerVariant`. */
+  /**
+   * See `RoutePageLayoutProps.headerVariant`. In `brain` mode the auth slot is
+   * `BrainAuthActions` and there is no default nav (pass `headerNav`).
+   */
   headerVariant?: 'default' | 'brain';
+  /** `brain` header: console pill for signed-in users. */
+  authShowConsole?: boolean;
+  /** `brain` header: round logout button after the avatar. */
+  authShowLogout?: boolean;
   tt: AppRoutePageTT;
 }

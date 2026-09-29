@@ -166,3 +166,24 @@ export const COMMON_HEADER_NAV_ABOUT = 'common:header_nav__about';
  * @localEn Developer
  */
 export const COMMON_HEADER_NAV_DEVELOPER = 'common:header_nav__developer';
+
+/**
+ * @description Brain OAuth portal — header nav to the in-site OAuth playground
+ * @localZh 测试台
+ * @localEn Playground
+ */
+export const COMMON_HEADER_NAV_PLAYGROUND = 'common:header_nav__playground';
+
+/**
+ * @description Brain OAuth portal — header sign-in pill (guest)
+ * @localZh 登录
+ * @localEn Sign in
+ */
+export const COMMON_HEADER_LOGIN = 'common:header__login';
+
+/**
+ * @description Brain OAuth portal — header developer console pill (signed in)
+ * @localZh 控制台
+ * @localEn Console
+ */
+export const COMMON_HEADER_CONSOLE = 'common:header__console';

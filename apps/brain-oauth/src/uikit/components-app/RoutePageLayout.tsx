@@ -86,20 +86,26 @@ export function RoutePageLayout({
               headerClassName
             )}
           >
-            {showHeaderLogo ? (
-              <LocaleLink
-                data-testid="BaseHeaderLogo"
-                title={tt.title}
-                aria-label={tt.title}
-                href={headerHref}
-                locale={locale}
-                className="brain-header-logo text-primary-text"
-              >
-                <BrainIcon data-testid="BaseHeaderBrainIcon" />
-              </LocaleLink>
-            ) : (
-              <span />
-            )}
+            <div className="flex min-w-0 items-center gap-5">
+              {showHeaderLogo && (
+                <LocaleLink
+                  data-testid="BaseHeaderLogo"
+                  title={tt.title}
+                  aria-label={tt.title}
+                  href={headerHref}
+                  locale={locale}
+                  className="brain-header-logo text-primary-text"
+                >
+                  <BrainIcon data-testid="BaseHeaderBrainIcon" />
+                </LocaleLink>
+              )}
+              {headerSubtitle && (
+                <span className="brain-header-sub max-sm:hidden">
+                  {headerSubtitle}
+                </span>
+              )}
+              {headerNav}
+            </div>
             <div className="flex items-center gap-2.5">
               {authSlot}
               {githubLink}
