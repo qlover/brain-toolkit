@@ -6,5 +6,6 @@
 
 @source '../../shared/config/component.ts';
 @source '../../node_modules/@qlover/next-kit/dist';
+@source '../../node_modules/@brain-toolkit/next-app-kit/src/client';
 @source '../pages';
 @source '../uikit';

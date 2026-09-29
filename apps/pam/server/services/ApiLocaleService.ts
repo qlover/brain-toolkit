@@ -1,3 +1,4 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import {
   ResourceSearchParams,
   ResourceSearchResult,
@@ -10,7 +11,6 @@ import { inject, injectable } from '@shared/container';
 import { useApiLocales } from '@config/common';
 import type { LocaleType } from '@config/i18n';
 import { i18nConfig } from '@config/i18n';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import {
   LocalesRepository,
   UpsertResult

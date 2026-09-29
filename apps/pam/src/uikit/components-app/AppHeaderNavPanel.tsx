@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  headerIconButtonClass,
+  headerNavLinkActiveClass,
+  headerNavLinkClass
+} from '@brain-toolkit/next-app-kit/client';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
@@ -10,11 +15,6 @@ import {
   ROUTE_PROJECTS,
   ROUTE_TEAMS
 } from '@config/route';
-import {
-  headerIconButtonClass,
-  headerNavLinkActiveClass,
-  headerNavLinkClass
-} from './headerChrome';
 import type { ReactNode } from 'react';
 
 export interface AppHeaderNavTT {

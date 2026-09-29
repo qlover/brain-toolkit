@@ -1,8 +1,8 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import type { RoleKindType } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
 import { resetAdminSupabaseClient } from '@shared/supabase/server';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 
 const ROLES_TABLE = 'pam_roles';
 const PERMISSIONS_TABLE = 'pam_role_permissions';

@@ -1,5 +1,6 @@
 'use client';
 
+import { headerIconButtonClass } from '@brain-toolkit/next-app-kit/client';
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import {
   Cog6ToothIcon as Cog6ToothOutlineIcon,
@@ -25,7 +26,6 @@ import {
 } from '@config/i18n-identifier/common/common';
 import { I } from '@config/ioc-identifiter';
 import { themeConfig, type SupportedTheme } from '@config/theme';
-import { headerIconButtonClass } from './headerChrome';
 import { useIOC } from '../hook/useIOC';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 

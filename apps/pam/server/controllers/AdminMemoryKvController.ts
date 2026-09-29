@@ -1,3 +1,4 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { inject, injectable } from '@shared/container';
 import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
@@ -6,7 +7,6 @@ import {
   type PamMemoryKvListResult,
   type PamMemoryKvPurgeResult
 } from '@schemas/PamMemoryKvSchema';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 
 @injectable()
 export class AdminMemoryKvController {

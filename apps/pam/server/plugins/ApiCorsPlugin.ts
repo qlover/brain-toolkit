@@ -1,3 +1,4 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import {
   apiCorsPreflightResponse,
   buildApiCorsHeaders
@@ -5,7 +6,6 @@ import {
 import { I } from '@config/ioc-identifiter';
 import type { PamServerIocMap } from '@server/BootstrapServer';
 import { ServerConfig } from '@server/ServerConfig';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import {
   PAM_RUNTIME_CORS_CACHE_KEY,
   SiteSettingsService

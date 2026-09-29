@@ -1,3 +1,4 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import {
@@ -23,7 +24,6 @@ import {
 } from '@schemas/PamSiteSettingsSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { SiteSettingsRepo } from '@server/repositorys/SiteSettingsRepo';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import {
   buildPamSiteSettingSeedRows,

@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  BrainIcon,
+  GithubIcon,
+  GoogleIcon
+} from '@brain-toolkit/next-app-kit/client';
 import { useStrictEffect } from '@qlover/next-kit/client';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -7,7 +12,6 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import { fetchPublicConfig } from '@/impls/fetchPublicConfig';
 import { EmailOTPForm } from '@/uikit/components/EmailOTPForm';
-import { BrainIcon, GithubIcon, GoogleIcon } from '@/uikit/components/icons';
 import { LoginForm } from '@/uikit/components/LoginForm';
 import { PhoneLoginForm } from '@/uikit/components/PhoneLoginForm';
 import type { LoginProviderType } from '@config/common';

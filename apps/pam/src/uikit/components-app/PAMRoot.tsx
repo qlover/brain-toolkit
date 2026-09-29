@@ -1,5 +1,6 @@
 'use client';
 
+import { ResponsiveModal } from '@brain-toolkit/next-app-kit/client';
 import { useMountedClient, useStore } from '@brain-toolkit/react-kit';
 import {
   ArrowPathIcon,
@@ -28,7 +29,6 @@ import { PAMForm, PAM_PROJECT_FORM_ID } from '../components/pam/PAMForm';
 import { PAMLoadMoreTrigger } from '../components/pam/PAMLoadMoreTrigger';
 import { PAMProjectList } from '../components/pam/PAMProjectList';
 import { PAMToolbar } from '../components/pam/PAMToolbar';
-import { ResponsiveModal } from '../components/ResponsiveModal';
 import { PermissionKey, useCan } from '../hook/useHasPermission';
 import { useIOC } from '../hook/useIOC';
 import { useUserAuth } from '../hook/useUserAuth';

@@ -1,5 +1,6 @@
 'use client';
 
+import { GithubIcon } from '@brain-toolkit/next-app-kit/client';
 import {
   Cog6ToothIcon,
   CommandLineIcon,
@@ -12,7 +13,6 @@ import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import type { AboutI18nInterface } from '@config/i18n-mapping/AboutI18n';
 import { ROUTE_CHANGELOG } from '@config/route';
-import { GithubIcon } from '../components/icons';
 import { LocaleLink } from '../components/LocaleLink';
 
 export type AboutUpdateKind = 'feature' | 'fix';

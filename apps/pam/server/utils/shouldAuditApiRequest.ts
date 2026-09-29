@@ -1,3 +1,8 @@
+import {
+  createApiAuditMatcher,
+  type ApiAuditRule
+} from '@brain-toolkit/next-app-kit/server';
+
 /**
  * Decide whether an HTTP API call should write a `pam_request_logs` row.
  *
@@ -8,14 +13,7 @@
  *
  * Keep this list small: mutations + sensitive access only.
  */
-
-type AuditRule = {
-  readonly method: string | readonly string[];
-  /** Exact pathname, or RegExp matched against pathname. */
-  readonly path: string | RegExp;
-};
-
-const AUDIT_RULES: readonly AuditRule[] = [
+const AUDIT_RULES: readonly ApiAuditRule[] = [
   // Account / session mutations (OTP & register lack insertWithAuth).
   { method: 'POST', path: '/api/user/register' },
   { method: 'POST', path: '/api/user/otp/login' },
@@ -62,33 +60,7 @@ const AUDIT_RULES: readonly AuditRule[] = [
   { method: 'POST', path: '/api/pam/cli/device/code' }
 ];
 
-function methodMatches(
-  method: string,
-  ruleMethod: string | readonly string[]
-): boolean {
-  const upper = method.toUpperCase();
-  if (typeof ruleMethod === 'string') {
-    return ruleMethod.toUpperCase() === upper;
-  }
-  return ruleMethod.some((item) => item.toUpperCase() === upper);
-}
-
-function pathMatches(pathname: string, rulePath: string | RegExp): boolean {
-  if (typeof rulePath === 'string') {
-    return pathname === rulePath;
-  }
-  return rulePath.test(pathname);
-}
-
 /**
  * Returns true when this request should be persisted to `pam_request_logs`.
  */
-export function shouldAuditApiRequest(
-  method: string,
-  pathname: string
-): boolean {
-  return AUDIT_RULES.some(
-    (rule) =>
-      methodMatches(method, rule.method) && pathMatches(pathname, rule.path)
-  );
-}
+export const shouldAuditApiRequest = createApiAuditMatcher(AUDIT_RULES);
