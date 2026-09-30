@@ -1,45 +1,23 @@
-import { PageI18nProvider } from '@qlover/next-kit/client';
-import dynamic from 'next/dynamic';
-import { useMemo } from 'react';
-import { AdminSiteSettingsPanel } from '@/uikit/components-pages/AdminSiteSettingsPanel';
+import { AdminSettingsView } from '@/uikit/components-app/admin/AdminSettingsView';
+import { AdminShell } from '@/uikit/components-app/admin/AdminShell';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
-import { defaultNavItems } from '@config/adminNavs';
 import { i18nConfig } from '@config/i18n';
 import { adminSettings18n } from '@config/i18n-mapping/admin18n';
 import type { PagesRouteParamsType } from '@server/render/PagesRouteParams';
 import { PagesRouteParams } from '@server/render/PagesRouteParams';
 import type { GetStaticPropsContext } from 'next';
 
-const AdminLayout = dynamic(
-  () =>
-    import('@/uikit/components-pages/AdminLayout').then(
-      (mod) => mod.AdminLayout
-    ),
-  { ssr: false }
-);
-
-interface AdminSettingsProps {
+interface AdminSettingsPageProps {
   messages: Record<string, string>;
 }
 
-const namespace = 'admin_settings';
-
-export default function AdminSettingsPage({}: AdminSettingsProps) {
-  const pageI18n = useMemo(() => adminSettings18n, []);
-  const tt = useI18nMapping(pageI18n);
+export default function AdminSettingsPage({}: AdminSettingsPageProps) {
+  const seo = useI18nMapping(adminSettings18n);
 
   return (
-    <PageI18nProvider value={tt}>
-      <AdminLayout seoMetadata={tt} navItems={defaultNavItems}>
-        <div>
-          <h1 className="text-2xl font-semibold text-primary-text mb-6">
-            {tt.title}
-          </h1>
-          <p className="text-secondary-text mb-6">{tt.description}</p>
-          <AdminSiteSettingsPanel tt={tt} />
-        </div>
-      </AdminLayout>
-    </PageI18nProvider>
+    <AdminShell active="settings" seo={seo} adminOnly>
+      <AdminSettingsView />
+    </AdminShell>
   );
 }
 
@@ -47,7 +25,10 @@ export async function getStaticProps({
   params
 }: GetStaticPropsContext<PagesRouteParamsType>) {
   const pageParams = new PagesRouteParams(params);
-  const messages = await pageParams.getI18nMessages(namespace);
+  const messages = await pageParams.getI18nMessages([
+    'admin_settings',
+    'admin_home'
+  ]);
 
   return {
     props: {
