@@ -34,6 +34,16 @@ export function BrainModal({
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
+    if (!open) return;
+    const { style } = document.body;
+    const previous = style.overflow;
+    style.overflow = 'hidden';
+    return () => {
+      style.overflow = previous;
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (!open || !onClose) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
