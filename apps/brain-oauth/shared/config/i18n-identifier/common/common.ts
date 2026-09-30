@@ -60,9 +60,9 @@ export const COMMON_THEME_DARK = 'common:theme__dark';
 export const COMMON_ADMIN_TITLE = 'common:admin__title';
 
 /**
- * @description Brain OAuth admin sidebar — dashboard nav item
- * @localZh 仪表盘
- * @localEn Dashboard
+ * @description Brain OAuth admin sidebar — overview nav item
+ * @localZh 概览
+ * @localEn Overview
  */
 export const COMMON_ADMIN_NAV_DASHBOARD = 'common:admin_nav__dashboard';
 

@@ -6,6 +6,15 @@
  */
 
 /**
+ * API path: `/api/admin/overview`
+ *
+ * @see [src/app/api/admin/overview/route.ts](../../src/app/api/admin/overview/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/overview/route.ts`
+ */
+export const API_ADMIN_OVERVIEW = '/api/admin/overview' as const;
+
+/**
  * API path: `/api/admin/site-settings`
  *
  * @see [src/app/api/admin/site-settings/route.ts](../../src/app/api/admin/site-settings/route.ts)
@@ -13,6 +22,15 @@
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/site-settings/route.ts`
  */
 export const API_ADMIN_SITE_SETTINGS = '/api/admin/site-settings' as const;
+
+/**
+ * API path: `/api/admin/users`
+ *
+ * @see [src/app/api/admin/users/route.ts](../../src/app/api/admin/users/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/users/route.ts`
+ */
+export const API_ADMIN_USERS = '/api/admin/users' as const;
 
 /**
  * API path: `/api/clients`
@@ -144,7 +162,9 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
+  | typeof API_ADMIN_OVERVIEW
   | typeof API_ADMIN_SITE_SETTINGS
+  | typeof API_ADMIN_USERS
   | typeof API_CLIENTS
   | typeof API_CLIENTS_2
   | typeof API_CLIENTS_ROTATE_SECRET

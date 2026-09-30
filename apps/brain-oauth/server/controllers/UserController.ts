@@ -9,11 +9,18 @@ import {
   type UserSchema,
   type ValidatorInterface
 } from '@qlover/next-kit/common';
+import { Operators } from '@qlover/next-kit/server';
 import {
   SignOtpResult,
   signWithPhoneOtpSchema,
   signWithEmailOtpSchema
 } from '@qlover/oauth-wrapper';
+import {
+  isUuid,
+  sanitizeSearchKeyword,
+  type RequestLogFilters
+} from '@shared/admin/adminDashboard';
+import { isBrainAdminUser } from '@shared/auth/brainAdmin';
 import { inject, injectable } from '@shared/container';
 import {
   API_OTP_SEND_FAILED,
@@ -31,6 +38,10 @@ import type {
   ResourceSearchResult
 } from '@qlover/corekit-bridge';
 import type { RequestLogRow } from '@qlover/next-kit/common';
+
+type RequestLogsSearch = Parameters<
+  UserScopedRequestLogsRepository['search']
+>[0];
 
 @injectable()
 export class UserController {
@@ -90,7 +101,9 @@ export class UserController {
   }
 
   /**
-   * Paged `request_logs` for the current  session user.
+   * Paged `request_logs`: own rows for normal users, every row for Brain
+   * admins. `keyword` matches the request ID (UUID) or path / IP; `filters`
+   * accepts `{ category?: string; success?: boolean }`.
    * Response shape matches {@link ResourceSearchResult}.
    */
   public async searchRequestLogsForCurrentUser(
@@ -99,10 +112,38 @@ export class UserController {
     const criteria = await this.searchParamsValidator.getThrow(query);
     const user = await this.userService.getUser();
 
-    return await this.requestLogsRepository.searchForUser(
-      String(user.id),
-      criteria
-    );
+    const where: [string, string, unknown][] = [];
+    if (!isBrainAdminUser(user)) {
+      where.push(['user_id', Operators.eq, String(user.id)]);
+    }
+    const filters = parseRequestLogFilters(criteria.filters);
+    if (filters.category) {
+      where.push(['event_category', Operators.eq, filters.category]);
+    }
+    if (filters.success !== undefined) {
+      where.push(['success', Operators.eq, filters.success]);
+    }
+
+    const keyword = sanitizeSearchKeyword(criteria.keyword);
+    const whereOr: [string, string, unknown][] = [];
+    if (keyword && isUuid(keyword)) {
+      where.push(['request_id', Operators.eq, keyword]);
+    } else if (keyword) {
+      whereOr.push(
+        ['payload->>http_path', Operators.ilike, `*${keyword}*`],
+        ['payload->>ip_address', Operators.ilike, `*${keyword}*`]
+      );
+    }
+
+    return await this.requestLogsRepository.search({
+      ...criteria,
+      keyword: undefined,
+      filters: undefined,
+      where: where as unknown as RequestLogsSearch['where'],
+      ...(whereOr.length
+        ? { whereOr: whereOr as unknown as RequestLogsSearch['whereOr'] }
+        : {})
+    });
   }
 
   public async signWithOtp(body: unknown): Promise<SignOtpResult> {
@@ -150,4 +191,26 @@ export class UserController {
       throw new ExecutorError(API_OTP_VERIFY_FAILED, error as Error);
     }
   }
+}
+
+function parseRequestLogFilters(raw: unknown): RequestLogFilters {
+  let value = raw;
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return {};
+    }
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+  const { category, success } = value as Record<string, unknown>;
+  return {
+    category:
+      typeof category === 'string' && /^[a-z0-9_.-]{1,32}$/i.test(category)
+        ? category
+        : undefined,
+    success: typeof success === 'boolean' ? success : undefined
+  };
 }
