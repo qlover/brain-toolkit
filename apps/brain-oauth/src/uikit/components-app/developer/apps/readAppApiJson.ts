@@ -18,6 +18,17 @@ export async function readAppApiJson<T>(response: Response): Promise<T> {
   return body.data as T;
 }
 
+/** Error from a machine OAuth endpoint; `code` is the RFC `error` value when present. */
+export class OAuthMachineError extends Error {
+  constructor(
+    message: string,
+    public readonly code?: string
+  ) {
+    super(message);
+    this.name = 'OAuthMachineError';
+  }
+}
+
 /**
  * Parse machine OAuth endpoints (`/oauth/token`, `/oauth/userinfo`, `/oauth/revoke`)
  * that return flat RFC JSON (no `{ success, data }` envelope).
@@ -28,13 +39,12 @@ export async function readOAuthMachineJson<T = unknown>(
   const body = (await response.json()) as Record<string, unknown>;
 
   if (!response.ok || typeof body.error === 'string') {
+    const code = typeof body.error === 'string' ? body.error : undefined;
     const description =
       typeof body.error_description === 'string'
         ? body.error_description
-        : typeof body.error === 'string'
-          ? body.error
-          : `OAuth request failed (${response.status})`;
-    throw new Error(description);
+        : (code ?? `OAuth request failed (${response.status})`);
+    throw new OAuthMachineError(description, code);
   }
 
   return body as T;

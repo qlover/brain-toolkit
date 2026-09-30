@@ -1,6 +1,8 @@
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type {
   InputHTMLAttributes,
   ReactNode,
+  SelectHTMLAttributes,
   TextareaHTMLAttributes
 } from 'react';
 
@@ -23,6 +25,10 @@ export interface BrainFieldProps
 export interface BrainTextareaFieldProps
   extends Omit<BrainFieldShellProps, 'leading' | 'action'>,
     Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {}
+
+export interface BrainSelectFieldProps
+  extends Omit<BrainFieldShellProps, 'leading' | 'action'>,
+    Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id'> {}
 
 function BrainFieldShell({
   id,
@@ -101,6 +107,30 @@ export function BrainTextareaField({
         aria-describedby={help != null ? `${id}-help` : undefined}
         {...textareaProps}
       />
+    </BrainFieldShell>
+  );
+}
+
+/** Native select styled as an underline field. */
+export function BrainSelectField({
+  id,
+  label,
+  help,
+  invalid,
+  children,
+  ...selectProps
+}: BrainSelectFieldProps) {
+  return (
+    <BrainFieldShell id={id} label={label} help={help} invalid={invalid}>
+      <select
+        id={id}
+        aria-invalid={invalid || undefined}
+        aria-describedby={help != null ? `${id}-help` : undefined}
+        {...selectProps}
+      >
+        {children}
+      </select>
+      <ChevronDownIcon className="brain-field-chevron" aria-hidden />
     </BrainFieldShell>
   );
 }
