@@ -1278,18 +1278,20 @@
   inset: 0;
   z-index: 100;
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.45) transparent;
   background: rgb(0 0 0 / 0.35);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   color: rgb(var(--fe-color-primary-text));
 }
 
+/* `margin: auto` centers when it fits and top-aligns (scrollable) when not. */
 .brain-modal .brain-card {
-  max-height: 100%;
-  overflow: auto;
+  margin: auto;
 }
 
 .brain-modal-head {
@@ -1331,10 +1333,17 @@
   display: flex;
   justify-content: space-between;
   gap: 6px;
+  margin-top: auto;
   padding: 0 48px 28px;
   font-size: 12px;
   font-weight: 300;
   color: rgb(var(--fe-color-tertiary-text));
+}
+
+.brain-foot-version {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid rgb(var(--fe-color-primary-border));
 }
 
 .brain-foot a {
