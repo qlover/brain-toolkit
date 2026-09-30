@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>集成文档原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .doc {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 48px;
+    }
+
+    .toc {
+      align-self: start;
+      padding-top: 6px;
+    }
+
+    .toc .label {
+      display: block;
+      margin-bottom: 14px;
+    }
+
+    .toc a {
+      position: relative;
+      display: block;
+      padding: 6px 0 6px 14px;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-sub);
+      text-decoration: none;
+    }
+
+    .toc a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      border-radius: 2px;
+      background: var(--line);
+    }
+
+    .toc a.on {
+      color: var(--text);
+    }
+
+    .toc a.on::before {
+      background: linear-gradient(180deg, var(--purple), var(--blue));
+    }
+
+    .quick {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 56px;
+    }
+
+    .quick a {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 14px;
+      transition: transform .2s;
+    }
+
+    .quick a:hover {
+      transform: translateY(-2px);
+    }
+
+    .quick a svg {
+      width: 20px;
+      height: 20px;
+      color: var(--purple);
+    }
+
+    .quick small {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .sec {
+      margin-bottom: 56px;
+      scroll-margin-top: 24px;
+    }
+
+    .sec h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .sec h3 {
+      margin: 24px 0 10px;
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .sec p,
+    .sec li {
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--text-sub);
+    }
+
+    .sec p {
+      margin: 0 0 16px;
+    }
+
+    .sec code:not(.code-block code) {
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .types {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .types .inner-card p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .flow {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .flow li {
+      position: relative;
+      display: flex;
+      gap: 16px;
+      padding-bottom: 22px;
+    }
+
+    .flow li:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 13.5px;
+      top: 32px;
+      bottom: 4px;
+      width: 1px;
+      background: var(--line);
+    }
+
+    .flow b {
+      display: block;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .code-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .code-wrap .copy {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      padding: 6px;
+      border: none;
+      border-radius: 8px;
+      background: var(--muted);
+      color: var(--text-light);
+      cursor: pointer;
+    }
+
+    .code-wrap .copy:hover {
+      color: var(--blue);
+    }
+
+    .code-wrap .copy svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .code-wrap .lang {
+      position: absolute;
+      top: 14px;
+      right: 50px;
+      font-size: 11px;
+      letter-spacing: .4px;
+      color: var(--text-light);
+    }
+
+    .code-block i {
+      font-style: normal;
+      color: var(--text-light);
+    }
+
+    .sec .card.flat {
+      margin-bottom: 16px;
+    }
+
+    .sec .tabs {
+      margin-bottom: 14px;
+    }
+
+    .method {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--blue);
+    }
+
+    .method.post {
+      color: var(--purple);
+    }
+
+    .table td.wrap {
+      white-space: normal;
+      min-width: 220px;
+      line-height: 1.7;
+    }
+
+    .is-mobile .doc {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .is-mobile .toc {
+      display: none;
+    }
+
+    .is-mobile .quick,
+    .is-mobile .types {
+      grid-template-columns: 1fr;
+    }
+
+    .user-guest .only-user,
+    .user-signed .only-guest {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <div class="bg quiet"></div>
+
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="home.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+          <span class="hdr-sub" data-i18n="sub"></span>
+          <nav class="hdr-nav">
+            <a href="playground.html" data-i18n="navPlayground"></a>
+            <a href="developer.html" data-i18n="navConsole"></a>
+          </nav>
+        </div>
+        <div class="hdr-actions" data-std-actions>
+          <a class="btn sm auto only-guest" href="login.html" data-i18n="login"></a>
+          <span class="avatar only-user">R</span>
+        </div>
+      </header>
+
+      <main class="page">
+        <h1 class="title" data-i18n="title"></h1>
+        <p class="desc" data-i18n="desc"></p>
+
+        <div class="quick">
+          <a class="card flat" href="playground.html" data-icon="flask"><span data-i18n="qPlayground"></span><small data-i18n="qPlaygroundSub"></small></a>
+          <a class="card flat" href="#" data-icon="book"><span data-i18n="qOpenapi"></span><small data-i18n="qOpenapiSub"></small></a>
+          <a class="card flat" href="developer.html" data-icon="key"><span data-i18n="qConsole"></span><small data-i18n="qConsoleSub"></small></a>
+        </div>
+
+        <div class="doc">
+          <nav class="toc" id="toc">
+            <span class="label" data-i18n="toc"></span>
+            <a href="#overview" data-i18n="sOverview"></a>
+            <a href="#flow" data-i18n="sFlow"></a>
+            <a href="#endpoints" data-i18n="sEndpoints"></a>
+            <a href="#authorize" data-i18n="sAuthorize"></a>
+            <a href="#token" data-i18n="sToken"></a>
+            <a href="#pkce" data-i18n="sPkce"></a>
+            <a href="#userinfo" data-i18n="sUserinfo"></a>
+            <a href="#errors" data-i18n="sErrors"></a>
+          </nav>
+
+          <article>
+            <section class="sec" id="overview">
+              <h2 data-i18n="sOverview"></h2>
+              <p data-i18n="overviewText"></p>
+              <div class="types">
+                <div class="inner-card">
+                  <span class="pill purple" data-i18n="confidential"></span>
+                  <p data-i18n="confidentialText"></p>
+                </div>
+                <div class="inner-card">
+                  <span class="pill purple" data-i18n="public"></span>
+                  <p data-i18n="publicText"></p>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec" id="flow">
+              <h2 data-i18n="sFlow"></h2>
+              <ol class="flow">
+                <li><span class="step-no on">1</span><span><b data-i18n="f1"></b><span data-i18n="f1d"></span></span></li>
+                <li><span class="step-no on">2</span><span><b data-i18n="f2"></b><span data-i18n="f2d"></span></span></li>
+                <li><span class="step-no on">3</span><span><b data-i18n="f3"></b><span data-i18n="f3d"></span></span></li>
+                <li><span class="step-no on">4</span><span><b data-i18n="f4"></b><span data-i18n="f4d"></span></span></li>
+                <li><span class="step-no on">5</span><span><b data-i18n="f5"></b><span data-i18n="f5d"></span></span></li>
+              </ol>
+            </section>
+
+            <section class="sec" id="endpoints">
+              <h2 data-i18n="sEndpoints"></h2>
+              <div class="card flat">
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="thMethod"></th>
+                        <th data-i18n="thPath"></th>
+                        <th data-i18n="thCaller"></th>
+                        <th data-i18n="thNote"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="method">GET</span></td>
+                        <td class="mono">/oauth/authorize</td>
+                        <td data-i18n="eBrowser"></td>
+                        <td class="wrap" data-i18n="eAuthorize"></td>
+                      </tr>
+                      <tr>
+                        <td><span class="method post">POST</span></td>
+                        <td class="mono">/oauth/token</td>
+                        <td data-i18n="eServer"></td>
+                        <td class="wrap" data-i18n="eToken"></td>
+                      </tr>
+                      <tr>
+                        <td><span class="method post">POST</span></td>
+                        <td class="mono">/oauth/revoke</td>
+                        <td data-i18n="eServer"></td>
+                        <td class="wrap" data-i18n="eRevoke"></td>
+                      </tr>
+                      <tr>
+                        <td><span class="method">GET</span></td>
+                        <td class="mono">/oauth/userinfo</td>
+                        <td data-i18n="eServer"></td>
+                        <td class="wrap" data-i18n="eUserinfo"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec" id="authorize">
+              <h2 data-i18n="sAuthorize"></h2>
+              <p data-i18n="authorizeText"></p>
+              <div class="card flat">
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="thParam"></th>
+                        <th data-i18n="thRequired"></th>
+                        <th data-i18n="thNote"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td class="mono">response_type</td><td><span class="pill sm ok" data-i18n="req"></span></td><td class="wrap" data-i18n="pResponseType"></td></tr>
+                      <tr><td class="mono">client_id</td><td><span class="pill sm ok" data-i18n="req"></span></td><td class="wrap" data-i18n="pClientId"></td></tr>
+                      <tr><td class="mono">redirect_uri</td><td><span class="pill sm ok" data-i18n="req"></span></td><td class="wrap" data-i18n="pRedirect"></td></tr>
+                      <tr><td class="mono">scope</td><td><span class="pill sm soft" data-i18n="opt"></span></td><td class="wrap" data-i18n="pScope"></td></tr>
+                      <tr><td class="mono">state</td><td><span class="pill sm soft" data-i18n="opt"></span></td><td class="wrap" data-i18n="pState"></td></tr>
+                      <tr><td class="mono">code_challenge</td><td><span class="pill sm purple" data-i18n="pkceOnly"></span></td><td class="wrap" data-i18n="pChallenge"></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="code-wrap">
+                <span class="lang">HTTP</span>
+                <button type="button" class="copy" data-icon="copy" data-copy></button>
+<pre class="code-block"><b>GET</b> /oauth/authorize
+  ?response_type=code
+  &amp;client_id=YOUR_CLIENT_ID
+  &amp;redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback
+  &amp;scope=openid%20profile
+  &amp;state=RANDOM_STATE
+  &amp;code_challenge=CHALLENGE
+  &amp;code_challenge_method=S256</pre>
+              </div>
+            </section>
+
+            <section class="sec" id="token">
+              <h2 data-i18n="sToken"></h2>
+              <p data-i18n="tokenText"></p>
+              <div class="tabs" id="tokenTabs">
+                <button type="button" class="tab on" data-tab="code" data-i18n="tabCode"></button>
+                <button type="button" class="tab" data-tab="refresh" data-i18n="tabRefresh"></button>
+              </div>
+              <div class="code-wrap" data-pane="code">
+                <span class="lang">HTTP</span>
+                <button type="button" class="copy" data-icon="copy" data-copy></button>
+<pre class="code-block"><b>POST</b> /oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&amp;code=AUTH_CODE
+&amp;redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback
+&amp;client_id=YOUR_CLIENT_ID
+&amp;client_secret=YOUR_CLIENT_SECRET   <i data-i18n="cmSecret"></i>
+&amp;code_verifier=VERIFIER             <i data-i18n="cmVerifier"></i></pre>
+              </div>
+              <div class="code-wrap" data-pane="refresh" style="display:none">
+                <span class="lang">HTTP</span>
+                <button type="button" class="copy" data-icon="copy" data-copy></button>
+<pre class="code-block"><b>POST</b> /oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token
+&amp;refresh_token=REFRESH_TOKEN
+&amp;client_id=YOUR_CLIENT_ID
+&amp;client_secret=YOUR_CLIENT_SECRET</pre>
+              </div>
+              <h3 data-i18n="response"></h3>
+              <div class="code-wrap">
+                <span class="lang">JSON</span>
+                <button type="button" class="copy" data-icon="copy" data-copy></button>
+<pre class="code-block">{
+  <b>"access_token"</b>: "eyJhbGciOi...",
+  <b>"token_type"</b>: "Bearer",
+  <b>"expires_in"</b>: 3600,
+  <b>"refresh_token"</b>: "def50200...",
+  <b>"scope"</b>: "openid profile"
+}</pre>
+              </div>
+            </section>
+
+            <section class="sec" id="pkce">
+              <h2 data-i18n="sPkce"></h2>
+              <p data-i18n="pkceText"></p>
+              <div class="code-wrap">
+                <span class="lang">JavaScript</span>
+                <button type="button" class="copy" data-icon="copy" data-copy></button>
+<pre class="code-block"><b>const</b> base64url = (bytes) =&gt;
+  btoa(String.fromCharCode(...new Uint8Array(bytes)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+<b>const</b> verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
+<b>const</b> challenge = base64url(
+  await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+);</pre>
+              </div>
+              <div class="note" data-icon="info"><span data-i18n="pkceNote"></span></div>
+            </section>
+
+            <section class="sec" id="userinfo">
+              <h2 data-i18n="sUserinfo"></h2>
+              <p data-i18n="userinfoText"></p>
+              <div class="code-wrap">
+                <span class="lang">HTTP</span>
+                <button type="button" class="copy" data-icon="copy" data-copy></button>
+<pre class="code-block"><b>GET</b> /oauth/userinfo
+Authorization: Bearer ACCESS_TOKEN
+
+{
+  <b>"sub"</b>: "u_8f3k2p",
+  <b>"email"</b>: "renjie@brain.im",
+  <b>"name"</b>: "Renjie",
+  <b>"roles"</b>: ["user"]
+}</pre>
+              </div>
+            </section>
+
+            <section class="sec" id="errors">
+              <h2 data-i18n="sErrors"></h2>
+              <p data-i18n="errorsText"></p>
+              <div class="card flat">
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="thCode"></th>
+                        <th data-i18n="thWhere"></th>
+                        <th data-i18n="thNote"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td class="mono">invalid_request</td><td data-i18n="wAll"></td><td class="wrap" data-i18n="erInvalidRequest"></td></tr>
+                      <tr><td class="mono">unauthorized_client</td><td data-i18n="wAuthorize"></td><td class="wrap" data-i18n="erUnauthorized"></td></tr>
+                      <tr><td class="mono">access_denied</td><td data-i18n="wAuthorize"></td><td class="wrap" data-i18n="erDenied"></td></tr>
+                      <tr><td class="mono">invalid_scope</td><td data-i18n="wAuthorize"></td><td class="wrap" data-i18n="erScope"></td></tr>
+                      <tr><td class="mono">invalid_client</td><td data-i18n="wToken"></td><td class="wrap" data-i18n="erClient"></td></tr>
+                      <tr><td class="mono">invalid_grant</td><td data-i18n="wToken"></td><td class="wrap" data-i18n="erGrant"></td></tr>
+                      <tr><td class="mono">invalid_token</td><td data-i18n="wUserinfo"></td><td class="wrap" data-i18n="erToken"></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </article>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="about.html" data-i18n="about"></a><a href="#">OpenAPI</a></span>
+      </footer>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>文档是阅读型页面：背景用「安静版」，正文直接放在底色上，只有表格和代码块用卡片承载，保证长文好读。标题细体，正文 14px、行高 1.9。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>页头</b>：logo + 竖线 +「集成文档」，导航「测试台 / 控制台」；访客显示黑色「登录」胶囊，已登录显示头像。</li>
+        <li><b>快捷入口</b>：三张卡片——站内测试完整流程、OpenAPI 参考、管理 OAuth 应用。</li>
+        <li><b>左侧目录</b>：竖线 + 文字，当前章节竖线变成品牌渐变；真实页面滚动时自动高亮并吸顶。手机端隐藏。</li>
+        <li><b>章节</b>：概览（机密 / 公共客户端两张小卡）→ 授权码流程（编号时间线）→ 端点一览（表格）→ 授权请求（参数表 + 示例）→ 令牌交换（授权码 / 刷新令牌标签切换 + 响应示例）→ PKCE（JS 示例）→ 用户信息 → 错误响应（错误码表）。</li>
+        <li><b>代码块</b>：右上角显示语言和复制按钮，复制后轻提示。</li>
+        <li><b>表头改为中文</b>：原来端点表的表头是英文硬编码。</li>
+      </ul>
+
+      <h3>待确认</h3>
+      <ul>
+        <li><span class="tag">待确认</span> 现有文档里「架构：通用内核与示例装配」「本示例：demo-oauth + Brain User」两节讲的是内部实现和环境变量，对接入方没用，原型里去掉了，建议挪到仓库 README。</li>
+        <li><span class="tag">待确认</span> 端点表去掉了 <code>POST /api/oauth/verify</code>（站内登录用，不是给第三方调用的），补上了 <code>POST /oauth/revoke</code>。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    const proto = BrainProto.init({
+      title: '集成文档',
+      groups: [
+        { key: 'user', label: '账号', options: [['guest', '访客'], ['signed', '已登录']] }
+      ],
+      state: { user: 'guest' },
+      i18n: {
+        zh: {
+          sub: '集成文档',
+          navPlayground: '测试台',
+          navConsole: '控制台',
+          login: '登录',
+          about: '关于',
+          title: 'OAuth 集成文档',
+          desc: '注册客户端、引导用户授权、用授权码换取令牌并获取用户信息',
+          qPlayground: '在站内测试完整流程',
+          qPlaygroundSub: '用真实参数走一遍授权、换票与 userinfo',
+          qOpenapi: 'OpenAPI 参考',
+          qOpenapiSub: '所有端点的请求与响应定义',
+          qConsole: '管理 OAuth 应用',
+          qConsoleSub: '创建应用、配置回调地址、获取凭据',
+          toc: '目录',
+          sOverview: '概览',
+          sFlow: '授权码流程',
+          sEndpoints: '端点一览',
+          sAuthorize: '授权请求',
+          sToken: '令牌交换',
+          sPkce: 'PKCE',
+          sUserinfo: '用户信息',
+          sErrors: '错误响应',
+          overviewText: 'Brain OAuth 实现 RFC 6749 授权码流程。第三方应用引导用户在 Brain 登录并同意授权，拿到授权码后在服务端换取 access_token，再用它读取用户信息。',
+          confidential: '机密客户端',
+          confidentialText: '有服务端，可以安全保存 client_secret；换票时用 client_secret 认证，PKCE 可选。',
+          public: '公共客户端',
+          publicText: 'SPA、移动端等无法保存密钥的应用；没有 client_secret，必须使用 PKCE。',
+          f1: '创建应用',
+          f1d: '在开发者控制台创建应用并配置 redirect_uri（必须 HTTPS，localhost 除外）。',
+          f2: '跳转授权',
+          f2d: '把用户重定向到 /oauth/authorize，带上 client_id、redirect_uri 和 state。',
+          f3: '用户同意',
+          f3d: '用户登录并同意后，浏览器带着 ?code=…&state=… 回到 redirect_uri。',
+          f4: '换取令牌',
+          f4d: '服务端用授权码调用 /oauth/token，获得 access_token 和 refresh_token。',
+          f5: '读取用户',
+          f5d: '带上 Bearer access_token 调用 /oauth/userinfo。',
+          thMethod: '方法',
+          thPath: '路径',
+          thCaller: '调用方',
+          thNote: '说明',
+          thParam: '参数',
+          thRequired: '必填',
+          thCode: '错误码',
+          thWhere: '出现位置',
+          eBrowser: '浏览器',
+          eServer: '服务端',
+          eAuthorize: '展示授权确认页；未登录会先跳转登录，登录后回到本地址。',
+          eToken: '用授权码或 refresh_token 换取令牌；支持 Basic 认证或表单传 client_secret。',
+          eRevoke: '吊销 access_token 或 refresh_token。',
+          eUserinfo: '需要 Authorization: Bearer；返回 sub、email、name 等信息。',
+          authorizeText: '把用户浏览器重定向到授权地址。redirect_uri 必须和应用里登记的完全一致。',
+          req: '必填',
+          opt: '可选',
+          pkceOnly: '公共客户端必填',
+          pResponseType: '固定为 code。',
+          pClientId: '开发者控制台里的 Client ID。',
+          pRedirect: '授权完成后回跳的地址，必须在应用的白名单内。',
+          pScope: '空格分隔，例如 openid profile。',
+          pState: '随机字符串，回跳时原样带回，用来防止 CSRF。',
+          pChallenge: 'code_verifier 的 S256 摘要，同时传 code_challenge_method=S256。',
+          tokenText: '在服务端调用，不要在浏览器里暴露 client_secret。',
+          tabCode: '授权码换令牌',
+          tabRefresh: '刷新令牌',
+          cmSecret: '# 机密客户端',
+          cmVerifier: '# 使用 PKCE 时',
+          response: '响应示例',
+          pkceText: '公共客户端必须使用 PKCE：先生成随机的 code_verifier，把它的 S256 摘要作为 code_challenge 放进授权请求，换令牌时再提交原始的 code_verifier。',
+          pkceNote: '机密客户端也可以同时使用 PKCE，安全性更好。',
+          userinfoText: '成功时返回用户标识和资料；令牌无效或过期返回 401 和 error=invalid_token。',
+          errorsText: '授权阶段的错误以 error、error_description 参数带回 redirect_uri；令牌和用户信息接口的错误以 JSON 返回。',
+          wAll: '全部',
+          wAuthorize: '授权',
+          wToken: '令牌',
+          wUserinfo: '用户信息',
+          erInvalidRequest: '缺少必填参数或参数格式不对。',
+          erUnauthorized: '应用不存在、已停用，或者不允许这种授权方式。',
+          erDenied: '用户拒绝了授权。',
+          erScope: '请求的 scope 无效或超出应用允许的范围。',
+          erClient: '客户端认证失败，检查 client_id 和 client_secret。',
+          erGrant: '授权码无效、过期、已使用，或 code_verifier 不匹配。',
+          erToken: 'access_token 无效或已过期。',
+          copied: '已复制'
+        },
+        en: {
+          sub: 'Docs',
+          navPlayground: 'Playground',
+          navConsole: 'Console',
+          login: 'Sign in',
+          about: 'About',
+          title: 'OAuth integration guide',
+          desc: 'Register a client, send users to consent, exchange the code for tokens and read the user profile',
+          qPlayground: 'Try the full flow',
+          qPlaygroundSub: 'Run authorize, token and userinfo with real parameters',
+          qOpenapi: 'OpenAPI reference',
+          qOpenapiSub: 'Request and response schemas for every endpoint',
+          qConsole: 'Manage OAuth apps',
+          qConsoleSub: 'Create apps, set redirect URIs, get credentials',
+          toc: 'On this page',
+          sOverview: 'Overview',
+          sFlow: 'Authorization code flow',
+          sEndpoints: 'Endpoints',
+          sAuthorize: 'Authorization request',
+          sToken: 'Token exchange',
+          sPkce: 'PKCE',
+          sUserinfo: 'User info',
+          sErrors: 'Errors',
+          overviewText: 'Brain OAuth implements the RFC 6749 authorization code flow. Your app sends the user to sign in to Brain and approve access, exchanges the returned code for an access_token on your server, then reads the user profile.',
+          confidential: 'Confidential client',
+          confidentialText: 'Has a backend that can keep client_secret safe. Authenticates with client_secret; PKCE is optional.',
+          public: 'Public client',
+          publicText: 'SPAs and mobile apps that cannot keep a secret. No client_secret; PKCE is required.',
+          f1: 'Create an app',
+          f1d: 'Create an app in the developer console and set redirect_uri (HTTPS, except localhost).',
+          f2: 'Redirect to authorize',
+          f2d: 'Send the user to /oauth/authorize with client_id, redirect_uri and state.',
+          f3: 'User approves',
+          f3d: 'After sign-in and consent the browser returns to redirect_uri with ?code=…&state=….',
+          f4: 'Exchange the code',
+          f4d: 'Your server calls /oauth/token with the code to get access_token and refresh_token.',
+          f5: 'Read the user',
+          f5d: 'Call /oauth/userinfo with the Bearer access_token.',
+          thMethod: 'Method',
+          thPath: 'Path',
+          thCaller: 'Caller',
+          thNote: 'Notes',
+          thParam: 'Parameter',
+          thRequired: 'Required',
+          thCode: 'Error',
+          thWhere: 'Where',
+          eBrowser: 'Browser',
+          eServer: 'Server',
+          eAuthorize: 'Shows the consent page. Guests sign in first and come back here.',
+          eToken: 'Exchange a code or refresh_token for tokens. Basic auth or client_secret in the form.',
+          eRevoke: 'Revoke an access_token or refresh_token.',
+          eUserinfo: 'Requires Authorization: Bearer. Returns sub, email, name and more.',
+          authorizeText: 'Redirect the user\'s browser to the authorization URL. redirect_uri must exactly match one registered on the app.',
+          req: 'Required',
+          opt: 'Optional',
+          pkceOnly: 'Public clients',
+          pResponseType: 'Always code.',
+          pClientId: 'The Client ID from the developer console.',
+          pRedirect: 'Where to return after consent. Must be on the app\'s allow list.',
+          pScope: 'Space separated, e.g. openid profile.',
+          pState: 'A random string returned as is, to prevent CSRF.',
+          pChallenge: 'The S256 digest of code_verifier, sent with code_challenge_method=S256.',
+          tokenText: 'Call this from your server. Never expose client_secret in the browser.',
+          tabCode: 'Authorization code',
+          tabRefresh: 'Refresh token',
+          cmSecret: '# confidential clients',
+          cmVerifier: '# when using PKCE',
+          response: 'Example response',
+          pkceText: 'Public clients must use PKCE: generate a random code_verifier, send its S256 digest as code_challenge in the authorization request, and submit the original code_verifier when exchanging the code.',
+          pkceNote: 'Confidential clients can use PKCE too for extra protection.',
+          userinfoText: 'Returns the user id and profile. An invalid or expired token returns 401 with error=invalid_token.',
+          errorsText: 'Authorization errors come back to redirect_uri as error and error_description. Token and userinfo errors are returned as JSON.',
+          wAll: 'All',
+          wAuthorize: 'Authorize',
+          wToken: 'Token',
+          wUserinfo: 'User info',
+          erInvalidRequest: 'A required parameter is missing or malformed.',
+          erUnauthorized: 'The app does not exist, is disabled, or cannot use this grant.',
+          erDenied: 'The user denied access.',
+          erScope: 'The requested scope is invalid or not allowed for this app.',
+          erClient: 'Client authentication failed. Check client_id and client_secret.',
+          erGrant: 'The code is invalid, expired or used, or code_verifier does not match.',
+          erToken: 'The access_token is invalid or expired.',
+          copied: 'Copied'
+        }
+      }
+    });
+
+    const toc = document.getElementById('toc');
+    const setActive = (id) => toc.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a.getAttribute('href') === `#${id}`));
+    setActive('overview');
+    toc.addEventListener('click', (event) => {
+      const a = event.target.closest('a');
+      if (!a) return;
+      event.preventDefault();
+      const id = a.getAttribute('href').slice(1);
+      setActive(id);
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('tokenTabs').addEventListener('click', (event) => {
+      const tab = event.target.closest('.tab');
+      if (!tab) return;
+      document.querySelectorAll('#tokenTabs .tab').forEach((t) => t.classList.toggle('on', t === tab));
+      document.querySelectorAll('[data-pane]').forEach((p) => (p.style.display = p.dataset.pane === tab.dataset.tab ? '' : 'none'));
+    });
+
+    document.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', () => proto.toast(proto.dict.copied)));
+  </script>
+</body>
+
+</html>

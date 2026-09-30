@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .lost {
+      max-width: 440px;
+      text-align: center;
+    }
+
+    .lost .code-num {
+      font-size: 120px;
+      font-weight: 200;
+      letter-spacing: -4px;
+      line-height: 1;
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lost .title {
+      margin-top: 16px;
+    }
+
+    .lost .desc {
+      margin: 12px 0 32px;
+      line-height: 1.8;
+    }
+
+    .lost .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .is-mobile .lost .code-num {
+      font-size: 88px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="home.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+        </div>
+        <div class="hdr-actions" data-std-actions></div>
+      </header>
+
+      <div class="scene">
+        <div class="bg"></div>
+        <div class="lost">
+          <div class="code-num">404</div>
+          <h1 class="title md" data-i18n="title"></h1>
+          <p class="desc" data-i18n="desc"></p>
+          <div class="actions">
+            <a class="btn auto" href="home.html"><span data-i18n="home"></span><span class="arrow" data-icon="arrow"></span></a>
+            <a class="link-btn" href="docs.html" data-i18n="docs"></a>
+          </div>
+        </div>
+      </div>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+      </footer>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>404 用完整版背景（大圆盘 + 漂浮白球），和登录页同一种氛围。中间一个品牌渐变的细体「404」，下面标题、说明和按钮。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>页头</b>：只保留 logo 和 GitHub / 主题 / 语言，不放导航。</li>
+        <li><b>内容</b>：渐变「404」、标题「页面不存在」、说明、黑色胶囊「返回首页」（悬停箭头动）、文字链接「查看文档」。</li>
+      </ul>
+
+      <h3>顺带修复</h3>
+      <ul>
+        <li>现在的 404 页面多语言没接上，页面上直接显示 <code>title</code>、<code>description</code>、<code>backToHome</code> 这些 key，实现时一起修。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    BrainProto.init({
+      title: '404',
+      i18n: {
+        zh: {
+          title: '页面不存在',
+          desc: '你访问的地址可能输错了，或者页面已经被移走。',
+          home: '返回首页',
+          docs: '查看文档'
+        },
+        en: {
+          title: 'Page not found',
+          desc: 'The address may be mistyped, or the page has moved.',
+          home: 'Back to home',
+          docs: 'Read the docs'
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

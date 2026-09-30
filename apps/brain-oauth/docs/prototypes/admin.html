@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .page.admin {
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 36px;
+      padding-top: 40px;
+    }
+
+    .side {
+      align-self: start;
+    }
+
+    .side .label {
+      display: block;
+      margin: 0 14px 12px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view-overview .v-overview,
+    .view-users .v-users,
+    .view-logs .v-logs,
+    .view-settings .v-settings {
+      display: block;
+    }
+
+    .head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .head .desc {
+      margin-bottom: 0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 16px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 18px;
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      height: 160px;
+      padding-top: 8px;
+    }
+
+    .bars div {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      height: 100%;
+      justify-content: flex-end;
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .bars i {
+      width: 100%;
+      max-width: 34px;
+      border-radius: 10px 10px 4px 4px;
+      background: linear-gradient(180deg, var(--purple), var(--blue));
+      opacity: .85;
+    }
+
+    .bars div:last-child i {
+      opacity: 1;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--purple) 30%, transparent);
+    }
+
+    .recent {
+      display: grid;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .recent div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .recent .path {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .recent time {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 20px;
+      margin-bottom: 20px;
+    }
+
+    .toolbar .field {
+      flex: 1;
+      min-width: 220px;
+      margin-bottom: 0;
+    }
+
+    .toolbar .field.narrow {
+      flex: none;
+      min-width: 150px;
+    }
+
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .search svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+      color: var(--text-light);
+    }
+
+    .search input {
+      border-bottom: none !important;
+      font-size: 15px !important;
+    }
+
+    .method {
+      display: inline-block;
+      min-width: 44px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--blue);
+    }
+
+    .method.post {
+      color: var(--purple);
+    }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-cell small {
+      display: block;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .table-state {
+      display: none;
+      padding: 56px 0 40px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text-sub);
+    }
+
+    .table-state .empty-sphere {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, var(--sphere-hi) 0%, var(--sphere-hi) 22%, var(--sphere-lo) 100%);
+      box-shadow: 10px 14px 24px var(--sphere-shadow);
+    }
+
+    .table-state .spinner {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border-color: color-mix(in srgb, var(--text-light) 40%, transparent);
+      border-top-color: var(--text-light);
+    }
+
+    .data-empty .has-data,
+    .data-loading .has-data {
+      display: none;
+    }
+
+    .data-empty .st-empty,
+    .data-loading .st-loading {
+      display: block;
+    }
+
+    .pager select {
+      margin-left: 8px;
+      padding: 4px 6px;
+      border: none;
+      border-radius: 8px;
+      background: var(--muted);
+      color: var(--text-sub);
+      font: inherit;
+    }
+
+    .detail {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 12px 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .detail dt {
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .detail dd {
+      margin: 0;
+      min-width: 0;
+      color: var(--text);
+    }
+
+    .rules {
+      display: grid;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr auto;
+      gap: 0 24px;
+      align-items: end;
+    }
+
+    .rule .field {
+      margin-bottom: 0;
+    }
+
+    .rule .methods {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .rule .methods .block-label {
+      margin-right: 6px;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .rule .chip {
+      height: 28px;
+      padding: 0 12px;
+    }
+
+    .star {
+      flex: none;
+      margin-left: 10px;
+    }
+
+    .rule.bad .field.origin .inline {
+      border-bottom-color: var(--danger);
+    }
+
+    .rule .rule-err {
+      display: none;
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--danger);
+    }
+
+    .rule.bad .rule-err {
+      display: block;
+    }
+
+    .rules-empty {
+      display: none;
+      padding: 28px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .rules-empty-on .rules {
+      display: none;
+    }
+
+    .rules-empty-on .rules-empty {
+      display: block;
+    }
+
+    .settings-foot {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+    }
+
+    .role-user .admin-only {
+      display: none;
+    }
+
+    .forbidden {
+      display: none;
+    }
+
+    .role-user.view-users .v-users,
+    .role-user.view-settings .v-settings {
+      display: none;
+    }
+
+    .role-user.view-users .forbidden,
+    .role-user.view-settings .forbidden {
+      display: block;
+    }
+
+    .is-mobile .page.admin {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding-top: 28px;
+    }
+
+    .is-mobile .side .label {
+      display: none;
+    }
+
+    .is-mobile .side-nav {
+      display: flex;
+      overflow-x: auto;
+      gap: 6px;
+    }
+
+    .is-mobile .side-nav a {
+      flex: none;
+      padding: 8px 12px;
+    }
+
+    .is-mobile .side-nav .pill {
+      display: none;
+    }
+
+    .is-mobile .stats {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .is-mobile .two,
+    .is-mobile .rule {
+      grid-template-columns: 1fr;
+    }
+
+    .is-mobile .rule .field {
+      margin-bottom: 14px;
+    }
+
+    .is-mobile .detail {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <div class="bg quiet"></div>
+
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="home.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+          <span class="hdr-sub" data-i18n="sub"></span>
+          <nav class="hdr-nav">
+            <a href="developer.html" data-i18n="navConsole"></a>
+            <a href="docs.html" data-i18n="navDocs"></a>
+          </nav>
+        </div>
+        <div class="hdr-actions" data-std-actions>
+          <span class="avatar">R</span>
+          <a class="round-btn" href="login.html" data-icon="logout" data-i18n-title="logout"></a>
+        </div>
+      </header>
+
+      <main class="page admin">
+        <aside class="side">
+          <span class="label" data-i18n="menu"></span>
+          <nav class="side-nav" id="sideNav">
+            <a href="#" data-view="overview" data-icon="grid"><span data-i18n="navOverview"></span></a>
+            <a href="#" class="admin-only" data-view="users" data-icon="users"><span data-i18n="navUsers"></span><span class="pill sm soft" data-i18n="adminTag"></span></a>
+            <a href="#" data-view="logs" data-icon="list"><span data-i18n="navLogs"></span></a>
+            <a href="#" class="admin-only" data-view="settings" data-icon="gear"><span data-i18n="navSettings"></span><span class="pill sm soft" data-i18n="adminTag"></span></a>
+          </nav>
+        </aside>
+
+        <div>
+          <!-- 概览 -->
+          <section class="view v-overview">
+            <div class="head">
+              <div>
+                <h1 class="title md" data-i18n="overviewTitle"></h1>
+                <p class="desc" data-i18n="overviewDesc"></p>
+              </div>
+            </div>
+            <div class="stats">
+              <div class="card flat stat admin-only"><span class="label" data-i18n="stUsers"></span><div class="num">128</div><div class="trend up" data-i18n="stUsersTrend"></div></div>
+              <div class="card flat stat"><span class="label" data-i18n="stApps"></span><div class="num">36</div><div class="trend" data-i18n="stAppsTrend"></div></div>
+              <div class="card flat stat"><span class="label" data-i18n="stAuth"></span><div class="num">842</div><div class="trend up" data-i18n="stAuthTrend"></div></div>
+              <div class="card flat stat"><span class="label" data-i18n="stFail"></span><div class="num">1.8%</div><div class="trend down" data-i18n="stFailTrend"></div></div>
+            </div>
+            <div class="two">
+              <div class="card flat">
+                <h2 class="card-title"><span data-i18n="chartTitle"></span><span class="app-sub" data-i18n="chartSub"></span></h2>
+                <div class="bars" id="bars"></div>
+              </div>
+              <div class="card flat">
+                <h2 class="card-title"><span data-i18n="recentTitle"></span><a href="#" class="link-btn" data-go="logs"><span data-i18n="viewAll"></span></a></h2>
+                <div class="recent" id="recent"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 用户管理 -->
+          <section class="view v-users">
+            <div class="head">
+              <div>
+                <h1 class="title md" data-i18n="usersTitle"></h1>
+                <p class="desc" data-i18n="usersDesc"></p>
+              </div>
+            </div>
+            <div class="card flat">
+              <div class="toolbar">
+                <div class="field">
+                  <div class="search"><span data-icon="search"></span><input data-i18n-placeholder="usersSearch"></div>
+                </div>
+                <div class="chips" id="roleChips">
+                  <button type="button" class="chip on" data-i18n="all"></button>
+                  <button type="button" class="chip" data-i18n="roleAdmin"></button>
+                  <button type="button" class="chip" data-i18n="roleUser"></button>
+                </div>
+                <button type="button" class="link-btn" data-icon="refresh" data-refresh><span data-i18n="refresh"></span></button>
+              </div>
+              <div class="has-data">
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="thUser"></th>
+                        <th data-i18n="thRole"></th>
+                        <th data-i18n="thLoginMethod"></th>
+                        <th data-i18n="thApps"></th>
+                        <th data-i18n="thCreated"></th>
+                        <th data-i18n="thLastLogin"></th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="userRows"></tbody>
+                  </table>
+                </div>
+                <div class="pager"><span data-i18n="usersRange"></span><div class="pages"><button disabled>‹</button><button class="on">1</button><button>2</button><button>3</button><button>›</button></div></div>
+              </div>
+              <div class="table-state st-empty"><div class="empty-sphere"></div><span data-i18n="usersEmpty"></span></div>
+              <div class="table-state st-loading"><span class="spinner"></span></div>
+            </div>
+          </section>
+
+          <!-- 请求日志 -->
+          <section class="view v-logs">
+            <div class="head">
+              <div>
+                <h1 class="title md" data-i18n="logsTitle"></h1>
+                <p class="desc" data-i18n="logsDesc"></p>
+              </div>
+            </div>
+            <div class="card flat">
+              <div class="toolbar">
+                <div class="field">
+                  <div class="search"><span data-icon="search"></span><input data-i18n-placeholder="logsSearch"></div>
+                </div>
+                <div class="field narrow">
+                  <select id="category">
+                    <option data-i18n="allCategories"></option>
+                    <option>auth</option>
+                    <option>oauth</option>
+                    <option>api</option>
+                  </select>
+                </div>
+                <div class="chips" id="resultChips">
+                  <button type="button" class="chip on" data-i18n="all"></button>
+                  <button type="button" class="chip" data-i18n="success"></button>
+                  <button type="button" class="chip" data-i18n="failed"></button>
+                </div>
+                <button type="button" class="link-btn" data-icon="refresh" data-refresh><span data-i18n="refresh"></span></button>
+              </div>
+              <div class="has-data">
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="thTime"></th>
+                        <th data-i18n="thRequest"></th>
+                        <th data-i18n="thEvent"></th>
+                        <th data-i18n="thResult"></th>
+                        <th data-i18n="thDuration"></th>
+                        <th>IP</th>
+                        <th data-i18n="thLoginMethod"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="logRows"></tbody>
+                  </table>
+                </div>
+                <div class="pager">
+                  <span><span data-i18n="logsRange"></span><select><option>15</option><option>20</option><option>50</option><option>100</option></select></span>
+                  <div class="pages"><button disabled>‹</button><button class="on">1</button><button>2</button><button>3</button><button>…</button><button>8</button><button>›</button></div>
+                </div>
+              </div>
+              <div class="table-state st-empty"><div class="empty-sphere"></div><span data-i18n="logsEmpty"></span></div>
+              <div class="table-state st-loading"><span class="spinner"></span></div>
+            </div>
+          </section>
+
+          <!-- 站点设置 -->
+          <section class="view v-settings">
+            <div class="head">
+              <div>
+                <h1 class="title md" data-i18n="settingsTitle"></h1>
+                <p class="desc" data-i18n="settingsDesc"></p>
+              </div>
+            </div>
+            <div class="card flat" id="corsCard">
+              <h2 class="card-title" style="margin-bottom:6px"><span data-i18n="corsTitle"></span></h2>
+              <p class="app-sub" style="margin:0 0 22px;line-height:1.7" data-i18n="corsDesc"></p>
+
+              <div class="setting-row"><span data-i18n="corsRules"></span><span class="pill sm purple" id="sourcePill"></span></div>
+              <div class="rules" id="rules"></div>
+              <div class="rules-empty" style="margin:20px 0" data-i18n="rulesEmpty"></div>
+
+              <div class="settings-foot">
+                <button type="button" class="btn ghost sm auto" id="addRule" data-icon="plus"><span data-i18n="addRule"></span></button>
+                <button type="button" class="btn sm auto" id="saveRules"><span class="spinner"></span><span data-i18n="save"></span></button>
+              </div>
+            </div>
+          </section>
+
+          <div class="card flat forbidden">
+            <div class="table-state" style="display:block"><div class="empty-sphere"></div><span data-i18n="forbidden"></span></div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="docs.html" data-i18n="docs"></a></span>
+      </footer>
+
+      <!-- 用户详情 -->
+      <div class="modal" id="userModal">
+        <div class="card wide">
+          <div class="modal-head">
+            <h2 class="title" data-i18n="userDetail"></h2>
+            <button type="button" class="modal-close" data-close data-icon="close"></button>
+          </div>
+          <div class="app-row" style="justify-content:flex-start;margin-bottom:22px">
+            <span class="avatar" id="udAvatar"></span>
+            <div>
+              <div class="app-name" id="udName"></div>
+              <div class="app-sub" id="udEmail"></div>
+            </div>
+          </div>
+          <dl class="detail">
+            <dt>ID</dt><dd><span class="code" id="udId"></span></dd>
+            <dt data-i18n="thRole"></dt><dd id="udRole"></dd>
+            <dt data-i18n="phone"></dt><dd id="udPhone"></dd>
+            <dt data-i18n="emailVerified"></dt><dd>2026-08-02 10:21</dd>
+            <dt data-i18n="thCreated"></dt><dd id="udCreated"></dd>
+            <dt data-i18n="updated"></dt><dd>2026-09-28 17:40</dd>
+          </dl>
+          <div class="note" data-icon="info" style="margin-bottom:20px"><span data-i18n="userNote"></span></div>
+          <div class="modal-actions">
+            <button type="button" class="btn ghost sm auto" data-close data-i18n="close"></button>
+            <button type="button" class="btn sm auto" id="roleBtn"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 日志详情 -->
+      <div class="modal" id="logModal">
+        <div class="card wide">
+          <div class="modal-head">
+            <h2 class="title" data-i18n="logDetail"></h2>
+            <button type="button" class="modal-close" data-close data-icon="close"></button>
+          </div>
+          <dl class="detail">
+            <dt data-i18n="requestId"></dt><dd><span class="code"><span id="ldId"></span><button type="button" data-icon="copy" data-copy></button></span></dd>
+            <dt data-i18n="thTime"></dt><dd id="ldTime"></dd>
+            <dt data-i18n="thRequest"></dt><dd id="ldReq"></dd>
+            <dt data-i18n="thEvent"></dt><dd id="ldEvent"></dd>
+            <dt data-i18n="thResult"></dt><dd id="ldResult"></dd>
+            <dt data-i18n="thDuration"></dt><dd id="ldDuration"></dd>
+            <dt>IP</dt><dd id="ldIp"></dd>
+            <dt data-i18n="thLoginMethod"></dt><dd id="ldMethod"></dd>
+          </dl>
+          <div class="note danger" data-icon="warn" id="ldError"><span id="ldErrorText"></span></div>
+        </div>
+      </div>
+
+      <!-- 修改角色确认 -->
+      <div class="modal" id="confirmModal">
+        <div class="card">
+          <div class="modal-head">
+            <h2 class="title" id="confirmTitle"></h2>
+            <button type="button" class="modal-close" data-close data-icon="close"></button>
+          </div>
+          <p class="desc" style="margin-top:0" id="confirmText"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn ghost sm auto" data-close data-i18n="cancel"></button>
+            <button type="button" class="btn sm auto" id="confirmOk" data-i18n="confirm"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>后台沿用 Brain 的页头（logo + 竖线 +「管理后台」），不再用原来那套独立的顶栏。左侧一列侧边导航，当前项是白色小卡 + 紫色图标；内容区全部是近白色卡片，表格没有竖线，只用浅色横线分隔。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>侧边导航</b>：概览、用户管理、请求日志、站点设置；「用户管理」「站点设置」只有管理员可见（带「管理员」小标签）。手机端变成顶部横向滚动的标签。</li>
+        <li><b>概览</b>：四张数字卡（注册用户、OAuth 应用、今日授权、今日失败率）+ 近 7 天授权柱状图 + 最近请求列表（点「查看全部」跳到请求日志）。普通用户看不到「注册用户」，其余数字只统计自己的应用。</li>
+        <li><b>用户管理</b>：搜索（邮箱 / 手机号 / ID）+ 角色筛选芯片 + 刷新；表格列：用户（头像 + 名称 + 邮箱）、角色、登录方式、应用数、注册时间、最近登录、操作。点行打开用户详情，可以「设为管理员 / 取消管理员」，需要二次确认。</li>
+        <li><b>请求日志</b>：搜索（请求 ID / 路径 / IP）+ 类别下拉 + 成功 / 失败芯片 + 刷新；表格列：时间、请求（方法 + 路径）、事件（类别 · 类型）、结果（状态码胶囊，绿 / 红）、耗时、IP、登录方式。点行打开详情，请求 ID 可复制，失败时显示错误码和信息。分页：范围 + 每页条数 + 页码。</li>
+        <li><b>站点设置</b>：「API 与 CORS」卡片，规则来源胶囊（数据库 / 默认）；每条规则是一张小卡：来源 Origin、API 路径（都可用 * 芯片表示任意）、方法芯片多选（* 与其他互斥）、删除。底部「添加规则」「保存」。</li>
+        <li><b>状态</b>：列表有数据 / 空 / 加载中；设置有规则 / 空 / 校验错误（Origin 下划线变红 + 红字说明）；普通用户访问管理员页面显示「没有权限」。</li>
+      </ul>
+
+      <h3>待确认</h3>
+      <ul>
+        <li><span class="tag">待确认</span> 概览和用户管理现在是占位页，数字卡、柱状图、用户列表都需要新增接口。</li>
+        <li><span class="tag">待确认</span> 用户来自 Brain，不在这里创建 / 删除用户，也不改密码；后台只看信息和调整角色。原来 i18n 里的「创建用户 / 密码」等文案可以删掉。</li>
+        <li><span class="tag">待确认</span> 请求日志新增的搜索和筛选需要接口支持；普通用户只能看到自己的日志。</li>
+        <li><span class="tag">待确认</span> 后台改用 Brain 页头后，原来的侧栏折叠按钮不再需要。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    const users = [
+      { id: 'u_8f3k2p', name: 'Renjie', email: 'renjie@brain.im', phone: '+86 138****5620', role: 'admin', method: 'phone', apps: 3, created: '2026-06-12', last: '10 分钟前 / 10 min ago' },
+      { id: 'u_2m9qx1', name: 'Lin', email: 'lin@brain.im', phone: '+86 139****1024', role: 'user', method: 'email', apps: 1, created: '2026-07-03', last: '2 小时前 / 2 h ago' },
+      { id: 'u_7ha03c', name: 'Mia Chen', email: 'mia@example.com', phone: '—', role: 'user', method: 'email', apps: 0, created: '2026-08-19', last: '昨天 / Yesterday' },
+      { id: 'u_c41kzz', name: 'Tom', email: 'tom@studio.dev', phone: '+86 186****7731', role: 'user', method: 'phone', apps: 5, created: '2026-09-01', last: '3 天前 / 3 d ago' }
+    ];
+
+    const logs = [
+      { id: 'req_9f2c1a7e', time: '09-30 08:41:12', method: 'POST', path: '/oauth/token', cat: 'oauth', type: 'token', status: 200, ms: 86, ip: '10.2.3.18', login: '—' },
+      { id: 'req_3b7d0e21', time: '09-30 08:40:57', method: 'GET', path: '/oauth/authorize', cat: 'oauth', type: 'authorize', status: 302, ms: 41, ip: '10.2.3.18', login: '—' },
+      { id: 'req_e10a55c4', time: '09-30 08:40:31', method: 'POST', path: '/api/user/login/phone', cat: 'auth', type: 'login', status: 200, ms: 312, ip: '101.88.7.2', login: 'phone' },
+      { id: 'req_71cc9b03', time: '09-30 08:38:02', method: 'POST', path: '/oauth/token', cat: 'oauth', type: 'token', status: 401, ms: 23, ip: '52.14.9.77', login: '—', error: 'invalid_client · Client authentication failed' },
+      { id: 'req_0d4e8f6a', time: '09-30 08:35:44', method: 'GET', path: '/oauth/userinfo', cat: 'oauth', type: 'userinfo', status: 200, ms: 18, ip: '52.14.9.77', login: '—' },
+      { id: 'req_5a92b7d1', time: '09-30 08:31:20', method: 'POST', path: '/api/user/logout', cat: 'auth', type: 'logout', status: 200, ms: 12, ip: '101.88.7.2', login: 'email' }
+    ];
+
+    let rules = [
+      { origin: 'https://spa.example.com', originAny: false, path: '/oauth/*', pathAny: false, methods: ['GET', 'POST', 'OPTIONS'] },
+      { origin: '', originAny: true, path: '/oauth/userinfo', pathAny: false, methods: ['GET'] }
+    ];
+    const METHODS = ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'PATCH', '*'];
+    let confirmAction = null;
+    let currentUser = null;
+
+    const proto = BrainProto.init({
+      title: '管理后台',
+      groups: [
+        { key: 'view', label: '页面', options: [['overview', '概览'], ['users', '用户'], ['logs', '日志'], ['settings', '设置']] },
+        { key: 'role', label: '角色', options: [['admin', '管理员'], ['user', '普通用户']] },
+        { key: 'data', label: '列表', options: [['filled', '有数据'], ['empty', '空'], ['loading', '加载中']] },
+        { key: 'rules', label: '规则', options: [['filled', '有规则'], ['empty', '空'], ['invalid', '校验错误']] }
+      ],
+      state: { view: 'overview', role: 'admin', data: 'filled', rules: 'filled' },
+      i18n: {
+        zh: {
+          sub: '管理后台',
+          navConsole: '控制台',
+          navDocs: '文档',
+          logout: '退出登录',
+          menu: '菜单',
+          navOverview: '概览',
+          navUsers: '用户管理',
+          navLogs: '请求日志',
+          navSettings: '站点设置',
+          adminTag: '管理员',
+          overviewTitle: '概览',
+          overviewDesc: '站点运行情况一览',
+          stUsers: '注册用户',
+          stUsersTrend: '本周 +12',
+          stApps: 'OAuth 应用',
+          stAppsTrend: '其中公共客户端 14 个',
+          stAuth: '今日授权',
+          stAuthTrend: '较昨日 +8.4%',
+          stFail: '今日失败率',
+          stFailTrend: '较昨日 +0.3%',
+          chartTitle: '近 7 天授权次数',
+          chartSub: '按天统计',
+          recentTitle: '最近请求',
+          viewAll: '查看全部',
+          usersTitle: '用户管理',
+          usersDesc: '查看登录过本站的 Brain 账号，调整管理员角色',
+          usersSearch: '搜索邮箱、手机号或 ID',
+          all: '全部',
+          roleAdmin: '管理员',
+          roleUser: '普通用户',
+          refresh: '刷新',
+          thUser: '用户',
+          thRole: '角色',
+          thLoginMethod: '登录方式',
+          thApps: '应用数',
+          thCreated: '注册时间',
+          thLastLogin: '最近登录',
+          phoneLogin: '手机号',
+          emailLogin: '邮箱',
+          detail: '详情',
+          usersRange: '1–4 / 128',
+          usersEmpty: '没有找到匹配的用户',
+          logsTitle: '请求日志',
+          logsDesc: '查看 API 请求、登录、登出等操作记录',
+          logsSearch: '搜索请求 ID、路径或 IP',
+          allCategories: '全部类别',
+          success: '成功',
+          failed: '失败',
+          thTime: '时间',
+          thRequest: '请求',
+          thEvent: '事件',
+          thResult: '结果',
+          thDuration: '耗时',
+          logsRange: '1–15 / 120 · 每页',
+          logsEmpty: '暂无记录',
+          settingsTitle: '站点设置',
+          settingsDesc: '运行时参数，优先于 .env，保存后立即生效',
+          corsTitle: 'API 与 CORS',
+          corsDesc: '允许浏览器跨域调用 /oauth/token、/oauth/userinfo、/oauth/revoke 与登出接口的来源。每条规则由来源 Origin、API 路径、HTTP 方法组成，都可以用 * 表示任意；路径支持 /oauth/*。没有规则时使用环境变量 API_CORS_ALLOWED_ORIGINS。',
+          corsRules: 'CORS 规则',
+          sourceDb: '来源：数据库',
+          sourceDefault: '来源：默认',
+          origin: '来源 Origin',
+          path: 'API 路径',
+          methods: '方法',
+          any: '任意',
+          remove: '删除',
+          rulesEmpty: '还没有规则，点击下方「添加规则」',
+          ruleErr: '来源 Origin 必须是 * 或有效的 http(s) 地址（不含路径），例如 https://spa.example.com',
+          addRule: '添加规则',
+          save: '保存',
+          saved: '已保存',
+          fixErrors: '请先修正标红的规则',
+          forbidden: '没有权限访问这个页面',
+          userDetail: '用户详情',
+          phone: '手机号',
+          emailVerified: '邮箱验证时间',
+          updated: '更新时间',
+          userNote: '账号信息来自 Brain，这里只能调整在本站的角色。',
+          close: '关闭',
+          setAdmin: '设为管理员',
+          unsetAdmin: '取消管理员',
+          setAdminTitle: '设为管理员？',
+          setAdminText: '该用户将可以管理用户和站点设置。',
+          unsetAdminTitle: '取消管理员？',
+          unsetAdminText: '该用户将无法再访问用户管理和站点设置。',
+          cancel: '取消',
+          confirm: '确认',
+          roleChanged: '角色已更新',
+          logDetail: '请求详情',
+          requestId: '请求 ID',
+          copied: '已复制',
+          refreshed: '已刷新'
+        },
+        en: {
+          sub: 'Admin',
+          navConsole: 'Console',
+          navDocs: 'Docs',
+          logout: 'Sign out',
+          menu: 'Menu',
+          navOverview: 'Overview',
+          navUsers: 'Users',
+          navLogs: 'Request logs',
+          navSettings: 'Settings',
+          adminTag: 'Admin',
+          overviewTitle: 'Overview',
+          overviewDesc: 'How the site is doing',
+          stUsers: 'Users',
+          stUsersTrend: '+12 this week',
+          stApps: 'OAuth apps',
+          stAppsTrend: '14 public clients',
+          stAuth: 'Authorizations today',
+          stAuthTrend: '+8.4% vs yesterday',
+          stFail: 'Failure rate today',
+          stFailTrend: '+0.3% vs yesterday',
+          chartTitle: 'Authorizations, last 7 days',
+          chartSub: 'Daily',
+          recentTitle: 'Recent requests',
+          viewAll: 'View all',
+          usersTitle: 'Users',
+          usersDesc: 'Brain accounts that have signed in here, and their admin role',
+          usersSearch: 'Search email, phone or ID',
+          all: 'All',
+          roleAdmin: 'Admin',
+          roleUser: 'User',
+          refresh: 'Refresh',
+          thUser: 'User',
+          thRole: 'Role',
+          thLoginMethod: 'Sign-in',
+          thApps: 'Apps',
+          thCreated: 'Joined',
+          thLastLogin: 'Last sign-in',
+          phoneLogin: 'Phone',
+          emailLogin: 'Email',
+          detail: 'Details',
+          usersRange: '1–4 of 128',
+          usersEmpty: 'No matching users',
+          logsTitle: 'Request logs',
+          logsDesc: 'API requests, sign-ins, sign-outs and other activity',
+          logsSearch: 'Search request ID, path or IP',
+          allCategories: 'All categories',
+          success: 'Success',
+          failed: 'Failed',
+          thTime: 'Time',
+          thRequest: 'Request',
+          thEvent: 'Event',
+          thResult: 'Result',
+          thDuration: 'Duration',
+          logsRange: '1–15 of 120 · per page',
+          logsEmpty: 'No records yet',
+          settingsTitle: 'Settings',
+          settingsDesc: 'Runtime settings. They override .env and apply immediately.',
+          corsTitle: 'API & CORS',
+          corsDesc: 'Origins allowed to call /oauth/token, /oauth/userinfo, /oauth/revoke and sign-out from the browser. Each rule has an origin, an API path and HTTP methods; any of them can be *. Paths support /oauth/*. Without rules, API_CORS_ALLOWED_ORIGINS is used.',
+          corsRules: 'CORS rules',
+          sourceDb: 'Source: database',
+          sourceDefault: 'Source: default',
+          origin: 'Origin',
+          path: 'API path',
+          methods: 'Methods',
+          any: 'Any',
+          remove: 'Remove',
+          rulesEmpty: 'No rules yet. Use "Add rule" below.',
+          ruleErr: 'Origin must be * or a valid http(s) origin without a path, e.g. https://spa.example.com',
+          addRule: 'Add rule',
+          save: 'Save',
+          saved: 'Saved',
+          fixErrors: 'Fix the rules marked in red first',
+          forbidden: 'You don\'t have access to this page',
+          userDetail: 'User details',
+          phone: 'Phone',
+          emailVerified: 'Email verified',
+          updated: 'Updated',
+          userNote: 'Account details come from Brain. Only the role on this site can be changed here.',
+          close: 'Close',
+          setAdmin: 'Make admin',
+          unsetAdmin: 'Remove admin',
+          setAdminTitle: 'Make admin?',
+          setAdminText: 'This user will be able to manage users and site settings.',
+          unsetAdminTitle: 'Remove admin?',
+          unsetAdminText: 'This user will lose access to users and site settings.',
+          cancel: 'Cancel',
+          confirm: 'Confirm',
+          roleChanged: 'Role updated',
+          logDetail: 'Request details',
+          requestId: 'Request ID',
+          copied: 'Copied',
+          refreshed: 'Refreshed'
+        }
+      },
+      onRender(state, dict) {
+        const zh = state.lang === 'zh';
+        const pick = (text) => (text.includes(' / ') ? text.split(' / ')[zh ? 0 : 1] : text);
+
+        document.querySelectorAll('#sideNav a').forEach((a) => a.classList.toggle('on', a.dataset.view === state.view));
+
+        const days = [['一', 'Mon', 96], ['二', 'Tue', 118], ['三', 'Wed', 104], ['四', 'Thu', 132], ['五', 'Fri', 150], ['六', 'Sat', 88], ['日', 'Sun', 142]];
+        $('bars').innerHTML = days.map(([z, e, v]) => `<div><i style="height:${Math.round((v / 150) * 120)}px"></i>${zh ? '周' + z : e}</div>`).join('');
+
+        const resultPill = (log) => `<span class="pill sm ${log.status < 400 ? 'ok' : 'danger'}">${log.status}</span>`;
+        $('recent').innerHTML = logs.slice(0, 5).map((l) => `<div>${resultPill(l)}<span class="method ${l.method === 'POST' ? 'post' : ''}">${l.method}</span><span class="path">${l.path}</span><time>${l.time.slice(6)}</time></div>`).join('');
+
+        $('userRows').innerHTML = users.map((u) => `
+          <tr class="clickable" data-user="${u.id}">
+            <td><div class="user-cell"><span class="avatar sm">${esc(u.name[0])}</span><span class="strong">${esc(u.name)}<small>${esc(u.email)}</small></span></div></td>
+            <td>${u.role === 'admin' ? `<span class="pill sm purple">${dict.roleAdmin}</span>` : `<span class="pill sm soft">${dict.roleUser}</span>`}</td>
+            <td>${u.method === 'phone' ? dict.phoneLogin : dict.emailLogin}</td>
+            <td>${u.apps}</td>
+            <td>${u.created}</td>
+            <td>${pick(u.last)}</td>
+            <td><button type="button" class="link-btn" data-user="${u.id}">${dict.detail}</button></td>
+          </tr>`).join('');
+
+        $('logRows').innerHTML = logs.map((l) => `
+          <tr class="clickable" data-log="${l.id}">
+            <td>${l.time}</td>
+            <td><span class="method ${l.method === 'POST' ? 'post' : ''}">${l.method}</span><span class="mono">${l.path}</span></td>
+            <td>${l.cat} · ${l.type}</td>
+            <td>${resultPill(l)}</td>
+            <td>${l.ms} ms</td>
+            <td class="mono">${l.ip}</td>
+            <td>${l.login === 'phone' ? dict.phoneLogin : l.login === 'email' ? dict.emailLogin : '—'}</td>
+          </tr>`).join('');
+
+        renderRules(state, dict);
+      }
+    });
+
+    function renderRules(state, dict) {
+      const card = $('corsCard');
+      card.classList.toggle('rules-empty-on', state.rules === 'empty');
+      $('sourcePill').textContent = state.rules === 'empty' ? dict.sourceDefault : dict.sourceDb;
+      $('rules').innerHTML = rules.map((r, i) => {
+        const bad = state.rules === 'invalid' && i === 0;
+        const origin = bad ? 'spa.example.com/app' : r.origin;
+        return `
+          <div class="inner-card rule${bad ? ' bad' : ''}" data-rule="${i}">
+            <div class="field origin">
+              <label>${dict.origin}</label>
+              <div class="inline">
+                <input value="${esc(r.originAny ? '' : origin)}" placeholder="${r.originAny ? dict.any : 'https://spa.example.com'}" ${r.originAny ? 'disabled' : ''}>
+                <button type="button" class="chip mono star${r.originAny ? ' on' : ''}" data-any="origin">*</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>${dict.path}</label>
+              <div class="inline">
+                <input value="${esc(r.pathAny ? '' : r.path)}" placeholder="${r.pathAny ? dict.any : '/oauth/token'}" ${r.pathAny ? 'disabled' : ''}>
+                <button type="button" class="chip mono star${r.pathAny ? ' on' : ''}" data-any="path">*</button>
+              </div>
+            </div>
+            <button type="button" class="link-btn danger" data-remove>${BrainProto.icon('trash')}${dict.remove}</button>
+            <div class="methods">
+              <span class="block-label">${dict.methods}</span>
+              ${METHODS.map((m) => `<button type="button" class="chip mono${r.methods.includes(m) ? ' on' : ''}" data-method="${m}">${m}</button>`).join('')}
+            </div>
+            <div class="rule-err">${dict.ruleErr}</div>
+          </div>`;
+      }).join('');
+    }
+
+    const open = (id) => $(id).classList.add('open');
+    const close = (id) => $(id).classList.remove('open');
+    document.querySelectorAll('.modal').forEach((modal) => {
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal || event.target.closest('[data-close]')) modal.classList.remove('open');
+      });
+    });
+
+    const setView = (view) => {
+      proto.state.view = view;
+      proto.render();
+    };
+    $('sideNav').addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      e.preventDefault();
+      setView(a.dataset.view);
+    });
+    document.querySelector('[data-go="logs"]').addEventListener('click', (e) => {
+      e.preventDefault();
+      setView('logs');
+    });
+
+    document.querySelectorAll('.toolbar .chips').forEach((group) => {
+      group.addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip');
+        if (!chip) return;
+        group.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c === chip));
+      });
+    });
+    document.querySelectorAll('[data-refresh]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        proto.state.data = 'loading';
+        proto.render();
+        setTimeout(() => {
+          proto.state.data = 'filled';
+          proto.render();
+          proto.toast(proto.dict.refreshed);
+        }, 700);
+      })
+    );
+
+    function showUser(id) {
+      currentUser = users.find((u) => u.id === id);
+      const d = proto.dict;
+      $('udAvatar').textContent = currentUser.name[0];
+      $('udName').textContent = currentUser.name;
+      $('udEmail').textContent = currentUser.email;
+      $('udId').textContent = currentUser.id;
+      $('udRole').innerHTML = currentUser.role === 'admin' ? `<span class="pill sm purple">${d.roleAdmin}</span>` : `<span class="pill sm soft">${d.roleUser}</span>`;
+      $('udPhone').textContent = currentUser.phone;
+      $('udCreated').textContent = currentUser.created;
+      $('roleBtn').textContent = currentUser.role === 'admin' ? d.unsetAdmin : d.setAdmin;
+      open('userModal');
+    }
+
+    $('userRows').addEventListener('click', (e) => {
+      const row = e.target.closest('[data-user]');
+      if (row) showUser(row.dataset.user);
+    });
+
+    $('roleBtn').addEventListener('click', () => {
+      const d = proto.dict;
+      const isAdmin = currentUser.role === 'admin';
+      $('confirmTitle').textContent = isAdmin ? d.unsetAdminTitle : d.setAdminTitle;
+      $('confirmText').textContent = isAdmin ? d.unsetAdminText : d.setAdminText;
+      confirmAction = () => {
+        currentUser.role = isAdmin ? 'user' : 'admin';
+        close('userModal');
+        proto.render();
+        proto.toast(d.roleChanged);
+      };
+      open('confirmModal');
+    });
+    $('confirmOk').addEventListener('click', () => {
+      close('confirmModal');
+      if (confirmAction) confirmAction();
+    });
+
+    $('logRows').addEventListener('click', (e) => {
+      const row = e.target.closest('[data-log]');
+      if (!row) return;
+      const l = logs.find((x) => x.id === row.dataset.log);
+      const d = proto.dict;
+      $('ldId').textContent = l.id;
+      $('ldTime').textContent = `2026-${l.time}`;
+      $('ldReq').innerHTML = `<span class="code">${l.method} ${l.path}</span>`;
+      $('ldEvent').textContent = `${l.cat} · ${l.type}`;
+      $('ldResult').innerHTML = `<span class="pill sm ${l.status < 400 ? 'ok' : 'danger'}">${l.status}</span>`;
+      $('ldDuration').textContent = `${l.ms} ms`;
+      $('ldIp').textContent = l.ip;
+      $('ldMethod').textContent = l.login === 'phone' ? d.phoneLogin : l.login === 'email' ? d.emailLogin : '—';
+      $('ldError').style.display = l.error ? '' : 'none';
+      $('ldErrorText').textContent = l.error || '';
+      open('logModal');
+    });
+
+    document.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', () => proto.toast(proto.dict.copied)));
+
+    $('rules').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-rule]');
+      if (!card) return;
+      const rule = rules[Number(card.dataset.rule)];
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      if (btn.dataset.any) rule[`${btn.dataset.any}Any`] = !rule[`${btn.dataset.any}Any`];
+      if (btn.dataset.method) {
+        const m = btn.dataset.method;
+        if (m === '*') rule.methods = rule.methods.includes('*') ? [] : ['*'];
+        else {
+          rule.methods = rule.methods.filter((x) => x !== '*');
+          rule.methods = rule.methods.includes(m) ? rule.methods.filter((x) => x !== m) : [...rule.methods, m];
+        }
+      }
+      if (btn.hasAttribute('data-remove')) {
+        rules.splice(Number(card.dataset.rule), 1);
+        if (!rules.length) proto.state.rules = 'empty';
+      }
+      proto.render();
+    });
+
+    $('addRule').addEventListener('click', () => {
+      rules.push({ origin: '', originAny: false, path: '', pathAny: false, methods: ['POST'] });
+      if (proto.state.rules === 'empty') proto.state.rules = 'filled';
+      proto.render();
+    });
+
+    $('saveRules').addEventListener('click', (e) => {
+      if (proto.state.rules === 'invalid') {
+        proto.toast(proto.dict.fixErrors);
+        return;
+      }
+      const btn = e.currentTarget;
+      btn.classList.add('state-loading');
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.classList.remove('state-loading');
+        btn.disabled = false;
+        proto.toast(proto.dict.saved);
+      }, 700);
+    });
+  </script>
+</body>
+
+</html>
