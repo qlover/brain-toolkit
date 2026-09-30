@@ -1326,6 +1326,43 @@
   margin-top: 8px;
 }
 
+/* ---------- 404 ---------- */
+.brain-lost {
+  position: relative;
+  z-index: 1;
+  max-width: 440px;
+  text-align: center;
+}
+
+.brain-lost-code {
+  font-size: 120px;
+  font-weight: 200;
+  letter-spacing: -4px;
+  line-height: 1;
+  background: var(--brain-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brain-lost .brain-title {
+  margin-top: 16px;
+  font-size: 28px;
+}
+
+.brain-lost .brain-desc {
+  margin: 12px 0 32px;
+  line-height: 1.8;
+}
+
+.brain-lost-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
 /* ---------- Footer ---------- */
 .brain-foot {
   position: relative;
@@ -1385,6 +1422,10 @@
 
   .brain-content {
     padding: 32px 20px 48px;
+  }
+
+  .brain-lost-code {
+    font-size: 88px;
   }
 
   .brain-features {

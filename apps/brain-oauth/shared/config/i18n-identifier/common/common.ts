@@ -187,3 +187,38 @@ export const COMMON_HEADER_LOGIN = 'common:header__login';
  * @localEn Console
  */
 export const COMMON_HEADER_CONSOLE = 'common:header__console';
+
+/**
+ * @description Brain OAuth portal — product name (logo title)
+ * @localZh Brain OAuth
+ * @localEn Brain OAuth
+ */
+export const COMMON_APP_NAME = 'common:app__name';
+
+/**
+ * @description 404 page — heading
+ * @localZh 页面不存在
+ * @localEn Page not found
+ */
+export const COMMON_NOT_FOUND_TITLE = 'common:not_found__title';
+
+/**
+ * @description 404 page — explanation under the heading
+ * @localZh 你访问的地址可能输错了，或者页面已经被移走。
+ * @localEn The address may be mistyped, or the page has moved.
+ */
+export const COMMON_NOT_FOUND_DESC = 'common:not_found__desc';
+
+/**
+ * @description 404 page — primary button back to the home page
+ * @localZh 返回首页
+ * @localEn Back to home
+ */
+export const COMMON_NOT_FOUND_HOME = 'common:not_found__home';
+
+/**
+ * @description 404 page — secondary link to the docs
+ * @localZh 查看文档
+ * @localEn Read the docs
+ */
+export const COMMON_NOT_FOUND_DOCS = 'common:not_found__docs';
