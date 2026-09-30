@@ -110,8 +110,9 @@ export const ADMIN_HOME_SHELL_COPIED = 'admin_home:shell__copied';
 
 /**
  * @description Brain OAuth admin — pager range, placeholders {from} {to} {total}
- * @localZh {from}–{to} / {total}
- * @localEn {from}–{to} of {total}
+ *   (ICU-escaped so useI18nMapping returns the template for fill())
+ * @localZh '{from}'–'{to}' / '{total}'
+ * @localEn '{from}'–'{to}' of '{total}'
  */
 export const ADMIN_HOME_SHELL_RANGE = 'admin_home:shell__range';
 
@@ -161,8 +162,9 @@ export const ADMIN_HOME_STAT_USERS = 'admin_home:stat__users';
 
 /**
  * @description Brain OAuth admin — stat card: new users this week, placeholder {n}
- * @localZh 本周新增 {n}
- * @localEn +{n} this week
+ *   (ICU-escaped so useI18nMapping returns the template for fill())
+ * @localZh 本周新增 '{n}'
+ * @localEn +'{n}' this week
  */
 export const ADMIN_HOME_STAT_USERS_TREND = 'admin_home:stat__users_trend';
 
@@ -175,8 +177,9 @@ export const ADMIN_HOME_STAT_APPS = 'admin_home:stat__apps';
 
 /**
  * @description Brain OAuth admin — stat card: public clients, placeholder {n}
- * @localZh 其中公共客户端 {n} 个
- * @localEn {n} public clients
+ *   (ICU-escaped so useI18nMapping returns the template for fill())
+ * @localZh 其中公共客户端 '{n}' 个
+ * @localEn '{n}' public clients
  */
 export const ADMIN_HOME_STAT_APPS_TREND = 'admin_home:stat__apps_trend';
 
@@ -196,8 +199,9 @@ export const ADMIN_HOME_STAT_FAIL = 'admin_home:stat__fail';
 
 /**
  * @description Brain OAuth admin — stat card trend, placeholder {delta}
- * @localZh 较昨日 {delta}
- * @localEn {delta} vs yesterday
+ *   (ICU-escaped so useI18nMapping returns the template for fill())
+ * @localZh 较昨日 '{delta}'
+ * @localEn '{delta}' vs yesterday
  */
 export const ADMIN_HOME_STAT_VS_YESTERDAY = 'admin_home:stat__vs_yesterday';
 
