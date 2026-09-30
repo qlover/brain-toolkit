@@ -79,7 +79,8 @@
   text-decoration: none;
 }
 
-.brain-header [data-testid='AppHeaderNav'] a:hover {
+.brain-header [data-testid='AppHeaderNav'] a:hover,
+.brain-header [data-testid='AppHeaderNav'] a[aria-current='page'] {
   color: rgb(var(--fe-color-primary-text));
 }
 
@@ -1326,6 +1327,106 @@
   margin-top: 8px;
 }
 
+/* ---------- Chips ---------- */
+.brain-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brain-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: rgb(var(--fe-color-secondary));
+  box-shadow: var(--brain-shadow-sm);
+  font-size: 13px;
+  font-weight: 300;
+  color: rgb(var(--fe-color-primary-text));
+}
+
+.brain-chip small {
+  font-size: 11px;
+  color: rgb(var(--fe-color-tertiary-text));
+}
+
+/* ---------- About ---------- */
+.brain-about-hero {
+  max-width: 620px;
+  padding: 16px 0 64px;
+}
+
+.brain-about-hero .brain-title {
+  font-size: 52px;
+  letter-spacing: -1px;
+}
+
+.brain-about-hero p {
+  margin: 20px 0 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: rgb(var(--fe-color-secondary-text));
+}
+
+.brain-about-standards {
+  margin-bottom: 56px;
+}
+
+.brain-about-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.brain-about-info .brain-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brain-about-version {
+  font-size: 36px;
+  font-weight: 300;
+  color: rgb(var(--fe-color-primary-text));
+}
+
+.brain-about-links {
+  display: grid;
+  gap: 12px;
+}
+
+.brain-about-links a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgb(var(--fe-color-primary-border));
+  font-size: 14px;
+  font-weight: 300;
+  color: rgb(var(--fe-color-primary-text));
+  text-decoration: none;
+}
+
+.brain-about-links a:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.brain-about-links a:hover {
+  color: rgb(var(--fe-color-brand));
+}
+
+.brain-about-links svg {
+  width: 14px;
+  height: 14px;
+  color: rgb(var(--fe-color-tertiary-text));
+}
+
 /* ---------- 404 ---------- */
 .brain-lost {
   position: relative;
@@ -1428,8 +1529,13 @@
     font-size: 88px;
   }
 
-  .brain-features {
+  .brain-features,
+  .brain-about-info {
     grid-template-columns: 1fr;
+  }
+
+  .brain-about-hero .brain-title {
+    font-size: 38px;
   }
 
   .brain-code-block {
