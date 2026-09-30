@@ -118,18 +118,34 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
 
   /**
    * @override
+   *
+   * Persist failed API envelopes only — successful calls used to flood
+   * `brain_oauth_request_logs`. Auth login/logout still use `insertWithAuth`.
    */
   protected override afterApiResult<Result>(
     envelope: NextKitApiResult<Result>,
     request?: NextRequest
   ): void {
-    if (request) {
-      this.IOC(RequestLogsRepository)
-        .insertWithApiResult(envelope, { request })
-        .catch((error: unknown) => {
-          this.IOC(I.Logger).warn('Failed to write request log', error);
-        });
+    if (!request) {
+      return;
     }
+
+    // Success rows: keep the call site for easy re-enable, but do not write.
+    // this.IOC(RequestLogsRepository)
+    //   .insertWithApiResult(envelope, { request })
+    //   .catch((error: unknown) => {
+    //     this.IOC(I.Logger).warn('Failed to write request log', error);
+    //   });
+
+    if (envelope.success) {
+      return;
+    }
+
+    this.IOC(RequestLogsRepository)
+      .insertWithApiResult(envelope, { request })
+      .catch((error: unknown) => {
+        this.IOC(I.Logger).warn('Failed to write request log', error);
+      });
   }
 
   /**

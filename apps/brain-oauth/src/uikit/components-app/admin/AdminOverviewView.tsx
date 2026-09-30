@@ -104,14 +104,11 @@ export function AdminOverviewView() {
       {
         key: 'fail',
         label: tt.statFail,
-        value:
-          data.failureRate.today === null
-            ? '—'
-            : `${(data.failureRate.today * 100).toFixed(1)}%`,
+        value: String(data.failures.today),
         trend: vsYesterday(
-          data.failureRate.today,
-          data.failureRate.yesterday,
-          (t, y) => (t - y) * 100,
+          data.failures.today,
+          data.failures.yesterday,
+          (t, y) => ((t - y) / y) * 100,
           false
         )
       }

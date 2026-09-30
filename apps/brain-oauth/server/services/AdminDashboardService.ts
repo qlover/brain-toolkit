@@ -74,14 +74,14 @@ export class AdminDashboardService {
             })()
           );
 
-    const countLogs = (from: number, to: number, failedOnly: boolean) => {
+    const countFailedLogs = (from: number, to: number) => {
       let q = supabase
         .from(requestLogsTable)
         .select('id', { count: 'exact', head: true })
+        .eq('success', false)
         .gte('created_at', new Date(from).toISOString())
         .lt('created_at', new Date(to).toISOString());
       if (ownerUserId) q = q.eq('user_id', ownerUserId);
-      if (failedOnly) q = q.eq('success', false);
       return count(q);
     };
 
@@ -101,9 +101,7 @@ export class AdminDashboardService {
       dailyCounts,
       appsTotal,
       appsPublic,
-      logsToday,
       failedToday,
-      logsYesterday,
       failedYesterday,
       users,
       recent
@@ -113,10 +111,8 @@ export class AdminDashboardService {
       ),
       countApps(false),
       countApps(true),
-      countLogs(todayStart, tomorrowStart, false),
-      countLogs(todayStart, tomorrowStart, true),
-      countLogs(yesterdayStart, todayStart, false),
-      countLogs(yesterdayStart, todayStart, true),
+      countFailedLogs(todayStart, tomorrowStart),
+      countFailedLogs(yesterdayStart, todayStart),
       ownerUserId ? Promise.resolve(null) : this.countUsers(supabase),
       this.listRecentLogs(supabase, ownerUserId)
     ]);
@@ -129,9 +125,9 @@ export class AdminDashboardService {
         today: dailyCounts[dailyCounts.length - 1],
         yesterday: dailyCounts[dailyCounts.length - 2]
       },
-      failureRate: {
-        today: rate(failedToday, logsToday),
-        yesterday: rate(failedYesterday, logsYesterday)
+      failures: {
+        today: failedToday,
+        yesterday: failedYesterday
       },
       daily: chartStarts.map((start, index) => ({
         date: new Date(start).toISOString(),
@@ -314,8 +310,4 @@ async function count(
     throw new Error(`Count query failed: ${error.message}`);
   }
   return value ?? 0;
-}
-
-function rate(failed: number, total: number): number | null {
-  return total > 0 ? failed / total : null;
 }
