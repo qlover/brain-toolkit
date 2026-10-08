@@ -1,12 +1,19 @@
 'use client';
 
+import { Dropdown, type DropdownItem } from '@qlover/next-kit/client';
+import { useCallback, useMemo } from 'react';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
+import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { isBrainAdminUser } from '@shared/auth/brainAdmin';
 import { headerNavI18n } from '@config/i18n-mapping/headerNavI18n';
+import { I } from '@config/ioc-identifiter';
 import { ROUTE_ADMIN, ROUTE_DEVELOPER_APPS, ROUTE_LOGIN } from '@config/route';
 import { BrainAvatar } from './BrainAvatar';
-import { LogoutButton } from '../../components-app/LogoutButton';
+import {
+  LogoutButton,
+  useLogoutConfirm
+} from '../../components-app/LogoutButton';
 import { LocaleLink } from '../LocaleLink';
 
 export interface BrainAuthActionsProps {
@@ -14,11 +21,15 @@ export interface BrainAuthActionsProps {
   showConsole?: boolean;
   /** Round logout button after the avatar (console). */
   showLogout?: boolean;
-  /** Admin backend pill for Brain admins (default true; off inside admin). */
+  /** Admin backend item in the avatar menu for Brain admins (default true; off inside admin). */
   showAdmin?: boolean;
 }
 
-/** Brain header auth area: sign-in pill for guests, avatar for signed-in users. */
+const MENU_ACCOUNT = 'account';
+const MENU_ADMIN = 'admin';
+const MENU_LOGOUT = 'logout';
+
+/** Brain header auth area: sign-in pill for guests, avatar menu for signed-in users. */
 export function BrainAuthActions({
   showConsole,
   showLogout,
@@ -26,6 +37,43 @@ export function BrainAuthActions({
 }: BrainAuthActionsProps) {
   const tt = useI18nMapping(headerNavI18n);
   const { success, loading, user } = useUserAuth();
+  const routerService = useIOC(I.RouterServiceInterface);
+  const logout = useLogoutConfirm();
+
+  const displayName = user?.name || user?.email || user?.phone;
+  const contact = user?.email || user?.phone;
+  const canAdmin = showAdmin && isBrainAdminUser(user);
+
+  const items = useMemo<DropdownItem[]>(
+    () => [
+      {
+        key: MENU_ACCOUNT,
+        disabled: true,
+        label: (
+          <span className="flex flex-col">
+            <span className="text-primary-text font-medium">{displayName}</span>
+            {contact && contact !== displayName && (
+              <small className="text-secondary-text">{contact}</small>
+            )}
+          </span>
+        )
+      },
+      ...(canAdmin ? [{ key: MENU_ADMIN, label: tt.admin }] : []),
+      { key: MENU_LOGOUT, label: logout.title }
+    ],
+    [displayName, contact, canAdmin, tt.admin, logout.title]
+  );
+
+  const onSelect = useCallback(
+    (key: string) => {
+      if (key === MENU_ADMIN) {
+        routerService.goto(ROUTE_ADMIN);
+      } else if (key === MENU_LOGOUT) {
+        logout.confirm();
+      }
+    },
+    [routerService, logout]
+  );
 
   if (loading) {
     return (
@@ -50,20 +98,8 @@ export function BrainAuthActions({
     );
   }
 
-  const displayName = user?.name || user?.email || user?.phone;
-
   return (
     <div data-testid="BrainAuthActions" className="flex items-center gap-2.5">
-      {showAdmin && isBrainAdminUser(user) && (
-        <LocaleLink
-          data-testid="BrainAuthAdmin"
-          href={ROUTE_ADMIN}
-          title={tt.admin}
-          className="brain-btn sm auto brain-hide-mobile"
-        >
-          {tt.admin}
-        </LocaleLink>
-      )}
       {showConsole && (
         <LocaleLink
           href={ROUTE_DEVELOPER_APPS}
@@ -73,9 +109,24 @@ export function BrainAuthActions({
           {tt.console}
         </LocaleLink>
       )}
-      <span title={displayName}>
-        <BrainAvatar name={displayName} />
-      </span>
+      <Dropdown
+        data-testid="BrainAuthMenu"
+        items={items}
+        placement="bottom-end"
+        mobileMode="menu"
+        menuMinWidth={200}
+        onSelect={onSelect}
+      >
+        <button
+          type="button"
+          title={displayName}
+          aria-label={displayName}
+          aria-haspopup="menu"
+          className="cursor-pointer rounded-full"
+        >
+          <BrainAvatar name={displayName} />
+        </button>
+      </Dropdown>
       {showLogout && <LogoutButton showLabel />}
     </div>
   );
