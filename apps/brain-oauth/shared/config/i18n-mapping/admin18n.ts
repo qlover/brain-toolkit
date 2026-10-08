@@ -133,7 +133,14 @@ export const adminSettings18n = Object.freeze({
   corsPathInvalid: settingsKeys.ADMIN_SETTINGS_CORS_PATH_INVALID,
   corsMethodsEmpty: settingsKeys.ADMIN_SETTINGS_CORS_METHODS_EMPTY,
   corsDuplicate: settingsKeys.ADMIN_SETTINGS_CORS_DUPLICATE,
-  corsFixErrors: settingsKeys.ADMIN_SETTINGS_CORS_FIX_ERRORS
+  corsFixErrors: settingsKeys.ADMIN_SETTINGS_CORS_FIX_ERRORS,
+  sectionBrain: settingsKeys.ADMIN_SETTINGS_SECTION_BRAIN,
+  sectionBrainDesc: settingsKeys.ADMIN_SETTINGS_SECTION_BRAIN_DESC,
+  brainEnv: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV,
+  brainEnvCustom: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV_CUSTOM,
+  brainBaseUrl: settingsKeys.ADMIN_SETTINGS_BRAIN_BASE_URL,
+  brainBaseUrlInvalid: settingsKeys.ADMIN_SETTINGS_BRAIN_BASE_URL_INVALID,
+  brainEffective: settingsKeys.ADMIN_SETTINGS_BRAIN_EFFECTIVE
 });
 
 export type AdminSettingsI18nInterface = typeof adminSettings18n;

@@ -36,6 +36,7 @@ import { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperPr
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { BrainOAuthUserStore } from '@server/services/BrainOAuthUserStore';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
+import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { OAuthConsentDeviceContext } from '@server/utils/oauthConsentDevice';
 import type { LoggerInterface } from '@qlover/logger';
 
@@ -203,7 +204,7 @@ export class BrainUserOAuthProvider
   extends OAuthWrapperService<UserSchema, BrainUserSession>
   implements OAuthWrapperProviderInterface
 {
-  protected gateway: BrainUserGateway;
+  protected gatewayPromise?: Promise<BrainUserGateway>;
   protected tokenEncryption: TokenEncryption;
   protected consentTrust: OAuthConsentTrustService;
   /** Per-request (IOC is per request): true only inside userinfo. */
@@ -218,7 +219,9 @@ export class BrainUserOAuthProvider
     @inject(OAuthWrapperRepository) oauthRepo: OAuthWrapperRepositoryInterface,
     @inject(BrainOAuthUserStore)
     protected readonly identityStore: BrainOAuthUserStore,
-    @inject(SupabaseRepo) supabaseRepo: SupabaseRepo<unknown>
+    @inject(SupabaseRepo) supabaseRepo: SupabaseRepo<unknown>,
+    @inject(SiteSettingsService)
+    protected readonly siteSettings: SiteSettingsService
   ) {
     const tokenEncryption = new TokenEncryption(config.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
@@ -229,12 +232,26 @@ export class BrainUserOAuthProvider
       ),
       logger
     );
-    const options = createBrainUserOptions({
-      logger,
-      fetcher: nextSafeFetch
-    });
-    this.gateway = new BrainUserGateway(options.requestAdapter, logger);
     this.tokenEncryption = tokenEncryption;
+  }
+
+  /**
+   * Built lazily from the admin "Brain API" site settings (cached
+   * process-wide), once per request since IOC is per request.
+   */
+  protected getGateway(): Promise<BrainUserGateway> {
+    this.gatewayPromise ??= this.siteSettings
+      .getBrainApiTarget()
+      .then(({ env, domains }) => {
+        const options = createBrainUserOptions({
+          logger: this.logger,
+          fetcher: nextSafeFetch,
+          env,
+          domains
+        });
+        return new BrainUserGateway(options.requestAdapter, this.logger);
+      });
+    return this.gatewayPromise;
   }
 
   /**
@@ -392,13 +409,14 @@ export class BrainUserOAuthProvider
   protected async providerLogin(
     params: LoginParams
   ): Promise<WithUserSession<BrainUserSession, UserSchema>> {
+    const gateway = await this.getGateway();
     const result =
       params.phone && params.code
-        ? await this.gateway.verifySignOtp({
+        ? await gateway.verifySignOtp({
             phone: params.phone,
             otp: params.code
           })
-        : await this.gateway.login({
+        : await gateway.login({
             email: params.email!,
             password: params.password!
           });
@@ -427,7 +445,8 @@ export class BrainUserOAuthProvider
   protected async providerExchangeAccessToken(
     session: BrainUserSession
   ): Promise<OAuthWrapperAccessToken> {
-    const accessResult = await this.gateway.getAccessToken({
+    const gateway = await this.getGateway();
+    const accessResult = await gateway.getAccessToken({
       token: session.providerRefreshToken,
       lang: 'en'
     });
@@ -457,7 +476,8 @@ export class BrainUserOAuthProvider
   protected async providerGetUserInfo(
     sessionToken: string
   ): Promise<UserSchema> {
-    const profile = await this.gateway.getUserInfo({ token: sessionToken });
+    const gateway = await this.getGateway();
+    const profile = await gateway.getUserInfo({ token: sessionToken });
     return brainUserToUserSchema(requireBrainUser(profile));
   }
 
@@ -467,7 +487,8 @@ export class BrainUserOAuthProvider
   protected async providerGetUserInfoByAccessToken(
     accessToken: string
   ): Promise<UserSchema> {
-    const profile = await this.gateway.getUserInfo(
+    const gateway = await this.getGateway();
+    const profile = await gateway.getUserInfo(
       { token: accessToken },
       { tokenPrefix: 'Bearer' }
     );
@@ -565,7 +586,8 @@ export class BrainUserOAuthProvider
     if ('email' in params) {
       throw new Error('Email is not supported');
     }
-    const result = await this.gateway.verifySignOtp({ phone: params.phone });
+    const gateway = await this.getGateway();
+    const result = await gateway.verifySignOtp({ phone: params.phone });
     this.logger.debug('BrainUser send phone otp', result);
 
     if (result.error) {
