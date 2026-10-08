@@ -18,6 +18,14 @@ import type { GatewayResult } from '@qlover/corekit-bridge';
 import { BrainUserIdentifier } from './config/identifier';
 import type { LoggerInterface } from '@qlover/logger';
 import { isPossibleFrequentResult } from './utils/typeGuard';
+import { BrainUserHttpError } from './BrainUserHttpError';
+
+/** Response body for both success data and {@link BrainUserHttpError}. */
+function responseBody(result: GatewayResult<unknown>): unknown {
+  return result.error instanceof BrainUserHttpError
+    ? result.error.data
+    : result.data;
+}
 
 /**
  * Brain User Gateway - Business logic layer for user operations
@@ -150,6 +158,18 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
 
     this.logger?.debug('BrainUserGateway handleGatewayResult result:', result);
 
+    const status = response.status;
+    if (typeof status === 'number' && status >= 400) {
+      this.logger?.warn('BrainUserGateway HTTP error', {
+        status,
+        data: result.data
+      });
+      return {
+        data: null,
+        error: new BrainUserHttpError(status, result.data)
+      };
+    }
+
     const gatewayData = result.data as R;
 
     return {
@@ -244,12 +264,13 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
       await this.handleGatewayResult<types.BrainCredentials>(response);
 
     // IMPORTANT: 某些情况下, 传了email 和 password 会返回以下数据, 可能需是登录太频繁
-    if (isPossibleFrequentResult(result.data)) {
+    const body = responseBody(result);
+    if (isPossibleFrequentResult(body)) {
       this.logger?.warn('BrainUserGateway login rate limit triggered', result);
       return {
         data: null,
         error: new ExecutorError(BrainUserIdentifier.TOO_FREQUENTLY, {
-          cause: result.data
+          cause: body
         })
       };
     }
@@ -379,16 +400,17 @@ export class BrainUserGateway implements types.BrainUserGatewayInterface {
       types.BrainCredentials & BrainUser & { detail?: string }
     >(response);
 
-    if (result.data && result.data.detail === 'Invalid token.') {
+    const body = responseBody(result) as { detail?: unknown } | null;
+    if (body && body.detail === 'Invalid token.') {
       this.logger?.warn('BrainUserGateway getUserInfo invalid token', {
-        data: result.data
+        data: body
       });
       return {
         data: null,
         error: new ExecutorError(
           BrainUserIdentifier.GETUSERINFO_INVALID_TOKEN,
           {
-            cause: result.data
+            cause: body
           }
         )
       };

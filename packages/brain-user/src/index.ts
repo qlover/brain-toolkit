@@ -6,6 +6,7 @@ export * from './config/identifier';
 
 // Core classes
 export * from './BrainUserGateway';
+export * from './BrainUserHttpError';
 export * from './BrainUserService';
 export * from './BrainUserStore';
 export * from './UserProfile';

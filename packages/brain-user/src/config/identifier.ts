@@ -10,6 +10,11 @@ export const BrainUserIdentifier = {
   TOO_FREQUENTLY: 'brain_user_too_frequently',
 
   ANTI_ABUSE_CHECK_FAILED: 'brain_user_anti_abuse_check_failed',
+
+  /**
+   * Brain API 返回 HTTP status >= 400，见 `BrainUserHttpError`
+   */
+  HTTP_ERROR: 'brain_user_http_error',
   /**
    * 获取用户信息的时候会返回
    *
