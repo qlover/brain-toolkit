@@ -13,10 +13,12 @@ import { UserRole, type UserSchema } from '@qlover/next-kit/common';
 import { SupabaseRepo, TokenEncryption } from '@qlover/next-kit/server';
 import {
   OAuthWrapperService,
+  resolveOAuthRealEmail,
   type OAuthAuthorizePageData,
   type OAuthConsentResult,
   type OAuthIdentityStore,
   type OAuthLocalUserDraft,
+  type OAuthLocalUserRecord,
   type OAuthSessionPayload,
   type OAuthWrapperRepositoryInterface,
   type SignWithOtpParams,
@@ -241,6 +243,27 @@ export class BrainUserOAuthProvider
       // UserRole.ADMIN is 0, so compare explicitly instead of truthiness.
       extra: { brainAdmin: upstream.role === UserRole.ADMIN }
     };
+  }
+
+  /**
+   * @override
+   */
+  protected override async ensureLocalUser(
+    draft: OAuthLocalUserDraft
+  ): Promise<OAuthLocalUserRecord> {
+    const email = resolveOAuthRealEmail(
+      draft.email,
+      oauthLocalUserConfig.syntheticEmailDomain
+    );
+    const externalUserId = String(draft.externalUserId ?? '').trim();
+    if (email && externalUserId) {
+      await this.identityStore.releaseStaleEmail(
+        email,
+        draft.provider,
+        externalUserId
+      );
+    }
+    return super.ensureLocalUser(draft);
   }
 
   /**
