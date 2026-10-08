@@ -1,5 +1,5 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
-import { buildOAuthSyntheticEmail } from '@qlover/oauth-wrapper';
+import { resolveOAuthRealEmail } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
@@ -84,10 +84,11 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   ): Promise<string> {
     const supabase = await this.supabaseRepo.getAdminSupabase();
     const now = new Date().toISOString();
+    const email = realEmailOrNull(draft.email);
     const { data, error } = await supabase
       .from(usersTable)
       .insert({
-        email: normalizeEmail(draft.email),
+        email,
         phone: draft.phone?.trim() || null,
         name: draft.name,
         extra: draft.extra ?? null,
@@ -100,8 +101,8 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       return String(data.id);
     }
 
-    if (error?.code === PG_UNIQUE_VIOLATION) {
-      const existing = await this.findByEmail(draft.email);
+    if (email && error?.code === PG_UNIQUE_VIOLATION) {
+      const existing = await this.findByEmail(email);
       if (existing) {
         if (
           existing.externalUserId &&
@@ -147,8 +148,8 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
-   * Upstream without a real email falls back to the synthetic address, so a
-   * stale real email cannot keep blocking the Brain account that owns it.
+   * Upstream without a real email clears the column, so a stale real email
+   * cannot keep blocking the Brain account that owns it.
    *
    * @override
    */
@@ -161,13 +162,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
     const extra = draft.extra
       ? await this.mergeUserExtra(userId, draft.extra)
       : null;
-    const email = draft.email
-      ? normalizeEmail(draft.email)
-      : buildOAuthSyntheticEmail(
-          draft.provider,
-          draft.externalUserId,
-          oauthLocalUserConfig.syntheticEmailDomain
-        );
+    const email = realEmailOrNull(draft.email);
     const { error } = await supabase
       .from(usersTable)
       .update({
@@ -191,12 +186,10 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   /**
    * Brain account emails are unique upstream, so a local row holding `email`
    * while linked to another external user is stale (e.g. claimed earlier via
-   * `google_email`). Move that row to its synthetic address so the owner can
-   * sign in.
+   * `google_email`). Clear that row's email so the owner can sign in.
    */
   public async releaseStaleEmail(
     email: string,
-    provider: string,
     externalUserId: string
   ): Promise<void> {
     const existing = await this.findByEmail(email);
@@ -210,14 +203,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
     const supabase = await this.supabaseRepo.getAdminSupabase();
     const { error } = await supabase
       .from(usersTable)
-      .update({
-        email: buildOAuthSyntheticEmail(
-          provider,
-          existing.externalUserId,
-          oauthLocalUserConfig.syntheticEmailDomain
-        ),
-        updated_at: new Date().toISOString()
-      })
+      .update({ email: null, updated_at: new Date().toISOString() })
       .eq('id', existing.id);
 
     if (error) {
@@ -279,4 +265,15 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+/**
+ * oauth-wrapper hands phone-only users a synthetic address; the column is
+ * nullable, so store `NULL` and let `phone` identify them instead.
+ */
+function realEmailOrNull(email: string | null | undefined): string | null {
+  return resolveOAuthRealEmail(
+    email,
+    oauthLocalUserConfig.syntheticEmailDomain
+  );
 }
