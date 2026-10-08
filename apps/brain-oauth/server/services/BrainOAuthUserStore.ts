@@ -189,6 +189,51 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
+   * Brain account emails are unique upstream, so a local row holding `email`
+   * while linked to another external user is stale (e.g. claimed earlier via
+   * `google_email`). Move that row to its synthetic address so the owner can
+   * sign in.
+   */
+  public async releaseStaleEmail(
+    email: string,
+    provider: string,
+    externalUserId: string
+  ): Promise<void> {
+    const existing = await this.findByEmail(email);
+    if (
+      !existing?.externalUserId ||
+      existing.externalUserId === externalUserId
+    ) {
+      return;
+    }
+
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { error } = await supabase
+      .from(usersTable)
+      .update({
+        email: buildOAuthSyntheticEmail(
+          provider,
+          existing.externalUserId,
+          oauthLocalUserConfig.syntheticEmailDomain
+        ),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existing.id);
+
+    if (error) {
+      throw new Error(
+        `Failed to release ${usersTable} email: ${error.message}`
+      );
+    }
+
+    this.logger.warn('Released stale local email held by another account', {
+      userId: existing.id,
+      heldBy: existing.externalUserId,
+      claimedBy: externalUserId
+    });
+  }
+
+  /**
    * Shallow-merges `patch` over the user's current `extra` so keys written by
    * other features (or legacy migrations) survive each login.
    */
