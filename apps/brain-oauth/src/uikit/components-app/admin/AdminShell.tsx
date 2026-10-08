@@ -121,7 +121,6 @@ export function AdminShell({
       }
       showAdminButton={false}
       showAuthButton
-      authShowLogout
       authShowAdmin={false}
     >
       <ClientSeo i18nInterface={seo} />

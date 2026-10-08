@@ -36,8 +36,6 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   headerVariant?: 'default' | 'brain';
   /** `brain` header: console pill for signed-in users. */
   authShowConsole?: boolean;
-  /** `brain` header: round logout button after the avatar. */
-  authShowLogout?: boolean;
   /** `brain` header: admin backend pill for Brain admins (default true). */
   authShowAdmin?: boolean;
   tt: AppRoutePageTT;
