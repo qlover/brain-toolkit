@@ -7,6 +7,7 @@ import { inject, injectable } from '@shared/container';
 import {
   parseBrainApiSettings,
   resolveBrainApiTarget,
+  serializeBrainApiSettings,
   type BrainApiTarget
 } from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
@@ -74,12 +75,11 @@ export class SiteSettingsService extends KitSiteSettingsService<SiteSettingKey> 
     if (!parsed.success) {
       throw new Error(`Invalid Brain API config: ${parsed.error}`);
     }
-    const normalized =
-      Object.keys(parsed.settings).length > 0
-        ? JSON.stringify(parsed.settings, null, 2)
-        : '';
     return super.updateAdminSettings({
-      settings: { ...patch.settings, [key]: normalized }
+      settings: {
+        ...patch.settings,
+        [key]: serializeBrainApiSettings(parsed.settings)
+      }
     });
   }
 

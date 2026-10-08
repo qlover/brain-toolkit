@@ -184,45 +184,159 @@ export const ADMIN_SETTINGS_SECTION_BRAIN = 'admin_settings:section__brain';
 
 /**
  * @description Brain OAuth admin settings — Brain API card description
- * @localZh Brain API 请求地址配置（对应 BrainUserGatewayConfig），用于登录、短信验证码、用户信息与 access token 换取。可配置 env、domains、userlyDomains、endpoints；domains 与 endpoints 会合并到默认值之上，留空即使用默认（development）。保存后约 1 分钟内对所有实例生效。
- * @localEn Brain API request addresses (per BrainUserGatewayConfig) for sign-in, SMS codes, user info and access token exchange. Supports env, domains, userlyDomains and endpoints; domains and endpoints are merged over the defaults, and an empty value uses the defaults (development). Takes effect on all instances within about a minute after saving.
+ * @localZh 登录、短信验证码、用户信息与 access token 换取请求的 Brain API 地址。只会保存与默认值不同的项，保存后约 1 分钟内对所有实例生效。
+ * @localEn Brain API addresses for sign-in, SMS codes, user info and access token exchange. Only values that differ from the defaults are saved; changes reach all instances within about a minute.
  */
 export const ADMIN_SETTINGS_SECTION_BRAIN_DESC =
   'admin_settings:section__brain_desc';
 
 /**
- * @description Brain OAuth admin settings — Brain API config JSON label
- * @localZh 配置（JSON）
- * @localEn Config (JSON)
+ * @description Brain OAuth admin settings — current Brain env select
+ * @localZh 当前环境
+ * @localEn Current environment
  */
-export const ADMIN_SETTINGS_BRAIN_CONFIG = 'admin_settings:brain__config';
+export const ADMIN_SETTINGS_BRAIN_ENV = 'admin_settings:brain__env';
 
 /**
- * @description Brain OAuth admin settings — Brain API config invalid
- * @localZh 配置有误，请按提示修正后再保存
- * @localEn The config is invalid; fix the errors shown and save again
+ * @description Brain OAuth admin settings — env address list title
+ * @localZh 环境地址
+ * @localEn Environment addresses
+ */
+export const ADMIN_SETTINGS_BRAIN_DOMAINS = 'admin_settings:brain__domains';
+
+/**
+ * @description Brain OAuth admin settings — env name field
+ * @localZh 环境名
+ * @localEn Environment name
+ */
+export const ADMIN_SETTINGS_BRAIN_DOMAIN_NAME =
+  'admin_settings:brain__domain_name';
+
+/**
+ * @description Brain OAuth admin settings — env API URL field
+ * @localZh API 地址
+ * @localEn API URL
+ */
+export const ADMIN_SETTINGS_BRAIN_DOMAIN_URL =
+  'admin_settings:brain__domain_url';
+
+/**
+ * @description Brain OAuth admin settings — add env button
+ * @localZh 添加环境
+ * @localEn Add environment
+ */
+export const ADMIN_SETTINGS_BRAIN_DOMAIN_ADD =
+  'admin_settings:brain__domain_add';
+
+/**
+ * @description Brain OAuth admin settings — remove env button
+ * @localZh 删除
+ * @localEn Remove
+ */
+export const ADMIN_SETTINGS_BRAIN_DOMAIN_REMOVE =
+  'admin_settings:brain__domain_remove';
+
+/**
+ * @description Brain OAuth admin settings — built-in env tag
+ * @localZh 内置
+ * @localEn Built-in
+ */
+export const ADMIN_SETTINGS_BRAIN_PRESET = 'admin_settings:brain__preset';
+
+/**
+ * @description Brain OAuth admin settings — access token URL field
+ * @localZh Access token 地址
+ * @localEn Access token URL
+ */
+export const ADMIN_SETTINGS_BRAIN_USERLY = 'admin_settings:brain__userly';
+
+/**
+ * @description Brain OAuth admin settings — access token URL help
+ * @localZh 只对当前环境生效；留空则与当前环境的 API 地址相同
+ * @localEn Applies to the current environment only; leave empty to use its API URL
+ */
+export const ADMIN_SETTINGS_BRAIN_USERLY_HELP =
+  'admin_settings:brain__userly_help';
+
+/**
+ * @description Brain OAuth admin settings — endpoints section title
+ * @localZh 接口路径（高级）
+ * @localEn Endpoint paths (advanced)
+ */
+export const ADMIN_SETTINGS_BRAIN_ENDPOINTS = 'admin_settings:brain__endpoints';
+
+/**
+ * @description Brain OAuth admin settings — endpoints section description
+ * @localZh 一般无需修改。路径会拼接在 API 地址之后。
+ * @localEn Usually left as is. Paths are appended to the API URL.
+ */
+export const ADMIN_SETTINGS_BRAIN_ENDPOINTS_DESC =
+  'admin_settings:brain__endpoints_desc';
+
+/**
+ * @description Brain OAuth admin settings — value differs from default
+ * @localZh 已修改
+ * @localEn Modified
+ */
+export const ADMIN_SETTINGS_BRAIN_MODIFIED = 'admin_settings:brain__modified';
+
+/**
+ * @description Brain OAuth admin settings — reset one value
+ * @localZh 恢复默认
+ * @localEn Reset
+ */
+export const ADMIN_SETTINGS_BRAIN_RESET = 'admin_settings:brain__reset';
+
+/**
+ * @description Brain OAuth admin settings — reset whole Brain API config
+ * @localZh 全部恢复默认
+ * @localEn Reset all
+ */
+export const ADMIN_SETTINGS_BRAIN_RESET_ALL = 'admin_settings:brain__reset_all';
+
+/**
+ * @description Brain OAuth admin settings — invalid URL
+ * @localZh 请填写以 http:// 或 https:// 开头的地址
+ * @localEn Enter a URL starting with http:// or https://
+ */
+export const ADMIN_SETTINGS_BRAIN_URL_INVALID =
+  'admin_settings:brain__url_invalid';
+
+/**
+ * @description Brain OAuth admin settings — invalid env name
+ * @localZh 环境名不能为空，也不能重复
+ * @localEn Environment name is required and must be unique
+ */
+export const ADMIN_SETTINGS_BRAIN_NAME_INVALID =
+  'admin_settings:brain__name_invalid';
+
+/**
+ * @description Brain OAuth admin settings — invalid endpoint path
+ * @localZh 路径需以 / 开头，且不能包含空格
+ * @localEn Path must start with / and contain no spaces
+ */
+export const ADMIN_SETTINGS_BRAIN_PATH_INVALID =
+  'admin_settings:brain__path_invalid';
+
+/**
+ * @description Brain OAuth admin settings — save blocked by invalid fields
+ * @localZh 请先修正标红的项
+ * @localEn Fix the fields marked in red first
  */
 export const ADMIN_SETTINGS_BRAIN_CONFIG_INVALID =
   'admin_settings:brain__config_invalid';
 
 /**
- * @description Brain OAuth admin settings — reset Brain API config to defaults
- * @localZh 恢复默认
- * @localEn Reset to defaults
- */
-export const ADMIN_SETTINGS_BRAIN_RESET = 'admin_settings:brain__reset';
-
-/**
- * @description Brain OAuth admin settings — effective brain-user-system address
- * @localZh 接口地址（domains）
- * @localEn API address (domains)
+ * @description Brain OAuth admin settings — effective API URL
+ * @localZh 生效的 API 地址
+ * @localEn Effective API URL
  */
 export const ADMIN_SETTINGS_BRAIN_EFFECTIVE = 'admin_settings:brain__effective';
 
 /**
- * @description Brain OAuth admin settings — effective userly address
- * @localZh access token 地址（userlyDomains）
- * @localEn Access token address (userlyDomains)
+ * @description Brain OAuth admin settings — effective access token URL
+ * @localZh 生效的 access token 地址
+ * @localEn Effective access token URL
  */
 export const ADMIN_SETTINGS_BRAIN_USERLY_EFFECTIVE =
   'admin_settings:brain__userly_effective';
