@@ -23,6 +23,13 @@ import type { ServerContextInterface } from '@qlover/next-kit/server';
 
 export type NextApiServerContext = ApiServerContext;
 
+function setServerTiming(response: NextResponse, started: number): void {
+  response.headers.set(
+    'Server-Timing',
+    `app;dur=${Math.round(performance.now() - started)}`
+  );
+}
+
 type RunWithInit = {
   successHeaders?: HeadersInit;
   errorHeaders?: HeadersInit;
@@ -109,11 +116,17 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
   /**
    * @override
    */
-  public override runWithJson<Result>(
+  public override async runWithJson<Result>(
     task?: RunWithTask<Result>,
     init?: RunWithInit
   ): Promise<NextResponse> {
-    return super.runWithJson(task, this.mergeResponseInit(init));
+    const started = performance.now();
+    const response = await super.runWithJson(
+      task,
+      this.mergeResponseInit(init)
+    );
+    setServerTiming(response, started);
+    return response;
   }
 
   /**
@@ -156,6 +169,16 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
    * Error: `{ error, error_description }` per RFC 6749 §5.2.
    */
   public async runWithOAuthJson<Result>(
+    task?: RunWithTask<Result>,
+    init?: RunWithInit
+  ): Promise<NextResponse> {
+    const started = performance.now();
+    const response = await this.buildOAuthJsonResponse(task, init);
+    setServerTiming(response, started);
+    return response;
+  }
+
+  protected async buildOAuthJsonResponse<Result>(
     task?: RunWithTask<Result>,
     init?: RunWithInit
   ): Promise<NextResponse> {
