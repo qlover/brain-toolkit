@@ -1,7 +1,7 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { resolveOAuthRealEmail } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
-import { BRAIN_LEGACY_ENV, brainProviderForEnv } from '@config/brainApi';
+import { BRAIN_LEGACY_ENV } from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { LoggerInterface } from '@qlover/logger';
@@ -31,9 +31,9 @@ export interface LinkedLocalUser {
 @injectable()
 export class BrainOAuthUserStore implements OAuthIdentityStore {
   /**
-   * Brain env of the identity being resolved. Emails are unique per env, and
-   * the `OAuthIdentityStore` lookups carry no provider, so the provider sets
-   * this per request (IOC is per request).
+   * Brain env of the identity being resolved. Brain user ids and emails are
+   * unique per env, and the `OAuthIdentityStore` lookups carry no env, so the
+   * provider sets this per request (IOC is per request).
    */
   protected env: string = BRAIN_LEGACY_ENV;
 
@@ -77,6 +77,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       .from(linksTable)
       .select('user_id')
       .eq('provider', provider)
+      .eq('brain_env', this.env)
       .eq('external_user_id', externalUserId)
       .maybeSingle();
 
@@ -101,6 +102,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       .from(linksTable)
       .select(`user_id, user:${usersTable}(id,email,phone,name,extra)`)
       .eq('provider', provider)
+      .eq('brain_env', this.env)
       .eq('external_user_id', externalUserId)
       .maybeSingle();
 
@@ -208,6 +210,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       {
         user_id: userId,
         provider: draft.provider,
+        brain_env: this.env,
         external_user_id: draft.externalUserId,
         updated_at: new Date().toISOString()
       },
@@ -324,7 +327,8 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       .from(linksTable)
       .select('external_user_id')
       .eq('user_id', userId)
-      .eq('provider', brainProviderForEnv(this.env))
+      .eq('provider', oauthLocalUserConfig.provider)
+      .eq('brain_env', this.env)
       .maybeSingle();
 
     if (error) {

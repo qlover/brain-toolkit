@@ -26,21 +26,13 @@ export const BRAIN_API_DEFAULT_ENV: string = defaultEnv;
 /** Login page choice; validated server-side against the configured domains. */
 export const BRAIN_LOGIN_ENV_COOKIE = 'brain_login_env';
 
-/**
- * Env of local users created before per-env login; their links keep the bare
- * `brain` provider.
- */
+/** Env of local users and links created before per-env login. */
 export const BRAIN_LEGACY_ENV = 'development';
 
 /** `GET /api/brain/envs` payload for the login page env switcher. */
 export interface BrainLoginEnvs {
   envs: string[];
   defaultEnv: string;
-}
-
-/** Brain user ids are per env, so each env gets its own link provider. */
-export function brainProviderForEnv(env: string): string {
-  return env === BRAIN_LEGACY_ENV ? 'brain' : `brain:${env}`;
 }
 
 export const BRAIN_API_PRESET_DOMAINS: Readonly<Record<string, string>> =
