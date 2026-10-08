@@ -240,12 +240,11 @@ export class BrainUserOAuthProvider
   protected getGateway(): Promise<BrainUserGateway> {
     this.gatewayPromise ??= this.siteSettings
       .getBrainApiTarget()
-      .then(({ env, domains }) => {
+      .then(({ config }) => {
         const options = createBrainUserOptions({
+          ...config,
           logger: this.logger,
-          fetcher: nextSafeFetch,
-          env,
-          domains
+          fetcher: nextSafeFetch
         });
         return new BrainUserGateway(options.requestAdapter, this.logger);
       });
@@ -444,10 +443,17 @@ export class BrainUserOAuthProvider
     session: BrainUserSession
   ): Promise<OAuthWrapperAccessToken> {
     const gateway = await this.getGateway();
-    const accessResult = await gateway.getAccessToken({
-      token: session.providerRefreshToken,
-      lang: 'en'
-    });
+    const { config } = await this.siteSettings.getBrainApiTarget();
+    // getAccessToken resolves its base URL from the call config only;
+    // createAdapter drops env / domains from the adapter config.
+    const accessResult = await gateway.getAccessToken(
+      { token: session.providerRefreshToken, lang: 'en' },
+      {
+        env: config.env,
+        domains: config.domains,
+        userlyDomains: config.userlyDomains
+      }
+    );
 
     if (accessResult.error) {
       throw accessResult.error;

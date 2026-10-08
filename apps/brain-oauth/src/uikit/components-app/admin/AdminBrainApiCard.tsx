@@ -1,23 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   SiteSettingsApi,
   type AdminSiteSettingRow
 } from '@/impls/appApi/SiteSettingsApi';
 import { BrainButton } from '@/uikit/components/brain/BrainButton';
-import {
-  BrainField,
-  BrainSelectField
-} from '@/uikit/components/brain/BrainField';
+import { BrainTextareaField } from '@/uikit/components/brain/BrainField';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
 import {
-  BRAIN_API_CUSTOM_ENV,
-  BRAIN_API_DEFAULT_ENV,
-  BRAIN_API_ENV_OPTIONS,
-  BRAIN_API_PRESET_DOMAINS,
-  isValidBrainApiBaseUrl,
+  BRAIN_API_SETTINGS_TEMPLATE,
+  parseBrainApiSettings,
   resolveBrainApiTarget
 } from '@config/brainApi';
 import { adminSettings18n } from '@config/i18n-mapping/admin18n';
@@ -25,17 +19,7 @@ import { I } from '@config/ioc-identifiter';
 import { SITE_SETTING_KEYS } from '@config/siteSettings';
 import type { DialogHandler } from '@qlover/next-kit/client';
 
-const ENV_KEY = SITE_SETTING_KEYS.BRAIN_API_ENV;
-const BASE_URL_KEY = SITE_SETTING_KEYS.BRAIN_API_BASE_URL;
-
-function stringValue(
-  rows: readonly AdminSiteSettingRow[],
-  key: string,
-  fallback: string
-): string {
-  const value = rows.find((entry) => entry.key === key)?.value;
-  return typeof value === 'string' && value.trim() ? value : fallback;
-}
+const CONFIG_KEY = SITE_SETTING_KEYS.BRAIN_API_GATEWAY_CONFIG;
 
 export interface AdminBrainApiCardProps {
   rows: AdminSiteSettingRow[];
@@ -46,38 +30,24 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
   const tt = useI18nMapping(adminSettings18n);
   const siteSettingsApi = useIOC(SiteSettingsApi);
   const dialogHandler = useIOC(I.DialogHandler) as DialogHandler;
-  const [envDraft, setEnvDraft] = useState<string | undefined>();
-  const [baseUrlDraft, setBaseUrlDraft] = useState<string | undefined>();
-  const [attempted, setAttempted] = useState(false);
+  const [draft, setDraft] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
 
-  const env = envDraft ?? stringValue(rows, ENV_KEY, BRAIN_API_DEFAULT_ENV);
-  const baseUrl = baseUrlDraft ?? stringValue(rows, BASE_URL_KEY, '');
-  const isCustom = env === BRAIN_API_CUSTOM_ENV;
-  const baseUrlInvalid =
-    isCustom && (baseUrl.trim() ? !isValidBrainApiBaseUrl(baseUrl) : attempted);
-  const effective = resolveBrainApiTarget(env, baseUrl).baseURL;
-  const fromDb = rows.some(
-    (entry) => entry.key === ENV_KEY && entry.source === 'db'
-  );
+  const entry = rows.find((row) => row.key === CONFIG_KEY);
+  const stored = typeof entry?.value === 'string' ? entry.value : '';
+  const text = draft ?? (stored.trim() ? stored : BRAIN_API_SETTINGS_TEMPLATE);
+  const parsed = useMemo(() => parseBrainApiSettings(text), [text]);
+  const target = parsed.success ? resolveBrainApiTarget(parsed.settings) : null;
 
   const save = async () => {
-    if (isCustom && !isValidBrainApiBaseUrl(baseUrl)) {
-      setAttempted(true);
-      dialogHandler.error(tt.brainBaseUrlInvalid);
+    if (!parsed.success) {
+      dialogHandler.error(tt.brainConfigInvalid);
       return;
     }
     setSaving(true);
     try {
-      onSaved(
-        await siteSettingsApi.patch({
-          [ENV_KEY]: env,
-          [BASE_URL_KEY]: baseUrl.trim()
-        })
-      );
-      setEnvDraft(undefined);
-      setBaseUrlDraft(undefined);
-      setAttempted(false);
+      onSaved(await siteSettingsApi.patch({ [CONFIG_KEY]: text }));
+      setDraft(undefined);
       dialogHandler.success(tt.saveSuccess);
     } catch (error) {
       console.error('Save Brain API settings error:', error);
@@ -95,41 +65,53 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
       </p>
 
       <div className="brain-setting-row">
-        <span>{tt.brainEffective}</span>
+        <span>{tt.brainConfig}</span>
         <span className="brain-pill sm purple">
-          {fromDb ? tt.sourceDb : tt.sourceDefault}
+          {entry?.source === 'db' && stored.trim()
+            ? tt.sourceDb
+            : tt.sourceDefault}
         </span>
       </div>
-      <p className="brain-sub mono mb-4 mt-0 break-all">{effective}</p>
 
-      <BrainSelectField
-        id="brain-api-env"
-        label={tt.brainEnv}
-        value={env}
-        onChange={(event) => setEnvDraft(event.target.value)}
-      >
-        {BRAIN_API_ENV_OPTIONS.map((option) => (
-          <option data-testid="AdminBrainApiCard" key={option} value={option}>
-            {option === BRAIN_API_CUSTOM_ENV
-              ? tt.brainEnvCustom
-              : `${option} — ${BRAIN_API_PRESET_DOMAINS[option]}`}
-          </option>
-        ))}
-      </BrainSelectField>
+      <BrainTextareaField
+        id="brain-api-config"
+        label={tt.brainConfig}
+        className="mono"
+        rows={14}
+        spellCheck={false}
+        value={text}
+        invalid={!parsed.success}
+        help={
+          parsed.success ? undefined : (
+            <span className="whitespace-pre-wrap">{parsed.error}</span>
+          )
+        }
+        onChange={(event) => setDraft(event.target.value)}
+      />
 
-      {isCustom && (
-        <BrainField
-          id="brain-api-base-url"
-          label={tt.brainBaseUrl}
-          value={baseUrl}
-          placeholder="https://api.dev.brain.ai"
-          invalid={baseUrlInvalid}
-          help={baseUrlInvalid ? tt.brainBaseUrlInvalid : undefined}
-          onChange={(event) => setBaseUrlDraft(event.target.value)}
-        />
+      {target && (
+        <dl className="brain-sub mono mb-4 mt-3 grid gap-1 break-all">
+          <div>
+            <dt className="inline">{tt.brainEffective}: </dt>
+            <dd className="inline">{target.baseURL}</dd>
+          </div>
+          <div>
+            <dt className="inline">{tt.brainUserlyEffective}: </dt>
+            <dd className="inline">{target.userlyBaseURL}</dd>
+          </div>
+        </dl>
       )}
 
       <div className="brain-settings-foot">
+        <BrainButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          auto
+          onClick={() => setDraft(BRAIN_API_SETTINGS_TEMPLATE)}
+        >
+          {tt.brainReset}
+        </BrainButton>
         <BrainButton
           type="button"
           size="sm"
