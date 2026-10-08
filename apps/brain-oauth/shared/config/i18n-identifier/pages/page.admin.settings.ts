@@ -174,3 +174,55 @@ export const ADMIN_SETTINGS_CORS_DUPLICATE = 'admin_settings:cors__duplicate';
  * @localEn Fix the rules marked in red first
  */
 export const ADMIN_SETTINGS_CORS_FIX_ERRORS = 'admin_settings:cors__fix_errors';
+
+/**
+ * @description Brain OAuth admin settings — Brain API card title
+ * @localZh Brain API
+ * @localEn Brain API
+ */
+export const ADMIN_SETTINGS_SECTION_BRAIN = 'admin_settings:section__brain';
+
+/**
+ * @description Brain OAuth admin settings — Brain API card description
+ * @localZh 登录、短信验证码、用户信息与 access token 换取请求的 Brain API 地址。保存后约 1 分钟内对所有实例生效。
+ * @localEn Brain API address used for sign-in, SMS codes, user info and access token exchange. Takes effect on all instances within about a minute after saving.
+ */
+export const ADMIN_SETTINGS_SECTION_BRAIN_DESC =
+  'admin_settings:section__brain_desc';
+
+/**
+ * @description Brain OAuth admin settings — Brain API env select label
+ * @localZh 环境
+ * @localEn Environment
+ */
+export const ADMIN_SETTINGS_BRAIN_ENV = 'admin_settings:brain__env';
+
+/**
+ * @description Brain OAuth admin settings — custom env option
+ * @localZh 自定义地址
+ * @localEn Custom URL
+ */
+export const ADMIN_SETTINGS_BRAIN_ENV_CUSTOM =
+  'admin_settings:brain__env_custom';
+
+/**
+ * @description Brain OAuth admin settings — custom base URL label
+ * @localZh 自定义 API 地址
+ * @localEn Custom API URL
+ */
+export const ADMIN_SETTINGS_BRAIN_BASE_URL = 'admin_settings:brain__base_url';
+
+/**
+ * @description Brain OAuth admin settings — invalid custom base URL
+ * @localZh 请填写以 http:// 或 https:// 开头的地址
+ * @localEn Enter a URL starting with http:// or https://
+ */
+export const ADMIN_SETTINGS_BRAIN_BASE_URL_INVALID =
+  'admin_settings:brain__base_url_invalid';
+
+/**
+ * @description Brain OAuth admin settings — effective Brain API address
+ * @localZh 当前生效地址
+ * @localEn Effective address
+ */
+export const ADMIN_SETTINGS_BRAIN_EFFECTIVE = 'admin_settings:brain__effective';
