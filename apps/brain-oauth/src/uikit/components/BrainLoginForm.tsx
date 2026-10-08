@@ -3,16 +3,18 @@
 import { useReturnTo } from '@qlover/next-kit/client';
 import { LoginValidator } from '@qlover/next-kit/common';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { BrainEnvApi } from '@/impls/appApi/BrainEnvApi';
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
+import { BRAIN_LOGIN_ENV_COOKIE } from '@config/brainApi';
 import { URLParamsKeys } from '@config/common';
 import type { LoginI18nInterface } from '@config/i18n-mapping/loginI18n';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_DEVELOPER_APPS } from '@config/route';
 import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { BrainButton } from './brain/BrainButton';
-import { BrainField } from './brain/BrainField';
+import { BrainField, BrainSelectField } from './brain/BrainField';
 import { BrainTabs } from './brain/BrainTabs';
 
 type LoginMethod = 'phone' | 'email';
@@ -20,6 +22,17 @@ type InvalidField = 'phone' | 'code' | 'email' | 'password';
 
 const COUNTRY_CODE = '+86';
 const RESEND_SECONDS = 60;
+
+function readLoginEnvCookie(): string | null {
+  const match = document.cookie.match(
+    new RegExp(`(?:^|; )${BRAIN_LOGIN_ENV_COOKIE}=([^;]*)`)
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function writeLoginEnvCookie(env: string): void {
+  document.cookie = `${BRAIN_LOGIN_ENV_COOKIE}=${encodeURIComponent(env)}; path=/; max-age=31536000; samesite=lax`;
+}
 
 /** Local numbers get the default country code; `+…` is sent as typed. */
 function toE164(raw: string): string | null {
@@ -31,6 +44,7 @@ function toE164(raw: string): string | null {
 export function BrainLoginForm({ tt }: { tt: LoginI18nInterface }) {
   const t = useWarnTranslations();
   const userGateway = useIOC(AppUserGateway);
+  const brainEnvApi = useIOC(BrainEnvApi);
   const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
   const validator = useMemo(() => new LoginValidator(), []);
   const { returnTo } = useReturnTo({ returnToKey: URLParamsKeys.returnTo });
@@ -46,6 +60,35 @@ export function BrainLoginForm({ tt }: { tt: LoginI18nInterface }) {
   const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [invalid, setInvalid] = useState<InvalidField | null>(null);
+  const [envs, setEnvs] = useState<string[]>([]);
+  const [env, setEnv] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    brainEnvApi
+      .getLoginEnvs()
+      .then(({ envs: list, defaultEnv }) => {
+        if (cancelled) return;
+        const saved = readLoginEnvCookie();
+        const initial = saved && list.includes(saved) ? saved : defaultEnv;
+        setEnvs(list);
+        setEnv(initial);
+        writeLoginEnvCookie(initial);
+      })
+      .catch((err) => console.error('Load Brain envs error:', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [brainEnvApi]);
+
+  const changeEnv = (next: string) => {
+    setEnv(next);
+    writeLoginEnvCookie(next);
+    setCode('');
+    setCodeSent(false);
+    setCountdown(0);
+    clearError();
+  };
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -147,6 +190,22 @@ export function BrainLoginForm({ tt }: { tt: LoginI18nInterface }) {
       onSubmit={handleSubmit}
       noValidate
     >
+      {envs.length > 1 && (
+        <BrainSelectField
+          id="login-env"
+          label={tt.env}
+          value={env}
+          disabled={loading || sending}
+          onChange={(e) => changeEnv(e.target.value)}
+        >
+          {envs.map((name) => (
+            <option data-testid="BrainLoginForm" key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </BrainSelectField>
+      )}
+
       <BrainTabs
         aria-label={tt.method}
         items={[

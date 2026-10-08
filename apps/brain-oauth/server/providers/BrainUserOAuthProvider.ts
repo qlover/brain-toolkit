@@ -28,11 +28,19 @@ import {
   type WithUserSession,
   type OAuthWrapperAccessToken
 } from '@qlover/oauth-wrapper';
+import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
+import {
+  BRAIN_LEGACY_ENV,
+  BRAIN_LOGIN_ENV_COOKIE,
+  brainProviderForEnv,
+  type BrainApiTarget
+} from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import { AccessTokenEnvRepo } from '@server/repositorys/AccessTokenEnvRepo';
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { BrainOAuthUserStore } from '@server/services/BrainOAuthUserStore';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
@@ -191,7 +199,10 @@ function brainUserToUserSchema(
 
 export interface BrainUserSession
   extends OAuthSessionPayload,
-    Partial<BrainCredentials> {}
+    Partial<BrainCredentials> {
+  /** Brain env the session was created in (login page choice). */
+  brainEnv?: string;
+}
 
 /**
  * Brain User API as OAuth AS backend. Local identity is brain_oauth_users UUID via
@@ -202,11 +213,13 @@ export class BrainUserOAuthProvider
   extends OAuthWrapperService<UserSchema, BrainUserSession>
   implements OAuthWrapperProviderInterface
 {
-  protected gatewayPromise?: Promise<BrainUserGateway>;
+  protected gateways = new Map<string, Promise<BrainUserGateway>>();
   protected tokenEncryption: TokenEncryption;
   protected consentTrust: OAuthConsentTrustService;
   /** Per-request (IOC is per request): true only inside userinfo. */
   protected passiveSync = false;
+  /** Brain env of the identity handled by this request; see {@link useEnv}. */
+  protected activeEnv?: string;
 
   constructor(
     @inject(I.Logger)
@@ -219,7 +232,9 @@ export class BrainUserOAuthProvider
     protected readonly identityStore: BrainOAuthUserStore,
     @inject(SupabaseRepo) supabaseRepo: SupabaseRepo<unknown>,
     @inject(SiteSettingsService)
-    protected readonly siteSettings: SiteSettingsService
+    protected readonly siteSettings: SiteSettingsService,
+    @inject(AccessTokenEnvRepo)
+    protected readonly accessTokenEnvs: AccessTokenEnvRepo
   ) {
     const tokenEncryption = new TokenEncryption(config.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
@@ -234,21 +249,55 @@ export class BrainUserOAuthProvider
   }
 
   /**
-   * Built lazily from the admin "Brain API" site settings (cached
-   * process-wide), once per request since IOC is per request.
+   * Admin "Brain API" settings (cached process-wide) for `env`; an env that is
+   * no longer configured falls back to the default env.
    */
-  protected getGateway(): Promise<BrainUserGateway> {
-    this.gatewayPromise ??= this.siteSettings
-      .getBrainApiTarget()
-      .then(({ config }) => {
+  protected async resolveEnv(
+    env?: string | null
+  ): Promise<{ env: string; config: BrainApiTarget['config'] }> {
+    const { config } = await this.siteSettings.getBrainApiTarget();
+    const name = env?.trim();
+    return {
+      config,
+      env: name && name in config.domains ? name : config.env
+    };
+  }
+
+  /** Env picked on the login page (cookie), else the default env. */
+  protected async resolveLoginEnv(): Promise<string> {
+    const cookieStore = await cookies();
+    const { env } = await this.resolveEnv(
+      cookieStore.get(BRAIN_LOGIN_ENV_COOKIE)?.value
+    );
+    return env;
+  }
+
+  /** Scopes this request's Brain calls and local identity to `env`. */
+  protected useEnv(env: string): void {
+    this.activeEnv = env;
+    this.identityStore.useEnv(env);
+  }
+
+  /**
+   * One gateway per env per request (IOC is per request); defaults to
+   * {@link activeEnv}.
+   */
+  protected getGateway(env = this.activeEnv): Promise<BrainUserGateway> {
+    const key = env ?? '';
+    let gateway = this.gateways.get(key);
+    if (!gateway) {
+      gateway = this.resolveEnv(env).then(({ env: resolved, config }) => {
         const options = createBrainUserOptions({
           ...config,
+          env: resolved,
           logger: this.logger,
           fetcher: nextSafeFetch
         });
         return new BrainUserGateway(options.requestAdapter, this.logger);
       });
-    return this.gatewayPromise;
+      this.gateways.set(key, gateway);
+    }
+    return gateway;
   }
 
   /**
@@ -272,7 +321,7 @@ export class BrainUserOAuthProvider
     upstream: UserSchema
   ): OAuthLocalUserDraft {
     return {
-      provider: oauthLocalUserConfig.provider,
+      provider: brainProviderForEnv(this.activeEnv ?? BRAIN_LEGACY_ENV),
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
       phone: upstream.phone?.trim() || null,
@@ -371,6 +420,10 @@ export class BrainUserOAuthProvider
   public override async getUserInfoWithAccessToken(
     accessToken: string
   ): Promise<UserSchema> {
+    const { env } = await this.resolveEnv(
+      await this.accessTokenEnvs.findEnv(accessToken)
+    );
+    this.useEnv(env);
     this.passiveSync = true;
     try {
       return await super.getUserInfoWithAccessToken(accessToken);
@@ -406,6 +459,8 @@ export class BrainUserOAuthProvider
   protected async providerLogin(
     params: LoginParams
   ): Promise<WithUserSession<BrainUserSession, UserSchema>> {
+    const env = await this.resolveLoginEnv();
+    this.useEnv(env);
     const gateway = await this.getGateway();
     const result =
       params.phone && params.code
@@ -432,7 +487,8 @@ export class BrainUserOAuthProvider
     return {
       ...(typeof result.data === 'object' && result.data ? result.data : {}),
       userId: '',
-      providerRefreshToken: token
+      providerRefreshToken: token,
+      brainEnv: env
     };
   }
 
@@ -442,16 +498,22 @@ export class BrainUserOAuthProvider
   protected async providerExchangeAccessToken(
     session: BrainUserSession
   ): Promise<OAuthWrapperAccessToken> {
-    const gateway = await this.getGateway();
-    const { config } = await this.siteSettings.getBrainApiTarget();
+    const userId = String(session.userId ?? '').trim();
+    const { env, config } = await this.resolveEnv(
+      userId ? await this.identityStore.findUserEnv(userId) : null
+    );
+    const gateway = await this.getGateway(env);
     // getAccessToken resolves its base URL from the call config only;
     // createAdapter drops env / domains from the adapter config.
     const accessResult = await gateway.getAccessToken(
       { token: session.providerRefreshToken, lang: 'en' },
       {
-        env: config.env,
+        env,
         domains: config.domains,
-        userlyDomains: config.userlyDomains
+        // A map without `env` would resolve to an empty base URL.
+        userlyDomains: config.userlyDomains?.[env]
+          ? config.userlyDomains
+          : undefined
       }
     );
 
@@ -463,14 +525,31 @@ export class BrainUserOAuthProvider
       access: accessResult
     });
 
+    const accessToken = accessResult.data!.access_token;
+    const expiresIn = accessResult.data!.expires_in ?? 3600;
+    if (userId) {
+      try {
+        await this.accessTokenEnvs.record({
+          accessToken,
+          userId,
+          env,
+          expiresInSeconds: expiresIn
+        });
+      } catch (error) {
+        this.logger.warn('Failed to record access token env', { error });
+      }
+    }
+
+    // Empty `refresh_token`: a non-empty one would replace the stored Brain
+    // login token, and the next exchange would send the wrong credential.
     return {
       ...accessResult,
       provider_token: session.providerRefreshToken ?? '',
       provider_refresh_token: '',
       token_type: 'Bearer',
-      access_token: accessResult.data!.access_token,
-      expires_in: accessResult.data!.expires_in ?? 3600,
-      refresh_token: accessResult.data!.refresh_token
+      access_token: accessToken,
+      expires_in: expiresIn,
+      refresh_token: ''
     };
   }
 
@@ -590,7 +669,7 @@ export class BrainUserOAuthProvider
     if ('email' in params) {
       throw new Error('Email is not supported');
     }
-    const gateway = await this.getGateway();
+    const gateway = await this.getGateway(await this.resolveLoginEnv());
     const result = await gateway.verifySignOtp({ phone: params.phone });
     this.logger.debug('BrainUser send phone otp', result);
 
@@ -643,5 +722,16 @@ export class BrainUserOAuthProvider
    */
   public clearSession(): Promise<void> {
     return super.clearSession();
+  }
+
+  /**
+   * Signing out of this site only ends the browser session. Apps the user
+   * authorized keep their refresh tokens and the stored Brain credentials;
+   * those are revoked via `/oauth/revoke`.
+   *
+   * @override
+   */
+  public override async logout(_userId: string): Promise<void> {
+    await this.clearSession();
   }
 }

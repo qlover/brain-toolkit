@@ -66,6 +66,13 @@ export const PAGE_LOGIN_TAB_PHONE = 'page_login:tab__phone';
 export const PAGE_LOGIN_TAB_EMAIL = 'page_login:tab__email';
 
 /**
+ * @description Brain OAuth sign-in card — Brain environment select label
+ * @localZh 登录环境
+ * @localEn Sign-in environment
+ */
+export const PAGE_LOGIN_ENV = 'page_login:env';
+
+/**
  * @description Brain OAuth sign-in form — email field label
  * @localZh 邮箱
  * @localEn Email

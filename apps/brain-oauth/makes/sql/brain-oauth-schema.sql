@@ -21,13 +21,20 @@ create table if not exists public.brain_oauth_users (
   phone text,
   name text,
   extra jsonb,
+  brain_env text not null default 'development',
   last_login_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-create unique index if not exists brain_oauth_users_email_key
-  on public.brain_oauth_users (lower(email))
+-- Existing DB: per-env users (see section 6).
+alter table public.brain_oauth_users
+  add column if not exists brain_env text not null default 'development';
+
+drop index if exists public.brain_oauth_users_email_key;
+
+create unique index if not exists brain_oauth_users_env_email_key
+  on public.brain_oauth_users (brain_env, lower(email))
   where email is not null;
 
 comment on table public.brain_oauth_users is
@@ -216,7 +223,7 @@ create table if not exists public.brain_oauth_refresh_tokens (
 create index if not exists idx_brain_oauth_refresh_tokens_client_user
   on public.brain_oauth_refresh_tokens (client_id, user_id);
 
-comment on column public.brain_oauth_refresh_tokens.refresh_token is 'Encrypted Brain refresh_token issued to the third-party client.';
+comment on column public.brain_oauth_refresh_tokens.refresh_token is 'sha256 (hex) of the wrapper-issued refresh_token given to the third-party client.';
 
 alter table public.brain_oauth_refresh_tokens enable row level security;
 
@@ -385,3 +392,30 @@ comment on table public.brain_oauth_site_settings is
   'Runtime site settings. Missing keys are seeded by the app; edit via Admin → Site settings.';
 
 alter table public.brain_oauth_site_settings enable row level security;
+
+
+-- #############################################################################
+-- 6) Login env (Brain API environment chosen on the login page)
+-- #############################################################################
+-- Brain user ids are per env: each env has its own local users
+-- (brain_oauth_users.brain_env) and link provider (`brain` for development,
+-- `brain:<env>` otherwise). Rows created earlier keep development.
+
+comment on column public.brain_oauth_users.brain_env is
+  'Brain API env the user signed in with; emails are unique per env.';
+
+create table if not exists public.brain_oauth_access_token_envs (
+  token_hash text primary key,
+  user_id text not null,
+  brain_env text not null,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_brain_oauth_access_token_envs_expires
+  on public.brain_oauth_access_token_envs (expires_at);
+
+comment on table public.brain_oauth_access_token_envs is
+  'sha256 (hex) of Brain access tokens issued via /oauth/token → env, so /oauth/userinfo calls the right Brain env.';
+
+alter table public.brain_oauth_access_token_envs enable row level security;

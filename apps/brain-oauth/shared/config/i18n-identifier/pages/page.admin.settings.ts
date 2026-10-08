@@ -191,9 +191,9 @@ export const ADMIN_SETTINGS_SECTION_BRAIN_DESC =
   'admin_settings:section__brain_desc';
 
 /**
- * @description Brain OAuth admin settings — current Brain env select
- * @localZh 当前环境
- * @localEn Current environment
+ * @description Brain OAuth admin settings — default Brain env select
+ * @localZh 默认登录环境（登录页可切换到下方任一环境）
+ * @localEn Default sign-in environment (the login page can switch to any environment below)
  */
 export const ADMIN_SETTINGS_BRAIN_ENV = 'admin_settings:brain__env';
 
@@ -252,8 +252,8 @@ export const ADMIN_SETTINGS_BRAIN_USERLY = 'admin_settings:brain__userly';
 
 /**
  * @description Brain OAuth admin settings — access token URL help
- * @localZh 只对当前环境生效；留空则与当前环境的 API 地址相同
- * @localEn Applies to the current environment only; leave empty to use its API URL
+ * @localZh 只对默认登录环境生效；留空则与该环境的 API 地址相同
+ * @localEn Applies to the default sign-in environment only; leave empty to use its API URL
  */
 export const ADMIN_SETTINGS_BRAIN_USERLY_HELP =
   'admin_settings:brain__userly_help';
