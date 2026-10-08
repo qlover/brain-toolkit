@@ -1,6 +1,7 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { resolveOAuthRealEmail } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
+import { BRAIN_LEGACY_ENV, brainProviderForEnv } from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { LoggerInterface } from '@qlover/logger';
@@ -29,11 +30,40 @@ export interface LinkedLocalUser {
  */
 @injectable()
 export class BrainOAuthUserStore implements OAuthIdentityStore {
+  /**
+   * Brain env of the identity being resolved. Emails are unique per env, and
+   * the `OAuthIdentityStore` lookups carry no provider, so the provider sets
+   * this per request (IOC is per request).
+   */
+  protected env: string = BRAIN_LEGACY_ENV;
+
   constructor(
     @inject(I.Logger) protected readonly logger: LoggerInterface,
     @inject(SupabaseRepo)
     protected readonly supabaseRepo: SupabaseRepo<unknown>
   ) {}
+
+  public useEnv(env: string): void {
+    this.env = env;
+  }
+
+  /** Env the local user signed in with; legacy rows are development. */
+  public async findUserEnv(userId: string): Promise<string> {
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(usersTable)
+      .select('brain_env')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        `Failed to read ${usersTable}.brain_env: ${error.message}`
+      );
+    }
+    const env = (data as { brain_env?: unknown } | null)?.brain_env;
+    return typeof env === 'string' && env.trim() ? env : BRAIN_LEGACY_ENV;
+  }
 
   /**
    * @override
@@ -99,6 +129,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
     const { data, error } = await supabase
       .from(usersTable)
       .select('id')
+      .eq('brain_env', this.env)
       .eq('email', normalizeEmail(email))
       .maybeSingle();
 
@@ -132,6 +163,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
         phone: draft.phone?.trim() || null,
         name: draft.name,
         extra: draft.extra ?? null,
+        brain_env: this.env,
         last_login_at: now
       })
       .select('id')
@@ -292,7 +324,7 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       .from(linksTable)
       .select('external_user_id')
       .eq('user_id', userId)
-      .eq('provider', oauthLocalUserConfig.provider)
+      .eq('provider', brainProviderForEnv(this.env))
       .maybeSingle();
 
     if (error) {

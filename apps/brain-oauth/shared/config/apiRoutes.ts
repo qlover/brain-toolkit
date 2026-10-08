@@ -33,6 +33,15 @@ export const API_ADMIN_SITE_SETTINGS = '/api/admin/site-settings' as const;
 export const API_ADMIN_USERS = '/api/admin/users' as const;
 
 /**
+ * API path: `/api/brain/envs`
+ *
+ * @see [src/app/api/brain/envs/route.ts](../../src/app/api/brain/envs/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/brain/envs/route.ts`
+ */
+export const API_BRAIN_ENVS = '/api/brain/envs' as const;
+
+/**
  * API path: `/api/clients`
  *
  * @see [src/app/api/clients/route.ts](../../src/app/api/clients/route.ts)
@@ -165,6 +174,7 @@ export type ApiRoutePath =
   | typeof API_ADMIN_OVERVIEW
   | typeof API_ADMIN_SITE_SETTINGS
   | typeof API_ADMIN_USERS
+  | typeof API_BRAIN_ENVS
   | typeof API_CLIENTS
   | typeof API_CLIENTS_2
   | typeof API_CLIENTS_ROTATE_SECRET

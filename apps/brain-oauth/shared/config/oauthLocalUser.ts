@@ -15,6 +15,8 @@ export const oauthLocalUserConfig = {
   consentGrantsTable: 'brain_oauth_consent_grants',
   /** Admin-editable runtime settings (CORS rules, …) */
   siteSettingsTable: 'brain_oauth_site_settings',
+  /** sha256(access_token) → Brain env, so /oauth/userinfo knows which env to call */
+  accessTokenEnvsTable: 'brain_oauth_access_token_envs',
   /**
    * Domain for synthetic emails when upstream has no email.
    * Final address: `{externalUserId}@{provider}.{syntheticEmailDomain}`
