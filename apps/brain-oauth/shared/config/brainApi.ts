@@ -1,65 +1,136 @@
-import { BRAIN_DOMAINS } from '@brain-toolkit/brain-user';
-
-/** Admin-selectable Brain API env; `custom` uses the configured base URL. */
-export const BRAIN_API_CUSTOM_ENV = 'custom' as const;
-
-export const BRAIN_API_DEFAULT_ENV = 'development' as const;
-
-export const BRAIN_API_PRESET_DOMAINS: Readonly<Record<string, string>> =
-  BRAIN_DOMAINS;
-
-export const BRAIN_API_ENV_OPTIONS: readonly string[] = Object.freeze([
-  ...Object.keys(BRAIN_DOMAINS),
-  BRAIN_API_CUSTOM_ENV
-]);
-
-export interface BrainApiTarget {
-  /** Env passed to the Brain gateway; always a key of {@link domains}. */
-  readonly env: string;
-  readonly domains: Record<string, string>;
-  /** Resolved origin all Brain requests go to. */
-  readonly baseURL: string;
-}
-
-export function isBrainApiEnv(value: string): boolean {
-  return BRAIN_API_ENV_OPTIONS.includes(value);
-}
-
-export function isValidBrainApiBaseUrl(value: string): boolean {
-  try {
-    const url = new URL(value.trim());
-    return url.protocol === 'https:' || url.protocol === 'http:';
-  } catch {
-    return false;
-  }
-}
-
-/** Trailing slashes would double up with endpoint paths. */
-export function normalizeBrainApiBaseUrl(value: string): string {
-  return value.trim().replace(/\/+$/, '');
-}
+import {
+  BRAIN_DOMAINS,
+  GATEWAY_BRAIN_USER_ENDPOINTS,
+  defaultEnv,
+  type BrainUserGatewayConfig
+} from '@brain-toolkit/brain-user';
+import { z } from 'zod';
 
 /**
- * Invalid input (unknown env, `custom` without a valid URL) falls back to
- * {@link BRAIN_API_DEFAULT_ENV} so a bad setting never breaks sign-in.
+ * Admin-editable part of `BrainUserGatewayConfig`: only the fields that decide
+ * request addresses. `domains` / `endpoints` are merged over the defaults.
  */
-export function resolveBrainApiTarget(
-  env: string,
-  customBaseUrl: string
-): BrainApiTarget {
-  const domains: Record<string, string> = { ...BRAIN_DOMAINS };
-  const trimmedEnv = env.trim();
+export type BrainApiGatewaySettings = Pick<
+  BrainUserGatewayConfig<unknown>,
+  'env' | 'domains' | 'userlyDomains' | 'endpoints'
+>;
 
-  if (
-    trimmedEnv === BRAIN_API_CUSTOM_ENV &&
-    isValidBrainApiBaseUrl(customBaseUrl)
-  ) {
-    const baseURL = normalizeBrainApiBaseUrl(customBaseUrl);
-    domains[BRAIN_API_CUSTOM_ENV] = baseURL;
-    return { env: BRAIN_API_CUSTOM_ENV, domains, baseURL };
-  }
+export const BRAIN_API_ENDPOINT_KEYS = Object.freeze(
+  Object.keys(GATEWAY_BRAIN_USER_ENDPOINTS)
+) as readonly (keyof typeof GATEWAY_BRAIN_USER_ENDPOINTS)[];
 
-  const resolvedEnv =
-    trimmedEnv in domains ? trimmedEnv : BRAIN_API_DEFAULT_ENV;
-  return { env: resolvedEnv, domains, baseURL: domains[resolvedEnv] };
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' || url.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  }, 'Must be an http(s) URL')
+  .transform((value) => value.replace(/\/+$/, ''));
+
+const endpointSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^(GET|POST|PUT|DELETE|PATCH|OPTIONS|HEAD) \/\S*$/,
+    'Must look like "POST /path"'
+  );
+
+const domainMapSchema = z.record(z.string().trim().min(1), httpUrlSchema);
+
+export const brainApiGatewaySettingsSchema = z
+  .object({
+    env: z.string().trim().min(1).optional(),
+    domains: domainMapSchema.optional(),
+    userlyDomains: domainMapSchema.optional(),
+    endpoints: z
+      .partialRecord(z.enum(BRAIN_API_ENDPOINT_KEYS), endpointSchema)
+      .optional()
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const env = value.env ?? defaultEnv;
+    const domains = { ...BRAIN_DOMAINS, ...value.domains };
+    if (!(env in domains)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['env'],
+        message: `env "${env}" is not a key of domains`
+      });
+    }
+    if (value.userlyDomains && !(env in value.userlyDomains)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['userlyDomains'],
+        message: `userlyDomains has no "${env}" entry`
+      });
+    }
+  });
+
+export interface BrainApiTarget {
+  /** Options for `createBrainUserOptions`. */
+  readonly config: BrainApiGatewaySettings & {
+    env: string;
+    domains: Record<string, string>;
+  };
+  /** Origin for every endpoint except `accessToken`. */
+  readonly baseURL: string;
+  /** Origin for `accessToken` (`userlyDomains`, else {@link baseURL}). */
+  readonly userlyBaseURL: string;
 }
+
+export type BrainApiSettingsParseResult =
+  | { success: true; settings: BrainApiGatewaySettings }
+  | { success: false; error: string };
+
+/** Accepts the stored JSON string; empty means package defaults. */
+export function parseBrainApiSettings(
+  raw: string
+): BrainApiSettingsParseResult {
+  if (!raw.trim()) {
+    return { success: true, settings: {} };
+  }
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+  const parsed = brainApiGatewaySettingsSchema.safeParse(json);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues
+        .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+        .join('\n')
+    };
+  }
+  return { success: true, settings: parsed.data as BrainApiGatewaySettings };
+}
+
+export function resolveBrainApiTarget(
+  settings: BrainApiGatewaySettings
+): BrainApiTarget {
+  const env = settings.env ?? defaultEnv;
+  const domains: Record<string, string> = {
+    ...BRAIN_DOMAINS,
+    ...settings.domains
+  };
+  const baseURL = domains[env] ?? '';
+  return {
+    config: { ...settings, env, domains },
+    baseURL,
+    userlyBaseURL: settings.userlyDomains?.[env] ?? baseURL
+  };
+}
+
+/** Pretty JSON for the admin editor when nothing is stored yet. */
+export const BRAIN_API_SETTINGS_TEMPLATE = JSON.stringify(
+  { env: defaultEnv } satisfies BrainApiGatewaySettings,
+  null,
+  2
+);

@@ -5,10 +5,7 @@ import {
 } from '@brain-toolkit/next-app-kit/server';
 import { inject, injectable } from '@shared/container';
 import {
-  BRAIN_API_CUSTOM_ENV,
-  isBrainApiEnv,
-  isValidBrainApiBaseUrl,
-  normalizeBrainApiBaseUrl,
+  parseBrainApiSettings,
   resolveBrainApiTarget,
   type BrainApiTarget
 } from '@config/brainApi';
@@ -40,19 +37,22 @@ export class SiteSettingsService extends KitSiteSettingsService<SiteSettingKey> 
     super(repo, cache, logger);
   }
 
+  /**
+   * An invalid stored config falls back to package defaults so a bad setting
+   * never breaks sign-in.
+   */
   public async getBrainApiTarget(): Promise<BrainApiTarget> {
-    const [env, baseUrl] = await Promise.all([
-      this.getString(SITE_SETTING_KEYS.BRAIN_API_ENV),
-      this.getString(SITE_SETTING_KEYS.BRAIN_API_BASE_URL)
-    ]);
-    const target = resolveBrainApiTarget(env, baseUrl);
-    if (env.trim() && target.env !== env.trim()) {
-      this.logger.warn('Invalid Brain API setting; using default env', {
-        env,
-        baseUrl
+    const raw = await this.getString(
+      SITE_SETTING_KEYS.BRAIN_API_GATEWAY_CONFIG
+    );
+    const parsed = parseBrainApiSettings(raw);
+    if (!parsed.success) {
+      this.logger.warn('Invalid Brain API config; using defaults', {
+        error: parsed.error
       });
+      return resolveBrainApiTarget({});
     }
-    return target;
+    return resolveBrainApiTarget(parsed.settings);
   }
 
   /**
@@ -61,31 +61,26 @@ export class SiteSettingsService extends KitSiteSettingsService<SiteSettingKey> 
   public override async updateAdminSettings(
     patch: AdminSiteSettingsPatch
   ): Promise<AdminSiteSettingEntry<SiteSettingKey>[]> {
-    const current = await this.getAdminSettings();
-    const valueOf = (key: SiteSettingKey): unknown =>
-      key in patch.settings
-        ? patch.settings[key]
-        : current.find((entry) => entry.key === key)?.value;
-
-    const env = valueOf(SITE_SETTING_KEYS.BRAIN_API_ENV);
-    const baseUrl = valueOf(SITE_SETTING_KEYS.BRAIN_API_BASE_URL);
-    if (typeof env !== 'string' || !isBrainApiEnv(env)) {
-      throw new Error(`Invalid Brain API env: ${String(env)}`);
-    }
-    if (typeof baseUrl !== 'string') {
-      throw new Error('Invalid Brain API base URL');
-    }
-    if (env === BRAIN_API_CUSTOM_ENV && !isValidBrainApiBaseUrl(baseUrl)) {
-      throw new Error('Brain API base URL must be an http(s) URL');
+    const key = SITE_SETTING_KEYS.BRAIN_API_GATEWAY_CONFIG;
+    if (!(key in patch.settings)) {
+      return super.updateAdminSettings(patch);
     }
 
-    const settings = { ...patch.settings };
-    if (SITE_SETTING_KEYS.BRAIN_API_BASE_URL in settings) {
-      settings[SITE_SETTING_KEYS.BRAIN_API_BASE_URL] = baseUrl.trim()
-        ? normalizeBrainApiBaseUrl(baseUrl)
+    const raw = patch.settings[key];
+    if (typeof raw !== 'string') {
+      throw new Error('Brain API config must be a JSON string');
+    }
+    const parsed = parseBrainApiSettings(raw);
+    if (!parsed.success) {
+      throw new Error(`Invalid Brain API config: ${parsed.error}`);
+    }
+    const normalized =
+      Object.keys(parsed.settings).length > 0
+        ? JSON.stringify(parsed.settings, null, 2)
         : '';
-    }
-    return super.updateAdminSettings({ settings });
+    return super.updateAdminSettings({
+      settings: { ...patch.settings, [key]: normalized }
+    });
   }
 
   /**
