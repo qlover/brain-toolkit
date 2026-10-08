@@ -112,9 +112,30 @@ describe('BrainOAuthUserStore', () => {
     expect(upsert?.args[0]).toMatchObject({
       user_id: 'u-1',
       provider: 'brain',
+      brain_env: 'development',
       external_user_id: '42'
     });
     expect(upsert?.args[1]).toEqual({ onConflict: 'user_id' });
+  });
+
+  it('scopes links to the active env', async () => {
+    const { store, calls } = createStore({});
+    store.useEnv('production');
+
+    await store.upsertLink('u-1', draft);
+    await store.findAuthUserIdByExternalId('brain', '42');
+
+    const upsert = calls.find((c) => c.method === 'upsert');
+    expect(upsert?.args[0]).toMatchObject({ brain_env: 'production' });
+    expect(
+      calls.some(
+        (c) =>
+          c.table === 'brain_oauth_user_links' &&
+          c.method === 'eq' &&
+          c.args[0] === 'brain_env' &&
+          c.args[1] === 'production'
+      )
+    ).toBe(true);
   });
 
   it('swallows metadata refresh errors', async () => {

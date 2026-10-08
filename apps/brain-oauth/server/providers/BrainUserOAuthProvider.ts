@@ -30,12 +30,7 @@ import {
 } from '@qlover/oauth-wrapper';
 import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
-import {
-  BRAIN_LEGACY_ENV,
-  BRAIN_LOGIN_ENV_COOKIE,
-  brainProviderForEnv,
-  type BrainApiTarget
-} from '@config/brainApi';
+import { BRAIN_LOGIN_ENV_COOKIE, type BrainApiTarget } from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
@@ -321,7 +316,7 @@ export class BrainUserOAuthProvider
     upstream: UserSchema
   ): OAuthLocalUserDraft {
     return {
-      provider: brainProviderForEnv(this.activeEnv ?? BRAIN_LEGACY_ENV),
+      provider: oauthLocalUserConfig.provider,
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
       phone: upstream.phone?.trim() || null,
