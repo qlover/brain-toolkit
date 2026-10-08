@@ -120,6 +120,9 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
+   * Identity mapping only. Brain profile data is fetched live on login and
+   * `/oauth/userinfo`, so `extra` is intentionally not written here.
+   *
    * @override
    */
   public async upsertLink(
@@ -132,7 +135,6 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
         user_id: userId,
         provider: draft.provider,
         external_user_id: draft.externalUserId,
-        extra: draft.extra ?? null,
         updated_at: new Date().toISOString()
       },
       { onConflict: 'user_id' }
@@ -152,13 +154,16 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   ): Promise<void> {
     const supabase = await this.supabaseRepo.getAdminSupabase();
     const now = new Date().toISOString();
+    const extra = draft.extra
+      ? await this.mergeUserExtra(userId, draft.extra)
+      : null;
     const { error } = await supabase
       .from(usersTable)
       .update({
         name: draft.name,
         ...(draft.email ? { email: normalizeEmail(draft.email) } : {}),
         ...(draft.phone?.trim() ? { phone: draft.phone.trim() } : {}),
-        ...(draft.extra ? { extra: draft.extra } : {}),
+        ...(extra ? { extra } : {}),
         last_login_at: now,
         updated_at: now
       })
@@ -170,6 +175,33 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
         error: error.message
       });
     }
+  }
+
+  /**
+   * Shallow-merges `patch` over the user's current `extra` so keys written by
+   * other features (or legacy migrations) survive each login.
+   */
+  protected async mergeUserExtra(
+    userId: string,
+    patch: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(usersTable)
+      .select('extra')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to read ${usersTable}.extra: ${error.message}`);
+    }
+
+    const current = (data as { extra?: unknown } | null)?.extra;
+    const base =
+      current && typeof current === 'object' && !Array.isArray(current)
+        ? (current as Record<string, unknown>)
+        : {};
+    return { ...base, ...patch };
   }
 
   protected async findExternalUserId(userId: string): Promise<string | null> {
