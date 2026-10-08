@@ -122,15 +122,13 @@ function formatBrainLoginError(data: unknown): string {
   return 'Brain login did not return a session token';
 }
 
+/**
+ * Account email only. `profile.google_email` is deliberately ignored: Brain
+ * keeps separate user ids for Google/phone signups and email signups, and
+ * using it here would make both claim the same local row by email.
+ */
 function resolveBrainEmail(user: BrainUser): string {
-  if (typeof user.email === 'string' && user.email.trim()) {
-    return user.email.trim();
-  }
-  const nested = user.profile as { google_email?: string } | undefined;
-  if (typeof nested?.google_email === 'string' && nested.google_email.trim()) {
-    return nested.google_email.trim();
-  }
-  return '';
+  return typeof user.email === 'string' ? user.email.trim() : '';
 }
 
 function resolveBrainName(user: BrainUser): string | undefined {

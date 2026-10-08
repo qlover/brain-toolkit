@@ -1,4 +1,5 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
+import { buildOAuthSyntheticEmail } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
@@ -146,6 +147,9 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
+   * Upstream without a real email falls back to the synthetic address, so a
+   * stale real email cannot keep blocking the Brain account that owns it.
+   *
    * @override
    */
   public async refreshMetadata(
@@ -157,11 +161,18 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
     const extra = draft.extra
       ? await this.mergeUserExtra(userId, draft.extra)
       : null;
+    const email = draft.email
+      ? normalizeEmail(draft.email)
+      : buildOAuthSyntheticEmail(
+          draft.provider,
+          draft.externalUserId,
+          oauthLocalUserConfig.syntheticEmailDomain
+        );
     const { error } = await supabase
       .from(usersTable)
       .update({
         name: draft.name,
-        ...(draft.email ? { email: normalizeEmail(draft.email) } : {}),
+        email,
         ...(draft.phone?.trim() ? { phone: draft.phone.trim() } : {}),
         ...(extra ? { extra } : {}),
         last_login_at: now,
