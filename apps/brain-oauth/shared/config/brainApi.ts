@@ -5,6 +5,7 @@ import {
   type BrainUserGatewayConfig
 } from '@brain-toolkit/brain-user';
 import { z } from 'zod';
+import type { UserSchema } from '@qlover/next-kit/common';
 
 /**
  * Admin-editable part of `BrainUserGatewayConfig`: only the fields that decide
@@ -13,9 +14,17 @@ import { z } from 'zod';
 export type BrainApiGatewaySettings = Pick<
   BrainUserGatewayConfig<unknown>,
   'env' | 'domains' | 'userlyDomains' | 'endpoints'
->;
+> & {
+  /**
+   * Per-env endpoint overrides merged over `endpoints`, e.g. a proxy site
+   * that exposes Brain under its own paths.
+   */
+  envEndpoints?: Record<string, BrainApiEndpointMap>;
+};
 
 export type BrainApiEndpointKey = keyof typeof GATEWAY_BRAIN_USER_ENDPOINTS;
+
+export type BrainApiEndpointMap = Partial<Record<BrainApiEndpointKey, string>>;
 
 export const BRAIN_API_ENDPOINT_KEYS = Object.freeze(
   Object.keys(GATEWAY_BRAIN_USER_ENDPOINTS)
@@ -28,6 +37,14 @@ export const BRAIN_LOGIN_ENV_COOKIE = 'brain_login_env';
 
 /** Env of local users and links created before per-env login. */
 export const BRAIN_LEGACY_ENV = 'development';
+
+/** Session user as returned by the server; `brain_env` is the login env. */
+export type BrainSessionUser = UserSchema & { brain_env?: string };
+
+export function brainEnvOfUser(user: unknown): string | undefined {
+  const env = (user as BrainSessionUser | null | undefined)?.brain_env;
+  return typeof env === 'string' && env.trim() ? env : undefined;
+}
 
 /** `GET /api/brain/envs` payload for the login page env switcher. */
 export interface BrainLoginEnvs {
@@ -85,13 +102,19 @@ const endpointSchema = z
 
 const domainMapSchema = z.record(z.string().trim().min(1), httpUrlSchema);
 
+const endpointMapSchema = z.partialRecord(
+  z.enum(BRAIN_API_ENDPOINT_KEYS),
+  endpointSchema
+);
+
 export const brainApiGatewaySettingsSchema = z
   .object({
     env: z.string().trim().min(1).optional(),
     domains: domainMapSchema.optional(),
     userlyDomains: domainMapSchema.optional(),
-    endpoints: z
-      .partialRecord(z.enum(BRAIN_API_ENDPOINT_KEYS), endpointSchema)
+    endpoints: endpointMapSchema.optional(),
+    envEndpoints: z
+      .record(z.string().trim().min(1), endpointMapSchema)
       .optional()
   })
   .strict()
@@ -105,25 +128,40 @@ export const brainApiGatewaySettingsSchema = z
         message: `env "${env}" is not a key of domains`
       });
     }
-    if (value.userlyDomains && !(env in value.userlyDomains)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['userlyDomains'],
-        message: `userlyDomains has no "${env}" entry`
-      });
-    }
   });
 
 export interface BrainApiTarget {
-  /** Options for `createBrainUserOptions`. */
   readonly config: BrainApiGatewaySettings & {
     env: string;
     domains: Record<string, string>;
   };
-  /** Origin for every endpoint except `accessToken`. */
+  /** Origin for every endpoint of the default env except `accessToken`. */
   readonly baseURL: string;
   /** Origin for `accessToken` (`userlyDomains`, else {@link baseURL}). */
   readonly userlyBaseURL: string;
+}
+
+/** Request addresses of one env. */
+export interface BrainApiEnvTarget {
+  readonly baseURL: string;
+  readonly userlyBaseURL: string;
+  readonly endpoints: NonNullable<BrainApiGatewaySettings['endpoints']>;
+}
+
+export function resolveBrainApiEnv(
+  config: BrainApiTarget['config'],
+  env: string
+): BrainApiEnvTarget {
+  const baseURL = config.domains[env] ?? '';
+  return {
+    baseURL,
+    userlyBaseURL: config.userlyDomains?.[env] ?? baseURL,
+    endpoints: {
+      ...BRAIN_API_DEFAULT_ENDPOINTS,
+      ...config.endpoints,
+      ...config.envEndpoints?.[env]
+    } as BrainApiEnvTarget['endpoints']
+  };
 }
 
 export type BrainApiSettingsParseResult =
@@ -163,12 +201,9 @@ export function resolveBrainApiTarget(
     ...BRAIN_DOMAINS,
     ...settings.domains
   };
-  const baseURL = domains[env] ?? '';
-  return {
-    config: { ...settings, env, domains },
-    baseURL,
-    userlyBaseURL: settings.userlyDomains?.[env] ?? baseURL
-  };
+  const config = { ...settings, env, domains };
+  const { baseURL, userlyBaseURL } = resolveBrainApiEnv(config, env);
+  return { config, baseURL, userlyBaseURL };
 }
 
 export interface BrainApiDomainRow {
@@ -176,6 +211,10 @@ export interface BrainApiDomainRow {
   url: string;
   /** Preset rows (`BRAIN_DOMAINS`) can be edited but not removed. */
   preset: boolean;
+  /** Access token origin; empty means same as {@link url}. */
+  userlyUrl: string;
+  /** Path overrides for this env; empty means the shared endpoint path. */
+  paths: Partial<Record<BrainApiEndpointKey, string>>;
 }
 
 export interface BrainApiEndpointRow {
@@ -187,8 +226,6 @@ export interface BrainApiEndpointRow {
 export interface BrainApiForm {
   env: string;
   domains: BrainApiDomainRow[];
-  /** Access token origin for {@link env}; empty means same as the domain. */
-  userlyUrl: string;
   endpoints: Record<BrainApiEndpointKey, BrainApiEndpointRow>;
 }
 
@@ -197,15 +234,28 @@ export function settingsToBrainApiForm(
 ): BrainApiForm {
   const env = settings.env ?? defaultEnv;
   const custom = settings.domains ?? {};
+  const toRow = (
+    name: string,
+    url: string,
+    preset: boolean
+  ): BrainApiDomainRow => ({
+    name,
+    url,
+    preset,
+    userlyUrl: settings.userlyDomains?.[name] ?? '',
+    paths: Object.fromEntries(
+      Object.entries(settings.envEndpoints?.[name] ?? {}).map(
+        ([key, endpoint]) => [key, splitEndpoint(endpoint).path]
+      )
+    )
+  });
   const domains: BrainApiDomainRow[] = [
-    ...Object.entries(BRAIN_DOMAINS).map(([name, url]) => ({
-      name,
-      url: custom[name] ?? url,
-      preset: true
-    })),
+    ...Object.entries(BRAIN_DOMAINS).map(([name, url]) =>
+      toRow(name, custom[name] ?? url, true)
+    ),
     ...Object.entries(custom)
       .filter(([name]) => !(name in BRAIN_DOMAINS))
-      .map(([name, url]) => ({ name, url, preset: false }))
+      .map(([name, url]) => toRow(name, url, false))
   ];
   const endpoints = Object.fromEntries(
     BRAIN_API_ENDPOINT_KEYS.map((key) => [
@@ -216,12 +266,7 @@ export function settingsToBrainApiForm(
     ])
   ) as BrainApiForm['endpoints'];
 
-  return {
-    env,
-    domains,
-    userlyUrl: settings.userlyDomains?.[env] ?? '',
-    endpoints
-  };
+  return { env, domains, endpoints };
 }
 
 /** Only values that differ from the package defaults are kept. */
@@ -229,18 +274,36 @@ export function brainApiFormToSettings(
   form: BrainApiForm
 ): BrainApiGatewaySettings {
   const domains: Record<string, string> = {};
+  const userlyDomains: Record<string, string> = {};
+  const envEndpoints: Record<string, BrainApiEndpointMap> = {};
   for (const row of form.domains) {
     const name = row.name.trim();
-    const url = row.url.trim().replace(/\/+$/, '');
+    if (!name) {
+      continue;
+    }
+    const url = trimUrl(row.url);
     if (
-      name &&
-      (!row.preset || BRAIN_DOMAINS[name as keyof typeof BRAIN_DOMAINS] !== url)
+      !row.preset ||
+      BRAIN_DOMAINS[name as keyof typeof BRAIN_DOMAINS] !== url
     ) {
       domains[name] = url;
     }
+    if (row.userlyUrl.trim()) {
+      userlyDomains[name] = trimUrl(row.userlyUrl);
+    }
+    const overrides: BrainApiEndpointMap = {};
+    for (const key of BRAIN_API_ENDPOINT_KEYS) {
+      const path = row.paths[key]?.trim();
+      if (path) {
+        overrides[key] = `${form.endpoints[key].method} ${path}`;
+      }
+    }
+    if (Object.keys(overrides).length > 0) {
+      envEndpoints[name] = overrides;
+    }
   }
 
-  const endpoints: Partial<Record<BrainApiEndpointKey, string>> = {};
+  const endpoints: BrainApiEndpointMap = {};
   for (const key of BRAIN_API_ENDPOINT_KEYS) {
     const { method, path } = form.endpoints[key];
     const value = `${method} ${path.trim()}`;
@@ -252,13 +315,20 @@ export function brainApiFormToSettings(
   const settings: BrainApiGatewaySettings = {};
   if (form.env !== defaultEnv) settings.env = form.env;
   if (Object.keys(domains).length > 0) settings.domains = domains;
-  if (form.userlyUrl.trim()) {
-    settings.userlyDomains = { [form.env]: form.userlyUrl.trim() };
+  if (Object.keys(userlyDomains).length > 0) {
+    settings.userlyDomains = userlyDomains;
   }
   if (Object.keys(endpoints).length > 0) {
     settings.endpoints = endpoints as BrainApiGatewaySettings['endpoints'];
   }
+  if (Object.keys(envEndpoints).length > 0) {
+    settings.envEndpoints = envEndpoints;
+  }
   return settings;
+}
+
+function trimUrl(url: string): string {
+  return url.trim().replace(/\/+$/, '');
 }
 
 /** Stored form of {@link BrainApiGatewaySettings}; empty means defaults. */

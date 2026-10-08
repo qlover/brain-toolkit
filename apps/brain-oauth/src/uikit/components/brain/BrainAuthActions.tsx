@@ -6,6 +6,7 @@ import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { isBrainAdminUser } from '@shared/auth/brainAdmin';
+import { brainEnvOfUser } from '@config/brainApi';
 import { headerNavI18n } from '@config/i18n-mapping/headerNavI18n';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_ADMIN, ROUTE_DEVELOPER_APPS, ROUTE_LOGIN } from '@config/route';
@@ -43,6 +44,7 @@ export function BrainAuthActions({
   const displayName = user?.name || user?.email || user?.phone;
   const contact = user?.email || user?.phone;
   const canAdmin = showAdmin && isBrainAdminUser(user);
+  const loginEnv = brainEnvOfUser(user);
 
   const items = useMemo<DropdownItem[]>(
     () => [
@@ -55,13 +57,26 @@ export function BrainAuthActions({
             {contact && contact !== displayName && (
               <small className="text-secondary-text">{contact}</small>
             )}
+            {loginEnv && (
+              <small className="text-secondary-text">
+                {tt.loginEnv}：{loginEnv}
+              </small>
+            )}
           </span>
         )
       },
       ...(canAdmin ? [{ key: MENU_ADMIN, label: tt.admin }] : []),
       { key: MENU_LOGOUT, label: logout.title }
     ],
-    [displayName, contact, canAdmin, tt.admin, logout.title]
+    [
+      displayName,
+      contact,
+      loginEnv,
+      canAdmin,
+      tt.loginEnv,
+      tt.admin,
+      logout.title
+    ]
   );
 
   const onSelect = useCallback(
@@ -108,6 +123,15 @@ export function BrainAuthActions({
         >
           {tt.console}
         </LocaleLink>
+      )}
+      {loginEnv && (
+        <span
+          data-testid="BrainAuthLoginEnv"
+          title={`${tt.loginEnv}：${loginEnv}`}
+          className="brain-pill sm purple brain-hide-mobile"
+        >
+          {loginEnv}
+        </span>
       )}
       <Dropdown
         data-testid="BrainAuthMenu"
