@@ -238,7 +238,9 @@ export function AdminUsersView() {
               <BrainAvatar name={selected.name || selected.email} />
               <div className="min-w-0">
                 <div className="brain-name">{selected.name || tt.unnamed}</div>
-                <div className="brain-sub">{selected.email || '—'}</div>
+                <div className="brain-sub">
+                  {selected.email || selected.phone || '—'}
+                </div>
               </div>
             </div>
             <dl className="brain-detail">

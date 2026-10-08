@@ -257,13 +257,30 @@ export class BrainUserOAuthProvider
     );
     const externalUserId = String(draft.externalUserId ?? '').trim();
     if (email && externalUserId) {
-      await this.identityStore.releaseStaleEmail(
-        email,
-        draft.provider,
-        externalUserId
-      );
+      await this.identityStore.releaseStaleEmail(email, externalUserId);
     }
     return super.ensureLocalUser(draft);
+  }
+
+  /**
+   * Keep the synthetic address out of the session user so UIs fall back to
+   * `phone` for phone-only accounts.
+   *
+   * @override
+   */
+  protected override applyLocalUser(
+    upstream: UserSchema,
+    local: OAuthLocalUserRecord
+  ): UserSchema {
+    const user = super.applyLocalUser(upstream, local);
+    return {
+      ...user,
+      email:
+        resolveOAuthRealEmail(
+          user.email,
+          oauthLocalUserConfig.syntheticEmailDomain
+        ) ?? ''
+    };
   }
 
   /**
