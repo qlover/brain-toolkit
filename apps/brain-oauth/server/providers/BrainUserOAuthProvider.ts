@@ -144,14 +144,21 @@ function resolveBrainName(user: BrainUser): string | undefined {
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
+function resolveBrainPhone(user: BrainUser): string | undefined {
+  const phone = user.profile?.phone_number?.trim();
+  return phone || undefined;
+}
+
 function brainUserToUserSchema(
   user: BrainUser & Partial<BrainCredentials>
 ): UserSchema {
   const name = resolveBrainName(user);
+  const phone = resolveBrainPhone(user);
   return {
     id: String(user.id),
     email: resolveBrainEmail(user),
     ...(name ? { name } : {}),
+    ...(phone ? { phone } : {}),
     role: user.roles?.includes('admin') ? UserRole.ADMIN : UserRole.USER,
     credential_token:
       user.token ??
@@ -231,6 +238,7 @@ export class BrainUserOAuthProvider
       provider: oauthLocalUserConfig.provider,
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
+      phone: upstream.phone?.trim() || null,
       name: upstream.name?.trim() || upstream.email || String(upstream.id),
       // UserRole.ADMIN is 0, so compare explicitly instead of truthiness.
       extra: { brainAdmin: upstream.role === UserRole.ADMIN }
