@@ -27,6 +27,8 @@ import {
   BRAIN_DOMAINS,
   parseEndpoint
 } from '@brain-toolkit/brain-user';
+import { BrainUserHttpError } from '../src/BrainUserHttpError';
+import { BrainUserIdentifier } from '../src/config/identifier';
 
 // Test assistant to expose protected handleResponse method
 class TestableBrainUserGateway extends BrainUserGateway {
@@ -619,6 +621,96 @@ describe('BrainUserGateway', () => {
       const gateway = new BrainUserGateway(mockAdapter);
 
       await expect(gateway.getUserInfo({})).rejects.toThrow('User not found');
+    });
+  });
+
+  describe('HTTP status handling', () => {
+    function createMockAdapterWithStatus(data: unknown, status: number) {
+      const adapter = createMockAdapterWithResponse(data);
+      adapter.request = vi.fn().mockResolvedValue({
+        data,
+        config: {} as any,
+        headers: {},
+        status,
+        statusText: '',
+        response: {} as any
+      });
+      return adapter;
+    }
+
+    it('should return BrainUserHttpError for status >= 400', async () => {
+      const body = { detail: 'Authentication Failed.' };
+      const gateway = new BrainUserGateway(
+        createMockAdapterWithStatus(body, 401)
+      );
+      mockResponsePluginPassthrough(gateway);
+
+      const result = await gateway.getUserInfo(
+        { token: 'bad' },
+        { tokenPrefix: 'Bearer' }
+      );
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBeInstanceOf(BrainUserHttpError);
+      expect(result.error).toMatchObject({
+        id: BrainUserIdentifier.HTTP_ERROR,
+        status: 401,
+        data: body,
+        message: 'Authentication Failed.'
+      });
+    });
+
+    it('should keep GETUSERINFO_INVALID_TOKEN for 401 Invalid token.', async () => {
+      const gateway = new BrainUserGateway(
+        createMockAdapterWithStatus({ detail: 'Invalid token.' }, 401)
+      );
+      mockResponsePluginPassthrough(gateway);
+
+      const result = await gateway.getUserInfo({ token: 'bad' });
+
+      expect(result.error).toMatchObject({
+        id: BrainUserIdentifier.GETUSERINFO_INVALID_TOKEN
+      });
+    });
+
+    it('should keep TOO_FREQUENTLY for a 400 login rate-limit body', async () => {
+      const gateway = new BrainUserGateway(
+        createMockAdapterWithStatus(
+          {
+            email: ['This field is required.'],
+            password: ['This field is required.']
+          },
+          400
+        )
+      );
+      mockResponsePluginPassthrough(gateway);
+
+      const result = await gateway.login({
+        email: 'a@b.c',
+        password: 'x'
+      });
+
+      expect(result.error).toMatchObject({
+        id: BrainUserIdentifier.TOO_FREQUENTLY
+      });
+    });
+
+    it('should use non_field_errors as the 400 login message', async () => {
+      const gateway = new BrainUserGateway(
+        createMockAdapterWithStatus(
+          { non_field_errors: ['Unable to log in.'] },
+          400
+        )
+      );
+      mockResponsePluginPassthrough(gateway);
+
+      const result = await gateway.login({
+        email: 'a@b.c',
+        password: 'x'
+      });
+
+      expect(result.error).toBeInstanceOf(BrainUserHttpError);
+      expect(result.error?.message).toBe('Unable to log in.');
     });
   });
 
