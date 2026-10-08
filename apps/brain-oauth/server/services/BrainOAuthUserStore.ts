@@ -14,6 +14,14 @@ const PG_UNIQUE_VIOLATION = '23505';
 
 const { usersTable, linksTable } = oauthLocalUserConfig;
 
+export interface LinkedLocalUser {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  name: string | null;
+  extra: Record<string, unknown> | null;
+}
+
 /**
  * oauth-wrapper identity CRUD on `brain_oauth_users` + links table
  * (service-role client; no Supabase Auth).
@@ -47,6 +55,38 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
     }
 
     return data?.user_id ? String(data.user_id) : null;
+  }
+
+  /**
+   * Link + user row in one round trip (embedded via the `user_id` FK).
+   * Returns `null` when unlinked or on any read error so callers can fall back
+   * to the full find-or-create path.
+   */
+  public async findLinkedUser(
+    provider: string,
+    externalUserId: string
+  ): Promise<LinkedLocalUser | null> {
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(linksTable)
+      .select(`user_id, user:${usersTable}(id,email,phone,name,extra)`)
+      .eq('provider', provider)
+      .eq('external_user_id', externalUserId)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.warn(`Failed to read ${linksTable} with user`, {
+        error: error.message
+      });
+      return null;
+    }
+
+    const user = (data as { user?: unknown } | null)?.user;
+    const row = (Array.isArray(user) ? user[0] : user) as
+      | LinkedLocalUser
+      | null
+      | undefined;
+    return row?.id ? { ...row, id: String(row.id) } : null;
   }
 
   /**
