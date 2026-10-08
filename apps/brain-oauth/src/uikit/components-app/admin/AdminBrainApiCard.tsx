@@ -93,7 +93,12 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
     const names = form.domains.map((row) => row.name.trim());
     const domains = form.domains.map((row, index) => ({
       name: !names[index] ? attempted : names.indexOf(names[index]) !== index,
-      url: row.url.trim() ? !isHttpUrl(row.url) : attempted
+      url: row.url.trim() ? !isHttpUrl(row.url) : attempted,
+      userly: row.userlyUrl.trim() !== '' && !isHttpUrl(row.userlyUrl),
+      paths: BRAIN_API_ENDPOINT_KEYS.filter((key) => {
+        const path = row.paths[key]?.trim();
+        return !!path && !PATH_PATTERN.test(path);
+      })
     }));
     const endpoints = Object.fromEntries(
       BRAIN_API_ENDPOINT_KEYS.map((key) => [
@@ -101,14 +106,15 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
         !PATH_PATTERN.test(form.endpoints[key].path.trim())
       ])
     ) as Record<BrainApiEndpointKey, boolean>;
-    const userly = form.userlyUrl.trim() !== '' && !isHttpUrl(form.userlyUrl);
     const hasError =
-      domains.some((issue) => issue.name || issue.url) ||
+      domains.some(
+        (issue) =>
+          issue.name || issue.url || issue.userly || issue.paths.length > 0
+      ) ||
       names.some((name) => !name) ||
       form.domains.some((row) => !isHttpUrl(row.url)) ||
-      Object.values(endpoints).some(Boolean) ||
-      userly;
-    return { domains, endpoints, userly, hasError };
+      Object.values(endpoints).some(Boolean);
+    return { domains, endpoints, hasError };
   }, [attempted, form]);
 
   const target = useMemo(() => {
@@ -232,8 +238,12 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
           const modified = isDomainModified(row);
           const errors = [
             issue.name && tt.brainNameInvalid,
-            issue.url && tt.brainUrlInvalid
+            issue.url && tt.brainUrlInvalid,
+            issue.paths.length > 0 && tt.brainPathInvalid
           ].filter(Boolean) as string[];
+          const overridden = BRAIN_API_ENDPOINT_KEYS.filter(
+            (key) => !!row.paths[key]?.trim()
+          ).length;
           return (
             <div
               key={index}
@@ -290,6 +300,47 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
                   {tt.brainDomainRemove}
                 </button>
               )}
+              <div className="brain-rule-full">
+                <BrainField
+                  id={`brain-domain-userly-${index}`}
+                  label={tt.brainUserly}
+                  value={row.userlyUrl}
+                  placeholder={row.url.trim() || 'https://api.example.com'}
+                  invalid={issue.userly}
+                  help={issue.userly ? tt.brainUrlInvalid : tt.brainUserlyHelp}
+                  onChange={(event) =>
+                    updateDomain(index, { userlyUrl: event.target.value })
+                  }
+                />
+              </div>
+              <details className="brain-settings-group brain-rule-full">
+                <summary>
+                  <span>{tt.brainEnvPaths}</span>
+                  {overridden > 0 && (
+                    <span className="brain-pill sm purple">
+                      {tt.brainModified} {overridden}
+                    </span>
+                  )}
+                  <ChevronDownIcon aria-hidden />
+                </summary>
+                <p className="brain-sub mb-2 mt-2">{tt.brainEnvPathsDesc}</p>
+                {BRAIN_API_ENDPOINT_KEYS.map((key) => (
+                  <BrainField
+                    key={key}
+                    id={`brain-domain-path-${index}-${key}`}
+                    label={`${key}（${form.endpoints[key].method}）`}
+                    className="mono"
+                    value={row.paths[key] ?? ''}
+                    placeholder={form.endpoints[key].path}
+                    invalid={issue.paths.includes(key)}
+                    onChange={(event) =>
+                      updateDomain(index, {
+                        paths: { ...row.paths, [key]: event.target.value }
+                      })
+                    }
+                  />
+                ))}
+              </details>
               {errors.map((message) => (
                 <div
                   data-testid="AdminBrainApiCard"
@@ -310,25 +361,16 @@ export function AdminBrainApiCard({ rows, onSaved }: AdminBrainApiCardProps) {
         auto
         onClick={() =>
           update({
-            domains: [...form.domains, { name: '', url: '', preset: false }]
+            domains: [
+              ...form.domains,
+              { name: '', url: '', preset: false, userlyUrl: '', paths: {} }
+            ]
           })
         }
       >
         <PlusIcon className="h-4 w-4" aria-hidden />
         {tt.brainDomainAdd}
       </BrainButton>
-
-      <div className="mt-7">
-        <BrainField
-          id="brain-api-userly"
-          label={tt.brainUserly}
-          value={form.userlyUrl}
-          placeholder={target?.baseURL ?? 'https://api.example.com'}
-          invalid={issues.userly}
-          help={issues.userly ? tt.brainUrlInvalid : tt.brainUserlyHelp}
-          onChange={(event) => update({ userlyUrl: event.target.value })}
-        />
-      </div>
 
       <details className="brain-settings-group">
         <summary>

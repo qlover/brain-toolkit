@@ -2511,6 +2511,19 @@ button.brain-chip {
   grid-template-columns: 1fr 120px 2fr auto;
 }
 
+.brain-rule-full {
+  grid-column: 1 / -1;
+}
+
+.brain-rule .brain-settings-group {
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.brain-rule .brain-settings-group > summary {
+  font-size: 13px;
+}
+
 .brain-rule-key {
   align-self: center;
   font-size: 13px;

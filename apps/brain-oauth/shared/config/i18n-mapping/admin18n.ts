@@ -145,6 +145,8 @@ export const adminSettings18n = Object.freeze({
   brainPreset: settingsKeys.ADMIN_SETTINGS_BRAIN_PRESET,
   brainUserly: settingsKeys.ADMIN_SETTINGS_BRAIN_USERLY,
   brainUserlyHelp: settingsKeys.ADMIN_SETTINGS_BRAIN_USERLY_HELP,
+  brainEnvPaths: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV_PATHS,
+  brainEnvPathsDesc: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV_PATHS_DESC,
   brainEndpoints: settingsKeys.ADMIN_SETTINGS_BRAIN_ENDPOINTS,
   brainEndpointsDesc: settingsKeys.ADMIN_SETTINGS_BRAIN_ENDPOINTS_DESC,
   brainModified: settingsKeys.ADMIN_SETTINGS_BRAIN_MODIFIED,

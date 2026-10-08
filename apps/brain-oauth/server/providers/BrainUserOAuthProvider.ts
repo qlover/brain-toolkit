@@ -30,7 +30,12 @@ import {
 } from '@qlover/oauth-wrapper';
 import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
-import { BRAIN_LOGIN_ENV_COOKIE, type BrainApiTarget } from '@config/brainApi';
+import {
+  BRAIN_LOGIN_ENV_COOKIE,
+  resolveBrainApiEnv,
+  type BrainApiTarget,
+  type BrainSessionUser
+} from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
@@ -199,6 +204,12 @@ export interface BrainUserSession
   brainEnv?: string;
 }
 
+function sessionEnvField(
+  session: BrainUserSession
+): Pick<BrainSessionUser, 'brain_env'> {
+  return session.brainEnv ? { brain_env: session.brainEnv } : {};
+}
+
 /**
  * Brain User API as OAuth AS backend. Local identity is brain_oauth_users UUID via
  * IdentityStore hooks on OAuthWrapperService.
@@ -283,8 +294,9 @@ export class BrainUserOAuthProvider
     if (!gateway) {
       gateway = this.resolveEnv(env).then(({ env: resolved, config }) => {
         const options = createBrainUserOptions({
-          ...config,
           env: resolved,
+          domains: config.domains,
+          endpoints: resolveBrainApiEnv(config, resolved).endpoints,
           logger: this.logger,
           fetcher: nextSafeFetch
         });
@@ -502,14 +514,7 @@ export class BrainUserOAuthProvider
     // createAdapter drops env / domains from the adapter config.
     const accessResult = await gateway.getAccessToken(
       { token: session.providerRefreshToken, lang: 'en' },
-      {
-        env,
-        domains: config.domains,
-        // A map without `env` would resolve to an empty base URL.
-        userlyDomains: config.userlyDomains?.[env]
-          ? config.userlyDomains
-          : undefined
-      }
+      { baseURL: resolveBrainApiEnv(config, env).userlyBaseURL }
     );
 
     if (accessResult.error) {
@@ -586,15 +591,18 @@ export class BrainUserOAuthProvider
     }
 
     const withUser = session2 as WithUserSession<BrainUserSession, UserSchema>;
+    const env = sessionEnvField(withUser);
     if (withUser.user) {
       return {
         ...withUser.user,
+        ...env,
         id: String(session2.userId),
         credential_token: session2.providerRefreshToken
       };
     }
 
     return {
+      ...env,
       id: String(session2.userId),
       email: '',
       role: UserRole.USER,
@@ -611,7 +619,9 @@ export class BrainUserOAuthProvider
       | WithUserSession<BrainUserSession, UserSchema>
       | null
       | undefined;
-    return payload?.user?.id ? payload.user : null;
+    return payload?.user?.id
+      ? { ...payload.user, ...sessionEnvField(payload) }
+      : null;
   }
 
   /**

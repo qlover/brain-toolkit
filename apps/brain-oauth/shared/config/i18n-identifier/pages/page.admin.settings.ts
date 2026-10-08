@@ -244,31 +244,46 @@ export const ADMIN_SETTINGS_BRAIN_DOMAIN_REMOVE =
 export const ADMIN_SETTINGS_BRAIN_PRESET = 'admin_settings:brain__preset';
 
 /**
- * @description Brain OAuth admin settings — access token URL field
- * @localZh Access token 地址
- * @localEn Access token URL
+ * @description Brain OAuth admin settings — per-env access token URL field
+ * @localZh Access token 地址（可选）
+ * @localEn Access token URL (optional)
  */
 export const ADMIN_SETTINGS_BRAIN_USERLY = 'admin_settings:brain__userly';
 
 /**
  * @description Brain OAuth admin settings — access token URL help
- * @localZh 只对默认登录环境生效；留空则与该环境的 API 地址相同
- * @localEn Applies to the default sign-in environment only; leave empty to use its API URL
+ * @localZh 留空则与该环境的 API 地址相同
+ * @localEn Leave empty to use this environment's API URL
  */
 export const ADMIN_SETTINGS_BRAIN_USERLY_HELP =
   'admin_settings:brain__userly_help';
 
 /**
+ * @description Brain OAuth admin settings — per-env endpoint path overrides title
+ * @localZh 该环境的接口路径（代理站点用）
+ * @localEn Endpoint paths for this environment (for proxy sites)
+ */
+export const ADMIN_SETTINGS_BRAIN_ENV_PATHS = 'admin_settings:brain__env_paths';
+
+/**
+ * @description Brain OAuth admin settings — per-env endpoint path overrides description
+ * @localZh 例如代理站点的登录接口是 https://xx.top/api/brain/login，就把 API 地址填 https://xx.top，login 填 /api/brain/login。留空的接口沿用下方通用路径，Method 也沿用通用配置。
+ * @localEn E.g. if a proxy serves login at https://xx.top/api/brain/login, set the API URL to https://xx.top and login to /api/brain/login. Empty entries use the shared paths below, and the method follows the shared setting.
+ */
+export const ADMIN_SETTINGS_BRAIN_ENV_PATHS_DESC =
+  'admin_settings:brain__env_paths_desc';
+
+/**
  * @description Brain OAuth admin settings — endpoints section title
- * @localZh 接口路径（高级）
- * @localEn Endpoint paths (advanced)
+ * @localZh 通用接口路径（高级）
+ * @localEn Shared endpoint paths (advanced)
  */
 export const ADMIN_SETTINGS_BRAIN_ENDPOINTS = 'admin_settings:brain__endpoints';
 
 /**
  * @description Brain OAuth admin settings — endpoints section description
- * @localZh 一般无需修改。路径会拼接在 API 地址之后。
- * @localEn Usually left as is. Paths are appended to the API URL.
+ * @localZh 所有环境共用，一般无需修改。路径会拼接在 API 地址之后。
+ * @localEn Shared by every environment; usually left as is. Paths are appended to the API URL.
  */
 export const ADMIN_SETTINGS_BRAIN_ENDPOINTS_DESC =
   'admin_settings:brain__endpoints_desc';
