@@ -2,8 +2,9 @@
 
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
+import { isBrainAdminUser } from '@shared/auth/brainAdmin';
 import { headerNavI18n } from '@config/i18n-mapping/headerNavI18n';
-import { ROUTE_DEVELOPER_APPS, ROUTE_LOGIN } from '@config/route';
+import { ROUTE_ADMIN, ROUTE_DEVELOPER_APPS, ROUTE_LOGIN } from '@config/route';
 import { BrainAvatar } from './BrainAvatar';
 import { LogoutButton } from '../../components-app/LogoutButton';
 import { LocaleLink } from '../LocaleLink';
@@ -13,12 +14,15 @@ export interface BrainAuthActionsProps {
   showConsole?: boolean;
   /** Round logout button after the avatar (console). */
   showLogout?: boolean;
+  /** Admin backend pill for Brain admins (default true; off inside admin). */
+  showAdmin?: boolean;
 }
 
 /** Brain header auth area: sign-in pill for guests, avatar for signed-in users. */
 export function BrainAuthActions({
   showConsole,
-  showLogout
+  showLogout,
+  showAdmin = true
 }: BrainAuthActionsProps) {
   const tt = useI18nMapping(headerNavI18n);
   const { success, loading, user } = useUserAuth();
@@ -50,6 +54,16 @@ export function BrainAuthActions({
 
   return (
     <div data-testid="BrainAuthActions" className="flex items-center gap-2.5">
+      {showAdmin && isBrainAdminUser(user) && (
+        <LocaleLink
+          data-testid="BrainAuthAdmin"
+          href={ROUTE_ADMIN}
+          title={tt.admin}
+          className="brain-btn sm auto brain-hide-mobile"
+        >
+          {tt.admin}
+        </LocaleLink>
+      )}
       {showConsole && (
         <LocaleLink
           href={ROUTE_DEVELOPER_APPS}

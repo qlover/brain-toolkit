@@ -1,4 +1,5 @@
 import {
+  COMMON_ADMIN_TITLE,
   COMMON_HEADER_CONSOLE,
   COMMON_HEADER_LOGIN,
   COMMON_HEADER_NAV_ABOUT,
@@ -13,7 +14,8 @@ export const headerNavI18n = Object.freeze({
   navDeveloper: COMMON_HEADER_NAV_DEVELOPER,
   navPlayground: COMMON_HEADER_NAV_PLAYGROUND,
   login: COMMON_HEADER_LOGIN,
-  console: COMMON_HEADER_CONSOLE
+  console: COMMON_HEADER_CONSOLE,
+  admin: COMMON_ADMIN_TITLE
 });
 
 export type HeaderNavI18nInterface = typeof headerNavI18n;

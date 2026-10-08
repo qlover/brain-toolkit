@@ -26,6 +26,7 @@ export function AppRoutePageApp({
   headerNav,
   authShowConsole,
   authShowLogout,
+  authShowAdmin,
   tt,
   ...layoutProps
 }: AppRoutePageProps) {
@@ -47,6 +48,7 @@ export function AppRoutePageApp({
           <BrainAuthActions
             showConsole={authShowConsole}
             showLogout={authShowLogout}
+            showAdmin={authShowAdmin}
           />
         ) : (
           <Suspense key="auth-button">
