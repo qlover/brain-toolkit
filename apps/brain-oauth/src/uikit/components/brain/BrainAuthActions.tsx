@@ -11,17 +11,12 @@ import { headerNavI18n } from '@config/i18n-mapping/headerNavI18n';
 import { I } from '@config/ioc-identifiter';
 import { ROUTE_ADMIN, ROUTE_DEVELOPER_APPS, ROUTE_LOGIN } from '@config/route';
 import { BrainAvatar } from './BrainAvatar';
-import {
-  LogoutButton,
-  useLogoutConfirm
-} from '../../components-app/LogoutButton';
+import { useLogoutConfirm } from '../../components-app/LogoutButton';
 import { LocaleLink } from '../LocaleLink';
 
 export interface BrainAuthActionsProps {
   /** Console pill next to the avatar (home). */
   showConsole?: boolean;
-  /** Round logout button after the avatar (console). */
-  showLogout?: boolean;
   /** Admin backend item in the avatar menu for Brain admins (default true; off inside admin). */
   showAdmin?: boolean;
 }
@@ -33,7 +28,6 @@ const MENU_LOGOUT = 'logout';
 /** Brain header auth area: sign-in pill for guests, avatar menu for signed-in users. */
 export function BrainAuthActions({
   showConsole,
-  showLogout,
   showAdmin = true
 }: BrainAuthActionsProps) {
   const tt = useI18nMapping(headerNavI18n);
@@ -151,7 +145,6 @@ export function BrainAuthActions({
           <BrainAvatar name={displayName} />
         </button>
       </Dropdown>
-      {showLogout && <LogoutButton showLabel />}
     </div>
   );
 }

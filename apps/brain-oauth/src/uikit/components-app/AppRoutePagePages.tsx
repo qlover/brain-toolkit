@@ -25,7 +25,6 @@ export function AppRoutePagePages({
   showHeaderNav = true,
   headerNav,
   authShowConsole,
-  authShowLogout,
   authShowAdmin,
   tt,
   ...layoutProps
@@ -48,7 +47,6 @@ export function AppRoutePagePages({
         !showAuthButton ? undefined : isBrain ? (
           <BrainAuthActions
             showConsole={authShowConsole}
-            showLogout={authShowLogout}
             showAdmin={authShowAdmin}
           />
         ) : (
