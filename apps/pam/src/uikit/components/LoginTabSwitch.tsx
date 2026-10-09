@@ -5,6 +5,7 @@ import {
   GithubIcon,
   GoogleIcon
 } from '@brain-toolkit/next-app-kit/client';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useStrictEffect } from '@qlover/next-kit/client';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -25,8 +26,23 @@ import { useIOC } from '../hook/useIOC';
 type LoginTab = 'email' | 'phone';
 type EmailMode = 'password' | 'otp';
 
-const providerButtonClass =
-  'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24292e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2c3137] focus:outline-none focus:ring-2 focus:ring-[#24292e] focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+const providerButtonBaseClass =
+  'flex w-full cursor-pointer items-center justify-center gap-2 px-4 py-3 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+
+const providerOutlineClass = `${providerButtonBaseClass} min-h-12 rounded-xl border border-primary-border bg-primary font-semibold text-primary-text hover:bg-elevated focus:ring-brand`;
+
+/** Brain's own primary button: inverse pill + arrow (see brain-oauth prototypes). */
+const providerButtonClass = {
+  brain: `${providerButtonBaseClass} group min-h-13 rounded-full bg-primary-text font-medium text-primary hover:opacity-90 focus:ring-primary-text`,
+  github: providerOutlineClass,
+  google: providerOutlineClass
+} as const;
+
+function BrainArrow() {
+  return (
+    <ArrowRightIcon className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
+  );
+}
 
 function resolveReturnTo(
   searchParams: URLSearchParams | null | undefined
@@ -56,7 +72,7 @@ function ProviderButtonRow({
   return (
     <div
       data-testid="ProviderButtonRow"
-      className={`mb-6 w-full ${disabled ? 'cursor-not-allowed' : ''}`}
+      className={`mb-3 w-full ${disabled ? 'cursor-not-allowed' : ''}`}
       title={title}
     >
       {children}
@@ -165,10 +181,11 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
             disabled={providerLogining}
             onClick={() => onLoginWithProvider(loginProviders.Brain)}
             aria-label={tt.providerBrain}
-            className={providerButtonClass}
+            className={providerButtonClass.brain}
           >
             <BrainIcon className="h-5 w-5 shrink-0" />
             <span>{tt.providerBrain}</span>
+            <BrainArrow />
           </button>
         </ProviderButtonRow>
       )}
@@ -184,10 +201,11 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
             disabled={providerLogining}
             onClick={onLoginWithBrainPkce}
             aria-label={tt.providerBrainPkce}
-            className={providerButtonClass}
+            className={providerButtonClass.brain}
           >
             <BrainIcon className="h-5 w-5 shrink-0" />
             <span>{tt.providerBrainPkce}</span>
+            <BrainArrow />
           </button>
         </ProviderButtonRow>
       )}
@@ -199,7 +217,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
           disabled={providerLogining}
           onClick={() => onLoginWithProvider(loginProviders.GitHub)}
           aria-label={tt.providerGitHub}
-          className={providerButtonClass}
+          className={providerButtonClass.github}
         >
           <GithubIcon className="h-5 w-5 shrink-0" />
           <span>{tt.providerGitHub}</span>
@@ -217,7 +235,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
             disabled={providerLogining}
             onClick={() => onLoginWithProvider(loginProviders.Google)}
             aria-label={tt.providerGoogle}
-            className={providerButtonClass}
+            className={providerButtonClass.google}
           >
             <GoogleIcon className="h-5 w-5 shrink-0" />
             <span>{tt.providerGoogle}</span>
@@ -225,7 +243,7 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </ProviderButtonRow>
       )}
 
-      <div className="relative mb-6">
+      <div className="relative mt-6 mb-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-primary-border"></div>
         </div>

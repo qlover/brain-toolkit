@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAM 登录页 · Brain 登录按钮方案</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* PAM tokens (approximate the app's light / dark themes) */
+    [data-theme="light"] {
+      --bg: #f6f8fa;
+      --card: #ffffff;
+      --text: #1f2328;
+      --text-2: #59636e;
+      --text-3: #8c959f;
+      --border: #d1d9e0;
+      --elevated: #eef1f4;
+      --pam-brand: #7c3aed;
+      --pam-brand-hover: #6d28d9;
+      --inverse: #1f2328;
+      --on-inverse: #f6f8fa;
+      /* Brain (from brain-oauth theme) */
+      --brain-ink: #111317;
+      --brain-on-ink: #ffffff;
+      --brain-disc: #e9eaef;
+      --brain-sphere-hi: #ffffff;
+      --brain-sphere-lo: #e4e6ec;
+      --brain-shadow: rgb(40 48 70 / 0.14);
+      --brain-purple: #7b2fe0;
+      --brain-blue: #5b8def;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0e1013;
+      --card: #15181d;
+      --text: #e6edf3;
+      --text-2: #9198a1;
+      --text-3: #656c76;
+      --border: #30363d;
+      --elevated: #1c2026;
+      --pam-brand: #8b5cf6;
+      --pam-brand-hover: #7c3aed;
+      --inverse: #e6edf3;
+      --on-inverse: #0e1013;
+      --brain-ink: #f3f4f7;
+      --brain-on-ink: #111317;
+      --brain-disc: #22252b;
+      --brain-sphere-hi: #3a3e47;
+      --brain-sphere-lo: #1b1d22;
+      --brain-shadow: rgb(0 0 0 / 0.45);
+      --brain-purple: #9d6bf5;
+      --brain-blue: #6f9cf5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background .2s, color .2s;
+    }
+
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 32px;
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .top p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .seg {
+      display: inline-flex;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+    }
+
+    .seg button {
+      border: 0;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-2);
+      font: inherit;
+      font-size: 13px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .seg button.on {
+      background: var(--inverse);
+      color: var(--on-inverse);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 24px;
+      padding: 28px 32px 48px;
+    }
+
+    .option {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .option-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+    }
+
+    .badge.rec {
+      border-color: transparent;
+      color: #fff;
+      background: linear-gradient(90deg, var(--brain-purple), var(--brain-blue));
+    }
+
+    .option-head p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+
+    /* Mini PAM login card */
+    .login {
+      padding: 28px 24px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card);
+    }
+
+    .login h3 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .login .desc {
+      margin: 6px 0 20px;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .divider {
+      position: relative;
+      margin: 22px 0 18px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    .divider::before {
+      content: "";
+      position: absolute;
+      inset: 50% 0 auto;
+      border-top: 1px solid var(--border);
+    }
+
+    .divider span {
+      position: relative;
+      padding: 0 8px;
+      background: var(--card);
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .field input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    .pam-primary {
+      width: 100%;
+      height: 48px;
+      margin-top: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--pam-brand);
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Provider buttons */
+    .pbtn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 48px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, box-shadow .15s, transform .15s, filter .15s;
+    }
+
+    .pbtn svg {
+      width: 20px;
+      height: 20px;
+      flex: none;
+    }
+
+    .gh-inverse {
+      background: var(--inverse);
+      color: var(--on-inverse);
+    }
+
+    .gh-inverse:hover {
+      opacity: .9;
+    }
+
+    .gh-outline {
+      background: transparent;
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .gh-outline:hover {
+      background: var(--elevated);
+    }
+
+    .arrow {
+      display: inline-flex;
+      margin-left: 2px;
+    }
+
+    .arrow svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .pbtn:hover .arrow {
+      animation: nudge .9s ease-in-out infinite;
+    }
+
+    @keyframes nudge {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      50% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* A. Brain ink pill (Brain's own primary button) */
+    .brain-a {
+      height: 52px;
+      border-radius: 999px;
+      background: var(--brain-ink);
+      color: var(--brain-on-ink);
+      font-weight: 500;
+      letter-spacing: .01em;
+    }
+
+    /* B. Matte sphere card */
+    .brain-b {
+      justify-content: flex-start;
+      height: 56px;
+      padding: 0 10px 0 8px;
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--text);
+      font-weight: 400;
+      box-shadow: 0 6px 18px var(--brain-shadow), inset 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
+    }
+
+    .brain-b .sphere {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: var(--brain-ink);
+      background: radial-gradient(circle at 32% 28%, var(--brain-sphere-hi), var(--brain-sphere-lo) 72%);
+      box-shadow: 0 4px 10px var(--brain-shadow);
+    }
+
+    .brain-b .sphere svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .brain-b .label {
+      flex: 1;
+      text-align: left;
+    }
+
+    .brain-b .arrow {
+      color: var(--text-3);
+      margin-right: 8px;
+    }
+
+    .brain-b::after {
+      content: "";
+      position: absolute;
+      left: 60px;
+      right: 40px;
+      bottom: 10px;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--brain-purple), var(--brain-blue));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .3s ease;
+    }
+
+    .brain-b:hover::after {
+      transform: scaleX(1);
+    }
+
+    /* C. Gradient hairline border */
+    .brain-c {
+      border-radius: 999px;
+      height: 50px;
+      color: var(--text);
+      font-weight: 500;
+      background:
+        linear-gradient(var(--card), var(--card)) padding-box,
+        linear-gradient(90deg, var(--brain-purple), var(--brain-blue)) border-box;
+      border: 1.5px solid transparent;
+    }
+
+    .brain-c:hover {
+      background:
+        linear-gradient(color-mix(in srgb, var(--brain-blue) 8%, var(--card)), color-mix(in srgb, var(--brain-blue) 8%, var(--card))) padding-box,
+        linear-gradient(90deg, var(--brain-purple), var(--brain-blue)) border-box;
+    }
+
+    /* D. Current: full gradient fill */
+    .brain-d {
+      color: #fff;
+      background: linear-gradient(90deg, #7b2fe0, #5b8def);
+    }
+
+    .brain-d:hover {
+      filter: brightness(1.1);
+    }
+
+    .notes {
+      margin: 0 32px 48px;
+      padding: 20px 24px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-2);
+    }
+
+    .notes h2 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .notes ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .notes code {
+      font-size: 12px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--elevated);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="top">
+    <div>
+      <h1>PAM 登录页 · Brain 登录按钮方案</h1>
+      <p>参考 brain-oauth 原型（apps/brain-oauth/docs/prototypes/login.html）：黑色胶囊主按钮 + 箭头，紫蓝只做点缀。</p>
+    </div>
+    <div class="seg" role="group" aria-label="主题">
+      <button type="button" data-theme-btn="light" class="on">亮色</button>
+      <button type="button" data-theme-btn="dark">暗色</button>
+    </div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <section class="notes">
+    <h2>说明</h2>
+    <ul>
+      <li>Brain 视觉要点（取自 brain-oauth 原型设计说明）：冷调浅灰、白色哑光立体球、近白色无边框卡片、细体字；主按钮是黑色胶囊 + 箭头，暗色主题反转为白色；紫 <code>#7B2FE0</code> → 蓝 <code>#5B8DEF</code> 渐变只用于下划线、选中短线等点缀。</li>
+      <li>方案 A 与 GitHub 的反色按钮会撞色，所以 A 里 GitHub 改为描边按钮；其他方案 GitHub 保持反色。</li>
+      <li>「发送验证码」保持 PAM 主题紫实心，作为表单主操作，第三方按钮都不能和它长得一样。</li>
+      <li>悬停按钮可看交互：A / B 箭头轻推，B 底部出现紫蓝渐变下划线，C 底色轻微泛蓝。</li>
+    </ul>
+  </section>
+
+  <template id="brain-logo">
+    <svg viewBox="0 0 490.16 371.96" aria-hidden="true">
+      <path fill="currentColor" transform="translate(-483.29 -161.78)"
+        d="M777.79,533.74c-77.45-7.060-134.42-44.33-166.64-117.19-8.59-19.42-17.07-38.900-25.83-58.24-6.25-13.79-22.34-18.15-34.77-9.56-6.35,4.38-12.44,9.13-18.73,13.6a30.94,30.94,0,0,1-34.33.94c-10.17-6.44-15.81-18.76-13.8-30.14,2.3-13,11.3-22.36,24.26-25a29.560,29.560,0,0,1,24.79,5.76c6.12,4.69,12,9.7,18.07,14.45C563.15,338,579.55,334.73,587,321c10.35-19.07,20.47-38.27,30.78-57.37,30-55.56,76-89.4,138.35-99.42A187.36,187.36,0,0,1,966.42,297.46c19.810,68.86-3.13,144.09-58,190.63a186.58,186.58,0,0,1-99.87,43.78C798.68,533.08,788.7,533.11,777.79,533.74Zm-127.35-191c-2.61,73.53,55.79,135.63,130.15,138.38S918,426,920.6,352.3,864.82,216.7,790.42,213.91,653.06,269,650.44,342.72Z" />
+    </svg>
+  </template>
+  <template id="github-logo">
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path fill="currentColor"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  </template>
+  <template id="arrow">
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+        stroke-linejoin="round" />
+    </svg>
+  </template>
+
+  <script>
+    const tpl = (id) => document.getElementById(id).innerHTML;
+    const arrow = `<span class="arrow">${tpl('arrow')}</span>`;
+
+    const options = [
+      {
+        key: 'A',
+        title: 'A. Brain 黑色胶囊',
+        badge: ['rec', '已采用'],
+        desc: '直接沿用 Brain 自己的主按钮语言：黑色胶囊 + 箭头，暗色主题反转为白色。辨识度最高，和 brain-oauth 登录页一致；代价是 GitHub 要退为描边按钮。',
+        brain: `<button class="pbtn brain-a">${tpl('brain-logo')}<span>使用 Brain 登录</span>${arrow}</button>`,
+        github: 'gh-outline'
+      },
+      {
+        key: 'B',
+        title: 'B. 哑光球卡片',
+        badge: ['', '更像官网'],
+        desc: '取 Brain 官网的「白色哑光立体球」：logo 放在立体小球里，按钮是近白色胶囊 + 柔和阴影，细体字；悬停时底部出现紫蓝渐变下划线。最有 Brain 的氛围，但和 PAM 其它按钮差异最大。',
+        brain: `<button class="pbtn brain-b"><span class="sphere">${tpl('brain-logo')}</span><span class="label">使用 Brain 账号继续</span>${arrow}</button>`,
+        github: 'gh-inverse'
+      },
+      {
+        key: 'C',
+        title: 'C. 紫蓝渐变细描边',
+        badge: ['', '折中'],
+        desc: '渐变只用在 1.5px 的描边上（点缀），按钮本体是卡片底色 + 正文色。和 GitHub 反色按钮、主题紫实心按钮都能区分开，改动最小。',
+        brain: `<button class="pbtn brain-c">${tpl('brain-logo')}<span>使用 Brain 登录</span></button>`,
+        github: 'gh-inverse'
+      },
+      {
+        key: 'D',
+        title: 'D. 当前：整块渐变填充',
+        badge: ['', '现状'],
+        desc: '当前代码里的样式，作为对比。大面积紫蓝渐变和 Brain「紫蓝只做点缀」的原则不符。',
+        brain: `<button class="pbtn brain-d">${tpl('brain-logo')}<span>使用 Brain(PKCE) 登录</span></button>`,
+        github: 'gh-inverse'
+      }
+    ];
+
+    document.getElementById('grid').innerHTML = options.map((o) => `
+      <section class="option" data-option="${o.key}">
+        <div class="option-head">
+          <h2>${o.title}<span class="badge ${o.badge[0]}">${o.badge[1]}</span></h2>
+          <p>${o.desc}</p>
+        </div>
+        <div class="login">
+          <h3>登录</h3>
+          <p class="desc">使用邮箱、手机验证码或第三方账号登录。</p>
+          <div class="stack">
+            ${o.brain}
+            <button class="pbtn ${o.github}">${tpl('github-logo')}<span>使用 GitHub 登录</span></button>
+          </div>
+          <div class="divider"><span>或继续使用</span></div>
+          <div class="field">
+            <label>邮箱</label>
+            <input value="renjie.qin@brain.im" readonly>
+          </div>
+          <button class="pam-primary">发送验证码</button>
+        </div>
+      </section>`).join('');
+
+    document.querySelectorAll('[data-theme-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.documentElement.dataset.theme = btn.dataset.themeBtn;
+        document.querySelectorAll('[data-theme-btn]').forEach((b) => b.classList.toggle('on', b === btn));
+      });
+    });
+  </script>
+</body>
+
+</html>
