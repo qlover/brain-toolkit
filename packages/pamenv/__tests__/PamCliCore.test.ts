@@ -11,7 +11,8 @@ import { PamCliPrivateFsUtil } from '../src/impls/PamCliPrivateFsUtil';
 import { PamCliProjectResolveUtil } from '../src/impls/PamCliProjectResolveUtil';
 import {
   PamCliSyncConflictKind,
-  PamCliSyncConflictUtil
+  PamCliSyncConflictUtil,
+  PamCliSyncSide
 } from '../src/impls/PamCliSyncConflictUtil';
 import type {
   PamCliEnvironmentSummaryType,
@@ -197,6 +198,75 @@ describe('PamCliSyncConflictUtil', () => {
     expect(
       PamCliSyncConflictUtil.classify(null, { A: '1' }, { A: '2' })
     ).toBe(PamCliSyncConflictKind.NoBase);
+  });
+
+  it('merges one-sided changes and resolves conflicts with the preferred side', () => {
+    const base = { SAME: '1', LOCAL: 'a', REMOTE: 'x', BOTH: 'b', GONE: 'g' };
+    const local = { SAME: '1', LOCAL: 'a2', REMOTE: 'x', BOTH: 'local', NEW_L: 'l' };
+    const remote = { SAME: '1', LOCAL: 'a', REMOTE: 'x2', BOTH: 'remote', GONE: 'g' };
+
+    const pull = PamCliSyncConflictUtil.merge(
+      base,
+      local,
+      remote,
+      PamCliSyncSide.Remote
+    );
+    expect(pull.conflicts).toEqual(['BOTH']);
+    expect(pull.merged).toEqual({
+      SAME: '1',
+      LOCAL: 'a2',
+      REMOTE: 'x2',
+      BOTH: 'remote',
+      NEW_L: 'l'
+    });
+
+    const push = PamCliSyncConflictUtil.merge(
+      base,
+      local,
+      remote,
+      PamCliSyncSide.Local
+    );
+    expect(push.conflicts).toEqual(['BOTH']);
+    expect(push.merged.BOTH).toBe('local');
+  });
+
+  it('treats every differing key as a conflict without a baseline', () => {
+    const result = PamCliSyncConflictUtil.merge(
+      null,
+      { A: '1', ONLY_L: 'l' },
+      { A: '2', ONLY_R: 'r' },
+      PamCliSyncSide.Remote
+    );
+    expect(result.conflicts).toEqual(['A', 'ONLY_L', 'ONLY_R']);
+    expect(result.merged).toEqual({ A: '2', ONLY_R: 'r' });
+  });
+});
+
+describe('PamCliDotenvUtil.pickMergedVariables', () => {
+  it('keeps primary order and reuses the matching side layout', () => {
+    const primary = PamCliDotenvUtil.parse(`# remote A
+A=r
+B=same
+`);
+    const secondary = PamCliDotenvUtil.parse(`# pam:sensitive
+# local A
+A=l
+B=same
+# local C
+C=c
+`);
+    const picked = PamCliDotenvUtil.pickMergedVariables(
+      { A: 'l', B: 'same', C: 'c' },
+      primary,
+      secondary
+    );
+    expect(picked.map((item) => item.key)).toEqual(['A', 'B', 'C']);
+    expect(picked[0]).toMatchObject({
+      value: 'l',
+      comments: ['# local A'],
+      sensitive: true
+    });
+    expect(picked[2]).toMatchObject({ value: 'c', comments: ['# local C'] });
   });
 });
 

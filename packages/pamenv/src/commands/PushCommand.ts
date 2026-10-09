@@ -24,11 +24,10 @@ import {
   PAMENV_CLI_PUSH_CONFIRM_CREATE_LARGE,
   PAMENV_CLI_PUSH_CONFIRM_LARGE,
   PAMENV_CLI_PUSH_CONFLICT,
-  PAMENV_CLI_PUSH_CONFLICT_KEYS,
   PAMENV_CLI_PUSH_LARGE_WARNING,
+  PAMENV_CLI_PUSH_MERGED_REMOTE,
   PAMENV_CLI_PUSH_NO_BASELINE,
   PAMENV_CLI_PUSH_NO_BASELINE_CREATE,
-  PAMENV_CLI_PUSH_OVERWRITE_REMOTE,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
@@ -57,7 +56,8 @@ import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
 import { PamCliSensitivePromptUtil } from '../impls/PamCliSensitivePromptUtil';
 import {
   PamCliSyncConflictKind,
-  PamCliSyncConflictUtil
+  PamCliSyncConflictUtil,
+  PamCliSyncSide
 } from '../impls/PamCliSyncConflictUtil';
 import { PamCliSyncStore } from '../impls/PamCliSyncStore';
 
@@ -145,16 +145,18 @@ export class PushCommand {
 
     let remoteMap: Record<string, string> = {};
     let remoteSensitiveKeys = new Set<string>();
+    let remoteVars: PamCliParsedVarType[] = [];
 
     if (targetEnv.mode === 'existing') {
       const remoteExport = await this.apiClient.exportEnvironment(
         project.id,
         targetEnv.id
       );
-      remoteMap = PamCliDotenvUtil.toValueMap(
-        PamCliDotenvUtil.parse(remoteExport.content)
-      );
       remoteSensitiveKeys = new Set(remoteExport.sensitiveKeys || []);
+      remoteVars = PamCliDotenvUtil.parse(remoteExport.content).map((item) =>
+        remoteSensitiveKeys.has(item.key) ? { ...item, sensitive: true } : item
+      );
+      remoteMap = PamCliDotenvUtil.toValueMap(remoteVars);
     }
 
     const baseline = await this.syncStore.readSnapshot(
@@ -194,27 +196,75 @@ export class PushCommand {
     }
 
     if (kind === PamCliSyncConflictKind.Conflict) {
-      const keys = PamCliSyncConflictUtil.conflictingKeys(
+      let result = PamCliSyncConflictUtil.merge(
         baseline!.variables,
         localMap,
-        remoteMap
+        remoteMap,
+        PamCliSyncSide.Local
       );
-      console.log(PamCliI18n.t(PAMENV_CLI_PUSH_CONFLICT));
-      if (keys.length > 0) {
-        console.log(
-          PamCliI18n.t(PAMENV_CLI_PUSH_CONFLICT_KEYS, {
-            keys: keys.join(', ')
-          })
-        );
-      }
-      if (!options.force) {
-        const overwrite = await PamCliSyncConflictUtil.askOverwriteOrAbort(
-          PamCliI18n.t(PAMENV_CLI_PUSH_OVERWRITE_REMOTE)
-        );
-        if (!overwrite) {
+      if (result.conflicts.length > 0) {
+        const side = await PamCliSyncConflictUtil.resolveConflicts({
+          title: PamCliI18n.t(PAMENV_CLI_PUSH_CONFLICT),
+          conflicts: result.conflicts,
+          defaultSide: PamCliSyncSide.Local,
+          skipPrompt: options.force === true,
+          path: target,
+          slug: project.slug,
+          env: targetEnv.name
+        });
+        if (!side) {
           console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
           return;
         }
+        if (side === PamCliSyncSide.Remote) {
+          result = PamCliSyncConflictUtil.merge(
+            baseline!.variables,
+            localMap,
+            remoteMap,
+            PamCliSyncSide.Remote
+          );
+        }
+      }
+
+      // Keep remote-only edits instead of overwriting them; the local file
+      // gets the merged result so it matches what is pushed.
+      const takenFromRemote = Object.keys({ ...result.merged, ...localMap })
+        .filter((key) => result.merged[key] !== localMap[key])
+        .sort((a, b) => a.localeCompare(b));
+      localVars = PamCliDotenvUtil.pickMergedVariables(
+        result.merged,
+        localVars,
+        remoteVars
+      );
+      localDoc = {
+        variables: localVars,
+        trailingComments: localDoc.trailingComments
+      };
+      if (takenFromRemote.length > 0) {
+        await PamCliPrivateFsUtil.writePrivateFile(
+          target,
+          PamCliDotenvUtil.serializeDocument(localDoc)
+        );
+        console.log(
+          PamCliI18n.t(PAMENV_CLI_PUSH_MERGED_REMOTE, {
+            keys: takenFromRemote.join(', ')
+          })
+        );
+      }
+      if (PamCliDotenvUtil.valueMapsEqual(result.merged, remoteMap)) {
+        await this.syncStore.saveBaseline(
+          project.id,
+          project.slug,
+          targetEnv.name,
+          remoteMap
+        );
+        console.log(
+          PamCliI18n.t(PAMENV_CLI_PUSH_ALREADY_SYNC, {
+            slug: project.slug,
+            env: targetEnv.name
+          })
+        );
+        return;
       }
     }
 

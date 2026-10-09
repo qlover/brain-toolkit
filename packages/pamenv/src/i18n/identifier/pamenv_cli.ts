@@ -562,11 +562,75 @@ export const PAMENV_CLI_DUPLICATE_ENV_NAMES = 'pamenv_cli:duplicate_env_names';
 export const PAMENV_CLI_LABEL_NONE = 'pamenv_cli:label_none';
 
 /**
- * @description Pull 冲突：本地文件与远端不一致
- * @localZh Pull 冲突：本地文件与远端不一致
- * @localEn Pull conflict: local file differs from remote
+ * @description Pull 冲突：自上次同步后本地与远端修改了同一批键
+ * @localZh Pull 冲突：自上次同步后本地与远端修改了同一批键
+ * @localEn Pull conflict: local and remote changed the same keys since last sync
  */
 export const PAMENV_CLI_PULL_CONFLICT = 'pamenv_cli:pull_conflict';
+
+/**
+ * @description 冲突键使用哪一边的值？
+ * @localZh 冲突键使用哪一边的值？
+ * @localEn Which side should win the conflicting keys?
+ */
+export const PAMENV_CLI_CONFLICT_RESOLVE_PROMPT =
+  'pamenv_cli:conflict_resolve_prompt';
+
+/**
+ * @description 使用远端值
+ * @localZh 使用远端值
+ * @localEn Use remote values
+ */
+export const PAMENV_CLI_CONFLICT_USE_REMOTE = 'pamenv_cli:conflict_use_remote';
+
+/**
+ * @description 使用本地值
+ * @localZh 使用本地值
+ * @localEn Use local values
+ */
+export const PAMENV_CLI_CONFLICT_USE_LOCAL = 'pamenv_cli:conflict_use_local';
+
+/**
+ * @description 取消
+ * @localZh 取消
+ * @localEn Abort
+ */
+export const PAMENV_CLI_CONFLICT_ABORT = 'pamenv_cli:conflict_abort';
+
+/**
+ * @description 冲突键已使用{{side}}。如需调整，请手动编辑 {{path}} 后运行 `pamenv push {{slug}} -e {{env}}`。
+ * @localZh 冲突键已使用{{side}}。如需调整，请手动编辑 {{path}} 后运行 `pamenv push {{slug}} -e {{env}}`。
+ * @localEn Conflicting keys now use {{side}}. To adjust, edit {{path}} manually and run `pamenv push {{slug}} -e {{env}}`.
+ */
+export const PAMENV_CLI_CONFLICT_MANUAL_HINT = 'pamenv_cli:conflict_manual_hint';
+
+/**
+ * @description 远端值
+ * @localZh 远端值
+ * @localEn remote values
+ */
+export const PAMENV_CLI_SIDE_REMOTE = 'pamenv_cli:side_remote';
+
+/**
+ * @description 本地值
+ * @localZh 本地值
+ * @localEn local values
+ */
+export const PAMENV_CLI_SIDE_LOCAL = 'pamenv_cli:side_local';
+
+/**
+ * @description 已保留本地未推送的修改: {{keys}}。确认后运行 `pamenv push {{slug}} -e {{env}}`。
+ * @localZh 已保留本地未推送的修改: {{keys}}。确认后运行 `pamenv push {{slug}} -e {{env}}`。
+ * @localEn Kept unpushed local changes: {{keys}}. Run `pamenv push {{slug}} -e {{env}}` when ready.
+ */
+export const PAMENV_CLI_PULL_LOCAL_KEPT = 'pamenv_cli:pull_local_kept';
+
+/**
+ * @description 已把远端修改合并进本地文件: {{keys}}
+ * @localZh 已把远端修改合并进本地文件: {{keys}}
+ * @localEn Merged remote changes into the local file: {{keys}}
+ */
+export const PAMENV_CLI_PUSH_MERGED_REMOTE = 'pamenv_cli:push_merged_remote';
 
 /**
  * @description 本地文件: {{path}}
@@ -574,13 +638,6 @@ export const PAMENV_CLI_PULL_CONFLICT = 'pamenv_cli:pull_conflict';
  * @localEn Local file: {{path}}
  */
 export const PAMENV_CLI_LOCAL_FILE = 'pamenv_cli:local_file';
-
-/**
- * @description 用远端值覆盖本地文件（有远端注释时以远端为准）？
- * @localZh 用远端值覆盖本地文件（有远端注释时以远端为准）？
- * @localEn Overwrite local file with remote values (remote comments win when present)?
- */
-export const PAMENV_CLI_PULL_OVERWRITE_PROMPT = 'pamenv_cli:pull_overwrite_prompt';
 
 /**
  * @description 已是最新: {{slug}}/{{env}} ({{path}})
@@ -618,9 +675,9 @@ export const PAMENV_CLI_NOT_OWNER_PUSH = 'pamenv_cli:not_owner_push';
 export const PAMENV_CLI_PUSH_ALREADY_SYNC = 'pamenv_cli:push_already_sync';
 
 /**
- * @description Push 冲突：自上次同步后本地与远端均有变更
- * @localZh Push 冲突：自上次同步后本地与远端均有变更
- * @localEn Push conflict: local and remote both changed since last sync
+ * @description Push 冲突：自上次同步后本地与远端修改了同一批键
+ * @localZh Push 冲突：自上次同步后本地与远端修改了同一批键
+ * @localEn Push conflict: local and remote changed the same keys since last sync
  */
 export const PAMENV_CLI_PUSH_CONFLICT = 'pamenv_cli:push_conflict';
 
@@ -665,13 +722,6 @@ export const PAMENV_CLI_WILL_CREATE_ENV = 'pamenv_cli:will_create_env';
  * @localEn Remote changed since last sync. Run `pamenv pull {{slug}} -e {{env}}` first.
  */
 export const PAMENV_CLI_PUSH_REMOTE_ONLY = 'pamenv_cli:push_remote_only';
-
-/**
- * @description 仍要用本地值覆盖远端吗？
- * @localZh 仍要用本地值覆盖远端吗？
- * @localEn Overwrite remote with local values anyway?
- */
-export const PAMENV_CLI_PUSH_OVERWRITE_REMOTE = 'pamenv_cli:push_overwrite_remote';
 
 /**
  * @description 尚无同步基线。创建 {{slug}}/{{env}} 并推送本地变量？

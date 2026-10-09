@@ -21,13 +21,76 @@ import {
   PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE,
   PAMENV_CLI_USING_LOCAL_ROOT
 } from './i18n/identifier/pamenv_cli';
-import { name, version } from '../package.json';
+import {
+  PAMENV_HELP_ARG_PROJECT,
+  PAMENV_HELP_CONFIG,
+  PAMENV_HELP_CONFIG_ARG_VALUE,
+  PAMENV_HELP_CONFIG_GET,
+  PAMENV_HELP_CONFIG_LIST,
+  PAMENV_HELP_CONFIG_SET,
+  PAMENV_HELP_FORK,
+  PAMENV_HELP_FORK_ARG_SOURCE,
+  PAMENV_HELP_FORK_OPT_NAME,
+  PAMENV_HELP_FORK_OPT_SLUG,
+  PAMENV_HELP_FORK_OPT_YES,
+  PAMENV_HELP_HELP_COMMAND,
+  PAMENV_HELP_HELP_OPTION,
+  PAMENV_HELP_INIT,
+  PAMENV_HELP_LOCALES,
+  PAMENV_HELP_LOCALES_PULL,
+  PAMENV_HELP_LOGIN,
+  PAMENV_HELP_LOGIN_OPT_BROWSER,
+  PAMENV_HELP_LOGIN_OPT_EMAIL,
+  PAMENV_HELP_LOGIN_OPT_PASSWORD,
+  PAMENV_HELP_LOGIN_OPT_PASSWORD_VALUE,
+  PAMENV_HELP_LOGIN_OPT_URL,
+  PAMENV_HELP_LOGOUT,
+  PAMENV_HELP_OPT_DOMAIN,
+  PAMENV_HELP_OPT_ENV,
+  PAMENV_HELP_OPT_FILE,
+  PAMENV_HELP_OPT_LOCAL,
+  PAMENV_HELP_OPT_URL,
+  PAMENV_HELP_OPT_WORKDIR,
+  PAMENV_HELP_PROGRAM,
+  PAMENV_HELP_PROJECTS,
+  PAMENV_HELP_PROJECTS_ARG_KEYWORD,
+  PAMENV_HELP_PULL,
+  PAMENV_HELP_PULL_OPT_FORCE,
+  PAMENV_HELP_PULL_OPT_OUT,
+  PAMENV_HELP_PULL_OPT_SHOW_VALUES,
+  PAMENV_HELP_PUSH,
+  PAMENV_HELP_PUSH_OPT_FORCE,
+  PAMENV_HELP_PUSH_OPT_OUT,
+  PAMENV_HELP_PUSH_OPT_SHOW_VALUES,
+  PAMENV_HELP_PUSH_OPT_YES,
+  PAMENV_HELP_REMOVE,
+  PAMENV_HELP_REMOVE_OPT_ENV,
+  PAMENV_HELP_REMOVE_OPT_YES,
+  PAMENV_HELP_TITLE_ARGUMENTS,
+  PAMENV_HELP_TITLE_COMMANDS,
+  PAMENV_HELP_TITLE_GLOBAL_OPTIONS,
+  PAMENV_HELP_TITLE_OPTIONS,
+  PAMENV_HELP_TITLE_USAGE,
+  PAMENV_HELP_VERSION_OPTION
+} from './i18n/identifier/pamenv_cli_help';
+import { version } from '../package.json';
 
 type PamCliGlobalOptionsType = {
   readonly url?: string;
   readonly domain?: string;
   readonly local?: boolean;
 };
+
+/** commander section titles → help i18n keys. */
+const HELP_TITLE_KEYS: Readonly<Record<string, string>> = {
+  'Usage:': PAMENV_HELP_TITLE_USAGE,
+  'Arguments:': PAMENV_HELP_TITLE_ARGUMENTS,
+  'Options:': PAMENV_HELP_TITLE_OPTIONS,
+  'Global Options:': PAMENV_HELP_TITLE_GLOBAL_OPTIONS,
+  'Commands:': PAMENV_HELP_TITLE_COMMANDS
+};
+
+const t = (key: string): string => PamCliI18n.t(key);
 
 /**
  * pamenv application entry / command registrar.
@@ -51,8 +114,21 @@ export class PamCliApp {
    * @param argv - Process argv
    */
   public async run(argv: string[] = process.argv): Promise<void> {
+    await this.loadHelpLocale(argv);
+
     const program = new Command();
-    program.name('pamenv').description(name).version(version);
+    // Help settings are copied to subcommands on creation, so set them first.
+    program
+      .configureHelp({
+        styleTitle: (title: string): string =>
+          HELP_TITLE_KEYS[title] ? t(HELP_TITLE_KEYS[title]!) : title
+      })
+      .helpOption('-h, --help', t(PAMENV_HELP_HELP_OPTION))
+      .helpCommand('help [command]', t(PAMENV_HELP_HELP_COMMAND));
+    program
+      .name('pamenv')
+      .description(t(PAMENV_HELP_PROGRAM))
+      .version(version, '-V, --version', t(PAMENV_HELP_VERSION_OPTION));
 
     this.addRuntimeOptions(program);
 
@@ -81,8 +157,8 @@ export class PamCliApp {
 
     const projects = program
       .command('projects')
-      .description('List PAM projects')
-      .argument('[keyword]', 'Optional search keyword')
+      .description(t(PAMENV_HELP_PROJECTS))
+      .argument('[keyword]', t(PAMENV_HELP_PROJECTS_ARG_KEYWORD))
       .action(async (keyword?: string) => {
         await new ProjectsCommand(this.apiClient).run(keyword);
       });
@@ -90,10 +166,8 @@ export class PamCliApp {
 
     const init = program
       .command('init')
-      .description(
-        'Interactively create a PAM project from the current directory'
-      )
-      .option('-o, --out <dir>', 'Working directory (default: cwd)')
+      .description(t(PAMENV_HELP_INIT))
+      .option('-o, --out <dir>', t(PAMENV_HELP_OPT_WORKDIR))
       .action(async (options: { out?: string }) => {
         this.bindOutDir(options.out);
         await new InitCommand(this.apiClient, this.authStore).run({
@@ -104,13 +178,11 @@ export class PamCliApp {
 
     const fork = program
       .command('fork')
-      .description(
-        'Fork a readable PAM project (sensitive values cleared)'
-      )
-      .argument('<slug|id>', 'Source project slug or project id')
-      .option('--slug <slug>', 'Slug for the forked project')
-      .option('--name <name>', 'Display name for the forked project')
-      .option('-y, --yes', 'Use defaults / flags without confirmation')
+      .description(t(PAMENV_HELP_FORK))
+      .argument('<slug|id>', t(PAMENV_HELP_FORK_ARG_SOURCE))
+      .option('--slug <slug>', t(PAMENV_HELP_FORK_OPT_SLUG))
+      .option('--name <name>', t(PAMENV_HELP_FORK_OPT_NAME))
+      .option('-y, --yes', t(PAMENV_HELP_FORK_OPT_YES))
       .action(
         async (
           projectRef: string,
@@ -127,19 +199,13 @@ export class PamCliApp {
 
     const pull = program
       .command('pull')
-      .description('Pull decrypted environments into the current directory')
-      .argument('<slug|id>', 'Project slug or project id')
-      .option('-e, --env <name>', 'Environment name (default: first)')
-      .option('-o, --out <dir>', 'Output directory (default: cwd)')
-      .option(
-        '--file <path>',
-        'Local dotenv file (default: .env.<env>; e.g. --file .env with -e local)'
-      )
-      .option('-f, --force', 'Overwrite local file on conflict without asking')
-      .option(
-        '--show-values',
-        'Show non-sensitive values in conflict review (default: mask all)'
-      )
+      .description(t(PAMENV_HELP_PULL))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
+      .option('-o, --out <dir>', t(PAMENV_HELP_PULL_OPT_OUT))
+      .option('--file <path>', t(PAMENV_HELP_OPT_FILE))
+      .option('-f, --force', t(PAMENV_HELP_PULL_OPT_FORCE))
+      .option('--show-values', t(PAMENV_HELP_PULL_OPT_SHOW_VALUES))
       .action(
         async (
           projectRef: string,
@@ -168,26 +234,14 @@ export class PamCliApp {
 
     const push = program
       .command('push')
-      .description('Push local dotenv files back to PAM environments')
-      .argument('<slug|id>', 'Project slug or project id')
-      .option('-e, --env <name>', 'Environment name (default: first)')
-      .option('-o, --out <dir>', 'Local directory (default: cwd)')
-      .option(
-        '--file <path>',
-        'Local dotenv file (default: .env.<env>; e.g. --file .env with -e local)'
-      )
-      .option(
-        '-y, --yes',
-        'Skip ordinary confirmation prompts (not sync-conflict overwrite)'
-      )
-      .option(
-        '-f, --force',
-        'Overwrite remote on sync conflict without asking (does not imply -y)'
-      )
-      .option(
-        '--show-values',
-        'Show non-sensitive values in push review (default: mask all)'
-      )
+      .description(t(PAMENV_HELP_PUSH))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
+      .option('-o, --out <dir>', t(PAMENV_HELP_PUSH_OPT_OUT))
+      .option('--file <path>', t(PAMENV_HELP_OPT_FILE))
+      .option('-y, --yes', t(PAMENV_HELP_PUSH_OPT_YES))
+      .option('-f, --force', t(PAMENV_HELP_PUSH_OPT_FORCE))
+      .option('--show-values', t(PAMENV_HELP_PUSH_OPT_SHOW_VALUES))
       .action(
         async (
           projectRef: string,
@@ -219,10 +273,10 @@ export class PamCliApp {
 
     const remove = program
       .command('remove')
-      .description('Delete a PAM environment from a project (admin+)')
-      .argument('<slug|id>', 'Project slug or project id')
-      .requiredOption('-e, --env <name>', 'Environment name to delete')
-      .option('-y, --yes', 'Skip confirmation prompts')
+      .description(t(PAMENV_HELP_REMOVE))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .requiredOption('-e, --env <name>', t(PAMENV_HELP_REMOVE_OPT_ENV))
+      .option('-y, --yes', t(PAMENV_HELP_REMOVE_OPT_YES))
       .action(
         async (
           projectRef: string,
@@ -254,19 +308,37 @@ export class PamCliApp {
     return error instanceof Error ? error.message : String(error);
   }
 
+  /**
+   * Loads the configured locale before commands are registered so `--help`
+   * (which skips `preAction`) is translated. Offline: no PAM API request.
+   *
+   * @param argv - Process argv (only `--local` is honoured here)
+   */
+  protected async loadHelpLocale(argv: readonly string[]): Promise<void> {
+    try {
+      const store = new PamCliAuthStore({
+        preferLocal: argv.includes('--local'),
+        workingDir: process.cwd()
+      });
+      PamCliI18n.setLocale(await store.getLocale());
+    } catch {
+      // Unreadable config: keep the current locale.
+    }
+    await PamCliI18n.ensureLoaded(PamCliI18n.getLocale());
+    await PamCliI18n.ensureLoaded('en');
+  }
+
   protected registerLogin(program: Command): void {
     const login = program
       .command('login')
-      .description(
-        'Login and store CLI token (browser by default; use --local for cwd/.pam)'
-      )
-      .option('--url <url>', 'PAM base URL (overrides config / --domain)')
-      .option('--browser', 'Force browser device login (default)', true)
-      .option('--password', 'Use email/password login instead of browser')
-      .option('--email <email>', 'Account email (password login)')
+      .description(t(PAMENV_HELP_LOGIN))
+      .option('--url <url>', t(PAMENV_HELP_LOGIN_OPT_URL))
+      .option('--browser', t(PAMENV_HELP_LOGIN_OPT_BROWSER), true)
+      .option('--password', t(PAMENV_HELP_LOGIN_OPT_PASSWORD))
+      .option('--email <email>', t(PAMENV_HELP_LOGIN_OPT_EMAIL))
       .option(
         '--password-value <password>',
-        'Account password for non-interactive password login'
+        t(PAMENV_HELP_LOGIN_OPT_PASSWORD_VALUE)
       )
       .action(async (options: {
         url?: string;
@@ -289,20 +361,14 @@ export class PamCliApp {
         });
       });
     login
-      .option(
-        '--domain <host>',
-        'Same as --url; bare host allowed (e.g. pam.localhost:3400)'
-      )
-      .option(
-        '--local',
-        'Use ./.pam config + sync under the working directory (not ~/.pam)'
-      );
+      .option('--domain <host>', t(PAMENV_HELP_OPT_DOMAIN))
+      .option('--local', t(PAMENV_HELP_OPT_LOCAL));
   }
 
   protected registerLogout(program: Command): void {
     const logout = program
       .command('logout')
-      .description('Revoke CLI token on server and clear local auth/sync state')
+      .description(t(PAMENV_HELP_LOGOUT))
       .action(async () => {
         try {
           await this.apiClient.revokeCliToken();
@@ -327,13 +393,13 @@ export class PamCliApp {
   protected registerConfig(program: Command): void {
     const config = program
       .command('config')
-      .description('Get or set pamenv config (domain, locale, …)');
+      .description(t(PAMENV_HELP_CONFIG));
 
     const setCmd = config
       .command('set')
-      .description('Set a config value')
+      .description(t(PAMENV_HELP_CONFIG_SET))
       .argument('<key>', 'domain | url | locale')
-      .argument('<value>', 'Config value')
+      .argument('<value>', t(PAMENV_HELP_CONFIG_ARG_VALUE))
       .action(async (key: string, value: string) => {
         await new ConfigCommand(this.authStore).set(
           key,
@@ -344,7 +410,7 @@ export class PamCliApp {
 
     const getCmd = config
       .command('get')
-      .description('Get a config value')
+      .description(t(PAMENV_HELP_CONFIG_GET))
       .argument('<key>', 'domain | url | locale | email | path')
       .action(async (key: string) => {
         await new ConfigCommand(this.authStore).get(key);
@@ -353,7 +419,7 @@ export class PamCliApp {
 
     const listCmd = config
       .command('list')
-      .description('List non-secret config values')
+      .description(t(PAMENV_HELP_CONFIG_LIST))
       .action(async () => {
         await new ConfigCommand(this.authStore).list();
       });
@@ -365,13 +431,11 @@ export class PamCliApp {
   protected registerLocales(program: Command): void {
     const locales = program
       .command('locales')
-      .description('Refresh PAM API error messages (memory only)');
+      .description(t(PAMENV_HELP_LOCALES));
 
     const pull = locales
       .command('pull')
-      .description(
-        'Fetch api:* messages from /api/locales/json (not saved locally)'
-      )
+      .description(t(PAMENV_HELP_LOCALES_PULL))
       .action(async () => {
         await new LocalesCommand(this.authStore).pull();
       });
@@ -381,15 +445,9 @@ export class PamCliApp {
 
   protected addRuntimeOptions(command: Command): void {
     command
-      .option('--url <url>', 'PAM base URL for this process (overrides config)')
-      .option(
-        '--domain <host>',
-        'Same as --url; bare host allowed (e.g. pam.localhost:3400)'
-      )
-      .option(
-        '--local',
-        'Use ./.pam config + sync under the working directory (not ~/.pam)'
-      );
+      .option('--url <url>', t(PAMENV_HELP_OPT_URL))
+      .option('--domain <host>', t(PAMENV_HELP_OPT_DOMAIN))
+      .option('--local', t(PAMENV_HELP_OPT_LOCAL));
   }
 
   protected applyRuntime(globals: PamCliGlobalOptionsType): void {
