@@ -132,11 +132,31 @@ describe('PermissionService', () => {
     expect(await service.resolveRolePermissions('admin')).toEqual(['k']);
   });
 
-  it('keeps defaults when assignments are empty', async () => {
-    const service = new TestPermissionService(createRepo([]), logger);
+  it('keeps defaults when assignments are empty without re-querying', async () => {
+    const repo = createRepo([]);
+    const service = new TestPermissionService(repo, logger);
     await service.ensureLoaded();
-    expect(service.getRegistry().isLoaded()).toBe(false);
+    await service.ensureLoaded();
+    expect(service.getRegistry().isLoaded()).toBe(true);
+    expect(repo.listAllRolePermissions).toHaveBeenCalledTimes(1);
     expect(service.getRegistry().resolve('admin')).toEqual(['default_key']);
+  });
+
+  it('does not fall back to defaults for a role emptied in the DB', async () => {
+    const OTHER_ID = '00000000-0000-4000-8000-000000000002';
+    const repo = createRepo([
+      {
+        role_id: OTHER_ID,
+        permission_key: 'k',
+        role: { id: OTHER_ID, key: 'user', kind: 'platform' }
+      }
+    ]);
+    const service = new TestPermissionService(repo, logger);
+    expect(await service.resolveRolePermissions('admin')).toEqual([]);
+    expect((await service.getAdminRolesView()).roles[0]).toMatchObject({
+      key: 'admin',
+      permissionKeys: []
+    });
   });
 
   it('builds the admin roles view from defaults when DB has no rows', async () => {

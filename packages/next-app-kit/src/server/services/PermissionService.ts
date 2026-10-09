@@ -22,10 +22,18 @@ export interface PermissionServiceLogger {
   warn(...args: unknown[]): void;
 }
 
+/**
+ * `roles` get an empty entry when they have no assignments, so a role whose
+ * permissions were all removed does not fall back to code defaults.
+ */
 export function roleMapsFromAssignmentRows(
-  rows: readonly RoleAssignmentRow[]
+  rows: readonly RoleAssignmentRow[],
+  roles: ReadonlyArray<{ key: string }> = []
 ): Record<string, string[]> {
   const maps: Record<string, string[]> = {};
+  for (const role of roles) {
+    maps[role.key] = [];
+  }
   for (const row of rows) {
     const key = row.role?.key;
     if (!key) continue;
@@ -119,7 +127,7 @@ export abstract class PermissionService<
     try {
       const rows = await this.repo.listAllRolePermissions();
       if (rows.length > 0) {
-        maps = { ...maps, ...roleMapsFromAssignmentRows(rows) };
+        maps = { ...maps, ...roleMapsFromAssignmentRows(rows, roleRows) };
       }
     } catch (error) {
       this.logger.warn(
@@ -201,10 +209,12 @@ export abstract class PermissionService<
     try {
       const rows = await this.repo.listAllRolePermissions();
       if (rows.length === 0) {
+        // Mark loaded so every request does not re-query an empty table.
+        this.registry.setRoleMaps({});
         this.logger.warn(`${table} empty; using code permission defaults`);
         return;
       }
-      const maps = roleMapsFromAssignmentRows(rows);
+      const maps = roleMapsFromAssignmentRows(rows, await this.repo.listRoles());
       this.registry.setRoleMaps(maps);
       this.logger.info(`Permission maps loaded from ${table}`, {
         roleKeys: Object.keys(maps).length,

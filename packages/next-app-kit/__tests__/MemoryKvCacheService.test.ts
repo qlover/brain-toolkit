@@ -26,6 +26,22 @@ describe('MemoryKvCacheService', () => {
     expect(await kv.getItem('pam:test:getOrSet')).toEqual({ n: 1 });
   });
 
+  it('getOrSet does not write back a load superseded by removeItem', async () => {
+    const kv = new MemoryKvCacheService();
+    let release: (value: string) => void = () => undefined;
+    const stale = kv.getOrSet(
+      'pam:test:race',
+      () => new Promise<string>((resolve) => (release = resolve))
+    );
+    await new Promise((r) => setTimeout(r, 0));
+    await kv.removeItem('pam:test:race');
+    await kv.setItem('pam:test:race', 'fresh');
+    release('stale');
+
+    expect(await stale).toBe('stale');
+    expect(await kv.getItem('pam:test:race')).toBe('fresh');
+  });
+
   it('removeByPrefix only deletes matching keys', async () => {
     const kv = new MemoryKvCacheService();
     await kv.setItem('pam:roles:idKeyMaps', { ok: 1 }, { ttlMs: 5_000 });

@@ -42,6 +42,7 @@ export class MemoryKvCacheService implements KvCacheInterface {
     if (ttlMs != null && (!Number.isFinite(ttlMs) || ttlMs <= 0)) {
       throw new Error('KvCache ttlMs must be a positive number');
     }
+    sharedInflight.delete(key);
     sharedKvStore.set(key, {
       json: JSON.stringify(value),
       expiresAtMs: ttlMs == null ? null : Date.now() + ttlMs
@@ -104,16 +105,24 @@ export class MemoryKvCacheService implements KvCacheInterface {
       return existing;
     }
 
-    const pending = (async () => {
+    // A removeItem/setItem during the factory supersedes this load; writing
+    // its (older) result afterwards would resurrect stale data.
+    const self: { pending?: Promise<T> } = {};
+    const isCurrent = (): boolean => sharedInflight.get(key) === self.pending;
+    self.pending = (async () => {
       const value = await factory();
-      await this.setItem(key, value, options);
+      if (isCurrent()) {
+        await this.setItem(key, value, options);
+      }
       return value;
     })().finally(() => {
-      sharedInflight.delete(key);
+      if (isCurrent()) {
+        sharedInflight.delete(key);
+      }
     });
 
-    sharedInflight.set(key, pending);
-    return pending;
+    sharedInflight.set(key, self.pending);
+    return self.pending;
   }
 
   /**

@@ -26,6 +26,8 @@ export interface SiteSettingsServiceConfig<K extends string> {
   readonly snapshotTtlMs?: number;
   /** Process-wide cache key for {@link RuntimeCorsConfig} (write-through). */
   readonly corsCacheKey: string;
+  /** Bounds staleness across processes; defaults to the snapshot TTL. */
+  readonly corsTtlMs?: number;
   /** Setting that stores the CORS rule list; omit when the app has none. */
   readonly corsRulesKey?: K;
   /** Used when neither DB nor env provides rules. */
@@ -164,8 +166,18 @@ export abstract class SiteSettingsService<K extends string> {
   }
 
   public async getCorsConfig(): Promise<RuntimeCorsConfig> {
-    return this.cache.getOrSet(this.config.corsCacheKey, () =>
-      this.loadCorsConfigFromStore()
+    return this.cache.getOrSet(
+      this.config.corsCacheKey,
+      () => this.loadCorsConfigFromStore(),
+      { ttlMs: this.corsTtlMs }
+    );
+  }
+
+  protected get corsTtlMs(): number {
+    return (
+      this.config.corsTtlMs ??
+      this.config.snapshotTtlMs ??
+      DEFAULT_SNAPSHOT_TTL_MS
     );
   }
 
@@ -312,7 +324,8 @@ export abstract class SiteSettingsService<K extends string> {
         buildRuntimeCorsConfig(
           corsRulesForCache,
           this.resolveDefaultCorsMethods()
-        )
+        ),
+        { ttlMs: this.corsTtlMs }
       );
     }
 
