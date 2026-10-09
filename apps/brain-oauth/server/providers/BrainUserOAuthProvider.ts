@@ -230,7 +230,8 @@ export class BrainUserOAuthProvider
   constructor(
     @inject(I.Logger)
     protected logger: LoggerInterface,
-    @inject(I.AppConfig) config: SeedServerConfigInterface,
+    @inject(I.AppConfig)
+    protected readonly appConfig: SeedServerConfigInterface,
     @inject(OAuthSessionService)
     oauthSession: OAuthSessionService,
     @inject(OAuthWrapperRepository) oauthRepo: OAuthWrapperRepositoryInterface,
@@ -242,7 +243,7 @@ export class BrainUserOAuthProvider
     @inject(AccessTokenEnvRepo)
     protected readonly accessTokenEnvs: AccessTokenEnvRepo
   ) {
-    const tokenEncryption = new TokenEncryption(config.encryptionKey);
+    const tokenEncryption = new TokenEncryption(appConfig.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
     this.consentTrust = new OAuthConsentTrustService(
       new OAuthConsentGrantRepository(
@@ -561,7 +562,7 @@ export class BrainUserOAuthProvider
   ): Promise<UserSchema> {
     const gateway = await this.getGateway();
     const profile = await gateway.getUserInfo({ token: sessionToken });
-    return brainUserToUserSchema(requireBrainUser(profile));
+    return this.applyAdminEnv(brainUserToUserSchema(requireBrainUser(profile)));
   }
 
   /**
@@ -575,7 +576,23 @@ export class BrainUserOAuthProvider
       { token: accessToken },
       { tokenPrefix: 'Bearer' }
     );
-    return brainUserToUserSchema(requireBrainUser(profile));
+    return this.applyAdminEnv(brainUserToUserSchema(requireBrainUser(profile)));
+  }
+
+  /**
+   * Brain admins only count in the admin envs; otherwise an admin of any
+   * selectable env (e.g. development) could manage this site.
+   */
+  protected async applyAdminEnv(user: UserSchema): Promise<UserSchema> {
+    if (user.role !== UserRole.ADMIN) {
+      return user;
+    }
+    const { env, config } = await this.resolveEnv(this.activeEnv);
+    const adminEnvs =
+      this.appConfig.brainAdminEnvs.length > 0
+        ? this.appConfig.brainAdminEnvs
+        : [config.env];
+    return adminEnvs.includes(env) ? user : { ...user, role: UserRole.USER };
   }
 
   /**
