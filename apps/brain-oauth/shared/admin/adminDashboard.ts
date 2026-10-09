@@ -9,7 +9,11 @@ export interface AdminOverview {
   users: { total: number; newThisWeek: number } | null;
   apps: { total: number; public: number };
   authorizations: { today: number; yesterday: number };
-  failureRate: { today: number | null; yesterday: number | null };
+  /**
+   * Failed API rows today / yesterday.
+   * Rate is unavailable because successful HTTP calls are no longer audited.
+   */
+  failures: { today: number; yesterday: number };
   /** Last 7 local days, oldest first; `date` is the local day start (ISO). */
   daily: { date: string; count: number }[];
   recent: RequestLogRow[];

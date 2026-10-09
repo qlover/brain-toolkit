@@ -191,9 +191,9 @@ export const ADMIN_HOME_STAT_APPS_TREND = 'admin_home:stat__apps_trend';
 export const ADMIN_HOME_STAT_AUTH = 'admin_home:stat__auth';
 
 /**
- * @description Brain OAuth admin — stat card: failure rate today
- * @localZh 今日失败率
- * @localEn Failure rate today
+ * @description Brain OAuth admin — stat card: failed API requests today
+ * @localZh 今日失败
+ * @localEn Failures today
  */
 export const ADMIN_HOME_STAT_FAIL = 'admin_home:stat__fail';
 
