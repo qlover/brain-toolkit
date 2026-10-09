@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { defaultNavItems } from '@config/adminNavs';
 import { AdminLayout } from './AdminLayout';
 import { AdminPanelLoading } from './AdminPanelLoading';
+import { AppBridgePages } from '../components-app/AppBridgePages';
 
 function isAdminAsPath(url: string): boolean {
   const path = url.split('?')[0] ?? url;
@@ -47,6 +48,7 @@ export function AdminPagesAppShell({ children }: AdminPagesAppShellProps) {
 
   return (
     <AdminLayout navItems={defaultNavItems}>
+      <AppBridgePages />
       <div
         data-testid="AdminPagesAppShellContent"
         className="relative min-h-48"
