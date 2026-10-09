@@ -56,8 +56,6 @@ export const loginI18n = Object.freeze({
   // login tab switch
   tabEmail: i18nKeys.PAGE_LOGIN_TAB_EMAIL,
   tabPhone: i18nKeys.PAGE_LOGIN_TAB_PHONE,
-  tabPhoneDisabled: i18nKeys.PAGE_LOGIN_TAB_PHONE_DISABLED,
-
   // phone OTP login
   phoneTitle: i18nKeys.PAGE_LOGIN_PHONE_TITLE,
   phoneSubtitle: i18nKeys.PAGE_LOGIN_PHONE_SUBTITLE,
@@ -95,7 +93,6 @@ export const loginI18n = Object.freeze({
 
   // 这里的i18nkey 名与 config/common 中的 loginProviders value一致
   providerGoogle: i18nKeys.PAGE_LOGIN_WITH_GOOGLE,
-  providerGoogleTooltip: i18nKeys.PAGE_LOGIN_WITH_GOOGLE_TOOLTIP,
   providerGitHub: i18nKeys.PAGE_LOGIN_WITH_GITHUB,
 
   providerBrain: i18nKeys.PAGE_LOGIN_WITH_BRAIN,

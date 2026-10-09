@@ -103,12 +103,6 @@ export const PAGE_LOGIN_CONTINUE_WITH = 'page_login:continue_with';
  */
 export const PAGE_LOGIN_WITH_GOOGLE = 'page_login:with_google';
 /**
- * @description Tooltip for Google login when disabled
- * @localZh Google 登录暂未开通，请改用 GitHub、Brain(PKCE) 或邮箱。
- * @localEn Google sign-in is not enabled yet. Use GitHub, Brain (PKCE), or email instead.
- */
-export const PAGE_LOGIN_WITH_GOOGLE_TOOLTIP = 'page_login:with_google_tooltip';
-/**
  * @description Login page no account text
  * @localZh 还没有账号？
  * @localEn Don't have an account?
@@ -213,12 +207,6 @@ export const PAGE_LOGIN_TAB_EMAIL = 'page_login:tab_email';
  * @localEn Phone
  */
 export const PAGE_LOGIN_TAB_PHONE = 'page_login:tab_phone';
-/**
- * @description Phone login unavailable hint
- * @localZh 手机登录暂未开通，请使用邮箱验证码或第三方账号登录。
- * @localEn Phone sign-in is not available yet. Use email code or a third-party account.
- */
-export const PAGE_LOGIN_TAB_PHONE_DISABLED = 'page_login:tab_phone_disabled';
 /**
  * @description Phone login form title
  * @localZh 手机号登录
