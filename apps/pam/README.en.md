@@ -2,232 +2,154 @@
 
 > 中文: [README.md](./README.md)
 
-**TL;DR**: `npm install` → copy `.env.template` to `.env` (OAuth variables below) → run `makes/sql/000-pam-full-schema.sql` on Supabase → `npm run dev` (port **3102**, `APP_ENV=localhost`) → production: `npm run build` then `npm start` (port **3101**).
+PAM is a multi-environment config and environment-variable platform for dev teams: variables are managed per project and per environment, sensitive values are encrypted at rest, and the [`pamenv`](../../packages/pamenv/README_EN.md) CLI syncs them between local repos and PAM. PAM is also a standard OAuth 2.0 authorization server that other apps can use for single sign-on.
 
-**Docs**: In-app OAuth guide at `/[locale]/docs/oauth` (e.g. `http://localhost:3102/en/docs/oauth`); i18n conventions in [docs/i18n.en.md](./docs/i18n.en.md).
+**TL;DR**: `pnpm install` → copy `.env.template` to `.env` and fill it in → run `makes/sql/000-pam-full-schema.sql` on Supabase → `pnpm dev` (`http://pam.localhost:3400`) → sign in as a platform admin and finish login, mail and SMS setup under **Admin → Site settings**.
 
-A Next.js OAuth 2.0 authorization server example. **`shared/oauth-wrapper`** holds provider-agnostic protocol logic; this repo wires sessions, storage, adapters, and routes under `server/` and `src/`.
+---
+
+## Features
+
+| Module                      | Description                                                                                                                                                                                               |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Projects & environments** | local / staging / production environments per project; variables isolated per environment, sensitive values encrypted with `PAM_ENV_SECRET_KEY`; public / private projects, fork, transfer, dotenv export |
+| **Teams & permissions**     | Team members (admin / member), project collaborators; platform roles → permission keys (`pam_role_permissions`) gate API access                                                                           |
+| **pamenv CLI**              | Browser device-code login (`/pamenv/device`), `pull` / `push` sync; the in-app `/docs/cli` page renders the pamenv README                                                                                 |
+| **Sign-in**                 | Email + password, sign-up, forgot / reset password, email OTP / magic link, phone OTP, GitHub / Google (Supabase Auth), Brain OAuth (authorization code + PKCE)                                           |
+| **OAuth server**            | Built on `@qlover/oauth-wrapper`: developer console for clients, consent page, token exchange, userinfo, revocation, in-app Playground; integration guide at `/docs/oauth`                                |
+| **Admin console**           | Users, roles, permissions, site settings, locale CMS, request logs, mail logs, OTP monitor, Memory KV (platform admins only)                                                                              |
 
 ---
 
 ## Tech Stack
 
-| Category        | Technologies |
-| --------------- | ------------ |
-| **Framework**   | Next.js 16, App Router, React 19 |
-| **OAuth**       | `shared/oauth-wrapper` (authorization code, PKCE, token, userinfo) |
-| **Validation**  | Zod |
-| **Data**        | Supabase |
-| **Reference upstream** | `@brain-toolkit/brain-user` (`BrainUserAdapter`, swappable) |
-| **UI**          | Ant Design 5, Tailwind CSS 4 |
-| **i18n**        | next-intl |
-| **DI**          | Inversify, SimpleIOCContainer |
-| **Quality**     | TypeScript 5, ESLint, Prettier, Vitest |
+| Category    | Technologies                                                                   |
+| ----------- | ------------------------------------------------------------------------------ |
+| Framework   | Next.js 16 (App Router + Pages Router), React 19                               |
+| Data & auth | Supabase (Postgres, Auth, Storage)                                             |
+| OAuth       | `@qlover/oauth-wrapper`, `server/providers/SupabaseOAuthProvider.ts`           |
+| Shared kit  | `@brain-toolkit/next-app-kit` (site settings, CORS, request logs, KV cache, …) |
+| UI          | Ant Design 5, Tailwind CSS 4                                                   |
+| i18n        | next-intl + ts2locales (see [docs/i18n.en.md](./docs/i18n.en.md))              |
+| DI          | Inversify (`server/serverIoc.ts`)                                              |
+| Validation  | Zod                                                                            |
+| Quality     | TypeScript, ESLint, Prettier, Vitest                                           |
 
-**Runtime:** Node.js ^20.17.0 or >=22.9.0, npm >=10.0.0.
-
----
-
-## OAuth Wrapper: Architecture
-
-### Two layers
-
-| Layer | Path | Role |
-| ----- | ---- | ---- |
-| **Reusable core** | `shared/oauth-wrapper/` | RFC 6749 flows, PKCE, consent, token exchange, userinfo — **no** dependency on a specific login API |
-| **This example** | `server/providers`, `server/adapters`, `server/repositorys`, `src/app` | HttpOnly session cookie, Supabase persistence, adapter, Next routes and UI |
-
-To change the user system, replace the **adapter + Provider class + IOC binding**; keep `OAuthWrapperService` stable when possible.
-
-### Core modules (`shared/oauth-wrapper/`)
-
-| Path | Description |
-| ---- | ----------- |
-| `interfaces/OAuthUserAdapterInterface.ts` | Upstream port: `login`, `exchangeAccessToken`, `getUserInfo`, `getUserInfoByAccessToken` |
-| `interfaces/OAuthWrapperRepositoryInterface.ts` | Auth codes, refresh tokens, clients, stored credentials |
-| `interfaces/OAuthSessionInterface.ts` | Logged-in session for the authorize page (JWT cookie in this demo) |
-| `services/OAuthWrapperService.ts` | Authorize validation, consent, token delegation, userinfo |
-| `services/OAuthTokenService.ts` | `authorization_code` / `refresh_token` grants |
-| `schema/`, `utils/` | Zod schemas, PKCE, redirect helpers |
-
-```ts
-import {
-  OAuthWrapperService,
-  OAuthTokenService,
-  OAuthUserAdapterInterface
-} from '@shared/oauth-wrapper';
-```
-
-### Wiring in this repo
-
-- **Provider**: `server/providers/BrainUserOAuthProvider.ts` — `extends OAuthWrapperService`, injects session, `BrainUserAdapter`, `OAuthWrapperRepository`, `OAuthTokenService`.
-- **IOC**: `server/serverIoc.ts` binds `I.OAuthWrapperProviderInterface` → `BrainUserOAuthProvider`.
-- **Login orchestration**: `server/services/OAuthControllerService.ts` — session + `upsertUserCredentials` after `adapter.login`.
-- **HTTP**: `server/controllers/OAuthWrapperController.ts`.
-
-Machine endpoints (no locale, skip session middleware in `src/proxy.ts`):
-
-- `POST /oauth/token`
-- `GET /userinfo`
+Runtime: Node.js `^20.17.0` or `>=22.9.0` (see `engines` in `package.json`).
 
 ---
 
-## Quick Start
+## Getting Started
+
+### 1. Environment variables
+
+Copy `.env.template` to `.env` (or `.env.local`); every entry is commented. The minimum:
+
+| Variable                             | Description                                                                 |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| `SITE_URL`                           | Site origin, e.g. `http://pam.localhost:3400` locally                       |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase project URL and anon key                                           |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Server only; needed when tables use RLS                                     |
+| `JWT_SECRET` / `SESSION_SECRET`      | Login JWT and HttpOnly session signing secrets                              |
+| `ENCRYPTION_KEY`                     | Encrypts third-party refresh tokens in the database                         |
+| `PAM_ENV_SECRET_KEY`                 | Encrypts sensitive environment values (keep separate from `ENCRYPTION_KEY`) |
+
+Once you can reach a PAM instance, `pnpm env:pull` / `pnpm env:push` (`pamenv pull/push pam -e local`) sync your local config.
+
+### 2. Database
+
+| Case                         | Script                                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Fresh install                | `makes/sql/000-pam-full-schema.sql` (drops and recreates tables — **never run on a database with data**) |
+| Upgrade an existing database | `makes/sql/001-pam-upgrade.sql` (re-runnable, no data loss)                                              |
+
+Run them in the Supabase SQL Editor. All tables use the `pam_` prefix.
+
+### 3. Run
 
 ```bash
-cd examples/next-oauth-wrapper
-npm install
-cp .env.template .env
+pnpm dev            # http://pam.localhost:3400 (APP_ENV=localhost)
+pnpm dev:localhost  # http://localhost:3400
+pnpm build && pnpm start   # production build, port 3401
 ```
 
-**OAuth-related env** (see `.env.template`):
+`next.config.ts` regenerates `shared/config/apiRoutes.ts`, locale JSON and theme CSS on startup.
 
-| Variable | Purpose |
-| -------- | ------- |
-| `SITE_URL` | Public site URL |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase connection (OAuth table access) |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Optional** — only when OAuth tables use RLS without policies that allow your server role |
-| `SESSION_SECRET` | Signs HttpOnly OAuth authorize session cookie |
-| `ENCRYPTION_KEY` | Encrypts upstream refresh tokens at rest |
-| `OAUTH_WRAPPER_API_BASE` | Upstream user API base (Brain User in the default adapter) |
-| `OAUTH_WRAPPER_API_TIMEOUT` | Upstream timeout ms (default `10000`) |
+### 4. Site settings
 
-**Database:** run `makes/sql/000-pam-full-schema.sql` once in Supabase (full PAM schema, including `pam_request_logs`, `pam_oauth_*`, and `pam_cli_tokens`). OAuth / roles / business repos use `createAdminClient()` which **requires** `SUPABASE_SERVICE_ROLE_KEY` (do not call `auth.refreshSession` on that client). Shared DBs can coexist via table prefixes (e.g. fe-base: `fe_oauth_*` / `fe_request_logs`).
+Apart from the base secrets above, runtime config lives in the database (`pam_site_settings`) and is edited by platform admins under **Admin → Site settings** (`/admin/settings`):
 
-**Run:** `npm run dev` → `http://localhost:3102`.
+| Section        | Contents                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| Sign-in & auth | Phone OTP (memory / aliyun), Google, Brain PKCE, Brain Supabase SSO toggles; CLI token lifetime         |
+| Brain OAuth    | brain-oauth site URL, client_id / secret, redirect URI, scopes, consent-page locale for PAM as a client |
+| Mail           | Channel (disabled / memory / resend), Resend API key, sender, password-reset / password-changed notices |
+| Aliyun SMS     | AccessKey, sign name, template                                                                          |
+| API & CORS     | CORS rules for OAuth machine endpoints (origin × path × methods)                                        |
+| Other          | OpenAI-compatible API, preview image storage                                                            |
 
-**Suggested first run:**
-
-1. Sign in at `/auth/login` or `POST /api/oauth/verify`.
-2. Create a client at `/{locale}/developer/apps`.
-3. Try `/{locale}/oauth/playground` or a real redirect to `/{locale}/oauth/authorize`.
+The `memory` channel sends nothing: SMS codes show up in the OTP monitor and emails in the mail logs, which is handy for local development.
 
 ---
 
-## Using OAuth Wrapper End-to-End
+## Brain OAuth Sign-in
 
-### Supported today
+PAM signs in against [brain-oauth](../brain-oauth) as an OAuth client using authorization code + PKCE:
 
-- `response_type=code`, **PKCE S256** (required for public clients)
-- `grant_type=authorization_code`, `grant_type=refresh_token`
-- `GET /userinfo` with Bearer token
+1. Register a client in the brain-oauth developer console with `redirect_uri` = `{SITE_URL}/api/callback/brain-oauth`.
+2. In PAM **Site settings → Brain OAuth**, fill in the site URL and client_id. **Confidential clients must set client_secret**; public clients can leave it empty.
+3. Enable "Brain PKCE" under **Site settings → Sign-in & auth**; the login page then shows "Sign in with Brain (PKCE)".
 
-### Endpoints
+Flow: `/api/user/login/brain` redirects to the Brain consent page → `/api/callback/brain-oauth` exchanges the code → brain-oauth userinfo returns `sub`, `email`, `name`, `phone_number` → PAM links or creates the account by Brain identity → the refresh token from this login is revoked (PAM only uses the access token once).
 
-| Endpoint | Method | Notes |
-| -------- | ------ | ----- |
-| `/[locale]/oauth/authorize` | GET | Consent UI (requires session) |
-| `/api/oauth/verify` | POST | Email/password login → session + stored upstream tokens |
-| `/api/oauth/consent` | POST | Approve/deny → `redirectUrl` with `code` or OAuth error |
-| `/oauth/token` | POST | Token endpoint (form body, optional HTTP Basic) |
-| `/userinfo` | GET | Bearer access token |
-| `/api/clients` | GET/POST | Manage clients (authenticated) |
-
-Constants: `shared/config/route.ts`, `shared/config/apiRoutes.ts`.
+- New accounts get the Brain display name and phone number; existing accounts only have blank fields filled, and a phone number already owned by another account is skipped.
+- Brain accounts without an email (e.g. phone-only) get a `@brain.oauth` placeholder email in `auth.users`, which is never written to the PAM profile.
+- brain-oauth environments are transparent to PAM; PAM only relies on the `sub` from userinfo.
 
 ---
 
-## Integrate OAuth login in your app
+## PAM as an OAuth Server
 
-Use this deployment as the **authorization server**. End users sign in on **this site** (`/auth/login`), not by posting passwords to your app. Your app redirects, receives `code` on `redirect_uri`, and exchanges it for tokens **on your backend** (recommended).
+See the in-app guide at `/{locale}/docs/oauth` for third-party integration, and use `/{locale}/oauth/playground` to run the full flow with a registered client.
 
-### Prerequisites
+| Endpoint                    | Description                                           |
+| --------------------------- | ----------------------------------------------------- |
+| `/{locale}/oauth/authorize` | Consent page (requires login)                         |
+| `POST /oauth/token`         | `authorization_code` / `refresh_token` grants         |
+| `GET /oauth/userinfo`       | User info with `Authorization: Bearer <access_token>` |
+| `POST /oauth/revoke`        | RFC 7009 token revocation                             |
 
-1. Set `SITE_URL` (e.g. `http://localhost:3102`).
-2. Sign in, create a client at `/{locale}/developer/apps`: `client_id`, `redirect_uri`, scopes, and `client_secret` (confidential clients only).
-3. Public clients (SPA/native): **PKCE required**, no `client_secret` at token endpoint.
+Machine endpoints have no locale prefix and bypass the session middleware. Clients are managed (registered, secret rotated) at `/{locale}/developer/apps`.
 
-| Step | URL |
-| ---- | --- |
-| Authorize (browser) | `{SITE_URL}/{locale}/oauth/authorize` |
-| Token | `POST {SITE_URL}/oauth/token` |
-| Userinfo | `GET {SITE_URL}/userinfo` |
+---
 
-### Minimal Express client (see Chinese [README.md](./README.md) for full listing)
+## Project Layout
 
-1. `GET /login` — generate `state` + PKCE, redirect to `{SITE_URL}/zh/oauth/authorize?...`
-2. `GET /oauth/callback` — verify `state`, `POST /oauth/token` with `code` + `code_verifier`
-3. `GET /userinfo` with `Bearer access_token`, then create **your** session
+| Path                  | Description                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/[locale]/`   | App Router public / product pages: home, projects, teams, auth, docs, OAuth consent and Playground, pamenv device approval                                  |
+| `src/pages/[locale]/` | Pages Router consoles behind login: `admin/*`, `developer/apps`, `account`                                                                                  |
+| `src/app/api/`        | Product APIs (`/api/pam/*`, `/api/user/*`, `/api/admin/*`, `/api/pam/cli/*`, …)                                                                             |
+| `src/app/oauth/`      | OAuth machine endpoints (token, userinfo, revoke)                                                                                                           |
+| `src/proxy.ts`        | Middleware: locale, session and admin gates                                                                                                                 |
+| `server/`             | Server side: `controllers`, `services`, `repositorys`, `providers`, `serverIoc.ts`, `ServerConfig.ts`                                                       |
+| `shared/`             | Shared by client and server: routes (`config/route.ts`), site setting definitions (`config/pamSiteSettings.ts`), i18n identifiers and mappings, Zod schemas |
+| `makes/sql/`          | Full and upgrade SQL scripts                                                                                                                                |
+| `tools/`              | Generators for API routes, locales, theme CSS                                                                                                               |
+| `docs/`               | i18n conventions, Supabase error notes, prototypes                                                                                                          |
+| `__tests__/`          | Vitest unit tests                                                                                                                                           |
 
-Store `code_verifier` server-side; never expose `client_secret` to the browser. Unauthenticated authorize visits redirect to `/auth/login?redirect=...` and return after login.
+Page access is defined in `shared/config/route.ts`: `AUTH_ROUTES` are public, `LOGINED_PAGES` require login, and `/admin/*` additionally requires a platform admin.
 
-Helpers in-repo: `src/uikit/utils/oauthPlaygroundUtils.ts` (`buildAuthorizeUrl`, `parseOAuthCallbackUrl`). In-app tester: `/{locale}/oauth/playground`.
+---
 
-### Authorization code + PKCE (protocol detail)
+## Scripts
 
-1. Register a client in the developer console; note `client_id`, `redirect_uri`, and `client_secret` (confidential clients).
-2. Redirect the user to authorize, e.g.:
-
-   ```
-   GET {SITE_URL}/en/oauth/authorize?client_id=...&redirect_uri=...&response_type=code&scope=openid%20profile%20email&state=...&code_challenge=...&code_challenge_method=S256
-   ```
-
-3. Ensure the user has a site session (`/auth/login` or `POST /api/oauth/verify`).
-4. User consents → browser returns to `redirect_uri?code=...&state=...`.
-5. Backend exchanges the code:
-
-   ```bash
-   curl -X POST http://localhost:3102/oauth/token \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "grant_type=authorization_code&code=CODE&redirect_uri=URI&client_id=ID&code_verifier=VERIFIER"
-   ```
-
-6. Call userinfo:
-
-   ```bash
-   curl http://localhost:3102/userinfo -H "Authorization: Bearer ACCESS_TOKEN"
-   ```
-
-PKCE helpers: `@shared/oauth-wrapper/utils/pkce`. In-app testing: `OAuthPlayground` at `/{locale}/oauth/playground`.
-
-### Swap the upstream user API (minimal diff)
-
-OAuth routes stay unchanged. Smallest integration: **one Adapter file**, **one Provider file** (copy of `BrainUserOAuthProvider` with your adapter type), **one IOC line**.
-
-| Step | File |
-| ---- | ---- |
-| 1 | `server/adapters/AcmeUserAdapter.ts` — implement `OAuthUserAdapterInterface` (`login`, `exchangeAccessToken`, `getUserInfo`, `getUserInfoByAccessToken`) |
-| 2 | `server/providers/AcmeOAuthProvider.ts` — copy `BrainUserOAuthProvider.ts`, inject `AcmeUserAdapter` instead of `BrainUserAdapter` |
-| 3 | `server/serverIoc.ts` — `ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(AcmeOAuthProvider))` |
-
-Adapter contract (used by `OAuthControllerService.verifyLogin`):
-
-- `login` → `{ token: string }` (upstream session token)
-- `exchangeAccessToken` → `{ access_token, expires_in, refresh_token? }`
-- Profiles need a numeric `id` and non-empty `email`
-
-Example stub (see Chinese [README.md](./README.md) for the full `AcmeUserAdapter` listing):
-
-```ts
-@injectable()
-export class AcmeUserAdapter implements OAuthUserAdapterInterface {
-  async login(email, password) {
-    const data = await fetch(`${process.env.ACME_API_BASE}/login`, { /* … */ }).then((r) => r.json());
-    return { token: data.session_token };
-  }
-  // exchangeAccessToken, getUserInfo, getUserInfoByAccessToken — call your API, map to OAuthUserProfile
-}
+```bash
+pnpm lint:fix     # ESLint autofix
+pnpm type-check   # TypeScript check
+pnpm test         # Vitest
+pnpm format       # Prettier
 ```
 
-Do **not** change `shared/oauth-wrapper`, repositories, controllers, or routes unless your login flow differs from the default `OAuthControllerService`.
-
----
-
-## Project Layers (summary)
-
-- **`shared/oauth-wrapper/`** — OAuth protocol core (portable).
-- **`server/`** — Controllers, `OAuthWrapperRepository`, `OAuthSessionService`, providers, adapters, `serverIoc.ts`.
-- **`src/`** — App Router pages, machine routes, `OAuthWrapperGateway`, UI under `uikit/components-app/oauth/`.
-- **`shared/`** (elsewhere) — App-wide interfaces, schemas, config, IOC identifiers.
-
-### Front–back in one Next process
-
-Pages and Gateways call `/api/*`; third parties call `/oauth/token` and `/userinfo` on the same origin. `npm run dev` serves everything on port **3102**.
-
-### Interface-first
-
-Read `OAuthServiceInterface` and `OAuthUserAdapterInterface` in `@shared/oauth-wrapper` before opening implementations. API routes resolve `OAuthWrapperController` via `NextApiServer` + server IOC; the browser uses `OAuthWrapperGateway` for verify/consent.
-
----
-
-**Summary:** **`shared/oauth-wrapper`** is the reusable OAuth server core; this example wires **Brain User** via `BrainUserAdapter` and Supabase. Use **`npm run dev`** on port **3102** to exercise the full flow including Playground and machine endpoints.
+`lint:fix` and `type-check` must pass before committing.
