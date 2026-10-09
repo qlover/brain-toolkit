@@ -1,39 +1,10 @@
-import { SUPABASE_KEY, SUPABASE_URL } from '@qlover/next-kit/common';
-import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
+import { SUPABASE_URL } from '@qlover/next-kit/common';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
 /**
- * Especially important if using Fluid compute: Don't put this client in a
- * global variable. Always create a new client within each function when using
- * it.
- */
-export async function createServerClient() {
-  const cookieStore = await cookies();
-
-  return createSupabaseServerClient(SUPABASE_URL!, SUPABASE_KEY!, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
-        } catch {
-          // The `setAll` method was called from a Server Component.
-          // This can be ignored if you have proxy refreshing
-          // user sessions.
-        }
-      }
-    }
-  });
-}
-
-/**
- * Service-role Supabase client for OAuth server operations (bypasses RLS).
- * Never import from client bundles.
+ * Service-role Supabase client (bypasses RLS). brain-oauth uses Supabase as a
+ * plain database only — no Supabase Auth sessions — so every repository goes
+ * through this client and scopes rows itself. Never import from client bundles.
  */
 export function createAdminClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

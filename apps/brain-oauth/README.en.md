@@ -85,14 +85,14 @@ cp .env.template .env
 | Variable | Purpose |
 | -------- | ------- |
 | `SITE_URL` | Public site URL |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase connection (OAuth table access) |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Optional** — only when OAuth tables use RLS without policies that allow your server role |
+| `SUPABASE_URL` | Supabase project (used as a database only, no Supabase Auth) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Required**, server-only; all table access uses the service role |
 | `SESSION_SECRET` | Signs HttpOnly OAuth authorize session cookie |
 | `ENCRYPTION_KEY` | Encrypts upstream refresh tokens at rest |
 | `OAUTH_WRAPPER_API_BASE` | Upstream user API base (Brain User in the default adapter) |
 | `OAUTH_WRAPPER_API_TIMEOUT` | Upstream timeout ms (default `10000`) |
 
-**Database:** run `makes/sql/001-base-tables.sql` then `002-oauth-clients.sql` in Supabase. If OAuth tables have **no RLS**, `SUPABASE_ANON_KEY` is enough; `SUPABASE_SERVICE_ROLE_KEY` is only needed when RLS blocks anon writes (the bundled `002` script enables RLS by default—skip or adjust if that does not match your deployment). `createAdminClient()` prefers service role, then falls back to anon.
+**Database:** run `makes/sql/brain-oauth-schema.sql` in Supabase. It only touches `brain_oauth_*` tables, never drops anything, and is safe to re-run (fresh install or in-place upgrade). All tables enable RLS with no policies; the server reads/writes through `createAdminClient()` (service role) and scopes rows per user in code.
 
 **Run:** `npm run dev` → `http://localhost:3112`.
 

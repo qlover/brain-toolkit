@@ -11,7 +11,7 @@ function ownershipAllows(
   return String(ownerFromDb) === String(sessionOwnerId);
 }
 
-describe('Brain local auth.users ownership', () => {
+describe('Brain local brain_oauth_users ownership', () => {
   it('rejects legacy Brain numeric id vs string session (pre-fix bug)', () => {
     const fromDb: unknown = 123;
     const sessionId = '123';
@@ -19,8 +19,8 @@ describe('Brain local auth.users ownership', () => {
     expect(ownershipAllows(fromDb, sessionId)).toBe(true);
   });
 
-  it('allows UUID owner from auth.users with string session id', () => {
-    const authUserId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-    expect(ownershipAllows(authUserId, authUserId)).toBe(true);
+  it('allows UUID owner from brain_oauth_users with string session id', () => {
+    const userId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    expect(ownershipAllows(userId, userId)).toBe(true);
   });
 });
