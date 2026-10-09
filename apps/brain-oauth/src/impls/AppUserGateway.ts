@@ -2,21 +2,21 @@ import { HttpMethods, RequestExecutor } from '@qlover/fe-corekit';
 import { SignOtpResult, SignWithOtpParams } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import {
+  API_OAUTH_AUTHORIZE_PREVIEW,
   API_OAUTH_CONSENT,
   API_OAUTH_VERIFY,
   API_USER_LOGIN,
   API_USER_LOGOUT,
   API_USER_OTP_LOGIN,
   API_USER_OTP_VERIFY,
-  API_USER_REGISTER,
   API_USER_SESSION
 } from '@config/route';
 import type {
   UserApiLoginTransaction,
   UserApiLogoutTransaction,
-  UserApiRegisterTransaction,
   UserSubmitOAuthConsentTransaction
 } from '@interfaces/AppUserApiInterface';
+import type { OAuthAuthorizeClientPreview } from '@interfaces/UserServiceInterface';
 import { UserServiceGatewayInterface } from '@interfaces/UserServiceInterface';
 import {
   AppApiConfig,
@@ -104,29 +104,12 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   }
 
   /**
+   * Brain accounts are created upstream; brain-oauth has no sign-up.
+   *
    * @override
    */
-  public async register(
-    params: UserApiRegisterTransaction['data']
-  ): Promise<GatewayResult<UserSchema>> {
-    const response = await this.client.request<
-      UserApiRegisterTransaction['response'],
-      UserApiRegisterTransaction['request']
-    >({
-      url: API_USER_REGISTER,
-      method: HttpMethods.POST,
-      data: params,
-      encryptProps: 'password'
-    });
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
-    }
-
-    return {
-      data: response.data.data as UserSchema,
-      error: null
-    };
+  public async register(): Promise<GatewayResult<UserSchema>> {
+    throw new Error('Registration is not supported');
   }
 
   /**
@@ -176,6 +159,23 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   }
 
   /**
+   * @override
+   */
+  public async previewAuthorizeClient(
+    query: string
+  ): Promise<OAuthAuthorizeClientPreview | null> {
+    const response = await this.client.request<
+      NextKitApiResult<OAuthAuthorizeClientPreview | null>,
+      undefined
+    >({
+      url: `${API_OAUTH_AUTHORIZE_PREVIEW}?${query}`,
+      method: HttpMethods.GET
+    });
+
+    return response.data.success ? (response.data.data ?? null) : null;
+  }
+
+  /**
    * Send OTP (step 1) — supports both phone and email
    * @override
    */
@@ -199,14 +199,15 @@ export class AppUserGateway implements UserServiceGatewayInterface {
   }
 
   /**
-   * Verify OTP code (step 2) — supports both phone and email
+   * Phone + code login (step 2); the server creates the session.
    * @override
    */
-  public async verifyOtp(
-    params: { phone: string; token: string } | { email: string; token: string }
-  ): Promise<SignOtpResult> {
+  public async verifyOtp(params: {
+    phone: string;
+    token: string;
+  }): Promise<UserSchema> {
     const response = await this.client.request<
-      NextKitApiResult<SignOtpResult>,
+      NextKitApiResult<UserSchema>,
       typeof params
     >({
       url: API_USER_OTP_VERIFY,

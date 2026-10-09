@@ -12,8 +12,8 @@ import { I } from '@config/ioc-identifiter';
 import { useI18nMapping } from '../hook/useI18nMapping';
 import { useIOC } from '../hook/useIOC';
 
-export function LogoutButton(props: { showLabel?: boolean }) {
-  const { showLabel = false } = props;
+/** Confirm dialog, then sign out and go to login. Returns the dialog title too. */
+export function useLogoutConfirm(): { title: string; confirm: () => void } {
   const dialogHandler = useIOC(I.DialogHandler);
   const userService = useIOC(I.UserServiceInterface);
   const routerService = useIOC(I.RouterServiceInterface);
@@ -23,7 +23,7 @@ export function LogoutButton(props: { showLabel?: boolean }) {
     content: COMMON_LOGOUT_DIALOG_CONTENT
   });
 
-  const onClick = useCallback(() => {
+  const confirm = useCallback(() => {
     dialogHandler.confirm({
       title: tt.title,
       content: tt.content,
@@ -34,23 +34,30 @@ export function LogoutButton(props: { showLabel?: boolean }) {
     });
   }, [tt, dialogHandler, userService, routerService]);
 
+  return { title: tt.title, confirm };
+}
+
+export function LogoutButton(props: { showLabel?: boolean }) {
+  const { showLabel = false } = props;
+  const { title, confirm } = useLogoutConfirm();
+
   return (
-    <Tooltip title={tt.title} placement="bottom">
+    <Tooltip title={title} placement="bottom">
       <Button
         variant={showLabel ? 'header' : 'ghost'}
-        aria-label={tt.title}
+        aria-label={title}
         data-testid="LogoutIcon"
         className={clsx(
           !showLabel &&
             'text-primary-text hover:text-red-500 hover:bg-transparent border-0 bg-transparent p-0 shadow-none',
           showLabel && 'hover:text-red-500 hover:border-red-500/40'
         )}
-        onClick={onClick}
+        onClick={confirm}
       >
         <ArrowRightOnRectangleIcon
           className={showLabel ? 'h-4 w-4' : 'h-5 w-5'}
         />
-        {showLabel && <span className="max-sm:hidden inline">{tt.title}</span>}
+        {showLabel && <span className="max-sm:hidden inline">{title}</span>}
       </Button>
     </Tooltip>
   );

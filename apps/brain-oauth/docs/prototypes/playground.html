@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试台原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .pg {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .account {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 16px;
+    }
+
+    .step-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-head h2 {
+      flex: 1;
+      margin: 0;
+      font-size: 17px;
+      font-weight: 400;
+    }
+
+    .step-body {
+      margin-top: 22px;
+    }
+
+    .step.locked {
+      opacity: .55;
+    }
+
+    .step.locked .step-body,
+    .step.done .step-body {
+      display: none;
+    }
+
+    .step .summary {
+      display: none;
+      margin: 10px 0 0 40px;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-sub);
+    }
+
+    .step.done .summary {
+      display: block;
+    }
+
+    .step .reopen {
+      display: none;
+    }
+
+    .step.done .reopen {
+      display: inline-flex;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 28px;
+    }
+
+    .block-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-light);
+    }
+
+    .pkce {
+      margin-bottom: 26px;
+    }
+
+    .pkce-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .pkce-head label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 10px 14px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    .kv .code {
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .result {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .result .code-block {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .url-wrap {
+      position: relative;
+    }
+
+    .url-wrap .code-block {
+      padding-right: 48px;
+    }
+
+    .url-wrap button {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      padding: 6px;
+      border: none;
+      border-radius: 8px;
+      background: var(--muted);
+      color: var(--text-light);
+      cursor: pointer;
+    }
+
+    .url-wrap button svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .consent-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .consent-preview .chips {
+      margin-left: auto;
+    }
+
+    .foot-note {
+      margin-top: 20px;
+    }
+
+    .is-mobile .row2 {
+      grid-template-columns: 1fr;
+    }
+
+    .is-mobile .kv {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .is-mobile .consent-preview {
+      flex-wrap: wrap;
+    }
+
+    .is-mobile .consent-preview .chips {
+      margin-left: 0;
+    }
+
+    .client-confidential .only-public,
+    .client-public .only-confidential {
+      display: none;
+    }
+
+    .error-none .err-banner {
+      display: none;
+    }
+
+    .err-banner {
+      margin-bottom: 16px;
+      justify-content: space-between;
+    }
+
+    .err-banner button {
+      display: inline-flex;
+      padding: 0;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <div class="bg quiet"></div>
+
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="home.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+          <span class="hdr-sub" data-i18n="sub"></span>
+          <nav class="hdr-nav">
+            <a href="developer.html" data-i18n="navConsole"></a>
+            <a href="docs.html" data-i18n="navDocs"></a>
+          </nav>
+        </div>
+        <div class="hdr-actions" data-std-actions>
+          <span class="avatar">R</span>
+          <a class="round-btn" href="login.html" data-icon="logout" data-i18n-title="logout"></a>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="pg">
+          <h1 class="title" data-i18n="title"></h1>
+          <p class="desc" data-i18n="desc"></p>
+
+          <div class="note danger err-banner" data-icon="warn">
+            <span style="flex:1" data-i18n="errText"></span>
+            <button type="button" data-icon="close" id="errClose"></button>
+          </div>
+
+          <div class="inner-card account">
+            <div class="who app-row" style="justify-content:flex-start">
+              <span class="avatar sm">R</span>
+              <div>
+                <div class="app-name" style="font-size:14px">renjie@brain.im</div>
+                <div class="app-sub" data-i18n="accountSub"></div>
+              </div>
+            </div>
+            <span class="pill ok" data-i18n="signedIn"></span>
+          </div>
+
+          <div class="steps">
+            <!-- 1 选择客户端 -->
+            <section class="card flat step" data-step="1">
+              <div class="step-head">
+                <span class="step-no">1</span>
+                <h2 data-i18n="s1"></h2>
+                <button type="button" class="link-btn reopen" data-reopen="1" data-icon="edit"><span data-i18n="change"></span></button>
+              </div>
+              <div class="summary" data-i18n="s1Summary"></div>
+              <div class="step-body">
+                <div class="row2">
+                  <div class="field">
+                    <label for="client" data-i18n="client"></label>
+                    <select id="client">
+                      <option value="confidential">Demo App（demo_client_8f3k2）</option>
+                      <option value="public">Brain Web（brain_web_p91xq）</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="redirect">redirect_uri</label>
+                    <select id="redirect">
+                      <option class="only-confidential">https://app.example.com/callback</option>
+                      <option class="only-confidential">http://localhost:3000/callback</option>
+                      <option class="only-public">https://web.brain.im/oauth/callback</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="margin-bottom:26px">
+                  <span class="block-label">scope</span>
+                  <div class="chips" id="scopes">
+                    <button type="button" class="chip mono on" data-icon="check">openid</button>
+                    <button type="button" class="chip mono on" data-icon="check">profile</button>
+                    <button type="button" class="chip mono" data-icon="check">email</button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="stateInput">state</label>
+                  <div class="inline">
+                    <input id="stateInput" value="k29dh3xq" data-i18n-placeholder="optional">
+                    <button type="button" class="send" id="randomState" data-i18n="random"></button>
+                  </div>
+                </div>
+
+                <div class="inner-card pkce">
+                  <div class="pkce-head">
+                    <span>PKCE <span class="pill purple only-public" style="margin-left:8px" data-i18n="pkceRequired"></span></span>
+                    <label class="only-confidential"><span class="app-sub" data-i18n="pkceOptional"></span><span class="switch"><input type="checkbox" id="pkceToggle"><span></span></span></label>
+                  </div>
+                  <div class="kv" id="pkceValues">
+                    <span>code_verifier</span><span class="code" id="verifier">dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk</span>
+                    <span>code_challenge</span><span class="code">E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM</span>
+                  </div>
+                  <button type="button" class="link-btn blue" id="regen" style="margin-top:12px" data-icon="refresh"><span data-i18n="regen"></span></button>
+                </div>
+
+                <div class="actions">
+                  <button type="button" class="btn sm auto" id="validate"><span class="spinner"></span><span data-i18n="validate"></span></button>
+                </div>
+              </div>
+            </section>
+
+            <!-- 2 授权确认 -->
+            <section class="card flat step" data-step="2">
+              <div class="step-head">
+                <span class="step-no">2</span>
+                <h2 data-i18n="s2"></h2>
+                <button type="button" class="link-btn reopen" data-reopen="2" data-icon="edit"><span data-i18n="change"></span></button>
+              </div>
+              <div class="summary" data-i18n="s2Summary"></div>
+              <div class="step-body">
+                <div class="note" data-icon="check" style="margin-bottom:16px"><span data-i18n="validOk"></span></div>
+                <span class="block-label" data-i18n="authUrl"></span>
+                <div class="url-wrap" style="margin-bottom:20px">
+                  <pre class="code-block" style="white-space:pre-wrap;word-break:break-all" id="authUrl"></pre>
+                  <button type="button" data-icon="copy" data-copy></button>
+                </div>
+                <div class="inner-card consent-preview">
+                  <span class="avatar sm" id="appAvatar">D</span>
+                  <div>
+                    <div class="app-name" style="font-size:14px" id="appName">Demo App</div>
+                    <div class="app-sub" data-i18n="consentSub"></div>
+                  </div>
+                  <div class="chips"><span class="chip mono">openid</span><span class="chip mono">profile</span></div>
+                </div>
+                <div class="actions">
+                  <button type="button" class="btn ghost sm auto" id="deny" data-i18n="deny"></button>
+                  <button type="button" class="btn sm auto" id="allow" data-i18n="allow"></button>
+                </div>
+              </div>
+            </section>
+
+            <!-- 3 换取令牌 -->
+            <section class="card flat step" data-step="3">
+              <div class="step-head">
+                <span class="step-no">3</span>
+                <h2 data-i18n="s3"></h2>
+              </div>
+              <div class="summary" data-i18n="s3Summary"></div>
+              <div class="step-body">
+                <span class="block-label" data-i18n="callback"></span>
+                <pre class="code-block" style="margin-bottom:20px">{
+  <b>"code"</b>: "SplxlOBeZQQYbYS6WxSbIA",
+  <b>"state"</b>: "k29dh3xq"
+}</pre>
+                <div class="field only-confidential">
+                  <label for="secret">client_secret</label>
+                  <input id="secret" type="password" value="sk_live_demo_secret">
+                </div>
+                <div class="note only-public" data-icon="info" style="margin-bottom:20px"><span data-i18n="verifierNote"></span></div>
+                <div class="actions">
+                  <button type="button" class="btn sm auto" id="exchange"><span class="spinner"></span><span data-i18n="exchange"></span></button>
+                </div>
+              </div>
+            </section>
+
+            <!-- 4 用户信息 -->
+            <section class="card flat step" data-step="4">
+              <div class="step-head">
+                <span class="step-no">4</span>
+                <h2 data-i18n="s4"></h2>
+              </div>
+              <div class="step-body">
+                <span class="block-label" data-i18n="tokenResp"></span>
+                <pre class="code-block" style="margin-bottom:20px">{
+  <b>"access_token"</b>: "eyJhbGciOiJSUzI1NiIs…",
+  <b>"token_type"</b>: "Bearer",
+  <b>"expires_in"</b>: 3600,
+  <b>"refresh_token"</b>: "def50200a1c9…",
+  <b>"scope"</b>: "openid profile"
+}</pre>
+                <div class="actions">
+                  <button type="button" class="btn sm auto" id="userinfo"><span class="spinner"></span><span data-i18n="fetchUser"></span></button>
+                </div>
+                <div class="result" id="userResult" style="display:none">
+                  <span class="block-label" style="margin:0" data-i18n="userResp"></span>
+                  <pre class="code-block">{
+  <b>"sub"</b>: "u_8f3k2p",
+  <b>"email"</b>: "renjie@brain.im",
+  <b>"name"</b>: "Renjie"
+}</pre>
+                  <div class="note" data-icon="check"><span data-i18n="allDone"></span></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="note warn foot-note" data-icon="info"><span data-i18n="footNote"></span></div>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="docs.html" data-i18n="docs"></a></span>
+      </footer>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>测试台让开发者用自己应用的真实参数，在站内把授权码流程走一遍，不会跳到外部 redirect_uri。背景用「安静版」，每一步是一张卡片，从上到下推进。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>页头</b>：logo + 竖线 +「测试台」，导航「控制台 / 文档」，右侧头像 + 退出。</li>
+        <li><b>当前账号</b>：页面本来就要求登录，所以原来的「1. 登录会话」步骤改成顶部一条账号信息，步骤从 5 步减为 4 步。</li>
+        <li><b>1 选择客户端</b>：客户端、redirect_uri 两个下划线下拉框；scope 用芯片多选；state 带「随机」；PKCE 小卡——公共客户端固定开启，机密客户端可用开关选择测试。</li>
+        <li><b>2 授权确认</b>：参数校验通过后显示授权 URL（可复制）和一张迷你授权卡，按钮「模拟拒绝 / 模拟允许」。</li>
+        <li><b>3 换取令牌</b>：展示回调得到的 code / state；机密客户端填 client_secret，公共客户端提示会自动提交 code_verifier。</li>
+        <li><b>4 用户信息</b>：展示 token 响应，按钮请求 userinfo，成功后显示结果和「流程完成」。</li>
+        <li><b>步骤状态</b>：已完成的步骤折叠成一行摘要（绿色对勾，可「修改」重新展开）；当前步骤展开，编号是品牌渐变；后面的步骤变淡锁定。</li>
+        <li><b>错误</b>：任何一步失败，顶部出现红色提示条，可关闭；错误文案需要翻译成中文（原来是英文硬编码）。</li>
+      </ul>
+
+      <h3>已确认的决定</h3>
+      <ul>
+        <li><span class="tag">已确认</span> 去掉「登录会话」步骤。</li>
+        <li><span class="tag">已确认</span> 模拟拒绝后，步骤 3 显示 <code>error=access_denied</code> 的回调结果并结束流程。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const proto = BrainProto.init({
+      title: '测试台',
+      groups: [
+        { key: 'client', label: '客户端', options: [['confidential', '机密'], ['public', '公共']] },
+        { key: 'progress', label: '进度', options: [['1', '选择客户端'], ['2', '授权确认'], ['3', '换取令牌'], ['4', '用户信息']] },
+        { key: 'error', label: '错误', options: [['none', '无'], ['shown', '显示']] }
+      ],
+      state: { client: 'confidential', progress: '1', error: 'none' },
+      i18n: {
+        zh: {
+          sub: '测试台',
+          navConsole: '控制台',
+          navDocs: '文档',
+          logout: '退出登录',
+          title: 'OAuth 流程测试',
+          desc: '用已注册应用的真实参数，在站内完成授权、换取令牌和读取用户信息',
+          accountSub: '授权将以这个账号进行',
+          signedIn: '已登录',
+          errText: '换取令牌失败：client_secret 不正确（invalid_client）',
+          s1: '选择客户端',
+          s2: '授权确认',
+          s3: '换取令牌',
+          s4: '用户信息',
+          change: '修改',
+          s1Summary: () => (BrainProto.state.client === 'public' ? 'Brain Web · 公共客户端 · PKCE' : 'Demo App · 机密客户端'),
+          s2Summary: '已模拟允许，拿到授权码',
+          s3Summary: '已获得 access_token',
+          client: '客户端',
+          optional: '可选',
+          random: '随机',
+          pkceRequired: '公共客户端必须使用',
+          pkceOptional: '同时测试 PKCE',
+          regen: '重新生成',
+          validate: '校验参数',
+          validOk: '参数有效，可以进行授权。',
+          authUrl: '授权 URL（真实参数）',
+          consentSub: '请求访问你的账号',
+          deny: '模拟拒绝',
+          allow: '模拟允许',
+          callback: '回调结果（未跳转）',
+          verifierNote: '公共客户端不需要 client_secret，换取令牌时会自动提交 code_verifier。',
+          exchange: '换取令牌',
+          tokenResp: '令牌响应',
+          fetchUser: '请求用户信息',
+          userResp: '用户信息响应',
+          allDone: '流程完成，可以把这些参数用到你的应用里了。',
+          footNote: '只在站内模拟回调，不会跳转到外部 redirect_uri。',
+          copied: '已复制',
+          denied: '已模拟拒绝，回调会带上 error=access_denied'
+        },
+        en: {
+          sub: 'Playground',
+          navConsole: 'Console',
+          navDocs: 'Docs',
+          logout: 'Sign out',
+          title: 'OAuth flow tester',
+          desc: 'Run authorize, token exchange and userinfo on this site with your app\'s real parameters',
+          accountSub: 'Authorization runs as this account',
+          signedIn: 'Signed in',
+          errText: 'Token exchange failed: wrong client_secret (invalid_client)',
+          s1: 'Choose a client',
+          s2: 'Consent',
+          s3: 'Exchange the code',
+          s4: 'User info',
+          change: 'Change',
+          s1Summary: () => (BrainProto.state.client === 'public' ? 'Brain Web · Public client · PKCE' : 'Demo App · Confidential client'),
+          s2Summary: 'Approved, authorization code received',
+          s3Summary: 'access_token received',
+          client: 'Client',
+          optional: 'Optional',
+          random: 'Random',
+          pkceRequired: 'Required for public clients',
+          pkceOptional: 'Also test PKCE',
+          regen: 'Regenerate',
+          validate: 'Validate',
+          validOk: 'Parameters are valid. You can continue.',
+          authUrl: 'Authorization URL (real parameters)',
+          consentSub: 'wants to access your account',
+          deny: 'Simulate deny',
+          allow: 'Simulate allow',
+          callback: 'Callback result (no redirect)',
+          verifierNote: 'Public clients need no client_secret. code_verifier is sent automatically.',
+          exchange: 'Exchange for token',
+          tokenResp: 'Token response',
+          fetchUser: 'Request user info',
+          userResp: 'User info response',
+          allDone: 'Done. You can use these parameters in your app.',
+          footNote: 'Callbacks are simulated on this site; nothing is sent to your redirect_uri.',
+          copied: 'Copied',
+          denied: 'Denied. The callback carries error=access_denied'
+        }
+      },
+      onRender(state) {
+        const current = Number(state.progress);
+        document.querySelectorAll('.step').forEach((step) => {
+          const n = Number(step.dataset.step);
+          step.classList.toggle('done', n < current);
+          step.classList.toggle('locked', n > current);
+          const no = step.querySelector('.step-no');
+          no.className = `step-no${n < current ? ' done' : n === current ? ' on' : ''}`;
+          no.innerHTML = n < current ? BrainProto.icon('check') : String(n);
+        });
+
+        const isPublic = state.client === 'public';
+        $('client').value = state.client;
+        $('redirect').value = isPublic ? 'https://web.brain.im/oauth/callback' : 'https://app.example.com/callback';
+        const pkceOn = isPublic || $('pkceToggle').checked;
+        $('pkceValues').style.display = pkceOn ? '' : 'none';
+        $('regen').style.display = pkceOn ? '' : 'none';
+        $('appName').textContent = isPublic ? 'Brain Web' : 'Demo App';
+        $('appAvatar').textContent = isPublic ? 'B' : 'D';
+        const scopes = [...document.querySelectorAll('#scopes .chip.on')].map((c) => c.textContent.trim()).join('%20');
+        $('authUrl').textContent =
+          'https://oauth.brain.im/oauth/authorize?response_type=code' +
+          `&client_id=${isPublic ? 'brain_web_p91xq' : 'demo_client_8f3k2'}` +
+          `&redirect_uri=${encodeURIComponent($('redirect').value)}` +
+          `&scope=${scopes}&state=${$('stateInput').value}` +
+          (pkceOn ? '&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256' : '');
+        if (current < 4) $('userResult').style.display = 'none';
+      }
+    });
+
+    const go = (step) => {
+      proto.state.progress = String(step);
+      proto.render();
+    };
+
+    const withLoading = (btn, next) => {
+      btn.classList.add('state-loading');
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.classList.remove('state-loading');
+        btn.disabled = false;
+        next();
+      }, 700);
+    };
+
+    $('client').addEventListener('change', (e) => {
+      proto.state.client = e.target.value;
+      proto.render();
+    });
+    $('redirect').addEventListener('change', () => proto.render());
+    $('pkceToggle').addEventListener('change', () => proto.render());
+    $('stateInput').addEventListener('input', () => proto.render());
+    $('scopes').addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      chip.classList.toggle('on');
+      proto.render();
+    });
+    $('randomState').addEventListener('click', () => {
+      $('stateInput').value = Math.random().toString(36).slice(2, 10);
+      proto.render();
+    });
+    $('regen').addEventListener('click', () => {
+      $('verifier').textContent = Array.from({ length: 43 }, () => Math.random().toString(36)[2]).join('');
+    });
+
+    $('validate').addEventListener('click', (e) => withLoading(e.currentTarget, () => go(2)));
+    $('allow').addEventListener('click', () => go(3));
+    $('deny').addEventListener('click', () => proto.toast(proto.dict.denied));
+    $('exchange').addEventListener('click', (e) => withLoading(e.currentTarget, () => go(4)));
+    $('userinfo').addEventListener('click', (e) =>
+      withLoading(e.currentTarget, () => {
+        $('userResult').style.display = '';
+      })
+    );
+    document.querySelectorAll('[data-reopen]').forEach((btn) => btn.addEventListener('click', () => go(btn.dataset.reopen)));
+    document.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', () => proto.toast(proto.dict.copied)));
+    $('errClose').addEventListener('click', () => {
+      proto.state.error = 'none';
+      proto.render();
+    });
+  </script>
+</body>
+
+</html>

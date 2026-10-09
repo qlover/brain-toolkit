@@ -1,7 +1,11 @@
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, isAbsolute, join } from 'path';
 import { generateThemeCSS } from '@qlover/tailwind-theme';
-import { themeConfig } from '../shared/config/theme';
+import {
+  brainThemeTokens,
+  brainTokenMapping,
+  themeConfig
+} from '../shared/config/theme';
 
 export type GenerateAppThemeCssOptions = {
   /**
@@ -28,7 +32,9 @@ export function generateAppThemeCss(
 
   const css = generateThemeCSS({
     includeThemes: [...themeConfig.supportedThemes],
-    defaultTheme: 'light'
+    defaultTheme: 'light',
+    themes: brainThemeTokens,
+    tokenMapping: brainTokenMapping
   });
 
   mkdirSync(dirname(outPath), { recursive: true });

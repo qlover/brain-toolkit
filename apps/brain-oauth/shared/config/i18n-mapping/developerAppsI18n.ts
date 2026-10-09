@@ -29,6 +29,7 @@ export const developerAppsI18n = Object.freeze({
 
   // form fields
   appNameLabel: developerAppsKeys.DEVELOPER_APPS_APP_NAME_LABEL,
+  appNamePlaceholder: developerAppsKeys.DEVELOPER_APPS_APP_NAME_PLACEHOLDER,
   appNameRequired: developerAppsKeys.DEVELOPER_APPS_APP_NAME_REQUIRED,
   redirectUrisRequired: developerAppsKeys.DEVELOPER_APPS_REDIRECT_URIS_REQUIRED,
   redirectUrisPlaceholder:
@@ -68,19 +69,24 @@ export const developerAppsI18n = Object.freeze({
   clientSecretLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_SECRET_LABEL,
   secretWarning: developerAppsKeys.DEVELOPER_APPS_SECRET_WARNING,
   credentialsConfirm: developerAppsKeys.DEVELOPER_APPS_CREDENTIALS_CONFIRM,
+  copy: developerAppsKeys.DEVELOPER_APPS_COPY,
   copyClientIdSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_CLIENT_ID_SUCCESS,
   copySecretSuccess: developerAppsKeys.DEVELOPER_APPS_COPY_SECRET_SUCCESS,
   loading: developerAppsKeys.DEVELOPER_APPS_LOADING,
   saving: developerAppsKeys.DEVELOPER_APPS_SAVING,
-  playgroundLink: developerAppsKeys.DEVELOPER_APPS_PLAYGROUND_LINK,
   clientTypeLabel: developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_LABEL,
   clientTypeConfidential:
     developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_CONFIDENTIAL,
+  clientTypeConfidentialHint:
+    developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_CONFIDENTIAL_HINT,
   clientTypePublic: developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_PUBLIC,
-  clientTypeHint: developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_HINT,
+  clientTypePublicHint:
+    developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_PUBLIC_HINT,
   clientTypeLockedHint:
     developerAppsKeys.DEVELOPER_APPS_CLIENT_TYPE_LOCKED_HINT,
   statusPublic: developerAppsKeys.DEVELOPER_APPS_STATUS_PUBLIC,
   statusConfidential: developerAppsKeys.DEVELOPER_APPS_STATUS_CONFIDENTIAL,
   publicClientNote: developerAppsKeys.DEVELOPER_APPS_PUBLIC_CLIENT_NOTE
 });
+
+export type DeveloperAppsI18nInterface = typeof developerAppsI18n;

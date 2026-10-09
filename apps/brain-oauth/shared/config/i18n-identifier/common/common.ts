@@ -53,13 +53,6 @@ export const COMMON_THEME_LIGHT = 'common:theme__light';
 export const COMMON_THEME_DARK = 'common:theme__dark';
 
 /**
- * @description Theme switcher pink theme label
- * @localZh 粉色主题
- * @localEn Pink Theme
- */
-export const COMMON_THEME_PINK = 'common:theme__pink';
-
-/**
  * @description Brain OAuth admin backend — page title
  * @localZh 管理后台
  * @localEn Admin Backend
@@ -67,9 +60,9 @@ export const COMMON_THEME_PINK = 'common:theme__pink';
 export const COMMON_ADMIN_TITLE = 'common:admin__title';
 
 /**
- * @description Brain OAuth admin sidebar — dashboard nav item
- * @localZh 仪表盘
- * @localEn Dashboard
+ * @description Brain OAuth admin sidebar — overview nav item
+ * @localZh 概览
+ * @localEn Overview
  */
 export const COMMON_ADMIN_NAV_DASHBOARD = 'common:admin_nav__dashboard';
 
@@ -80,13 +73,6 @@ export const COMMON_ADMIN_NAV_DASHBOARD = 'common:admin_nav__dashboard';
  */
 export const COMMON_ADMIN_NAV_USER_MANAGEMENT =
   'common:admin_nav__user_management';
-
-/**
- * @description Brain OAuth admin sidebar — i18n locale management nav item
- * @localZh 国际化
- * @localEn Locales
- */
-export const COMMON_ADMIN_NAV_LOCALES = 'common:admin_nav__locales';
 
 /**
  * @description Brain OAuth admin sidebar — OAuth/API request audit logs nav item
@@ -154,13 +140,6 @@ export const COMMON_USER_AUTH_FAILED_GO_TO_LOGIN =
   'common:userAuthFailed_goToLogin';
 
 /**
- * @description Brain OAuth portal — nav link to Brain user registration
- * @localZh 注册
- * @localEn Sign up
- */
-export const COMMON_AUTH_NAV_SIGN_UP = 'common:authNav_signUp';
-
-/**
  * @description Brain OAuth portal — signed-in Brain user activity / request logs nav
  * @localZh 请求日志
  * @localEn Activity logs
@@ -187,3 +166,59 @@ export const COMMON_HEADER_NAV_ABOUT = 'common:header_nav__about';
  * @localEn Developer
  */
 export const COMMON_HEADER_NAV_DEVELOPER = 'common:header_nav__developer';
+
+/**
+ * @description Brain OAuth portal — header nav to the in-site OAuth playground
+ * @localZh 测试台
+ * @localEn Playground
+ */
+export const COMMON_HEADER_NAV_PLAYGROUND = 'common:header_nav__playground';
+
+/**
+ * @description Brain OAuth portal — header sign-in pill (guest)
+ * @localZh 登录
+ * @localEn Sign in
+ */
+export const COMMON_HEADER_LOGIN = 'common:header__login';
+
+/**
+ * @description Brain OAuth portal — header developer console pill (signed in)
+ * @localZh 控制台
+ * @localEn Console
+ */
+export const COMMON_HEADER_CONSOLE = 'common:header__console';
+
+/**
+ * @description Brain OAuth portal — product name (logo title)
+ * @localZh Brain OAuth
+ * @localEn Brain OAuth
+ */
+export const COMMON_APP_NAME = 'common:app__name';
+
+/**
+ * @description 404 page — heading
+ * @localZh 页面不存在
+ * @localEn Page not found
+ */
+export const COMMON_NOT_FOUND_TITLE = 'common:not_found__title';
+
+/**
+ * @description 404 page — explanation under the heading
+ * @localZh 你访问的地址可能输错了，或者页面已经被移走。
+ * @localEn The address may be mistyped, or the page has moved.
+ */
+export const COMMON_NOT_FOUND_DESC = 'common:not_found__desc';
+
+/**
+ * @description 404 page — primary button back to the home page
+ * @localZh 返回首页
+ * @localEn Back to home
+ */
+export const COMMON_NOT_FOUND_HOME = 'common:not_found__home';
+
+/**
+ * @description 404 page — secondary link to the docs
+ * @localZh 查看文档
+ * @localEn Read the docs
+ */
+export const COMMON_NOT_FOUND_DOCS = 'common:not_found__docs';

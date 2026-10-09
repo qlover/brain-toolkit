@@ -1,8 +1,12 @@
 'use client';
 
-import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
-import { oauthLabelClass, oauthPrimaryButtonClass } from '@config/component';
-import { CopyableCredential } from './CopyableCredential';
+import {
+  ExclamationTriangleIcon,
+  InformationCircleIcon
+} from '@heroicons/react/24/outline';
+import { BrainButton } from '@/uikit/components/brain/BrainButton';
+import { BrainCode } from '@/uikit/components/brain/BrainCode';
+import { BrainModal } from '@/uikit/components/brain/BrainModal';
 
 export interface OAuthCredentials {
   clientId: string;
@@ -10,6 +14,7 @@ export interface OAuthCredentials {
   confidential: boolean;
 }
 
+/** Shown after create / rotate; the secret is visible only here, once. */
 export function OAuthClientCredentialsModal(props: {
   open: boolean;
   credentials: OAuthCredentials | null;
@@ -17,10 +22,10 @@ export function OAuthClientCredentialsModal(props: {
   clientIdLabel: string;
   clientSecretLabel: string;
   secretWarning: string;
-  publicClientNote?: string;
+  publicClientNote: string;
   confirmLabel: string;
-  onCopyClientId: () => void;
-  onCopySecret: () => void;
+  copyLabel: string;
+  onCopy: (value: string) => void;
   onClose: () => void;
 }) {
   const {
@@ -32,58 +37,56 @@ export function OAuthClientCredentialsModal(props: {
     secretWarning,
     publicClientNote,
     confirmLabel,
-    onCopyClientId,
-    onCopySecret,
+    copyLabel,
+    onCopy,
     onClose
   } = props;
 
+  const hasSecret = !!credentials?.confidential && !!credentials.clientSecret;
+
   return (
-    <DeveloperOverlayModal
-      open={open}
+    <BrainModal
+      open={open && !!credentials}
       title={title}
-      onClose={onClose}
-      maxWidthClass="max-w-lg"
-      closeOnBackdrop={false}
-      footer={
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className={oauthPrimaryButtonClass}
-            onClick={onClose}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      }
+      wide
+      data-testid="OAuthClientCredentialsModal"
     >
       {credentials && (
-        <div className="space-y-4">
-          <div>
-            <label className={oauthLabelClass}>{clientIdLabel}</label>
-            <CopyableCredential
+        <>
+          <div className="brain-cred-row">
+            <span className="brain-label">{clientIdLabel}</span>
+            <BrainCode
               value={credentials.clientId}
-              onCopy={onCopyClientId}
+              onCopy={onCopy}
+              copyLabel={copyLabel}
             />
           </div>
-          {credentials.confidential && credentials.clientSecret ? (
-            <div>
-              <label className={oauthLabelClass}>{clientSecretLabel}</label>
-              <CopyableCredential
-                value={credentials.clientSecret}
-                onCopy={onCopySecret}
-              />
-              <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-                {secretWarning}
-              </p>
-            </div>
+          {hasSecret ? (
+            <>
+              <div className="brain-cred-row">
+                <span className="brain-label">{clientSecretLabel}</span>
+                <BrainCode
+                  value={credentials.clientSecret!}
+                  onCopy={onCopy}
+                  copyLabel={copyLabel}
+                />
+              </div>
+              <div className="brain-note warn">
+                <ExclamationTriangleIcon />
+                <span>{secretWarning}</span>
+              </div>
+            </>
           ) : (
-            <p className="text-sm text-secondary-text rounded-lg bg-elevated border border-primary-border p-3">
-              {publicClientNote ??
-                'Public client: no client_secret. Use PKCE in your SPA or mobile app.'}
-            </p>
+            <div className="brain-note">
+              <InformationCircleIcon />
+              <span>{publicClientNote}</span>
+            </div>
           )}
-        </div>
+          <BrainButton type="button" className="mt-6" onClick={onClose}>
+            {confirmLabel}
+          </BrainButton>
+        </>
       )}
-    </DeveloperOverlayModal>
+    </BrainModal>
   );
 }

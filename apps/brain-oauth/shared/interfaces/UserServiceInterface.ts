@@ -19,6 +19,12 @@ export interface UserServiceInterface
   getToken(): string;
 }
 
+/** App shown on the login page when it was reached from an authorize request. */
+export interface OAuthAuthorizeClientPreview {
+  clientName: string;
+  logoUri: string | null;
+}
+
 export type OAuthConsentPayload = {
   action: 'allow' | 'deny';
   client_id: string;
@@ -47,8 +53,15 @@ export interface UserServiceGatewayInterface
    */
   submitOAuthConsent(payload: OAuthConsentPayload): Promise<string>;
 
+  /**
+   * App name / logo for a pending authorize request (authorize query string
+   * without the leading `?`); `null` when the request is invalid.
+   */
+  previewAuthorizeClient(
+    query: string
+  ): Promise<OAuthAuthorizeClientPreview | null>;
+
   sendOtp(params: SignWithOtpParams): Promise<SignOtpResult>;
-  verifyOtp(
-    params: { phone: string; token: string } | { email: string; token: string }
-  ): Promise<SignOtpResult>;
+  /** Phone + code login; resolves with the signed-in user. */
+  verifyOtp(params: { phone: string; token: string }): Promise<UserSchema>;
 }

@@ -2,6 +2,10 @@ export const envPrefix = 'NEXT_PUBLIC_';
 
 export const browserGlobalsName = 'feGlobals';
 
+/** Source repository (header GitHub link). */
+export const githubRepoUrl =
+  'https://github.com/qlover/brain-toolkit/tree/master/apps/brain-oauth';
+
 export const loggerStyles = {
   fatal: { color: '#ff0000', fontWeight: 'bold' },
   error: { color: '#ff0000' },
@@ -19,14 +23,6 @@ export const loggerStyles = {
  * - false: 不使用本地化路由，直接使用路径 (例如: /home)
  */
 export const useLocaleRoutes = true;
-
-/**
- * 是否使用API获取本地化数据
- *
- * - true: 使用API获取本地化数据，可以在 /admin/locales 页面中对他进行修改
- * - false: 不使用API获取本地化数据，直接使用 `@brain-toolkit/ts2locales` 生成的json数据
- */
-export const useApiLocales = false;
 
 /**
  * 是否在在 useWarnTranslations 中警告缺失的翻译,而不是抛出错误

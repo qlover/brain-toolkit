@@ -4,72 +4,102 @@
  */
 
 /**
- * @description Brain OAuth docs — integration guide page title
+ * @description Brain OAuth docs — page title
  * @localZh OAuth 集成文档
- * @localEn OAuth Integration Guide
+ * @localEn OAuth integration guide
  */
 export const PAGE_DOCS_OAUTH_TITLE = 'page_docs_oauth:title';
 
 /**
- * @description Brain OAuth docs meta description
+ * @description Brain OAuth docs — meta description
  * @localZh Brain OAuth 授权码流程、端点参数与 PKCE 说明
  * @localEn Authorization code flow, endpoint parameters, and PKCE for Brain OAuth
  */
 export const PAGE_DOCS_OAUTH_DESCRIPTION = 'page_docs_oauth:description';
 
 /**
- * @description Brain OAuth docs content label
+ * @description Brain OAuth docs — content label
  * @localZh OAuth 文档
  * @localEn OAuth docs
  */
 export const PAGE_DOCS_OAUTH_CONTENT = 'page_docs_oauth:content';
 
 /**
- * @description Brain OAuth docs keywords
+ * @description Brain OAuth docs — SEO keywords
  * @localZh OAuth 2.0, 授权码, PKCE, token, userinfo
  * @localEn OAuth 2.0, authorization code, PKCE, token, userinfo
  */
 export const PAGE_DOCS_OAUTH_KEYWORDS = 'page_docs_oauth:keywords';
 
 /**
- * @description Page intro
- * @localZh 本文说明第三方应用如何接入 Brain OAuth 2.0 授权服务器：注册客户端、引导用户授权、用授权码换取访问令牌并调用用户信息接口。
- * @localEn How third-party apps integrate with the Brain OAuth 2.0 server: register a client, obtain user consent, exchange an authorization code for tokens, and call userinfo.
+ * @description Header subtitle next to the logo
+ * @localZh 集成文档
+ * @localEn Docs
  */
-export const PAGE_DOCS_OAUTH_INTRO = 'page_docs_oauth:intro';
+export const PAGE_DOCS_OAUTH_HEADER_SUB = 'page_docs_oauth:header__sub';
 
 /**
- * @description Architecture section title
- * @localZh 架构：通用内核与示例装配
- * @localEn Architecture: core vs example wiring
+ * @description Subtitle under the page title
+ * @localZh 注册客户端、引导用户授权、用授权码换取令牌并获取用户信息
+ * @localEn Register a client, send users to consent, exchange the code for tokens and read the user profile
  */
-export const PAGE_DOCS_OAUTH_SECTION_ARCHITECTURE =
-  'page_docs_oauth:section__architecture';
+export const PAGE_DOCS_OAUTH_DESC = 'page_docs_oauth:desc';
 
 /**
- * @description Architecture body
- * @localZh shared/oauth-wrapper 提供与上游登录 API 无关的 OAuth 2.0 服务（authorize、consent、token、PKCE、userinfo）。oauth-wrapper 负责会话、登录编排与持久化；通过实现 OAuthUserAdapterInterface 接入任意上游。本站点运行的是 demo-oauth 中的一种实现（BrainUserAdapter），并非协议本身的限制。
- * @localEn shared/oauth-wrapper is provider-agnostic OAuth 2.0 logic. oauth-wrapper handles sessions, login orchestration, and storage; you integrate upstream systems via OAuthUserAdapterInterface. This site runs one reference adapter (BrainUserAdapter)—that is not a protocol limitation.
+ * @description Quick link card — playground title
+ * @localZh 在站内测试完整流程
+ * @localEn Try the full flow
  */
-export const PAGE_DOCS_OAUTH_ARCHITECTURE_BODY =
-  'page_docs_oauth:architecture__body';
+export const PAGE_DOCS_OAUTH_QUICK_PLAYGROUND =
+  'page_docs_oauth:quick__playground';
 
 /**
- * @description Demo provider section title
- * @localZh 本示例：demo-oauth + Brain User
- * @localEn This example: demo-oauth + Brain User
+ * @description Quick link card — playground hint
+ * @localZh 用真实参数走一遍授权、换票与 userinfo
+ * @localEn Run authorize, token and userinfo with real parameters
  */
-export const PAGE_DOCS_OAUTH_SECTION_DEMO = 'page_docs_oauth:section__demo';
+export const PAGE_DOCS_OAUTH_QUICK_PLAYGROUND_SUB =
+  'page_docs_oauth:quick__playground_sub';
 
 /**
- * @description Demo provider body
- * @localZh 终端用户通过 POST /api/oauth/verify 使用邮箱密码登录（由 DemoAuthService 调用 BrainUserAdapter）。授权页与换票流程与 Provider 无关。配置 OAUTH_WRAPPER_API_BASE、SESSION_SECRET、ENCRYPTION_KEY 等见 .env.template。替换 Provider 时修改 oauth-wrapper 与 serverIoc 绑定即可。
- * @localEn End users sign in with email/password via POST /api/oauth/verify (DemoAuthService → BrainUserAdapter). Authorize and token endpoints are provider-agnostic. See .env.template for OAUTH_WRAPPER_API_BASE and secrets. To swap providers, change oauth-wrapper and IOC bindings.
+ * @description Quick link card — OpenAPI title
+ * @localZh OpenAPI 参考
+ * @localEn OpenAPI reference
  */
-export const PAGE_DOCS_OAUTH_DEMO_BODY = 'page_docs_oauth:demo__body';
+export const PAGE_DOCS_OAUTH_QUICK_OPENAPI = 'page_docs_oauth:quick__openapi';
 
 /**
- * @description Overview section title
+ * @description Quick link card — OpenAPI hint
+ * @localZh 所有端点的请求与响应定义
+ * @localEn Request and response schemas for every endpoint
+ */
+export const PAGE_DOCS_OAUTH_QUICK_OPENAPI_SUB =
+  'page_docs_oauth:quick__openapi_sub';
+
+/**
+ * @description Quick link card — console title
+ * @localZh 管理 OAuth 应用
+ * @localEn Manage OAuth apps
+ */
+export const PAGE_DOCS_OAUTH_QUICK_CONSOLE = 'page_docs_oauth:quick__console';
+
+/**
+ * @description Quick link card — console hint
+ * @localZh 创建应用、配置回调地址、获取凭据
+ * @localEn Create apps, set redirect URIs, get credentials
+ */
+export const PAGE_DOCS_OAUTH_QUICK_CONSOLE_SUB =
+  'page_docs_oauth:quick__console_sub';
+
+/**
+ * @description Table of contents label
+ * @localZh 目录
+ * @localEn On this page
+ */
+export const PAGE_DOCS_OAUTH_TOC = 'page_docs_oauth:toc';
+
+/**
+ * @description Section title — overview
  * @localZh 概览
  * @localEn Overview
  */
@@ -77,56 +107,14 @@ export const PAGE_DOCS_OAUTH_SECTION_OVERVIEW =
   'page_docs_oauth:section__overview';
 
 /**
- * @description Overview body
- * @localZh 本服务实现标准 OAuth 2.0 授权码模式（RFC 6749），支持机密客户端与公共客户端（须使用 PKCE）。访问令牌由 Brain 签发，本服务作为中间层完成授权、换票与 userinfo 代理。
- * @localEn This server implements the OAuth 2.0 authorization code grant (RFC 6749) for confidential and public clients (PKCE required for public). Access tokens are issued by Brain; this service handles authorization, token exchange, and userinfo proxying.
- */
-export const PAGE_DOCS_OAUTH_OVERVIEW_BODY = 'page_docs_oauth:overview__body';
-
-/**
- * @description Flow section title
+ * @description Section title — flow
  * @localZh 授权码流程
  * @localEn Authorization code flow
  */
 export const PAGE_DOCS_OAUTH_SECTION_FLOW = 'page_docs_oauth:section__flow';
 
 /**
- * @description Flow step 1
- * @localZh 在开发者控制台创建应用，配置 redirect_uri（须 HTTPS，localhost 除外）。
- * @localEn Create an app in the developer console and register redirect_uri values (HTTPS required except localhost).
- */
-export const PAGE_DOCS_OAUTH_FLOW_STEP1 = 'page_docs_oauth:flow__step1';
-
-/**
- * @description Flow step 2
- * @localZh 将用户重定向到 GET /oauth/authorize，携带 client_id、redirect_uri、response_type=code，公共客户端须附带 PKCE 参数。
- * @localEn Redirect the user to GET /oauth/authorize with client_id, redirect_uri, response_type=code; public clients must include PKCE parameters.
- */
-export const PAGE_DOCS_OAUTH_FLOW_STEP2 = 'page_docs_oauth:flow__step2';
-
-/**
- * @description Flow step 3
- * @localZh 用户登录并同意后，浏览器携带 ?code=...&state=... 回到 redirect_uri。
- * @localEn After sign-in and consent, the browser returns to redirect_uri with ?code=...&state=....
- */
-export const PAGE_DOCS_OAUTH_FLOW_STEP3 = 'page_docs_oauth:flow__step3';
-
-/**
- * @description Flow step 4
- * @localZh 服务端用授权码调用 POST /oauth/token，获得 access_token（及可选 refresh_token）。
- * @localEn Your backend calls POST /oauth/token with the code to obtain access_token (and optional refresh_token).
- */
-export const PAGE_DOCS_OAUTH_FLOW_STEP4 = 'page_docs_oauth:flow__step4';
-
-/**
- * @description Flow step 5
- * @localZh 使用 Bearer access_token 调用 GET /userinfo 获取用户标识与资料。
- * @localEn Call GET /userinfo with Bearer access_token to load the user profile.
- */
-export const PAGE_DOCS_OAUTH_FLOW_STEP5 = 'page_docs_oauth:flow__step5';
-
-/**
- * @description Endpoints section title
+ * @description Section title — endpoints
  * @localZh 端点一览
  * @localEn Endpoints
  */
@@ -134,54 +122,7 @@ export const PAGE_DOCS_OAUTH_SECTION_ENDPOINTS =
   'page_docs_oauth:section__endpoints';
 
 /**
- * @description Authorize endpoint row
- * @localZh 授权（浏览器）
- * @localEn Authorize (browser)
- */
-export const PAGE_DOCS_OAUTH_ENDPOINT_AUTHORIZE =
-  'page_docs_oauth:endpoint__authorize';
-
-/**
- * @description Authorize endpoint description
- * @localZh 展示同意页；未登录会跳转登录后再回到本 URL。
- * @localEn Consent UI; unauthenticated users are sent to login then returned here.
- */
-export const PAGE_DOCS_OAUTH_ENDPOINT_AUTHORIZE_DESC =
-  'page_docs_oauth:endpoint__authorize__desc';
-
-/**
- * @description Token endpoint row
- * @localZh 令牌（服务端）
- * @localEn Token (server)
- */
-export const PAGE_DOCS_OAUTH_ENDPOINT_TOKEN = 'page_docs_oauth:endpoint__token';
-
-/**
- * @description Token endpoint description
- * @localZh grant_type=authorization_code 或 refresh_token；支持 Basic 或表单客户端认证。
- * @localEn grant_type=authorization_code or refresh_token; client auth via Basic or form body.
- */
-export const PAGE_DOCS_OAUTH_ENDPOINT_TOKEN_DESC =
-  'page_docs_oauth:endpoint__token__desc';
-
-/**
- * @description Userinfo endpoint row
- * @localZh 用户信息（服务端）
- * @localEn Userinfo (server)
- */
-export const PAGE_DOCS_OAUTH_ENDPOINT_USERINFO =
-  'page_docs_oauth:endpoint__userinfo';
-
-/**
- * @description Userinfo endpoint description
- * @localZh 需要 Authorization: Bearer；返回 sub、email、name 等声明。
- * @localEn Requires Authorization: Bearer; returns sub, email, name, and related claims.
- */
-export const PAGE_DOCS_OAUTH_ENDPOINT_USERINFO_DESC =
-  'page_docs_oauth:endpoint__userinfo__desc';
-
-/**
- * @description Authorize request section title
+ * @description Section title — authorization request
  * @localZh 授权请求
  * @localEn Authorization request
  */
@@ -189,112 +130,475 @@ export const PAGE_DOCS_OAUTH_SECTION_AUTHORIZE =
   'page_docs_oauth:section__authorize';
 
 /**
- * @description Authorize query params note
- * @localZh 必填：response_type=code、client_id、redirect_uri（须在应用白名单内）。可选：scope、state；公共客户端必填 code_challenge 与 code_challenge_method=S256。
- * @localEn Required: response_type=code, client_id, redirect_uri (must match a registered URI). Optional: scope, state; public clients require code_challenge and code_challenge_method=S256.
- */
-export const PAGE_DOCS_OAUTH_AUTHORIZE_PARAMS =
-  'page_docs_oauth:authorize__params';
-
-/**
- * @description Token section title
+ * @description Section title — token exchange
  * @localZh 令牌交换
  * @localEn Token exchange
  */
 export const PAGE_DOCS_OAUTH_SECTION_TOKEN = 'page_docs_oauth:section__token';
 
 /**
- * @description Authorization code grant subtitle
- * @localZh 授权码换票
- * @localEn Exchange authorization code
- */
-export const PAGE_DOCS_OAUTH_TOKEN_AUTH_CODE =
-  'page_docs_oauth:token__auth__code';
-
-/**
- * @description Refresh token grant subtitle
- * @localZh 刷新令牌
- * @localEn Refresh token
- */
-export const PAGE_DOCS_OAUTH_TOKEN_REFRESH = 'page_docs_oauth:token__refresh';
-
-/**
- * @description PKCE section title
- * @localZh PKCE（公共客户端）
- * @localEn PKCE (public clients)
+ * @description Section title — PKCE
+ * @localZh PKCE
+ * @localEn PKCE
  */
 export const PAGE_DOCS_OAUTH_SECTION_PKCE = 'page_docs_oauth:section__pkce';
 
 /**
- * @description PKCE body
- * @localZh 授权前生成 code_verifier，将 S256 摘要作为 code_challenge 传给授权端点；换票时在 POST /oauth/token 中提交 code_verifier。机密客户端可省略 PKCE。
- * @localEn Generate code_verifier before authorize, pass its S256 digest as code_challenge, then send code_verifier when exchanging the code. Confidential clients may omit PKCE.
- */
-export const PAGE_DOCS_OAUTH_PKCE_BODY = 'page_docs_oauth:pkce__body';
-
-/**
- * @description Userinfo section title
+ * @description Section title — user info
  * @localZh 用户信息
- * @localEn Userinfo
+ * @localEn User info
  */
 export const PAGE_DOCS_OAUTH_SECTION_USERINFO =
   'page_docs_oauth:section__userinfo';
 
 /**
- * @description Userinfo body
- * @localZh 成功时返回 JSON：sub（用户 ID）、email、name，以及可选 roles。无效或过期令牌返回 401 与 error=invalid_token。
- * @localEn Success returns JSON with sub (user id), email, name, and optional roles. Invalid or expired tokens yield 401 with error=invalid_token.
- */
-export const PAGE_DOCS_OAUTH_USERINFO_BODY = 'page_docs_oauth:userinfo__body';
-
-/**
- * @description Errors section title
+ * @description Section title — errors
  * @localZh 错误响应
- * @localEn Error responses
+ * @localEn Errors
  */
 export const PAGE_DOCS_OAUTH_SECTION_ERRORS = 'page_docs_oauth:section__errors';
 
 /**
- * @description Errors body
- * @localZh 授权错误通过 redirect_uri 查询参数 error、error_description 返回；令牌与用户信息的错误为 JSON（如 invalid_request、invalid_grant、invalid_client、invalid_token）。
- * @localEn Authorization errors redirect with error and error_description query params; token and userinfo errors are JSON (e.g. invalid_request, invalid_grant, invalid_client, invalid_token).
+ * @description Overview paragraph
+ * @localZh Brain OAuth 实现 RFC 6749 授权码流程。第三方应用引导用户在 Brain 登录并同意授权，拿到授权码后在服务端换取 access_token，再用它读取用户信息。
+ * @localEn Brain OAuth implements the RFC 6749 authorization code flow. Your app sends the user to sign in to Brain and approve access, exchanges the returned code for an access_token on your server, then reads the user profile.
  */
-export const PAGE_DOCS_OAUTH_ERRORS_BODY = 'page_docs_oauth:errors__body';
+export const PAGE_DOCS_OAUTH_OVERVIEW_TEXT = 'page_docs_oauth:overview__text';
 
 /**
- * @description Link to playground
- * @localZh 在站内测试完整流程
- * @localEn Try the in-app playground
+ * @description Client type — confidential
+ * @localZh 机密客户端
+ * @localEn Confidential client
  */
-export const PAGE_DOCS_OAUTH_LINK_PLAYGROUND =
-  'page_docs_oauth:link__playground';
+export const PAGE_DOCS_OAUTH_CONFIDENTIAL = 'page_docs_oauth:confidential';
 
 /**
- * @description Link to OpenAPI reference
- * @localZh 打开 OpenAPI 参考
- * @localEn Open API reference
+ * @description Client type — confidential description
+ * @localZh 有服务端，可以安全保存 client_secret；换票时用 client_secret 认证，PKCE 可选。
+ * @localEn Has a backend that can keep client_secret safe. Authenticates with client_secret; PKCE is optional.
  */
-export const PAGE_DOCS_OAUTH_LINK_API = 'page_docs_oauth:link__api';
+export const PAGE_DOCS_OAUTH_CONFIDENTIAL_TEXT =
+  'page_docs_oauth:confidential__text';
 
 /**
- * @description Link to developer console
- * @localZh 管理 OAuth 应用
- * @localEn Manage OAuth apps
+ * @description Client type — public
+ * @localZh 公共客户端
+ * @localEn Public client
  */
-export const PAGE_DOCS_OAUTH_LINK_DEVELOPER = 'page_docs_oauth:link__developer';
+export const PAGE_DOCS_OAUTH_PUBLIC = 'page_docs_oauth:public';
 
 /**
- * @description Login verify endpoint row
- * @localZh 终端用户登录（服务端）
- * @localEn End-user sign-in (server)
+ * @description Client type — public description
+ * @localZh SPA、移动端等无法保存密钥的应用；没有 client_secret，必须使用 PKCE。
+ * @localEn SPAs and mobile apps that cannot keep a secret. No client_secret; PKCE is required.
  */
-export const PAGE_DOCS_OAUTH_ENDPOINT_VERIFY =
-  'page_docs_oauth:endpoint__verify';
+export const PAGE_DOCS_OAUTH_PUBLIC_TEXT = 'page_docs_oauth:public__text';
 
 /**
- * @description Login verify endpoint description
- * @localZh 邮箱/密码登录，建立授权页所需会话；由 demo-oauth 编排，非 OAuth 客户端调用。
- * @localEn Email/password sign-in for the consent UI session; demo-oauth orchestration—not for OAuth clients.
+ * @description Flow step 1 title
+ * @localZh 创建应用
+ * @localEn Create an app
  */
-export const PAGE_DOCS_OAUTH_ENDPOINT_VERIFY_DESC =
-  'page_docs_oauth:endpoint__verify__desc';
+export const PAGE_DOCS_OAUTH_FLOW1 = 'page_docs_oauth:flow1';
+
+/**
+ * @description Flow step 1 description
+ * @localZh 在开发者控制台创建应用并配置 redirect_uri（必须 HTTPS，localhost 除外）。
+ * @localEn Create an app in the developer console and set redirect_uri (HTTPS, except localhost).
+ */
+export const PAGE_DOCS_OAUTH_FLOW1_DESC = 'page_docs_oauth:flow1__desc';
+
+/**
+ * @description Flow step 2 title
+ * @localZh 跳转授权
+ * @localEn Redirect to authorize
+ */
+export const PAGE_DOCS_OAUTH_FLOW2 = 'page_docs_oauth:flow2';
+
+/**
+ * @description Flow step 2 description
+ * @localZh 把用户重定向到 /oauth/authorize，带上 client_id、redirect_uri 和 state。
+ * @localEn Send the user to /oauth/authorize with client_id, redirect_uri and state.
+ */
+export const PAGE_DOCS_OAUTH_FLOW2_DESC = 'page_docs_oauth:flow2__desc';
+
+/**
+ * @description Flow step 3 title
+ * @localZh 用户同意
+ * @localEn User approves
+ */
+export const PAGE_DOCS_OAUTH_FLOW3 = 'page_docs_oauth:flow3';
+
+/**
+ * @description Flow step 3 description
+ * @localZh 用户登录并同意后，浏览器带着 ?code=…&state=… 回到 redirect_uri。
+ * @localEn After sign-in and consent the browser returns to redirect_uri with ?code=…&state=….
+ */
+export const PAGE_DOCS_OAUTH_FLOW3_DESC = 'page_docs_oauth:flow3__desc';
+
+/**
+ * @description Flow step 4 title
+ * @localZh 换取令牌
+ * @localEn Exchange the code
+ */
+export const PAGE_DOCS_OAUTH_FLOW4 = 'page_docs_oauth:flow4';
+
+/**
+ * @description Flow step 4 description
+ * @localZh 服务端用授权码调用 /oauth/token，获得 access_token 和 refresh_token。
+ * @localEn Your server calls /oauth/token with the code to get access_token and refresh_token.
+ */
+export const PAGE_DOCS_OAUTH_FLOW4_DESC = 'page_docs_oauth:flow4__desc';
+
+/**
+ * @description Flow step 5 title
+ * @localZh 读取用户
+ * @localEn Read the user
+ */
+export const PAGE_DOCS_OAUTH_FLOW5 = 'page_docs_oauth:flow5';
+
+/**
+ * @description Flow step 5 description
+ * @localZh 带上 Bearer access_token 调用 /oauth/userinfo。
+ * @localEn Call /oauth/userinfo with the Bearer access_token.
+ */
+export const PAGE_DOCS_OAUTH_FLOW5_DESC = 'page_docs_oauth:flow5__desc';
+
+/**
+ * @description Table header — method
+ * @localZh 方法
+ * @localEn Method
+ */
+export const PAGE_DOCS_OAUTH_TH_METHOD = 'page_docs_oauth:th__method';
+
+/**
+ * @description Table header — path
+ * @localZh 路径
+ * @localEn Path
+ */
+export const PAGE_DOCS_OAUTH_TH_PATH = 'page_docs_oauth:th__path';
+
+/**
+ * @description Table header — caller
+ * @localZh 调用方
+ * @localEn Caller
+ */
+export const PAGE_DOCS_OAUTH_TH_CALLER = 'page_docs_oauth:th__caller';
+
+/**
+ * @description Table header — notes
+ * @localZh 说明
+ * @localEn Notes
+ */
+export const PAGE_DOCS_OAUTH_TH_NOTE = 'page_docs_oauth:th__note';
+
+/**
+ * @description Table header — parameter
+ * @localZh 参数
+ * @localEn Parameter
+ */
+export const PAGE_DOCS_OAUTH_TH_PARAM = 'page_docs_oauth:th__param';
+
+/**
+ * @description Table header — required
+ * @localZh 必填
+ * @localEn Required
+ */
+export const PAGE_DOCS_OAUTH_TH_REQUIRED = 'page_docs_oauth:th__required';
+
+/**
+ * @description Table header — error code
+ * @localZh 错误码
+ * @localEn Error
+ */
+export const PAGE_DOCS_OAUTH_TH_CODE = 'page_docs_oauth:th__code';
+
+/**
+ * @description Table header — where the error appears
+ * @localZh 出现位置
+ * @localEn Where
+ */
+export const PAGE_DOCS_OAUTH_TH_WHERE = 'page_docs_oauth:th__where';
+
+/**
+ * @description Endpoint caller — browser
+ * @localZh 浏览器
+ * @localEn Browser
+ */
+export const PAGE_DOCS_OAUTH_CALLER_BROWSER = 'page_docs_oauth:caller__browser';
+
+/**
+ * @description Endpoint caller — server
+ * @localZh 服务端
+ * @localEn Server
+ */
+export const PAGE_DOCS_OAUTH_CALLER_SERVER = 'page_docs_oauth:caller__server';
+
+/**
+ * @description Endpoint note — authorize
+ * @localZh 展示授权确认页；未登录会先跳转登录，登录后回到本地址。
+ * @localEn Shows the consent page. Guests sign in first and come back here.
+ */
+export const PAGE_DOCS_OAUTH_ENDPOINT_AUTHORIZE =
+  'page_docs_oauth:endpoint__authorize';
+
+/**
+ * @description Endpoint note — token
+ * @localZh 用授权码或 refresh_token 换取令牌；支持 Basic 认证或表单传 client_secret。
+ * @localEn Exchange a code or refresh_token for tokens. Basic auth or client_secret in the form.
+ */
+export const PAGE_DOCS_OAUTH_ENDPOINT_TOKEN = 'page_docs_oauth:endpoint__token';
+
+/**
+ * @description Endpoint note — revoke
+ * @localZh 吊销 access_token 或 refresh_token。
+ * @localEn Revoke an access_token or refresh_token.
+ */
+export const PAGE_DOCS_OAUTH_ENDPOINT_REVOKE =
+  'page_docs_oauth:endpoint__revoke';
+
+/**
+ * @description Endpoint note — userinfo
+ * @localZh 需要 Authorization: Bearer；返回 sub、email、name 等信息。
+ * @localEn Requires Authorization: Bearer. Returns sub, email, name and more.
+ */
+export const PAGE_DOCS_OAUTH_ENDPOINT_USERINFO =
+  'page_docs_oauth:endpoint__userinfo';
+
+/**
+ * @description Authorization request paragraph
+ * @localZh 把用户浏览器重定向到授权地址。redirect_uri 必须和应用里登记的完全一致。
+ * @localEn Redirect the user's browser to the authorization URL. redirect_uri must exactly match one registered on the app.
+ */
+export const PAGE_DOCS_OAUTH_AUTHORIZE_TEXT = 'page_docs_oauth:authorize__text';
+
+/**
+ * @description Param pill — required
+ * @localZh 必填
+ * @localEn Required
+ */
+export const PAGE_DOCS_OAUTH_REQUIRED = 'page_docs_oauth:required';
+
+/**
+ * @description Param pill — optional
+ * @localZh 可选
+ * @localEn Optional
+ */
+export const PAGE_DOCS_OAUTH_OPTIONAL = 'page_docs_oauth:optional';
+
+/**
+ * @description Param pill — required for public clients
+ * @localZh 公共客户端必填
+ * @localEn Public clients
+ */
+export const PAGE_DOCS_OAUTH_PKCE_ONLY = 'page_docs_oauth:pkce__only';
+
+/**
+ * @description Param note — response_type
+ * @localZh 固定为 code。
+ * @localEn Always code.
+ */
+export const PAGE_DOCS_OAUTH_PARAM_RESPONSE_TYPE =
+  'page_docs_oauth:param__response_type';
+
+/**
+ * @description Param note — client_id
+ * @localZh 开发者控制台里的 Client ID。
+ * @localEn The Client ID from the developer console.
+ */
+export const PAGE_DOCS_OAUTH_PARAM_CLIENT_ID =
+  'page_docs_oauth:param__client_id';
+
+/**
+ * @description Param note — redirect_uri
+ * @localZh 授权完成后回跳的地址，必须在应用的白名单内。
+ * @localEn Where to return after consent. Must be on the app's allow list.
+ */
+export const PAGE_DOCS_OAUTH_PARAM_REDIRECT = 'page_docs_oauth:param__redirect';
+
+/**
+ * @description Param note — scope
+ * @localZh 空格分隔，例如 openid profile。
+ * @localEn Space separated, e.g. openid profile.
+ */
+export const PAGE_DOCS_OAUTH_PARAM_SCOPE = 'page_docs_oauth:param__scope';
+
+/**
+ * @description Param note — state
+ * @localZh 随机字符串，回跳时原样带回，用来防止 CSRF。
+ * @localEn A random string returned as is, to prevent CSRF.
+ */
+export const PAGE_DOCS_OAUTH_PARAM_STATE = 'page_docs_oauth:param__state';
+
+/**
+ * @description Param note — code_challenge
+ * @localZh code_verifier 的 S256 摘要，同时传 code_challenge_method=S256。
+ * @localEn The S256 digest of code_verifier, sent with code_challenge_method=S256.
+ */
+export const PAGE_DOCS_OAUTH_PARAM_CHALLENGE =
+  'page_docs_oauth:param__challenge';
+
+/**
+ * @description Token exchange paragraph
+ * @localZh 在服务端调用，不要在浏览器里暴露 client_secret。
+ * @localEn Call this from your server. Never expose client_secret in the browser.
+ */
+export const PAGE_DOCS_OAUTH_TOKEN_TEXT = 'page_docs_oauth:token__text';
+
+/**
+ * @description Token tab — authorization code
+ * @localZh 授权码换令牌
+ * @localEn Authorization code
+ */
+export const PAGE_DOCS_OAUTH_TAB_CODE = 'page_docs_oauth:tab__code';
+
+/**
+ * @description Token tab — refresh token
+ * @localZh 刷新令牌
+ * @localEn Refresh token
+ */
+export const PAGE_DOCS_OAUTH_TAB_REFRESH = 'page_docs_oauth:tab__refresh';
+
+/**
+ * @description Code comment — confidential clients only
+ * @localZh # 机密客户端
+ * @localEn # confidential clients
+ */
+export const PAGE_DOCS_OAUTH_COMMENT_SECRET = 'page_docs_oauth:comment__secret';
+
+/**
+ * @description Code comment — when using PKCE
+ * @localZh # 使用 PKCE 时
+ * @localEn # when using PKCE
+ */
+export const PAGE_DOCS_OAUTH_COMMENT_VERIFIER =
+  'page_docs_oauth:comment__verifier';
+
+/**
+ * @description Example response heading
+ * @localZh 响应示例
+ * @localEn Example response
+ */
+export const PAGE_DOCS_OAUTH_RESPONSE = 'page_docs_oauth:response';
+
+/**
+ * @description PKCE paragraph
+ * @localZh 公共客户端必须使用 PKCE：先生成随机的 code_verifier，把它的 S256 摘要作为 code_challenge 放进授权请求，换令牌时再提交原始的 code_verifier。
+ * @localEn Public clients must use PKCE: generate a random code_verifier, send its S256 digest as code_challenge in the authorization request, and submit the original code_verifier when exchanging the code.
+ */
+export const PAGE_DOCS_OAUTH_PKCE_TEXT = 'page_docs_oauth:pkce__text';
+
+/**
+ * @description PKCE note
+ * @localZh 机密客户端也可以同时使用 PKCE，安全性更好。
+ * @localEn Confidential clients can use PKCE too for extra protection.
+ */
+export const PAGE_DOCS_OAUTH_PKCE_NOTE = 'page_docs_oauth:pkce__note';
+
+/**
+ * @description User info paragraph
+ * @localZh 成功时返回用户标识和资料；令牌无效或过期返回 401 和 error=invalid_token。
+ * @localEn Returns the user id and profile. An invalid or expired token returns 401 with error=invalid_token.
+ */
+export const PAGE_DOCS_OAUTH_USERINFO_TEXT = 'page_docs_oauth:userinfo__text';
+
+/**
+ * @description Errors paragraph
+ * @localZh 授权阶段的错误以 error、error_description 参数带回 redirect_uri；令牌和用户信息接口的错误以 JSON 返回。
+ * @localEn Authorization errors come back to redirect_uri as error and error_description. Token and userinfo errors are returned as JSON.
+ */
+export const PAGE_DOCS_OAUTH_ERRORS_TEXT = 'page_docs_oauth:errors__text';
+
+/**
+ * @description Error location — all endpoints
+ * @localZh 全部
+ * @localEn All
+ */
+export const PAGE_DOCS_OAUTH_WHERE_ALL = 'page_docs_oauth:where__all';
+
+/**
+ * @description Error location — authorize
+ * @localZh 授权
+ * @localEn Authorize
+ */
+export const PAGE_DOCS_OAUTH_WHERE_AUTHORIZE =
+  'page_docs_oauth:where__authorize';
+
+/**
+ * @description Error location — token
+ * @localZh 令牌
+ * @localEn Token
+ */
+export const PAGE_DOCS_OAUTH_WHERE_TOKEN = 'page_docs_oauth:where__token';
+
+/**
+ * @description Error location — userinfo
+ * @localZh 用户信息
+ * @localEn User info
+ */
+export const PAGE_DOCS_OAUTH_WHERE_USERINFO = 'page_docs_oauth:where__userinfo';
+
+/**
+ * @description Error note — invalid_request
+ * @localZh 缺少必填参数或参数格式不对。
+ * @localEn A required parameter is missing or malformed.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_INVALID_REQUEST =
+  'page_docs_oauth:error__invalid_request';
+
+/**
+ * @description Error note — unauthorized_client
+ * @localZh 应用不存在、已停用，或者不允许这种授权方式。
+ * @localEn The app does not exist, is disabled, or cannot use this grant.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_UNAUTHORIZED =
+  'page_docs_oauth:error__unauthorized';
+
+/**
+ * @description Error note — access_denied
+ * @localZh 用户拒绝了授权。
+ * @localEn The user denied access.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_DENIED = 'page_docs_oauth:error__denied';
+
+/**
+ * @description Error note — invalid_scope
+ * @localZh 请求的 scope 无效或超出应用允许的范围。
+ * @localEn The requested scope is invalid or not allowed for this app.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_SCOPE = 'page_docs_oauth:error__scope';
+
+/**
+ * @description Error note — invalid_client
+ * @localZh 客户端认证失败，检查 client_id 和 client_secret。
+ * @localEn Client authentication failed. Check client_id and client_secret.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_CLIENT = 'page_docs_oauth:error__client';
+
+/**
+ * @description Error note — invalid_grant
+ * @localZh 授权码无效、过期、已使用，或 code_verifier 不匹配。
+ * @localEn The code is invalid, expired or used, or code_verifier does not match.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_GRANT = 'page_docs_oauth:error__grant';
+
+/**
+ * @description Error note — invalid_token
+ * @localZh access_token 无效或已过期。
+ * @localEn The access_token is invalid or expired.
+ */
+export const PAGE_DOCS_OAUTH_ERROR_TOKEN = 'page_docs_oauth:error__token';
+
+/**
+ * @description Code block copy button label
+ * @localZh 复制
+ * @localEn Copy
+ */
+export const PAGE_DOCS_OAUTH_COPY = 'page_docs_oauth:copy';
+
+/**
+ * @description Toast after copying a code block
+ * @localZh 已复制
+ * @localEn Copied
+ */
+export const PAGE_DOCS_OAUTH_COPIED = 'page_docs_oauth:copied';
