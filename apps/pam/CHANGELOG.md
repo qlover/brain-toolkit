@@ -1,5 +1,39 @@
 # pam
 
+## 2.14.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **pam:** 对接最新 brain-oauth userinfo，登录后撤销 refresh token ([934b286](https://github.com/qlover/brain-toolkit/commit/934b286b25f3dcf67bff95bc0e9bb573b88ed511)) ([#172](https://github.com/qlover/brain-toolkit/pull/172))
+  - 读取 name / phone_number：新账号写入显示名和手机号，已有账号只补空缺；
+    手机号已被其他 PAM 账号占用时跳过（pam_users.phone 唯一）
+  - 无邮箱的 Brain 账号不再把 @brain.oauth 占位邮箱写入 pam_users，
+    toBusinessEmail 同时过滤该占位后缀
+  - 登录拿到 userinfo 后撤销 Brain refresh token，避免残留 90 天有效 token
+  - userinfo 失败时透传 error_description；site_url 去掉末尾斜杠
+  - 删除未使用的 BRAIN*OAUTH*\* 环境变量（配置只从站点设置读取）
+  - 手机号 E.164 规范化移入 pamUserIdentity，Brain 登录与短信登录共用
+
+- **pam:** 对接最新 brain-oauth userinfo，登录后撤销 refresh token ([934b286](https://github.com/qlover/brain-toolkit/commit/934b286b25f3dcf67bff95bc0e9bb573b88ed511)) ([#172](https://github.com/qlover/brain-toolkit/pull/172))
+  - 读取 name / phone_number：新账号写入显示名和手机号，已有账号只补空缺；
+    手机号已被其他 PAM 账号占用时跳过（pam_users.phone 唯一）
+  - 无邮箱的 Brain 账号不再把 @brain.oauth 占位邮箱写入 pam_users，
+    toBusinessEmail 同时过滤该占位后缀
+  - 登录拿到 userinfo 后撤销 Brain refresh token，避免残留 90 天有效 token
+  - userinfo 失败时透传 error_description；site_url 去掉末尾斜杠
+  - 删除未使用的 BRAIN*OAUTH*\* 环境变量（配置只从站点设置读取）
+  - 手机号 E.164 规范化移入 pamUserIdentity，Brain 登录与短信登录共用
+
+#### 📝 Documentation
+
+- **pam:** 按现有功能重写中英文 README ([4a737b2](https://github.com/qlover/brain-toolkit/commit/4a737b24936aa61aed62b7689a0191f8688a67d5)) ([#173](https://github.com/qlover/brain-toolkit/pull/173))
+
+  旧 README 仍描述早期 oauth-wrapper 示例（端口 3102、BrainUserAdapter
+  等已不存在）。改为介绍项目与环境、团队权限、pamenv、登录方式、
+  OAuth 授权服务与管理后台，补充快速开始、站点设置与 Brain OAuth 登录。
+
 ## 2.13.0
 
 ### Minor Changes
