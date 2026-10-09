@@ -24,6 +24,12 @@ export const accountI18n = Object.freeze({
   emailBound: accountKeys.PAGE_ACCOUNT_EMAIL_BOUND,
   bindSectionTitle: accountKeys.PAGE_ACCOUNT_BIND_SECTION_TITLE,
 
+  linkedSectionTitle: accountKeys.PAGE_ACCOUNT_LINKED_SECTION_TITLE,
+  linkedEmpty: accountKeys.PAGE_ACCOUNT_LINKED_EMPTY,
+  linked: accountKeys.PAGE_ACCOUNT_LINKED,
+  linkedLastLogin: accountKeys.PAGE_ACCOUNT_LINKED_LAST_LOGIN,
+  linkedError: accountKeys.PAGE_ACCOUNT_LINKED_ERROR,
+
   passwordSectionTitle: accountKeys.PAGE_ACCOUNT_PASSWORD_SECTION_TITLE,
   passwordDescription: accountKeys.PAGE_ACCOUNT_PASSWORD_DESCRIPTION,
   passwordNoPasswordHint: accountKeys.PAGE_ACCOUNT_PASSWORD_NO_PASSWORD_HINT,

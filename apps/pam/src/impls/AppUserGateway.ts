@@ -12,6 +12,7 @@ import type {
   PamBindEmailVerifyResult,
   PamChangePasswordInput,
   PamForgotPasswordInput,
+  PamLinkedLogin,
   PamResetPasswordInput,
   PamSessionResponse,
   PamSessionUser
@@ -378,6 +379,26 @@ export class AppUserGateway implements UserServiceGatewayInterface {
     }
 
     return response.data.data;
+  }
+
+  public async fetchLinkedLogins(config?: {
+    signal?: AbortSignal;
+  }): Promise<PamLinkedLogin[]> {
+    const response = await this.client.request<
+      NextKitApiResult<PamLinkedLogin[]>,
+      undefined
+    >({
+      url: apiRoutes.API_USER_LINKED_LOGINS,
+      method: HttpMethods.GET,
+      signal: config?.signal,
+      disabledDialogError: true
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Load linked logins failed');
+    }
+
+    return response.data.data ?? [];
   }
 
   /**

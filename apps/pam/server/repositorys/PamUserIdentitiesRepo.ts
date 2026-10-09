@@ -27,6 +27,25 @@ export class PamUserIdentitiesRepo {
     return (result.data as { user_id: string } | null)?.user_id ?? null;
   }
 
+  public async listByUserId(userId: string): Promise<
+    {
+      provider: string;
+      external_user_id: string;
+      created_at: string;
+      last_login_at: string | null;
+    }[]
+  > {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const result = await supabase
+      .from(PamTables.userIdentities)
+      .select('provider, external_user_id, created_at, last_login_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+    this.supabaseBridge.throwIfError(result);
+
+    return result.data ?? [];
+  }
+
   /**
    * Link an external identity to a PAM user. When a concurrent login already
    * linked it, returns the existing user id instead.

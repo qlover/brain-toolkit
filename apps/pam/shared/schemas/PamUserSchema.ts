@@ -104,6 +104,27 @@ export type PamBindEmailVerifyResult = z.infer<
   typeof pamBindEmailVerifyResultSchema
 >;
 
+export const pamLinkedLoginProviderSchema = z.enum([
+  'brain',
+  'github',
+  'google'
+]);
+
+export type PamLinkedLoginProvider = z.infer<
+  typeof pamLinkedLoginProviderSchema
+>;
+
+/** Third-party login linked to the current user (Brain / GitHub / Google). */
+export const pamLinkedLoginSchema = z.object({
+  provider: pamLinkedLoginProviderSchema,
+  /** Account name on the provider (e.g. GitHub username); null when unknown. */
+  account: z.string().nullable(),
+  linked_at: z.string().nullable(),
+  last_login_at: z.string().nullable()
+});
+
+export type PamLinkedLogin = z.infer<typeof pamLinkedLoginSchema>;
+
 /**
  * Display name: 1–32 Unicode letters/numbers/underscore.
  * No spaces, punctuation (except `_`), or other symbols.

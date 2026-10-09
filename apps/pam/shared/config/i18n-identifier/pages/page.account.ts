@@ -116,6 +116,42 @@ export const PAGE_ACCOUNT_BIND_HINT = 'page_account:bind_hint';
 export const PAGE_ACCOUNT_EMAIL_BOUND = 'page_account:email_bound';
 
 /**
+ * @description Linked third-party logins section title
+ * @localZh 已关联的登录方式
+ * @localEn Linked sign-in methods
+ */
+export const PAGE_ACCOUNT_LINKED_SECTION_TITLE =
+  'page_account:linked_section_title';
+
+/**
+ * @description Shown when no third-party login is linked
+ * @localZh 暂未关联 Brain、GitHub 等第三方登录
+ * @localEn No third-party sign-in (Brain, GitHub, etc.) linked yet
+ */
+export const PAGE_ACCOUNT_LINKED_EMPTY = 'page_account:linked_empty';
+
+/**
+ * @description Linked status when the provider account name is unknown
+ * @localZh 已关联
+ * @localEn Linked
+ */
+export const PAGE_ACCOUNT_LINKED = 'page_account:linked';
+
+/**
+ * @description Prefix before the last sign-in time of a linked login
+ * @localZh 最近登录
+ * @localEn Last sign-in
+ */
+export const PAGE_ACCOUNT_LINKED_LAST_LOGIN = 'page_account:linked_last_login';
+
+/**
+ * @description Failed to load linked logins
+ * @localZh 加载已关联的登录方式失败
+ * @localEn Failed to load linked sign-in methods
+ */
+export const PAGE_ACCOUNT_LINKED_ERROR = 'page_account:linked_error';
+
+/**
  * @description Bind email section title
  * @localZh 绑定邮箱
  * @localEn Bind email
