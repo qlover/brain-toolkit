@@ -1,4 +1,5 @@
 import { SupabaseRepo } from '@qlover/next-kit/server';
+import { resolveOAuthRealEmail } from '@qlover/oauth-wrapper';
 import { inject, injectable } from '@shared/container';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
@@ -12,6 +13,14 @@ import type {
 const PG_UNIQUE_VIOLATION = '23505';
 
 const { usersTable, linksTable } = oauthLocalUserConfig;
+
+export interface LinkedLocalUser {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  name: string | null;
+  extra: Record<string, unknown> | null;
+}
 
 /**
  * oauth-wrapper identity CRUD on `brain_oauth_users` + links table
@@ -49,6 +58,38 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
+   * Link + user row in one round trip (embedded via the `user_id` FK).
+   * Returns `null` when unlinked or on any read error so callers can fall back
+   * to the full find-or-create path.
+   */
+  public async findLinkedUser(
+    provider: string,
+    externalUserId: string
+  ): Promise<LinkedLocalUser | null> {
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(linksTable)
+      .select(`user_id, user:${usersTable}(id,email,phone,name,extra)`)
+      .eq('provider', provider)
+      .eq('external_user_id', externalUserId)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.warn(`Failed to read ${linksTable} with user`, {
+        error: error.message
+      });
+      return null;
+    }
+
+    const user = (data as { user?: unknown } | null)?.user;
+    const row = (Array.isArray(user) ? user[0] : user) as
+      | LinkedLocalUser
+      | null
+      | undefined;
+    return row?.id ? { ...row, id: String(row.id) } : null;
+  }
+
+  /**
    * @override
    */
   public async findByEmail(
@@ -83,10 +124,11 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   ): Promise<string> {
     const supabase = await this.supabaseRepo.getAdminSupabase();
     const now = new Date().toISOString();
+    const email = realEmailOrNull(draft.email);
     const { data, error } = await supabase
       .from(usersTable)
       .insert({
-        email: normalizeEmail(draft.email),
+        email,
         phone: draft.phone?.trim() || null,
         name: draft.name,
         extra: draft.extra ?? null,
@@ -99,8 +141,8 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
       return String(data.id);
     }
 
-    if (error?.code === PG_UNIQUE_VIOLATION) {
-      const existing = await this.findByEmail(draft.email);
+    if (email && error?.code === PG_UNIQUE_VIOLATION) {
+      const existing = await this.findByEmail(email);
       if (existing) {
         if (
           existing.externalUserId &&
@@ -120,6 +162,9 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
+   * Identity mapping only. Brain profile data is fetched live on login and
+   * `/oauth/userinfo`, so `extra` is intentionally not written here.
+   *
    * @override
    */
   public async upsertLink(
@@ -132,7 +177,6 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
         user_id: userId,
         provider: draft.provider,
         external_user_id: draft.externalUserId,
-        extra: draft.extra ?? null,
         updated_at: new Date().toISOString()
       },
       { onConflict: 'user_id' }
@@ -144,6 +188,9 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   }
 
   /**
+   * Upstream without a real email clears the column, so a stale real email
+   * cannot keep blocking the Brain account that owns it.
+   *
    * @override
    */
   public async refreshMetadata(
@@ -152,13 +199,17 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
   ): Promise<void> {
     const supabase = await this.supabaseRepo.getAdminSupabase();
     const now = new Date().toISOString();
+    const extra = draft.extra
+      ? await this.mergeUserExtra(userId, draft.extra)
+      : null;
+    const email = realEmailOrNull(draft.email);
     const { error } = await supabase
       .from(usersTable)
       .update({
         name: draft.name,
-        ...(draft.email ? { email: normalizeEmail(draft.email) } : {}),
+        email,
         ...(draft.phone?.trim() ? { phone: draft.phone.trim() } : {}),
-        ...(draft.extra ? { extra: draft.extra } : {}),
+        ...(extra ? { extra } : {}),
         last_login_at: now,
         updated_at: now
       })
@@ -170,6 +221,69 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
         error: error.message
       });
     }
+  }
+
+  /**
+   * Brain account emails are unique upstream, so a local row holding `email`
+   * while linked to another external user is stale (e.g. claimed earlier via
+   * `google_email`). Clear that row's email so the owner can sign in.
+   */
+  public async releaseStaleEmail(
+    email: string,
+    externalUserId: string
+  ): Promise<void> {
+    const existing = await this.findByEmail(email);
+    if (
+      !existing?.externalUserId ||
+      existing.externalUserId === externalUserId
+    ) {
+      return;
+    }
+
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { error } = await supabase
+      .from(usersTable)
+      .update({ email: null, updated_at: new Date().toISOString() })
+      .eq('id', existing.id);
+
+    if (error) {
+      throw new Error(
+        `Failed to release ${usersTable} email: ${error.message}`
+      );
+    }
+
+    this.logger.warn('Released stale local email held by another account', {
+      userId: existing.id,
+      heldBy: existing.externalUserId,
+      claimedBy: externalUserId
+    });
+  }
+
+  /**
+   * Shallow-merges `patch` over the user's current `extra` so keys written by
+   * other features (or legacy migrations) survive each login.
+   */
+  protected async mergeUserExtra(
+    userId: string,
+    patch: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
+    const supabase = await this.supabaseRepo.getAdminSupabase();
+    const { data, error } = await supabase
+      .from(usersTable)
+      .select('extra')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to read ${usersTable}.extra: ${error.message}`);
+    }
+
+    const current = (data as { extra?: unknown } | null)?.extra;
+    const base =
+      current && typeof current === 'object' && !Array.isArray(current)
+        ? (current as Record<string, unknown>)
+        : {};
+    return { ...base, ...patch };
   }
 
   protected async findExternalUserId(userId: string): Promise<string | null> {
@@ -191,4 +305,15 @@ export class BrainOAuthUserStore implements OAuthIdentityStore {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+/**
+ * oauth-wrapper hands phone-only users a synthetic address; the column is
+ * nullable, so store `NULL` and let `phone` identify them instead.
+ */
+function realEmailOrNull(email: string | null | undefined): string | null {
+  return resolveOAuthRealEmail(
+    email,
+    oauthLocalUserConfig.syntheticEmailDomain
+  );
 }

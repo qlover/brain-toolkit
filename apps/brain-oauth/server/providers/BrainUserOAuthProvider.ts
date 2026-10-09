@@ -13,10 +13,13 @@ import { UserRole, type UserSchema } from '@qlover/next-kit/common';
 import { SupabaseRepo, TokenEncryption } from '@qlover/next-kit/server';
 import {
   OAuthWrapperService,
+  buildOAuthSyntheticEmail,
+  resolveOAuthRealEmail,
   type OAuthAuthorizePageData,
   type OAuthConsentResult,
   type OAuthIdentityStore,
   type OAuthLocalUserDraft,
+  type OAuthLocalUserRecord,
   type OAuthSessionPayload,
   type OAuthWrapperRepositoryInterface,
   type SignWithOtpParams,
@@ -122,15 +125,13 @@ function formatBrainLoginError(data: unknown): string {
   return 'Brain login did not return a session token';
 }
 
+/**
+ * Account email only. `profile.google_email` is deliberately ignored: Brain
+ * keeps separate user ids for Google/phone signups and email signups, and
+ * using it here would make both claim the same local row by email.
+ */
 function resolveBrainEmail(user: BrainUser): string {
-  if (typeof user.email === 'string' && user.email.trim()) {
-    return user.email.trim();
-  }
-  const nested = user.profile as { google_email?: string } | undefined;
-  if (typeof nested?.google_email === 'string' && nested.google_email.trim()) {
-    return nested.google_email.trim();
-  }
-  return '';
+  return typeof user.email === 'string' ? user.email.trim() : '';
 }
 
 function resolveBrainName(user: BrainUser): string | undefined {
@@ -144,14 +145,41 @@ function resolveBrainName(user: BrainUser): string | undefined {
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
+function resolveBrainPhone(user: BrainUser): string | undefined {
+  const phone = user.profile?.phone_number?.trim();
+  return phone || undefined;
+}
+
+/**
+ * `BrainUserGateway` ignores the HTTP status and only flags
+ * `detail: 'Invalid token.'`; a Bearer 401 (`detail: 'Authentication
+ * Failed.'`) comes back as `data` with `error: null`. Treat any profile
+ * without an id as a rejected token so it never becomes a local user.
+ */
+function requireBrainUser(profile: {
+  data: (BrainUser & Partial<BrainCredentials>) | null;
+  error: unknown;
+}): BrainUser & Partial<BrainCredentials> {
+  if (profile.error) {
+    throw profile.error;
+  }
+  const id = profile.data?.id;
+  if (id === undefined || id === null || String(id).trim() === '') {
+    throw new Error('Brain user info rejected or missing id');
+  }
+  return profile.data!;
+}
+
 function brainUserToUserSchema(
   user: BrainUser & Partial<BrainCredentials>
 ): UserSchema {
   const name = resolveBrainName(user);
+  const phone = resolveBrainPhone(user);
   return {
     id: String(user.id),
     email: resolveBrainEmail(user),
     ...(name ? { name } : {}),
+    ...(phone ? { phone } : {}),
     role: user.roles?.includes('admin') ? UserRole.ADMIN : UserRole.USER,
     credential_token:
       user.token ??
@@ -178,6 +206,8 @@ export class BrainUserOAuthProvider
   protected gateway: BrainUserGateway;
   protected tokenEncryption: TokenEncryption;
   protected consentTrust: OAuthConsentTrustService;
+  /** Per-request (IOC is per request): true only inside userinfo. */
+  protected passiveSync = false;
 
   constructor(
     @inject(I.Logger)
@@ -231,9 +261,128 @@ export class BrainUserOAuthProvider
       provider: oauthLocalUserConfig.provider,
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
+      phone: upstream.phone?.trim() || null,
       name: upstream.name?.trim() || upstream.email || String(upstream.id),
       // UserRole.ADMIN is 0, so compare explicitly instead of truthiness.
       extra: { brainAdmin: upstream.role === UserRole.ADMIN }
+    };
+  }
+
+  /**
+   * @override
+   */
+  protected override async ensureLocalUser(
+    draft: OAuthLocalUserDraft
+  ): Promise<OAuthLocalUserRecord> {
+    const email = resolveOAuthRealEmail(
+      draft.email,
+      oauthLocalUserConfig.syntheticEmailDomain
+    );
+    const externalUserId = String(draft.externalUserId ?? '').trim();
+
+    if (this.passiveSync && externalUserId) {
+      const unchanged = await this.resolveUnchangedLinkedUser(
+        draft,
+        externalUserId,
+        email
+      );
+      if (unchanged) {
+        return unchanged;
+      }
+    }
+
+    if (email && externalUserId) {
+      await this.identityStore.releaseStaleEmail(email, externalUserId);
+    }
+    return super.ensureLocalUser(draft);
+  }
+
+  /**
+   * Read-only fast path for `/oauth/userinfo`: when the linked local row
+   * already matches what {@link BrainOAuthUserStore.refreshMetadata} would
+   * write, skip every write. Mirrors that method's field rules; any difference
+   * (or no link yet) returns `null` and the full sync runs.
+   */
+  protected async resolveUnchangedLinkedUser(
+    draft: OAuthLocalUserDraft,
+    externalUserId: string,
+    email: string | null
+  ): Promise<OAuthLocalUserRecord | null> {
+    const provider = String(draft.provider ?? '').trim();
+    const linked = await this.identityStore.findLinkedUser(
+      provider,
+      externalUserId
+    );
+    if (!linked) {
+      return null;
+    }
+
+    const name = (draft.name ?? '').trim() || externalUserId;
+    const phone = draft.phone?.trim();
+    const storedExtra = linked.extra ?? {};
+    const extraChanged = Object.entries(draft.extra ?? {}).some(
+      ([key, value]) => storedExtra[key] !== value
+    );
+    if (
+      (linked.email ?? null) !== email ||
+      linked.name !== name ||
+      (phone && linked.phone !== phone) ||
+      extraChanged
+    ) {
+      return null;
+    }
+
+    return {
+      authUserId: linked.id,
+      provider,
+      externalUserId,
+      email:
+        email ??
+        buildOAuthSyntheticEmail(
+          provider,
+          externalUserId,
+          oauthLocalUserConfig.syntheticEmailDomain
+        ),
+      name
+    };
+  }
+
+  /**
+   * Third-party userinfo polls should not rewrite the user row on every call;
+   * enable the unchanged fast path in {@link ensureLocalUser} for this flow
+   * only. Login keeps the full sync (it also bumps `last_login_at`).
+   *
+   * @override
+   */
+  public override async getUserInfoWithAccessToken(
+    accessToken: string
+  ): Promise<UserSchema> {
+    this.passiveSync = true;
+    try {
+      return await super.getUserInfoWithAccessToken(accessToken);
+    } finally {
+      this.passiveSync = false;
+    }
+  }
+
+  /**
+   * Keep the synthetic address out of the session user so UIs fall back to
+   * `phone` for phone-only accounts.
+   *
+   * @override
+   */
+  protected override applyLocalUser(
+    upstream: UserSchema,
+    local: OAuthLocalUserRecord
+  ): UserSchema {
+    const user = super.applyLocalUser(upstream, local);
+    return {
+      ...user,
+      email:
+        resolveOAuthRealEmail(
+          user.email,
+          oauthLocalUserConfig.syntheticEmailDomain
+        ) ?? ''
     };
   }
 
@@ -309,11 +458,7 @@ export class BrainUserOAuthProvider
     sessionToken: string
   ): Promise<UserSchema> {
     const profile = await this.gateway.getUserInfo({ token: sessionToken });
-
-    if (profile.error) {
-      throw profile.error;
-    }
-    return brainUserToUserSchema(profile.data);
+    return brainUserToUserSchema(requireBrainUser(profile));
   }
 
   /**
@@ -326,12 +471,7 @@ export class BrainUserOAuthProvider
       { token: accessToken },
       { tokenPrefix: 'Bearer' }
     );
-
-    if (profile.error) {
-      throw profile.error;
-    }
-
-    return brainUserToUserSchema(profile.data);
+    return brainUserToUserSchema(requireBrainUser(profile));
   }
 
   /**
