@@ -1,5 +1,892 @@
 # apps/brain-oauth
 
+## 2.3.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 绉婚櫎鍚庡彴澶氳瑷€锛屾枃妗堝彧鐢ㄦ瀯寤烘椂鐢熸垚鐨?JSON
+  - feat(brain-oauth): 鍘绘帀娉ㄥ唽涓庡繕璁板瘑鐮侊紝椤靛ご涓庡悗鍙版樉绀?Brain logo
+  - docs(brain-oauth): 鎸?Brain 椋庢牸閲嶆瀯椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鍘熷瀷鍏ㄩ儴鏍囪涓哄凡纭
+  - feat(brain-oauth): 鐧诲綍椤垫寜 Brain 鍘熷瀷閲嶅仛骞舵帴鍏ユ墜鏈洪獙璇佺爜鐧诲綍
+  - refactor(brain-oauth): 绉婚櫎 pink 涓婚锛屽彧淇濈暀娴呰壊 / 鏆楄壊 / 璺熼殢绯荤粺
+  - feat(brain-oauth): 鎺堟潈纭椤垫寜 Brain 鍘熷瀷閲嶅仛锛岀櫥褰曢〉鏄剧ず鎺堟潈搴旂敤
+  - feat(brain-oauth): 棣栭〉鎸?Brain 鍘熷瀷閲嶅仛锛孊rain 椤靛ご鏀寔瀵艰埅涓庣櫥褰曟€?- feat(brain-oauth): 寮€鍙戣€呮帶鍒跺彴鎸?Brain 鍘熷瀷閲嶅仛
+  - fix(brain-oauth): footer 璐村簳骞舵樉绀虹増鏈彿锛屽脊绐楁敼涓洪伄缃╁眰婊氬姩
+  - docs(brain-oauth): 琛ュ厖鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 椤甸潰鍘熷瀷
+  - docs(brain-oauth): 鏂囨。銆佹祴璇曞彴銆佸悗鍙般€佸叧浜庛€?04 鍘熷瀷鏍囪涓哄凡纭
+  - feat(brain-oauth): 404 椤甸潰鎸?Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 鍏充簬椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 闆嗘垚鏂囨。椤垫寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 娴嬭瘯鍙版寜 Brain 鍘熷瀷閲嶅仛
+  - feat(brain-oauth): 绠＄悊鍚庡彴鎸夊師鍨嬫敼涓?Brain 椋庢牸
+  - fix(brain-oauth): 绠＄悊鍚庡彴 i18n 鍗犱綅绗︽敼涓?ICU 瀛楅潰閲?- feat(brain-oauth): 椤堕儴涓?Brain 绠＄悊鍛樻樉绀虹鐞嗗悗鍙板叆鍙?- feat(brain-oauth): 绠＄悊鍚庡彴鍏ュ彛绉诲叆澶村儚涓嬫媺鑿滃崟
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 鍚庡彴鏀寔閰嶇疆 Brain API 璇锋眰鍦板潃
+  - feat(brain-oauth): Brain API 鍚庡彴閰嶇疆鏀逛负鎸?BrainUserGatewayConfig 瀹氫箟
+  - feat(brain-oauth): Brain API 閰嶇疆鏀逛负琛ㄥ崟浜や簰
+  - feat(brain-oauth): 鐧诲綍椤垫敮鎸佸垏鎹?Brain 鐧诲綍鐜
+  - refactor(brain-oauth): 鍏宠仈琛ㄦ敼鐢?brain_env 鍒楀尯鍒嗙櫥褰曠幆澧?- feat(brain-oauth): 鎸夌幆澧冮厤缃唬鐞嗘帴鍙ｃ€佹樉绀虹櫥褰曠幆澧冨苟鍔犻€?envs
+
+#### 🐞 Bug Fixes
+
+- **brain-oauth:** 登录后跳转只允许同源地址 ([046d634](https://github.com/qlover/brain-toolkit/commit/046d6349c65b046fca1a3f73208d4f10c364cb6c)) ([#170](https://github.com/qlover/brain-toolkit/pull/170))
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+
+- **brain-oauth:** 管理员权限限定在指定 Brain 环境 ([152d0bb](https://github.com/qlover/brain-toolkit/commit/152d0bbd87476f9a54d25f0c2358e05e73e8c5ad)) ([#170](https://github.com/qlover/brain-toolkit/pull/170))
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 鎵嬫満鍙风櫥褰曞悗鍚屾 phone 鍒版湰鍦扮敤鎴疯〃
+  - fix(brain-oauth): 鐧诲綍鏃跺悎骞?extra锛岄摼鎺ヨ〃涓嶅啀鍐椾綑瀛樿祫鏂?- fix(brain-oauth): 鏈湴閭鍙 Brain 璐﹀彿閭锛岄伩鍏嶈法璐﹀彿鍐茬獊
+  - fix(brain-oauth): 閭鐧诲綍鏃堕噴鏀捐鍏朵粬璐﹀彿鍗犵敤鐨勬湰鍦伴偖绠?- fix(brain-oauth): 鏃犵湡瀹為偖绠辨椂 email 瀛?NULL锛屼笉鍐嶅啓鍚堟垚閭
+  - fix(brain-oauth): userinfo 鎷掔粷鏃犳晥 token锛岃祫鏂欐湭鍙樻椂璺宠繃鍐欏簱
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+#### ♻️ Refactors
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 澶撮儴鍘绘帀鐙珛閫€鍑烘寜閽?
+
+#### 🚀 Performance
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 璇锋眰鏃ュ織浠呰褰曞け璐?- perf(brain-oauth): 瀵归綈 pam 鎺ュ彛鍔犻€熶笌璇锋眰鏃ュ織
+
 ## 2.2.0
 
 ### Minor Changes
