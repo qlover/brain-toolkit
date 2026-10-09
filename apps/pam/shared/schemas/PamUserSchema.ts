@@ -119,6 +119,8 @@ export const pamLinkedLoginSchema = z.object({
   provider: pamLinkedLoginProviderSchema,
   /** Account name on the provider (e.g. GitHub username); null when unknown. */
   account: z.string().nullable(),
+  /** brain-oauth login env for Brain links; null for other providers. */
+  env: z.string().nullable(),
   linked_at: z.string().nullable(),
   last_login_at: z.string().nullable()
 });

@@ -27,6 +27,7 @@ import {
 } from '@server/services/PamUserService';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import {
+  toBrainIdentityData,
   toBrainProfile,
   type BrainProfile,
   type BrainUserInfo
@@ -326,7 +327,8 @@ export class BrainOAuthLoginService {
       sub: profile.sub,
       // auth.users needs an email; placeholder never reaches pam_users.
       email: profile.email || `${profile.sub}${BRAIN_PLACEHOLDER_EMAIL_SUFFIX}`,
-      emailVerified: profile.emailVerified
+      emailVerified: profile.emailVerified,
+      identityData: toBrainIdentityData(profile)
     });
 
     const pamUser = await this.pamUserService.ensurePamUser({

@@ -69,11 +69,13 @@ export function LinkedLoginsSection(props: {
             return (
               <div
                 data-testid="LinkedLoginsSection"
-                key={`${item.provider}:${item.account ?? ''}:${item.linked_at ?? ''}`}
+                key={`${item.provider}:${item.env ?? ''}:${item.account ?? ''}:${item.linked_at ?? ''}`}
                 className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4"
               >
                 <dt className="w-28 shrink-0 text-sm text-secondary-text">
-                  {PROVIDER_LABELS[item.provider]}
+                  {item.env
+                    ? `${PROVIDER_LABELS[item.provider]} · ${item.env}`
+                    : PROVIDER_LABELS[item.provider]}
                 </dt>
                 <dd className="min-w-0 flex-1 text-sm font-medium text-primary-text">
                   <span className="break-all">

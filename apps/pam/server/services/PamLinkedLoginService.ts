@@ -42,7 +42,8 @@ export class PamLinkedLoginService {
       .filter((row) => row.provider === BRAIN_IDENTITY_PROVIDER)
       .map((row) => ({
         provider: 'brain',
-        account: null,
+        account: row.identity_data?.account ?? null,
+        env: row.identity_data?.env ?? null,
         linked_at: row.created_at,
         last_login_at: row.last_login_at
       }));
@@ -58,6 +59,7 @@ export class PamLinkedLoginService {
         {
           provider: provider.data,
           account: pickIdentityAccount(identity),
+          env: null,
           linked_at: identity.created_at ?? null,
           last_login_at: identity.last_sign_in_at ?? null
         }
