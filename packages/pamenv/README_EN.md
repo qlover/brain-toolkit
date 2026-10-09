@@ -117,15 +117,18 @@ Then fill in secrets with `pamenv push <new-slug> -e <env>`.
 
 ```bash
 pamenv pull <slug|id> -e staging
-pamenv pull <slug|id> -e staging -f            # overwrite local changes without asking
+pamenv pull <slug|id> -e staging -f            # conflicting keys take remote values without asking
 pamenv push <slug|id> -e staging
 pamenv push <slug|id> -e staging -y            # skip ordinary confirmations
-pamenv push <slug|id> -e staging -f            # on conflict, overwrite remote with local
+pamenv push <slug|id> -e staging -f            # conflicting keys take local values without asking
 pamenv push <slug|id> -e staging --show-values # show non-sensitive values in the preview
 ```
 
-- `pull` keeps comments in your local file where possible and asks before overwriting local content that differs.
-- `push` shows a diff first. If the remote changed (for example in the web UI) and you have not pulled, it asks you to `pull` first; if both sides changed, it lets you resolve the conflict.
+- Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
+- On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
+- `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.
+- Without a baseline (never pulled/pushed here), every differing key counts as a conflict.
+- `pull` keeps comments in your local file where possible. If only the remote changed, `push` asks you to `pull` first.
 - The diff masks every value as `*****` by default; `--show-values` reveals non-sensitive values only (names like `*_SECRET` or `*_TOKEN` are treated as sensitive).
 - If the `-e` environment does not exist, `push` asks for its URL, validates everything, then creates the environment and uploads the variables together.
 
@@ -134,7 +137,7 @@ pamenv push <slug|id> -e staging --show-values # show non-sensitive values in th
 | Option | Effect |
 | --- | --- |
 | `-y` | Skips ordinary confirmations: first push, final push, sensitivity of new keys, creating a missing environment, `remove` prompts |
-| `-f` | Skips conflict overwrite confirmation only |
+| `-f` | Skips conflict confirmation only and uses the default side (remote for pull, local for push) |
 
 Neither implies the other; pass both to skip everything.
 

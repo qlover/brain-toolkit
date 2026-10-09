@@ -135,7 +135,10 @@ export class PamCliApp {
         '--file <path>',
         'Local dotenv file (default: .env.<env>; e.g. --file .env with -e local)'
       )
-      .option('-f, --force', 'Overwrite local file on conflict without asking')
+      .option(
+        '-f, --force',
+        'Resolve conflicting keys with remote values without asking'
+      )
       .option(
         '--show-values',
         'Show non-sensitive values in conflict review (default: mask all)'
@@ -178,11 +181,11 @@ export class PamCliApp {
       )
       .option(
         '-y, --yes',
-        'Skip ordinary confirmation prompts (not sync-conflict overwrite)'
+        'Skip ordinary confirmation prompts (not sync-conflict resolution)'
       )
       .option(
         '-f, --force',
-        'Overwrite remote on sync conflict without asking (does not imply -y)'
+        'Resolve conflicting keys with local values without asking (does not imply -y)'
       )
       .option(
         '--show-values',

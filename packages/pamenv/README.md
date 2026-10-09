@@ -117,15 +117,18 @@ fork 后用 `pamenv push <new-slug> -e <env>` 填入密钥。
 
 ```bash
 pamenv pull <slug|id> -e staging
-pamenv pull <slug|id> -e staging -f            # 本地有改动时直接覆盖
+pamenv pull <slug|id> -e staging -f            # 冲突键不询问，直接用远端值
 pamenv push <slug|id> -e staging
 pamenv push <slug|id> -e staging -y            # 跳过普通确认
-pamenv push <slug|id> -e staging -f            # 冲突时直接用本地覆盖远端
+pamenv push <slug|id> -e staging -f            # 冲突键不询问，直接用本地值
 pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量的值
 ```
 
-- `pull` 会尽量保留本地文件里的注释；本地内容与远端不同时会询问是否覆盖。
-- `push` 前会展示差异。如果远端（例如有人在网页上）改过而本地没同步，会提示先 `pull`；两边都改过时会让你选择如何处理冲突。
+- 以上次 pull/push 的同步基线逐个键合并：只有一边改过的键自动采用那一边，两边都改了同一个键才算冲突。
+- `pull` 冲突时默认用远端值，`push` 冲突时默认用本地值；会列出冲突键并让你确认（可选另一边或取消），之后提示你手动编辑本地文件再 `push`。
+- `pull` 会保留本地还没推送的修改并提示；`push` 会把远端单独改过的键合并进本地文件，不会覆盖掉。
+- 从没在此处 pull/push 过（没有基线）时，所有不同的键都按冲突处理。
+- `pull` 会尽量保留本地文件里的注释。如果只有远端改过、本地没改，`push` 会提示先 `pull`。
 - 差异预览默认把所有值显示为 `*****`；`--show-values` 只显示非敏感变量的明文（名称像 `*_SECRET`、`*_TOKEN` 的也按敏感处理）。
 - `-e` 指定的环境不存在时，`push` 会先询问环境 URL，确认无误后再一并创建环境并写入变量。
 
@@ -134,7 +137,7 @@ pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量�
 | 参数 | 作用 |
 | --- | --- |
 | `-y` | 跳过普通确认：首次推送、最终推送、新变量的敏感标记、创建缺失环境、`remove` 确认 |
-| `-f` | 只跳过冲突覆盖确认 |
+| `-f` | 只跳过冲突确认，按默认一边处理（pull 用远端，push 用本地） |
 
 两者互不包含，需要都跳过时一起传。
 

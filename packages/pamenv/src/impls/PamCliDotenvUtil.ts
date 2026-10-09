@@ -224,6 +224,53 @@ export class PamCliDotenvUtil {
   }
 
   /**
+   * Turns a merged key → value map back into variables, keeping `primary`
+   * order then `secondary`-only keys. Each key reuses the side whose value
+   * matches (comments / trailing), preferring `primary`.
+   *
+   * @param merged - Merged key → value map
+   * @param primary - Preferred layout source
+   * @param secondary - Other side
+   */
+  public static pickMergedVariables(
+    merged: Readonly<Record<string, string>>,
+    primary: readonly PamCliParsedVarType[],
+    secondary: readonly PamCliParsedVarType[]
+  ): PamCliParsedVarType[] {
+    const primaryByKey = new Map(primary.map((item) => [item.key, item]));
+    const secondaryByKey = new Map(secondary.map((item) => [item.key, item]));
+    const order = [
+      ...primary.map((item) => item.key),
+      ...secondary
+        .map((item) => item.key)
+        .filter((key) => !primaryByKey.has(key))
+    ];
+
+    const result: PamCliParsedVarType[] = [];
+    for (const key of order) {
+      if (!(key in merged)) {
+        continue;
+      }
+      const value = merged[key]!;
+      const fromPrimary = primaryByKey.get(key);
+      const fromSecondary = secondaryByKey.get(key);
+      const source =
+        fromPrimary?.value === value
+          ? fromPrimary
+          : fromSecondary?.value === value
+            ? fromSecondary
+            : (fromPrimary ?? fromSecondary)!;
+      result.push({
+        ...source,
+        value,
+        sensitive:
+          fromPrimary?.sensitive === true || fromSecondary?.sensitive === true
+      });
+    }
+    return result;
+  }
+
+  /**
    * Builds API `comments` from a parsed local variable (block + trailing).
    *
    * @param variable - Parsed dotenv variable
