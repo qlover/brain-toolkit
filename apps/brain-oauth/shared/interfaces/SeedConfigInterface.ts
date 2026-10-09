@@ -35,6 +35,12 @@ export interface SeedServerConfigInterface extends SharedConfigInterface {
   /** Allowed CORS methods from `API_CORS_ALLOWED_METHODS`. */
   readonly apiCorsAllowedMethods: readonly string[];
 
+  /**
+   * Brain envs whose admins may use the admin backend (`BRAIN_ADMIN_ENVS`);
+   * empty means only the site's default login env.
+   */
+  readonly brainAdminEnvs: readonly string[];
+
   /** OAuth session key. */
   readonly oauthSessionKey: string;
 }

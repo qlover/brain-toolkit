@@ -61,6 +61,10 @@ export class ServerConfig implements SeedServerConfigInterface {
     'GET,POST,OPTIONS'
   );
 
+  public readonly brainAdminEnvs: readonly string[] = parseCsvEnv(
+    process.env.BRAIN_ADMIN_ENVS
+  );
+
   public readonly logPrefixTemplate: string =
     process.env.LOG_PREFIX_TEMPLATE ?? logPrefixTemplate;
 

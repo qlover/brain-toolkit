@@ -34,6 +34,19 @@ function writeLoginEnvCookie(env: string): void {
   document.cookie = `${BRAIN_LOGIN_ENV_COOKIE}=${encodeURIComponent(env)}; path=/; max-age=31536000; samesite=lax`;
 }
 
+/** Same-origin `returnTo` only, so the login page cannot be used as an open redirect. */
+function safeReturnTo(value: string | null, fallback: string): string {
+  if (!value) return fallback;
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.origin === window.location.origin
+      ? `${url.pathname}${url.search}${url.hash}`
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 /** Local numbers get the default country code; `+…` is sent as typed. */
 function toE164(raw: string): string | null {
   const compact = raw.replace(/[\s-]/g, '');
@@ -47,7 +60,11 @@ export function BrainLoginForm({ tt }: { tt: LoginI18nInterface }) {
   const brainEnvApi = useIOC(BrainEnvApi);
   const appConfig = useIOC(I.AppConfig) as SeedSrcConfigInterface;
   const validator = useMemo(() => new LoginValidator(), []);
-  const { returnTo } = useReturnTo({ returnToKey: URLParamsKeys.returnTo });
+  const { returnToValue } = useReturnTo({
+    returnToKey: URLParamsKeys.returnTo
+  });
+  const returnTo = () =>
+    window.location.assign(safeReturnTo(returnToValue, ROUTE_DEVELOPER_APPS));
 
   const [method, setMethod] = useState<LoginMethod>('phone');
   const [phone, setPhone] = useState('');
@@ -141,7 +158,7 @@ export function BrainLoginForm({ tt }: { tt: LoginI18nInterface }) {
     setLoading(true);
     try {
       await userGateway.verifyOtp({ phone: e164, token: code });
-      returnTo(ROUTE_DEVELOPER_APPS);
+      returnTo();
     } catch {
       fail(tt.phoneError, 'code');
       setLoading(false);
@@ -163,7 +180,7 @@ export function BrainLoginForm({ tt }: { tt: LoginI18nInterface }) {
     setLoading(true);
     try {
       await userGateway.verify({ email, password });
-      returnTo(ROUTE_DEVELOPER_APPS);
+      returnTo();
     } catch {
       fail(tt.emailError);
       setLoading(false);

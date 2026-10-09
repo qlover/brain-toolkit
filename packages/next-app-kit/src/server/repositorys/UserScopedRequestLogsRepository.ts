@@ -1,7 +1,5 @@
 import { Operators, RequestLogsRepository } from '@qlover/next-kit/server';
 import type { ResourceSearchParams } from '@qlover/corekit-bridge';
-import type { RequestLogRow } from '@qlover/next-kit/common';
-
 export type AuthLogParams = Parameters<
   RequestLogsRepository['insertWithAuth']
 >[0];
@@ -16,6 +14,9 @@ export type AuthLogParams = Parameters<
 export class UserScopedRequestLogsRepository extends RequestLogsRepository {
   /**
    * @override Persists `params.user_id` (base implementation drops it).
+   *
+   * Written with the service-role client: RLS on the cookie client only
+   * accepts `user_id = auth.uid()`, which is null for non-Supabase sessions.
    */
   public override async insertWithAuth(params: AuthLogParams): Promise<void> {
     const data = {
@@ -32,7 +33,12 @@ export class UserScopedRequestLogsRepository extends RequestLogsRepository {
       },
       ...(params.user_id ? { user_id: params.user_id } : {})
     };
-    await this.insert({ data: data as unknown as RequestLogRow });
+    const { error } = await this.getAdminSupabase()
+      .from(this.getRepoName())
+      .insert(data);
+    if (error) {
+      throw new Error(`Failed to write auth log: ${error.message}`);
+    }
   }
 
   /**
