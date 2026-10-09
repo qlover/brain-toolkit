@@ -404,9 +404,9 @@ export const PAGE_LOGIN_WITH_GITHUB = 'page_login:with_github';
 export const PAGE_LOGIN_WITH_BRAIN = 'page_login:with_brain';
 
 /**
- * @description Tooltip for Supabase Brain SSO button (currently disabled locally)
- * @localZh 通过 Supabase 的 custom:brain 跳转 Brain 登录。本地 Brain 授权站仅 localhost 可达时不可用，请改用 Brain(PKCE)。
- * @localEn Signs in via Supabase custom:brain. Disabled when Brain AS is only reachable on localhost — use Brain (PKCE) instead.
+ * @description Tooltip for Supabase Brain SSO button (legacy path)
+ * @localZh 通过 Supabase 的 custom:brain 跳转 Brain 登录（旧方式），推荐使用 Brain(PKCE) 登录。
+ * @localEn Signs in via Supabase custom:brain (legacy). Brain (PKCE) sign-in is recommended.
  */
 export const PAGE_LOGIN_WITH_BRAIN_TOOLTIP = 'page_login:with_brain_tooltip';
 
@@ -418,9 +418,9 @@ export const PAGE_LOGIN_WITH_BRAIN_TOOLTIP = 'page_login:with_brain_tooltip';
 export const PAGE_LOGIN_WITH_BRAIN_PKCE = 'page_login:with_brain_pkce';
 
 /**
- * @description Tooltip for Brain PKCE login button (local APP_ENV only)
- * @localZh PAM 作为 OAuth 客户端直连 brain-oauth（授权码 + PKCE）。仅本地环境可用；线上尚未支持跨域请求 Brain API。
- * @localEn PAM acts as an OAuth client against brain-oauth (authorization code + PKCE). Local only; production does not yet support cross-origin Brain API requests.
+ * @description Tooltip for Brain PKCE login button
+ * @localZh 使用 Brain 账号登录：跳转 Brain 授权页，PAM 通过授权码 + PKCE 完成登录。
+ * @localEn Sign in with your Brain account: redirects to Brain for authorization, then PAM completes sign-in via authorization code + PKCE.
  */
 export const PAGE_LOGIN_WITH_BRAIN_PKCE_TOOLTIP =
   'page_login:with_brain_pkce_tooltip';
