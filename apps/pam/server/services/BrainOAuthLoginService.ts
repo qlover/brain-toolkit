@@ -4,11 +4,12 @@ import { UserRole, userSchema, type UserSchema } from '@qlover/next-kit/common';
 import { RequestLogsRepository } from '@qlover/next-kit/server';
 import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
-import { API_CALLBACK_BRAIN_OAUTH } from '@config/apiRoutes';
 import {
-  API_OAUTH_INVALID_REQUEST,
-  API_USER_NOT_FOUND
-} from '@config/i18n-identifier/api';
+  defaultDisplayNameFromPhone,
+  toBusinessEmail
+} from '@shared/utils/pamUserIdentity';
+import { API_CALLBACK_BRAIN_OAUTH } from '@config/apiRoutes';
+import { API_OAUTH_INVALID_REQUEST } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
@@ -16,11 +17,20 @@ import { LoginProviderResult } from '@interfaces/UserServiceInterface';
 import type { UserLoginContext } from '@server/interfaces/UserServiceInterface';
 import {
   BRAIN_PLACEHOLDER_EMAIL_SUFFIX,
-  BrainIdentityLinkService
+  BrainIdentityLinkService,
+  type BrainIdentityResult
 } from '@server/services/BrainIdentityLinkService';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
-import { PamUserService } from '@server/services/PamUserService';
+import {
+  PamUserService,
+  type PamUserEnsureInput
+} from '@server/services/PamUserService';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
+import {
+  toBrainProfile,
+  type BrainProfile,
+  type BrainUserInfo
+} from '@server/utils/brainOAuthProfile';
 import type { LoggerInterface } from '@qlover/logger';
 import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
 
@@ -55,14 +65,6 @@ type BrainTokenResponse = {
   error_description?: string;
 };
 
-type BrainUserInfo = {
-  sub?: string;
-  email?: string;
-  email_verified?: boolean;
-  preferred_username?: string;
-  name?: string;
-};
-
 /** App session JWT payload: includes embedded user (same pattern as Supabase path). */
 type PamSessionPayload = OAuthSessionPayload & { user?: UserSchema };
 
@@ -91,31 +93,6 @@ function sanitizeReturnTo(raw: string | undefined): string {
     return '/';
   }
   return value;
-}
-
-function mapBrainUserToSchema(info: BrainUserInfo): UserSchema {
-  const id = info.sub?.trim();
-  const email =
-    info.email?.trim() ||
-    info.preferred_username?.trim() ||
-    (id ? `${id}${BRAIN_PLACEHOLDER_EMAIL_SUFFIX}` : '');
-
-  if (!id || !email) {
-    throw new ExecutorError(
-      API_USER_NOT_FOUND,
-      'Brain userinfo missing sub or email'
-    );
-  }
-
-  // Keep pam_session JWT tiny: browsers drop cookies ≳4KB. Do NOT embed the
-  // Brain access_token (itself a large JWT) into credential_token.
-  return userSchema.parse({
-    id,
-    email,
-    role: UserRole.USER,
-    credential_token: '',
-    created_at: new Date().toISOString()
-  });
 }
 
 /**
@@ -165,7 +142,7 @@ export class BrainOAuthLoginService {
       ]);
 
     return {
-      siteUrl,
+      siteUrl: siteUrl.trim().replace(/\/+$/, ''),
       clientId,
       clientSecret,
       redirectUri,
@@ -336,24 +313,39 @@ export class BrainOAuthLoginService {
 
     const token = await this.exchangeCode(query.code.trim(), pkce.codeVerifier);
     const accessToken = token.access_token!;
-    const userInfo = await this.fetchUserInfo(accessToken);
-    const brainUser = mapBrainUserToSchema(userInfo);
+    let profile: BrainProfile;
+    try {
+      profile = toBrainProfile(await this.fetchUserInfo(accessToken));
+    } finally {
+      // PAM keeps its own session; an unused 90-day Brain refresh token
+      // would otherwise stay valid on brain-oauth.
+      await this.revokeRefreshToken(token.refresh_token);
+    }
+
     const identity = await this.identityLink.resolveUser({
-      sub: brainUser.id,
-      email: brainUser.email,
-      emailVerified: userInfo.email_verified === true
+      sub: profile.sub,
+      // auth.users needs an email; placeholder never reaches pam_users.
+      email: profile.email || `${profile.sub}${BRAIN_PLACEHOLDER_EMAIL_SUFFIX}`,
+      emailVerified: profile.emailVerified
     });
 
-    // Existing accounts keep their PAM email; Brain email only seeds new ones.
     const pamUser = await this.pamUserService.ensurePamUser({
       id: identity.userId,
-      email: identity.created ? brainUser.email : null
+      ...(await this.resolveProfileSeed(identity, profile))
     });
-    const user: UserSchema = {
-      ...brainUser,
+    const name = pamUser.display_name?.trim() || profile.name;
+    const phone = pamUser.phone?.trim();
+    // Keep pam_session JWT tiny: browsers drop cookies ≳4KB. Do NOT embed the
+    // Brain access_token (itself a large JWT) into credential_token.
+    const user: UserSchema = userSchema.parse({
       id: pamUser.id,
-      email: pamUser.email?.trim() || brainUser.email
-    };
+      email: toBusinessEmail(pamUser.email) ?? profile.email,
+      role: UserRole.USER,
+      credential_token: '',
+      created_at: new Date().toISOString(),
+      ...(name ? { name } : {}),
+      ...(phone ? { phone } : {})
+    });
 
     const sessionPayload: PamSessionPayload = {
       userId: user.id,
@@ -388,6 +380,76 @@ export class BrainOAuthLoginService {
       ).toString(),
       sessionCookie
     };
+  }
+
+  /**
+   * Brain profile fields for pam_users. Email only seeds new accounts; name and
+   * phone only fill blanks, and a phone owned by another PAM user is skipped
+   * (pam_users.phone is unique).
+   */
+  protected async resolveProfileSeed(
+    identity: BrainIdentityResult,
+    profile: BrainProfile
+  ): Promise<Omit<PamUserEnsureInput, 'id'>> {
+    const existing = identity.created
+      ? null
+      : await this.pamUserService.findById(identity.userId);
+
+    let phone: string | undefined;
+    if (profile.phone && !existing?.phone) {
+      const owner = await this.pamUserService.findByPhone(profile.phone);
+      if (!owner || owner.id === identity.userId) {
+        phone = profile.phone;
+      }
+    }
+
+    let displayName: string | undefined;
+    if (!existing?.display_name?.trim()) {
+      displayName =
+        profile.name ??
+        (phone && identity.created
+          ? defaultDisplayNameFromPhone(phone)
+          : undefined);
+    }
+
+    return {
+      email: identity.created ? profile.email || null : null,
+      ...(displayName ? { displayName } : {}),
+      ...(phone ? { phone } : {})
+    };
+  }
+
+  /** Best effort: login must not fail because revocation did. */
+  protected async revokeRefreshToken(refreshToken?: string): Promise<void> {
+    if (!refreshToken) {
+      return;
+    }
+    try {
+      const oauth = await this.getOAuthSettings();
+      const body = new URLSearchParams({
+        token: refreshToken,
+        token_type_hint: 'refresh_token',
+        client_id: oauth.clientId
+      });
+      if (oauth.clientSecret) {
+        body.set('client_secret', oauth.clientSecret);
+      }
+      const response = await fetch(`${oauth.siteUrl}/oauth/revoke`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json'
+        },
+        body
+      });
+      if (!response.ok) {
+        this.logger.warn('Brain OAuth refresh token revoke failed', {
+          status: response.status
+        });
+      }
+    } catch (error) {
+      this.logger.warn('Brain OAuth refresh token revoke failed', { error });
+    }
   }
 
   protected async exchangeCode(
@@ -443,12 +505,18 @@ export class BrainOAuthLoginService {
     });
 
     if (!response.ok) {
+      const json = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        error_description?: string;
+      };
       this.logger.warn('Brain OAuth userinfo failed', {
-        status: response.status
+        status: response.status,
+        error: json.error,
+        error_description: json.error_description
       });
       throw new ExecutorError(
         API_OAUTH_INVALID_REQUEST,
-        'Failed to fetch Brain userinfo'
+        json.error_description || json.error || 'Failed to fetch Brain userinfo'
       );
     }
 

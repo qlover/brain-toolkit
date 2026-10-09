@@ -10,15 +10,41 @@ export function isPhonePlaceholderEmail(
   return email.trim().toLowerCase().endsWith(PHONE_PLACEHOLDER_EMAIL_SUFFIX);
 }
 
+/** auth.users placeholder for Brain accounts without email (not a business email). */
+export const BRAIN_PLACEHOLDER_EMAIL_SUFFIX = '@brain.oauth';
+
 /** Business email for pam_users: null when missing or placeholder. */
 export function toBusinessEmail(
   email: string | null | undefined
 ): string | null {
   const trimmed = email?.trim() ?? '';
-  if (!trimmed || isPhonePlaceholderEmail(trimmed)) {
+  if (
+    !trimmed ||
+    isPhonePlaceholderEmail(trimmed) ||
+    trimmed.toLowerCase().endsWith(BRAIN_PLACEHOLDER_EMAIL_SUFFIX)
+  ) {
     return null;
   }
   return trimmed;
+}
+
+export function normalizePhoneE164(raw: string): string {
+  const trimmed = raw.trim().replace(/[\s-]/g, '');
+  if (!trimmed) {
+    return '';
+  }
+  if (trimmed.startsWith('+')) {
+    return `+${trimmed.slice(1).replace(/\D/g, '')}`;
+  }
+  const digits = trimmed.replace(/\D/g, '');
+  // Default country code +86 for mainland numbers / bare digit input.
+  if (/^1\d{10}$/.test(digits)) {
+    return `+86${digits}`;
+  }
+  if (digits.startsWith('86') && digits.length >= 12) {
+    return `+${digits}`;
+  }
+  return digits ? `+86${digits}` : '';
 }
 
 export function phonePlaceholderEmail(phone: string): string {
