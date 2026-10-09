@@ -434,7 +434,11 @@ export class BrainUserOAuthProvider
     this.useEnv(env);
     this.passiveSync = true;
     try {
-      return await super.getUserInfoWithAccessToken(accessToken);
+      const user: BrainSessionUser = {
+        ...(await super.getUserInfoWithAccessToken(accessToken)),
+        brain_env: env
+      };
+      return user;
     } finally {
       this.passiveSync = false;
     }

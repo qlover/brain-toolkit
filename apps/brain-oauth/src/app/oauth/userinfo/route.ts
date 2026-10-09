@@ -1,5 +1,6 @@
 import { OAuthWrapperError } from '@qlover/oauth-wrapper';
 import { isEmpty } from 'lodash';
+import { brainEnvOfUser } from '@config/brainApi';
 import { ROUTE_OAUTH_USERINFO } from '@config/route';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import { NextApiServer } from '@server/NextApiServer';
@@ -54,13 +55,16 @@ export async function GET(req: NextRequest) {
       const user = await IOC(OAuthWrapperController).getUserInfo(accessToken!);
 
       const phone = user.phone?.trim() || null;
+      const brainEnv = brainEnvOfUser(user);
       return {
         sub: String(user.id),
         email: user.email,
         // Brain verifies email at registration.
         email_verified: Boolean(user.email),
         name: user.name?.trim() || user.email || String(user.id),
-        ...(phone ? { phone_number: phone } : {})
+        ...(phone ? { phone_number: phone } : {}),
+        // `sub` is scoped to this env: one Brain account has a sub per env.
+        ...(brainEnv ? { brain_env: brainEnv } : {})
       };
     });
 }
