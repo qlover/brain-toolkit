@@ -1,5 +1,973 @@
 # apps/brain-oauth
 
+## 2.3.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
+
+- **brain-oauth:** 页面按 Brain 原型重做 ([843ec3e](https://github.com/qlover/brain-toolkit/commit/843ec3e980e6f9b059b0f154bd0646b728f83328)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/04-brain-oauth-ui-redesign：
+  - refactor(brain-oauth): 移除后台多语言，文案只用构建时生成的 JSON
+  - feat(brain-oauth): 去掉注册与忘记密码，页头与后台显示 Brain logo
+  - docs(brain-oauth): 按 Brain 风格重构页面原型
+  - docs(brain-oauth): 原型全部标记为已确认
+  - feat(brain-oauth): 登录页按 Brain 原型重做并接入手机验证码登录
+  - refactor(brain-oauth): 移除 pink 主题，只保留浅色 / 暗色 / 跟随系统
+  - feat(brain-oauth): 授权确认页按 Brain 原型重做，登录页显示授权应用
+  - feat(brain-oauth): 首页按 Brain 原型重做，Brain 页头支持导航与登录态
+  - feat(brain-oauth): 开发者控制台按 Brain 原型重做
+  - fix(brain-oauth): footer 贴底并显示版本号，弹窗改为遮罩层滚动
+  - docs(brain-oauth): 补充文档、测试台、后台、关于、404 页面原型
+  - docs(brain-oauth): 文档、测试台、后台、关于、404 原型标记为已确认
+  - feat(brain-oauth): 404 页面按 Brain 原型重做
+  - feat(brain-oauth): 关于页按 Brain 原型重做
+  - feat(brain-oauth): 集成文档页按 Brain 原型重做
+  - feat(brain-oauth): 测试台按 Brain 原型重做
+  - feat(brain-oauth): 管理后台按原型改为 Brain 风格
+  - fix(brain-oauth): 管理后台 i18n 占位符改为 ICU 字面量
+  - feat(brain-oauth): 顶部为 Brain 管理员显示管理后台入口
+  - feat(brain-oauth): 管理后台入口移入头像下拉菜单
+
+- **brain-oauth:** Brain API 后台配置与多登录环境 ([796e424](https://github.com/qlover/brain-toolkit/commit/796e424966b5e745a6b9c9223bd01db872e810a7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/08-brain-oauth-brain-api-envs：
+  - feat(brain-oauth): 后台支持配置 Brain API 请求地址
+  - feat(brain-oauth): Brain API 后台配置改为按 BrainUserGatewayConfig 定义
+  - feat(brain-oauth): Brain API 配置改为表单交互
+  - feat(brain-oauth): 登录页支持切换 Brain 登录环境
+  - refactor(brain-oauth): 关联表改用 brain_env 列区分登录环境
+  - feat(brain-oauth): 按环境配置代理接口、显示登录环境并加速 envs
+
+#### 🐞 Bug Fixes
+
+- **brain-oauth:** 登录后跳转只允许同源地址 ([046d634](https://github.com/qlover/brain-toolkit/commit/046d6349c65b046fca1a3f73208d4f10c364cb6c)) ([#170](https://github.com/qlover/brain-toolkit/pull/170))
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+
+- **brain-oauth:** 管理员权限限定在指定 Brain 环境 ([152d0bb](https://github.com/qlover/brain-toolkit/commit/152d0bbd87476f9a54d25f0c2358e05e73e8c5ad)) ([#170](https://github.com/qlover/brain-toolkit/pull/170))
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **brain-oauth:** 用户身份、邮箱与手机号同步修复 ([800e5f9](https://github.com/qlover/brain-toolkit/commit/800e5f90b4ac39d2780a809204e1f389ba2e647d)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/05-brain-oauth-identity-fixes：
+  - fix(brain-oauth): 手机号登录后同步 phone 到本地用户表
+  - fix(brain-oauth): 登录时合并 extra，链接表不再冗余存资料
+  - fix(brain-oauth): 本地邮箱只认 Brain 账号邮箱，避免跨账号冲突
+  - fix(brain-oauth): 邮箱登录时释放被其他账号占用的本地邮箱
+  - fix(brain-oauth): 无真实邮箱时 email 存 NULL，不再写合成邮箱
+  - fix(brain-oauth): userinfo 拒绝无效 token，资料未变时跳过写库
+
+- **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/07-brain-user-http-error：
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
+
+- 修复代码审查发现的 4 个高危问题 ([9f68724](https://github.com/qlover/brain-toolkit/commit/9f687248862cfb01a7569a32d5941e4da74a74d7)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+  - fix(next-app-kit): 登录审计日志改用 service-role 写入
+
+  user_id 写入后，cookie 客户端受 RLS 限制（user_id = auth.uid()），
+  Brain 等非 Supabase 会话下 auth.uid() 为空，登录 / 退出会因写日志失败而报错。
+  - fix(brain-oauth): 登录后跳转只允许同源地址
+
+  returnTo 原样跳转，?redirect=https://外站 登录成功后会跳出站点；
+  非同源地址改为回落到开发者控制台。
+  - fix(brain-oauth): 管理员权限限定在指定 Brain 环境
+
+  登录环境可选后，任一环境（如 development）的 Brain admin 都能进入
+  本站后台。新增 BRAIN_ADMIN_ENVS，仅在这些环境（默认为配置的默认
+  环境）保留 admin 角色，其余环境降级为普通用户。
+  - fix(next-app-kit): 清空的角色权限不再回退默认值，CORS 缓存加 TTL
+  * 加载角色权限时为 DB 中无分配的角色写入空数组，避免清空后回退到
+    代码默认权限；分配表为空时也标记已加载，不再每次请求都查库
+  * getOrSet 被 removeItem/setItem 打断后不再回写旧结果，修复失效后
+    旧 CORS 配置覆盖新值的竞态
+  * CORS 配置缓存增加 TTL（默认同 snapshot 60s），多进程下最终一致
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+#### ♻️ Refactors
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+- **brain-oauth:** 头部去掉独立退出按钮 ([3e01827](https://github.com/qlover/brain-toolkit/commit/3e0182746f3181302112a8556127d694e436ffa3)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/09-brain-oauth-header-cleanup：
+  - refactor(brain-oauth): 头部去掉独立退出按钮
+
+#### 🚀 Performance
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
+- **brain-oauth:** 接口加速，请求日志只记失败 ([0bfdc0e](https://github.com/qlover/brain-toolkit/commit/0bfdc0e4daae231e94c949cbdd66b1d081a303a6)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/06-brain-oauth-perf-logs：
+  - fix(brain-oauth): API 请求日志仅记录失败
+  - perf(brain-oauth): 对齐 pam 接口加速与请求日志
+
 ## 2.2.0
 
 ### Minor Changes

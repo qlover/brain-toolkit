@@ -1,6 +1,6 @@
 {
   "name": "@brain-toolkit/next-app-kit",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "private": true,
   "description": "Shared server / client building blocks for brain-toolkit Next.js apps (PAM, brain-oauth)",
