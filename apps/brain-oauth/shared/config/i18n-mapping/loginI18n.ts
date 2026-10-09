@@ -27,6 +27,7 @@ export const loginI18n = Object.freeze({
   method: i18nKeys.PAGE_LOGIN_METHOD,
   tabPhone: i18nKeys.PAGE_LOGIN_TAB_PHONE,
   tabEmail: i18nKeys.PAGE_LOGIN_TAB_EMAIL,
+  env: i18nKeys.PAGE_LOGIN_ENV,
   ctxSub: i18nKeys.PAGE_LOGIN_CTX_SUB,
   ctxPill: i18nKeys.PAGE_LOGIN_CTX_PILL,
 

@@ -2503,6 +2503,69 @@ button.brain-chip {
   color: rgb(var(--fe-color-tertiary-text));
 }
 
+.brain-rule.domain {
+  grid-template-columns: 1fr 2fr auto;
+}
+
+.brain-rule.endpoint {
+  grid-template-columns: 1fr 120px 2fr auto;
+}
+
+.brain-rule-full {
+  grid-column: 1 / -1;
+}
+
+.brain-rule .brain-settings-group {
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.brain-rule .brain-settings-group > summary {
+  font-size: 13px;
+}
+
+.brain-rule-key {
+  align-self: center;
+  font-size: 13px;
+  color: rgb(var(--fe-color-secondary-text));
+  overflow-wrap: anywhere;
+}
+
+.brain-settings-group {
+  margin-top: 28px;
+}
+
+.brain-settings-group > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: rgb(var(--fe-color-primary-text));
+}
+
+.brain-settings-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.brain-settings-group > summary svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.brain-settings-group[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 640px) {
+  .brain-rule.domain,
+  .brain-rule.endpoint {
+    grid-template-columns: 1fr;
+  }
+}
+
 .brain-settings-foot {
   display: flex;
   flex-wrap: wrap;

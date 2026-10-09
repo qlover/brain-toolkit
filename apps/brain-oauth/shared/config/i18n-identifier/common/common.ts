@@ -189,6 +189,13 @@ export const COMMON_HEADER_LOGIN = 'common:header__login';
 export const COMMON_HEADER_CONSOLE = 'common:header__console';
 
 /**
+ * @description Brain OAuth portal — Brain env the signed-in user logged in with
+ * @localZh 登录环境
+ * @localEn Sign-in environment
+ */
+export const COMMON_HEADER_LOGIN_ENV = 'common:header__login_env';
+
+/**
  * @description Brain OAuth portal — product name (logo title)
  * @localZh Brain OAuth
  * @localEn Brain OAuth

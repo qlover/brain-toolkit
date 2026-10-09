@@ -21,13 +21,20 @@ create table if not exists public.brain_oauth_users (
   phone text,
   name text,
   extra jsonb,
+  brain_env text not null default 'development',
   last_login_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-create unique index if not exists brain_oauth_users_email_key
-  on public.brain_oauth_users (lower(email))
+-- Existing DB: per-env users (see section 6).
+alter table public.brain_oauth_users
+  add column if not exists brain_env text not null default 'development';
+
+drop index if exists public.brain_oauth_users_email_key;
+
+create unique index if not exists brain_oauth_users_env_email_key
+  on public.brain_oauth_users (brain_env, lower(email))
   where email is not null;
 
 comment on table public.brain_oauth_users is
@@ -115,14 +122,27 @@ end $$;
 create table if not exists public.brain_oauth_user_links (
   user_id uuid primary key references public.brain_oauth_users (id) on delete cascade,
   provider text not null default 'brain',
+  brain_env text not null default 'development',
   external_user_id text not null,
   extra jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (provider, external_user_id)
+  constraint brain_oauth_user_links_provider_env_external_key
+    unique (provider, brain_env, external_user_id)
 );
 
+-- Existing DB: per-env links (see section 6). Rows from the interim
+-- `brain:<env>` provider encoding move into the column.
+alter table public.brain_oauth_user_links
+  add column if not exists brain_env text not null default 'development';
+
+update public.brain_oauth_user_links
+set brain_env = substring(provider from 7), provider = 'brain', updated_at = now()
+where provider like 'brain:%';
+
 do $$
+declare
+  uq record;
 begin
   if not exists (
     select 1 from pg_constraint
@@ -133,18 +153,29 @@ begin
       foreign key (user_id) references public.brain_oauth_users (id) on delete cascade;
   end if;
 
+  for uq in
+    select conname from pg_constraint
+    where conrelid = 'public.brain_oauth_user_links'::regclass and contype = 'u'
+      and conname <> 'brain_oauth_user_links_provider_env_external_key'
+  loop
+    execute format(
+      'alter table public.brain_oauth_user_links drop constraint %I',
+      uq.conname
+    );
+  end loop;
+
   if not exists (
     select 1 from pg_constraint
-    where conrelid = 'public.brain_oauth_user_links'::regclass and contype = 'u'
+    where conrelid = 'public.brain_oauth_user_links'::regclass
+      and conname = 'brain_oauth_user_links_provider_env_external_key'
   ) then
     alter table public.brain_oauth_user_links
-      add constraint brain_oauth_user_links_provider_external_user_id_key
-      unique (provider, external_user_id);
+      add constraint brain_oauth_user_links_provider_env_external_key
+      unique (provider, brain_env, external_user_id);
   end if;
 end $$;
 
-create index if not exists idx_brain_oauth_user_links_external
-  on public.brain_oauth_user_links (provider, external_user_id);
+drop index if exists public.idx_brain_oauth_user_links_external;
 
 comment on table public.brain_oauth_user_links is
   'Maps upstream IdP user ids to brain_oauth_users ids; optional extra profile JSON.';
@@ -216,7 +247,7 @@ create table if not exists public.brain_oauth_refresh_tokens (
 create index if not exists idx_brain_oauth_refresh_tokens_client_user
   on public.brain_oauth_refresh_tokens (client_id, user_id);
 
-comment on column public.brain_oauth_refresh_tokens.refresh_token is 'Encrypted Brain refresh_token issued to the third-party client.';
+comment on column public.brain_oauth_refresh_tokens.refresh_token is 'sha256 (hex) of the wrapper-issued refresh_token given to the third-party client.';
 
 alter table public.brain_oauth_refresh_tokens enable row level security;
 
@@ -265,21 +296,21 @@ end $$;
 update public.brain_oauth_clients c
 set owner_user_id = l.user_id::text, updated_at = now()
 from public.brain_oauth_user_links l
-where l.provider = 'brain'
+where l.provider = 'brain' and l.brain_env = 'development'
   and c.owner_user_id = l.external_user_id
   and c.owner_user_id <> l.user_id::text;
 
 update public.brain_oauth_authorization_codes a
 set user_id = l.user_id::text
 from public.brain_oauth_user_links l
-where l.provider = 'brain'
+where l.provider = 'brain' and l.brain_env = 'development'
   and a.user_id = l.external_user_id
   and a.user_id <> l.user_id::text;
 
 update public.brain_oauth_refresh_tokens r
 set user_id = l.user_id::text
 from public.brain_oauth_user_links l
-where l.provider = 'brain'
+where l.provider = 'brain' and l.brain_env = 'development'
   and r.user_id = l.external_user_id
   and r.user_id <> l.user_id::text;
 
@@ -289,13 +320,14 @@ insert into public.brain_oauth_user_credentials (
 select l.user_id::text, c.provider_refresh_token, c.provider_session_token, now()
 from public.brain_oauth_user_credentials c
 join public.brain_oauth_user_links l
-  on l.provider = 'brain' and c.user_id = l.external_user_id
+  on l.provider = 'brain' and l.brain_env = 'development'
+  and c.user_id = l.external_user_id
 where c.user_id <> l.user_id::text
 on conflict (user_id) do nothing;
 
 delete from public.brain_oauth_user_credentials c
 using public.brain_oauth_user_links l
-where l.provider = 'brain'
+where l.provider = 'brain' and l.brain_env = 'development'
   and c.user_id = l.external_user_id
   and c.user_id <> l.user_id::text;
 
@@ -385,3 +417,31 @@ comment on table public.brain_oauth_site_settings is
   'Runtime site settings. Missing keys are seeded by the app; edit via Admin → Site settings.';
 
 alter table public.brain_oauth_site_settings enable row level security;
+
+
+-- #############################################################################
+-- 6) Login env (Brain API environment chosen on the login page)
+-- #############################################################################
+-- Brain user ids are per env: each env has its own local users and links
+-- (brain_env on both tables). Rows created earlier keep development.
+
+comment on column public.brain_oauth_users.brain_env is
+  'Brain API env the user signed in with; emails are unique per env.';
+comment on column public.brain_oauth_user_links.brain_env is
+  'Brain API env of external_user_id; ids are unique per env.';
+
+create table if not exists public.brain_oauth_access_token_envs (
+  token_hash text primary key,
+  user_id text not null,
+  brain_env text not null,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_brain_oauth_access_token_envs_expires
+  on public.brain_oauth_access_token_envs (expires_at);
+
+comment on table public.brain_oauth_access_token_envs is
+  'sha256 (hex) of Brain access tokens issued via /oauth/token → env, so /oauth/userinfo calls the right Brain env.';
+
+alter table public.brain_oauth_access_token_envs enable row level security;

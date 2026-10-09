@@ -26,6 +26,7 @@ import {
 } from '@config/i18n-mapping/admin18n';
 import { I } from '@config/ioc-identifiter';
 import { SITE_SETTING_KEYS } from '@config/siteSettings';
+import { AdminBrainApiCard } from './AdminBrainApiCard';
 import type { DialogHandler } from '@qlover/next-kit/client';
 
 const CORS_KEY = SITE_SETTING_KEYS.API_CORS_RULES;
@@ -152,163 +153,168 @@ export function AdminSettingsView() {
           <span className="brain-spinner" aria-hidden />
         </div>
       ) : (
-        <div className="brain-card flat">
-          <h2 className="brain-card-title mb-1.5">{tt.sectionApi}</h2>
-          <p className="brain-sub mb-[22px] mt-0 leading-[1.7]">
-            {tt.sectionApiDesc}
-          </p>
+        <div className="flex flex-col gap-5">
+          <div className="brain-card flat">
+            <h2 className="brain-card-title mb-1.5">{tt.sectionApi}</h2>
+            <p className="brain-sub mb-[22px] mt-0 leading-[1.7]">
+              {tt.sectionApiDesc}
+            </p>
 
-          <div className="brain-setting-row">
-            <span>{tt.corsRules}</span>
-            <span className="brain-pill sm purple">
-              {corsEntry?.source === 'db' ? tt.sourceDb : tt.sourceDefault}
-            </span>
-          </div>
+            <div className="brain-setting-row">
+              <span>{tt.corsRules}</span>
+              <span className="brain-pill sm purple">
+                {corsEntry?.source === 'db' ? tt.sourceDb : tt.sourceDefault}
+              </span>
+            </div>
 
-          {rules.length === 0 ? (
-            <div className="brain-rules-empty">{tt.corsEmpty}</div>
-          ) : (
-            <div className="brain-rules">
-              {rules.map((rule, index) => {
-                const issue = issues[index];
-                const originAny = rule.origin.trim() === '*';
-                const pathAny = rule.path.trim() === '*';
-                const errors = [
-                  issue.origin && tt.corsOriginInvalid,
-                  issue.path && tt.corsPathInvalid,
-                  issue.methods && tt.corsMethodsEmpty,
-                  issue.duplicate && tt.corsDuplicate
-                ].filter(Boolean) as string[];
-                return (
-                  <div
-                    key={index}
-                    data-testid="AdminCorsRule"
-                    className="brain-inner-card brain-rule"
-                  >
-                    <BrainField
-                      id={`cors-origin-${index}`}
-                      label={tt.corsOrigin}
-                      value={originAny ? '' : rule.origin}
-                      placeholder={
-                        originAny ? tt.corsAny : 'https://spa.example.com'
-                      }
-                      disabled={originAny}
-                      invalid={issue.origin || issue.duplicate}
-                      onChange={(event) =>
-                        updateRule(index, { origin: event.target.value })
-                      }
-                      action={
-                        <button
-                          type="button"
-                          className="brain-chip toggle mono"
-                          aria-pressed={originAny}
-                          aria-label={`${tt.corsOrigin} *`}
-                          onClick={() =>
-                            updateRule(index, { origin: originAny ? '' : '*' })
-                          }
-                        >
-                          *
-                        </button>
-                      }
-                    />
-                    <BrainField
-                      id={`cors-path-${index}`}
-                      label={tt.corsPath}
-                      value={pathAny ? '' : rule.path}
-                      placeholder={pathAny ? tt.corsAny : '/oauth/token'}
-                      disabled={pathAny}
-                      invalid={issue.path || issue.duplicate}
-                      onChange={(event) =>
-                        updateRule(index, { path: event.target.value })
-                      }
-                      action={
-                        <button
-                          type="button"
-                          className="brain-chip toggle mono"
-                          aria-pressed={pathAny}
-                          aria-label={`${tt.corsPath} *`}
-                          onClick={() =>
-                            updateRule(index, { path: pathAny ? '' : '*' })
-                          }
-                        >
-                          *
-                        </button>
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="brain-link danger mb-3"
-                      onClick={() =>
-                        setDraft(rules.filter((_, i) => i !== index))
-                      }
-                    >
-                      <TrashIcon aria-hidden />
-                      {tt.corsRemove}
-                    </button>
+            {rules.length === 0 ? (
+              <div className="brain-rules-empty">{tt.corsEmpty}</div>
+            ) : (
+              <div className="brain-rules">
+                {rules.map((rule, index) => {
+                  const issue = issues[index];
+                  const originAny = rule.origin.trim() === '*';
+                  const pathAny = rule.path.trim() === '*';
+                  const errors = [
+                    issue.origin && tt.corsOriginInvalid,
+                    issue.path && tt.corsPathInvalid,
+                    issue.methods && tt.corsMethodsEmpty,
+                    issue.duplicate && tt.corsDuplicate
+                  ].filter(Boolean) as string[];
+                  return (
                     <div
-                      className="brain-rule-methods"
-                      role="group"
-                      aria-label={tt.corsMethods}
+                      key={index}
+                      data-testid="AdminCorsRule"
+                      className="brain-inner-card brain-rule"
                     >
-                      <span>{tt.corsMethods}</span>
-                      {[...METHODS, '*'].map((method) => (
-                        <button
+                      <BrainField
+                        id={`cors-origin-${index}`}
+                        label={tt.corsOrigin}
+                        value={originAny ? '' : rule.origin}
+                        placeholder={
+                          originAny ? tt.corsAny : 'https://spa.example.com'
+                        }
+                        disabled={originAny}
+                        invalid={issue.origin || issue.duplicate}
+                        onChange={(event) =>
+                          updateRule(index, { origin: event.target.value })
+                        }
+                        action={
+                          <button
+                            type="button"
+                            className="brain-chip toggle mono"
+                            aria-pressed={originAny}
+                            aria-label={`${tt.corsOrigin} *`}
+                            onClick={() =>
+                              updateRule(index, {
+                                origin: originAny ? '' : '*'
+                              })
+                            }
+                          >
+                            *
+                          </button>
+                        }
+                      />
+                      <BrainField
+                        id={`cors-path-${index}`}
+                        label={tt.corsPath}
+                        value={pathAny ? '' : rule.path}
+                        placeholder={pathAny ? tt.corsAny : '/oauth/token'}
+                        disabled={pathAny}
+                        invalid={issue.path || issue.duplicate}
+                        onChange={(event) =>
+                          updateRule(index, { path: event.target.value })
+                        }
+                        action={
+                          <button
+                            type="button"
+                            className="brain-chip toggle mono"
+                            aria-pressed={pathAny}
+                            aria-label={`${tt.corsPath} *`}
+                            onClick={() =>
+                              updateRule(index, { path: pathAny ? '' : '*' })
+                            }
+                          >
+                            *
+                          </button>
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="brain-link danger mb-3"
+                        onClick={() =>
+                          setDraft(rules.filter((_, i) => i !== index))
+                        }
+                      >
+                        <TrashIcon aria-hidden />
+                        {tt.corsRemove}
+                      </button>
+                      <div
+                        className="brain-rule-methods"
+                        role="group"
+                        aria-label={tt.corsMethods}
+                      >
+                        <span>{tt.corsMethods}</span>
+                        {[...METHODS, '*'].map((method) => (
+                          <button
+                            data-testid="AdminSettingsView"
+                            key={method}
+                            type="button"
+                            className="brain-chip toggle mono"
+                            aria-pressed={rule.methods.includes(method)}
+                            onClick={() =>
+                              updateRule(index, {
+                                methods: toggleMethod(rule.methods, method)
+                              })
+                            }
+                          >
+                            {method}
+                          </button>
+                        ))}
+                      </div>
+                      {errors.map((message) => (
+                        <div
                           data-testid="AdminSettingsView"
-                          key={method}
-                          type="button"
-                          className="brain-chip toggle mono"
-                          aria-pressed={rule.methods.includes(method)}
-                          onClick={() =>
-                            updateRule(index, {
-                              methods: toggleMethod(rule.methods, method)
-                            })
-                          }
+                          key={message}
+                          className="brain-rule-err"
                         >
-                          {method}
-                        </button>
+                          {message}
+                        </div>
                       ))}
                     </div>
-                    {errors.map((message) => (
-                      <div
-                        data-testid="AdminSettingsView"
-                        key={message}
-                        className="brain-rule-err"
-                      >
-                        {message}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
 
-          <div className="brain-settings-foot">
-            <BrainButton
-              type="button"
-              variant="ghost"
-              size="sm"
-              auto
-              onClick={() =>
-                setDraft([
-                  ...rules,
-                  { origin: '', path: '', methods: ['POST'] }
-                ])
-              }
-            >
-              <PlusIcon className="h-4 w-4" aria-hidden />
-              {tt.corsAdd}
-            </BrainButton>
-            <BrainButton
-              type="button"
-              size="sm"
-              auto
-              loading={saving}
-              onClick={() => void save()}
-            >
-              {tt.save}
-            </BrainButton>
+            <div className="brain-settings-foot">
+              <BrainButton
+                type="button"
+                variant="ghost"
+                size="sm"
+                auto
+                onClick={() =>
+                  setDraft([
+                    ...rules,
+                    { origin: '', path: '', methods: ['POST'] }
+                  ])
+                }
+              >
+                <PlusIcon className="h-4 w-4" aria-hidden />
+                {tt.corsAdd}
+              </BrainButton>
+              <BrainButton
+                type="button"
+                size="sm"
+                auto
+                loading={saving}
+                onClick={() => void save()}
+              >
+                {tt.save}
+              </BrainButton>
+            </div>
           </div>
+          <AdminBrainApiCard rows={rows} onSaved={setRows} />
         </div>
       )}
     </div>

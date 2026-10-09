@@ -133,7 +133,31 @@ export const adminSettings18n = Object.freeze({
   corsPathInvalid: settingsKeys.ADMIN_SETTINGS_CORS_PATH_INVALID,
   corsMethodsEmpty: settingsKeys.ADMIN_SETTINGS_CORS_METHODS_EMPTY,
   corsDuplicate: settingsKeys.ADMIN_SETTINGS_CORS_DUPLICATE,
-  corsFixErrors: settingsKeys.ADMIN_SETTINGS_CORS_FIX_ERRORS
+  corsFixErrors: settingsKeys.ADMIN_SETTINGS_CORS_FIX_ERRORS,
+  sectionBrain: settingsKeys.ADMIN_SETTINGS_SECTION_BRAIN,
+  sectionBrainDesc: settingsKeys.ADMIN_SETTINGS_SECTION_BRAIN_DESC,
+  brainEnv: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV,
+  brainDomains: settingsKeys.ADMIN_SETTINGS_BRAIN_DOMAINS,
+  brainDomainName: settingsKeys.ADMIN_SETTINGS_BRAIN_DOMAIN_NAME,
+  brainDomainUrl: settingsKeys.ADMIN_SETTINGS_BRAIN_DOMAIN_URL,
+  brainDomainAdd: settingsKeys.ADMIN_SETTINGS_BRAIN_DOMAIN_ADD,
+  brainDomainRemove: settingsKeys.ADMIN_SETTINGS_BRAIN_DOMAIN_REMOVE,
+  brainPreset: settingsKeys.ADMIN_SETTINGS_BRAIN_PRESET,
+  brainUserly: settingsKeys.ADMIN_SETTINGS_BRAIN_USERLY,
+  brainUserlyHelp: settingsKeys.ADMIN_SETTINGS_BRAIN_USERLY_HELP,
+  brainEnvPaths: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV_PATHS,
+  brainEnvPathsDesc: settingsKeys.ADMIN_SETTINGS_BRAIN_ENV_PATHS_DESC,
+  brainEndpoints: settingsKeys.ADMIN_SETTINGS_BRAIN_ENDPOINTS,
+  brainEndpointsDesc: settingsKeys.ADMIN_SETTINGS_BRAIN_ENDPOINTS_DESC,
+  brainModified: settingsKeys.ADMIN_SETTINGS_BRAIN_MODIFIED,
+  brainReset: settingsKeys.ADMIN_SETTINGS_BRAIN_RESET,
+  brainResetAll: settingsKeys.ADMIN_SETTINGS_BRAIN_RESET_ALL,
+  brainUrlInvalid: settingsKeys.ADMIN_SETTINGS_BRAIN_URL_INVALID,
+  brainNameInvalid: settingsKeys.ADMIN_SETTINGS_BRAIN_NAME_INVALID,
+  brainPathInvalid: settingsKeys.ADMIN_SETTINGS_BRAIN_PATH_INVALID,
+  brainConfigInvalid: settingsKeys.ADMIN_SETTINGS_BRAIN_CONFIG_INVALID,
+  brainEffective: settingsKeys.ADMIN_SETTINGS_BRAIN_EFFECTIVE,
+  brainUserlyEffective: settingsKeys.ADMIN_SETTINGS_BRAIN_USERLY_EFFECTIVE
 });
 
 export type AdminSettingsI18nInterface = typeof adminSettings18n;
