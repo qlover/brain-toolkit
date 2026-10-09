@@ -1,5 +1,24 @@
 # pamenv-cli
 
+## 1.11.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** pull/push 按键三方合并，冲突时 pull 默认远端、push 默认本地 ([ee4e49f](https://github.com/qlover/brain-toolkit/commit/ee4e49f2cb24d3140b6a0a2ebf1c7be072586791)) ([#173](https://github.com/qlover/brain-toolkit/pull/173))
+  - 以同步基线逐键合并：只有一边改过的键自动采用该边，两边都改才算冲突
+  - 冲突时列出冲突键并选择（pull 默认远端值，push 默认本地值，可改选或取消），
+    之后提示手动编辑本地文件再 push；-f 直接按默认一边处理
+  - pull 保留本地未推送的修改并提示；push 把远端单独改过的键合并进本地文件，
+    不再整份覆盖远端
+  - 无基线时所有不同的键都按冲突处理
+
+- **pamenv:** --help 描述跟随 locale 显示中英文 ([2fd6e94](https://github.com/qlover/brain-toolkit/commit/2fd6e94a31f3a54745c4b18f08a713b56c7cb973)) ([#173](https://github.com/qlover/brain-toolkit/pull/173))
+  - 命令、参数、选项描述及 Usage / Options 等标题改为 i18n（pamenv_cli_help）
+  - 注册命令前先读取配置的 locale（仅识别 --local，不请求 PAM），
+    使 --help 也按当前语言显示
+
 ## 1.10.0
 
 ### Minor Changes

@@ -1,5 +1,144 @@
 # pam
 
+## 2.14.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/01-next-app-kit-pam：
+  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
+  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+
+- **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/02-brain-oauth-local-users：
+  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
+  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+
+- **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
+
+  squash 自 split/03-next-app-kit-settings-perms：
+  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
+  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+
+- **pam:** 新增更新日志页，渲染 CHANGELOG.md ([95543bc](https://github.com/qlover/brain-toolkit/commit/95543bc0c53e2af51d33f3be3440fe5264a30f97)) ([#168](https://github.com/qlover/brain-toolkit/pull/168))
+  - 新增 /changelog，构建时读取 CHANGELOG.md 按版本拆分，最近 3 个版本默认展开
+  - 首页与登录页的版本号链接到更新日志页
+  - CLI 文档页的 Markdown 样式抽为 docsMarkdownComponents 复用
+
+- **pam:** 补全 About 页面内容 ([4fb07ec](https://github.com/qlover/brain-toolkit/commit/4fb07ecc126d50fb55adea7971dad86976b94a77)) ([#168](https://github.com/qlover/brain-toolkit/pull/168))
+  - 项目简介、核心能力、当前版本与 GitHub 入口
+  - 最近更新：构建时从 CHANGELOG.md 摘取最近 3 个版本的新功能与修复
+
+- **pam:** 新增独立邮件服务，支持邮件找回密码与改密通知 ([215b300](https://github.com/qlover/brain-toolkit/commit/215b30067d0aa382389691c5ea0bd1351222f0dc)) ([#167](https://github.com/qlover/brain-toolkit/pull/167))
+
+  邮件服务独立于 Supabase Auth 邮件，面向接口实现：
+  - MailProviderInterface + ResendMailProvider / MemoryMailProvider，
+    由站点设置 mail.provider（disabled | memory | resend）切换
+  - MailService 负责发件人配置、模板渲染（zh/en）与 pam_mail_logs 审计
+  - 后台：站点设置新增「邮件服务」分组与测试邮件按钮、邮件记录页；
+    新增权限 admin_mail_logs_read / admin_mail_test
+
+  忘记密码（链接方式）：
+  - /auth/forgot-password 与 /auth/reset-password 页面，登录页按开关展示入口
+  - 令牌仅存 SHA-256，30 分钟有效、单次使用；接口响应不暴露邮箱是否存在，
+    按 IP 与邮箱限流
+  - 重置成功后撤销所有会话：pam_users.sessions_revoked_at 作废旧
+    pam_session，吊销 CLI Token、OAuth refresh token 与 Supabase 会话
+
+  修改 / 重置密码成功后按开关发送安全通知邮件，发送失败不影响结果。
+
+  已有库需执行 makes/sql/patch-mail-service.sql。
+
+- **pam:** 忘记密码页预填登录页已输入的邮箱 ([fb29bff](https://github.com/qlover/brain-toolkit/commit/fb29bff5c538d9984e929e27ceb5e02be92a626a)) ([#167](https://github.com/qlover/brain-toolkit/pull/167))
+
+  登录页跳转忘记密码时通过 ?email= 带上邮箱，忘记密码表单读取后预填。
+
+- **pam:** 后台邮件记录菜单增加图标 ([536a4a8](https://github.com/qlover/brain-toolkit/commit/536a4a8661f438996738a93fc6d037ea89f9d43f)) ([#167](https://github.com/qlover/brain-toolkit/pull/167))
+
+- **pam:** 后台权限菜单改用独立图标 ([77bcb95](https://github.com/qlover/brain-toolkit/commit/77bcb95b00449cc61aa018695659271618aa3f71)) ([#167](https://github.com/qlover/brain-toolkit/pull/167))
+
+- **pam:** 头部新增 GitHub 仓库入口 ([906d644](https://github.com/qlover/brain-toolkit/commit/906d64474bc5938fee26b90365803f2a61b28ff1)) ([#167](https://github.com/qlover/brain-toolkit/pull/167))
+
+  仓库地址取自 package.json 的 repository.url，点击在新标签页打开。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 对接最新 brain-oauth userinfo，登录后撤销 refresh token ([934b286](https://github.com/qlover/brain-toolkit/commit/934b286b25f3dcf67bff95bc0e9bb573b88ed511)) ([#172](https://github.com/qlover/brain-toolkit/pull/172))
+  - 读取 name / phone_number：新账号写入显示名和手机号，已有账号只补空缺；
+    手机号已被其他 PAM 账号占用时跳过（pam_users.phone 唯一）
+  - 无邮箱的 Brain 账号不再把 @brain.oauth 占位邮箱写入 pam_users，
+    toBusinessEmail 同时过滤该占位后缀
+  - 登录拿到 userinfo 后撤销 Brain refresh token，避免残留 90 天有效 token
+  - userinfo 失败时透传 error_description；site_url 去掉末尾斜杠
+  - 删除未使用的 BRAIN*OAUTH*\* 环境变量（配置只从站点设置读取）
+  - 手机号 E.164 规范化移入 pamUserIdentity，Brain 登录与短信登录共用
+
+- **pam:** 对接最新 brain-oauth userinfo，登录后撤销 refresh token ([934b286](https://github.com/qlover/brain-toolkit/commit/934b286b25f3dcf67bff95bc0e9bb573b88ed511)) ([#172](https://github.com/qlover/brain-toolkit/pull/172))
+  - 读取 name / phone_number：新账号写入显示名和手机号，已有账号只补空缺；
+    手机号已被其他 PAM 账号占用时跳过（pam_users.phone 唯一）
+  - 无邮箱的 Brain 账号不再把 @brain.oauth 占位邮箱写入 pam_users，
+    toBusinessEmail 同时过滤该占位后缀
+  - 登录拿到 userinfo 后撤销 Brain refresh token，避免残留 90 天有效 token
+  - userinfo 失败时透传 error_description；site_url 去掉末尾斜杠
+  - 删除未使用的 BRAIN*OAUTH*\* 环境变量（配置只从站点设置读取）
+  - 手机号 E.164 规范化移入 pamUserIdentity，Brain 登录与短信登录共用
+
+#### 📝 Documentation
+
+- **pam:** 按现有功能重写中英文 README ([4a737b2](https://github.com/qlover/brain-toolkit/commit/4a737b24936aa61aed62b7689a0191f8688a67d5)) ([#173](https://github.com/qlover/brain-toolkit/pull/173))
+
+  旧 README 仍描述早期 oauth-wrapper 示例（端口 3102、BrainUserAdapter
+  等已不存在）。改为介绍项目与环境、团队权限、pamenv、登录方式、
+  OAuth 授权服务与管理后台，补充快速开始、站点设置与 Brain OAuth 登录。
+
+- **changelog:** 修复 squash 提交列表中文乱码 ([a097df8](https://github.com/qlover/brain-toolkit/commit/a097df82d8006fc76fe1f240fed7338d05f68141)) ([#171](https://github.com/qlover/brain-toolkit/pull/171))
+
+  按 split/\* 原始提交标题重建 "squash 自 split/..." 下的列表。
+
+- **changelog:** 修复 squash 提交列表中文乱码 ([a097df8](https://github.com/qlover/brain-toolkit/commit/a097df82d8006fc76fe1f240fed7338d05f68141)) ([#171](https://github.com/qlover/brain-toolkit/pull/171))
+
+  按 split/\* 原始提交标题重建 "squash 自 split/..." 下的列表。
+
 ## 2.13.0
 
 ### Minor Changes
