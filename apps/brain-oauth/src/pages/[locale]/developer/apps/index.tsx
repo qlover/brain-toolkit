@@ -55,7 +55,6 @@ export default function DeveloperApps({ initialApps }: DeveloperAppsProps) {
       }
       showAdminButton={false}
       showAuthButton
-      authShowLogout
     >
       <ClientSeo i18nInterface={seoMetadata} />
       <BrainScene quiet />
