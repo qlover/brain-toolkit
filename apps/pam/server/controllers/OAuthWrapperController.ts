@@ -1,3 +1,4 @@
+import { isTrustedAllow } from '@brain-toolkit/next-app-kit/server';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { Base64Serializer } from '@qlover/fe-corekit/serializer';
 import {
@@ -26,11 +27,6 @@ import type {
   OAuthConsentResult,
   OAuthTokenRequest
 } from '@qlover/oauth-wrapper';
-
-function isTrustedAllow(requestBody: unknown): boolean {
-  const body = requestBody as { action?: unknown; trust?: unknown } | null;
-  return body?.action === 'allow' && body.trust === true;
-}
 
 @injectable()
 export class OAuthWrapperController {

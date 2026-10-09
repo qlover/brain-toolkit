@@ -1,4 +1,6 @@
+import { buildSwitchAccountHref } from '@brain-toolkit/next-app-kit/shared';
 import { PageI18nProvider } from '@qlover/next-kit/client';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { OAuthAuthorizeCard } from '@/uikit/components-app/oauth/OAuthAuthorizeCard';
@@ -9,6 +11,7 @@ import {
   oauthAuthorizeI18nNamespace,
   resolveAuthorizeErrorMessage
 } from '@config/i18n-mapping/OAuthAuthorizeI18n';
+import { localePage, ROUTE_LOGIN, ROUTE_OAUTH_AUTHORIZE } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import { BootstrapServer } from '@server/BootstrapServer';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
@@ -51,6 +54,25 @@ export default async function OAuthAuthorizePage(
   const authorizeResult =
     await oauthContoller.resolveAuthorizePage(rawSearchParams);
 
+  if (authorizeResult.ok) {
+    const trustedRedirect = await oauthContoller.tryAutoConsent(
+      authorizeResult.data
+    );
+    if (trustedRedirect) {
+      redirect(trustedRedirect);
+    }
+  }
+
+  const account = authorizeResult.ok
+    ? await oauthContoller.getAuthorizingUser()
+    : null;
+  const locale = pageParams.getLocale();
+  const switchAccountHref = buildSwitchAccountHref(
+    localePage(ROUTE_LOGIN, locale),
+    localePage(ROUTE_OAUTH_AUTHORIZE, locale),
+    rawSearchParams
+  );
+
   return (
     <PageI18nProvider value={tt}>
       <AppRoutePage
@@ -65,6 +87,16 @@ export default async function OAuthAuthorizePage(
                 <OAuthAuthorizeCard
                   tt={tt}
                   authorizeData={authorizeResult.data}
+                  account={
+                    account
+                      ? {
+                          name: account.name,
+                          email: account.email,
+                          phone: account.phone
+                        }
+                      : null
+                  }
+                  switchAccountHref={switchAccountHref}
                 />
               </Suspense>
             ) : (

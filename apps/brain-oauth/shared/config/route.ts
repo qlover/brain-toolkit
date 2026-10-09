@@ -29,6 +29,11 @@ export const ROUTE_ADMIN_USERS = '/admin/users' as const;
  */
 export const ROUTE_REQUEST_LOGS = '/admin/request-logs' as const;
 
+/**
+ * Admin site settings (CORS etc.). Pages Router: `src/pages/[locale]/admin/settings.tsx`.
+ */
+export const ROUTE_ADMIN_SETTINGS = '/admin/settings' as const;
+
 export const ROUTE_HOME = '/' as const;
 
 /** Developer console app list (PRD default post-login redirect). */
@@ -86,12 +91,29 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN,
   ROUTE_ADMIN_USERS,
   ROUTE_REQUEST_LOGS,
+  ROUTE_ADMIN_SETTINGS,
   ROUTE_DEVELOPER_APPS,
   ROUTE_OAUTH_PLAYGROUND,
   // Consent requires an app session; gate here so unauthenticated users
   // are sent to login with `?redirect=<full authorize URL>` via redirect.
   ROUTE_OAUTH_AUTHORIZE
 ] as const;
+
+/**
+ * Session pages that additionally require a Brain admin account.
+ * `/admin` and the personal request log stay open to every logged-in user.
+ */
+export const ADMIN_ONLY_PAGES = [
+  ROUTE_ADMIN_USERS,
+  ROUTE_ADMIN_SETTINGS
+] as const;
+
+export function isAdminOnlyPath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '');
+  return ADMIN_ONLY_PAGES.some(
+    (route) => normalized === route || normalized.endsWith(route)
+  );
+}
 
 /**
  * Returns true if pathname is an OAuth machine endpoint (token, userinfo, etc.).
@@ -128,6 +150,11 @@ export function hasSessionPath(pathname: string): boolean {
   return LOGINED_PAGES.some(
     (route) => pathname === route || pathname.endsWith(route)
   );
+}
+
+/** Prefixes a page route with the `[locale]` segment. */
+export function localePage(route: string, locale: string): string {
+  return `/${locale}${route}`;
 }
 
 export function apiClientDetail<T extends string>(

@@ -38,7 +38,10 @@ export class UserScopedRequestLogsRepository extends RequestLogsRepository {
   /**
    * Search rows owned by `userId`; caller-provided `where` is discarded.
    */
-  public searchForUser(userId: string, criteria: ResourceSearchParams) {
+  public searchForUser(
+    userId: string,
+    criteria: ResourceSearchParams
+  ): ReturnType<RequestLogsRepository['search']> {
     return this.search({
       ...criteria,
       where: [['user_id', Operators.eq, userId]]

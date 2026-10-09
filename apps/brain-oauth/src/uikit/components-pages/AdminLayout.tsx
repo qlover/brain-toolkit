@@ -5,11 +5,13 @@ import { ClientSeo } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import { usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { isBrainAdminUser } from '@shared/auth/brainAdmin';
 import type { NavItemInterface } from '@config/adminNavs';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { LocaleLink } from '../components/LocaleLink';
 import { ThemeSwitcher } from '../components-app/ThemeSwitcher';
+import { useUserAuth } from '../hook/useUserAuth';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 import type { PageI18nInterface } from '@qlover/next-kit/common';
 
@@ -46,6 +48,12 @@ export function AdminLayout({
   const pathname = usePathname();
   const locale = useLocale();
   const t = useWarnTranslations();
+  const { user } = useUserAuth();
+  const isAdmin = isBrainAdminUser(user);
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => !item.adminOnly || isAdmin),
+    [navItems, isAdmin]
+  );
 
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const isControlled = controlledCollapsed !== undefined;
@@ -121,7 +129,7 @@ export function AdminLayout({
           style={{ width: sidebarWidth }}
         >
           <nav className="flex flex-col py-2 overflow-y-auto">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const active = isActive(item);
               const href = linkHref(item);
               const label = t(item.i18nKey);
