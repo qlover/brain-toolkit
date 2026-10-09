@@ -9,7 +9,7 @@
 - **brain-user:** HTTP status >= 400 统一返回 BrainUserHttpError ([56790aa](https://github.com/qlover/brain-toolkit/commit/56790aade2b598647df5633b2690cd829b114716)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/07-brain-user-http-error：
-  - fix(brain-user): HTTP status >= 400 缁熶竴杩斿洖 BrainUserHttpError
+  - fix(brain-user): HTTP status >= 400 统一返回 BrainUserHttpError
 
 ## 0.2.5
 

@@ -9,56 +9,62 @@
 - **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/01-next-app-kit-pam：
-  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
-  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
 
 - **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/02-brain-oauth-local-users：
-  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
-  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
 
 - **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/03-next-app-kit-settings-perms：
-  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
-  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
 
 - **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/01-next-app-kit-pam：
-  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
-  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
 
 - **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/02-brain-oauth-local-users：
-  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
-  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
 
 - **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/03-next-app-kit-settings-perms：
-  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
-  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
 
 - **next-app-kit:** 新增公共包并迁移 pam ([8d68816](https://github.com/qlover/brain-toolkit/commit/8d6881642b4b9d16265dd282c3756b650b89a72f)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/01-next-app-kit-pam：
-  - feat(next-app-kit): 鏂板鍏叡鍖咃紝杩佸叆 PAM 閫氱敤宸ュ叿涓庣粍浠?- feat(pam): Brain 鐧诲綍鏀圭敤韬唤鍏宠仈琛紝涓嶅啀浠?sub 浣滀负鐢ㄦ埛 id
-  - fix(next-app-kit): 涓汉璇锋眰鏃ュ織浠呰繑鍥炲綋鍓嶇敤鎴风殑璁板綍
+  - feat(next-app-kit): 新增公共包，迁入 PAM 通用工具与组件
+  - feat(pam): Brain 登录改用身份关联表，不再以 sub 作为用户 id
+  - fix(next-app-kit): 个人请求日志仅返回当前用户的记录
 
 - **brain-oauth:** 独立用户表并合并 SQL 脚本 ([ecc97a3](https://github.com/qlover/brain-toolkit/commit/ecc97a398872d1cc2c968b55f6df2f446d4902e8)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/02-brain-oauth-local-users：
-  - feat(brain-oauth): 鐙珛鐢ㄦ埛琛?brain_oauth_users锛岀Щ闄?Supabase Auth 渚濊禆
-  - chore(sql): 姣忎釜搴旂敤鍚堝苟涓哄崟涓€ SQL 鑴氭湰
+  - feat(brain-oauth): 独立用户表 brain_oauth_users，移除 Supabase Auth 依赖
+  - chore(sql): 每个应用合并为单一 SQL 脚本
 
 - **next-app-kit:** 权限、授权记忆、站点设置与 CORS 入包 ([39ad235](https://github.com/qlover/brain-toolkit/commit/39ad2350fe059127c87679ea21b31524f6f2c00e)) ([#169](https://github.com/qlover/brain-toolkit/pull/169))
 
   squash 自 split/03-next-app-kit-settings-perms：
-  - feat(next-app-kit): 鏉冮檺浣撶郴鍏ュ寘锛宐rain-oauth 鍚庡彴鎸?Brain 绠＄悊鍛樻斁琛?- feat(next-app-kit): 鎸夎澶囪浣忔巿鏉冧笌鎺堟潈椤佃处鍙峰垏鎹㈠叆鍖咃紝鍚屾 brain-oauth
-  - feat(next-app-kit): 绔欑偣璁剧疆涓?CORS 鍏ュ寘锛宐rain-oauth 鏀寔鍚庡彴閰嶇疆 CORS
+  - feat(next-app-kit): 权限体系入包，brain-oauth 后台按 Brain 管理员放行
+  - feat(next-app-kit): 按设备记住授权与授权页账号切换入包，同步 brain-oauth
+  - feat(next-app-kit): 站点设置与 CORS 入包，brain-oauth 支持后台配置 CORS
 
 - **pam:** 新增更新日志页，渲染 CHANGELOG.md ([95543bc](https://github.com/qlover/brain-toolkit/commit/95543bc0c53e2af51d33f3be3440fe5264a30f97)) ([#168](https://github.com/qlover/brain-toolkit/pull/168))
   - 新增 /changelog，构建时读取 CHANGELOG.md 按版本拆分，最近 3 个版本默认展开
