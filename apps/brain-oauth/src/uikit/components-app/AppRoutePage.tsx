@@ -20,7 +20,6 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   showHeaderLogo?: boolean;
   mainProps?: HTMLAttributes<HTMLElement>;
   showAuthButton?: boolean;
-  authButtonLoginOnly?: boolean;
   /** Show text label on logout control (home header). */
   authButtonShowLogoutLabel?: boolean;
   /** Show docs/about/developer links in header (default true). Auth pages should set false. */
@@ -30,5 +29,14 @@ export interface AppRoutePageProps extends HTMLAttributes<HTMLDivElement> {
   headerNav?: ReactNode;
   /** Optional class for the header title text (e.g. brand color on console pages). */
   headerTitleClassName?: string;
+  /**
+   * See `RoutePageLayoutProps.headerVariant`. In `brain` mode the auth slot is
+   * `BrainAuthActions` and there is no default nav (pass `headerNav`).
+   */
+  headerVariant?: 'default' | 'brain';
+  /** `brain` header: console pill for signed-in users. */
+  authShowConsole?: boolean;
+  /** `brain` header: admin backend pill for Brain admins (default true). */
+  authShowAdmin?: boolean;
   tt: AppRoutePageTT;
 }

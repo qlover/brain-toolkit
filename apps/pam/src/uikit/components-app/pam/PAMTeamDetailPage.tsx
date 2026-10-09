@@ -1,5 +1,6 @@
 'use client';
 
+import { ResponsiveModal } from '@brain-toolkit/next-app-kit/client';
 import {
   runAsyncStore,
   usePendingAsyncStore,
@@ -17,7 +18,6 @@ import {
 } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
-import { ResponsiveModal } from '@/uikit/components/ResponsiveModal';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';

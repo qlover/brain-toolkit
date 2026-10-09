@@ -14,6 +14,7 @@ import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
 import { ServerConfig } from './ServerConfig';
 import { createServerIoc } from './serverIoc';
 import { NextApiHandler } from './utils/NextApiHandler';
+import { ServerContext } from './utils/ServerContext';
 import type { BrainOAuthServerIocMap } from './BootstrapServer';
 import type { SeedConfigInterface } from '@qlover/corekit-bridge/bootstrap';
 import type { ExecutorAsyncTask } from '@qlover/fe-corekit';
@@ -21,6 +22,13 @@ import type { NextKitApiResult } from '@qlover/next-kit/common';
 import type { ServerContextInterface } from '@qlover/next-kit/server';
 
 export type NextApiServerContext = ApiServerContext;
+
+function setServerTiming(response: NextResponse, started: number): void {
+  response.headers.set(
+    'Server-Timing',
+    `app;dur=${Math.round(performance.now() - started)}`
+  );
+}
 
 type RunWithInit = {
   successHeaders?: HeadersInit;
@@ -89,18 +97,68 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
     return this.IOC(I.ServerContextInterface);
   }
 
+  /** Response headers written by plugins in `onBefore` (e.g. ApiCorsPlugin). */
+  protected mergeResponseInit(init?: RunWithInit): RunWithInit | undefined {
+    const pluginHeaders =
+      this.serverContext instanceof ServerContext
+        ? this.serverContext.getResponseHeaders()
+        : undefined;
+    if (!pluginHeaders) {
+      return init;
+    }
+    return {
+      ...init,
+      successHeaders: { ...pluginHeaders, ...init?.successHeaders },
+      errorHeaders: { ...pluginHeaders, ...init?.errorHeaders }
+    };
+  }
+
   /**
    * @override
+   */
+  public override async runWithJson<Result>(
+    task?: RunWithTask<Result>,
+    init?: RunWithInit
+  ): Promise<NextResponse> {
+    const started = performance.now();
+    const response = await super.runWithJson(
+      task,
+      this.mergeResponseInit(init)
+    );
+    setServerTiming(response, started);
+    return response;
+  }
+
+  /**
+   * @override
+   *
+   * Persist failed API envelopes only — successful calls used to flood
+   * `brain_oauth_request_logs`. Auth login/logout still use `insertWithAuth`.
    */
   protected override afterApiResult<Result>(
     envelope: NextKitApiResult<Result>,
     request?: NextRequest
   ): void {
-    if (request) {
-      this.IOC(RequestLogsRepository).insertWithApiResult(envelope, {
-        request
-      });
+    if (!request) {
+      return;
     }
+
+    // Success rows: keep the call site for easy re-enable, but do not write.
+    // this.IOC(RequestLogsRepository)
+    //   .insertWithApiResult(envelope, { request })
+    //   .catch((error: unknown) => {
+    //     this.IOC(I.Logger).warn('Failed to write request log', error);
+    //   });
+
+    if (envelope.success) {
+      return;
+    }
+
+    this.IOC(RequestLogsRepository)
+      .insertWithApiResult(envelope, { request })
+      .catch((error: unknown) => {
+        this.IOC(I.Logger).warn('Failed to write request log', error);
+      });
   }
 
   /**
@@ -114,7 +172,18 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
     task?: RunWithTask<Result>,
     init?: RunWithInit
   ): Promise<NextResponse> {
+    const started = performance.now();
+    const response = await this.buildOAuthJsonResponse(task, init);
+    setServerTiming(response, started);
+    return response;
+  }
+
+  protected async buildOAuthJsonResponse<Result>(
+    task?: RunWithTask<Result>,
+    init?: RunWithInit
+  ): Promise<NextResponse> {
     const result = await this.run(task);
+    const merged = this.mergeResponseInit(init);
     const contextHttpStatus = this.serverContext.getState('httpStatus');
     const noStoreHeaders = {
       'Cache-Control': 'no-store',
@@ -132,7 +201,7 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
           status: contextHttpStatus ?? 400,
           headers: {
             ...noStoreHeaders,
-            ...init?.errorHeaders
+            ...merged?.errorHeaders
           }
         }
       );
@@ -145,7 +214,7 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
       status: contextHttpStatus ?? 200,
       headers: {
         ...noStoreHeaders,
-        ...init?.successHeaders
+        ...merged?.successHeaders
       }
     });
   }

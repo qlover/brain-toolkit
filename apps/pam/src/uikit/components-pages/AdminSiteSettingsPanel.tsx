@@ -1,19 +1,23 @@
 'use client';
 
 import {
+  CorsRulesEditor,
+  SettingToggleSwitch,
+  SiteSettingRow
+} from '@brain-toolkit/next-app-kit/client';
+import { isCorsRuleArray } from '@brain-toolkit/next-app-kit/shared';
+import {
   runAsyncStore,
   useAsyncStore,
   usePendingAsyncStore,
   type AsyncState
 } from '@brain-toolkit/react-kit';
 import { useStrictEffect } from '@qlover/next-kit/client';
-import { clsx } from 'clsx';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import { SiteSettingsApi } from '@/impls/appApi/SiteSettingsApi';
 import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
 import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
-import { CorsRulesEditor } from '@/uikit/components-pages/AdminCorsRulesEditor';
 import { AdminMailTestAction } from '@/uikit/components-pages/AdminMailTestAction';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -38,20 +42,6 @@ type SettingsSaveState = AsyncState<PamAdminSiteSettingEntry[]> & {
   targetId: string | null;
 };
 
-function isPamCorsRuleArray(value: unknown): value is PamCorsRule[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        item != null &&
-        typeof item === 'object' &&
-        'origin' in item &&
-        'path' in item &&
-        'methods' in item
-    )
-  );
-}
-
 function entryMap(
   entries: PamAdminSiteSettingEntry[]
 ): Map<PamSiteSettingKey, PamAdminSiteSettingEntry> {
@@ -69,127 +59,13 @@ function getDraftValue(
   return entry?.value ?? '';
 }
 
-function sourceLabel(
-  source: PamAdminSiteSettingEntry['source'] | undefined,
-  tt: AdminSettingsI18nInterface
-): string {
-  if (source === 'db') {
-    return tt.sourceDb;
-  }
-  return tt.sourceDefault;
-}
-
-function SourceBadge({
-  source,
-  tt
-}: {
-  source: PamAdminSiteSettingEntry['source'] | undefined;
-  tt: AdminSettingsI18nInterface;
-}) {
-  if (!source) {
-    return null;
-  }
-
-  return (
-    <span
-      data-testid="SourceBadge"
-      className={clsx(
-        'rounded-full px-2 py-0.5 text-[11px] font-medium',
-        source === 'db'
-          ? 'bg-brand/10 text-brand'
-          : 'bg-elevated text-tertiary-text'
-      )}
-    >
-      {sourceLabel(source, tt)}
-    </span>
-  );
-}
-
-function ToggleSwitch({
-  checked,
-  onChange
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <button
-      data-testid="ToggleSwitch"
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={clsx(
-        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
-        checked ? 'bg-brand' : 'bg-elevated'
-      )}
-    >
-      <span
-        className={clsx(
-          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-          checked ? 'translate-x-5' : 'translate-x-0'
-        )}
-      />
-    </button>
-  );
-}
-
 function SettingRow({
-  entry,
   tt,
-  children,
-  controlClassName,
-  layout = 'stacked'
-}: {
-  entry: PamAdminSiteSettingEntry | undefined;
+  ...props
+}: Omit<ComponentProps<typeof SiteSettingRow>, 'labels'> & {
   tt: AdminSettingsI18nInterface;
-  children: ReactNode;
-  controlClassName?: string;
-  /** stacked: 标签左、控件右（大屏约 20rem）；block: 标签在上、控件占满行。 */
-  layout?: 'stacked' | 'inline' | 'block';
 }) {
-  if (!entry) {
-    return null;
-  }
-
-  const isInline = layout === 'inline';
-  const isBlock = layout === 'block';
-
-  return (
-    <div
-      data-testid="SettingRow"
-      className={clsx(
-        'gap-3 border-b border-primary-border/50 py-4 last:border-b-0',
-        isInline && 'flex items-start justify-between',
-        isBlock && 'flex flex-col',
-        !isInline &&
-          !isBlock &&
-          'flex flex-col md:flex-row md:items-start md:justify-between md:gap-8'
-      )}
-    >
-      <div className={clsx('min-w-0', isInline ? 'flex-1 pr-3' : 'flex-1')}>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-primary-text">
-            {entry.label}
-          </span>
-          <SourceBadge source={entry.source} tt={tt} />
-        </div>
-        <p className="mt-1 text-sm leading-relaxed text-secondary-text">
-          {entry.description}
-        </p>
-      </div>
-      <div
-        className={clsx(
-          isInline && 'shrink-0 pt-0.5',
-          isBlock && 'w-full min-w-0',
-          !isInline && !isBlock && 'w-full shrink-0 md:w-72 lg:w-80',
-          controlClassName
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  );
+  return <SiteSettingRow {...props} labels={tt} />;
 }
 
 export function AdminSiteSettingsPanel({
@@ -245,7 +121,7 @@ export function AdminSiteSettingsPanel({
           continue;
         }
         if (key === PAM_SITE_SETTING_KEYS.API_CORS_RULES) {
-          if (!isPamCorsRuleArray(value)) {
+          if (!isCorsRuleArray(value)) {
             payload[key] = [];
             continue;
           }
@@ -403,7 +279,7 @@ export function AdminSiteSettingsPanel({
               tt={tt}
               layout="inline"
             >
-              <ToggleSwitch
+              <SettingToggleSwitch
                 checked={Boolean(
                   getDraftValue(draft, byKey.get(key), key) === true
                 )}
@@ -616,7 +492,7 @@ export function AdminSiteSettingsPanel({
               tt={tt}
               layout="inline"
             >
-              <ToggleSwitch
+              <SettingToggleSwitch
                 checked={Boolean(
                   getDraftValue(draft, byKey.get(key), key) === true
                 )}
@@ -643,7 +519,7 @@ export function AdminSiteSettingsPanel({
                 byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES),
                 PAM_SITE_SETTING_KEYS.API_CORS_RULES
               );
-              const rules = isPamCorsRuleArray(value) ? value : [];
+              const rules = isCorsRuleArray(value) ? value : [];
               setDraftValue(PAM_SITE_SETTING_KEYS.API_CORS_RULES, [
                 ...rules,
                 { origin: '', path: '', methods: [] }
@@ -668,7 +544,7 @@ export function AdminSiteSettingsPanel({
                   byKey.get(PAM_SITE_SETTING_KEYS.API_CORS_RULES),
                   PAM_SITE_SETTING_KEYS.API_CORS_RULES
                 );
-                return isPamCorsRuleArray(value) ? value : [];
+                return isCorsRuleArray(value) ? value : [];
               })()}
               onChange={(rules) =>
                 setDraftValue(PAM_SITE_SETTING_KEYS.API_CORS_RULES, rules)

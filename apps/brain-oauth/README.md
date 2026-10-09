@@ -154,8 +154,8 @@ cp .env.template .env   # Windows 下手动复制亦可
 | 变量 | 用途 |
 | ---- | ---- |
 | `SITE_URL` | 站点根 URL，用于回调与 sitemap |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase 项目连接（OAuth 表读写主要依赖此项） |
-| `SUPABASE_SERVICE_ROLE_KEY` | **可选**，仅服务端；库表启用 RLS 且需绕过策略时配置（见下方「数据库」） |
+| `SUPABASE_URL` | Supabase 项目连接（仅作数据库使用，不使用 Supabase Auth） |
+| `SUPABASE_SERVICE_ROLE_KEY` | **必填**，仅服务端；所有表读写都走 service role（见下方「数据库」） |
 | `SESSION_SECRET` | 签发 OAuth 授权用 HttpOnly 会话 Cookie（建议 `openssl rand -hex 32`） |
 | `ENCRYPTION_KEY` | AES-256-GCM，加密存库的 upstream refresh token（`openssl rand -base64 32`） |
 | `OAUTH_WRAPPER_API_BASE` | 上游用户 API 基址（本示例 `BrainUserAdapter` 通过 `@brain-toolkit/brain-user` 读取） |
@@ -168,19 +168,11 @@ cp .env.template .env   # Windows 下手动复制亦可
 
 在 Supabase SQL Editor（或等价环境）按顺序执行：
 
-1. `makes/sql/001-base-tables.sql` — 基础表（`request_logs` 等）
-2. `makes/sql/002-oauth-clients.sql` — OAuth 全表（含 `brain_oauth_user_links`；**会 drop 重建**，仅适合新库/可清空的开发库）
-3. 已有旧库（integer id、缺 links）：再执行一次 `makes/sql/003-migrate-existing.sql`
-4. 旧数据仍是 Brain id 归属时：先跑 `makes/scripts/migrate-brain-user-ids.ts` 建 link，再执行一遍 `003-migrate-existing.sql`（remap 段）
+执行 [`makes/sql/brain-oauth-schema.sql`](makes/sql/brain-oauth-schema.sql)。只操作 `brain_oauth_*` 表，不删表，可重复执行：新库直接建表；旧库原地升级（用户从 `auth.users` 迁到 `brain_oauth_users`，保留 UUID）。
 
-登录成功后会在 `auth.users` upsert 本地用户，session / `owner_user_id` 使用 **auth.users.id（UUID）**。上游 id 存在 `brain_oauth_user_links.external_user_id`（及 `app_metadata.external_user_id`）；可选资料在 `links.extra` / `user_metadata.extra`。移植 fe-base next-oauth 时改 [`shared/config/oauthLocalUser.ts`](shared/config/oauthLocalUser.ts) 的 `provider` / `linksTable` 即可。
+brain-oauth 有自己的用户表，**不使用 Supabase Auth**。登录成功后在 `brain_oauth_users` 创建/更新本地用户，session / `owner_user_id` 使用 **brain_oauth_users.id（UUID）**。上游 id 存在 `brain_oauth_user_links.external_user_id`，可选资料在 `links.extra` / `users.extra`。移植 fe-base next-oauth 时改 [`shared/config/oauthLocalUser.ts`](shared/config/oauthLocalUser.ts) 的 `provider` / 表名即可。
 
-**RLS 与密钥：**
-
-- 若 OAuth 相关表 **未启用 RLS**（或已对 `anon` / 服务端角色开放读写策略），配置 **`SUPABASE_URL` + `SUPABASE_ANON_KEY`** 即可；**不必**配置 `SUPABASE_SERVICE_ROLE_KEY`。
-- 仓库自带 `002-oauth-clients.sql` 末尾包含 `enable row level security`（默认无公开 policy）。仅在这种 **已启用 RLS 且不允许 anon 直写** 的部署下，才需要 **service role**，或改为自行添加合适的 RLS policy 而继续用 anon。
-
-`OAuthWrapperRepository` 通过 `shared/supabase/server.ts` 的 `createAdminClient()` 连接数据库：优先 `SUPABASE_SERVICE_ROLE_KEY`，未配置时回退 `SUPABASE_ANON_KEY`。
+**RLS 与密钥：** 所有表都启用 RLS 且没有公开 policy，服务端统一通过 `shared/supabase/server.ts` 的 `createAdminClient()`（`SUPABASE_SERVICE_ROLE_KEY`）读写，按用户隔离由应用代码负责（例如个人请求日志按 `user_id` 过滤）。
 
 ### 3. 启动
 
@@ -394,7 +386,7 @@ app.listen(4000, () => console.log('http://localhost:4000/login'));
 2. `node minimal-oauth-client.mjs` 启动示例客户端（4000）
 3. 浏览器打开 `http://localhost:4000/login` → 在 OAuth 站点登录并同意 → 回调 JSON 中含 `user.sub` / `user.email`
 
-未登录访问授权页时，OAuth 站点中间件会跳到 `/auth/login?redirect=...`，登录成功后回到授权页（`LoginForm` 读取 `redirect` 参数）。
+未登录访问授权页时，OAuth 站点中间件会跳到 `/auth/login?redirect=...`，登录成功后回到授权页（`BrainLoginForm` 读取 `redirect` 参数）。
 
 ### 前端（浏览器）只需做两件事
 

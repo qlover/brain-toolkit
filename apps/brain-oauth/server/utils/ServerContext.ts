@@ -12,6 +12,7 @@ import type { NextRequest } from 'next/server';
 export class ServerContext implements ServerContextInterface {
   protected request?: NextRequest | Request;
   protected state: ServerState;
+  protected responseHeaders?: HeadersInit;
 
   constructor() {
     this.state = {
@@ -51,8 +52,18 @@ export class ServerContext implements ServerContextInterface {
       uid: '',
       name: ''
     };
+    this.responseHeaders = undefined;
 
     return this.changeState(params);
+  }
+
+  /** Written by plugins (e.g. ApiCorsPlugin) and merged into the response. */
+  public setResponseHeaders(headers: HeadersInit | undefined): void {
+    this.responseHeaders = headers;
+  }
+
+  public getResponseHeaders(): HeadersInit | undefined {
+    return this.responseHeaders;
   }
 
   /**

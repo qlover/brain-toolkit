@@ -1,4 +1,7 @@
 import { PageI18nProvider } from '@qlover/next-kit/client';
+import { BrainFooter } from '@/uikit/components/brain/BrainFooter';
+import { BrainHeaderNav } from '@/uikit/components/brain/BrainHeaderNav';
+import { BrainScene } from '@/uikit/components/brain/BrainScene';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { OAuthDocsContent } from '@/uikit/components-app/docs/OAuthDocsContent';
 import { i18nConfig } from '@config/i18n';
@@ -6,6 +9,7 @@ import {
   oauthDocsI18n,
   oauthDocsI18nNamespace
 } from '@config/i18n-mapping/oauthDocsI18n';
+import { ROUTE_DEVELOPER_APPS, ROUTE_OAUTH_PLAYGROUND } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import {
   AppPageRouteParams,
@@ -40,12 +44,25 @@ export default async function OAuthDocsPage(props: OAuthDocsPageProps) {
     <PageI18nProvider value={tt}>
       <AppRoutePage
         data-testid="AppRoute-OAuthDocsPage"
-        tt={{ title: tt.title, adminTitle: tt.adminTitle }}
+        tt={{
+          title: tt.appName,
+          adminTitle: tt.adminTitle,
+          headerSubtitle: tt.headerSub
+        }}
+        headerVariant="brain"
+        headerNav={
+          <BrainHeaderNav
+            items={[
+              { href: ROUTE_OAUTH_PLAYGROUND, label: tt.navPlayground },
+              { href: ROUTE_DEVELOPER_APPS, label: tt.navConsole }
+            ]}
+          />
+        }
         showAuthButton
-        authButtonLoginOnly
-        mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
+        <BrainScene quiet />
         <OAuthDocsContent />
+        <BrainFooter showAbout />
       </AppRoutePage>
     </PageI18nProvider>
   );

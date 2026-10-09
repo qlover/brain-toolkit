@@ -1,3 +1,4 @@
+import { UserScopedRequestLogsRepository } from '@brain-toolkit/next-app-kit/server';
 import {
   createIOCFunction,
   ReflectionIOCContainer,
@@ -5,9 +6,10 @@ import {
   type IOCRegisterInterface
 } from '@qlover/corekit-bridge/ioc';
 import { RequestLogsRepository, SupabaseRepo } from '@qlover/next-kit/server';
-import { createAdminClient, createServerClient } from '@shared/supabase/server';
+import { createAdminClient } from '@shared/supabase/server';
 import type { IOCIdentifierMapServer } from '@config/ioc-identifiter';
 import { I } from '@config/ioc-identifiter';
+import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { BrainUserOAuthProvider } from './providers/BrainUserOAuthProvider';
 import { ServerContext } from './utils/ServerContext';
@@ -54,18 +56,18 @@ const ServerIocRegister: IOCRegisterInterface<
 
     const supabaseDeps = {
       logger,
-      getUserClient: createServerClient,
+      getUserClient: async () => createAdminClient(),
       getAdminClient: createAdminClient
     };
 
     ioc.bind(SupabaseRepo, new SupabaseRepo('', supabaseDeps));
-    ioc.bind(
-      RequestLogsRepository,
-      new RequestLogsRepository({
-        ...supabaseDeps,
-        serverContext: ioc.get(I.ServerContextInterface)
-      })
-    );
+    const requestLogsRepository = new UserScopedRequestLogsRepository({
+      ...supabaseDeps,
+      serverContext: ioc.get(I.ServerContextInterface),
+      tableName: oauthLocalUserConfig.requestLogsTable
+    });
+    ioc.bind(UserScopedRequestLogsRepository, requestLogsRepository);
+    ioc.bind(RequestLogsRepository, requestLogsRepository);
 
     ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(BrainUserOAuthProvider));
   }

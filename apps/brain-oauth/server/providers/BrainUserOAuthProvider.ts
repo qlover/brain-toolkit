@@ -4,13 +4,22 @@ import {
   BrainUserGateway,
   createBrainUserOptions
 } from '@brain-toolkit/brain-user';
+import {
+  OAuthConsentGrantRepository,
+  OAuthConsentTrustService
+} from '@brain-toolkit/next-app-kit/server';
 import { LoginParams } from '@qlover/corekit-bridge';
 import { UserRole, type UserSchema } from '@qlover/next-kit/common';
-import { TokenEncryption } from '@qlover/next-kit/server';
+import { SupabaseRepo, TokenEncryption } from '@qlover/next-kit/server';
 import {
   OAuthWrapperService,
+  buildOAuthSyntheticEmail,
+  resolveOAuthRealEmail,
+  type OAuthAuthorizePageData,
+  type OAuthConsentResult,
   type OAuthIdentityStore,
   type OAuthLocalUserDraft,
+  type OAuthLocalUserRecord,
   type OAuthSessionPayload,
   type OAuthWrapperRepositoryInterface,
   type SignWithOtpParams,
@@ -19,17 +28,30 @@ import {
   type WithUserSession,
   type OAuthWrapperAccessToken
 } from '@qlover/oauth-wrapper';
+import { cookies } from 'next/headers';
 import { inject, injectable } from '@shared/container';
+import {
+  BRAIN_LOGIN_ENV_COOKIE,
+  resolveBrainApiEnv,
+  type BrainApiTarget,
+  type BrainSessionUser
+} from '@config/brainApi';
 import { I } from '@config/ioc-identifiter';
 import { oauthLocalUserConfig } from '@config/oauthLocalUser';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
+import { AccessTokenEnvRepo } from '@server/repositorys/AccessTokenEnvRepo';
 import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
+import { BrainOAuthUserStore } from '@server/services/BrainOAuthUserStore';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
-import { SupabaseOAuthIdentityStore } from '@server/services/SupabaseOAuthIdentityStore';
+import { SiteSettingsService } from '@server/services/SiteSettingsService';
+import type { OAuthConsentDeviceContext } from '@server/utils/oauthConsentDevice';
 import type { LoggerInterface } from '@qlover/logger';
 
 type BrainLoginLike = Record<string, unknown>;
+
+/** Seconds; used when Brain omits `OTP_EXP`. */
+const DEFAULT_OTP_EXPIRES = 60;
 
 /**
  * Next.js patches global `fetch` and can drop the body when given a `Request`
@@ -112,23 +134,59 @@ function formatBrainLoginError(data: unknown): string {
   return 'Brain login did not return a session token';
 }
 
+/**
+ * Account email only. `profile.google_email` is deliberately ignored: Brain
+ * keeps separate user ids for Google/phone signups and email signups, and
+ * using it here would make both claim the same local row by email.
+ */
 function resolveBrainEmail(user: BrainUser): string {
-  if (typeof user.email === 'string' && user.email.trim()) {
-    return user.email.trim();
+  return typeof user.email === 'string' ? user.email.trim() : '';
+}
+
+function resolveBrainName(user: BrainUser): string | undefined {
+  const name = typeof user.name === 'string' ? user.name.trim() : '';
+  if (name) {
+    return name;
   }
-  const nested = user.profile as { google_email?: string } | undefined;
-  if (typeof nested?.google_email === 'string' && nested.google_email.trim()) {
-    return nested.google_email.trim();
+  const parts = [user.first_name, user.middle_name, user.last_name]
+    .map((part) => part?.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : undefined;
+}
+
+function resolveBrainPhone(user: BrainUser): string | undefined {
+  const phone = user.profile?.phone_number?.trim();
+  return phone || undefined;
+}
+
+/**
+ * HTTP errors already come back as `error`; a 2xx profile without an id is
+ * still rejected so it never becomes a local user.
+ */
+function requireBrainUser(profile: {
+  data: (BrainUser & Partial<BrainCredentials>) | null;
+  error: unknown;
+}): BrainUser & Partial<BrainCredentials> {
+  if (profile.error) {
+    throw profile.error;
   }
-  return '';
+  const id = profile.data?.id;
+  if (id === undefined || id === null || String(id).trim() === '') {
+    throw new Error('Brain user info rejected or missing id');
+  }
+  return profile.data!;
 }
 
 function brainUserToUserSchema(
   user: BrainUser & Partial<BrainCredentials>
 ): UserSchema {
+  const name = resolveBrainName(user);
+  const phone = resolveBrainPhone(user);
   return {
     id: String(user.id),
     email: resolveBrainEmail(user),
+    ...(name ? { name } : {}),
+    ...(phone ? { phone } : {}),
     role: user.roles?.includes('admin') ? UserRole.ADMIN : UserRole.USER,
     credential_token:
       user.token ??
@@ -141,10 +199,19 @@ function brainUserToUserSchema(
 
 export interface BrainUserSession
   extends OAuthSessionPayload,
-    Partial<BrainCredentials> {}
+    Partial<BrainCredentials> {
+  /** Brain env the session was created in (login page choice). */
+  brainEnv?: string;
+}
+
+function sessionEnvField(
+  session: BrainUserSession
+): Pick<BrainSessionUser, 'brain_env'> {
+  return session.brainEnv ? { brain_env: session.brainEnv } : {};
+}
 
 /**
- * Brain User API as OAuth AS backend. Local identity is auth.users UUID via
+ * Brain User API as OAuth AS backend. Local identity is brain_oauth_users UUID via
  * IdentityStore hooks on OAuthWrapperService.
  */
 @injectable()
@@ -152,27 +219,93 @@ export class BrainUserOAuthProvider
   extends OAuthWrapperService<UserSchema, BrainUserSession>
   implements OAuthWrapperProviderInterface
 {
-  protected gateway: BrainUserGateway;
+  protected gateways = new Map<string, Promise<BrainUserGateway>>();
   protected tokenEncryption: TokenEncryption;
+  protected consentTrust: OAuthConsentTrustService;
+  /** Per-request (IOC is per request): true only inside userinfo. */
+  protected passiveSync = false;
+  /** Brain env of the identity handled by this request; see {@link useEnv}. */
+  protected activeEnv?: string;
 
   constructor(
     @inject(I.Logger)
     protected logger: LoggerInterface,
-    @inject(I.AppConfig) config: SeedServerConfigInterface,
+    @inject(I.AppConfig)
+    protected readonly appConfig: SeedServerConfigInterface,
     @inject(OAuthSessionService)
     oauthSession: OAuthSessionService,
     @inject(OAuthWrapperRepository) oauthRepo: OAuthWrapperRepositoryInterface,
-    @inject(SupabaseOAuthIdentityStore)
-    protected readonly identityStore: SupabaseOAuthIdentityStore
+    @inject(BrainOAuthUserStore)
+    protected readonly identityStore: BrainOAuthUserStore,
+    @inject(SupabaseRepo) supabaseRepo: SupabaseRepo<unknown>,
+    @inject(SiteSettingsService)
+    protected readonly siteSettings: SiteSettingsService,
+    @inject(AccessTokenEnvRepo)
+    protected readonly accessTokenEnvs: AccessTokenEnvRepo
   ) {
-    const tokenEncryption = new TokenEncryption(config.encryptionKey);
+    const tokenEncryption = new TokenEncryption(appConfig.encryptionKey);
     super(oauthSession, tokenEncryption, oauthRepo);
-    const options = createBrainUserOptions({
-      logger,
-      fetcher: nextSafeFetch
-    });
-    this.gateway = new BrainUserGateway(options.requestAdapter, logger);
+    this.consentTrust = new OAuthConsentTrustService(
+      new OAuthConsentGrantRepository(
+        supabaseRepo,
+        oauthLocalUserConfig.consentGrantsTable
+      ),
+      logger
+    );
     this.tokenEncryption = tokenEncryption;
+  }
+
+  /**
+   * Admin "Brain API" settings (cached process-wide) for `env`; an env that is
+   * no longer configured falls back to the default env.
+   */
+  protected async resolveEnv(
+    env?: string | null
+  ): Promise<{ env: string; config: BrainApiTarget['config'] }> {
+    const { config } = await this.siteSettings.getBrainApiTarget();
+    const name = env?.trim();
+    return {
+      config,
+      env: name && name in config.domains ? name : config.env
+    };
+  }
+
+  /** Env picked on the login page (cookie), else the default env. */
+  protected async resolveLoginEnv(): Promise<string> {
+    const cookieStore = await cookies();
+    const { env } = await this.resolveEnv(
+      cookieStore.get(BRAIN_LOGIN_ENV_COOKIE)?.value
+    );
+    return env;
+  }
+
+  /** Scopes this request's Brain calls and local identity to `env`. */
+  protected useEnv(env: string): void {
+    this.activeEnv = env;
+    this.identityStore.useEnv(env);
+  }
+
+  /**
+   * One gateway per env per request (IOC is per request); defaults to
+   * {@link activeEnv}.
+   */
+  protected getGateway(env = this.activeEnv): Promise<BrainUserGateway> {
+    const key = env ?? '';
+    let gateway = this.gateways.get(key);
+    if (!gateway) {
+      gateway = this.resolveEnv(env).then(({ env: resolved, config }) => {
+        const options = createBrainUserOptions({
+          env: resolved,
+          domains: config.domains,
+          endpoints: resolveBrainApiEnv(config, resolved).endpoints,
+          logger: this.logger,
+          fetcher: nextSafeFetch
+        });
+        return new BrainUserGateway(options.requestAdapter, this.logger);
+      });
+      this.gateways.set(key, gateway);
+    }
+    return gateway;
   }
 
   /**
@@ -195,16 +328,136 @@ export class BrainUserOAuthProvider
   protected override toLocalUserDraft(
     upstream: UserSchema
   ): OAuthLocalUserDraft {
-    const extra: Record<string, unknown> = {};
-    if (upstream.role) {
-      extra.role = upstream.role;
-    }
     return {
       provider: oauthLocalUserConfig.provider,
       externalUserId: String(upstream.id ?? '').trim(),
       email: upstream.email || null,
-      name: upstream.email || String(upstream.id),
-      extra: Object.keys(extra).length > 0 ? extra : null
+      phone: upstream.phone?.trim() || null,
+      name: upstream.name?.trim() || upstream.email || String(upstream.id),
+      // UserRole.ADMIN is 0, so compare explicitly instead of truthiness.
+      extra: { brainAdmin: upstream.role === UserRole.ADMIN }
+    };
+  }
+
+  /**
+   * @override
+   */
+  protected override async ensureLocalUser(
+    draft: OAuthLocalUserDraft
+  ): Promise<OAuthLocalUserRecord> {
+    const email = resolveOAuthRealEmail(
+      draft.email,
+      oauthLocalUserConfig.syntheticEmailDomain
+    );
+    const externalUserId = String(draft.externalUserId ?? '').trim();
+
+    if (this.passiveSync && externalUserId) {
+      const unchanged = await this.resolveUnchangedLinkedUser(
+        draft,
+        externalUserId,
+        email
+      );
+      if (unchanged) {
+        return unchanged;
+      }
+    }
+
+    if (email && externalUserId) {
+      await this.identityStore.releaseStaleEmail(email, externalUserId);
+    }
+    return super.ensureLocalUser(draft);
+  }
+
+  /**
+   * Read-only fast path for `/oauth/userinfo`: when the linked local row
+   * already matches what {@link BrainOAuthUserStore.refreshMetadata} would
+   * write, skip every write. Mirrors that method's field rules; any difference
+   * (or no link yet) returns `null` and the full sync runs.
+   */
+  protected async resolveUnchangedLinkedUser(
+    draft: OAuthLocalUserDraft,
+    externalUserId: string,
+    email: string | null
+  ): Promise<OAuthLocalUserRecord | null> {
+    const provider = String(draft.provider ?? '').trim();
+    const linked = await this.identityStore.findLinkedUser(
+      provider,
+      externalUserId
+    );
+    if (!linked) {
+      return null;
+    }
+
+    const name = (draft.name ?? '').trim() || externalUserId;
+    const phone = draft.phone?.trim();
+    const storedExtra = linked.extra ?? {};
+    const extraChanged = Object.entries(draft.extra ?? {}).some(
+      ([key, value]) => storedExtra[key] !== value
+    );
+    if (
+      (linked.email ?? null) !== email ||
+      linked.name !== name ||
+      (phone && linked.phone !== phone) ||
+      extraChanged
+    ) {
+      return null;
+    }
+
+    return {
+      authUserId: linked.id,
+      provider,
+      externalUserId,
+      email:
+        email ??
+        buildOAuthSyntheticEmail(
+          provider,
+          externalUserId,
+          oauthLocalUserConfig.syntheticEmailDomain
+        ),
+      name
+    };
+  }
+
+  /**
+   * Third-party userinfo polls should not rewrite the user row on every call;
+   * enable the unchanged fast path in {@link ensureLocalUser} for this flow
+   * only. Login keeps the full sync (it also bumps `last_login_at`).
+   *
+   * @override
+   */
+  public override async getUserInfoWithAccessToken(
+    accessToken: string
+  ): Promise<UserSchema> {
+    const { env } = await this.resolveEnv(
+      await this.accessTokenEnvs.findEnv(accessToken)
+    );
+    this.useEnv(env);
+    this.passiveSync = true;
+    try {
+      return await super.getUserInfoWithAccessToken(accessToken);
+    } finally {
+      this.passiveSync = false;
+    }
+  }
+
+  /**
+   * Keep the synthetic address out of the session user so UIs fall back to
+   * `phone` for phone-only accounts.
+   *
+   * @override
+   */
+  protected override applyLocalUser(
+    upstream: UserSchema,
+    local: OAuthLocalUserRecord
+  ): UserSchema {
+    const user = super.applyLocalUser(upstream, local);
+    return {
+      ...user,
+      email:
+        resolveOAuthRealEmail(
+          user.email,
+          oauthLocalUserConfig.syntheticEmailDomain
+        ) ?? ''
     };
   }
 
@@ -214,10 +467,19 @@ export class BrainUserOAuthProvider
   protected async providerLogin(
     params: LoginParams
   ): Promise<WithUserSession<BrainUserSession, UserSchema>> {
-    const result = await this.gateway.login({
-      email: params.email!,
-      password: params.password!
-    });
+    const env = await this.resolveLoginEnv();
+    this.useEnv(env);
+    const gateway = await this.getGateway();
+    const result =
+      params.phone && params.code
+        ? await gateway.verifySignOtp({
+            phone: params.phone,
+            otp: params.code
+          })
+        : await gateway.login({
+            email: params.email!,
+            password: params.password!
+          });
 
     this.logger.debug('BrainUser login', result);
 
@@ -233,7 +495,8 @@ export class BrainUserOAuthProvider
     return {
       ...(typeof result.data === 'object' && result.data ? result.data : {}),
       userId: '',
-      providerRefreshToken: token
+      providerRefreshToken: token,
+      brainEnv: env
     };
   }
 
@@ -243,10 +506,17 @@ export class BrainUserOAuthProvider
   protected async providerExchangeAccessToken(
     session: BrainUserSession
   ): Promise<OAuthWrapperAccessToken> {
-    const accessResult = await this.gateway.getAccessToken({
-      token: session.providerRefreshToken,
-      lang: 'en'
-    });
+    const userId = String(session.userId ?? '').trim();
+    const { env, config } = await this.resolveEnv(
+      userId ? await this.identityStore.findUserEnv(userId) : null
+    );
+    const gateway = await this.getGateway(env);
+    // getAccessToken resolves its base URL from the call config only;
+    // createAdapter drops env / domains from the adapter config.
+    const accessResult = await gateway.getAccessToken(
+      { token: session.providerRefreshToken, lang: 'en' },
+      { baseURL: resolveBrainApiEnv(config, env).userlyBaseURL }
+    );
 
     if (accessResult.error) {
       throw accessResult.error;
@@ -256,14 +526,31 @@ export class BrainUserOAuthProvider
       access: accessResult
     });
 
+    const accessToken = accessResult.data!.access_token;
+    const expiresIn = accessResult.data!.expires_in ?? 3600;
+    if (userId) {
+      try {
+        await this.accessTokenEnvs.record({
+          accessToken,
+          userId,
+          env,
+          expiresInSeconds: expiresIn
+        });
+      } catch (error) {
+        this.logger.warn('Failed to record access token env', { error });
+      }
+    }
+
+    // Empty `refresh_token`: a non-empty one would replace the stored Brain
+    // login token, and the next exchange would send the wrong credential.
     return {
       ...accessResult,
       provider_token: session.providerRefreshToken ?? '',
       provider_refresh_token: '',
       token_type: 'Bearer',
-      access_token: accessResult.data!.access_token,
-      expires_in: accessResult.data!.expires_in ?? 3600,
-      refresh_token: accessResult.data!.refresh_token
+      access_token: accessToken,
+      expires_in: expiresIn,
+      refresh_token: ''
     };
   }
 
@@ -273,12 +560,9 @@ export class BrainUserOAuthProvider
   protected async providerGetUserInfo(
     sessionToken: string
   ): Promise<UserSchema> {
-    const profile = await this.gateway.getUserInfo({ token: sessionToken });
-
-    if (profile.error) {
-      throw profile.error;
-    }
-    return brainUserToUserSchema(profile.data);
+    const gateway = await this.getGateway();
+    const profile = await gateway.getUserInfo({ token: sessionToken });
+    return this.applyAdminEnv(brainUserToUserSchema(requireBrainUser(profile)));
   }
 
   /**
@@ -287,16 +571,28 @@ export class BrainUserOAuthProvider
   protected async providerGetUserInfoByAccessToken(
     accessToken: string
   ): Promise<UserSchema> {
-    const profile = await this.gateway.getUserInfo(
+    const gateway = await this.getGateway();
+    const profile = await gateway.getUserInfo(
       { token: accessToken },
       { tokenPrefix: 'Bearer' }
     );
+    return this.applyAdminEnv(brainUserToUserSchema(requireBrainUser(profile)));
+  }
 
-    if (profile.error) {
-      throw profile.error;
+  /**
+   * Brain admins only count in the admin envs; otherwise an admin of any
+   * selectable env (e.g. development) could manage this site.
+   */
+  protected async applyAdminEnv(user: UserSchema): Promise<UserSchema> {
+    if (user.role !== UserRole.ADMIN) {
+      return user;
     }
-
-    return brainUserToUserSchema(profile.data);
+    const { env, config } = await this.resolveEnv(this.activeEnv);
+    const adminEnvs =
+      this.appConfig.brainAdminEnvs.length > 0
+        ? this.appConfig.brainAdminEnvs
+        : [config.env];
+    return adminEnvs.includes(env) ? user : { ...user, role: UserRole.USER };
   }
 
   /**
@@ -312,21 +608,73 @@ export class BrainUserOAuthProvider
     }
 
     const withUser = session2 as WithUserSession<BrainUserSession, UserSchema>;
+    const env = sessionEnvField(withUser);
     if (withUser.user) {
       return {
         ...withUser.user,
+        ...env,
         id: String(session2.userId),
         credential_token: session2.providerRefreshToken
       };
     }
 
     return {
+      ...env,
       id: String(session2.userId),
       email: '',
       role: UserRole.USER,
       credential_token: session2.providerRefreshToken,
       created_at: new Date().toISOString()
     };
+  }
+
+  /**
+   * @override
+   */
+  public async getEmbeddedUser(): Promise<UserSchema | null> {
+    const payload = (await this.oauthSession.getSession()) as
+      | WithUserSession<BrainUserSession, UserSchema>
+      | null
+      | undefined;
+    return payload?.user?.id
+      ? { ...payload.user, ...sessionEnvField(payload) }
+      : null;
+  }
+
+  /**
+   * Persists "trust this app" for this device so later authorize requests
+   * skip consent until the grant expires.
+   *
+   * @override
+   */
+  public async processConsent(
+    requestBody: unknown,
+    device?: OAuthConsentDeviceContext
+  ): Promise<OAuthConsentResult> {
+    const result = await super.processConsent(requestBody);
+    const session = await this.getSession();
+    await this.consentTrust.remember(
+      String(session?.userId ?? '').trim(),
+      requestBody,
+      device
+    );
+    return result;
+  }
+
+  /**
+   * @override
+   */
+  public async tryAutoConsent(
+    data: OAuthAuthorizePageData,
+    device?: OAuthConsentDeviceContext
+  ): Promise<OAuthConsentResult | null> {
+    const session = await this.getSession();
+    return this.consentTrust.tryAuto(
+      String(session?.userId ?? '').trim(),
+      data,
+      device,
+      (body) => super.processConsent(body)
+    );
   }
 
   /**
@@ -343,15 +691,31 @@ export class BrainUserOAuthProvider
     if ('email' in params) {
       throw new Error('Email is not supported');
     }
-    this.logger.debug('BrainUser send phone otp', params);
-    throw new Error('Phone OTP is not implemented');
+    const gateway = await this.getGateway(await this.resolveLoginEnv());
+    const result = await gateway.verifySignOtp({ phone: params.phone });
+    this.logger.debug('BrainUser send phone otp', result);
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return { expired: Number(result.data?.OTP_EXP) || DEFAULT_OTP_EXPIRES };
   }
 
   /**
+   * Logs in with phone + code and creates the session.
+   *
    * @override
    */
-  public async verifyOtp(_params: VerifyOtpParams): Promise<SignOtpResult> {
-    throw new Error('Phone OTP is not implemented');
+  public async verifyOtp(params: VerifyOtpParams): Promise<SignOtpResult> {
+    if (!('phone' in params)) {
+      throw new Error('Email is not supported');
+    }
+    if (!params.token) {
+      throw new Error('OTP code is required');
+    }
+    await this.login({ phone: params.phone, code: params.token });
+    return { expired: 0 };
   }
 
   /**
@@ -380,5 +744,16 @@ export class BrainUserOAuthProvider
    */
   public clearSession(): Promise<void> {
     return super.clearSession();
+  }
+
+  /**
+   * Signing out of this site only ends the browser session. Apps the user
+   * authorized keep their refresh tokens and the stored Brain credentials;
+   * those are revoked via `/oauth/revoke`.
+   *
+   * @override
+   */
+  public override async logout(_userId: string): Promise<void> {
+    await this.clearSession();
   }
 }

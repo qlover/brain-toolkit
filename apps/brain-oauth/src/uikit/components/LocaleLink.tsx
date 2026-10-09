@@ -4,6 +4,7 @@ import {
   LocaleLink as KitLocaleLink,
   type LocaleLinkProps
 } from '@qlover/next-kit/client';
+import { useLocale } from 'next-intl';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 
@@ -16,18 +17,22 @@ type AppLocaleLinkProps = Omit<
 };
 
 /**
- * App LocaleLink — injects i18n / routing defaults from config.
+ * App LocaleLink — injects i18n / routing defaults from config; `locale`
+ * defaults to the current page locale.
  */
 export function LocaleLink(props: AppLocaleLinkProps) {
+  const currentLocale = useLocale();
   const {
     fallbackLocale = i18nConfig.fallbackLng,
     useLocaleRoutes: useLocaleRoutesProp = useLocaleRoutes,
+    locale = currentLocale,
     ...rest
   } = props;
 
   return (
     <KitLocaleLink
       {...rest}
+      locale={locale}
       fallbackLocale={fallbackLocale}
       useLocaleRoutes={useLocaleRoutesProp}
     />

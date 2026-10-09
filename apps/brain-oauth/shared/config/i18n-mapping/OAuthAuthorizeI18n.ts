@@ -35,12 +35,18 @@ export const oauthAuthorizeI18n = Object.freeze({
   allow: i18nKeys.PAGE_OAUTH_AUTHORIZE_ALLOW,
   oauthBadge: i18nKeys.PAGE_OAUTH_AUTHORIZE_OAUTH_BADGE,
   denyConfirm: i18nKeys.PAGE_OAUTH_AUTHORIZE_DENY_CONFIRM,
-  footerTagline: i18nKeys.PAGE_OAUTH_AUTHORIZE_FOOTER_TAGLINE,
+  denyTitle: i18nKeys.PAGE_OAUTH_AUTHORIZE_DENY_TITLE,
+  cancel: i18nKeys.PAGE_OAUTH_AUTHORIZE_CANCEL,
+  details: i18nKeys.PAGE_OAUTH_AUTHORIZE_DETAILS,
+  invalidTitle: i18nKeys.PAGE_OAUTH_AUTHORIZE_INVALID_TITLE,
+  back: i18nKeys.PAGE_OAUTH_AUTHORIZE_BACK,
   errorInvalid: i18nKeys.PAGE_OAUTH_AUTHORIZE_ERROR_INVALID,
   errorClient: i18nKeys.PAGE_OAUTH_AUTHORIZE_ERROR_CLIENT,
   errorRedirect: i18nKeys.PAGE_OAUTH_AUTHORIZE_ERROR_REDIRECT,
   errorScope: i18nKeys.PAGE_OAUTH_AUTHORIZE_ERROR_SCOPE,
   errorConsent: i18nKeys.PAGE_OAUTH_AUTHORIZE_ERROR_CONSENT,
+  accountLabel: i18nKeys.PAGE_OAUTH_AUTHORIZE_ACCOUNT_LABEL,
+  switchAccount: i18nKeys.PAGE_OAUTH_AUTHORIZE_SWITCH_ACCOUNT,
 
   adminTitle: COMMON_ADMIN_TITLE
 });
@@ -50,15 +56,20 @@ export function resolveAuthorizeErrorMessage(
   errorKey: string,
   fallback: string
 ): string {
+  // Validation returns RFC 6749 error codes; the API_* keys cover wrapped errors.
   switch (errorKey) {
     case API_REDIRECT_URL:
+    case 'unauthorized_client':
       return fallback.includes('redirect_uri')
         ? tt.errorRedirect
         : tt.errorClient;
     case API_OAUTH_INVALID_SCOPE:
+    case 'invalid_scope':
       return tt.errorScope;
     case API_OAUTH_INVALID_REQUEST:
     case API_OAUTH_UNSUPPORTED_RESPONSE_TYPE:
+    case 'invalid_request':
+    case 'unsupported_response_type':
       return tt.errorInvalid;
     default:
       return fallback || tt.errorInvalid;

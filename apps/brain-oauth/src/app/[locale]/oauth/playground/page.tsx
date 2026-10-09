@@ -1,4 +1,7 @@
 import { PageI18nProvider } from '@qlover/next-kit/client';
+import { BrainFooter } from '@/uikit/components/brain/BrainFooter';
+import { BrainHeaderNav } from '@/uikit/components/brain/BrainHeaderNav';
+import { BrainScene } from '@/uikit/components/brain/BrainScene';
 import { AppRoutePage } from '@/uikit/components-app/AppRoutePage';
 import { OAuthPlayground } from '@/uikit/components-app/oauth/OAuthPlayground';
 import { i18nConfig } from '@config/i18n';
@@ -6,6 +9,7 @@ import {
   oauthPlaygroundI18n,
   oauthPlaygroundI18nNamespace
 } from '@config/i18n-mapping/oauthPlaygroundI18n';
+import { ROUTE_DEVELOPER_APPS, ROUTE_DOCS_OAUTH } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
 import {
   AppPageRouteParams,
@@ -42,12 +46,25 @@ export default async function OAuthPlaygroundPage(
     <PageI18nProvider value={tt}>
       <AppRoutePage
         data-testid="AppRoute-OAuthPlaygroundPage"
-        tt={{ title: tt.title, adminTitle: tt.adminTitle }}
+        tt={{
+          title: tt.appName,
+          adminTitle: tt.adminTitle,
+          headerSubtitle: tt.headerSub
+        }}
+        headerVariant="brain"
+        headerNav={
+          <BrainHeaderNav
+            items={[
+              { href: ROUTE_DEVELOPER_APPS, label: tt.navConsole },
+              { href: ROUTE_DOCS_OAUTH, label: tt.navDocs }
+            ]}
+          />
+        }
         showAuthButton
-        authButtonShowLogoutLabel
-        mainProps={{ className: 'flex flex-1 flex-col bg-primary' }}
       >
+        <BrainScene quiet />
         <OAuthPlayground />
+        <BrainFooter />
       </AppRoutePage>
     </PageI18nProvider>
   );

@@ -1,3 +1,4 @@
+import { ResponsiveModal } from '@brain-toolkit/next-app-kit/client';
 import { useStore } from '@brain-toolkit/react-kit';
 import {
   AdjustmentsHorizontalIcon,
@@ -27,7 +28,6 @@ import type {
   PAMFacadeInterface,
   PAMFacadeStateInterface
 } from '@/interface/PAMFacadeInterface';
-import { ResponsiveModal } from '@/uikit/components/ResponsiveModal';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { mergePamCategories } from '@config/pamCategories';

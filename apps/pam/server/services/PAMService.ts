@@ -1,3 +1,4 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import {
   ResourceSearchParams,
   ResourceSearchResult
@@ -73,7 +74,6 @@ import {
 import { fetchSiteLogoForUrl } from '@server/utils/PAMSiteLogoFetchUtil';
 import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
 import { projectAccessFlags } from '@server/utils/projectAccessRole';
-import { MemoryKvCacheService } from './MemoryKvCacheService';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';

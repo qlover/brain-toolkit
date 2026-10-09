@@ -141,3 +141,17 @@ export const API_OAUTH_SERVER_ERROR = 'api:oauth_server_error';
  * @localEn OAuth wrapper sign-in failed
  */
 export const API_OAUTH_WRAPPER_AUTH_FAILED = 'api:oauth_wrapper_auth_failed';
+
+/**
+ * @description Sending the phone OTP failed (invalid number or rate limited)
+ * @localZh 验证码发送失败，请检查手机号或稍后再试
+ * @localEn Failed to send the code. Check the phone number or try again later
+ */
+export const API_OTP_SEND_FAILED = 'api:otp_send_failed';
+
+/**
+ * @description Phone OTP login failed
+ * @localZh 验证码不正确或已过期
+ * @localEn The code is incorrect or has expired
+ */
+export const API_OTP_VERIFY_FAILED = 'api:otp_verify_failed';

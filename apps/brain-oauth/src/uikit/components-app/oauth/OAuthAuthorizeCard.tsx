@@ -1,233 +1,262 @@
 'use client';
 
 import {
-  ArrowPathIcon,
-  CheckCircleIcon,
+  CheckIcon,
   ChevronDownIcon,
   ExclamationCircleIcon,
   InformationCircleIcon,
-  LockClosedIcon,
-  QuestionMarkCircleIcon,
-  Squares2X2Icon
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
-import { clsx } from 'clsx';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
+import { BrainAvatar } from '@/uikit/components/brain/BrainAvatar';
+import { BrainButton } from '@/uikit/components/brain/BrainButton';
+import { BrainModal } from '@/uikit/components/brain/BrainModal';
+import { BrainSwitch } from '@/uikit/components/brain/BrainSwitch';
 import { useIOC } from '@/uikit/hook/useIOC';
 import type { OAuthAuthorizeI18nInterface } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import { resolveScopeLabel } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import type { OAuthAuthorizePageData } from '@qlover/oauth-wrapper';
 
+export interface OAuthAuthorizeAccount {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
 export interface OAuthAuthorizeCardProps {
   tt: OAuthAuthorizeI18nInterface;
   authorizeData: OAuthAuthorizePageData;
+  account?: OAuthAuthorizeAccount | null;
+  /** Login URL that returns to this authorize request after sign-in. */
+  switchAccountHref?: string;
 }
 
 export function OAuthAuthorizeCard({
   tt,
-  authorizeData
+  authorizeData,
+  account,
+  switchAccountHref
 }: OAuthAuthorizeCardProps) {
   const userGateway = useIOC(AppUserGateway);
-  const [extraOpen, setExtraOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [trust, setTrust] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [denyOpen, setDenyOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const scopeLabels = useMemo(
-    () =>
-      authorizeData.scopes.map((scope) => ({
-        scope,
-        label: resolveScopeLabel(tt, scope)
-      })),
-    [authorizeData.scopes, tt]
-  );
+  const accountPrimary =
+    account?.name?.trim() || account?.email || account?.phone || '';
+  const accountSecondary = [account?.email, account?.phone]
+    .filter((value): value is string => !!value && value !== accountPrimary)
+    .join(' · ');
 
-  const scopeParam = authorizeData.scopes.join(' ');
+  const submit = async (action: 'allow' | 'deny') => {
+    setLoading(true);
+    setErrorMessage(null);
 
-  const submitConsent = useCallback(
-    async (action: 'allow' | 'deny') => {
-      setLoading(true);
-      setErrorMessage(null);
+    try {
+      const redirectUrl = await userGateway.submitOAuthConsent({
+        action,
+        client_id: authorizeData.clientId,
+        redirect_uri: authorizeData.redirectUri,
+        scope: authorizeData.scopes.join(' ') || undefined,
+        state: authorizeData.state,
+        trust: action === 'allow' ? trust : undefined,
+        code_challenge: authorizeData.codeChallenge,
+        code_challenge_method: authorizeData.codeChallengeMethod
+      });
 
-      try {
-        const redirectUrl = await userGateway.submitOAuthConsent({
-          action,
-          client_id: authorizeData.clientId,
-          redirect_uri: authorizeData.redirectUri,
-          scope: scopeParam || undefined,
-          state: authorizeData.state,
-          trust: action === 'allow' ? trust : undefined,
-          code_challenge: authorizeData.codeChallenge,
-          code_challenge_method: authorizeData.codeChallengeMethod
-        });
-
-        window.location.assign(redirectUrl);
-      } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : tt.errorConsent);
-        setLoading(false);
-      }
-    },
-    [authorizeData, userGateway, scopeParam, trust, tt.errorConsent]
-  );
-
-  const handleAllow = () => {
-    void submitConsent('allow');
+      window.location.assign(redirectUrl);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : tt.errorConsent);
+      setLoading(false);
+    }
   };
 
-  const handleDeny = () => {
-    if (!window.confirm(tt.denyConfirm)) {
-      return;
+  const handleSwitchAccount = async () => {
+    if (!switchAccountHref) return;
+    setLoading(true);
+    try {
+      await userGateway.logout();
+    } finally {
+      window.location.assign(switchAccountHref);
     }
-    void submitConsent('deny');
   };
 
   return (
-    <div
-      data-testid="OAuthAuthorizeCard"
-      className="max-w-lg w-full bg-primary rounded-2xl shadow-xl border border-primary-border overflow-hidden"
-    >
-      {errorMessage && (
-        <div
-          role="alert"
-          className="mx-6 mt-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded text-sm text-red-700 dark:text-red-300"
-        >
-          <ExclamationCircleIcon className="mr-2 inline h-4 w-4" />
-          {errorMessage}
+    <div data-testid="OAuthAuthorizeCard" className="brain-card wide">
+      <h1 className="brain-title">{tt.heading}</h1>
+      <p className="brain-desc">
+        {authorizeData.clientName} {tt.subtitle}
+      </p>
+
+      <div className="brain-inner-card">
+        <div className="brain-row">
+          <div className="brain-who">
+            <BrainAvatar
+              name={authorizeData.clientName}
+              src={authorizeData.logoUri}
+            />
+            <div className="min-w-0">
+              <div className="brain-name">{authorizeData.clientName}</div>
+              {authorizeData.clientUri && (
+                <div className="brain-sub">{authorizeData.clientUri}</div>
+              )}
+            </div>
+          </div>
+          <span className="brain-pill">{tt.oauthBadge}</span>
+        </div>
+      </div>
+
+      {accountPrimary && (
+        <div className="brain-section">
+          <div className="brain-section-head">
+            <span className="brain-label">{tt.accountLabel}</span>
+          </div>
+          <div className="brain-row">
+            <div className="brain-who">
+              <BrainAvatar name={accountPrimary} size="sm" />
+              <div className="min-w-0">
+                <div className="brain-name" style={{ fontSize: 14 }}>
+                  {accountPrimary}
+                </div>
+                {accountSecondary && (
+                  <div className="brain-sub">{accountSecondary}</div>
+                )}
+              </div>
+            </div>
+            {switchAccountHref && (
+              <button
+                type="button"
+                data-testid="OAuthAuthorizeSwitchAccount"
+                className="brain-link accent"
+                disabled={loading}
+                onClick={() => void handleSwitchAccount()}
+              >
+                {tt.switchAccount}
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      <div className="p-6 border-b border-primary-border">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand text-xl overflow-hidden shrink-0">
-            {authorizeData.logoUri ? (
-              // eslint-disable-next-line @next/next/no-img-element -- third-party app logos use arbitrary URLs
-              <img
-                src={authorizeData.logoUri}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Squares2X2Icon className="h-6 w-6" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-primary-text">
-              {tt.heading}
-            </h2>
-            <p className="text-sm text-secondary-text">{tt.subtitle}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-5">
-        <div className="bg-elevated rounded-lg p-4">
-          <div className="flex justify-between items-start gap-3">
-            <div className="min-w-0">
-              <p className="text-xs text-secondary-text uppercase tracking-wide">
-                {tt.appLabel}
-              </p>
-              <p className="font-semibold text-lg text-primary-text truncate">
-                {authorizeData.clientName}
-              </p>
-              {authorizeData.clientUri && (
-                <p className="text-sm text-secondary-text truncate">
-                  {authorizeData.clientUri}
-                </p>
-              )}
-            </div>
-            <span className="bg-brand/10 text-brand text-xs px-2 py-1 rounded-full shrink-0">
-              {tt.oauthBadge}
-            </span>
-          </div>
-        </div>
-
-        <div>
+      <div className="brain-section">
+        <div className="brain-section-head">
+          <span className="brain-label">{tt.permissionsLabel}</span>
           <button
             type="button"
-            className="flex w-full justify-between items-center cursor-pointer text-left"
-            onClick={() => setExtraOpen((open) => !open)}
-            aria-expanded={extraOpen}
+            className="brain-link"
+            aria-expanded={detailsOpen}
+            onClick={() => setDetailsOpen((open) => !open)}
           >
-            <p className="text-sm font-medium flex items-center gap-1 text-primary-text">
-              <LockClosedIcon className="h-4 w-4" />
-              {tt.permissionsLabel}
-            </p>
+            {tt.details}
             <ChevronDownIcon
-              className={clsx(
-                'h-3 w-3 text-secondary-text transition-transform',
-                extraOpen && 'rotate-180'
-              )}
+              className="brain-toggle-chevron"
+              data-open={detailsOpen}
             />
           </button>
-          <div className="mt-2 space-y-2 pl-1">
-            {scopeLabels.map(({ scope, label }) => (
-              <div
-                data-testid="OAuthAuthorizeCard"
-                key={scope}
-                className="flex items-start gap-2"
-              >
-                <CheckCircleIcon className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                <span className="text-sm text-primary-text">{label}</span>
-              </div>
-            ))}
-          </div>
-          <div
-            hidden={!extraOpen}
-            className="mt-2 pl-5 text-xs text-secondary-text border-l-2 border-brand/40"
-          >
-            <p>{tt.extraPermNote}</p>
-          </div>
         </div>
-
-        <div className="flex items-center justify-between pt-2 gap-2">
-          <div className="flex items-center min-w-0">
-            <input
-              type="checkbox"
-              id="trustCheckbox"
-              checked={trust}
-              onChange={(e) => setTrust(e.target.checked)}
-              className="w-4 h-4 text-brand rounded focus:ring-brand shrink-0"
-            />
-            <label
-              htmlFor="trustCheckbox"
-              className="ml-2 text-sm text-primary-text"
-            >
-              {tt.trustOption}
-            </label>
+        <ul className="brain-perm-list">
+          {authorizeData.scopes.map((scope) => (
+            <li data-testid="OAuthAuthorizeCard" key={scope}>
+              <span className="brain-check" aria-hidden>
+                <CheckIcon strokeWidth={2.5} />
+              </span>
+              <span>{resolveScopeLabel(tt, scope)}</span>
+            </li>
+          ))}
+        </ul>
+        {detailsOpen && (
+          <div className="brain-note" style={{ marginTop: 14 }}>
+            <LockClosedIcon />
+            <span>{tt.extraPermNote}</span>
           </div>
-          <QuestionMarkCircleIcon
-            className="h-3 w-3 text-secondary-text shrink-0"
-            title={tt.trustTooltip}
-          />
-        </div>
-
-        <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 p-3 rounded text-sm text-primary-text">
-          <InformationCircleIcon className="mr-2 inline h-4 w-4 text-amber-600" />
-          {tt.safetyNote}
-        </div>
+        )}
       </div>
 
-      <div className="p-6 border-t border-primary-border bg-elevated flex flex-col sm:flex-row gap-3">
-        <button
+      <div className="brain-section">
+        <label className="brain-trust">
+          <BrainSwitch
+            data-testid="OAuthAuthorizeTrust"
+            checked={trust}
+            disabled={loading}
+            onChange={(event) => setTrust(event.target.checked)}
+          />
+          <span>{tt.trustOption}</span>
+          <span className="brain-hint" title={tt.trustTooltip}>
+            <InformationCircleIcon />
+          </span>
+        </label>
+      </div>
+
+      {errorMessage && (
+        <div
+          role="alert"
+          className="brain-note danger"
+          style={{ marginTop: 20 }}
+        >
+          <ExclamationCircleIcon />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      <div className="brain-actions">
+        <BrainButton
           type="button"
-          id="denyBtn"
+          variant="ghost"
+          data-testid="OAuthAuthorizeDeny"
           disabled={loading}
-          onClick={handleDeny}
-          className="flex-1 px-4 py-2 rounded-lg border border-primary-border hover:bg-secondary transition font-medium text-primary-text disabled:opacity-60"
+          onClick={() => setDenyOpen(true)}
         >
           {tt.deny}
-        </button>
-        <button
+        </BrainButton>
+        <BrainButton
           type="button"
-          id="allowBtn"
-          disabled={loading}
-          onClick={handleAllow}
-          className="flex-1 px-4 py-2 rounded-lg bg-brand text-on-brand hover:bg-brand-hover transition font-medium shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
+          arrow
+          data-testid="OAuthAuthorizeAllow"
+          loading={loading}
+          onClick={() => void submit('allow')}
         >
           {tt.allow}
-          {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-        </button>
+        </BrainButton>
       </div>
+
+      <p className="brain-safety">{tt.safetyNote}</p>
+
+      <BrainModal
+        open={denyOpen}
+        title={tt.denyTitle}
+        onClose={() => setDenyOpen(false)}
+        data-testid="OAuthAuthorizeDenyModal"
+      >
+        <p className="brain-desc" style={{ marginTop: 0 }}>
+          {tt.denyConfirm}
+        </p>
+        <div className="brain-modal-actions">
+          <BrainButton
+            type="button"
+            variant="ghost"
+            size="sm"
+            auto
+            onClick={() => setDenyOpen(false)}
+          >
+            {tt.cancel}
+          </BrainButton>
+          <BrainButton
+            type="button"
+            variant="danger"
+            size="sm"
+            auto
+            onClick={() => {
+              setDenyOpen(false);
+              void submit('deny');
+            }}
+          >
+            {tt.deny}
+          </BrainButton>
+        </div>
+      </BrainModal>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { AuthButton } from './AuthButton';
 import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { RoutePageLayout } from './RoutePageLayout';
+import { BrainAuthActions } from '../components/brain/BrainAuthActions';
 import type { AppRoutePageProps } from './AppRoutePage';
 
 /**
@@ -20,17 +21,19 @@ export function AppRoutePageApp({
   showDeveloperButton,
   showHeaderLogo = true,
   showAuthButton,
-  authButtonLoginOnly,
   authButtonShowLogoutLabel,
   showHeaderNav = true,
   headerNav,
+  authShowConsole,
+  authShowAdmin,
   tt,
   ...layoutProps
 }: AppRoutePageProps) {
   const locale = useLocale();
   const developerTitle = tt.developerTitle || '';
+  const isBrain = layoutProps.headerVariant === 'brain';
   const resolvedHeaderNav =
-    headerNav ?? (showHeaderNav ? <AppHeaderNav /> : undefined);
+    headerNav ?? (showHeaderNav && !isBrain ? <AppHeaderNav /> : undefined);
 
   return (
     <RoutePageLayout
@@ -40,14 +43,16 @@ export function AppRoutePageApp({
       headerNav={resolvedHeaderNav}
       topSlot={<AppBridge />}
       authSlot={
-        showAuthButton ? (
+        !showAuthButton ? undefined : isBrain ? (
+          <BrainAuthActions
+            showConsole={authShowConsole}
+            showAdmin={authShowAdmin}
+          />
+        ) : (
           <Suspense key="auth-button">
-            <AuthButton
-              loginOnly={authButtonLoginOnly}
-              showLogoutLabel={authButtonShowLogoutLabel}
-            />
+            <AuthButton showLogoutLabel={authButtonShowLogoutLabel} />
           </Suspense>
-        ) : undefined
+        )
       }
       languageSlot={<LanguageSwitcher key="language-switcher" />}
       trailingSlot={

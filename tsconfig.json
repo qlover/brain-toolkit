@@ -7,6 +7,7 @@
   "references": [
     { "path": "./tsconfig.test.json" },
     { "path": "./packages/react-kit" },
+    { "path": "./packages/next-app-kit" },
     { "path": "./packages/antd-blocks" },
     { "path": "./packages/antd-theme-override" },
     { "path": "./packages/bridge" },

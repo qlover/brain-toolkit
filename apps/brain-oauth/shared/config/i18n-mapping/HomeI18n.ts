@@ -31,18 +31,11 @@ export const homeI18n = Object.freeze({
   feature3Title: i18nKeys.PAGE_HOME_FEATURE3_TITLE,
   feature3Desc: i18nKeys.PAGE_HOME_FEATURE3_DESC,
 
-  sectionArchTitle: i18nKeys.PAGE_HOME_SECTION_ARCH_TITLE,
-  sectionArchBody: i18nKeys.PAGE_HOME_SECTION_ARCH_BODY,
-  sectionDemoTitle: i18nKeys.PAGE_HOME_SECTION_DEMO_TITLE,
-  sectionDemoBody: i18nKeys.PAGE_HOME_SECTION_DEMO_BODY,
   apiSnippetTitle: i18nKeys.PAGE_HOME_API_SNIPPET_TITLE,
-  apiSnippetLogin: i18nKeys.PAGE_HOME_API_SNIPPET_LOGIN,
 
   ctaTitle: i18nKeys.PAGE_HOME_CTA_TITLE,
   ctaDesc: i18nKeys.PAGE_HOME_CTA_DESC,
   ctaButton: i18nKeys.PAGE_HOME_CTA_BUTTON,
-
-  footerTagline: i18nKeys.PAGE_HOME_FOOTER_TAGLINE,
 
   adminTitle: COMMON_ADMIN_TITLE
 });

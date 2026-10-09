@@ -87,14 +87,6 @@ export class OAuthUserService
 
     this.logger.info('OAuth wrapper login success', { email: params.email });
 
-    await this.requestLogsRepository.insertWithAuth({
-      event_type: 'login',
-      auth_provider: 'oauth-wrapper',
-      userAgent: params.loginContext?.userAgent ?? null,
-      ipAddress: params.loginContext?.ipAddress ?? null,
-      login_method: 'password'
-    });
-
     const user = await this.oauthProvider.getUserSchema();
     if (!user) {
       throw new ExecutorError(
@@ -102,6 +94,15 @@ export class OAuthUserService
         'OAuth app user missing after login'
       );
     }
+
+    await this.requestLogsRepository.insertWithAuth({
+      event_type: 'login',
+      auth_provider: 'oauth-wrapper',
+      userAgent: params.loginContext?.userAgent ?? null,
+      ipAddress: params.loginContext?.ipAddress ?? null,
+      login_method: 'password',
+      user_id: String(user.id)
+    });
 
     return user;
   }

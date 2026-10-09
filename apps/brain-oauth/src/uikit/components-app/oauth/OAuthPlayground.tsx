@@ -2,11 +2,13 @@
 
 import {
   ArrowPathIcon,
-  BeakerIcon,
   CheckCircleIcon,
+  CheckIcon,
   ClipboardDocumentIcon,
-  ExclamationCircleIcon,
-  InformationCircleIcon
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { usePageI18nMapping } from '@qlover/next-kit/client';
 import {
@@ -15,16 +17,18 @@ import {
 } from '@qlover/oauth-wrapper/core';
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode
-} from 'react';
-import { Link } from '@/i18n/routing';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppUserGateway } from '@/impls/AppUserGateway';
+import { BrainAvatar } from '@/uikit/components/brain/BrainAvatar';
+import { BrainButton } from '@/uikit/components/brain/BrainButton';
 import {
+  BrainField,
+  BrainSelectField
+} from '@/uikit/components/brain/BrainField';
+import { BrainSwitch } from '@/uikit/components/brain/BrainSwitch';
+import { LocaleLink } from '@/uikit/components/LocaleLink';
+import {
+  OAuthMachineError,
   readAppApiJson,
   readOAuthMachineJson
 } from '@/uikit/components-app/developer/apps/readAppApiJson';
@@ -36,126 +40,148 @@ import {
   randomStateValue,
   type OAuthCallbackParams
 } from '@/uikit/utils/oauthPlaygroundUtils';
-import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
 import {
-  ROUTE_LOGIN,
+  API_OAUTH_INVALID_REQUEST,
+  API_OAUTH_INVALID_SCOPE,
+  API_OAUTH_UNSUPPORTED_RESPONSE_TYPE,
+  API_REDIRECT_URL
+} from '@config/i18n-identifier/api';
+import type { OAuthPlaygroundI18nInterface } from '@config/i18n-mapping/oauthPlaygroundI18n';
+import { I } from '@config/ioc-identifiter';
+import {
+  ROUTE_DEVELOPER_APPS,
   ROUTE_OAUTH_TOKEN,
   ROUTE_OAUTH_USERINFO
 } from '@config/route';
+import type { DialogHandler } from '@qlover/next-kit/client';
 import type {
   OAuthClientDetail,
   OAuthClientListItem,
   OAuthAuthorizePageData
 } from '@qlover/oauth-wrapper';
-
-const labelClass =
-  'text-secondary-text mb-1.5 block text-xs font-medium uppercase tracking-wide';
-const inputClass =
-  'border-primary-border text-primary-text placeholder:text-tertiary-text focus:border-brand focus:ring-brand w-full rounded-lg border bg-bg-container px-3 py-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-offset-0';
-const primaryButtonClass =
-  'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-brand text-on-brand font-medium hover:bg-brand-hover transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed';
-const secondaryButtonClass =
-  'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-primary-border bg-primary text-primary-text font-medium hover:bg-elevated transition disabled:opacity-60 disabled:cursor-not-allowed';
+import type { ReactNode } from 'react';
 
 type ValidateResult =
   | { valid: true; data: OAuthAuthorizePageData }
   | { valid: false; error: { errorKey: string; message: string } };
 
-function PlaygroundAlert(props: {
-  variant: 'error' | 'success' | 'warning' | 'info';
-  children: ReactNode;
-  onClose?: () => void;
-}) {
-  const { variant, children, onClose } = props;
-  const styles = {
-    error:
-      'bg-red-50 dark:bg-red-900/30 border-red-500 text-red-700 dark:text-red-300',
-    success:
-      'bg-green-50 dark:bg-green-900/25 border-green-500 text-green-800 dark:text-green-300',
-    warning:
-      'bg-amber-50 dark:bg-amber-950/30 border-amber-500 text-amber-900 dark:text-amber-200',
-    info: 'bg-brand/5 border-brand/40 text-primary-text'
-  }[variant];
+type TokenBody = { access_token?: string } & Record<string, unknown>;
 
+const RFC_CODE = /^[a-z_]+$/;
+
+function describeErrorCode(
+  tt: OAuthPlaygroundI18nInterface,
+  code: string | undefined,
+  message: string
+): string {
+  switch (code) {
+    case 'invalid_request':
+    case API_OAUTH_INVALID_REQUEST:
+      return tt.errInvalidRequest;
+    case 'invalid_client':
+      return tt.errInvalidClient;
+    case 'invalid_grant':
+      return tt.errInvalidGrant;
+    case 'unauthorized_client':
+      return message.includes('redirect_uri')
+        ? tt.errRedirect
+        : tt.errUnauthorizedClient;
+    case API_REDIRECT_URL:
+      return tt.errRedirect;
+    case 'invalid_scope':
+    case API_OAUTH_INVALID_SCOPE:
+      return tt.errInvalidScope;
+    case 'invalid_token':
+      return tt.errInvalidToken;
+    case 'unsupported_response_type':
+    case 'unsupported_grant_type':
+    case API_OAUTH_UNSUPPORTED_RESPONSE_TYPE:
+      return tt.errUnsupported;
+    case 'access_denied':
+      return tt.errAccessDenied;
+    case 'server_error':
+    case 'temporarily_unavailable':
+      return tt.errServer;
+    default:
+      return tt.errUnknown;
+  }
+}
+
+function errorCodeOf(error: unknown): string | undefined {
+  if (error instanceof OAuthMachineError) return error.code;
+  if (error instanceof Error && RFC_CODE.test(error.message)) {
+    return error.message;
+  }
+  return undefined;
+}
+
+/** Pretty JSON with keys in bold, like the docs code blocks. */
+function JsonCode({ value }: { value: unknown }) {
+  const parts = JSON.stringify(value, null, 2).split(
+    /("(?:[^"\\]|\\.)*")(?=:)/
+  );
   return (
-    <div
-      data-testid="PlaygroundAlert"
-      role="alert"
-      className={clsx(
-        'border-l-4 p-3 rounded-lg text-sm flex items-start gap-2',
-        styles
+    <pre data-testid="JsonCode" className="brain-code-block wrap">
+      {parts.map((part, index) =>
+        index % 2 === 1 ? <b key={index}>{part}</b> : part
       )}
-    >
-      {variant === 'error' && (
-        <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-      )}
-      {variant === 'success' && (
-        <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-      )}
-      {variant === 'warning' && (
-        <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-      )}
-      {variant === 'info' && (
-        <InformationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-      )}
-      <div className="flex-1 min-w-0">{children}</div>
-      {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-secondary-text hover:text-primary-text shrink-0"
-          aria-label="Close"
-        >
-          X{' '}
-        </button>
-      )}
-    </div>
+    </pre>
   );
 }
 
-function PlaygroundSection(props: {
+function PlaygroundStep({
+  no,
+  current,
+  title,
+  summary,
+  changeLabel,
+  onChange,
+  children
+}: {
+  no: number;
+  current: number;
   title: string;
-  step: number;
-  extra?: ReactNode;
+  summary?: string;
+  changeLabel: string;
+  onChange?: () => void;
   children: ReactNode;
 }) {
+  const done = no < current;
+  const active = no === current;
+
   return (
     <section
-      data-testid="PlaygroundSection"
-      className="border-b border-primary-border last:border-b-0"
+      data-testid={`PlaygroundStep-${no}`}
+      className={clsx(
+        'brain-card flat brain-step',
+        done && 'done',
+        no > current && 'locked'
+      )}
     >
-      <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 bg-elevated/50">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand text-sm font-semibold">
-            {props.step}
-          </span>
-          <h3 className="text-base font-semibold text-primary-text truncate">
-            {props.title}
-          </h3>
-        </div>
-        {props.extra}
+      <div className="brain-step-head">
+        <span className={clsx('brain-step-no', active && 'on', done && 'done')}>
+          {done ? <CheckIcon /> : no}
+        </span>
+        <h2>{title}</h2>
+        {done && onChange && (
+          <button type="button" className="brain-link" onClick={onChange}>
+            <PencilSquareIcon />
+            {changeLabel}
+          </button>
+        )}
       </div>
-      <div className="px-5 sm:px-6 py-5 space-y-4">{props.children}</div>
+      {done && summary && <div className="brain-step-summary">{summary}</div>}
+      {active && <div className="brain-step-body">{children}</div>}
     </section>
-  );
-}
-
-function JsonBlock({ value }: { value: unknown }) {
-  return (
-    <pre
-      data-testid="JsonBlock"
-      className="mt-2 max-h-64 overflow-auto rounded-lg bg-secondary border border-primary-border p-3 text-xs font-mono text-primary-text"
-    >
-      {JSON.stringify(value, null, 2)}
-    </pre>
   );
 }
 
 export function OAuthPlayground() {
   const tt = usePageI18nMapping<OAuthPlaygroundI18nInterface>();
   const locale = useLocale();
-  const { success, loading: authLoading, user } = useUserAuth();
+  const { success, user } = useUserAuth();
   const userGateway = useIOC(AppUserGateway);
+  const dialogHandler = useIOC(I.DialogHandler) as DialogHandler;
 
   const [clients, setClients] = useState<OAuthClientListItem[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
@@ -170,74 +196,90 @@ export function OAuthPlayground() {
   const [pkceOptionalEnabled, setPkceOptionalEnabled] = useState(false);
   const [pkceVerifier, setPkceVerifier] = useState('');
   const [pkceChallenge, setPkceChallenge] = useState('');
-  const [pkceLoading, setPkceLoading] = useState(false);
 
   const [validateResult, setValidateResult] = useState<ValidateResult | null>(
     null
   );
   const [validating, setValidating] = useState(false);
-
   const [consentLoading, setConsentLoading] = useState(false);
   const [callback, setCallback] = useState<OAuthCallbackParams | null>(null);
-  const [redirectPreview, setRedirectPreview] = useState<string | null>(null);
-
   const [tokenLoading, setTokenLoading] = useState(false);
-  const [tokenResponse, setTokenResponse] = useState<unknown>(null);
-
+  const [tokenBody, setTokenBody] = useState<TokenBody | null>(null);
   const [userinfoLoading, setUserinfoLoading] = useState(false);
-  const [userinfoResponse, setUserinfoResponse] = useState<unknown>(null);
+  const [userinfoBody, setUserinfoBody] = useState<unknown>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const zh = locale.startsWith('zh');
+  const formatError = useCallback(
+    (prefix: string, text: string, code?: string) => {
+      const shownCode = code && RFC_CODE.test(code) ? code : undefined;
+      const suffix = shownCode
+        ? zh
+          ? `（${shownCode}）`
+          : ` (${shownCode})`
+        : '';
+      return `${prefix}${zh ? '：' : ': '}${text}${suffix}`;
+    },
+    [zh]
+  );
+  const reportError = useCallback(
+    (prefix: string, error: unknown) => {
+      const code = errorCodeOf(error);
+      const message = error instanceof Error ? error.message : '';
+      setErrorMessage(
+        formatError(prefix, describeErrorCode(tt, code, message), code)
+      );
+    },
+    [formatError, tt]
+  );
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const pkceRequired = clientDetail != null && !clientDetail.confidential;
   const pkceActive = pkceRequired || pkceOptionalEnabled;
 
-  const regeneratePkce = useCallback(async () => {
-    setPkceLoading(true);
-    try {
-      const verifier = generatePkceVerifier(64);
-      const challenge = await computePkceS256Challenge(verifier);
-      setPkceVerifier(verifier);
-      setPkceChallenge(challenge);
-      setValidateResult(null);
-    } finally {
-      setPkceLoading(false);
-    }
+  const resetFrom = useCallback((step: 1 | 2 | 3) => {
+    if (step <= 1) setValidateResult(null);
+    if (step <= 2) setCallback(null);
+    setTokenBody(null);
+    setUserinfoBody(null);
   }, []);
 
-  const loadClients = useCallback(async () => {
-    setClientsLoading(true);
-    try {
-      const list = await readAppApiJson<OAuthClientListItem[]>(
-        await fetch('/api/clients', { credentials: 'include' })
-      );
-      setClients(list);
-      if (list.length > 0 && !clientId) {
-        setClientId(list[0].client_id);
-      }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Failed to load clients'
-      );
-    } finally {
-      setClientsLoading(false);
-    }
-  }, [clientId]);
+  const regeneratePkce = useCallback(async () => {
+    const verifier = generatePkceVerifier(64);
+    const challenge = await computePkceS256Challenge(verifier);
+    setPkceVerifier(verifier);
+    setPkceChallenge(challenge);
+  }, []);
 
   useEffect(() => {
-    if (success) {
-      void loadClients();
-    }
-  }, [success, loadClients]);
+    if (!success) return;
+    let cancelled = false;
+    void (async () => {
+      setClientsLoading(true);
+      try {
+        const list = await readAppApiJson<OAuthClientListItem[]>(
+          await fetch('/api/clients', { credentials: 'include' })
+        );
+        if (cancelled) return;
+        setClients(list);
+        setClientId((prev) => prev ?? list[0]?.client_id);
+      } catch (error) {
+        if (!cancelled) reportError(tt.errLoadClients, error);
+      } finally {
+        if (!cancelled) setClientsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [success, reportError, tt.errLoadClients]);
 
   useEffect(() => {
     if (!clientId || !success) {
       setClientDetail(null);
       return;
     }
-
     let cancelled = false;
     void (async () => {
       try {
@@ -250,36 +292,29 @@ export function OAuthPlayground() {
         setClientDetail(detail);
         setRedirectUri(detail.redirect_uris[0] ?? '');
         setSelectedScopes([...detail.scopes]);
-        setValidateResult(null);
-        setCallback(null);
-        setTokenResponse(null);
-        setUserinfoResponse(null);
         setPkceOptionalEnabled(false);
-        if (!detail.confidential) {
-          void regeneratePkce();
-        } else {
+        resetFrom(1);
+        if (detail.confidential) {
           setPkceVerifier('');
           setPkceChallenge('');
+        } else {
+          void regeneratePkce();
         }
-      } catch (err) {
-        if (!cancelled) {
-          setErrorMessage(
-            err instanceof Error ? err.message : 'Failed to load client'
-          );
-        }
+      } catch (error) {
+        if (!cancelled) reportError(tt.errLoadClients, error);
       }
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [clientId, success, regeneratePkce]);
-
-  useEffect(() => {
-    if (pkceRequired && !pkceVerifier) {
-      void regeneratePkce();
-    }
-  }, [pkceRequired, pkceVerifier, regeneratePkce]);
+  }, [
+    clientId,
+    success,
+    regeneratePkce,
+    reportError,
+    resetFrom,
+    tt.errLoadClients
+  ]);
 
   const authorizeUrl = useMemo(() => {
     if (!clientId || !redirectUri) return '';
@@ -303,12 +338,19 @@ export function OAuthPlayground() {
   ]);
 
   const scopeParam = selectedScopes.join(' ');
+  const pkceParams: {
+    code_challenge?: string;
+    code_challenge_method?: 'S256';
+  } =
+    pkceActive && pkceChallenge
+      ? { code_challenge: pkceChallenge, code_challenge_method: 'S256' }
+      : {};
 
-  const validateParams = useCallback(async () => {
+  const validateParams = async () => {
     if (!clientId || !redirectUri) return;
     setValidating(true);
     setErrorMessage(null);
-    setValidateResult(null);
+    resetFrom(1);
 
     const params = new URLSearchParams({
       response_type: 'code',
@@ -317,8 +359,8 @@ export function OAuthPlayground() {
     });
     if (scopeParam) params.set('scope', scopeParam);
     if (state.trim()) params.set('state', state.trim());
-    if (pkceActive && pkceChallenge) {
-      params.set('code_challenge', pkceChallenge);
+    if (pkceParams.code_challenge) {
+      params.set('code_challenge', pkceParams.code_challenge);
       params.set('code_challenge_method', 'S256');
     }
 
@@ -328,73 +370,49 @@ export function OAuthPlayground() {
           credentials: 'include'
         })
       );
-      setValidateResult(result);
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Validation failed');
+      if (result.valid) {
+        setValidateResult(result);
+      } else {
+        const { errorKey, message } = result.error;
+        setErrorMessage(
+          formatError(
+            tt.errValidate,
+            describeErrorCode(tt, errorKey, message),
+            errorKey
+          )
+        );
+      }
+    } catch (error) {
+      reportError(tt.errValidate, error);
     } finally {
       setValidating(false);
     }
-  }, [clientId, redirectUri, scopeParam, state, pkceActive, pkceChallenge]);
+  };
 
-  const submitConsent = useCallback(
-    async (action: 'allow' | 'deny') => {
-      if (!clientId || !redirectUri) return;
-      setConsentLoading(true);
-      setErrorMessage(null);
-      setCallback(null);
-      setRedirectPreview(null);
-      setTokenResponse(null);
-      setUserinfoResponse(null);
-
-      try {
-        const redirectUrl = await userGateway.submitOAuthConsent({
-          action,
-          client_id: clientId,
-          redirect_uri: redirectUri,
-          scope: scopeParam || undefined,
-          state: state.trim() || undefined,
-          ...(pkceActive && pkceChallenge
-            ? {
-                code_challenge: pkceChallenge,
-                code_challenge_method: 'S256' as const
-              }
-            : {})
-        });
-        setRedirectPreview(redirectUrl);
-        setCallback(parseOAuthCallbackUrl(redirectUrl));
-      } catch (err) {
-        setErrorMessage(
-          err instanceof Error ? err.message : 'Consent submission failed'
-        );
-      } finally {
-        setConsentLoading(false);
-      }
-    },
-    [
-      clientId,
-      redirectUri,
-      scopeParam,
-      state,
-      userGateway,
-      pkceActive,
-      pkceChallenge
-    ]
-  );
-
-  const exchangeToken = useCallback(async () => {
-    if (!callback?.code || !clientId || !redirectUri) {
-      setErrorMessage('Authorization code is required');
-      return;
+  const submitConsent = async (action: 'allow' | 'deny') => {
+    if (!clientId || !redirectUri) return;
+    setConsentLoading(true);
+    setErrorMessage(null);
+    resetFrom(2);
+    try {
+      const redirectUrl = await userGateway.submitOAuthConsent({
+        action,
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: scopeParam || undefined,
+        state: state.trim() || undefined,
+        ...pkceParams
+      });
+      setCallback(parseOAuthCallbackUrl(redirectUrl));
+    } catch (error) {
+      reportError(tt.errConsent, error);
+    } finally {
+      setConsentLoading(false);
     }
-    if (pkceActive) {
-      if (!pkceVerifier.trim()) {
-        setErrorMessage('code_verifier is required for PKCE');
-        return;
-      }
-    } else if (!clientSecret.trim()) {
-      setErrorMessage('client_secret is required');
-      return;
-    }
+  };
+
+  const exchangeToken = async () => {
+    if (!callback?.code || !clientId || !redirectUri) return;
     setTokenLoading(true);
     setErrorMessage(null);
     try {
@@ -414,235 +432,221 @@ export function OAuthPlayground() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
       });
-      const result = await readOAuthMachineJson(res);
-      setTokenResponse({ status: res.status, body: result });
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Token exchange failed'
-      );
+      setTokenBody(await readOAuthMachineJson<TokenBody>(res));
+    } catch (error) {
+      reportError(tt.errToken, error);
     } finally {
       setTokenLoading(false);
     }
-  }, [callback, clientId, redirectUri, clientSecret, pkceActive, pkceVerifier]);
+  };
 
-  const fetchUserinfo = useCallback(async () => {
-    const accessToken =
-      tokenResponse &&
-      typeof tokenResponse === 'object' &&
-      tokenResponse !== null &&
-      'body' in tokenResponse &&
-      typeof (tokenResponse as { body: unknown }).body === 'object' &&
-      (tokenResponse as { body: { access_token?: string } }).body?.access_token;
-
-    if (!accessToken) {
-      setErrorMessage('No access_token in token response');
-      return;
-    }
-
+  const fetchUserinfo = async () => {
+    if (!tokenBody?.access_token) return;
     setUserinfoLoading(true);
     setErrorMessage(null);
     try {
       const res = await fetch(ROUTE_OAUTH_USERINFO, {
-        headers: { Authorization: `Bearer ${accessToken}` }
+        headers: { Authorization: `Bearer ${tokenBody.access_token}` }
       });
-      const result = await readOAuthMachineJson(res);
-      setUserinfoResponse({ status: res.status, body: result });
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Userinfo failed');
+      setUserinfoBody(await readOAuthMachineJson(res));
+    } catch (error) {
+      reportError(tt.errUserinfo, error);
     } finally {
       setUserinfoLoading(false);
     }
-  }, [tokenResponse]);
-
-  const copyText = async (text: string) => {
-    await navigator.clipboard.writeText(text);
   };
 
-  const currentStep = useMemo(() => {
-    if (userinfoResponse) return 4;
-    if (tokenResponse) return 3;
-    if (callback) return 2;
-    if (validateResult?.valid) return 1;
-    return 0;
-  }, [validateResult, callback, tokenResponse, userinfoResponse]);
-
-  const stepTitles = [
-    tt.stepSession,
-    tt.stepClient,
-    tt.stepAuthorize,
-    tt.stepToken,
-    tt.stepUserinfo
-  ];
+  const copyAuthorizeUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(authorizeUrl);
+      dialogHandler.success(tt.copied);
+    } catch {
+      // clipboard permission denied; nothing useful to report
+    }
+  };
 
   const toggleScope = (scope: string) => {
     setSelectedScopes((prev) =>
       prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope]
     );
-    setValidateResult(null);
+    resetFrom(1);
   };
 
-  const hasAccessToken =
-    tokenResponse &&
-    typeof tokenResponse === 'object' &&
-    tokenResponse !== null &&
-    'body' in tokenResponse &&
-    (tokenResponse as { body: { access_token?: string } }).body?.access_token;
+  const current = !validateResult?.valid
+    ? 1
+    : !callback
+      ? 2
+      : !tokenBody
+        ? 3
+        : 4;
+  const denied = Boolean(callback?.error);
+  const displayName = user?.name || user?.email || user?.phone || '';
+  const clientSummary = clientDetail
+    ? [
+        clientDetail.client_name,
+        clientDetail.confidential ? tt.confidential : tt.public,
+        pkceActive ? 'PKCE' : null
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
 
   return (
-    <div data-testid="OAuthPlayground" className="flex flex-1 flex-col">
-      <div className="flex flex-1 items-start justify-center px-4 py-8 sm:py-12">
-        <div
-          data-testid="OAuthPlayground"
-          className="w-full max-w-3xl bg-primary rounded-2xl shadow-xl border border-primary-border overflow-hidden"
-        >
-          <div className="p-6 sm:p-8 border-b border-primary-border">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand text-xl shrink-0">
-                <BeakerIcon className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-semibold text-primary-text">
-                  {tt.title}
-                </h1>
-                <p className="text-sm text-secondary-text mt-1 leading-relaxed">
-                  {tt.intro}
-                </p>
-              </div>
-            </div>
+    <div data-testid="OAuthPlayground" className="brain-content brain-pg">
+      <h1 className="brain-title">{tt.title}</h1>
+      <p className="brain-desc">{tt.desc}</p>
 
-            <div className="mt-4">
-              <PlaygroundAlert variant="info">
-                <span>{tt.demoNote}</span>
-              </PlaygroundAlert>
-            </div>
+      {errorMessage && (
+        <div className="brain-note danger brain-pg-error" role="alert">
+          <ExclamationTriangleIcon />
+          <span className="flex-1">{errorMessage}</span>
+          <button
+            type="button"
+            aria-label={tt.close}
+            title={tt.close}
+            onClick={() => setErrorMessage(null)}
+          >
+            <XMarkIcon />
+          </button>
+        </div>
+      )}
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {stepTitles.map((title, index) => (
-                <span
-                  data-testid="OAuthPlayground"
-                  key={title}
-                  className={clsx(
-                    'text-xs px-3 py-1 rounded-full border font-medium transition-colors',
-                    index <= currentStep
-                      ? 'bg-brand/10 text-brand border-brand/30'
-                      : 'bg-elevated text-secondary-text border-primary-border'
-                  )}
-                >
-                  {index + 1}. {title}
-                </span>
-              ))}
+      {user && (
+        <div className="brain-inner-card brain-pg-account">
+          <div className="brain-who">
+            <BrainAvatar name={displayName} size="sm" />
+            <div>
+              <div className="brain-name">{user.email || displayName}</div>
+              <div className="brain-sub">{tt.accountSub}</div>
             </div>
           </div>
+          <span className="brain-pill ok">{tt.signedIn}</span>
+        </div>
+      )}
 
-          {errorMessage && (
-            <div className="px-5 sm:px-6 pt-5">
-              <PlaygroundAlert
-                variant="error"
-                onClose={() => setErrorMessage(null)}
+      <div className="brain-pg-steps">
+        <PlaygroundStep
+          no={1}
+          current={current}
+          title={tt.stepClient}
+          summary={clientSummary}
+          changeLabel={tt.change}
+          onChange={() => resetFrom(1)}
+        >
+          {!clientsLoading && clients.length === 0 ? (
+            <div className="brain-note">
+              <InformationCircleIcon />
+              <span className="flex-1">{tt.noClients}</span>
+              <LocaleLink
+                href={ROUTE_DEVELOPER_APPS}
+                title={tt.goConsole}
+                className="brain-link"
               >
-                {errorMessage}
-              </PlaygroundAlert>
+                {tt.goConsole}
+              </LocaleLink>
             </div>
-          )}
+          ) : (
+            <>
+              <div className="brain-pg-row">
+                <BrainSelectField
+                  id="playground-client"
+                  label={tt.clientLabel}
+                  disabled={clientsLoading}
+                  value={clientId ?? ''}
+                  onChange={(e) => setClientId(e.target.value)}
+                >
+                  {clients.map((c) => (
+                    <option
+                      data-testid="OAuthPlayground"
+                      key={c.client_id}
+                      value={c.client_id}
+                    >
+                      {c.client_name} ({c.client_id})
+                    </option>
+                  ))}
+                </BrainSelectField>
+                <BrainSelectField
+                  id="playground-redirect"
+                  label="redirect_uri"
+                  value={redirectUri}
+                  onChange={(e) => {
+                    setRedirectUri(e.target.value);
+                    resetFrom(1);
+                  }}
+                >
+                  {clientDetail?.redirect_uris.map((uri) => (
+                    <option data-testid="OAuthPlayground" key={uri} value={uri}>
+                      {uri}
+                    </option>
+                  ))}
+                </BrainSelectField>
+              </div>
 
-          <PlaygroundSection title={tt.stepSession} step={1}>
-            {authLoading ? (
-              <p className="text-secondary-text text-sm flex items-center gap-2">
-                <ArrowPathIcon className="h-4 w-4 animate-spin" /> Loading...
-              </p>
-            ) : success && user ? (
-              <p className="text-primary-text text-sm flex items-center gap-2">
-                <CheckCircleIcon className="h-4 w-4 text-green-500 shrink-0" />
-                <span>
-                  {tt.signedInAs}{' '}
-                  <strong className="font-semibold">{user.email}</strong>
-                </span>
-              </p>
-            ) : (
-              <PlaygroundAlert variant="warning">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span>{tt.loginRequired}</span>
-                  <Link href={ROUTE_LOGIN} className={primaryButtonClass}>
-                    {tt.goLogin}
-                  </Link>
+              <div className="brain-pg-block">
+                <span className="brain-pg-label">scope</span>
+                <div className="brain-chips">
+                  {clientDetail?.scopes.map((scope) => {
+                    const on = selectedScopes.includes(scope);
+                    return (
+                      <button
+                        data-testid="OAuthPlayground"
+                        key={scope}
+                        type="button"
+                        className="brain-chip toggle mono"
+                        aria-pressed={on}
+                        onClick={() => toggleScope(scope)}
+                      >
+                        {on && <CheckIcon />}
+                        {scope}
+                      </button>
+                    );
+                  })}
                 </div>
-              </PlaygroundAlert>
-            )}
-          </PlaygroundSection>
+              </div>
 
-          <PlaygroundSection
-            title={tt.stepClient}
-            step={2}
-            extra={
-              <button
-                type="button"
-                className={clsx(secondaryButtonClass, 'text-sm py-1.5 px-3')}
-                onClick={() => void loadClients()}
-                disabled={!success || clientsLoading}
-              >
-                <ArrowPathIcon className="h-4 w-4" />
-              </button>
-            }
-          >
-            <div>
-              <label htmlFor="playground-client" className={labelClass}>
-                {tt.clientLabel}
-              </label>
-              <select
-                id="playground-client"
-                className={inputClass}
-                disabled={!success || clientsLoading}
-                value={clientId ?? ''}
-                onChange={(e) => setClientId(e.target.value)}
-              >
-                {clients.length === 0 && <option value="">No clients</option>}
-                {clients.map((c) => (
-                  <option
-                    data-testid="OAuthPlayground"
-                    key={c.client_id}
-                    value={c.client_id}
+              <BrainField
+                id="playground-state"
+                label="state"
+                value={state}
+                placeholder={tt.optional}
+                onChange={(e) => {
+                  setState(e.target.value);
+                  resetFrom(1);
+                }}
+                action={
+                  <button
+                    type="button"
+                    className="brain-field-action"
+                    onClick={() => {
+                      setState(randomStateValue());
+                      resetFrom(1);
+                    }}
                   >
-                    {c.client_name} ({c.client_id})
-                  </option>
-                ))}
-              </select>
-            </div>
+                    {tt.random}
+                  </button>
+                }
+              />
 
-            {clientDetail && (
-              <div className="space-y-4 rounded-xl bg-elevated border border-primary-border p-4">
-                <p className="text-sm text-primary-text">
-                  <span className={labelClass}>{tt.clientType}</span>{' '}
-                  <span
-                    className={clsx(
-                      'inline-block text-xs px-2 py-0.5 rounded-full font-medium ml-1',
-                      clientDetail.confidential
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                        : 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
-                    )}
-                  >
-                    {clientDetail.confidential ? 'Confidential' : 'Public'}
-                  </span>
-                  {pkceActive && (
-                    <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium ml-2 bg-brand/10 text-brand border border-brand/30">
-                      {tt.pkceEnabled}
+              {clientDetail && (
+                <div className="brain-inner-card brain-pg-pkce">
+                  <div className="brain-row">
+                    <span className="brain-pg-pkce-title">
+                      PKCE
+                      {pkceRequired && (
+                        <span className="brain-pill purple sm">
+                          {tt.pkceRequired}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </p>
-
-                <div className="rounded-lg border border-primary-border p-4 space-y-3 bg-primary/50">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-primary-text">
-                      {tt.pkceTitle}
-                    </p>
-                    {clientDetail.confidential && (
-                      <label className="flex items-center gap-2 text-sm text-primary-text cursor-pointer">
-                        <input
-                          type="checkbox"
+                    {!pkceRequired && (
+                      <label className="brain-pg-switch">
+                        <span className="brain-sub">{tt.pkceOptional}</span>
+                        <BrainSwitch
                           checked={pkceOptionalEnabled}
                           onChange={(e) => {
                             const enabled = e.target.checked;
                             setPkceOptionalEnabled(enabled);
-                            setValidateResult(null);
+                            resetFrom(1);
                             if (enabled) {
                               void regeneratePkce();
                             } else {
@@ -650,309 +654,199 @@ export function OAuthPlayground() {
                               setPkceChallenge('');
                             }
                           }}
-                          className="w-4 h-4 rounded border-primary-border text-brand focus:ring-brand"
                         />
-                        {tt.pkceOptional}
                       </label>
                     )}
                   </div>
-                  {pkceActive ? (
+                  {pkceActive && (
                     <>
-                      <p className="text-xs text-secondary-text">
-                        {tt.pkceHint}
-                      </p>
-                      <div>
-                        <p className={labelClass}>{tt.pkceVerifier}</p>
-                        <textarea
-                          readOnly
-                          value={pkceVerifier}
-                          rows={2}
-                          className={clsx(inputClass, 'font-mono text-xs')}
-                        />
-                      </div>
-                      <div>
-                        <p className={labelClass}>{tt.pkceChallenge}</p>
-                        <textarea
-                          readOnly
-                          value={pkceChallenge}
-                          rows={2}
-                          className={clsx(inputClass, 'font-mono text-xs')}
-                        />
+                      <div className="brain-pg-kv">
+                        <span>code_verifier</span>
+                        <span className="brain-code">{pkceVerifier}</span>
+                        <span>code_challenge</span>
+                        <span className="brain-code">{pkceChallenge}</span>
                       </div>
                       <button
                         type="button"
-                        className={secondaryButtonClass}
-                        disabled={pkceLoading}
-                        onClick={() => void regeneratePkce()}
+                        className="brain-link"
+                        onClick={() => {
+                          void regeneratePkce();
+                          resetFrom(1);
+                        }}
                       >
-                        {pkceLoading && (
-                          <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                        )}
-                        {tt.pkceRegenerate}
+                        <ArrowPathIcon />
+                        {tt.regen}
                       </button>
                     </>
-                  ) : (
-                    <p className="text-xs text-secondary-text">
-                      Enable optional PKCE to test S256 with a confidential
-                      client, or select a public client.
-                    </p>
                   )}
                 </div>
+              )}
 
-                <div>
-                  <label htmlFor="playground-redirect" className={labelClass}>
-                    {tt.redirectLabel}
-                  </label>
-                  <select
-                    id="playground-redirect"
-                    className={inputClass}
-                    value={redirectUri}
-                    onChange={(e) => {
-                      setRedirectUri(e.target.value);
-                      setValidateResult(null);
-                    }}
-                  >
-                    {clientDetail.redirect_uris.map((uri) => (
-                      <option
-                        data-testid="OAuthPlayground"
-                        key={uri}
-                        value={uri}
-                      >
-                        {uri}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <p className={labelClass}>{tt.scopeLabel}</p>
-                  <div className="space-y-2">
-                    {clientDetail.scopes.map((scope) => (
-                      <label
-                        data-testid="OAuthPlayground"
-                        key={scope}
-                        className="flex items-center gap-2 text-sm text-primary-text cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedScopes.includes(scope)}
-                          onChange={() => toggleScope(scope)}
-                          className="w-4 h-4 rounded border-primary-border text-brand focus:ring-brand"
-                        />
-                        <code className="text-xs font-mono bg-secondary px-2 py-0.5 rounded">
-                          {scope}
-                        </code>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="playground-state" className={labelClass}>
-                    {tt.stateLabel}
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      id="playground-state"
-                      type="text"
-                      className={inputClass}
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      placeholder="optional"
-                    />
-                    <button
-                      type="button"
-                      className={secondaryButtonClass}
-                      onClick={() => setState(randomStateValue())}
-                    >
-                      {tt.randomState}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className={secondaryButtonClass}
-                  disabled={
-                    !success || validating || (pkceActive && !pkceChallenge)
-                  }
-                  onClick={() => void validateParams()}
-                >
-                  {validating && (
-                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                  )}
-                  {tt.validate}
-                </button>
-
-                {validateResult?.valid && (
-                  <PlaygroundAlert variant="success">
-                    {tt.validOk}
-                  </PlaygroundAlert>
-                )}
-                {validateResult && !validateResult.valid && (
-                  <PlaygroundAlert variant="error">
-                    <p>{validateResult.error.message}</p>
-                    <p className="text-xs mt-1 opacity-80 font-mono">
-                      {validateResult.error.errorKey}
-                    </p>
-                  </PlaygroundAlert>
-                )}
-
-                {authorizeUrl && (
-                  <div>
-                    <p className={labelClass}>{tt.authorizeUrl}</p>
-                    <div className="flex gap-2">
-                      <textarea
-                        readOnly
-                        value={authorizeUrl}
-                        rows={3}
-                        className={clsx(
-                          inputClass,
-                          'font-mono text-xs resize-y'
-                        )}
-                      />
-                      <button
-                        type="button"
-                        title={tt.copy}
-                        className={secondaryButtonClass}
-                        onClick={() => void copyText(authorizeUrl)}
-                      >
-                        <ClipboardDocumentIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </PlaygroundSection>
-
-          <PlaygroundSection title={tt.stepAuthorize} step={3}>
-            <p className="text-sm text-secondary-text">
-              {validateResult?.valid
-                ? validateResult.data.clientName
-                : tt.validate}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={primaryButtonClass}
-                disabled={!success || !validateResult?.valid || consentLoading}
-                onClick={() => void submitConsent('allow')}
+              <BrainButton
+                size="sm"
+                auto
+                loading={validating}
+                disabled={!clientDetail || (pkceActive && !pkceChallenge)}
+                onClick={() => void validateParams()}
               >
-                {consentLoading && (
-                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                )}
-                {tt.allow}
-              </button>
-              <button
-                type="button"
-                className={secondaryButtonClass}
-                disabled={!success || !validateResult?.valid || consentLoading}
-                onClick={() => void submitConsent('deny')}
-              >
-                {tt.deny}
-              </button>
+                {tt.validate}
+              </BrainButton>
+            </>
+          )}
+        </PlaygroundStep>
+
+        <PlaygroundStep
+          no={2}
+          current={current}
+          title={tt.stepConsent}
+          summary={denied ? tt.summaryDenied : tt.summaryAllowed}
+          changeLabel={tt.change}
+          onChange={() => resetFrom(2)}
+        >
+          <div className="brain-note brain-pg-block">
+            <CheckCircleIcon />
+            <span>{tt.validOk}</span>
+          </div>
+          <span className="brain-pg-label">{tt.authUrl}</span>
+          <div className="brain-doc-code brain-pg-block">
+            <button
+              type="button"
+              className="brain-doc-code-copy"
+              aria-label={tt.copy}
+              title={tt.copy}
+              onClick={() => void copyAuthorizeUrl()}
+            >
+              <ClipboardDocumentIcon />
+            </button>
+            <pre className="brain-code-block wrap brain-pg-url">
+              {authorizeUrl}
+            </pre>
+          </div>
+          <div className="brain-inner-card brain-pg-consent">
+            <BrainAvatar
+              name={clientDetail?.client_name}
+              src={clientDetail?.logo_uri}
+              size="sm"
+            />
+            <div>
+              <div className="brain-name">{clientDetail?.client_name}</div>
+              <div className="brain-sub">{tt.consentSub}</div>
             </div>
+            <div className="brain-chips">
+              {selectedScopes.map((scope) => (
+                <span
+                  data-testid="OAuthPlayground"
+                  key={scope}
+                  className="brain-chip toggle mono"
+                >
+                  {scope}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="brain-pg-actions">
+            <BrainButton
+              variant="ghost"
+              size="sm"
+              auto
+              disabled={consentLoading}
+              onClick={() => void submitConsent('deny')}
+            >
+              {tt.deny}
+            </BrainButton>
+            <BrainButton
+              size="sm"
+              auto
+              loading={consentLoading}
+              onClick={() => void submitConsent('allow')}
+            >
+              {tt.allow}
+            </BrainButton>
+          </div>
+        </PlaygroundStep>
 
-            {redirectPreview && (
-              <div className="rounded-xl bg-secondary border border-primary-border p-4 space-y-2">
-                <p className={labelClass}>{tt.callback}</p>
-                <textarea
-                  readOnly
-                  value={redirectPreview}
-                  rows={2}
-                  className={clsx(inputClass, 'font-mono text-xs')}
-                />
-                {callback && <JsonBlock value={callback} />}
-              </div>
-            )}
-          </PlaygroundSection>
-
-          <PlaygroundSection title={tt.stepToken} step={4}>
-            {pkceActive ? (
-              <div>
-                <p className={labelClass}>{tt.pkceVerifier}</p>
-                <textarea
-                  readOnly
-                  value={pkceVerifier}
-                  rows={2}
-                  className={clsx(inputClass, 'font-mono text-xs')}
-                />
-                <p className="text-xs text-secondary-text mt-2">
-                  {tt.pkceHint}
-                </p>
-              </div>
-            ) : (
-              <div>
-                <label htmlFor="playground-secret" className={labelClass}>
-                  {tt.secretLabel}
-                </label>
-                <input
+        <PlaygroundStep
+          no={3}
+          current={current}
+          title={tt.stepToken}
+          summary={tt.summaryToken}
+          changeLabel={tt.change}
+        >
+          <span className="brain-pg-label">{tt.callback}</span>
+          <div className="brain-pg-block">
+            <JsonCode value={callback} />
+          </div>
+          {denied ? (
+            <div className="brain-note danger">
+              <ExclamationTriangleIcon />
+              <span>{tt.deniedNote}</span>
+            </div>
+          ) : (
+            <>
+              {pkceActive ? (
+                <div className="brain-note brain-pg-block">
+                  <InformationCircleIcon />
+                  <span>{tt.verifierNote}</span>
+                </div>
+              ) : (
+                <BrainField
                   id="playground-secret"
+                  label="client_secret"
                   type="password"
                   autoComplete="off"
-                  className={inputClass}
                   value={clientSecret}
                   onChange={(e) => setClientSecret(e.target.value)}
-                  placeholder="client_secret"
                 />
-              </div>
-            )}
-            <button
-              type="button"
-              className={primaryButtonClass}
-              disabled={
-                !callback?.code ||
-                tokenLoading ||
-                (pkceActive ? !pkceVerifier.trim() : !clientSecret.trim())
-              }
-              onClick={() => void exchangeToken()}
-            >
-              {tokenLoading && (
-                <ArrowPathIcon className="h-4 w-4 animate-spin" />
               )}
-              {tt.exchange}
-            </button>
-            {tokenResponse != null && (
-              <div>
-                <p className={labelClass}>{tt.response}</p>
-                <JsonBlock value={tokenResponse} />
-              </div>
-            )}
-          </PlaygroundSection>
+              <BrainButton
+                size="sm"
+                auto
+                loading={tokenLoading}
+                disabled={pkceActive ? !pkceVerifier : !clientSecret.trim()}
+                onClick={() => void exchangeToken()}
+              >
+                {tt.exchange}
+              </BrainButton>
+            </>
+          )}
+        </PlaygroundStep>
 
-          <PlaygroundSection title={tt.stepUserinfo} step={5}>
-            <button
-              type="button"
-              className={primaryButtonClass}
-              disabled={!hasAccessToken || userinfoLoading}
-              onClick={() => void fetchUserinfo()}
-            >
-              {userinfoLoading && (
-                <ArrowPathIcon className="h-4 w-4 animate-spin" />
-              )}
-              {tt.fetchUserinfo}
-            </button>
-            {userinfoResponse != null && (
-              <div>
-                <p className={labelClass}>{tt.response}</p>
-                <JsonBlock value={userinfoResponse} />
-              </div>
-            )}
-          </PlaygroundSection>
-
-          <div className="px-5 sm:px-6 py-4 bg-amber-50 dark:bg-amber-950/30 border-t border-primary-border">
-            <p className="text-sm text-primary-text flex items-start gap-2">
-              <InformationCircleIcon className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <span>{tt.simulatedNote}</span>
-            </p>
+        <PlaygroundStep
+          no={4}
+          current={current}
+          title={tt.stepUserinfo}
+          changeLabel={tt.change}
+        >
+          <span className="brain-pg-label">{tt.tokenResp}</span>
+          <div className="brain-pg-block">
+            <JsonCode value={tokenBody} />
           </div>
-        </div>
+          <BrainButton
+            size="sm"
+            auto
+            loading={userinfoLoading}
+            disabled={!tokenBody?.access_token}
+            onClick={() => void fetchUserinfo()}
+          >
+            {tt.fetchUser}
+          </BrainButton>
+          {userinfoBody != null && (
+            <div className="brain-pg-result">
+              <span className="brain-pg-label">{tt.userResp}</span>
+              <JsonCode value={userinfoBody} />
+              <div className="brain-note">
+                <CheckCircleIcon />
+                <span>{tt.allDone}</span>
+              </div>
+            </div>
+          )}
+        </PlaygroundStep>
       </div>
 
-      <footer className="text-center text-sm text-secondary-text py-6 border-t border-primary-border bg-primary">
-        <p>&2026 {tt.title}</p>
-      </footer>
+      <div className="brain-note warn brain-pg-foot">
+        <InformationCircleIcon />
+        <span>{tt.footNote}</span>
+      </div>
     </div>
   );
 }

@@ -1,23 +1,14 @@
 'use client';
 
-import {
-  ArrowPathIcon,
-  ExclamationCircleIcon
-} from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import {
-  oauthDangerButtonClass,
-  oauthPrimaryButtonClass,
-  oauthSecondaryButtonClass
-} from '@config/component';
-import { DeveloperOverlayModal } from './DeveloperOverlayModal';
+import { BrainButton } from '@/uikit/components/brain/BrainButton';
+import { BrainModal } from '@/uikit/components/brain/BrainModal';
 
 export type DeveloperConfirmOptions = {
   title: string;
   content: string;
   okText: string;
   cancelText: string;
-  variant?: 'default' | 'danger';
   onConfirm: () => void | Promise<void>;
 };
 
@@ -27,6 +18,7 @@ type DeveloperConfirmDialogProps = {
   onClose: () => void;
 };
 
+/** Second confirmation for destructive actions; the confirm button is red. */
 export function DeveloperConfirmDialog({
   open,
   options,
@@ -49,44 +41,38 @@ export function DeveloperConfirmDialog({
 
   if (!options) return null;
 
-  const okClass =
-    options.variant === 'danger'
-      ? oauthDangerButtonClass
-      : oauthPrimaryButtonClass;
-
   return (
-    <DeveloperOverlayModal
+    <BrainModal
       open={open}
       title={options.title}
-      onClose={onClose}
-      maxWidthClass="max-w-md"
-      closeOnBackdrop={!pending}
-      footer={
-        <div className="flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            className={oauthSecondaryButtonClass}
-            disabled={pending}
-            onClick={onClose}
-          >
-            {options.cancelText}
-          </button>
-          <button
-            type="button"
-            className={okClass}
-            disabled={pending}
-            onClick={() => void handleConfirm()}
-          >
-            {pending && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-            {options.okText}
-          </button>
-        </div>
-      }
+      onClose={pending ? undefined : onClose}
+      data-testid="DeveloperConfirmDialog"
     >
-      <p className="text-sm text-secondary-text leading-relaxed flex gap-2">
-        <ExclamationCircleIcon className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-        <span>{options.content}</span>
+      <p className="brain-desc" style={{ marginTop: 0 }}>
+        {options.content}
       </p>
-    </DeveloperOverlayModal>
+      <div className="brain-modal-actions">
+        <BrainButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          auto
+          disabled={pending}
+          onClick={onClose}
+        >
+          {options.cancelText}
+        </BrainButton>
+        <BrainButton
+          type="button"
+          variant="danger"
+          size="sm"
+          auto
+          loading={pending}
+          onClick={() => void handleConfirm()}
+        >
+          {options.okText}
+        </BrainButton>
+      </div>
+    </BrainModal>
   );
 }

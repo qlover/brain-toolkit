@@ -1,14 +1,24 @@
 import jwt from 'jsonwebtoken';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isBrainAdminUser } from '@shared/auth/brainAdmin';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
-import { hasSessionPath, ROUTE_LOGIN } from '@config/route';
+import {
+  hasSessionPath,
+  isAdminOnlyPath,
+  ROUTE_ADMIN,
+  ROUTE_LOGIN
+} from '@config/route';
 import { ServerConfig } from '@server/ServerConfig';
-import type { OAuthSessionPayload } from '@qlover/oauth-wrapper';
+import type { UserSchema } from '@qlover/next-kit/common';
+import type {
+  OAuthSessionPayload,
+  WithUserSession
+} from '@qlover/oauth-wrapper';
 
-function loginPathnameForRequest(pathname: string): string {
+function localizedPathForRequest(pathname: string, route: string): string {
   if (!useLocaleRoutes) {
-    return ROUTE_LOGIN;
+    return route;
   }
 
   const first = pathname.split('/').filter(Boolean)[0];
@@ -16,10 +26,10 @@ function loginPathnameForRequest(pathname: string): string {
     first &&
     (i18nConfig.supportedLngs as readonly string[]).includes(first)
   ) {
-    return `/${first}${ROUTE_LOGIN}`;
+    return `/${first}${route}`;
   }
 
-  return `/${i18nConfig.fallbackLng}${ROUTE_LOGIN}`;
+  return `/${i18nConfig.fallbackLng}${route}`;
 }
 
 export function parseOAuthAppSessionCookie(
@@ -63,8 +73,20 @@ export async function oauthWrapperProxySession(request: NextRequest) {
   if (!session) {
     const url = request.nextUrl.clone();
     const returnPath = `${pathname}${request.nextUrl.search}`;
-    url.pathname = loginPathnameForRequest(pathname);
+    url.pathname = localizedPathForRequest(pathname, ROUTE_LOGIN);
     url.search = `redirect=${encodeURIComponent(returnPath)}`;
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    isAdminOnlyPath(pathname) &&
+    !isBrainAdminUser(
+      (session as WithUserSession<OAuthSessionPayload, UserSchema>).user
+    )
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = localizedPathForRequest(pathname, ROUTE_ADMIN);
+    url.search = '';
     return NextResponse.redirect(url);
   }
 

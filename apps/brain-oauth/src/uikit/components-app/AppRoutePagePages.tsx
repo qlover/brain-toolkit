@@ -9,6 +9,7 @@ import { DeveloperButton } from './DeveloperButton';
 import { LanguageSwitcherPages } from './LanguageSwitcherPages';
 import { LogoutButton } from './LogoutButton';
 import { RoutePageLayout } from './RoutePageLayout';
+import { BrainAuthActions } from '../components/brain/BrainAuthActions';
 import type { AppRoutePageProps } from './AppRoutePage';
 
 /**
@@ -23,13 +24,17 @@ export function AppRoutePagePages({
   authButtonShowLogoutLabel,
   showHeaderNav = true,
   headerNav,
+  authShowConsole,
+  authShowAdmin,
   tt,
   ...layoutProps
 }: AppRoutePageProps) {
   const locale = useLocale();
   const developerTitle = tt.developerTitle || '';
+  const isBrain = layoutProps.headerVariant === 'brain';
   const resolvedHeaderNav =
-    headerNav ?? (showHeaderNav ? <AppHeaderNavPages /> : undefined);
+    headerNav ??
+    (showHeaderNav && !isBrain ? <AppHeaderNavPages /> : undefined);
 
   return (
     <RoutePageLayout
@@ -39,12 +44,17 @@ export function AppRoutePagePages({
       headerNav={resolvedHeaderNav}
       topSlot={<AppBridgePages />}
       authSlot={
-        showAuthButton ? (
+        !showAuthButton ? undefined : isBrain ? (
+          <BrainAuthActions
+            showConsole={authShowConsole}
+            showAdmin={authShowAdmin}
+          />
+        ) : (
           <LogoutButton
             key="logout-button"
             showLabel={authButtonShowLogoutLabel}
           />
-        ) : undefined
+        )
       }
       languageSlot={<LanguageSwitcherPages key="language-switcher" />}
       trailingSlot={

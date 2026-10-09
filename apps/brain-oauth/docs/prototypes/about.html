@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于页原型 - Brain OAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/brain.css">
+  <style>
+    .hero {
+      max-width: 620px;
+      padding: 40px 0 72px;
+    }
+
+    .hero .title {
+      font-size: 52px;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      margin: 20px 0 0;
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--text-sub);
+    }
+
+    .sec-title {
+      margin: 0 0 20px;
+      font-size: 28px;
+      font-weight: 300;
+    }
+
+    .values {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+
+    .values svg {
+      width: 22px;
+      height: 22px;
+      color: var(--purple);
+    }
+
+    .values h3 {
+      margin: 14px 0 8px;
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .values p {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 300;
+      line-height: 1.8;
+      color: var(--text-sub);
+    }
+
+    .std {
+      margin-bottom: 64px;
+    }
+
+    .std .chips {
+      gap: 10px;
+    }
+
+    .std .chip {
+      cursor: default;
+      height: 36px;
+      background: var(--inner);
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+    }
+
+    .std .chip small {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .info .card.flat {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .version {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .version .num {
+      font-size: 36px;
+      font-weight: 300;
+    }
+
+    .links {
+      display: grid;
+      gap: 12px;
+    }
+
+    .links a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .links a:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .links svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-light);
+    }
+
+    .is-mobile .hero .title {
+      font-size: 38px;
+    }
+
+    .is-mobile .values,
+    .is-mobile .info {
+      grid-template-columns: 1fr;
+    }
+
+    .user-guest .only-user,
+    .user-signed .only-guest {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas">
+    <div id="stage" class="stage">
+      <div class="bg quiet"></div>
+
+      <header class="hdr">
+        <div class="hdr-left">
+          <a class="hdr-logo" href="home.html" title="Brain OAuth"><svg class="brain-logo" aria-hidden="true"></svg></a>
+          <nav class="hdr-nav">
+            <a href="docs.html" data-i18n="navDocs"></a>
+            <a href="about.html" style="color:var(--text)" data-i18n="navAbout"></a>
+          </nav>
+        </div>
+        <div class="hdr-actions" data-std-actions>
+          <a class="btn sm auto only-guest" href="login.html" data-i18n="login"></a>
+          <a class="btn sm auto only-user hide-mobile" href="developer.html" data-i18n="console"></a>
+          <span class="avatar only-user">R</span>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="hero">
+          <h1 class="title" data-i18n="title"></h1>
+          <p data-i18n="lead"></p>
+        </section>
+
+        <h2 class="sec-title" data-i18n="valuesTitle"></h2>
+        <div class="values">
+          <div class="card flat"><span data-icon="shield"></span><h3 data-i18n="v1"></h3><p data-i18n="v1d"></p></div>
+          <div class="card flat"><span data-icon="book"></span><h3 data-i18n="v2"></h3><p data-i18n="v2d"></p></div>
+          <div class="card flat"><span data-icon="code"></span><h3 data-i18n="v3"></h3><p data-i18n="v3d"></p></div>
+        </div>
+
+        <section class="std">
+          <h2 class="sec-title" data-i18n="stdTitle"></h2>
+          <div class="chips">
+            <span class="chip">OAuth 2.0 <small>RFC 6749</small></span>
+            <span class="chip">Bearer Token <small>RFC 6750</small></span>
+            <span class="chip">PKCE <small>RFC 7636</small></span>
+            <span class="chip">Token Revocation <small>RFC 7009</small></span>
+            <span class="chip">OpenAPI 3</span>
+          </div>
+        </section>
+
+        <div class="info">
+          <div class="card flat">
+            <span class="label" data-i18n="versionLabel"></span>
+            <div class="version"><span class="num">v2.2.0</span><span class="pill ok" data-i18n="latest"></span></div>
+            <span class="app-sub" data-i18n="released"></span>
+          </div>
+          <div class="card flat">
+            <span class="label" data-i18n="linksLabel"></span>
+            <div class="links">
+              <a href="#"><span data-i18n="changelog"></span><span data-icon="arrow"></span></a>
+              <a href="#"><span data-i18n="source"></span><span data-icon="external"></span></a>
+              <a href="#"><span data-i18n="feedback"></span><span data-icon="external"></span></a>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span data-i18n="footer"></span>
+        <span><a href="docs.html" data-i18n="docs"></a></span>
+      </footer>
+    </div>
+
+    <section class="notes">
+      <h2>设计说明</h2>
+      <p>关于页现在只有一行「关于我们」的占位文字，原型按首页的语言补了内容：大标题 + 介绍、三张理念卡片、支持的标准、版本和链接。背景用「安静版」。</p>
+
+      <h3>构成</h3>
+      <ul>
+        <li><b>页头</b>：和首页一样，导航「文档 / 关于」（当前页高亮）；访客显示「登录」，已登录显示「控制台」+ 头像。</li>
+        <li><b>介绍</b>：52px 细体大标题 + 一段说明。</li>
+        <li><b>理念</b>：三张卡片——安全可控、遵循开放标准、开发者友好。</li>
+        <li><b>支持的标准</b>：白色芯片列出协议名 + RFC 编号。</li>
+        <li><b>版本与链接</b>：当前版本号（读取 package.json 的 version，和页脚一致）；更新日志、源码、反馈问题。</li>
+      </ul>
+
+      <h3>已确认的决定</h3>
+      <ul>
+        <li><span class="tag">已确认</span> 整页文案都是新写的，需要确认措辞和要不要保留「理念」一节。</li>
+        <li><span class="tag">已确认</span> 「更新日志」页面还没有，链接先指向仓库的 CHANGELOG。</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="assets/brain.js"></script>
+  <script>
+    BrainProto.init({
+      title: '关于',
+      groups: [
+        { key: 'user', label: '账号', options: [['guest', '访客'], ['signed', '已登录']] }
+      ],
+      state: { user: 'guest' },
+      i18n: {
+        zh: {
+          navDocs: '文档',
+          navAbout: '关于',
+          login: '登录',
+          console: '控制台',
+          title: '关于 Brain OAuth',
+          lead: 'Brain OAuth 是 Brain 的开放授权服务。第三方应用通过标准的 OAuth 2.0 流程接入，用户用自己的 Brain 账号一键登录，应用拿到经过用户同意的最少信息。',
+          valuesTitle: '我们的理念',
+          v1: '安全可控',
+          v1d: '用户清楚看到每个应用请求了什么，可以拒绝授权；密钥只显示一次，公共客户端强制 PKCE。',
+          v2: '遵循开放标准',
+          v2d: '完整实现授权码流程、刷新与吊销，任何标准 OAuth 客户端库都能直接使用。',
+          v3: '开发者友好',
+          v3d: '控制台几分钟创建应用，文档和站内测试台帮你把流程跑通再上线。',
+          stdTitle: '支持的标准',
+          versionLabel: '当前版本',
+          latest: '最新',
+          released: '发布于 2026-09-28',
+          linksLabel: '更多',
+          changelog: '更新日志',
+          source: '源码',
+          feedback: '反馈问题'
+        },
+        en: {
+          navDocs: 'Docs',
+          navAbout: 'About',
+          login: 'Sign in',
+          console: 'Console',
+          title: 'About Brain OAuth',
+          lead: 'Brain OAuth is Brain\'s open authorization service. Apps integrate through the standard OAuth 2.0 flow, users sign in with their Brain account in one step, and apps receive only the data the user approved.',
+          valuesTitle: 'What we care about',
+          v1: 'Safe by default',
+          v1d: 'Users see exactly what each app asks for and can say no. Secrets are shown once; public clients must use PKCE.',
+          v2: 'Open standards',
+          v2d: 'Authorization code, refresh and revocation, fully implemented. Any standard OAuth client library works.',
+          v3: 'Built for developers',
+          v3d: 'Create an app in minutes, then use the docs and playground to get the flow working before launch.',
+          stdTitle: 'Standards',
+          versionLabel: 'Current version',
+          latest: 'Latest',
+          released: 'Released 2026-09-28',
+          linksLabel: 'More',
+          changelog: 'Changelog',
+          source: 'Source code',
+          feedback: 'Report an issue'
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

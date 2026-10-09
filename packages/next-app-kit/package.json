@@ -1,0 +1,65 @@
+{
+  "name": "@brain-toolkit/next-app-kit",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Shared server / client building blocks for brain-toolkit Next.js apps (PAM, brain-oauth)",
+  "exports": {
+    "./package.json": "./package.json",
+    "./server": {
+      "types": "./src/server/index.ts",
+      "import": "./src/server/index.ts",
+      "default": "./src/server/index.ts"
+    },
+    "./shared": {
+      "types": "./src/shared/index.ts",
+      "import": "./src/shared/index.ts",
+      "default": "./src/shared/index.ts"
+    },
+    "./client": {
+      "types": "./src/client/index.ts",
+      "import": "./src/client/index.ts",
+      "default": "./src/client/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "type-check": "tsc --build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/next-app-kit"
+  },
+  "author": "qlover",
+  "license": "ISC",
+  "devDependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@qlover/corekit-bridge": "3.4.0",
+    "@qlover/fe-corekit": "3.4.6",
+    "@qlover/next-kit": "^1.5.0",
+    "@supabase/supabase-js": "^2.57.2",
+    "@types/react": "^19",
+    "clsx": "^2.1.1",
+    "inversify": "^7.8.1",
+    "jsdom": "^28.0.0",
+    "next": "^16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "reflect-metadata": "^0.2.2",
+    "vitest": "^3.2.4",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@qlover/corekit-bridge": "^3.4.0",
+    "@qlover/fe-corekit": "^3.4.0",
+    "@qlover/next-kit": ">=1.5.0",
+    "@supabase/supabase-js": "^2.57.0",
+    "clsx": "^2.1.0",
+    "next": ">=15.0.0",
+    "react": ">=18.0.0",
+    "reflect-metadata": "^0.2.0",
+    "zod": "^4.0.0"
+  }
+}

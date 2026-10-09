@@ -1,5 +1,6 @@
 -- =============================================================================
 -- PAM full schema (single script, safe to re-run in DEV)
+-- FRESH INSTALLS ONLY: drops and recreates tables. Existing DB → 001-pam-upgrade.sql
 -- Prefix: pam_ (incl. pam_oauth_* / pam_request_logs / pam_cli_tokens)
 -- Request audit table: pam_request_logs (NOT request_logs / fe_request_logs)
 -- Keep permission_key seeds in sync with apps/pam/shared/auth/permissionKeys.ts
@@ -2287,4 +2288,25 @@ ALTER TABLE public.pam_users
 
 COMMENT ON COLUMN public.pam_users.sessions_revoked_at IS
   'Session JWTs with iat before this time are rejected (set after password reset).';
+
+-- ---------------------------------------------------------------------------
+-- External login identities (brain-oauth sub → PAM user)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.pam_user_identities (
+  provider TEXT NOT NULL,
+  external_user_id TEXT NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_login_at TIMESTAMPTZ,
+  PRIMARY KEY (provider, external_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_pam_user_identities_user
+  ON public.pam_user_identities (user_id);
+
+COMMENT ON TABLE public.pam_user_identities IS
+  'External login identities mapped to a PAM user (provider = brain: external_user_id is the brain-oauth sub).';
+
+ALTER TABLE public.pam_user_identities ENABLE ROW LEVEL SECURITY;
 

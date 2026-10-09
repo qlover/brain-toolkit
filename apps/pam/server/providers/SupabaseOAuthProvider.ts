@@ -1,3 +1,8 @@
+import {
+  OAuthConsentGrantRepository,
+  OAuthConsentTrustService,
+  type OAuthConsentDeviceContext
+} from '@brain-toolkit/next-app-kit/server';
 import { LoginParams } from '@qlover/corekit-bridge';
 import { UserRole, userSchema, type UserSchema } from '@qlover/next-kit/common';
 import {
@@ -6,10 +11,8 @@ import {
   type ServerContextInterface
 } from '@qlover/next-kit/server';
 import { SupabaseRepo } from '@qlover/next-kit/server';
-import {
-  OAuthConsentBodySchema,
-  OAuthWrapperService
-} from '@qlover/oauth-wrapper';
+import { OAuthWrapperService } from '@qlover/oauth-wrapper';
+import { PamTables } from '@shared/config/pamTables';
 import { inject, injectable } from '@shared/container';
 import { createEphemeralAuthClient } from '@shared/supabase/server';
 import {
@@ -21,15 +24,11 @@ import { I } from '@config/ioc-identifiter';
 import { localePage, ROUTE_CALLBACK_EMAIL_LOGIN } from '@config/route';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import {
-  OAuthWrapperRepository,
-  type OAuthConsentGrantRow
-} from '@server/repositorys/OAuthWrapperRepository';
+import { OAuthWrapperRepository } from '@server/repositorys/OAuthWrapperRepository';
 import { OAuthSessionService } from '@server/services/OAuthSessionService';
 import { PamCliTokenService } from '@server/services/PamCliTokenService';
 import { PamSupabaseSessionMintService } from '@server/services/PamSupabaseSessionMintService';
 import { PamUserService } from '@server/services/PamUserService';
-import type { OAuthConsentDeviceContext } from '@server/utils/oauthConsentDevice';
 import { resolveSupabaseLoginPassword } from '@server/utils/supabaseLoginPassword';
 import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
 import type { LoggerInterface } from '@qlover/logger';
@@ -44,13 +43,6 @@ import type {
   WithUserSession
 } from '@qlover/oauth-wrapper';
 import type { Session, User } from '@supabase/supabase-js';
-
-/** How long "trust this app" lasts on one device. */
-const CONSENT_GRANT_TTL_MS = 90 * 24 * 60 * 60 * 1000;
-
-function isConsentGrantActive(grant: OAuthConsentGrantRow): boolean {
-  return new Date(grant.expires_at).getTime() > Date.now();
-}
 
 function requireSupabaseRefreshToken(
   session: Session | null | undefined
@@ -129,6 +121,7 @@ export class SupabaseOAuthProvider
   protected pamUserService!: PamUserService;
 
   protected readonly appHost: string;
+  private consentTrustInstance?: OAuthConsentTrustService;
 
   constructor(
     @inject(I.AppConfig) config: SeedServerConfigInterface,
@@ -497,34 +490,12 @@ export class SupabaseOAuthProvider
     device?: OAuthConsentDeviceContext
   ): Promise<OAuthConsentResult> {
     const result = await super.processConsent(requestBody);
-
-    const body = OAuthConsentBodySchema.safeParse(requestBody);
-    const deviceId = device?.deviceId?.trim();
-    if (
-      deviceId &&
-      body.success &&
-      body.data.action === 'allow' &&
-      body.data.trust
-    ) {
-      const session = await this.getSession();
-      const userId = String(session?.userId ?? '').trim();
-      if (userId) {
-        try {
-          await this.rememberConsent(userId, body.data.client_id, {
-            deviceId,
-            userAgent: device?.userAgent,
-            scopes: (body.data.scope ?? '').split(/\s+/).filter(Boolean)
-          });
-        } catch (error) {
-          this.logger.warn('Failed to remember OAuth consent grant', {
-            userId,
-            clientId: body.data.client_id,
-            error
-          });
-        }
-      }
-    }
-
+    const session = await this.getSession();
+    await this.consentTrust.remember(
+      String(session?.userId ?? '').trim(),
+      requestBody,
+      device
+    );
     return result;
   }
 
@@ -539,78 +510,27 @@ export class SupabaseOAuthProvider
     data: OAuthAuthorizePageData,
     device?: OAuthConsentDeviceContext
   ): Promise<OAuthConsentResult | null> {
-    const deviceId = device?.deviceId?.trim();
-    if (!deviceId) {
-      return null;
-    }
-
     const session = await this.getSession();
-    const userId = String(session?.userId ?? '').trim();
-    if (!userId) {
-      return null;
-    }
-
-    const grant = await this.pamOAuthRepo.findConsentGrant(
-      userId,
-      data.clientId,
-      deviceId
+    return this.consentTrust.tryAuto(
+      String(session?.userId ?? '').trim(),
+      data,
+      device,
+      async (body) => {
+        await this.ensureProviderCredentials();
+        return super.processConsent(body);
+      }
     );
-    if (
-      !grant ||
-      !isConsentGrantActive(grant) ||
-      !data.scopes.every((scope) => grant.scopes.includes(scope))
-    ) {
-      return null;
-    }
-
-    await this.ensureProviderCredentials();
-
-    const result = await super.processConsent({
-      action: 'allow',
-      client_id: data.clientId,
-      redirect_uri: data.redirectUri,
-      scope: data.scopes.join(' ') || undefined,
-      state: data.state,
-      code_challenge: data.codeChallenge,
-      code_challenge_method: data.codeChallengeMethod
-    });
-    try {
-      await this.pamOAuthRepo.touchConsentGrant(
-        userId,
-        data.clientId,
-        deviceId
-      );
-    } catch (error) {
-      this.logger.warn('Failed to touch OAuth consent grant', {
-        userId,
-        clientId: data.clientId,
-        error
-      });
-    }
-    return result;
   }
 
-  protected async rememberConsent(
-    userId: string,
-    clientId: string,
-    input: { deviceId: string; userAgent?: string | null; scopes: string[] }
-  ): Promise<void> {
-    const existing = await this.pamOAuthRepo.findConsentGrant(
-      userId,
-      clientId,
-      input.deviceId
+  protected get consentTrust(): OAuthConsentTrustService {
+    this.consentTrustInstance ??= new OAuthConsentTrustService(
+      new OAuthConsentGrantRepository(
+        this.supabaseRepo,
+        PamTables.oauthConsentGrants
+      ),
+      this.logger
     );
-    const keptScopes =
-      existing && isConsentGrantActive(existing) ? existing.scopes : [];
-
-    await this.pamOAuthRepo.upsertConsentGrant({
-      user_id: userId,
-      client_id: clientId,
-      device_id: input.deviceId,
-      scopes: Array.from(new Set([...keptScopes, ...input.scopes])),
-      expires_at: new Date(Date.now() + CONSENT_GRANT_TTL_MS).toISOString(),
-      user_agent: input.userAgent ?? null
-    });
+    return this.consentTrustInstance;
   }
 
   protected async syncUserSession(session: Session): Promise<void> {

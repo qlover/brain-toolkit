@@ -10,9 +10,11 @@ import type { NextRequest } from 'next/server';
  *   get:
  *     tags:
  *       - User
- *     summary: List current user request logs
+ *     summary: List request logs
  *     description: |
- *       Paged `request_logs` for the signed-in user (RLS). Query mirrors {@link ResourceSearchParams}:
+ *       Paged `request_logs`: the signed-in user's own rows, or every row for Brain admins.
+ *       `keyword` matches the request ID (UUID) or HTTP path / IP; `filters` is `{ category?, success? }`.
+ *       Query mirrors {@link ResourceSearchParams}:
  *       `page`, `pageSize`, `offset`, `cursor`, `keyword`, `filters` (JSON string), `sort` (JSON array), or flat `orderBy`+`order` for the first sort clause.
  *       Parsed and validated by `RequestLogsSearchParamsValidator` in the controller; JSON body uses `AppApiSuccessInterface`; `data` is `ResourceSearchResult` (`items`, `total`, `page`, `pageSize`, `hasMore`).
  *     parameters:
@@ -51,7 +53,7 @@ import type { NextRequest } from 'next/server';
  *           type: string
  *       - in: query
  *         name: filters
- *         description: JSON string (opaque until server implements filter semantics).
+ *         description: 'JSON string, e.g. {"category":"auth","success":false}.'
  *         schema:
  *           type: string
  *       - in: query

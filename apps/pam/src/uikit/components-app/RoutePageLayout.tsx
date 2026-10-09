@@ -1,11 +1,13 @@
 'use client';
 
+import {
+  GithubIcon,
+  headerIconButtonClass
+} from '@brain-toolkit/next-app-kit/client';
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
 import { githubRepoUrl } from '@config/common';
-import { headerIconButtonClass } from './headerChrome';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { GithubIcon } from '../components/icons';
 import { LocaleLink } from '../components/LocaleLink';
 import { PAMLogo } from '../components/PAMLogo';
 import type { AppRoutePageTT } from './AppRoutePage';

@@ -2,253 +2,512 @@
 
 import {
   BeakerIcon,
-  CubeTransparentIcon,
-  RocketLaunchIcon
+  BookOpenIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  KeyIcon
 } from '@heroicons/react/24/outline';
 import { usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
-import { Link } from '@/i18n/routing';
+import { useEffect, useState } from 'react';
+import { BrainTabs } from '@/uikit/components/brain/BrainTabs';
+import { LocaleLink } from '@/uikit/components/LocaleLink';
+import { useIOC } from '@/uikit/hook/useIOC';
 import type { OAuthDocsI18nInterface } from '@config/i18n-mapping/oauthDocsI18n';
+import { I } from '@config/ioc-identifiter';
 import {
-  API_OAUTH_VERIFY,
   API_REFERENCE,
   ROUTE_DEVELOPER_APPS,
   ROUTE_OAUTH_AUTHORIZE,
   ROUTE_OAUTH_PLAYGROUND,
+  ROUTE_OAUTH_REVOKE,
   ROUTE_OAUTH_TOKEN,
   ROUTE_OAUTH_USERINFO
 } from '@config/route';
+import type { DialogHandler } from '@qlover/next-kit/client';
 import type { ReactNode } from 'react';
 
-const sectionClass = 'scroll-mt-24';
-const headingClass =
-  'text-lg font-semibold text-primary-text border-b border-primary-border pb-2 mb-4';
-const proseClass = 'text-secondary-text text-sm leading-relaxed mb-4';
-const codeBlockClass =
-  'rounded-lg border border-primary-border bg-elevated p-4 overflow-x-auto';
-const codeLineClass = 'text-sm font-mono text-secondary-text whitespace-pre';
+const SECTION_IDS = [
+  'overview',
+  'flow',
+  'endpoints',
+  'authorize',
+  'token',
+  'pkce',
+  'userinfo',
+  'errors'
+] as const;
 
-function CodeBlock({ children }: { children: string }) {
-  return (
-    <pre data-testid="CodeBlock" className={codeBlockClass}>
-      <code className={codeLineClass}>{children}</code>
-    </pre>
-  );
+type SectionId = (typeof SECTION_IDS)[number];
+
+/** `**bold**` highlights keywords, `%%text%%` is a comment left out of the copied text. */
+const CODE_TOKEN = /(\*\*[^*]+\*\*|%%[^%]+%%)/;
+
+function renderCode(source: string): ReactNode[] {
+  return source.split(CODE_TOKEN).map((part, index) => {
+    if (part.startsWith('**')) {
+      return (
+        <b data-testid="renderCode" key={index}>
+          {part.slice(2, -2)}
+        </b>
+      );
+    }
+    if (part.startsWith('%%')) {
+      return (
+        <i data-testid="renderCode" key={index}>
+          {part.slice(2, -2)}
+        </i>
+      );
+    }
+    return part;
+  });
 }
 
-function DocSection({
-  id,
-  title,
-  children
-}: {
-  id: string;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section
-      data-testid="DocSection"
-      id={id}
-      className={clsx(sectionClass, 'mb-10')}
-    >
-      <h2 className={headingClass}>{title}</h2>
-      {children}
-    </section>
-  );
+function toCopyText(source: string): string {
+  return source
+    .replace(/[ \t]*%%[^%]+%%/g, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1');
 }
 
-function EndpointTable({
-  rows
+function DocCode({
+  lang,
+  source,
+  copyLabel,
+  onCopy
 }: {
-  rows: { method: string; path: string; label: string; desc: string }[];
+  lang: string;
+  source: string;
+  copyLabel: string;
+  onCopy: (text: string) => void;
 }) {
   return (
-    <div
-      data-testid="EndpointTable"
-      className="overflow-x-auto rounded-xl border border-primary-border"
-    >
-      <table className="w-full min-w-[32rem] text-left text-sm">
-        <thead className="bg-elevated text-secondary-text">
-          <tr>
-            <th className="px-4 py-3 font-medium">Method</th>
-            <th className="px-4 py-3 font-medium">Path</th>
-            <th className="px-4 py-3 font-medium">Role</th>
-            <th className="px-4 py-3 font-medium">Notes</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-primary-border">
-          {rows.map((row) => (
-            <tr
-              data-testid="EndpointTable"
-              key={row.path}
-              className="text-primary-text"
-            >
-              <td className="px-4 py-3 font-mono text-brand">{row.method}</td>
-              <td className="px-4 py-3 font-mono">{row.path}</td>
-              <td className="px-4 py-3">{row.label}</td>
-              <td className="px-4 py-3 text-secondary-text">{row.desc}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div data-testid="DocCode" className="brain-doc-code">
+      <span className="brain-doc-code-lang">{lang}</span>
+      <button
+        type="button"
+        className="brain-doc-code-copy"
+        aria-label={copyLabel}
+        title={copyLabel}
+        onClick={() => onCopy(toCopyText(source))}
+      >
+        <ClipboardDocumentIcon />
+      </button>
+      <pre className="brain-code-block">{renderCode(source)}</pre>
     </div>
   );
 }
 
-const linkButtonClass =
-  'inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary-border bg-primary text-primary-text text-sm font-medium hover:bg-elevated transition';
+function DocTable({
+  head,
+  rows
+}: {
+  head: string[];
+  rows: { key: string; cells: ReactNode[] }[];
+}) {
+  return (
+    <div data-testid="DocTable" className="brain-card flat brain-doc-table">
+      <div className="brain-table-wrap">
+        <table className="brain-table">
+          <thead>
+            <tr>
+              {head.map((cell) => (
+                <th data-testid="DocTable" key={cell}>
+                  {cell}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr data-testid="DocTable" key={row.key}>
+                {row.cells.map((cell, index) => (
+                  <td
+                    data-testid="DocTable"
+                    key={index}
+                    className={clsx(index === row.cells.length - 1 && 'wrap')}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Method({ value }: { value: 'GET' | 'POST' }) {
+  return (
+    <span
+      data-testid="Method"
+      className={clsx('brain-method', value === 'POST' && 'post')}
+    >
+      {value}
+    </span>
+  );
+}
+
+function Mono({ children }: { children: string }) {
+  return (
+    <span data-testid="Mono" className="brain-mono">
+      {children}
+    </span>
+  );
+}
+
+function useActiveSection(): [SectionId, (id: SectionId) => void] {
+  const [active, setActive] = useState<SectionId>('overview');
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) {
+          setActive(visible[0].target.id as SectionId);
+        }
+      },
+      { rootMargin: '0px 0px -70% 0px' }
+    );
+    SECTION_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return [active, setActive];
+}
 
 export function OAuthDocsContent() {
   const tt = usePageI18nMapping<OAuthDocsI18nInterface>();
+  const dialogHandler = useIOC(I.DialogHandler) as DialogHandler;
+  const [active, setActive] = useActiveSection();
+  const [tokenTab, setTokenTab] = useState<'code' | 'refresh'>('code');
 
-  const flowSteps = [
-    tt.flowStep1,
-    tt.flowStep2,
-    tt.flowStep3,
-    tt.flowStep4,
-    tt.flowStep5
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      dialogHandler.success(tt.copied);
+    } catch {
+      // clipboard permission denied; nothing useful to report
+    }
+  };
+
+  const codeProps = { copyLabel: tt.copy, onCopy: handleCopy };
+
+  const sectionTitles: Record<SectionId, string> = {
+    overview: tt.sectionOverview,
+    flow: tt.sectionFlow,
+    endpoints: tt.sectionEndpoints,
+    authorize: tt.sectionAuthorize,
+    token: tt.sectionToken,
+    pkce: tt.sectionPkce,
+    userinfo: tt.sectionUserinfo,
+    errors: tt.sectionErrors
+  };
+
+  const flow = [
+    [tt.flow1, tt.flow1Desc],
+    [tt.flow2, tt.flow2Desc],
+    [tt.flow3, tt.flow3Desc],
+    [tt.flow4, tt.flow4Desc],
+    [tt.flow5, tt.flow5Desc]
   ];
 
+  const required = <span className="brain-pill sm ok">{tt.required}</span>;
+  const optional = <span className="brain-pill sm soft">{tt.optional}</span>;
+
   return (
-    <article
-      data-testid="OAuthDocsContent"
-      className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12"
-    >
-      <header className="mb-10">
-        <h1 className="text-2xl sm:text-3xl font-bold text-primary-text mb-3">
-          {tt.title}
-        </h1>
-        <p className={proseClass}>{tt.intro}</p>
-        <div className="flex flex-wrap gap-3">
-          <Link href={ROUTE_OAUTH_PLAYGROUND} className={linkButtonClass}>
-            <BeakerIcon className="h-4 w-4" />
-            {tt.linkPlayground}
-          </Link>
-          <a
-            href={API_REFERENCE}
-            className={linkButtonClass}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <CubeTransparentIcon className="h-4 w-4" />
-            {tt.linkApi}
-          </a>
-          <Link href={ROUTE_DEVELOPER_APPS} className={linkButtonClass}>
-            <RocketLaunchIcon className="h-4 w-4" />
-            {tt.linkDeveloper}
-          </Link>
-        </div>
-      </header>
+    <div data-testid="OAuthDocsContent" className="brain-content">
+      <h1 className="brain-title">{tt.title}</h1>
+      <p className="brain-desc">{tt.desc}</p>
 
-      <DocSection id="architecture" title={tt.sectionArchitecture}>
-        <p className={proseClass}>{tt.architectureBody}</p>
-      </DocSection>
+      <div className="brain-doc-quick">
+        <LocaleLink
+          href={ROUTE_OAUTH_PLAYGROUND}
+          title={tt.quickPlayground}
+          className="brain-card flat"
+        >
+          <BeakerIcon />
+          <span>{tt.quickPlayground}</span>
+          <small>{tt.quickPlaygroundSub}</small>
+        </LocaleLink>
+        <a
+          href={API_REFERENCE}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="brain-card flat"
+        >
+          <BookOpenIcon />
+          <span>{tt.quickOpenapi}</span>
+          <small>{tt.quickOpenapiSub}</small>
+        </a>
+        <LocaleLink
+          href={ROUTE_DEVELOPER_APPS}
+          title={tt.quickConsole}
+          className="brain-card flat"
+        >
+          <KeyIcon />
+          <span>{tt.quickConsole}</span>
+          <small>{tt.quickConsoleSub}</small>
+        </LocaleLink>
+      </div>
 
-      <DocSection id="demo" title={tt.sectionDemo}>
-        <p className={proseClass}>{tt.demoBody}</p>
-      </DocSection>
-
-      <DocSection id="overview" title={tt.sectionOverview}>
-        <p className={proseClass}>{tt.overviewBody}</p>
-      </DocSection>
-
-      <DocSection id="flow" title={tt.sectionFlow}>
-        <ol className="list-decimal list-inside space-y-2 text-sm text-secondary-text">
-          {flowSteps.map((step) => (
-            <li
+      <div className="brain-doc">
+        <nav className="brain-doc-toc" aria-label={tt.toc}>
+          <span className="brain-label">{tt.toc}</span>
+          {SECTION_IDS.map((id) => (
+            <a
               data-testid="OAuthDocsContent"
-              key={step}
-              className="leading-relaxed"
+              key={id}
+              href={`#${id}`}
+              aria-current={active === id ? 'true' : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                setActive(id);
+                document
+                  .getElementById(id)
+                  ?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
-              {step}
-            </li>
+              {sectionTitles[id]}
+            </a>
           ))}
-        </ol>
-      </DocSection>
+        </nav>
 
-      <DocSection id="endpoints" title={tt.sectionEndpoints}>
-        <EndpointTable
-          rows={[
-            {
-              method: 'POST',
-              path: API_OAUTH_VERIFY,
-              label: tt.endpointVerify,
-              desc: tt.endpointVerifyDesc
-            },
-            {
-              method: 'GET',
-              path: ROUTE_OAUTH_AUTHORIZE,
-              label: tt.endpointAuthorize,
-              desc: tt.endpointAuthorizeDesc
-            },
-            {
-              method: 'POST',
-              path: ROUTE_OAUTH_TOKEN,
-              label: tt.endpointToken,
-              desc: tt.endpointTokenDesc
-            },
-            {
-              method: 'GET',
-              path: ROUTE_OAUTH_USERINFO,
-              label: tt.endpointUserinfo,
-              desc: tt.endpointUserinfoDesc
-            }
-          ]}
-        />
-      </DocSection>
+        <article className="brain-doc-body">
+          <section id="overview">
+            <h2>{tt.sectionOverview}</h2>
+            <p>{tt.overviewText}</p>
+            <div className="brain-doc-types">
+              <div className="brain-inner-card">
+                <span className="brain-pill purple">{tt.confidential}</span>
+                <p>{tt.confidentialText}</p>
+              </div>
+              <div className="brain-inner-card">
+                <span className="brain-pill purple">{tt.public}</span>
+                <p>{tt.publicText}</p>
+              </div>
+            </div>
+          </section>
 
-      <DocSection id="authorize" title={tt.sectionAuthorize}>
-        <p className={proseClass}>{tt.authorizeParams}</p>
-        <CodeBlock>{`GET ${ROUTE_OAUTH_AUTHORIZE}?response_type=code
+          <section id="flow">
+            <h2>{tt.sectionFlow}</h2>
+            <ol className="brain-doc-flow">
+              {flow.map(([title, desc], index) => (
+                <li data-testid="OAuthDocsContent" key={title}>
+                  <span className="brain-step-no on">{index + 1}</span>
+                  <span>
+                    <b>{title}</b>
+                    {desc}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section id="endpoints">
+            <h2>{tt.sectionEndpoints}</h2>
+            <DocTable
+              head={[tt.thMethod, tt.thPath, tt.thCaller, tt.thNote]}
+              rows={[
+                {
+                  key: 'authorize',
+                  cells: [
+                    <Method key="m" value="GET" />,
+                    <Mono key="p">{ROUTE_OAUTH_AUTHORIZE}</Mono>,
+                    tt.callerBrowser,
+                    tt.endpointAuthorize
+                  ]
+                },
+                {
+                  key: 'token',
+                  cells: [
+                    <Method key="m" value="POST" />,
+                    <Mono key="p">{ROUTE_OAUTH_TOKEN}</Mono>,
+                    tt.callerServer,
+                    tt.endpointToken
+                  ]
+                },
+                {
+                  key: 'revoke',
+                  cells: [
+                    <Method key="m" value="POST" />,
+                    <Mono key="p">{ROUTE_OAUTH_REVOKE}</Mono>,
+                    tt.callerServer,
+                    tt.endpointRevoke
+                  ]
+                },
+                {
+                  key: 'userinfo',
+                  cells: [
+                    <Method key="m" value="GET" />,
+                    <Mono key="p">{ROUTE_OAUTH_USERINFO}</Mono>,
+                    tt.callerServer,
+                    tt.endpointUserinfo
+                  ]
+                }
+              ]}
+            />
+          </section>
+
+          <section id="authorize">
+            <h2>{tt.sectionAuthorize}</h2>
+            <p>{tt.authorizeText}</p>
+            <DocTable
+              head={[tt.thParam, tt.thRequired, tt.thNote]}
+              rows={[
+                ['response_type', required, tt.paramResponseType],
+                ['client_id', required, tt.paramClientId],
+                ['redirect_uri', required, tt.paramRedirect],
+                ['scope', optional, tt.paramScope],
+                ['state', optional, tt.paramState],
+                [
+                  'code_challenge',
+                  <span key="pill" className="brain-pill sm purple">
+                    {tt.pkceOnly}
+                  </span>,
+                  tt.paramChallenge
+                ]
+              ].map(([name, pill, note]) => ({
+                key: name as string,
+                cells: [<Mono key="n">{name as string}</Mono>, pill, note]
+              }))}
+            />
+            <DocCode
+              lang="HTTP"
+              source={`**GET** ${ROUTE_OAUTH_AUTHORIZE}
+  ?response_type=code
   &client_id=YOUR_CLIENT_ID
-  &redirect_uri=https%3A%2F%2Fapp.example%2Fcallback
+  &redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback
   &scope=openid%20profile
   &state=RANDOM_STATE
   &code_challenge=CHALLENGE
-  &code_challenge_method=S256`}</CodeBlock>
-      </DocSection>
+  &code_challenge_method=S256`}
+              {...codeProps}
+            />
+          </section>
 
-      <DocSection id="token" title={tt.sectionToken}>
-        <h3 className="text-sm font-semibold text-primary-text mb-2">
-          {tt.tokenAuthCode}
-        </h3>
-        <CodeBlock>{`POST ${ROUTE_OAUTH_TOKEN}
+          <section id="token">
+            <h2>{tt.sectionToken}</h2>
+            <p>{tt.tokenText}</p>
+            <BrainTabs
+              items={[
+                { key: 'code', label: tt.tabCode },
+                { key: 'refresh', label: tt.tabRefresh }
+              ]}
+              value={tokenTab}
+              onChange={setTokenTab}
+            />
+            {tokenTab === 'code' ? (
+              <DocCode
+                lang="HTTP"
+                source={`**POST** ${ROUTE_OAUTH_TOKEN}
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code
 &code=AUTH_CODE
-&redirect_uri=https%3A%2F%2Fapp.example%2Fcallback
+&redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback
 &client_id=YOUR_CLIENT_ID
-&client_secret=YOUR_CLIENT_SECRET
-&code_verifier=VERIFIER`}</CodeBlock>
-        <h3 className="text-sm font-semibold text-primary-text mb-2 mt-6">
-          {tt.tokenRefresh}
-        </h3>
-        <CodeBlock>{`POST ${ROUTE_OAUTH_TOKEN}
+&client_secret=YOUR_CLIENT_SECRET   %%${tt.commentSecret}%%
+&code_verifier=VERIFIER             %%${tt.commentVerifier}%%`}
+                {...codeProps}
+              />
+            ) : (
+              <DocCode
+                lang="HTTP"
+                source={`**POST** ${ROUTE_OAUTH_TOKEN}
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=refresh_token
 &refresh_token=REFRESH_TOKEN
 &client_id=YOUR_CLIENT_ID
-&client_secret=YOUR_CLIENT_SECRET`}</CodeBlock>
-        <p className={clsx(proseClass, 'mt-4 text-xs')}>
-          {`// 200 OK\n{\n  "access_token": "...",\n  "token_type": "Bearer",\n  "expires_in": 3600,\n  "refresh_token": "...",\n  "scope": "openid profile"\n}`}
-        </p>
-      </DocSection>
+&client_secret=YOUR_CLIENT_SECRET`}
+                {...codeProps}
+              />
+            )}
+            <h3>{tt.response}</h3>
+            <DocCode
+              lang="JSON"
+              source={`{
+  **"access_token"**: "eyJhbGciOi...",
+  **"token_type"**: "Bearer",
+  **"expires_in"**: 3600,
+  **"refresh_token"**: "def50200...",
+  **"scope"**: "openid profile"
+}`}
+              {...codeProps}
+            />
+          </section>
 
-      <DocSection id="pkce" title={tt.sectionPkce}>
-        <p className={proseClass}>{tt.pkceBody}</p>
-      </DocSection>
+          <section id="pkce">
+            <h2>{tt.sectionPkce}</h2>
+            <p>{tt.pkceText}</p>
+            <DocCode
+              lang="JavaScript"
+              source={`**const** base64url = (bytes) =>
+  btoa(String.fromCharCode(...new Uint8Array(bytes)))
+    .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
 
-      <DocSection id="userinfo" title={tt.sectionUserinfo}>
-        <p className={proseClass}>{tt.userinfoBody}</p>
-        <CodeBlock>{`GET ${ROUTE_OAUTH_USERINFO}
-Authorization: Bearer ACCESS_TOKEN`}</CodeBlock>
-      </DocSection>
+**const** verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
+**const** challenge = base64url(
+  await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+);`}
+              {...codeProps}
+            />
+            <div className="brain-note">
+              <InformationCircleIcon />
+              <span>{tt.pkceNote}</span>
+            </div>
+          </section>
 
-      <DocSection id="errors" title={tt.sectionErrors}>
-        <p className={proseClass}>{tt.errorsBody}</p>
-      </DocSection>
-    </article>
+          <section id="userinfo">
+            <h2>{tt.sectionUserinfo}</h2>
+            <p>{tt.userinfoText}</p>
+            <DocCode
+              lang="HTTP"
+              source={`**GET** ${ROUTE_OAUTH_USERINFO}
+Authorization: Bearer ACCESS_TOKEN
+
+{
+  **"sub"**: "u_8f3k2p",
+  **"email"**: "renjie@brain.im",
+  **"name"**: "Renjie",
+  **"roles"**: ["user"]
+}`}
+              {...codeProps}
+            />
+          </section>
+
+          <section id="errors">
+            <h2>{tt.sectionErrors}</h2>
+            <p>{tt.errorsText}</p>
+            <DocTable
+              head={[tt.thCode, tt.thWhere, tt.thNote]}
+              rows={[
+                ['invalid_request', tt.whereAll, tt.errorInvalidRequest],
+                [
+                  'unauthorized_client',
+                  tt.whereAuthorize,
+                  tt.errorUnauthorized
+                ],
+                ['access_denied', tt.whereAuthorize, tt.errorDenied],
+                ['invalid_scope', tt.whereAuthorize, tt.errorScope],
+                ['invalid_client', tt.whereToken, tt.errorClient],
+                ['invalid_grant', tt.whereToken, tt.errorGrant],
+                ['invalid_token', tt.whereUserinfo, tt.errorToken]
+              ].map(([code, where, note]) => ({
+                key: code,
+                cells: [<Mono key="c">{code}</Mono>, where, note]
+              }))}
+            />
+          </section>
+        </article>
+      </div>
+    </div>
   );
 }

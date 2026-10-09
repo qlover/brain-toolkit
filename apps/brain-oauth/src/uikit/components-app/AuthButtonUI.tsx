@@ -2,11 +2,8 @@
 
 import { buttonClassName } from '@qlover/next-kit/client';
 import { Link } from '@/i18n/routing';
-import {
-  COMMON_AUTH_NAV_SIGN_UP,
-  COMMON_USER_AUTH_FAILED_GO_TO_LOGIN
-} from '@config/i18n-identifier/common/common';
-import { ROUTE_LOGIN, ROUTE_REGISTER } from '@config/route';
+import { COMMON_USER_AUTH_FAILED_GO_TO_LOGIN } from '@config/i18n-identifier/common/common';
+import { ROUTE_LOGIN } from '@config/route';
 import { LogoutButton } from './LogoutButton';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 
@@ -26,11 +23,6 @@ import { useWarnTranslations } from '../hook/useWarnTranslations';
  *   tree as the root layout (IOCProvider → … → AppRoutePage → AuthButtonUI → LogoutButton).
  *   So useIOC() always has access to the IOC context.
  */
-const linkSecondary = buttonClassName({
-  variant: 'header',
-  className:
-    'focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-0'
-});
 const linkPrimary = buttonClassName({
   variant: 'header',
   className:
@@ -39,10 +31,9 @@ const linkPrimary = buttonClassName({
 
 export function AuthButtonUI(props: {
   hasAuth: boolean;
-  loginOnly?: boolean;
   showLogoutLabel?: boolean;
 }) {
-  const { hasAuth, loginOnly = false, showLogoutLabel = false } = props;
+  const { hasAuth, showLogoutLabel = false } = props;
   const t = useWarnTranslations();
 
   if (hasAuth) {
@@ -72,11 +63,6 @@ export function AuthButtonUI(props: {
           {t(COMMON_USER_AUTH_FAILED_GO_TO_LOGIN)}
         </span>
       </Link>
-      {!loginOnly && (
-        <Link href={ROUTE_REGISTER} className={linkSecondary}>
-          {t(COMMON_AUTH_NAV_SIGN_UP)}
-        </Link>
-      )}
     </div>
   );
 }

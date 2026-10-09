@@ -1,16 +1,11 @@
 'use client';
 
 import {
-  ArrowPathIcon,
-  BeakerIcon,
-  ClipboardDocumentIcon,
   KeyIcon,
   PencilSquareIcon,
   PlusIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
-import { clsx } from 'clsx';
-import { useLocale } from 'next-intl';
 import {
   useCallback,
   useEffect,
@@ -19,31 +14,27 @@ import {
   useState,
   type FormEvent
 } from 'react';
-import { LocaleLink } from '@/uikit/components/LocaleLink';
+import { BrainAvatar } from '@/uikit/components/brain/BrainAvatar';
+import { BrainButton } from '@/uikit/components/brain/BrainButton';
+import { BrainCode } from '@/uikit/components/brain/BrainCode';
+import { BrainModal } from '@/uikit/components/brain/BrainModal';
 import {
   DeveloperConfirmDialog,
   type DeveloperConfirmOptions
 } from '@/uikit/components-app/developer/DeveloperConfirmDialog';
-import { DeveloperOverlayModal } from '@/uikit/components-app/developer/DeveloperOverlayModal';
 import { useI18nMapping } from '@/uikit/hook/useI18nMapping';
 import { useIOC } from '@/uikit/hook/useIOC';
-import {
-  oauthCardClass,
-  oauthElevatedPanelClass,
-  oauthPrimaryButtonClass,
-  oauthSecondaryButtonClass
-} from '@config/component';
 import { developerAppsI18n } from '@config/i18n-mapping/developerAppsI18n';
 import { I } from '@config/ioc-identifiter';
 import {
   API_CLIENTS,
   apiClientDetail,
-  apiClientRotateSecret,
-  ROUTE_OAUTH_PLAYGROUND
+  apiClientRotateSecret
 } from '@config/route';
 import {
   OAuthClientAppForm,
   emptyOAuthClientFormValues,
+  type OAuthClientAppFormLabels,
   type OAuthClientFormValues
 } from './OAuthClientAppForm';
 import {
@@ -61,6 +52,8 @@ import type {
   OAuthClientUpdate
 } from '@qlover/oauth-wrapper';
 
+type FieldErrors = Partial<Record<keyof OAuthClientFormValues, string>>;
+
 function parseRedirectUris(raw: string): string[] {
   return raw
     .split('\n')
@@ -68,59 +61,24 @@ function parseRedirectUris(raw: string): string[] {
     .filter((uri) => uri.length > 0);
 }
 
-function AppListLogo({
-  name,
-  logoUri
-}: {
-  name: string;
-  logoUri?: string | null;
-}) {
-  const [broken, setBroken] = useState(false);
-  const initial = (name.trim().charAt(0) || '?').toUpperCase();
-  const src = logoUri?.trim();
-  const boxClass =
-    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary-border bg-secondary text-sm font-semibold text-brand sm:h-9 sm:w-9';
-
-  useEffect(() => {
-    setBroken(false);
-  }, [src]);
-
-  if (!src || broken) {
-    return (
-      <div
-        data-testid="DeveloperAppsPageLogoFallback"
-        className={boxClass}
-        aria-hidden
-      >
-        {initial}
-      </div>
-    );
+function withoutErrors(
+  errors: FieldErrors,
+  patch: Partial<OAuthClientFormValues>
+): FieldErrors {
+  const next = { ...errors };
+  for (const key of Object.keys(patch) as (keyof OAuthClientFormValues)[]) {
+    delete next[key];
   }
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- external logo URL from developer input
-    <img
-      data-testid="DeveloperAppsPageLogo"
-      src={src}
-      alt=""
-      className="h-8 w-8 shrink-0 rounded-lg border border-primary-border object-cover bg-secondary sm:h-9 sm:w-9"
-      onError={() => setBroken(true)}
-    />
-  );
+  return next;
 }
 
 export interface DeveloperAppsPageProps {
   initialApps: OAuthClientListItem[];
 }
 
-async function copyText(text: string) {
-  await navigator.clipboard.writeText(text);
-}
-
 export function DeveloperAppsPageComponent({
   initialApps
 }: DeveloperAppsPageProps) {
-  const locale = useLocale();
   const tt = useI18nMapping(developerAppsI18n);
   const dialogHandler = useIOC(I.DialogHandler) as DialogHandler;
   const [apps, setApps] = useState<OAuthClientListItem[]>(initialApps);
@@ -134,55 +92,43 @@ export function DeveloperAppsPageComponent({
     null
   );
   const [credentials, setCredentials] = useState<OAuthCredentials | null>(null);
-  const [credentialsModalVisible, setCredentialsModalVisible] = useState(false);
   const [confirmOptions, setConfirmOptions] =
     useState<DeveloperConfirmOptions | null>(null);
   const [createValues, setCreateValues] = useState<OAuthClientFormValues>(
     emptyOAuthClientFormValues
   );
-  const [createFieldErrors, setCreateFieldErrors] = useState<
-    Partial<Record<keyof OAuthClientFormValues, string>>
-  >({});
+  const [createFieldErrors, setCreateFieldErrors] = useState<FieldErrors>({});
   const [editValues, setEditValues] = useState<OAuthClientFormValues>(
     emptyOAuthClientFormValues
   );
-  const [editFieldErrors, setEditFieldErrors] = useState<
-    Partial<Record<keyof OAuthClientFormValues, string>>
-  >({});
+  const [editFieldErrors, setEditFieldErrors] = useState<FieldErrors>({});
   const editLoadSeqRef = useRef(0);
 
-  const formLabels = useMemo(
+  const formLabels = useMemo<OAuthClientAppFormLabels>(
     () => ({
-      appNameLabel: tt.appNameLabel || 'Application Name',
-      appNameRequired: tt.appNameRequired || 'Please enter application name',
-      redirectUrisLabel: tt.redirectUrisLabel || 'Redirect URIs (one per line)',
-      redirectUrisRequired:
-        tt.redirectUrisRequired || 'Please enter at least one redirect URI',
-      redirectUrisPlaceholder:
-        tt.redirectUrisPlaceholder ||
-        'https://your-app.com/callback\nhttps://localhost:3000/callback',
-      redirectUrisHint:
-        tt.redirectUrisHint ||
-        'Multiple callback URLs supported, one per line. Must use HTTPS (http://localhost allowed for local development).',
-      clientUriLabel:
-        tt.clientUriLabel || 'Application Homepage URL (Optional)',
-      logoUriLabel: tt.logoUriLabel || 'Logo image URL (Optional)',
-      logoUriHint:
-        tt.logoUriHint ||
-        'Public image URL shown on the consent screen and app list',
-      logoUriInvalid: tt.logoUriInvalid || 'Please enter a valid image URL',
-      clientTypeLabel: tt.clientTypeLabel || 'Client type',
-      clientTypeConfidential:
-        tt.clientTypeConfidential || 'Confidential (client_secret)',
-      clientTypePublic: tt.clientTypePublic || 'Public (PKCE, no secret)',
-      clientTypeHint:
-        tt.clientTypeHint ||
-        'Public clients require PKCE. Type cannot be changed after creation.',
-      clientTypeLockedHint:
-        tt.clientTypeLockedHint || 'Client type is fixed after creation.'
+      appNameLabel: tt.appNameLabel,
+      appNamePlaceholder: tt.appNamePlaceholder,
+      redirectUrisLabel: tt.redirectUrisLabel,
+      redirectUrisPlaceholder: tt.redirectUrisPlaceholder,
+      redirectUrisHint: tt.redirectUrisHint,
+      clientUriLabel: tt.clientUriLabel,
+      logoUriLabel: tt.logoUriLabel,
+      logoUriHint: tt.logoUriHint,
+      clientTypeLabel: tt.clientTypeLabel,
+      clientTypeConfidential: tt.clientTypeConfidential,
+      clientTypeConfidentialHint: tt.clientTypeConfidentialHint,
+      clientTypePublic: tt.clientTypePublic,
+      clientTypePublicHint: tt.clientTypePublicHint,
+      clientTypeLockedHint: tt.clientTypeLockedHint,
+      statusConfidential: tt.statusConfidential,
+      statusPublic: tt.statusPublic
     }),
     [tt]
   );
+
+  const showError = useCallback(() => {
+    dialogHandler.error(tt.toastError);
+  }, [dialogHandler, tt.toastError]);
 
   const resetCreateForm = () => {
     setCreateValues(emptyOAuthClientFormValues);
@@ -196,20 +142,20 @@ export function DeveloperAppsPageComponent({
 
   const validateFormValues = (
     values: OAuthClientFormValues
-  ): Partial<Record<keyof OAuthClientFormValues, string>> | null => {
-    const errors: Partial<Record<keyof OAuthClientFormValues, string>> = {};
+  ): FieldErrors | null => {
+    const errors: FieldErrors = {};
     if (!values.client_name.trim()) {
-      errors.client_name = formLabels.appNameRequired;
+      errors.client_name = tt.appNameRequired;
     }
     if (parseRedirectUris(values.redirect_uris).length === 0) {
-      errors.redirect_uris = formLabels.redirectUrisRequired;
+      errors.redirect_uris = tt.redirectUrisRequired;
     }
     const logoUri = values.logo_uri.trim();
     if (logoUri) {
       try {
         new URL(logoUri);
       } catch {
-        errors.logo_uri = formLabels.logoUriInvalid;
+        errors.logo_uri = tt.logoUriInvalid;
       }
     }
     return Object.keys(errors).length > 0 ? errors : null;
@@ -226,54 +172,27 @@ export function DeveloperAppsPageComponent({
       setApps(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Load apps error:', error);
-      dialogHandler.error(
-        tt.toastError || 'Operation failed, please try again later'
-      );
+      showError();
     } finally {
       setLoading(false);
     }
-  }, [dialogHandler, tt.toastError]);
+  }, [showError]);
 
   useEffect(() => {
     void loadApps();
   }, [loadApps]);
 
-  const showCredentialsModal = (next: OAuthCredentials) => {
-    setCredentials(next);
-    setCredentialsModalVisible(true);
-  };
-
-  const handleCopyClientId = async (clientId: string) => {
+  const handleCopy = async (value: string) => {
     try {
-      await copyText(clientId);
-      dialogHandler.success(tt.copyClientIdSuccess || 'Client ID copied');
-    } catch {
-      dialogHandler.error(
-        tt.toastError || 'Operation failed, please try again later'
+      await navigator.clipboard.writeText(value);
+      dialogHandler.success(
+        value === credentials?.clientSecret
+          ? tt.copySecretSuccess
+          : tt.copyClientIdSuccess
       );
-    }
-  };
-
-  const handleCopyFromCredentialsModal = async (field: 'id' | 'secret') => {
-    if (!credentials) return;
-    try {
-      if (field === 'id') {
-        await copyText(credentials.clientId);
-        dialogHandler.success(tt.copyClientIdSuccess || 'Client ID copied');
-      } else if (credentials.clientSecret) {
-        await copyText(credentials.clientSecret);
-        dialogHandler.success(tt.copySecretSuccess || 'Client Secret copied');
-      }
     } catch {
-      dialogHandler.error(
-        tt.toastError || 'Operation failed, please try again later'
-      );
+      showError();
     }
-  };
-
-  const closeCredentialsModal = () => {
-    setCredentialsModalVisible(false);
-    setCredentials(null);
   };
 
   const handleCreateApp = async (event: FormEvent<HTMLFormElement>) => {
@@ -322,23 +241,30 @@ export function DeveloperAppsPageComponent({
         updated_at: data.created_at
       };
 
-      setApps((prev) => [...prev, newApp]);
+      setApps((prev) => [newApp, ...prev]);
       setCreateModalVisible(false);
       resetCreateForm();
 
-      showCredentialsModal({
+      setCredentials({
         clientId: data.client_id,
         clientSecret: data.client_secret,
         confidential: data.confidential
       });
     } catch (error) {
       console.error('Create app error:', error);
-      dialogHandler.error(
-        tt.toastError || 'Operation failed, please try again later'
-      );
+      showError();
     } finally {
       setCreateSubmitting(false);
     }
+  };
+
+  const closeEditModal = () => {
+    if (editSubmitting) return;
+    editLoadSeqRef.current += 1;
+    setEditModalVisible(false);
+    setEditingApp(null);
+    setEditDetailLoading(false);
+    resetEditForm();
   };
 
   const handleEditApp = async (event: FormEvent<HTMLFormElement>) => {
@@ -391,39 +317,26 @@ export function DeveloperAppsPageComponent({
         )
       );
 
+      editLoadSeqRef.current += 1;
       setEditModalVisible(false);
       setEditingApp(null);
       resetEditForm();
 
-      dialogHandler.success(
-        tt.toastUpdateSuccess || 'Application updated successfully'
-      );
+      dialogHandler.success(tt.toastUpdateSuccess);
     } catch (error) {
       console.error('Update app error:', error);
-      dialogHandler.error(
-        tt.toastError || 'Operation failed, please try again later'
-      );
+      showError();
     } finally {
       setEditSubmitting(false);
     }
   };
 
-  const handleRotateSecret = (clientId: string, confidential = true) => {
-    if (!confidential) {
-      dialogHandler.warn(
-        tt.publicClientNote ||
-          'Public clients do not have a client_secret to rotate.'
-      );
-      return;
-    }
+  const askRotateSecret = (clientId: string) => {
     setConfirmOptions({
-      title: tt.rotateSecretConfirmTitle || 'Rotate Secret',
-      content:
-        tt.rotateSecretConfirmContent ||
-        'Rotating the secret will immediately invalidate the old one. Continue?',
-      okText: tt.rotateSecretButton || 'Rotate Secret',
-      cancelText: tt.cancelButton || 'Cancel',
-      variant: 'default',
+      title: tt.rotateSecretConfirmTitle,
+      content: tt.rotateSecretConfirmContent,
+      okText: tt.rotateSecretButton,
+      cancelText: tt.cancelButton,
       onConfirm: async () => {
         try {
           const response = await fetch(apiClientRotateSecret(clientId), {
@@ -437,31 +350,26 @@ export function DeveloperAppsPageComponent({
 
           const data =
             await readAppApiJson<OAuthClientSecretRotateResponse>(response);
-          showCredentialsModal({
+          setCredentials({
             clientId,
             clientSecret: data.client_secret,
             confidential: true
           });
         } catch (error) {
           console.error('Rotate secret error:', error);
-          dialogHandler.error(
-            tt.toastError || 'Operation failed, please try again later'
-          );
+          showError();
           throw error;
         }
       }
     });
   };
 
-  const handleDeleteApp = (clientId: string) => {
+  const askDeleteApp = (clientId: string) => {
     setConfirmOptions({
-      title: tt.deleteConfirmTitle || 'Delete Application',
-      content:
-        tt.deleteConfirmContent ||
-        'Permanently delete this application? This action cannot be undone.',
-      okText: tt.deleteButton || 'Delete',
-      cancelText: tt.cancelButton || 'Cancel',
-      variant: 'danger',
+      title: tt.deleteConfirmTitle,
+      content: tt.deleteConfirmContent,
+      okText: tt.deleteButton,
+      cancelText: tt.cancelButton,
       onConfirm: async () => {
         try {
           const response = await fetch(apiClientDetail(clientId), {
@@ -481,12 +389,10 @@ export function DeveloperAppsPageComponent({
             setEditDetailLoading(false);
             resetEditForm();
           }
-          dialogHandler.success(tt.toastDeleteSuccess || 'Application deleted');
+          dialogHandler.success(tt.toastDeleteSuccess);
         } catch (error) {
           console.error('Delete app error:', error);
-          dialogHandler.error(
-            tt.toastError || 'Operation failed, please try again later'
-          );
+          showError();
           throw error;
         }
       }
@@ -528,9 +434,7 @@ export function DeveloperAppsPageComponent({
       } catch (error) {
         if (loadSeq !== editLoadSeqRef.current) return;
         console.error('Load edit detail error:', error);
-        dialogHandler.error(
-          tt.toastError || 'Operation failed, please try again later'
-        );
+        showError();
       } finally {
         if (loadSeq === editLoadSeqRef.current) {
           setEditDetailLoading(false);
@@ -545,315 +449,120 @@ export function DeveloperAppsPageComponent({
     resetCreateForm();
   };
 
-  const closeEditModal = () => {
-    if (editSubmitting) return;
-    editLoadSeqRef.current += 1;
-    setEditModalVisible(false);
-    setEditingApp(null);
-    setEditDetailLoading(false);
-    resetEditForm();
-  };
-
   const openCreateModal = () => {
     resetCreateForm();
     setCreateSubmitting(false);
     setCreateModalVisible(true);
   };
 
+  const createButton = (
+    <BrainButton type="button" size="sm" auto onClick={openCreateModal}>
+      <PlusIcon className="h-4 w-4" aria-hidden />
+      {tt.createButton}
+    </BrainButton>
+  );
+
   return (
     <>
-      <div className="flex flex-1 flex-col">
-        <div className="max-w-5xl mx-auto w-full px-4 py-8 sm:py-10">
-          <div className={oauthCardClass} data-testid="DeveloperAppsPage">
-            <div className="p-6 sm:p-8 border-b border-primary-border">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-wide text-secondary-text mb-1">
-                    {tt.consoleSubtitle || 'Developer Console'}
-                  </p>
-                  <h1 className="text-xl sm:text-2xl font-semibold text-primary-text">
-                    {tt.title || 'My OAuth Applications'}
-                  </h1>
-                </div>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                  <LocaleLink
-                    href={ROUTE_OAUTH_PLAYGROUND}
-                    locale={locale}
-                    title={tt.playgroundLink || 'OAuth playground'}
-                    className={clsx(
-                      oauthSecondaryButtonClass,
-                      'w-full justify-center sm:w-auto'
-                    )}
-                  >
-                    <BeakerIcon className="h-4 w-4" />
-                    {tt.playgroundLink || 'OAuth playground'}
-                  </LocaleLink>
-                  <button
-                    type="button"
-                    className={clsx(
-                      oauthPrimaryButtonClass,
-                      'w-full justify-center sm:w-auto'
-                    )}
-                    onClick={openCreateModal}
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                    {tt.createButton || 'Create New App'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5 sm:p-6">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3 text-secondary-text">
-                  <ArrowPathIcon className="h-8 w-8 text-2xl text-brand animate-spin" />
-                  <span className="text-sm">
-                    {tt.loading || 'Loading applications'}
-                  </span>
-                </div>
-              ) : apps.length === 0 ? (
-                <div
-                  className={clsx(
-                    oauthElevatedPanelClass,
-                    'text-center py-12 px-4 border-dashed'
-                  )}
-                >
-                  <p className="text-secondary-text text-sm leading-relaxed">
-                    {tt.emptyState ||
-                      'No applications yet. Click "Create New App" to get started.'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4">
-                  {apps.map((app) => (
-                    <article
-                      data-testid="DeveloperAppsPageComponent"
-                      key={app.client_id}
-                      className={clsx(
-                        oauthElevatedPanelClass,
-                        'space-y-3 p-3 transition-colors hover:border-brand/30 sm:p-5'
-                      )}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-2.5">
-                        <AppListLogo
-                          name={app.client_name}
-                          logoUri={app.logo_uri}
-                        />
-                        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
-                          <h2 className="truncate text-xl font-semibold leading-tight text-primary-text sm:text-2xl">
-                            {app.client_name}
-                          </h2>
-                          <span
-                            className={clsx(
-                              'hidden shrink-0 items-center rounded-full px-1.5 py-px text-[10px] font-semibold leading-4 sm:inline-flex',
-                              app.confidential
-                                ? 'bg-[#1d4ed8] text-[#ffffff]'
-                                : 'bg-[#6d28d9] text-[#ffffff]'
-                            )}
-                          >
-                            {app.confidential
-                              ? tt.statusConfidential || 'Confidential'
-                              : tt.statusPublic || 'Public'}
-                          </span>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-                          <button
-                            type="button"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#7c3aed] bg-[#7c3aed] text-[#ffffff] transition hover:bg-[#6d28d9] sm:h-8 sm:w-auto sm:gap-1 sm:rounded-lg sm:px-2 sm:py-1 sm:text-xs sm:font-semibold"
-                            onClick={() => openEditModal(app)}
-                            title={tt.editButton || 'Edit'}
-                            aria-label={tt.editButton || 'Edit'}
-                          >
-                            <PencilSquareIcon className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">
-                              {tt.editButton || 'Edit'}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#d97706] bg-[#d97706] text-[#ffffff] transition hover:bg-[#b45309] disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-auto sm:gap-1 sm:rounded-lg sm:px-2 sm:py-1 sm:text-xs sm:font-semibold"
-                            onClick={() =>
-                              handleRotateSecret(
-                                app.client_id,
-                                app.confidential
-                              )
-                            }
-                            disabled={!app.confidential}
-                            title={
-                              !app.confidential
-                                ? tt.publicClientNote
-                                : tt.rotateSecretButton || 'Rotate Secret'
-                            }
-                            aria-label={
-                              tt.rotateSecretButton || 'Rotate Secret'
-                            }
-                          >
-                            <KeyIcon className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">
-                              {tt.rotateSecretButton || 'Rotate Secret'}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#dc2626] bg-[#dc2626] text-[#ffffff] transition hover:bg-[#b91c1c] sm:h-8 sm:w-auto sm:gap-1 sm:rounded-lg sm:px-2 sm:py-1 sm:text-xs sm:font-semibold"
-                            onClick={() => handleDeleteApp(app.client_id)}
-                            title={tt.deleteButton || 'Delete'}
-                            aria-label={tt.deleteButton || 'Delete'}
-                          >
-                            <TrashIcon className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">
-                              {tt.deleteButton || 'Delete'}
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <span
-                        className={clsx(
-                          'inline-flex w-fit items-center rounded-full px-1.5 py-px text-[10px] font-semibold leading-4 sm:hidden',
-                          app.confidential
-                            ? 'bg-[#1d4ed8] text-[#ffffff]'
-                            : 'bg-[#6d28d9] text-[#ffffff]'
-                        )}
-                      >
-                        {app.confidential
-                          ? tt.statusConfidential || 'Confidential'
-                          : tt.statusPublic || 'Public'}
-                      </span>
-
-                      <dl className="space-y-2.5 border-t border-primary-border/60 pt-3 text-sm">
-                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
-                          <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:pt-1 sm:uppercase sm:tracking-wide">
-                            {tt.clientIdLabel || 'Client ID'}
-                          </dt>
-                          <dd className="flex min-w-0 flex-1 items-center gap-2">
-                            <code className="min-w-0 flex-1 break-all rounded-lg border border-primary-border/40 bg-secondary px-2 py-1.5 font-mono text-xs text-primary-text sm:break-normal sm:overflow-x-auto sm:whitespace-nowrap sm:text-sm">
-                              {app.client_id}
-                            </code>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleCopyClientId(app.client_id)
-                              }
-                              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary-border text-brand transition hover:bg-brand/10"
-                              aria-label={
-                                tt.copyClientIdSuccess || 'Copy Client ID'
-                              }
-                            >
-                              <ClipboardDocumentIcon className="h-4 w-4" />
-                            </button>
-                          </dd>
-                        </div>
-                        {app.client_uri ? (
-                          <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
-                            <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:pt-0.5 sm:uppercase sm:tracking-wide">
-                              {tt.clientUriLabel || 'Homepage'}
-                            </dt>
-                            <dd className="min-w-0 flex-1">
-                              <a
-                                href={app.client_uri}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="break-all text-brand hover:underline sm:break-normal sm:block sm:overflow-x-auto sm:whitespace-nowrap"
-                              >
-                                {app.client_uri}
-                              </a>
-                            </dd>
-                          </div>
-                        ) : null}
-                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
-                          <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:pt-1 sm:uppercase sm:tracking-wide">
-                            {tt.redirectUrisLabel || 'Redirect URIs'}
-                          </dt>
-                          <dd className="min-w-0 flex-1 space-y-1.5">
-                            {app.redirect_uris.map((uri) => (
-                              <code
-                                data-testid="DeveloperAppsPageComponent"
-                                key={uri}
-                                className="block break-all rounded-lg border border-primary-border/40 bg-secondary px-2 py-1.5 font-mono text-xs text-primary-text sm:break-normal sm:overflow-x-auto sm:whitespace-nowrap"
-                              >
-                                {uri}
-                              </code>
-                            ))}
-                          </dd>
-                        </div>
-                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                          <dt className="shrink-0 text-xs font-medium text-secondary-text sm:w-28 sm:uppercase sm:tracking-wide">
-                            {tt.createdAtLabel || 'Created at'}
-                          </dt>
-                          <dd className="text-secondary-text">
-                            {new Date(app.created_at).toLocaleDateString()}
-                          </dd>
-                        </div>
-                      </dl>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </div>
+      <div data-testid="DeveloperAppsPage" className="brain-content">
+        <div className="brain-console-head">
+          <div>
+            <h1 className="brain-title">{tt.title}</h1>
+            <p className="brain-desc">{tt.description}</p>
           </div>
+          {createButton}
         </div>
+
+        {loading ? (
+          <div className="brain-empty" aria-busy>
+            <span className="brain-spinner" aria-hidden />
+          </div>
+        ) : apps.length === 0 ? (
+          <div className="brain-card flat brain-empty">
+            <div className="brain-empty-sphere" aria-hidden />
+            <p>{tt.emptyState}</p>
+            {createButton}
+          </div>
+        ) : (
+          <div className="brain-apps">
+            {apps.map((app) => (
+              <article
+                data-testid="DeveloperAppsPageComponent"
+                key={app.client_id}
+                className="brain-card flat brain-app-card"
+              >
+                <div className="brain-row">
+                  <div className="brain-who">
+                    <BrainAvatar name={app.client_name} src={app.logo_uri} />
+                    <h2 className="brain-name m-0 font-normal">
+                      {app.client_name}
+                      <span className="brain-pill ok">{tt.statusEnabled}</span>
+                      <span className="brain-pill purple">
+                        {app.confidential
+                          ? tt.statusConfidential
+                          : tt.statusPublic}
+                      </span>
+                    </h2>
+                  </div>
+                  <div className="brain-app-actions">
+                    <button
+                      type="button"
+                      className="brain-link"
+                      onClick={() => openEditModal(app)}
+                    >
+                      <PencilSquareIcon aria-hidden />
+                      {tt.editButton}
+                    </button>
+                    {app.confidential && (
+                      <button
+                        type="button"
+                        className="brain-link"
+                        onClick={() => askRotateSecret(app.client_id)}
+                      >
+                        <KeyIcon aria-hidden />
+                        {tt.rotateSecretButton}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="brain-link danger"
+                      onClick={() => askDeleteApp(app.client_id)}
+                    >
+                      <TrashIcon aria-hidden />
+                      {tt.deleteButton}
+                    </button>
+                  </div>
+                </div>
+                <dl className="brain-meta">
+                  <dt>{tt.clientIdLabel}</dt>
+                  <dd>
+                    <BrainCode
+                      value={app.client_id}
+                      onCopy={(value) => void handleCopy(value)}
+                      copyLabel={tt.copy}
+                    />
+                  </dd>
+                  <dt>{tt.redirectUrisLabel}</dt>
+                  <dd>
+                    {app.redirect_uris.map((uri) => (
+                      <BrainCode key={uri} value={uri} />
+                    ))}
+                  </dd>
+                  <dt>{tt.createdAtLabel}</dt>
+                  <dd>{new Date(app.created_at).toLocaleDateString()}</dd>
+                </dl>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
 
-      <OAuthClientCredentialsModal
-        open={credentialsModalVisible}
-        credentials={credentials}
-        title={tt.credentialsModalTitle || 'New Application Credentials'}
-        clientIdLabel={tt.clientIdLabel || 'Client ID'}
-        clientSecretLabel={tt.clientSecretLabel || 'Client Secret'}
-        secretWarning={
-          tt.secretWarning ||
-          'This secret is shown only once. Save it securely now.'
-        }
-        publicClientNote={tt.publicClientNote}
-        confirmLabel={tt.credentialsConfirm || 'I have saved it, close'}
-        onCopyClientId={() => void handleCopyFromCredentialsModal('id')}
-        onCopySecret={() => void handleCopyFromCredentialsModal('secret')}
-        onClose={closeCredentialsModal}
-      />
-
-      <DeveloperConfirmDialog
-        open={confirmOptions != null}
-        options={confirmOptions}
-        onClose={() => setConfirmOptions(null)}
-      />
-
-      <DeveloperOverlayModal
+      <BrainModal
         open={createModalVisible}
-        title={tt.createModalTitle || 'Create OAuth Application'}
-        onClose={closeCreateModal}
-        closeOnBackdrop={!createSubmitting}
-        maxWidthClass="max-w-xl"
-        footer={
-          <div className="flex gap-2 sm:justify-end">
-            <button
-              type="button"
-              className={clsx(
-                oauthSecondaryButtonClass,
-                'min-w-0 flex-1 justify-center sm:flex-none'
-              )}
-              onClick={closeCreateModal}
-              disabled={createSubmitting}
-            >
-              {tt.cancelButton || 'Cancel'}
-            </button>
-            <button
-              type="submit"
-              form="create-oauth-client"
-              className={clsx(
-                oauthPrimaryButtonClass,
-                'min-w-0 flex-1 justify-center sm:flex-none'
-              )}
-              disabled={createSubmitting}
-            >
-              {createSubmitting ? (
-                <ArrowPathIcon className="h-4 w-4 animate-spin" />
-              ) : null}
-              {createSubmitting
-                ? tt.saving || 'Saving...'
-                : tt.createSubmitButton || 'Create Application'}
-            </button>
-          </div>
-        }
+        title={tt.createModalTitle}
+        onClose={createSubmitting ? undefined : closeCreateModal}
+        wide
+        data-testid="DeveloperAppsCreateModal"
       >
         <OAuthClientAppForm
           formId="create-oauth-client"
@@ -863,113 +572,47 @@ export function DeveloperAppsPageComponent({
           disabled={createSubmitting}
           onChange={(patch) => {
             setCreateValues((prev) => ({ ...prev, ...patch }));
-            setCreateFieldErrors((prev) => {
-              const next = { ...prev };
-              for (const key of Object.keys(
-                patch
-              ) as (keyof OAuthClientFormValues)[]) {
-                delete next[key];
-              }
-              return next;
-            });
+            setCreateFieldErrors((prev) => withoutErrors(prev, patch));
           }}
           onSubmit={handleCreateApp}
-          footer={null}
-        />
-      </DeveloperOverlayModal>
-
-      <DeveloperOverlayModal
-        open={editModalVisible}
-        title={tt.editModalTitle || 'Edit Application'}
-        onClose={closeEditModal}
-        closeOnBackdrop={!editSubmitting && !editDetailLoading}
-        maxWidthClass="max-w-xl"
-        footer={
-          <div className="flex items-center gap-2">
-            {editingApp ? (
-              <div className="flex shrink-0 gap-1.5">
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d97706]/30 bg-[#fff7ed] text-[#c2410c] transition hover:bg-[#ffedd5] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:gap-1.5 sm:px-2.5"
-                  onClick={() =>
-                    void handleRotateSecret(
-                      editingApp.client_id,
-                      editValues.confidential
-                    )
-                  }
-                  disabled={
-                    !editValues.confidential ||
-                    editDetailLoading ||
-                    editSubmitting
-                  }
-                  title={tt.rotateSecretButton || 'Rotate Secret'}
-                  aria-label={tt.rotateSecretButton || 'Rotate Secret'}
-                >
-                  <KeyIcon className="h-4 w-4" />
-                  <span className="hidden text-xs font-medium sm:inline">
-                    {tt.rotateSecretButton || 'Rotate Secret'}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#dc2626]/25 bg-[#fef2f2] text-[#b91c1c] transition hover:bg-[#fee2e2] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:gap-1.5 sm:px-2.5"
-                  onClick={() => {
-                    const clientId = editingApp.client_id;
-                    closeEditModal();
-                    handleDeleteApp(clientId);
-                  }}
-                  disabled={editDetailLoading || editSubmitting}
-                  title={tt.deleteButton || 'Delete'}
-                  aria-label={tt.deleteButton || 'Delete'}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                  <span className="hidden text-xs font-medium sm:inline">
-                    {tt.deleteButton || 'Delete'}
-                  </span>
-                </button>
-              </div>
-            ) : null}
-            <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
-              <button
-                type="button"
-                className={clsx(
-                  oauthSecondaryButtonClass,
-                  'h-9 min-w-0 flex-1 justify-center px-3 sm:flex-none'
-                )}
-                onClick={closeEditModal}
-                disabled={editSubmitting}
-              >
-                {tt.cancelButton || 'Cancel'}
-              </button>
-              <button
-                type="submit"
-                form="edit-oauth-client"
-                className={clsx(
-                  oauthPrimaryButtonClass,
-                  'h-9 min-w-0 flex-1 justify-center px-3 sm:flex-none'
-                )}
-                disabled={editDetailLoading || editSubmitting}
-              >
-                {editSubmitting || editDetailLoading ? (
-                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                ) : null}
-                {editSubmitting
-                  ? tt.saving || 'Saving...'
-                  : editDetailLoading
-                    ? tt.loading || 'Loading...'
-                    : tt.saveSubmitButton || 'Save Changes'}
-              </button>
-            </div>
+        >
+          <div className="brain-modal-actions">
+            <BrainButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              auto
+              disabled={createSubmitting}
+              onClick={closeCreateModal}
+            >
+              {tt.cancelButton}
+            </BrainButton>
+            <BrainButton
+              type="submit"
+              size="sm"
+              auto
+              loading={createSubmitting}
+            >
+              {tt.createSubmitButton}
+            </BrainButton>
           </div>
-        }
+        </OAuthClientAppForm>
+      </BrainModal>
+
+      <BrainModal
+        open={editModalVisible}
+        title={tt.editModalTitle}
+        onClose={editSubmitting ? undefined : closeEditModal}
+        wide
+        data-testid="DeveloperAppsEditModal"
       >
         {editDetailLoading ? (
           <div
             data-testid="DeveloperAppsEditLoading"
-            className="flex flex-col items-center justify-center gap-3 py-10 text-secondary-text"
+            className="brain-empty"
+            aria-busy
           >
-            <ArrowPathIcon className="h-8 w-8 animate-spin text-brand" />
-            <span className="text-sm">{tt.loading || 'Loading...'}</span>
+            <span className="brain-spinner" aria-hidden />
           </div>
         ) : (
           <OAuthClientAppForm
@@ -981,21 +624,79 @@ export function DeveloperAppsPageComponent({
             disabled={editSubmitting}
             onChange={(patch) => {
               setEditValues((prev) => ({ ...prev, ...patch }));
-              setEditFieldErrors((prev) => {
-                const next = { ...prev };
-                for (const key of Object.keys(
-                  patch
-                ) as (keyof OAuthClientFormValues)[]) {
-                  delete next[key];
-                }
-                return next;
-              });
+              setEditFieldErrors((prev) => withoutErrors(prev, patch));
             }}
             onSubmit={handleEditApp}
-            footer={null}
-          />
+          >
+            <div className="brain-edit-foot">
+              {editingApp && (
+                <div className="flex gap-[18px]">
+                  {editValues.confidential && (
+                    <button
+                      type="button"
+                      className="brain-link"
+                      disabled={editSubmitting}
+                      onClick={() => askRotateSecret(editingApp.client_id)}
+                    >
+                      <KeyIcon aria-hidden />
+                      {tt.rotateSecretButton}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="brain-link danger"
+                    disabled={editSubmitting}
+                    onClick={() => askDeleteApp(editingApp.client_id)}
+                  >
+                    <TrashIcon aria-hidden />
+                    {tt.deleteButton}
+                  </button>
+                </div>
+              )}
+              <div className="brain-modal-actions">
+                <BrainButton
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  auto
+                  disabled={editSubmitting}
+                  onClick={closeEditModal}
+                >
+                  {tt.cancelButton}
+                </BrainButton>
+                <BrainButton
+                  type="submit"
+                  size="sm"
+                  auto
+                  loading={editSubmitting}
+                >
+                  {tt.saveSubmitButton}
+                </BrainButton>
+              </div>
+            </div>
+          </OAuthClientAppForm>
         )}
-      </DeveloperOverlayModal>
+      </BrainModal>
+
+      <DeveloperConfirmDialog
+        open={confirmOptions != null}
+        options={confirmOptions}
+        onClose={() => setConfirmOptions(null)}
+      />
+
+      <OAuthClientCredentialsModal
+        open={credentials != null}
+        credentials={credentials}
+        title={tt.credentialsModalTitle}
+        clientIdLabel={tt.clientIdLabel}
+        clientSecretLabel={tt.clientSecretLabel}
+        secretWarning={tt.secretWarning}
+        publicClientNote={tt.publicClientNote}
+        confirmLabel={tt.credentialsConfirm}
+        copyLabel={tt.copy}
+        onCopy={(value) => void handleCopy(value)}
+        onClose={() => setCredentials(null)}
+      />
     </>
   );
 }

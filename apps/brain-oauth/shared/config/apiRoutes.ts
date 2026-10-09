@@ -6,14 +6,40 @@
  */
 
 /**
- * API path: `/api/auth/email-otp-callback/establish`
+ * API path: `/api/admin/overview`
  *
- * @see [src/app/api/auth/email-otp-callback/establish/route.ts](../../src/app/api/auth/email-otp-callback/establish/route.ts)
+ * @see [src/app/api/admin/overview/route.ts](../../src/app/api/admin/overview/route.ts)
  *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/auth/email-otp-callback/establish/route.ts`
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/overview/route.ts`
  */
-export const API_AUTH_EMAIL_OTP_CALLBACK_ESTABLISH =
-  '/api/auth/email-otp-callback/establish' as const;
+export const API_ADMIN_OVERVIEW = '/api/admin/overview' as const;
+
+/**
+ * API path: `/api/admin/site-settings`
+ *
+ * @see [src/app/api/admin/site-settings/route.ts](../../src/app/api/admin/site-settings/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/site-settings/route.ts`
+ */
+export const API_ADMIN_SITE_SETTINGS = '/api/admin/site-settings' as const;
+
+/**
+ * API path: `/api/admin/users`
+ *
+ * @see [src/app/api/admin/users/route.ts](../../src/app/api/admin/users/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/users/route.ts`
+ */
+export const API_ADMIN_USERS = '/api/admin/users' as const;
+
+/**
+ * API path: `/api/brain/envs`
+ *
+ * @see [src/app/api/brain/envs/route.ts](../../src/app/api/brain/envs/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/brain/envs/route.ts`
+ */
+export const API_BRAIN_ENVS = '/api/brain/envs' as const;
 
 /**
  * API path: `/api/clients`
@@ -44,13 +70,14 @@ export const API_CLIENTS_ROTATE_SECRET =
   '/api/clients/:clientId/rotate-secret' as const;
 
 /**
- * API path: `/api/locales/json`
+ * API path: `/api/oauth/authorize-preview`
  *
- * @see [src/app/api/locales/json/route.ts](../../src/app/api/locales/json/route.ts)
+ * @see [src/app/api/oauth/authorize-preview/route.ts](../../src/app/api/oauth/authorize-preview/route.ts)
  *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/locales/json/route.ts`
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/oauth/authorize-preview/route.ts`
  */
-export const API_LOCALES_JSON = '/api/locales/json' as const;
+export const API_OAUTH_AUTHORIZE_PREVIEW =
+  '/api/oauth/authorize-preview' as const;
 
 /**
  * API path: `/api/oauth/consent`
@@ -126,15 +153,6 @@ export const API_USER_OTP_LOGIN = '/api/user/otp/login' as const;
 export const API_USER_OTP_VERIFY = '/api/user/otp/verify' as const;
 
 /**
- * API path: `/api/user/register`
- *
- * @see [src/app/api/user/register/route.ts](../../src/app/api/user/register/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/user/register/route.ts`
- */
-export const API_USER_REGISTER = '/api/user/register' as const;
-
-/**
  * API path: `/api/user/request-logs`
  *
  * @see [src/app/api/user/request-logs/route.ts](../../src/app/api/user/request-logs/route.ts)
@@ -153,11 +171,14 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
-  | typeof API_AUTH_EMAIL_OTP_CALLBACK_ESTABLISH
+  | typeof API_ADMIN_OVERVIEW
+  | typeof API_ADMIN_SITE_SETTINGS
+  | typeof API_ADMIN_USERS
+  | typeof API_BRAIN_ENVS
   | typeof API_CLIENTS
   | typeof API_CLIENTS_2
   | typeof API_CLIENTS_ROTATE_SECRET
-  | typeof API_LOCALES_JSON
+  | typeof API_OAUTH_AUTHORIZE_PREVIEW
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
@@ -166,6 +187,5 @@ export type ApiRoutePath =
   | typeof API_USER_LOGOUT
   | typeof API_USER_OTP_LOGIN
   | typeof API_USER_OTP_VERIFY
-  | typeof API_USER_REGISTER
   | typeof API_USER_REQUEST_LOGS
   | typeof API_USER_SESSION;

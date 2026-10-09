@@ -10,11 +10,8 @@ import { useUserAuth } from '../hook/useUserAuth';
  * bootstrap (`restoreUserService`) and shows a compact skeleton while loading
  * so the rest of the page is never blocked.
  */
-export function AuthButton(props: {
-  loginOnly?: boolean;
-  showLogoutLabel?: boolean;
-}) {
-  const { loginOnly = false, showLogoutLabel = false } = props;
+export function AuthButton(props: { showLogoutLabel?: boolean }) {
+  const { showLogoutLabel = false } = props;
   const { success, loading } = useUserAuth();
 
   if (loading) {
@@ -27,11 +24,5 @@ export function AuthButton(props: {
     );
   }
 
-  return (
-    <AuthButtonUI
-      hasAuth={success}
-      loginOnly={loginOnly}
-      showLogoutLabel={showLogoutLabel}
-    />
-  );
+  return <AuthButtonUI hasAuth={success} showLogoutLabel={showLogoutLabel} />;
 }
