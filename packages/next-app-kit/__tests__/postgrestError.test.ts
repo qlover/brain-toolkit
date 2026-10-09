@@ -4,7 +4,7 @@ import {
   extractPostgrestError,
   isPostgrestRangeNotSatisfiable,
   parsePostgrestRowCount
-} from '@server/utils/postgrestError';
+} from '../src/shared/postgrestError';
 
 describe('postgrestError', () => {
   it('detects PGRST103 in nested cause', () => {

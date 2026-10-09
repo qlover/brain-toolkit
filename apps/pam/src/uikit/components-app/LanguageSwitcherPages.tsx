@@ -1,5 +1,6 @@
 'use client';
 
+import { headerIconButtonClass } from '@brain-toolkit/next-app-kit/client';
 import { useMountedClient } from '@brain-toolkit/react-kit';
 import { LanguageIcon } from '@heroicons/react/24/outline';
 import { LocaleRouter } from '@qlover/corekit-bridge/url-helper';
@@ -10,7 +11,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { localeQueryParam, useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
-import { headerIconButtonClass } from './headerChrome';
 
 /**
  * Language switcher for Pages Router routes (uses `next/router`).

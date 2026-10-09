@@ -1,5 +1,5 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import { inject, injectable } from '@shared/container';
-import { MemoryKvCacheService } from './MemoryKvCacheService';
 
 const CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
 const CATEGORY_VERSION_KEY = 'pam:categories:version';

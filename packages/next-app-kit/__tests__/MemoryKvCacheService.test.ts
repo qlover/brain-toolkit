@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
+import { MemoryKvCacheService } from '../src/server/services/MemoryKvCacheService';
 
 describe('MemoryKvCacheService', () => {
   beforeEach(async () => {

@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "./ts-build",
+    "allowJs": false,
+    "jsx": "react-jsx",
+    "esModuleInterop": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
+    "types": ["vitest/globals"],
+    "paths": {
+      "@brain-toolkit/next-app-kit/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "package.json"],
+  "exclude": ["node_modules", "ts-build", "__tests__"],
+  "references": []
+}

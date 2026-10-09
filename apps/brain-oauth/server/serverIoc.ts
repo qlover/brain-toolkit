@@ -1,3 +1,4 @@
+import { UserScopedRequestLogsRepository } from '@brain-toolkit/next-app-kit/server';
 import {
   createIOCFunction,
   ReflectionIOCContainer,
@@ -59,13 +60,12 @@ const ServerIocRegister: IOCRegisterInterface<
     };
 
     ioc.bind(SupabaseRepo, new SupabaseRepo('', supabaseDeps));
-    ioc.bind(
-      RequestLogsRepository,
-      new RequestLogsRepository({
-        ...supabaseDeps,
-        serverContext: ioc.get(I.ServerContextInterface)
-      })
-    );
+    const requestLogsRepository = new UserScopedRequestLogsRepository({
+      ...supabaseDeps,
+      serverContext: ioc.get(I.ServerContextInterface)
+    });
+    ioc.bind(UserScopedRequestLogsRepository, requestLogsRepository);
+    ioc.bind(RequestLogsRepository, requestLogsRepository);
 
     ioc.bind(I.OAuthWrapperProviderInterface, ioc.get(BrainUserOAuthProvider));
   }

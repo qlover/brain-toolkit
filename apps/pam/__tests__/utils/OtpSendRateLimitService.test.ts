@@ -1,7 +1,7 @@
+import { MemoryKvCacheService } from '@brain-toolkit/next-app-kit/server';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { describe, expect, it } from 'vitest';
 import { API_OTP_SEND_RATE_LIMITED } from '@config/i18n-identifier/api';
-import { MemoryKvCacheService } from '@server/services/MemoryKvCacheService';
 import {
   OTP_SEND_COOLDOWN_MS,
   OtpSendRateLimitService

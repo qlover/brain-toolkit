@@ -30,6 +30,7 @@ import { PamCliTokenRepo } from '@server/repositorys/PamCliTokenRepo';
 import { PamProjectCollaboratorsRepo } from '@server/repositorys/PamProjectCollaboratorsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
+import { PamUserIdentitiesRepo } from '@server/repositorys/PamUserIdentitiesRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { PamSupabaseSessionMintService } from '@server/services/PamSupabaseSessionMintService';
 import { PamUserService } from '@server/services/PamUserService';
@@ -55,7 +56,9 @@ export class PamBindEmailService {
     @inject(I.OAuthWrapperProviderInterface)
     protected readonly oauthProvider: OAuthWrapperProviderInterface,
     @inject(PamSupabaseSessionMintService)
-    protected readonly sessionMint: PamSupabaseSessionMintService
+    protected readonly sessionMint: PamSupabaseSessionMintService,
+    @inject(PamUserIdentitiesRepo)
+    protected readonly identitiesRepo: PamUserIdentitiesRepo
   ) {}
 
   public async send(params: {
@@ -230,6 +233,7 @@ export class PamBindEmailService {
     await this.oauthRepo.reassignClientOwner(A.id, B.id);
     await this.oauthRepo.reassignRefreshTokensUserId(A.id, B.id);
     await this.oauthRepo.deleteUserCredentials(A.id);
+    await this.identitiesRepo.reassignUserId(A.id, B.id);
 
     if (
       normalizeSystemRole(await this.roles.getRoleKeyById(A.role_id)) ===

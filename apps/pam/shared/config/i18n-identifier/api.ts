@@ -334,6 +334,13 @@ export const API_BIND_EMAIL_ALREADY_BOUND = 'api:bind_email_already_bound';
 export const API_BIND_EMAIL_PHONE_CONFLICT = 'api:bind_email_phone_conflict';
 
 /**
+ * @description Brain login email matches an existing PAM account but Brain did not verify it
+ * @localZh 该邮箱已注册 PAM 账号，请先用原方式登录
+ * @localEn This email already has a PAM account; sign in with your original method first
+ */
+export const API_BRAIN_EMAIL_CONFLICT = 'api:brain_email_conflict';
+
+/**
  * @description Bind-email target is the same as the current user (noop conflict)
  * @localZh 不能绑定到当前账号自身
  * @localEn Cannot bind email to the same account
