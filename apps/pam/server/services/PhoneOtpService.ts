@@ -4,6 +4,7 @@ import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
 import {
   defaultDisplayNameFromPhone,
+  normalizePhoneE164,
   phonePlaceholderEmail
 } from '@shared/utils/pamUserIdentity';
 import {
@@ -48,25 +49,6 @@ function isAuthUserMissingError(error: unknown): boolean {
     return true;
   }
   return /user not found/i.test(String(err.message ?? ''));
-}
-
-function normalizePhoneE164(raw: string): string {
-  const trimmed = raw.trim().replace(/[\s-]/g, '');
-  if (!trimmed) {
-    return '';
-  }
-  if (trimmed.startsWith('+')) {
-    return `+${trimmed.slice(1).replace(/\D/g, '')}`;
-  }
-  const digits = trimmed.replace(/\D/g, '');
-  // Default country code +86 for mainland numbers / bare digit input.
-  if (/^1\d{10}$/.test(digits)) {
-    return `+86${digits}`;
-  }
-  if (digits.startsWith('86') && digits.length >= 12) {
-    return `+${digits}`;
-  }
-  return digits ? `+86${digits}` : '';
 }
 
 @injectable()

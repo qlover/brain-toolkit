@@ -1,16 +1,16 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import { inject, injectable } from '@shared/container';
+import { BRAIN_PLACEHOLDER_EMAIL_SUFFIX } from '@shared/utils/pamUserIdentity';
 import { API_BRAIN_EMAIL_CONFLICT } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { PamUserIdentitiesRepo } from '@server/repositorys/PamUserIdentitiesRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
-export const BRAIN_IDENTITY_PROVIDER = 'brain';
+export { BRAIN_PLACEHOLDER_EMAIL_SUFFIX };
 
-/** Placeholder used when Brain userinfo has no email (never a real mailbox). */
-export const BRAIN_PLACEHOLDER_EMAIL_SUFFIX = '@brain.oauth';
+export const BRAIN_IDENTITY_PROVIDER = 'brain';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

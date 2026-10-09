@@ -140,7 +140,7 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       key: PAM_SITE_SETTING_KEYS.BRAIN_OAUTH_CLIENT_SECRET,
       label: 'Brain OAuth Client Secret',
       description:
-        '机密客户端密钥；纯 PKCE 公共客户端可留空。保存后加密存储，界面不回显明文。',
+        '在 Brain OAuth 注册为机密客户端时必填（即使使用 PKCE）；仅公共客户端可留空。保存后加密存储，界面不回显明文。',
       isSensitive: true
     },
     {
