@@ -151,10 +151,8 @@ function resolveBrainPhone(user: BrainUser): string | undefined {
 }
 
 /**
- * `BrainUserGateway` ignores the HTTP status and only flags
- * `detail: 'Invalid token.'`; a Bearer 401 (`detail: 'Authentication
- * Failed.'`) comes back as `data` with `error: null`. Treat any profile
- * without an id as a rejected token so it never becomes a local user.
+ * HTTP errors already come back as `error`; a 2xx profile without an id is
+ * still rejected so it never becomes a local user.
  */
 function requireBrainUser(profile: {
   data: (BrainUser & Partial<BrainCredentials>) | null;
