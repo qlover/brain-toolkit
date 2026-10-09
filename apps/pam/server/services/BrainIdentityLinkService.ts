@@ -4,7 +4,10 @@ import { inject, injectable } from '@shared/container';
 import { BRAIN_PLACEHOLDER_EMAIL_SUFFIX } from '@shared/utils/pamUserIdentity';
 import { API_BRAIN_EMAIL_CONFLICT } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
-import { PamUserIdentitiesRepo } from '@server/repositorys/PamUserIdentitiesRepo';
+import {
+  PamUserIdentitiesRepo,
+  type PamIdentityData
+} from '@server/repositorys/PamUserIdentitiesRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
@@ -22,6 +25,8 @@ export type BrainIdentityInput = {
   readonly sub: string;
   readonly email: string;
   readonly emailVerified: boolean;
+  /** Snapshot stored on the identity link (`env`, `account`). */
+  readonly identityData?: PamIdentityData;
 };
 
 export type BrainIdentityResult = {
@@ -72,13 +77,17 @@ export class BrainIdentityLinkService {
       sub
     );
     if (linked) {
-      await this.identities.touchLastLogin(BRAIN_IDENTITY_PROVIDER, sub);
+      await this.identities.touchLastLogin(
+        BRAIN_IDENTITY_PROVIDER,
+        sub,
+        input.identityData
+      );
       return { userId: linked, created: false };
     }
 
     // Accounts created before pam_user_identities used the sub as pam_users.id.
     if (UUID_PATTERN.test(sub) && (await this.pamUsers.findById(sub))) {
-      return { userId: await this.link(sub, sub), created: false };
+      return { userId: await this.link(input, sub, sub), created: false };
     }
 
     const businessEmail = isPlaceholderEmail(email) ? null : email;
@@ -86,19 +95,27 @@ export class BrainIdentityLinkService {
       const existing = await this.pamUsers.findByEmail(businessEmail);
       if (existing) {
         this.assertCanLinkByEmail(input, sub);
-        return { userId: await this.link(sub, existing.id), created: false };
+        return {
+          userId: await this.link(input, sub, existing.id),
+          created: false
+        };
       }
     }
 
     const authUserId = await this.createAuthUser(input, sub, email);
-    return { userId: await this.link(sub, authUserId), created: true };
+    return { userId: await this.link(input, sub, authUserId), created: true };
   }
 
-  protected async link(sub: string, userId: string): Promise<string> {
+  protected async link(
+    input: BrainIdentityInput,
+    sub: string,
+    userId: string
+  ): Promise<string> {
     const linkedUserId = await this.identities.link({
       provider: BRAIN_IDENTITY_PROVIDER,
       externalUserId: sub,
-      userId
+      userId,
+      identityData: input.identityData
     });
     this.logger.info('Brain identity linked', { sub, userId: linkedUserId });
     return linkedUserId;
