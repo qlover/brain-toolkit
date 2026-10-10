@@ -12,6 +12,7 @@ A powerful DOM element expand/collapse animation tool that provides smooth eleme
 - 🌐 Modern browser support
 - 🔄 Automatic placeholder management
 - ⚡ High-performance animation implementation
+- 🃏 `ElementZoom`: iOS-style expanding card, with a React hook
 
 ## Installation
 
@@ -283,6 +284,98 @@ enum AnimationState {
   COLLAPSED = 'collapsed'
 }
 ```
+
+## ElementZoom: iOS-style expanding card
+
+`ElementZoom` grows a card out of a list row (or any element) to fill the screen and shrinks it back on close, like the iOS App Store cards.
+
+Compared with `ElementResizer`: `ElementResizer` enlarges the element itself in place; `ElementZoom` is a separate `fixed` card that morphs from the origin element's position.
+
+How it works:
+
+- The card is laid out once at its final size; only `transform` and `clip-path` animate, so there is no layout work per frame and content is never squeezed
+- Built on the Web Animations API: closing halfway through opening shrinks back from the current frame (interruptible)
+- The origin is re-measured on close, so it lands correctly after scrolling; when the origin is off screen the card scales and fades instead
+- Optional: cross-fading copy of the origin, pull-down-to-dismiss
+- Without `element.animate` it jumps straight to the final state
+
+### Vanilla usage
+
+```ts
+import {
+  ElementZoom,
+  viewportInsetRect,
+  lockBodyScroll,
+  bindHistoryBack
+} from '@brain-toolkit/element-sizer';
+
+const zoom = new ElementZoom({
+  target: cardEl, // the card; set to position: fixed
+  origin: () => rowEl, // origin element, re-read on close
+  to: viewportInsetRect({ top: 28, gap: 10, radius: 22 }),
+  backdrop: maskEl, // optional mask
+  ghost: ghostEl, // optional container at the card's top-left for the origin copy
+  content: () => [scrollEl, closeBtn] // optional content faded in after opening
+});
+
+const unlock = lockBodyScroll();
+const history = bindHistoryBack(() => {
+  unlock();
+  zoom.close().then(() => cardEl.remove());
+});
+zoom.enableDragDismiss({ scrollEl, onDismiss: history.back });
+
+await zoom.open();
+// Close button: history.back(), so the back gesture and the button share one path
+```
+
+### Options (ElementZoomOptions)
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `target` | required | Card element |
+| `origin` | — | Returns the origin element; null falls back to scale + fade |
+| `to` | `viewportInsetRect()` | Returns the expanded rect, evaluated on every open |
+| `originRadius` | `12` | Corner radius of the origin shape (px) |
+| `duration` | `460` | Duration (ms) |
+| `easing` | `cubic-bezier(.32,.72,0,1)` | Easing |
+| `backdrop` | — | Mask element |
+| `ghost` | — | Container showing a copy of the origin |
+| `content` | — | Returns content elements to fade |
+| `hideOrigin` | `true` | Hide the origin while the card is open |
+
+Methods: `open()` / `close()` (promises; repeated `close()` calls share one animation), `enableDragDismiss({ scrollEl, distance?, onDismiss })` (returns a function that removes the listeners), `destroy()`. Read the current `state` (`AnimationState`).
+
+Helpers: `viewportInsetRect({ top, gap, radius })`, `lockBodyScroll()`, `bindHistoryBack(onBack, { stateKey })`.
+
+### React
+
+`@brain-toolkit/element-sizer/react` exports `useElementZoom`, which opens on mount and by default locks scroll, wires the back gesture and enables pull-to-dismiss. `react` is an optional peer dependency, only needed for this entry.
+
+```tsx
+import { createPortal } from 'react-dom';
+import { useElementZoom } from '@brain-toolkit/element-sizer/react';
+
+function ZoomCard({ getRow, onClosed }) {
+  // Destructure: React Compiler lint flags property access on objects holding refs
+  const { targetRef, backdropRef, ghostRef, scrollRef, contentRef, close } =
+    useElementZoom({ origin: getRow, onClosed });
+
+  return createPortal(
+    <div className="fixed inset-0 z-50">
+      <div ref={backdropRef} onClick={close} className="absolute inset-0 bg-black/50 opacity-0" />
+      <div ref={targetRef} role="dialog" aria-modal="true" className="overflow-hidden bg-white">
+        <div ref={ghostRef} aria-hidden className="pointer-events-none absolute top-0 left-0" />
+        <div ref={scrollRef} className="h-full overflow-y-auto opacity-0">…</div>
+        <button ref={contentRef} onClick={close} className="absolute top-3 right-3 opacity-0">✕</button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+```
+
+Extra `useElementZoom` options: `history` (default `true`, or `{ stateKey }`), `lockScroll` (default `true`), `dragToDismiss` (default `true`, or `{ distance }`), `onClosed` (called after the close animation; unmount the card there).
 
 ## Use Cases
 

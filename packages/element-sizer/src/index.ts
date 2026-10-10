@@ -1,3 +1,16 @@
+import { AnimationState } from './AnimationState';
+
+export { AnimationState } from './AnimationState';
+export {
+  ElementZoom,
+  bindHistoryBack,
+  lockBodyScroll,
+  viewportInsetRect,
+  type ElementZoomDragOptions,
+  type ElementZoomOptions,
+  type ElementZoomRect
+} from './ElementZoom';
+
 /**
  * Configuration options for ElementResizer
  */
@@ -74,17 +87,6 @@ export type ElementResizerRect = {
   width: string | number;
   height: string | number;
 };
-
-/**
- * Animation state enum for better state management
- */
-export enum AnimationState {
-  IDLE = 'idle',
-  EXPANDING = 'expanding',
-  EXPANDED = 'expanded',
-  COLLAPSING = 'collapsing',
-  COLLAPSED = 'collapsed'
-}
 
 function getDefaultRelativeRect(
   target: HTMLElement,

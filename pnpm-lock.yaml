@@ -416,6 +416,9 @@ importers:
       '@brain-toolkit/antd-theme-override':
         specifier: ^0.1.2
         version: 0.1.2(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@brain-toolkit/element-sizer':
+        specifier: workspace:*
+        version: link:../../packages/element-sizer
       '@brain-toolkit/next-app-kit':
         specifier: workspace:*
         version: link:../../packages/next-app-kit
@@ -732,7 +735,20 @@ importers:
         specifier: ^2.3.1
         version: 2.5.0(debug@4.4.3(supports-color@8.1.1))
 
-  packages/element-sizer: {}
+  packages/element-sizer:
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.2)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
 
   packages/next-app-kit:
     devDependencies:

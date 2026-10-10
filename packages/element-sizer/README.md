@@ -12,6 +12,7 @@
 - 🌐 支持现代浏览器
 - 🔄 自动占位符管理
 - ⚡ 高性能动画实现
+- 🃏 `ElementZoom`：iOS 风格展开卡片，附 React hook
 
 ## 安装
 
@@ -283,6 +284,98 @@ enum AnimationState {
   COLLAPSED = 'collapsed'
 }
 ```
+
+## ElementZoom：iOS 风格展开卡片
+
+`ElementZoom` 让一张卡片从列表行（或任意元素）里「长」出来铺满屏幕，关闭时再缩回原位置，效果类似 iOS App Store 的卡片展开。
+
+与 `ElementResizer` 的区别：`ElementResizer` 在原位置把元素本身撑大；`ElementZoom` 是一层独立的 `fixed` 卡片，从起点元素的位置开始变形。
+
+实现要点：
+
+- 卡片一开始就按最终尺寸布局，动画只改 `transform` 和 `clip-path`，不触发重新布局，内容也不会被挤压
+- 基于 Web Animations API，展开到一半时关闭会从当前状态直接缩回（可打断）
+- 关闭时会重新测量起点元素的位置，列表滚动过也能缩回正确位置；起点不在屏幕内时改为缩放加淡出
+- 可选：起点元素的副本交叉淡入淡出、下拉关闭手势
+- 不支持 `element.animate` 的环境会直接跳到最终状态
+
+### 原生用法
+
+```ts
+import {
+  ElementZoom,
+  viewportInsetRect,
+  lockBodyScroll,
+  bindHistoryBack
+} from '@brain-toolkit/element-sizer';
+
+const zoom = new ElementZoom({
+  target: cardEl, // 卡片，会被设为 fixed
+  origin: () => rowEl, // 起点元素，关闭时重新读取
+  to: viewportInsetRect({ top: 28, gap: 10, radius: 22 }),
+  backdrop: maskEl, // 可选：遮罩
+  ghost: ghostEl, // 可选：卡片内左上角的容器，用于显示起点元素的副本
+  content: () => [scrollEl, closeBtn] // 可选：展开后淡入的内容
+});
+
+const unlock = lockBodyScroll();
+const history = bindHistoryBack(() => {
+  unlock();
+  zoom.close().then(() => cardEl.remove());
+});
+zoom.enableDragDismiss({ scrollEl, onDismiss: history.back });
+
+await zoom.open();
+// 关闭按钮：history.back()，让返回键和按钮走同一条路径
+```
+
+### 配置选项（ElementZoomOptions）
+
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `target` | 必填 | 卡片元素 |
+| `origin` | — | 返回起点元素的函数；返回 null 时用缩放淡入淡出 |
+| `to` | `viewportInsetRect()` | 返回展开后矩形的函数，每次打开时计算 |
+| `originRadius` | `12` | 起点形状的圆角（px） |
+| `duration` | `460` | 动画时长（ms） |
+| `easing` | `cubic-bezier(.32,.72,0,1)` | 缓动曲线 |
+| `backdrop` | — | 遮罩元素 |
+| `ghost` | — | 显示起点元素副本的容器 |
+| `content` | — | 返回需要淡入淡出的内容元素 |
+| `hideOrigin` | `true` | 卡片打开期间隐藏起点元素 |
+
+方法：`open()` / `close()`（返回 Promise，重复调用 `close()` 共用同一个动画）、`enableDragDismiss({ scrollEl, distance?, onDismiss })`（返回移除监听的函数）、`destroy()`。状态通过 `state` 读取（`AnimationState`）。
+
+辅助函数：`viewportInsetRect({ top, gap, radius })`、`lockBodyScroll()`、`bindHistoryBack(onBack, { stateKey })`。
+
+### React 用法
+
+`@brain-toolkit/element-sizer/react` 提供 `useElementZoom`，挂载时打开，默认会锁定滚动、接入返回键、开启下拉关闭。`react` 是可选的 peer 依赖，不用这个入口就不需要安装。
+
+```tsx
+import { createPortal } from 'react-dom';
+import { useElementZoom } from '@brain-toolkit/element-sizer/react';
+
+function ZoomCard({ getRow, onClosed }) {
+  // 需要解构：React Compiler 的 lint 不允许在渲染时访问包含 ref 的对象的属性
+  const { targetRef, backdropRef, ghostRef, scrollRef, contentRef, close } =
+    useElementZoom({ origin: getRow, onClosed });
+
+  return createPortal(
+    <div className="fixed inset-0 z-50">
+      <div ref={backdropRef} onClick={close} className="absolute inset-0 bg-black/50 opacity-0" />
+      <div ref={targetRef} role="dialog" aria-modal="true" className="overflow-hidden bg-white">
+        <div ref={ghostRef} aria-hidden className="pointer-events-none absolute top-0 left-0" />
+        <div ref={scrollRef} className="h-full overflow-y-auto opacity-0">…</div>
+        <button ref={contentRef} onClick={close} className="absolute top-3 right-3 opacity-0">✕</button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+```
+
+`useElementZoom` 额外选项：`history`（默认 `true`，可传 `{ stateKey }`）、`lockScroll`（默认 `true`）、`dragToDismiss`（默认 `true`，可传 `{ distance }`）、`onClosed`（关闭动画结束后调用，在这里卸载卡片）。
 
 ## 使用场景
 
