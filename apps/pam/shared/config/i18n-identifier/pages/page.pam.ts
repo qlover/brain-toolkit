@@ -291,6 +291,83 @@ export const PAGE_PAM_CATEGORY_CUSTOM_PLACEHOLDER =
 export const PAGE_PAM_ENV_DIRECT_TITLE = 'page_pam:envDirectTitle';
 
 /**
+ * @description Quick entries (environments + description links) section title
+ * @localZh 快速入口
+ * @localEn Quick access
+ */
+export const PAGE_PAM_QUICK_ENTRY_TITLE = 'page_pam:quickEntryTitle';
+
+/**
+ * @description Quick entries empty state on project card
+ * @localZh 暂无，可在环境或描述中添加链接
+ * @localEn None yet — add environments or links in the description
+ */
+export const PAGE_PAM_QUICK_ENTRY_EMPTY = 'page_pam:quickEntryEmpty';
+
+/**
+ * @description Quick access button title (%count% = total entries)
+ * @localZh 查看全部 %count% 个入口
+ * @localEn View all %count% entries
+ */
+export const PAGE_PAM_QUICK_ACCESS_ALL = 'page_pam:quickAccessAll';
+
+/**
+ * @description Quick access menu: environments group label
+ * @localZh 环境
+ * @localEn Environments
+ */
+export const PAGE_PAM_QUICK_ACCESS_ENVS = 'page_pam:quickAccessEnvs';
+
+/**
+ * @description Quick access menu: description links group label
+ * @localZh 链接
+ * @localEn Links
+ */
+export const PAGE_PAM_QUICK_ACCESS_LINKS = 'page_pam:quickAccessLinks';
+
+/**
+ * @description Quick access menu: go to project detail
+ * @localZh 查看项目详情
+ * @localEn View project details
+ */
+export const PAGE_PAM_VIEW_PROJECT_DETAIL = 'page_pam:viewProjectDetail';
+
+/**
+ * @description Placeholder cover hint when the project has no preview image
+ * @localZh 暂无首页截图
+ * @localEn No homepage screenshot
+ */
+export const PAGE_PAM_NO_PREVIEW_IMAGE = 'page_pam:noPreviewImage';
+
+/**
+ * @description Description link kind: design (Figma etc.)
+ * @localZh 设计
+ * @localEn Design
+ */
+export const PAGE_PAM_LINK_KIND_DESIGN = 'page_pam:linkKindDesign';
+
+/**
+ * @description Description link kind: issue tracker (Jira etc.)
+ * @localZh 需求
+ * @localEn Issue
+ */
+export const PAGE_PAM_LINK_KIND_ISSUE = 'page_pam:linkKindIssue';
+
+/**
+ * @description Description link kind: document (Feishu, Notion, API docs etc.)
+ * @localZh 文档
+ * @localEn Doc
+ */
+export const PAGE_PAM_LINK_KIND_DOC = 'page_pam:linkKindDoc';
+
+/**
+ * @description Description link kind: other link
+ * @localZh 链接
+ * @localEn Link
+ */
+export const PAGE_PAM_LINK_KIND_LINK = 'page_pam:linkKindLink';
+
+/**
  * @description Open repository action
  * @localZh 打开仓库
  * @localEn Open repository

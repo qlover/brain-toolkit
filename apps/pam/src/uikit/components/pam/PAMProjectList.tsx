@@ -143,7 +143,7 @@ export const PAMProjectList: React.FC<PAMProjectListProps> = ({
       <div
         data-testid="PAMProjectList"
         className={clsx(
-          'grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3',
+          'grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3',
           listClassName
         )}
       >

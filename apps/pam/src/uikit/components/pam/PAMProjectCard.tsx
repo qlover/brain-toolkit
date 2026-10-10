@@ -7,8 +7,11 @@ import React, {
   useRef,
   useState
 } from 'react';
-import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
+import {
+  extractPAMDescLinks,
+  extractPAMDescSummary
+} from '@shared/utils/PAMDescMarkdownUtil';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import { ROUTE_PROJECT_GENERAL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
@@ -25,10 +28,16 @@ import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
 import { PAMProjectAvatar } from './PAMProjectAvatar';
 import {
   formatPAMProjectTimestamp,
-  getPAMDisplayHost,
-  getPAMPrimaryUrl,
-  shortenPAMOwnerId
+  getPAMPrimaryUrl
 } from './PAMProjectDisplayUtil';
+import {
+  PAMDescLinkChip,
+  PAMProjectPlaceholderCover,
+  PAMProjectQuickAccess
+} from './PAMProjectQuickLinks';
+
+/** Entries shown inline on a card; the rest go to the quick-access menu. */
+const CARD_QUICK_ENTRY_MAX = 5;
 
 type PAMProjectCardModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
@@ -53,12 +62,28 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   highlightCategory = ''
 }) => {
   const locale = useLocale();
-  const envs = project.environments || [];
+  const envs = useMemo(
+    () => project.environments || [],
+    [project.environments]
+  );
   const isPublic = project.is_public === PAMPublicType.public;
   const stack = (project.stack || '').trim();
-  const hasEnvs = envs.length > 0;
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
-  const displayHost = getPAMDisplayHost(primaryUrl);
+  const summary = useMemo(
+    () => extractPAMDescSummary(project.description),
+    [project.description]
+  );
+  const links = useMemo(
+    () => extractPAMDescLinks(project.description),
+    [project.description]
+  );
+  const entryCount = envs.length + links.length;
+  const inlineEnvs = envs.slice(0, CARD_QUICK_ENTRY_MAX);
+  const inlineLinks = links.slice(
+    0,
+    Math.max(0, CARD_QUICK_ENTRY_MAX - inlineEnvs.length)
+  );
+  const restCount = entryCount - inlineEnvs.length - inlineLinks.length;
   const previewImageUrl = (project.preview_image_url || '').trim();
   const [previewFailed, setPreviewFailed] = useState(false);
   const [previewLoaded, setPreviewLoaded] = useState(false);
@@ -95,7 +120,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         node: (
           <span
             className={clsx(
-              'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold',
+              'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold',
               categoryActive
                 ? PAM_CATEGORY_HIGHLIGHT_CLASS
                 : 'border-brand/35 bg-brand/10 text-brand'
@@ -106,28 +131,13 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         )
       });
     }
-    if (project.owner_id) {
-      const ownerId = project.owner_id;
-      const shortId = shortenPAMOwnerId(ownerId);
+    if (stack) {
       bits.push({
-        key: 'owner',
+        key: 'stack',
         node: (
-          <button
-            type="button"
-            title={`${tt.copyOwnerId}: ${ownerId}`}
-            aria-label={tt.copyOwnerId}
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(ownerId);
-                toast.success(tt.copyOwnerIdSuccess);
-              } catch {
-                toast.error(tt.errorText);
-              }
-            }}
-            className="font-mono text-tertiary-text transition hover:text-primary-text"
-          >
-            {shortId}
-          </button>
+          <span className="shrink-0 font-medium text-primary-text">
+            {stack}
+          </span>
         )
       });
     }
@@ -141,12 +151,19 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         )
       });
     }
-    const updatedAtText = formatPAMProjectTimestamp(project.updated_at, locale);
+    const updatedAtText = formatPAMProjectTimestamp(
+      project.updated_at,
+      locale,
+      true
+    );
     if (updatedAtText) {
       bits.push({
         key: 'updated',
         node: (
-          <time dateTime={String(project.updated_at ?? '')}>
+          <time
+            dateTime={String(project.updated_at ?? '')}
+            className="truncate"
+          >
             {tt.updatedAt.replace('%time%', updatedAtText)}
           </time>
         )
@@ -156,15 +173,12 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
   }, [
     project.category,
     categoryActive,
-    project.owner_id,
+    stack,
     project.updated_at,
     locale,
     isOwner,
     isAuthenticated,
     tt.readonly,
-    tt.copyOwnerId,
-    tt.copyOwnerIdSuccess,
-    tt.errorText,
     tt.updatedAt
   ]);
 
@@ -207,9 +221,9 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
       data-testid="PAMProjectCard"
       className="flex h-full flex-col overflow-hidden rounded-2xl border border-primary-border bg-secondary transition hover:border-brand hover:shadow-[0_0_0_1px_var(--fe-color-brand)]"
     >
-      {showCover ? (
-        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-brand/6">
-          {primaryUrl ? (
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden border-b border-primary-border bg-brand/6">
+        {showCover ? (
+          primaryUrl ? (
             <a
               href={primaryUrl}
               target="_blank"
@@ -230,61 +244,36 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
             >
               {coverMedia}
             </Link>
-          )}
-        </div>
-      ) : (
-        <div className="flex h-18 shrink-0 items-center gap-3 border-b border-primary-border bg-brand/6 px-3 sm:h-20 sm:gap-3.5 sm:px-3.5">
-          <PAMProjectAvatar
-            name={project.name}
-            primaryUrl={primaryUrl}
-            repoUrl={project.repo_url}
-            allowPreview={false}
-            linkToRepo
-            linkTitle={tt.openRepo}
-            className="h-11! w-11! text-lg! sm:h-12! sm:w-12! sm:text-xl!"
-          />
-          <div className="min-w-0 flex-1">
-            {displayHost && primaryUrl ? (
-              <a
-                href={primaryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={primaryUrl}
-                className="block truncate text-xs font-medium text-tertiary-text no-underline transition hover:text-secondary-text hover:underline"
-              >
-                {displayHost}
-              </a>
-            ) : null}
-            {stack ? (
-              <div
-                className={clsx(
-                  'truncate text-sm font-semibold text-primary-text',
-                  displayHost && 'mt-0.5'
-                )}
-              >
-                {stack}
-              </div>
-            ) : !displayHost ? (
-              <div className="truncate text-sm font-semibold text-secondary-text">
-                {project.name}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      )}
+          )
+        ) : (
+          <Link
+            href={{
+              pathname: ROUTE_PROJECT_GENERAL,
+              params: { projectId: project.slug }
+            }}
+            title={project.name}
+            className="absolute inset-0 block"
+          >
+            <PAMProjectPlaceholderCover
+              tt={tt}
+              name={project.name}
+              slug={project.slug}
+              repoUrl={project.repo_url}
+            />
+          </Link>
+        )}
+      </div>
       <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-2.5 sm:p-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
-            {showCover ? (
-              <PAMProjectAvatar
-                name={project.name}
-                primaryUrl={primaryUrl}
-                repoUrl={project.repo_url}
-                allowPreview={false}
-                linkToRepo
-                linkTitle={tt.openRepo}
-              />
-            ) : null}
+            <PAMProjectAvatar
+              name={project.name}
+              primaryUrl={primaryUrl}
+              repoUrl={project.repo_url}
+              allowPreview={false}
+              linkToRepo
+              linkTitle={tt.openRepo}
+            />
             <div className="min-w-0 flex-1">
               <Link
                 href={{
@@ -296,10 +285,12 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
                 {titleNode}
               </Link>
               {subBits.length > 0 ? (
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-snug text-tertiary-text">
+                <div className="mt-0.5 flex items-center gap-1.5 overflow-hidden text-xs leading-snug whitespace-nowrap text-tertiary-text">
                   {subBits.map((bit, index) => (
                     <React.Fragment key={bit.key}>
-                      {index > 0 ? <span className="opacity-50">·</span> : null}
+                      {index > 0 ? (
+                        <span className="shrink-0 opacity-50">·</span>
+                      ) : null}
                       {bit.node}
                     </React.Fragment>
                   ))}
@@ -314,34 +305,45 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           />
         </div>
 
-        {showCover && stack ? (
-          <p
-            className="truncate text-sm font-semibold text-primary-text"
-            title={stack}
-          >
-            {stack}
-          </p>
-        ) : null}
-
         <p className="line-clamp-2 text-sm leading-snug text-secondary-text">
-          {project.description || tt.noDesc}
+          {summary || tt.noDesc}
         </p>
 
-        {hasEnvs ? (
-          <div className="flex flex-col gap-1.5">
-            <div className="text-[0.58rem] font-bold tracking-wide text-tertiary-text uppercase">
-              {tt.envDirectTitle}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {envs.map((env) => (
+        <div className="mt-auto flex flex-col gap-1.5">
+          <div className="text-[0.58rem] font-bold tracking-wide text-tertiary-text uppercase">
+            {tt.quickEntryTitle}
+          </div>
+          {entryCount > 0 ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {inlineEnvs.map((env) => (
                 <PAMEnvLink key={env.id} {...env} />
               ))}
+              {inlineLinks.map((link) => (
+                <PAMDescLinkChip key={link.url} tt={tt} link={link} />
+              ))}
+              {restCount > 0 ? (
+                <PAMProjectQuickAccess
+                  tt={tt}
+                  slug={project.slug}
+                  name={project.name}
+                  repoUrl={project.repo_url}
+                  envs={envs}
+                  links={links}
+                  className="h-7 px-2.5 sm:h-8"
+                >
+                  +{restCount}
+                </PAMProjectQuickAccess>
+              ) : null}
             </div>
-          </div>
-        ) : null}
+          ) : (
+            <div className="flex h-7 items-center text-xs text-tertiary-text sm:h-8">
+              {tt.quickEntryEmpty}
+            </div>
+          )}
+        </div>
 
         {isAuthenticated && !isOwner ? (
-          <div className="mt-auto border-t border-primary-border pt-2.5">
+          <div className="border-t border-primary-border pt-2.5">
             <span className="text-xs text-tertiary-text">{tt.readonly}</span>
           </div>
         ) : null}
