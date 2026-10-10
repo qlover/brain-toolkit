@@ -291,6 +291,216 @@ export const PAGE_PAM_CATEGORY_CUSTOM_PLACEHOLDER =
 export const PAGE_PAM_ENV_DIRECT_TITLE = 'page_pam:envDirectTitle';
 
 /**
+ * @description Quick entries (environments + description links) section title
+ * @localZh 快速入口
+ * @localEn Quick access
+ */
+export const PAGE_PAM_QUICK_ENTRY_TITLE = 'page_pam:quickEntryTitle';
+
+/**
+ * @description Quick entries empty state on project card
+ * @localZh 暂无，可在环境或描述中添加链接
+ * @localEn None yet — add environments or links in the description
+ */
+export const PAGE_PAM_QUICK_ENTRY_EMPTY = 'page_pam:quickEntryEmpty';
+
+/**
+ * @description Quick access button title (%count% = total entries)
+ * @localZh 查看全部 %count% 个入口
+ * @localEn View all %count% entries
+ */
+export const PAGE_PAM_QUICK_ACCESS_ALL = 'page_pam:quickAccessAll';
+
+/**
+ * @description Quick access menu: environments group label
+ * @localZh 环境
+ * @localEn Environments
+ */
+export const PAGE_PAM_QUICK_ACCESS_ENVS = 'page_pam:quickAccessEnvs';
+
+/**
+ * @description Quick access menu: description links group label
+ * @localZh 链接
+ * @localEn Links
+ */
+export const PAGE_PAM_QUICK_ACCESS_LINKS = 'page_pam:quickAccessLinks';
+
+/**
+ * @description Quick access menu: go to project detail
+ * @localZh 查看项目详情
+ * @localEn View project details
+ */
+export const PAGE_PAM_VIEW_PROJECT_DETAIL = 'page_pam:viewProjectDetail';
+
+/**
+ * @description Placeholder cover hint when the project has no preview image
+ * @localZh 暂无首页截图
+ * @localEn No homepage screenshot
+ */
+export const PAGE_PAM_NO_PREVIEW_IMAGE = 'page_pam:noPreviewImage';
+
+/**
+ * @description Description link kind: design (Figma etc.)
+ * @localZh 设计
+ * @localEn Design
+ */
+export const PAGE_PAM_LINK_KIND_DESIGN = 'page_pam:linkKindDesign';
+
+/**
+ * @description Description link kind: issue tracker (Jira etc.)
+ * @localZh 需求
+ * @localEn Issue
+ */
+export const PAGE_PAM_LINK_KIND_ISSUE = 'page_pam:linkKindIssue';
+
+/**
+ * @description Description link kind: document (Feishu, Notion, API docs etc.)
+ * @localZh 文档
+ * @localEn Doc
+ */
+export const PAGE_PAM_LINK_KIND_DOC = 'page_pam:linkKindDoc';
+
+/**
+ * @description Description link kind: other link
+ * @localZh 链接
+ * @localEn Link
+ */
+export const PAGE_PAM_LINK_KIND_LINK = 'page_pam:linkKindLink';
+
+/**
+ * @description List detail panel: project description section title
+ * @localZh 项目说明
+ * @localEn Description
+ */
+export const PAGE_PAM_DETAIL_DESC_TITLE = 'page_pam:detailDescTitle';
+
+/**
+ * @description List detail panel: project info section title
+ * @localZh 项目信息
+ * @localEn Project info
+ */
+export const PAGE_PAM_DETAIL_INFO_TITLE = 'page_pam:detailInfoTitle';
+
+/**
+ * @description List detail panel: owner label
+ * @localZh 拥有者
+ * @localEn Owner
+ */
+export const PAGE_PAM_DETAIL_OWNER = 'page_pam:detailOwner';
+
+/**
+ * @description List detail panel: last updated label
+ * @localZh 更新时间
+ * @localEn Last updated
+ */
+export const PAGE_PAM_DETAIL_UPDATED = 'page_pam:detailUpdated';
+
+/**
+ * @description List detail panel: placeholder while the Markdown renderer loads
+ * @localZh 加载中…
+ * @localEn Loading…
+ */
+export const PAGE_PAM_DETAIL_LOADING = 'page_pam:detailLoading';
+
+/**
+ * @description List detail panel: open the full project page
+ * @localZh 打开详情页
+ * @localEn Open project page
+ */
+export const PAGE_PAM_DETAIL_OPEN_PAGE = 'page_pam:detailOpenPage';
+
+/**
+ * @description List detail panel: close (Esc)
+ * @localZh 关闭（Esc）
+ * @localEn Close (Esc)
+ */
+export const PAGE_PAM_DETAIL_CLOSE = 'page_pam:detailClose';
+
+/**
+ * @description List detail panel: previous project (↑)
+ * @localZh 上一个（↑）
+ * @localEn Previous (↑)
+ */
+export const PAGE_PAM_DETAIL_PREV = 'page_pam:detailPrev';
+
+/**
+ * @description List detail panel: next project (↓)
+ * @localZh 下一个（↓）
+ * @localEn Next (↓)
+ */
+export const PAGE_PAM_DETAIL_NEXT = 'page_pam:detailNext';
+
+/**
+ * @description List detail drawer: pin as a side column (wide screens)
+ * @localZh 固定到右侧
+ * @localEn Pin to the side
+ */
+export const PAGE_PAM_DETAIL_PIN = 'page_pam:detailPin';
+
+/**
+ * @description List detail side column: unpin back to a drawer
+ * @localZh 取消固定
+ * @localEn Unpin
+ */
+export const PAGE_PAM_DETAIL_UNPIN = 'page_pam:detailUnpin';
+
+/**
+ * @description Project overview: edit description link
+ * @localZh 编辑
+ * @localEn Edit
+ */
+export const PAGE_PAM_DETAIL_EDIT = 'page_pam:detailEdit';
+
+/**
+ * @description Description editor: write mode
+ * @localZh 编辑
+ * @localEn Write
+ */
+export const PAGE_PAM_DESC_EDITOR_WRITE = 'page_pam:descEditorWrite';
+
+/**
+ * @description Description editor: preview mode
+ * @localZh 预览
+ * @localEn Preview
+ */
+export const PAGE_PAM_DESC_EDITOR_PREVIEW = 'page_pam:descEditorPreview';
+
+/**
+ * @description Description editor: Markdown support badge
+ * @localZh 支持 Markdown
+ * @localEn Markdown supported
+ */
+export const PAGE_PAM_DESC_EDITOR_MARKDOWN = 'page_pam:descEditorMarkdown';
+
+/**
+ * @description Description editor: open full-screen editor
+ * @localZh 展开编辑
+ * @localEn Expand editor
+ */
+export const PAGE_PAM_DESC_EDITOR_EXPAND = 'page_pam:descEditorExpand';
+
+/**
+ * @description Description editor: close full-screen editor
+ * @localZh 完成
+ * @localEn Done
+ */
+export const PAGE_PAM_DESC_EDITOR_DONE = 'page_pam:descEditorDone';
+
+/**
+ * @description Description editor: footer hint
+ * @localZh 第一段作为卡片摘要，其中的链接会显示为快速入口
+ * @localEn The first paragraph is the card summary; links show up as quick entries
+ */
+export const PAGE_PAM_DESC_EDITOR_HINT = 'page_pam:descEditorHint';
+
+/**
+ * @description Description editor: empty preview
+ * @localZh 暂无内容
+ * @localEn Nothing to preview
+ */
+export const PAGE_PAM_DESC_EDITOR_EMPTY = 'page_pam:descEditorEmpty';
+
+/**
  * @description Open repository action
  * @localZh 打开仓库
  * @localEn Open repository
@@ -370,8 +580,8 @@ export const PAGE_PAM_LABEL_DESC = 'page_pam:labelDesc';
 
 /**
  * @description Description placeholder
- * @localZh 简要描述项目…
- * @localEn Briefly describe the project…
+ * @localZh 第一段写一句话简介；Figma、文档、Jira 等链接写成 [标题](地址)，会显示为快速入口
+ * @localEn One-line intro first; write Figma, docs, Jira links as [title](url) to show them as quick entries
  */
 export const PAGE_PAM_PLACEHOLDER_DESC = 'page_pam:placeholderDesc';
 

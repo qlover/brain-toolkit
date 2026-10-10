@@ -1,10 +1,14 @@
+import { Squares2X2Icon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { useLocale } from 'next-intl';
-import React, { useCallback, useMemo } from 'react';
-import { toast } from 'sonner';
+import React, { useMemo } from 'react';
 import { Link } from '@/i18n/routing';
+import {
+  extractPAMDescLinks,
+  extractPAMDescSummary
+} from '@shared/utils/PAMDescMarkdownUtil';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { ROUTE_PROJECT_GENERAL } from '@config/route';
+import { ROUTE_PROJECT_DETAIL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
   PAMPublicType,
@@ -19,9 +23,9 @@ import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
 import { PAMProjectAvatar } from './PAMProjectAvatar';
 import {
   formatPAMProjectTimestamp,
-  getPAMPrimaryUrl,
-  shortenPAMOwnerId
+  getPAMPrimaryUrl
 } from './PAMProjectDisplayUtil';
+import { PAMDescLinkChip, PAMProjectQuickAccess } from './PAMProjectQuickLinks';
 
 type PAMProjectListModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
@@ -32,18 +36,30 @@ interface PAMProjectListItemProps {
   project: PAMProjectListModel;
   highlightKeyword?: string;
   highlightCategory?: string;
+  /** Plain left click opens the in-list detail instead of navigating (modifier clicks still navigate). */
+  onOpenDetail?: (slug: string) => void;
+  /** Row whose detail is showing in the drawer / side column. */
+  selected?: boolean;
 }
 
+/** Entries in the mobile strip under the row. */
+const MOBILE_STRIP_MAX = 4;
+
 /**
- * List row:
- * 1) larger avatar (→ repo) + title (+ lock) / host | envs
- * 2–3) description + meta, left-aligned with the avatar
+ * List row (tap → in-list detail, or the project page without `onOpenDetail`). Content grows with the viewport:
+ * - mobile: name + summary, quick links in a strip below
+ * - md: 2 envs + 2 link icons inline
+ * - lg: category · stack · updated after the name
+ * - xl: 3 envs + titled link chips
+ * The quick-access button always lists every entry.
  */
 export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
   highlightKeyword = '',
-  highlightCategory = ''
+  highlightCategory = '',
+  onOpenDetail,
+  selected = false
 }) => {
   const locale = useLocale();
   const envs = useMemo(
@@ -52,6 +68,15 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   );
   const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
   const isPublic = project.is_public === PAMPublicType.public;
+  const summary = useMemo(
+    () => extractPAMDescSummary(project.description),
+    [project.description]
+  );
+  const links = useMemo(
+    () => extractPAMDescLinks(project.description),
+    [project.description]
+  );
+  const entryCount = envs.length + links.length;
 
   const categoryActive = isCategoryHighlightActive(
     project.category,
@@ -62,146 +87,158 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     [project.name, highlightKeyword]
   );
 
-  const envChips =
-    envs.length > 0
-      ? envs.map((env) => <PAMEnvLink key={env.id} {...env} compact />)
-      : null;
+  const updatedAtText = formatPAMProjectTimestamp(
+    project.updated_at,
+    locale,
+    true
+  );
+  const metaText = [
+    project.stack,
+    updatedAtText ? tt.updatedAt.replace('%time%', updatedAtText) : ''
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-  const ownerId = project.owner_id || '';
-  const ownerIdShort = shortenPAMOwnerId(ownerId);
-  const updatedAtText = formatPAMProjectTimestamp(project.updated_at, locale);
-  const updatedAtLabel = updatedAtText
-    ? tt.updatedAt.replace('%time%', updatedAtText)
-    : '';
-
-  const onCopyOwnerId = useCallback(async () => {
-    if (!ownerId) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(ownerId);
-      toast.success(tt.copyOwnerIdSuccess);
-    } catch {
-      toast.error(tt.errorText);
-    }
-  }, [ownerId, tt.copyOwnerIdSuccess, tt.errorText]);
+  const stripEnvs = envs.slice(0, MOBILE_STRIP_MAX);
+  const stripLinks = links.slice(
+    0,
+    Math.max(0, MOBILE_STRIP_MAX - stripEnvs.length)
+  );
 
   return (
     <div
       data-testid="PAMProjectListItem"
-      className="flex flex-col gap-1.5 border-b border-primary-border bg-transparent px-3 py-3.5 transition last:border-b-0 hover:bg-elevated sm:gap-2 sm:px-4"
+      data-pam-row={project.slug}
+      className={clsx(
+        'relative px-3 py-2.5 transition sm:px-4',
+        selected
+          ? 'bg-brand/8 shadow-[inset_2px_0_0_var(--fe-color-brand)]'
+          : 'bg-secondary hover:bg-elevated'
+      )}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
-          <PAMProjectAvatar
-            name={project.name}
-            primaryUrl={primaryUrl}
-            repoUrl={project.repo_url}
-            allowPreview={false}
-            linkToRepo
-            linkTitle={tt.openRepo}
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <Link
-                href={{
-                  pathname: ROUTE_PROJECT_GENERAL,
-                  params: { projectId: project.slug }
-                }}
-                className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"
+      <Link
+        href={{
+          pathname: ROUTE_PROJECT_DETAIL,
+          params: { projectId: project.slug }
+        }}
+        aria-label={project.name}
+        className="absolute inset-0"
+        onClick={(event) => {
+          if (
+            !onOpenDetail ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+          event.preventDefault();
+          onOpenDetail(project.slug);
+        }}
+      />
+      <div className="flex items-center gap-3">
+        <PAMProjectAvatar
+          name={project.name}
+          primaryUrl={primaryUrl}
+          repoUrl={project.repo_url}
+          allowPreview={false}
+          linkToRepo
+          linkTitle={tt.openRepo}
+          className="relative h-10! w-10! text-lg! sm:h-11! sm:w-11!"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+            <span className="truncate font-semibold text-primary-text">
+              {titleNode}
+            </span>
+            <PAMPublicIcon
+              isPublic={isPublic}
+              publicTitle={tt.public}
+              privateTitle={tt.private}
+              showLabel={false}
+              className="shrink-0"
+            />
+            {project.category ? (
+              <span
+                className={clsx(
+                  'max-lg:hidden ml-1 inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold',
+                  categoryActive
+                    ? PAM_CATEGORY_HIGHLIGHT_CLASS
+                    : 'border-brand/35 bg-brand/10 text-brand'
+                )}
               >
-                {titleNode}
-              </Link>
-              <PAMPublicIcon
-                isPublic={isPublic}
-                publicTitle={tt.public}
-                privateTitle={tt.private}
-                className="shrink-0"
-              />
-            </div>
-            {primaryUrl ? (
-              <div className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text ">
-                <a
-                  href={primaryUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={primaryUrl}
-                  className="no-underline hover:text-secondary-text hover:underline"
-                >
-                  {primaryUrl}
-                </a>
-              </div>
-            ) : project.stack ? (
-              <span className="mt-0.5 block truncate text-sm leading-snug text-tertiary-text">
-                {project.stack}
+                {project.category}
+              </span>
+            ) : null}
+            {metaText ? (
+              <span className="max-lg:hidden truncate text-xs text-tertiary-text">
+                {metaText}
               </span>
             ) : null}
           </div>
+          <p className="truncate text-sm text-secondary-text">
+            {summary || tt.noDesc}
+          </p>
         </div>
 
-        {envChips ? (
-          <div className="flex max-w-[min(100%,20rem)] shrink-0 flex-wrap items-center justify-end gap-1.5">
-            <div className="max-md:hidden flex flex-wrap items-center justify-end gap-1">
-              {envChips}
-            </div>
+        {entryCount > 0 ? (
+          <div className="relative max-md:hidden flex shrink-0 items-center justify-end gap-1">
+            {envs.slice(0, 3).map((env, index) => (
+              <PAMEnvLink
+                key={env.id}
+                {...env}
+                compact
+                className={clsx('shrink-0', index >= 2 && 'max-xl:hidden')}
+              />
+            ))}
+            {links.slice(0, 2).map((link) => (
+              <React.Fragment key={link.url}>
+                <PAMDescLinkChip
+                  tt={tt}
+                  link={link}
+                  iconOnly
+                  className="xl:hidden"
+                />
+                <PAMDescLinkChip
+                  tt={tt}
+                  link={link}
+                  compact
+                  className="max-xl:hidden"
+                />
+              </React.Fragment>
+            ))}
           </div>
         ) : null}
+
+        <PAMProjectQuickAccess
+          tt={tt}
+          slug={project.slug}
+          name={project.name}
+          repoUrl={project.repo_url}
+          envs={envs}
+          links={links}
+          className="h-[30px] min-w-[42px] px-2"
+        >
+          <Squares2X2Icon className="h-3.5 w-3.5" />
+          <span>{entryCount}</span>
+        </PAMProjectQuickAccess>
+        {entryCount === 0 ? (
+          <span className="h-[30px] w-[42px] shrink-0" aria-hidden />
+        ) : null}
       </div>
 
-      <p className="max-md:hidden truncate text-sm text-primary-text block">
-        {project.description || tt.noDesc}
-      </p>
-
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-tertiary-text">
-        {ownerId ? (
-          <button
-            type="button"
-            title={`${tt.copyOwnerId}: ${ownerId}`}
-            aria-label={tt.copyOwnerId}
-            onClick={onCopyOwnerId}
-            className="font-mono text-tertiary-text transition hover:text-primary-text"
-          >
-            <span className="lg:hidden">{ownerIdShort}</span>
-            <span className="max-lg:hidden inline">{ownerId}</span>
-          </button>
-        ) : null}
-        {ownerId && project.category ? <span>·</span> : null}
-        {project.category ? (
-          <span
-            className={clsx(
-              categoryActive &&
-                clsx(
-                  'rounded-full px-1.5 py-0.5 font-semibold',
-                  PAM_CATEGORY_HIGHLIGHT_CLASS
-                )
-            )}
-          >
-            {project.category}
-          </span>
-        ) : null}
-        {(ownerId || project.category) && project.stack ? <span>·</span> : null}
-        {project.stack ? <span>{project.stack}</span> : null}
-        {envChips ? (
-          <>
-            {ownerId || project.category || project.stack ? (
-              <span className="md:hidden">·</span>
-            ) : null}
-            <span className="inline-flex flex-wrap items-center gap-1 md:hidden">
-              {envChips}
-            </span>
-          </>
-        ) : null}
-        {updatedAtLabel ? (
-          <>
-            {ownerId || project.category || project.stack || envChips ? (
-              <span>·</span>
-            ) : null}
-            <time dateTime={String(project.updated_at ?? '')}>
-              {updatedAtLabel}
-            </time>
-          </>
-        ) : null}
-      </div>
+      {entryCount > 0 ? (
+        <div className="relative mt-2 ml-[52px] flex gap-1.5 overflow-x-auto [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+          {stripEnvs.map((env) => (
+            <PAMEnvLink key={env.id} {...env} compact className="shrink-0" />
+          ))}
+          {stripLinks.map((link) => (
+            <PAMDescLinkChip key={link.url} tt={tt} link={link} compact />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 };

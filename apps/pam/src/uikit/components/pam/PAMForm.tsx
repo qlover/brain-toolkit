@@ -8,7 +8,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
 import React, { useEffect, useMemo } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { Controller, useForm, FormProvider } from 'react-hook-form';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
 import type { PAMProjectCreate } from '@schemas/PAMProjectSchema';
 import {
@@ -17,12 +17,9 @@ import {
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
 import { PAMCategoryField } from './PAMCategoryField';
+import { PAMDescEditor } from './PAMDescEditor';
 import { PAMFormEnvironments } from './PAMFormEnvironments';
-import {
-  pamFormFieldClass,
-  pamFormLabelClass,
-  pamFormTextareaClass
-} from './PAMFormFieldStyles';
+import { pamFormFieldClass, pamFormLabelClass } from './PAMFormFieldStyles';
 
 export const PAM_PROJECT_FORM_ID = 'pam-project-form';
 
@@ -241,11 +238,19 @@ export const PAMForm: React.FC<PAMFormProps> = ({
 
           <div>
             <label className={pamFormLabelClass}>{tt.labelDesc}</label>
-            <textarea
-              {...register('description')}
-              rows={2}
-              className={pamFormTextareaClass}
-              placeholder={tt.placeholderDesc}
+            <Controller
+              control={methods.control}
+              name="description"
+              render={({ field }) => (
+                <PAMDescEditor
+                  tt={tt}
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={tt.placeholderDesc}
+                />
+              )}
             />
           </div>
 

@@ -8,6 +8,19 @@ export type PAMI18nInterface = typeof pamI18n;
 
 export const pamI18nNamespace = 'page_pam';
 
+/** Labels for the shared project description editor (create modal + General). */
+export const pamDescEditorI18n = Object.freeze({
+  descEditorWrite: i18nKeys.PAGE_PAM_DESC_EDITOR_WRITE,
+  descEditorPreview: i18nKeys.PAGE_PAM_DESC_EDITOR_PREVIEW,
+  descEditorMarkdown: i18nKeys.PAGE_PAM_DESC_EDITOR_MARKDOWN,
+  descEditorExpand: i18nKeys.PAGE_PAM_DESC_EDITOR_EXPAND,
+  descEditorDone: i18nKeys.PAGE_PAM_DESC_EDITOR_DONE,
+  descEditorHint: i18nKeys.PAGE_PAM_DESC_EDITOR_HINT,
+  descEditorEmpty: i18nKeys.PAGE_PAM_DESC_EDITOR_EMPTY
+});
+
+export type PAMDescEditorI18nInterface = typeof pamDescEditorI18n;
+
 export const pamI18n = Object.freeze({
   // Meta
   title: i18nKeys.PAGE_PAM_TITLE,
@@ -57,6 +70,30 @@ export const pamI18n = Object.freeze({
   noDesc: i18nKeys.PAGE_PAM_NO_DESC,
   noProject: i18nKeys.PAGE_PAM_NO_PROJECT,
   envDirectTitle: i18nKeys.PAGE_PAM_ENV_DIRECT_TITLE,
+  quickEntryTitle: i18nKeys.PAGE_PAM_QUICK_ENTRY_TITLE,
+  quickEntryEmpty: i18nKeys.PAGE_PAM_QUICK_ENTRY_EMPTY,
+  quickAccessAll: i18nKeys.PAGE_PAM_QUICK_ACCESS_ALL,
+  quickAccessEnvs: i18nKeys.PAGE_PAM_QUICK_ACCESS_ENVS,
+  quickAccessLinks: i18nKeys.PAGE_PAM_QUICK_ACCESS_LINKS,
+  viewProjectDetail: i18nKeys.PAGE_PAM_VIEW_PROJECT_DETAIL,
+  noPreviewImage: i18nKeys.PAGE_PAM_NO_PREVIEW_IMAGE,
+  linkKindDesign: i18nKeys.PAGE_PAM_LINK_KIND_DESIGN,
+  linkKindIssue: i18nKeys.PAGE_PAM_LINK_KIND_ISSUE,
+  linkKindDoc: i18nKeys.PAGE_PAM_LINK_KIND_DOC,
+  linkKindLink: i18nKeys.PAGE_PAM_LINK_KIND_LINK,
+  detailDescTitle: i18nKeys.PAGE_PAM_DETAIL_DESC_TITLE,
+  detailInfoTitle: i18nKeys.PAGE_PAM_DETAIL_INFO_TITLE,
+  detailOwner: i18nKeys.PAGE_PAM_DETAIL_OWNER,
+  detailUpdated: i18nKeys.PAGE_PAM_DETAIL_UPDATED,
+  detailLoading: i18nKeys.PAGE_PAM_DETAIL_LOADING,
+  detailOpenPage: i18nKeys.PAGE_PAM_DETAIL_OPEN_PAGE,
+  detailClose: i18nKeys.PAGE_PAM_DETAIL_CLOSE,
+  detailPrev: i18nKeys.PAGE_PAM_DETAIL_PREV,
+  detailNext: i18nKeys.PAGE_PAM_DETAIL_NEXT,
+  detailPin: i18nKeys.PAGE_PAM_DETAIL_PIN,
+  detailUnpin: i18nKeys.PAGE_PAM_DETAIL_UNPIN,
+  detailEdit: i18nKeys.PAGE_PAM_DETAIL_EDIT,
+  ...pamDescEditorI18n,
   openRepo: i18nKeys.PAGE_PAM_OPEN_REPO,
   moreActions: i18nKeys.PAGE_PAM_MORE_ACTIONS,
   copyOwnerId: i18nKeys.PAGE_PAM_COPY_OWNER_ID,

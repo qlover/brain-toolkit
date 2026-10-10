@@ -68,10 +68,14 @@ export function buildPamSiteLogoApiUrl(siteUrl: string): string | null {
   return `${API_PAM_SITE_LOGO}?url=${encodeURIComponent(siteUrl.trim())}`;
 }
 
-/** Format project timestamp for list/card meta rows. */
+/**
+ * Format project timestamp for list/card meta rows.
+ * `omitCurrentYear` drops the year for dates in the current year (keeps one-line meta short).
+ */
 export function formatPAMProjectTimestamp(
   value: string | number | null | undefined,
-  locale?: string
+  locale?: string,
+  omitCurrentYear = false
 ): string {
   if (value == null || value === '') {
     return '';
@@ -80,8 +84,9 @@ export function formatPAMProjectTimestamp(
   if (Number.isNaN(date.getTime())) {
     return '';
   }
+  const sameYear = date.getFullYear() === new Date().getFullYear();
   return date.toLocaleString(locale, {
-    year: 'numeric',
+    year: omitCurrentYear && sameYear ? undefined : 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

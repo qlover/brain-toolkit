@@ -31,10 +31,8 @@ import {
   prefetchTransferUsers
 } from './PAMProjectTransferPicker';
 import { PAMCategoryField } from '../../components/pam/PAMCategoryField';
-import {
-  pamFormFieldClass,
-  pamFormTextareaClass
-} from '../../components/pam/PAMFormFieldStyles';
+import { PAMDescEditor } from '../../components/pam/PAMDescEditor';
+import { pamFormFieldClass } from '../../components/pam/PAMFormFieldStyles';
 import { getPAMPrimaryUrl } from '../../components/pam/PAMProjectDisplayUtil';
 import { PAMSettingsCard } from '../../components/pam/PAMSettingsCard';
 
@@ -526,16 +524,13 @@ export function PAMProjectGeneralPanel({
         }
       >
         {ready ? (
-          <textarea
+          <PAMDescEditor
+            tt={tt}
             value={description}
             readOnly={fieldReadOnly}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={setDescription}
             placeholder={tt.placeholderDesc}
-            rows={4}
-            className={clsx(
-              pamFormTextareaClass,
-              fieldReadOnly && 'cursor-default opacity-80'
-            )}
+            rows={14}
           />
         ) : (
           <div className="h-24 w-full animate-pulse rounded-[10px] bg-elevated" />

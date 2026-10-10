@@ -30,6 +30,7 @@ import { PermissionKey } from '@shared/auth/permissionKeys';
 import type { PAMProjectI18nInterface } from '@config/i18n-mapping/PAMProjectI18n';
 import { I } from '@config/ioc-identifiter';
 import {
+  ROUTE_PROJECT_DETAIL,
   ROUTE_PROJECT_ENVIRONMENTS,
   ROUTE_PROJECT_GENERAL,
   ROUTE_PROJECTS
@@ -40,7 +41,7 @@ import {
   type PAMProjectDetail
 } from '@schemas/PAMProjectSchema';
 
-export type PAMProjectDetailTabType = 'general' | 'environments';
+export type PAMProjectDetailTabType = 'overview' | 'general' | 'environments';
 
 export type PAMProjectDetailShellProps = {
   /** URL segment: preferred slug; legacy UUID still accepted. */
@@ -95,7 +96,7 @@ export function usePAMProjectDetail(): PAMProjectDetailValue {
 }
 
 /**
- * Project detail chrome: back link, title, General | Environments tabs.
+ * Project detail chrome: back link, title, Overview | General | Environments tabs.
  *
  * Significance: Shared layout shell for project detail App Router pages.
  * Core idea: Load project detail once here; tab panels reuse via context.
@@ -146,7 +147,10 @@ export function PAMProjectDetailShell({
     if (pathname.includes('/environments')) {
       return 'environments';
     }
-    return 'general';
+    if (pathname.includes('/general')) {
+      return 'general';
+    }
+    return 'overview';
   }, [pathname]);
 
   useStrictEffect(() => {
@@ -215,7 +219,9 @@ export function PAMProjectDetailShell({
       pathname:
         activeTab === 'environments'
           ? ROUTE_PROJECT_ENVIRONMENTS
-          : ROUTE_PROJECT_GENERAL,
+          : activeTab === 'general'
+            ? ROUTE_PROJECT_GENERAL
+            : ROUTE_PROJECT_DETAIL,
       params: { projectId: project.slug }
     });
   }, [project, routeKey, activeTab, router]);
@@ -403,6 +409,15 @@ export function PAMProjectDetailShell({
             data-testid="PAMProjectDetailTabs"
             className="flex gap-1 border-b border-primary-border"
           >
+            <Link
+              href={{
+                pathname: ROUTE_PROJECT_DETAIL,
+                params: { projectId: routeSlug }
+              }}
+              className={tabClass('overview')}
+            >
+              {tt.tabOverview}
+            </Link>
             <Link
               href={{
                 pathname: ROUTE_PROJECT_GENERAL,
