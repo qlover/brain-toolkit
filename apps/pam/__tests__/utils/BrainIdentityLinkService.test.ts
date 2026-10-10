@@ -87,21 +87,40 @@ describe('BrainIdentityLinkService', () => {
     const { service, identities, createUser } = createService({
       links: { [SUB]: EXISTING_ID }
     });
+    const identityData = { env: 'production', account: 'a@x.com' };
 
     await expect(
-      service.resolveUser({ sub: SUB, email: 'a@x.com', emailVerified: false })
+      service.resolveUser({
+        sub: SUB,
+        email: 'a@x.com',
+        emailVerified: false,
+        identityData
+      })
     ).resolves.toEqual({ userId: EXISTING_ID, created: false });
-    expect(identities.touchLastLogin).toHaveBeenCalledWith('brain', SUB);
+    expect(identities.touchLastLogin).toHaveBeenCalledWith(
+      'brain',
+      SUB,
+      identityData
+    );
     expect(createUser).not.toHaveBeenCalled();
   });
 
   it('links legacy accounts whose pam_users.id is the sub', async () => {
-    const { service, links } = createService({ pamById: [SUB] });
+    const { service, identities, links } = createService({ pamById: [SUB] });
+    const identityData = { env: 'development' };
 
     await expect(
-      service.resolveUser({ sub: SUB, email: 'a@x.com', emailVerified: false })
+      service.resolveUser({
+        sub: SUB,
+        email: 'a@x.com',
+        emailVerified: false,
+        identityData
+      })
     ).resolves.toEqual({ userId: SUB, created: false });
     expect(links.get(SUB)).toBe(SUB);
+    expect(identities.link).toHaveBeenCalledWith(
+      expect.objectContaining({ externalUserId: SUB, identityData })
+    );
   });
 
   it('links an existing email account only when email is verified', async () => {

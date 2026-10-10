@@ -2299,6 +2299,7 @@ CREATE TABLE IF NOT EXISTS public.pam_user_identities (
   user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_login_at TIMESTAMPTZ,
+  identity_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   PRIMARY KEY (provider, external_user_id)
 );
 
@@ -2307,6 +2308,9 @@ CREATE INDEX IF NOT EXISTS idx_pam_user_identities_user
 
 COMMENT ON TABLE public.pam_user_identities IS
   'External login identities mapped to a PAM user (provider = brain: external_user_id is the brain-oauth sub).';
+
+COMMENT ON COLUMN public.pam_user_identities.identity_data IS
+  'Provider-specific snapshot from the latest login, e.g. Brain: {"env": "production", "account": "a@x.com"}.';
 
 ALTER TABLE public.pam_user_identities ENABLE ROW LEVEL SECURITY;
 

@@ -10,6 +10,8 @@ export type BrainUserInfo = {
   email_verified?: boolean;
   name?: string;
   phone_number?: string;
+  /** brain-oauth login env (e.g. production); `sub` is unique per env. */
+  brain_env?: string;
 };
 
 export type BrainProfile = {
@@ -20,7 +22,20 @@ export type BrainProfile = {
   name: string | null;
   /** E.164, matching phone-OTP accounts. */
   phone: string | null;
+  /** Null when brain-oauth predates the `brain_env` claim. */
+  env: string | null;
 };
+
+/** `pam_user_identities.identity_data` for a Brain link; empty values omitted. */
+export function toBrainIdentityData(
+  profile: BrainProfile
+): Record<string, string> {
+  const account = profile.email || profile.name;
+  return {
+    ...(profile.env ? { env: profile.env } : {}),
+    ...(account ? { account } : {})
+  };
+}
 
 export function toBrainProfile(info: BrainUserInfo): BrainProfile {
   const sub = info.sub?.trim();
@@ -38,6 +53,7 @@ export function toBrainProfile(info: BrainUserInfo): BrainProfile {
     email,
     emailVerified: Boolean(email) && info.email_verified === true,
     name: name && name !== email && name !== sub ? name : null,
-    phone: phone || null
+    phone: phone || null,
+    env: info.brain_env?.trim() || null
   };
 }

@@ -38,6 +38,7 @@ import {
   pamResetPasswordSchema,
   type PamBindEmailVerifyResult,
   type PamChangePasswordInput,
+  type PamLinkedLogin,
   type PamResetPasswordInput,
   type PamSessionResponse,
   type PamSessionUser
@@ -50,6 +51,7 @@ import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLogin
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { OtpSendRateLimitService } from '@server/services/OtpSendRateLimitService';
 import { PamBindEmailService } from '@server/services/PamBindEmailService';
+import { PamLinkedLoginService } from '@server/services/PamLinkedLoginService';
 import { PamPasswordResetService } from '@server/services/PamPasswordResetService';
 import { PamPasswordService } from '@server/services/PamPasswordService';
 import { PamUserService } from '@server/services/PamUserService';
@@ -88,6 +90,8 @@ export class UserController {
     protected pamPasswordService: PamPasswordService,
     @inject(PamPasswordResetService)
     protected passwordResetService: PamPasswordResetService,
+    @inject(PamLinkedLoginService)
+    protected linkedLoginService: PamLinkedLoginService,
     @inject(I.ServerContextInterface)
     protected serverContext: ServerContextInterface,
     @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
@@ -326,6 +330,14 @@ export class UserController {
       role: user.role,
       created_at: user.created_at ?? pam.created_at
     });
+  }
+
+  public async listLinkedLogins(): Promise<PamLinkedLogin[]> {
+    const user = await this.userService.getSessionUser();
+    if (!user) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    return this.linkedLoginService.listForUser(user.id);
   }
 
   public async changePassword(

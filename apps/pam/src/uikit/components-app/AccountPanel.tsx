@@ -15,6 +15,7 @@ import { AppUserGateway } from '@/impls/AppUserGateway';
 import type { UserService } from '@/impls/UserService';
 import { BindEmailForm } from '@/uikit/components-app/BindEmailForm';
 import { ChangePasswordForm } from '@/uikit/components-app/ChangePasswordForm';
+import { LinkedLoginsSection } from '@/uikit/components-app/LinkedLoginsSection';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
 import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
@@ -278,6 +279,15 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
             {tt.bindHint}
           </p>
         ) : null}
+        <LinkedLoginsSection
+          labels={{
+            title: tt.linkedSectionTitle,
+            empty: tt.linkedEmpty,
+            linked: tt.linked,
+            lastLogin: tt.linkedLastLogin,
+            error: tt.linkedError
+          }}
+        />
       </section>
 
       {needsBindEmail ? (

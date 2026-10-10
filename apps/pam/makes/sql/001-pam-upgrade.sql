@@ -208,3 +208,14 @@ BEGIN
     link_col
   );
 END $$;
+
+-- #############################################################################
+-- 5) Provider snapshot on external login identities (account page)
+-- #############################################################################
+-- Existing rows are filled on their next login.
+
+ALTER TABLE public.pam_user_identities
+  ADD COLUMN IF NOT EXISTS identity_data jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+COMMENT ON COLUMN public.pam_user_identities.identity_data IS
+  'Provider-specific snapshot from the latest login, e.g. Brain: {"env": "production", "account": "a@x.com"}.';

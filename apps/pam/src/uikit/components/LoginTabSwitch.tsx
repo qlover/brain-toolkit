@@ -5,6 +5,7 @@ import {
   GithubIcon,
   GoogleIcon
 } from '@brain-toolkit/next-app-kit/client';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useStrictEffect } from '@qlover/next-kit/client';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -25,8 +26,23 @@ import { useIOC } from '../hook/useIOC';
 type LoginTab = 'email' | 'phone';
 type EmailMode = 'password' | 'otp';
 
-const providerButtonClass =
-  'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24292e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2c3137] focus:outline-none focus:ring-2 focus:ring-[#24292e] focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+const providerButtonBaseClass =
+  'flex w-full cursor-pointer items-center justify-center gap-2 px-4 py-3 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+
+const providerOutlineClass = `${providerButtonBaseClass} min-h-12 rounded-xl border border-primary-border bg-primary font-semibold text-primary-text hover:bg-elevated focus:ring-brand`;
+
+/** Brain's own primary button: inverse pill + arrow (see brain-oauth prototypes). */
+const providerButtonClass = {
+  brain: `${providerButtonBaseClass} group min-h-13 rounded-full bg-primary-text font-medium text-primary hover:opacity-90 focus:ring-primary-text`,
+  github: providerOutlineClass,
+  google: providerOutlineClass
+} as const;
+
+function BrainArrow() {
+  return (
+    <ArrowRightIcon className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
+  );
+}
 
 function resolveReturnTo(
   searchParams: URLSearchParams | null | undefined
@@ -56,7 +72,7 @@ function ProviderButtonRow({
   return (
     <div
       data-testid="ProviderButtonRow"
-      className={`mb-6 w-full ${disabled ? 'cursor-not-allowed' : ''}`}
+      className={`mb-3 w-full ${disabled ? 'cursor-not-allowed' : ''}`}
       title={title}
     >
       {children}
@@ -65,8 +81,8 @@ function ProviderButtonRow({
 }
 
 /**
- * PAM login entry: Brain (Supabase SSO, disabled), Brain PKCE (local only),
- * GitHub/Google, email.
+ * PAM login entry: Brain (Supabase SSO), Brain PKCE, GitHub/Google, email,
+ * phone. Methods turned off in site settings are not rendered.
  */
 export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
   const userGateway = useIOC(AppUserGateway);
@@ -143,10 +159,6 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
       });
   }, [userGateway, locale, searchParams]);
 
-  const brainDisabled = !brainSupabaseEnabled || providerLogining;
-  const brainPkceDisabled = !brainPkceEnabled || providerLogining;
-  const googleDisabled = !googleEnabled || providerLogining;
-
   return (
     <div data-testid="LoginTabSwitch" className="w-full">
       {error && (
@@ -158,39 +170,45 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </div>
       )}
 
-      <ProviderButtonRow
-        title={tt.providerBrainTooltip}
-        disabled={brainDisabled}
-      >
-        <button
-          type="button"
-          data-testid="LoginWithBrain"
-          disabled={brainDisabled}
-          onClick={() => onLoginWithProvider(loginProviders.Brain)}
-          aria-label={tt.providerBrain}
-          className={providerButtonClass}
+      {brainSupabaseEnabled && (
+        <ProviderButtonRow
+          title={tt.providerBrainTooltip}
+          disabled={providerLogining}
         >
-          <BrainIcon className="h-5 w-5 shrink-0" />
-          <span>{tt.providerBrain}</span>
-        </button>
-      </ProviderButtonRow>
+          <button
+            type="button"
+            data-testid="LoginWithBrain"
+            disabled={providerLogining}
+            onClick={() => onLoginWithProvider(loginProviders.Brain)}
+            aria-label={tt.providerBrain}
+            className={providerButtonClass.brain}
+          >
+            <BrainIcon className="h-5 w-5 shrink-0" />
+            <span>{tt.providerBrain}</span>
+            <BrainArrow />
+          </button>
+        </ProviderButtonRow>
+      )}
 
-      <ProviderButtonRow
-        title={tt.providerBrainPkceTooltip}
-        disabled={brainPkceDisabled}
-      >
-        <button
-          type="button"
-          data-testid="LoginWithBrainPkce"
-          disabled={brainPkceDisabled}
-          onClick={onLoginWithBrainPkce}
-          aria-label={tt.providerBrainPkce}
-          className={providerButtonClass}
+      {brainPkceEnabled && (
+        <ProviderButtonRow
+          title={tt.providerBrainPkceTooltip}
+          disabled={providerLogining}
         >
-          <BrainIcon className="h-5 w-5 shrink-0" />
-          <span>{tt.providerBrainPkce}</span>
-        </button>
-      </ProviderButtonRow>
+          <button
+            type="button"
+            data-testid="LoginWithBrainPkce"
+            disabled={providerLogining}
+            onClick={onLoginWithBrainPkce}
+            aria-label={tt.providerBrainPkce}
+            className={providerButtonClass.brain}
+          >
+            <BrainIcon className="h-5 w-5 shrink-0" />
+            <span>{tt.providerBrainPkce}</span>
+            <BrainArrow />
+          </button>
+        </ProviderButtonRow>
+      )}
 
       <ProviderButtonRow title={tt.providerGitHub}>
         <button
@@ -199,31 +217,33 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
           disabled={providerLogining}
           onClick={() => onLoginWithProvider(loginProviders.GitHub)}
           aria-label={tt.providerGitHub}
-          className={providerButtonClass}
+          className={providerButtonClass.github}
         >
           <GithubIcon className="h-5 w-5 shrink-0" />
           <span>{tt.providerGitHub}</span>
         </button>
       </ProviderButtonRow>
 
-      <ProviderButtonRow
-        title={tt.providerGoogleTooltip}
-        disabled={googleDisabled}
-      >
-        <button
-          type="button"
-          data-testid="LoginWithGoogle"
-          disabled={googleDisabled}
-          onClick={() => onLoginWithProvider(loginProviders.Google)}
-          aria-label={tt.providerGoogle}
-          className={providerButtonClass}
+      {googleEnabled && (
+        <ProviderButtonRow
+          title={tt.providerGoogle}
+          disabled={providerLogining}
         >
-          <GoogleIcon className="h-5 w-5 shrink-0" />
-          <span>{tt.providerGoogle}</span>
-        </button>
-      </ProviderButtonRow>
+          <button
+            type="button"
+            data-testid="LoginWithGoogle"
+            disabled={providerLogining}
+            onClick={() => onLoginWithProvider(loginProviders.Google)}
+            aria-label={tt.providerGoogle}
+            className={providerButtonClass.google}
+          >
+            <GoogleIcon className="h-5 w-5 shrink-0" />
+            <span>{tt.providerGoogle}</span>
+          </button>
+        </ProviderButtonRow>
+      )}
 
-      <div className="relative mb-6">
+      <div className="relative mt-6 mb-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-primary-border"></div>
         </div>
@@ -234,33 +254,33 @@ export function LoginTabSwitch({ tt }: { tt: LoginI18nInterface }) {
         </div>
       </div>
 
-      <div className="mb-6 flex border-b border-primary-border" role="tablist">
-        <button
-          type="button"
-          className={`${tabBaseClass} ${tab === 'email' ? tabActiveClass : tabInactiveClass}`}
-          onClick={() => setTab('email')}
-          aria-selected={tab === 'email'}
-          role="tab"
+      {phoneLoginEnabled && (
+        <div
+          className="mb-6 flex border-b border-primary-border"
+          role="tablist"
         >
-          {tt.tabEmail}
-        </button>
-        <button
-          type="button"
-          className={`${tabBaseClass} ${tab === 'phone' && phoneLoginEnabled ? tabActiveClass : tabInactiveClass}`}
-          onClick={() => {
-            if (phoneLoginEnabled) setTab('phone');
-          }}
-          disabled={!phoneLoginEnabled}
-          aria-disabled={!phoneLoginEnabled}
-          aria-selected={tab === 'phone' && phoneLoginEnabled}
-          title={phoneLoginEnabled ? undefined : tt.tabPhoneDisabled}
-          role="tab"
-        >
-          {tt.tabPhone}
-        </button>
-      </div>
+          <button
+            type="button"
+            className={`${tabBaseClass} ${tab === 'email' ? tabActiveClass : tabInactiveClass}`}
+            onClick={() => setTab('email')}
+            aria-selected={tab === 'email'}
+            role="tab"
+          >
+            {tt.tabEmail}
+          </button>
+          <button
+            type="button"
+            className={`${tabBaseClass} ${tab === 'phone' ? tabActiveClass : tabInactiveClass}`}
+            onClick={() => setTab('phone')}
+            aria-selected={tab === 'phone'}
+            role="tab"
+          >
+            {tt.tabPhone}
+          </button>
+        </div>
+      )}
 
-      {tab === 'email' &&
+      {(tab === 'email' || !phoneLoginEnabled) &&
         (emailMode === 'otp' ? (
           <>
             <EmailOTPForm
