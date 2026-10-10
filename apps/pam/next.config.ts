@@ -37,6 +37,7 @@ const nextConfig: NextConfig = {
     '@qlover/fe-corekit',
     '@qlover/corekit-bridge',
     '@qlover/next-kit',
+    '@brain-toolkit/element-sizer',
     '@brain-toolkit/react-kit',
     '@brain-toolkit/next-app-kit'
   ],
