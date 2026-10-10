@@ -36,13 +36,17 @@ interface PAMProjectListItemProps {
   project: PAMProjectListModel;
   highlightKeyword?: string;
   highlightCategory?: string;
+  /** Plain left click opens the in-list detail instead of navigating (modifier clicks still navigate). */
+  onOpenDetail?: (slug: string) => void;
+  /** Row whose detail is showing in the drawer / side column. */
+  selected?: boolean;
 }
 
 /** Entries in the mobile strip under the row. */
 const MOBILE_STRIP_MAX = 4;
 
 /**
- * List row (tap → project detail). Content grows with the viewport:
+ * List row (tap → in-list detail, or the project page without `onOpenDetail`). Content grows with the viewport:
  * - mobile: name + summary, quick links in a strip below
  * - md: 2 envs + 2 link icons inline
  * - lg: category · stack · updated after the name
@@ -53,7 +57,9 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   tt,
   project,
   highlightKeyword = '',
-  highlightCategory = ''
+  highlightCategory = '',
+  onOpenDetail,
+  selected = false
 }) => {
   const locale = useLocale();
   const envs = useMemo(
@@ -102,7 +108,13 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
   return (
     <div
       data-testid="PAMProjectListItem"
-      className="relative bg-transparent px-3 py-2.5 transition hover:bg-elevated sm:px-4"
+      data-pam-row={project.slug}
+      className={clsx(
+        'relative px-3 py-2.5 transition sm:px-4',
+        selected
+          ? 'bg-brand/8 shadow-[inset_2px_0_0_var(--fe-color-brand)]'
+          : 'bg-secondary hover:bg-elevated'
+      )}
     >
       <Link
         href={{
@@ -111,6 +123,20 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         }}
         aria-label={project.name}
         className="absolute inset-0"
+        onClick={(event) => {
+          if (
+            !onOpenDetail ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+          event.preventDefault();
+          onOpenDetail(project.slug);
+        }}
       />
       <div className="flex items-center gap-3">
         <PAMProjectAvatar

@@ -368,6 +368,83 @@ export const PAGE_PAM_LINK_KIND_DOC = 'page_pam:linkKindDoc';
 export const PAGE_PAM_LINK_KIND_LINK = 'page_pam:linkKindLink';
 
 /**
+ * @description List detail panel: project description section title
+ * @localZh 项目说明
+ * @localEn Description
+ */
+export const PAGE_PAM_DETAIL_DESC_TITLE = 'page_pam:detailDescTitle';
+
+/**
+ * @description List detail panel: project info section title
+ * @localZh 项目信息
+ * @localEn Project info
+ */
+export const PAGE_PAM_DETAIL_INFO_TITLE = 'page_pam:detailInfoTitle';
+
+/**
+ * @description List detail panel: owner label
+ * @localZh 拥有者
+ * @localEn Owner
+ */
+export const PAGE_PAM_DETAIL_OWNER = 'page_pam:detailOwner';
+
+/**
+ * @description List detail panel: last updated label
+ * @localZh 更新时间
+ * @localEn Last updated
+ */
+export const PAGE_PAM_DETAIL_UPDATED = 'page_pam:detailUpdated';
+
+/**
+ * @description List detail panel: placeholder while the Markdown renderer loads
+ * @localZh 加载中…
+ * @localEn Loading…
+ */
+export const PAGE_PAM_DETAIL_LOADING = 'page_pam:detailLoading';
+
+/**
+ * @description List detail panel: open the full project page
+ * @localZh 打开详情页
+ * @localEn Open project page
+ */
+export const PAGE_PAM_DETAIL_OPEN_PAGE = 'page_pam:detailOpenPage';
+
+/**
+ * @description List detail panel: close (Esc)
+ * @localZh 关闭（Esc）
+ * @localEn Close (Esc)
+ */
+export const PAGE_PAM_DETAIL_CLOSE = 'page_pam:detailClose';
+
+/**
+ * @description List detail panel: previous project (↑)
+ * @localZh 上一个（↑）
+ * @localEn Previous (↑)
+ */
+export const PAGE_PAM_DETAIL_PREV = 'page_pam:detailPrev';
+
+/**
+ * @description List detail panel: next project (↓)
+ * @localZh 下一个（↓）
+ * @localEn Next (↓)
+ */
+export const PAGE_PAM_DETAIL_NEXT = 'page_pam:detailNext';
+
+/**
+ * @description List detail drawer: pin as a side column (wide screens)
+ * @localZh 固定到右侧
+ * @localEn Pin to the side
+ */
+export const PAGE_PAM_DETAIL_PIN = 'page_pam:detailPin';
+
+/**
+ * @description List detail side column: unpin back to a drawer
+ * @localZh 取消固定
+ * @localEn Unpin
+ */
+export const PAGE_PAM_DETAIL_UNPIN = 'page_pam:detailUnpin';
+
+/**
  * @description Open repository action
  * @localZh 打开仓库
  * @localEn Open repository

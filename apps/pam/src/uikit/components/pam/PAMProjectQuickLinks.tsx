@@ -106,14 +106,18 @@ function hueFromSlug(slug: string): number {
   return hue;
 }
 
-/** Cover for projects without a preview image, so card rows keep the same structure. */
+/**
+ * Cover for projects without a preview image, so card rows keep the same structure.
+ * `iconOnly` drops the name and hint (used when a title is overlaid on the cover).
+ */
 export function PAMProjectPlaceholderCover(props: {
   tt: PAMI18nInterface;
   name: string;
   slug: string;
   repoUrl?: string | null;
+  iconOnly?: boolean;
 }) {
-  const { tt, name, slug, repoUrl } = props;
+  const { tt, name, slug, repoUrl, iconOnly = false } = props;
   return (
     <div
       data-testid="PAMProjectPlaceholderCover"
@@ -123,12 +127,16 @@ export function PAMProjectPlaceholderCover(props: {
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[hsl(var(--ph-h)_60%_60%/0.3)] bg-[hsl(var(--ph-h)_60%_50%/0.15)] text-2xl text-[hsl(var(--ph-h)_60%_40%)] dark:text-[hsl(var(--ph-h)_70%_70%)]">
         <PAMIcon repoUrl={repoUrl || undefined} />
       </span>
-      <span className="max-w-[80%] truncate text-[0.95rem] font-semibold text-secondary-text">
-        {name}
-      </span>
-      <span className="text-[0.7rem] text-tertiary-text">
-        {tt.noPreviewImage}
-      </span>
+      {iconOnly ? null : (
+        <>
+          <span className="max-w-[80%] truncate text-[0.95rem] font-semibold text-secondary-text">
+            {name}
+          </span>
+          <span className="text-[0.7rem] text-tertiary-text">
+            {tt.noPreviewImage}
+          </span>
+        </>
+      )}
     </div>
   );
 }
