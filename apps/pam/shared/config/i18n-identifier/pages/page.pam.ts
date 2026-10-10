@@ -445,6 +445,62 @@ export const PAGE_PAM_DETAIL_PIN = 'page_pam:detailPin';
 export const PAGE_PAM_DETAIL_UNPIN = 'page_pam:detailUnpin';
 
 /**
+ * @description Project overview: edit description link
+ * @localZh 编辑
+ * @localEn Edit
+ */
+export const PAGE_PAM_DETAIL_EDIT = 'page_pam:detailEdit';
+
+/**
+ * @description Description editor: write mode
+ * @localZh 编辑
+ * @localEn Write
+ */
+export const PAGE_PAM_DESC_EDITOR_WRITE = 'page_pam:descEditorWrite';
+
+/**
+ * @description Description editor: preview mode
+ * @localZh 预览
+ * @localEn Preview
+ */
+export const PAGE_PAM_DESC_EDITOR_PREVIEW = 'page_pam:descEditorPreview';
+
+/**
+ * @description Description editor: Markdown support badge
+ * @localZh 支持 Markdown
+ * @localEn Markdown supported
+ */
+export const PAGE_PAM_DESC_EDITOR_MARKDOWN = 'page_pam:descEditorMarkdown';
+
+/**
+ * @description Description editor: open full-screen editor
+ * @localZh 展开编辑
+ * @localEn Expand editor
+ */
+export const PAGE_PAM_DESC_EDITOR_EXPAND = 'page_pam:descEditorExpand';
+
+/**
+ * @description Description editor: close full-screen editor
+ * @localZh 完成
+ * @localEn Done
+ */
+export const PAGE_PAM_DESC_EDITOR_DONE = 'page_pam:descEditorDone';
+
+/**
+ * @description Description editor: footer hint
+ * @localZh 第一段作为卡片摘要，其中的链接会显示为快速入口
+ * @localEn The first paragraph is the card summary; links show up as quick entries
+ */
+export const PAGE_PAM_DESC_EDITOR_HINT = 'page_pam:descEditorHint';
+
+/**
+ * @description Description editor: empty preview
+ * @localZh 暂无内容
+ * @localEn Nothing to preview
+ */
+export const PAGE_PAM_DESC_EDITOR_EMPTY = 'page_pam:descEditorEmpty';
+
+/**
  * @description Open repository action
  * @localZh 打开仓库
  * @localEn Open repository
@@ -524,8 +580,8 @@ export const PAGE_PAM_LABEL_DESC = 'page_pam:labelDesc';
 
 /**
  * @description Description placeholder
- * @localZh 简要描述项目…
- * @localEn Briefly describe the project…
+ * @localZh 第一段写一句话简介；Figma、文档、Jira 等链接写成 [标题](地址)，会显示为快速入口
+ * @localEn One-line intro first; write Figma, docs, Jira links as [title](url) to show them as quick entries
  */
 export const PAGE_PAM_PLACEHOLDER_DESC = 'page_pam:placeholderDesc';
 

@@ -8,7 +8,7 @@ import {
   extractPAMDescSummary
 } from '@shared/utils/PAMDescMarkdownUtil';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { ROUTE_PROJECT_GENERAL } from '@config/route';
+import { ROUTE_PROJECT_DETAIL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
   PAMPublicType,
@@ -118,7 +118,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
     >
       <Link
         href={{
-          pathname: ROUTE_PROJECT_GENERAL,
+          pathname: ROUTE_PROJECT_DETAIL,
           params: { projectId: project.slug }
         }}
         aria-label={project.name}

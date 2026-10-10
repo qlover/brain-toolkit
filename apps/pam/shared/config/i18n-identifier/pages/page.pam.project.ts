@@ -20,6 +20,13 @@ export const PAGE_PAM_PROJECT_DESCRIPTION = 'page_pam_project:description';
 export const PAGE_PAM_PROJECT_KEYWORDS = 'page_pam_project:keywords';
 
 /**
+ * @description Project detail tab — Overview
+ * @localZh 概览
+ * @localEn Overview
+ */
+export const PAGE_PAM_PROJECT_TAB_OVERVIEW = 'page_pam_project:tabOverview';
+
+/**
  * @description Project detail tab — General
  * @localZh 基本信息
  * @localEn General

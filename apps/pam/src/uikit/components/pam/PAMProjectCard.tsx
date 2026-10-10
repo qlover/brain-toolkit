@@ -13,7 +13,7 @@ import {
   extractPAMDescSummary
 } from '@shared/utils/PAMDescMarkdownUtil';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { ROUTE_PROJECT_GENERAL } from '@config/route';
+import { ROUTE_PROJECT_DETAIL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
   PAMPublicType,
@@ -236,7 +236,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
           ) : (
             <Link
               href={{
-                pathname: ROUTE_PROJECT_GENERAL,
+                pathname: ROUTE_PROJECT_DETAIL,
                 params: { projectId: project.slug }
               }}
               title={project.name}
@@ -248,7 +248,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
         ) : (
           <Link
             href={{
-              pathname: ROUTE_PROJECT_GENERAL,
+              pathname: ROUTE_PROJECT_DETAIL,
               params: { projectId: project.slug }
             }}
             title={project.name}
@@ -277,7 +277,7 @@ export const PAMProjectCard: React.FC<PAMProjectCardProps> = ({
             <div className="min-w-0 flex-1">
               <Link
                 href={{
-                  pathname: ROUTE_PROJECT_GENERAL,
+                  pathname: ROUTE_PROJECT_DETAIL,
                   params: { projectId: project.slug }
                 }}
                 className="block max-w-full truncate text-left text-lg font-semibold leading-snug tracking-tight text-primary-text no-underline transition hover:text-brand sm:text-xl"

@@ -1,18 +1,36 @@
-import { redirect } from 'next/navigation';
-import { projectGeneralPath } from '@config/route';
+import { PageI18nProvider } from '@qlover/next-kit/client';
+import { PAMProjectOverviewPanel } from '@/uikit/components-app/pam/PAMProjectOverviewPanel';
+import { pamI18n, pamI18nNamespace } from '@config/i18n-mapping/PAMI18n';
+import { pamProjectI18n } from '@config/i18n-mapping/PAMProjectI18n';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
-import { getLocale, type PageParamsType } from '@server/render/pageRouteParams';
+import {
+  getI18nInterface,
+  getLocale,
+  type PageParamsType
+} from '@server/render/pageRouteParams';
+import type { Metadata } from 'next';
 
-type ProjectPageParamsType = PageParamsType & {
-  projectId: string;
-};
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<PageParamsType>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  const locale = getLocale(resolvedParams);
+  return await getI18nInterface(locale, pamProjectI18n);
+}
 
 /**
- * `/[locale]/projects/[projectId]` → redirect to general tab.
+ * Project overview tab — rendered description, quick entries, project info.
  */
-export default async function ProjectDetailIndexPage(props: PageParamsProps) {
-  const resolvedParams = (await props.params!) as ProjectPageParamsType;
+export default async function ProjectOverviewPage(props: PageParamsProps) {
+  const resolvedParams = await props.params!;
   const locale = getLocale(resolvedParams);
-  const projectId = resolvedParams.projectId;
-  redirect(`/${locale}${projectGeneralPath(projectId)}`);
+  const tt = await getI18nInterface(locale, pamI18n, pamI18nNamespace);
+
+  return (
+    <PageI18nProvider value={tt}>
+      <PAMProjectOverviewPanel />
+    </PageI18nProvider>
+  );
 }

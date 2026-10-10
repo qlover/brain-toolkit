@@ -24,7 +24,7 @@ import type {
   PAMDescLinkKind
 } from '@shared/utils/PAMDescMarkdownUtil';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { ROUTE_PROJECT_GENERAL } from '@config/route';
+import { ROUTE_PROJECT_DETAIL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import { PAMIcon } from './PAMIcon';
 import { getPAMDisplayHost } from './PAMProjectDisplayUtil';
@@ -226,7 +226,7 @@ function QuickAccessContent(props: {
         </>
       ) : null}
       <Link
-        href={{ pathname: ROUTE_PROJECT_GENERAL, params: { projectId: slug } }}
+        href={{ pathname: ROUTE_PROJECT_DETAIL, params: { projectId: slug } }}
         className="mt-1 flex items-center justify-center gap-1.5 border-t border-primary-border px-2.5 pt-2.5 pb-1.5 text-sm text-brand no-underline hover:text-brand-hover"
       >
         {tt.viewProjectDetail}

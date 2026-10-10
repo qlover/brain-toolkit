@@ -13,7 +13,7 @@ import {
   ROUTE_DOCS_CLI,
   ROUTE_DOCS_OAUTH,
   ROUTE_LOGIN,
-  ROUTE_PROJECT_GENERAL,
+  ROUTE_PROJECT_DETAIL,
   ROUTE_PROJECTS
 } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
@@ -264,7 +264,7 @@ export function HomeLanding({
                 >
                   <Link
                     href={{
-                      pathname: ROUTE_PROJECT_GENERAL,
+                      pathname: ROUTE_PROJECT_DETAIL,
                       params: { projectId: project.slug }
                     }}
                     className="flex items-center gap-3 py-3.5 transition hover:bg-elevated/50"

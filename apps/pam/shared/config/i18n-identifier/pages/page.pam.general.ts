@@ -73,8 +73,8 @@ export const PAGE_PAM_GENERAL_LABEL_DESC = 'page_pam_general:labelDesc';
 
 /**
  * @description Description placeholder
- * @localZh 简要描述项目…
- * @localEn Briefly describe the project…
+ * @localZh 第一段写一句话简介；Figma、文档、Jira 等链接写成 [标题](地址)，会显示为快速入口
+ * @localEn One-line intro first; write Figma, docs, Jira links as [title](url) to show them as quick entries
  */
 export const PAGE_PAM_GENERAL_PLACEHOLDER_DESC =
   'page_pam_general:placeholderDesc';
@@ -286,8 +286,8 @@ export const PAGE_PAM_GENERAL_DESC_PROJECT_CATEGORY =
 
 /**
  * @description Description settings description
- * @localZh 简要说明项目用途与背景
- * @localEn Short summary of what this project is for
+ * @localZh 第一段会作为列表卡片的摘要；链接会显示为「概览」和卡片上的快速入口
+ * @localEn The first paragraph becomes the list card summary; links show up as quick entries on Overview and cards
  */
 export const PAGE_PAM_GENERAL_DESC_PROJECT_DESC =
   'page_pam_general:descProjectDesc';

@@ -22,7 +22,7 @@ import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { resolveUserDisplayLabel } from '@shared/utils/pamUserIdentity';
 import type { PAMTeamsI18nInterface } from '@config/i18n-mapping/PAMTeamsI18n';
-import { ROUTE_PROJECT_GENERAL, ROUTE_TEAMS, projectPath } from '@config/route';
+import { ROUTE_PROJECT_DETAIL, ROUTE_TEAMS, projectPath } from '@config/route';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
 import {
   isPersonalTeamSlug,
@@ -414,7 +414,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
                 >
                   <Link
                     href={{
-                      pathname: ROUTE_PROJECT_GENERAL,
+                      pathname: ROUTE_PROJECT_DETAIL,
                       params: { projectId: project.slug }
                     }}
                     className="block min-w-0 transition hover:text-brand"
@@ -471,7 +471,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
               {attachProjectId ? (
                 <Link
                   href={{
-                    pathname: ROUTE_PROJECT_GENERAL,
+                    pathname: ROUTE_PROJECT_DETAIL,
                     params: {
                       projectId:
                         attachCandidates.find((p) => p.id === attachProjectId)

@@ -14,6 +14,7 @@ export const pamProjectI18n = Object.freeze({
   content: i18nKeys.PAGE_PAM_PROJECT_DESCRIPTION,
   keywords: i18nKeys.PAGE_PAM_PROJECT_KEYWORDS,
 
+  tabOverview: i18nKeys.PAGE_PAM_PROJECT_TAB_OVERVIEW,
   tabGeneral: i18nKeys.PAGE_PAM_PROJECT_TAB_GENERAL,
   tabEnvironments: i18nKeys.PAGE_PAM_PROJECT_TAB_ENVIRONMENTS,
   backToProjects: i18nKeys.PAGE_PAM_PROJECT_BACK_TO_PROJECTS,

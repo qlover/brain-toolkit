@@ -19,7 +19,7 @@ import React, {
 import { createPortal } from 'react-dom';
 import { Link } from '@/i18n/routing';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { ROUTE_PROJECT_GENERAL } from '@config/route';
+import { ROUTE_PROJECT_DETAIL } from '@config/route';
 import {
   PAMProjectDetailBody,
   type PAMProjectDetailModel
@@ -48,7 +48,7 @@ function OpenPageLink(props: { tt: PAMI18nInterface; slug: string }) {
   return (
     <Link
       href={{
-        pathname: ROUTE_PROJECT_GENERAL,
+        pathname: ROUTE_PROJECT_DETAIL,
         params: { projectId: props.slug }
       }}
       title={props.tt.detailOpenPage}

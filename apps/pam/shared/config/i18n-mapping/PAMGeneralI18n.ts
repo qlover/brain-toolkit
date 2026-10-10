@@ -1,4 +1,5 @@
 import { COMMON_ADMIN_TITLE } from '@config/i18n-identifier/common/common';
+import { pamDescEditorI18n } from './PAMI18n';
 import * as i18nKeys from '../i18n-identifier/pages/page.pam.general';
 
 /**
@@ -52,6 +53,7 @@ export const pamGeneralI18n = Object.freeze({
   descProjectVisibility: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_VISIBILITY,
   descProjectCategory: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_CATEGORY,
   descProjectDesc: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_DESC,
+  ...pamDescEditorI18n,
   descProjectStack: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_STACK,
   descProjectRepo: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_REPO,
   descPreviewImage: i18nKeys.PAGE_PAM_GENERAL_DESC_PROJECT_PREVIEW_IMAGE,

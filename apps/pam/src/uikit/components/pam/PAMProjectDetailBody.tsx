@@ -1,14 +1,17 @@
 'use client';
 
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowRightIcon,
+  LockClosedIcon,
+  LockOpenIcon
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
-import dynamic from 'next/dynamic';
 import { useLocale } from 'next-intl';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from '@/i18n/routing';
 import { extractPAMDescLinks } from '@shared/utils/PAMDescMarkdownUtil';
 import type { PAMI18nInterface } from '@config/i18n-mapping/PAMI18n';
-import { ROUTE_PROJECT_GENERAL } from '@config/route';
+import { ROUTE_PROJECT_DETAIL } from '@config/route';
 import type { PAMEnvWriteable } from '@schemas/PAMEnvironmentSchema';
 import {
   PAMPublicType,
@@ -16,6 +19,7 @@ import {
 } from '@schemas/PAMProjectSchema';
 import { PAMEnvLink, PAMPublicIcon } from './PAMIcon';
 import { PAMProjectAvatar } from './PAMProjectAvatar';
+import { PAMProjectDescMarkdownLazy } from './PAMProjectDescMarkdownLazy';
 import {
   formatPAMProjectTimestamp,
   getPAMPrimaryUrl,
@@ -31,29 +35,10 @@ export type PAMProjectDetailModel = SearchPAMProject & {
   environments?: PAMEnvWriteable[];
 };
 
-const PAMProjectDescMarkdown = dynamic(
-  () =>
-    import('./PAMProjectDescMarkdown').then((m) => m.PAMProjectDescMarkdown),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        data-testid="PAMProjectDescMarkdown"
-        className="animate-pulse space-y-2"
-        aria-hidden
-      >
-        <div className="h-3 w-full rounded bg-elevated" />
-        <div className="h-3 w-4/5 rounded bg-elevated" />
-        <div className="h-3 w-2/3 rounded bg-elevated" />
-      </div>
-    )
-  }
-);
-
-const SECTION_LABEL =
+export const PAM_DETAIL_SECTION_LABEL =
   'mb-1.5 text-[0.62rem] font-bold tracking-wide text-tertiary-text uppercase';
 
-function DetailCover(props: {
+export function PAMProjectDetailCover(props: {
   tt: PAMI18nInterface;
   project: PAMProjectDetailModel;
   iconOnly?: boolean;
@@ -68,7 +53,7 @@ function DetailCover(props: {
 
   return (
     <div
-      data-testid="DetailCover"
+      data-testid="PAMProjectDetailCover"
       className={clsx(
         'relative aspect-video w-full overflow-hidden bg-brand/6',
         className
@@ -96,46 +81,20 @@ function DetailCover(props: {
   );
 }
 
-/**
- * Project detail content shared by the list drawer, the pinned side column (`panel`)
- * and the mobile expanding card (`card`). The Markdown renderer loads on first render.
- */
-export function PAMProjectDetailBody(props: {
+/** Environments first, then links found in the description. */
+export function PAMProjectQuickEntries(props: {
   tt: PAMI18nInterface;
   project: PAMProjectDetailModel;
-  variant: 'panel' | 'card';
-  /** Header actions (panel only). */
-  actions?: React.ReactNode;
 }) {
-  const { tt, project, variant, actions } = props;
-  const locale = useLocale();
-  const envs = useMemo(
-    () => project.environments || [],
-    [project.environments]
-  );
+  const { tt, project } = props;
+  const envs = project.environments || [];
   const links = useMemo(
     () => extractPAMDescLinks(project.description),
     [project.description]
   );
-  const description = (project.description || '').trim();
-  const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
-  const isPublic = project.is_public === PAMPublicType.public;
-  const updatedShort = formatPAMProjectTimestamp(
-    project.updated_at,
-    locale,
-    true
-  );
-  const metaText = [
-    project.category,
-    project.stack,
-    updatedShort ? tt.updatedAt.replace('%time%', updatedShort) : ''
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
-  const entriesSection = (
-    <section>
-      <div className={SECTION_LABEL}>{tt.quickEntryTitle}</div>
+  return (
+    <section data-testid="PAMProjectQuickEntries">
+      <div className={PAM_DETAIL_SECTION_LABEL}>{tt.quickEntryTitle}</div>
       {envs.length + links.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
           {envs.map((env) => (
@@ -150,19 +109,29 @@ export function PAMProjectDetailBody(props: {
       )}
     </section>
   );
+}
 
-  const descSection = (
-    <section className="min-w-0">
-      <div className={SECTION_LABEL}>{tt.detailDescTitle}</div>
-      {description ? (
-        <PAMProjectDescMarkdown markdown={description} />
-      ) : (
-        <p className="text-sm text-tertiary-text">{tt.noDesc}</p>
-      )}
-    </section>
+export function PAMProjectDescription(props: {
+  tt: PAMI18nInterface;
+  description?: string | null;
+}) {
+  const description = (props.description || '').trim();
+  return description ? (
+    <PAMProjectDescMarkdownLazy markdown={description} />
+  ) : (
+    <p className="text-sm text-tertiary-text">{props.tt.noDesc}</p>
   );
+}
 
-  const infoRows: { key: string; label: string; value: React.ReactNode }[] = [
+export function PAMProjectInfoList(props: {
+  tt: PAMI18nInterface;
+  project: PAMProjectDetailModel;
+  showVisibility?: boolean;
+}) {
+  const { tt, project, showVisibility = false } = props;
+  const locale = useLocale();
+  const isPublic = project.is_public === PAMPublicType.public;
+  const rows: { key: string; label: string; value: React.ReactNode }[] = [
     { key: 'category', label: tt.labelCategory, value: project.category },
     { key: 'stack', label: tt.labelStack, value: project.stack || '—' },
     {
@@ -180,45 +149,108 @@ export function PAMProjectDetailBody(props: {
       ) : (
         '—'
       )
-    },
-    ...(project.owner_id
-      ? [
-          {
-            key: 'owner',
-            label: tt.detailOwner,
-            value: (
-              <span className="font-mono text-xs" title={project.owner_id}>
-                {shortenPAMOwnerId(project.owner_id)}
-              </span>
-            )
-          }
-        ]
-      : []),
-    {
-      key: 'updated',
-      label: tt.detailUpdated,
-      value: formatPAMProjectTimestamp(project.updated_at, locale) || '—'
     }
   ];
+  if (project.owner_id) {
+    rows.push({
+      key: 'owner',
+      label: tt.detailOwner,
+      value: (
+        <span className="font-mono text-xs" title={project.owner_id}>
+          {shortenPAMOwnerId(project.owner_id)}
+        </span>
+      )
+    });
+  }
+  rows.push({
+    key: 'updated',
+    label: tt.detailUpdated,
+    value: formatPAMProjectTimestamp(project.updated_at, locale) || '—'
+  });
+  if (showVisibility) {
+    const Icon = isPublic ? LockOpenIcon : LockClosedIcon;
+    rows.push({
+      key: 'visibility',
+      label: tt.labelVisibility,
+      value: (
+        <span className="inline-flex items-center gap-1">
+          <Icon className="h-3.5 w-3.5 text-tertiary-text" />
+          {isPublic ? tt.public : tt.private}
+        </span>
+      )
+    });
+  }
 
-  const infoSection = (
-    <section>
-      <div className={SECTION_LABEL}>{tt.detailInfoTitle}</div>
-      <dl className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-y-1.5 text-sm">
-        {infoRows.map((row) => (
-          <React.Fragment key={row.key}>
-            <dt className="text-tertiary-text">{row.label}</dt>
-            <dd className="truncate text-primary-text">{row.value}</dd>
-          </React.Fragment>
-        ))}
-      </dl>
-    </section>
+  return (
+    <dl
+      data-testid="PAMProjectInfoList"
+      className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-y-1.5 text-sm"
+    >
+      {rows.map((row) => (
+        <React.Fragment key={row.key}>
+          <dt className="text-tertiary-text">{row.label}</dt>
+          <dd className="truncate text-primary-text">{row.value}</dd>
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * Project detail content shared by the list drawer, the pinned side column (`panel`)
+ * and the mobile expanding card (`card`). The Markdown renderer loads on first render.
+ */
+export function PAMProjectDetailBody(props: {
+  tt: PAMI18nInterface;
+  project: PAMProjectDetailModel;
+  variant: 'panel' | 'card';
+  /** Header actions (panel only). */
+  actions?: React.ReactNode;
+}) {
+  const { tt, project, variant, actions } = props;
+  const locale = useLocale();
+  const envs = useMemo(
+    () => project.environments || [],
+    [project.environments]
+  );
+  const primaryUrl = getPAMPrimaryUrl(envs, project.repo_url);
+  const isPublic = project.is_public === PAMPublicType.public;
+  const updatedShort = formatPAMProjectTimestamp(
+    project.updated_at,
+    locale,
+    true
+  );
+  const metaText = [
+    project.category,
+    project.stack,
+    updatedShort ? tt.updatedAt.replace('%time%', updatedShort) : ''
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const sections = (
+    <>
+      <PAMProjectQuickEntries tt={tt} project={project} />
+      <section className="min-w-0">
+        <div className={PAM_DETAIL_SECTION_LABEL}>{tt.detailDescTitle}</div>
+        <PAMProjectDescription tt={tt} description={project.description} />
+      </section>
+      <section>
+        <div className={PAM_DETAIL_SECTION_LABEL}>{tt.detailInfoTitle}</div>
+        <PAMProjectInfoList tt={tt} project={project} />
+      </section>
+    </>
   );
 
   if (variant === 'card') {
     return (
       <div data-testid="PAMProjectDetailBody">
-        <DetailCover tt={tt} project={project} iconOnly className="max-h-72">
+        <PAMProjectDetailCover
+          tt={tt}
+          project={project}
+          iconOnly
+          className="max-h-72"
+        >
           <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-5 text-white">
             {metaText ? (
@@ -239,14 +271,12 @@ export function PAMProjectDetailBody(props: {
               />
             </div>
           </div>
-        </DetailCover>
+        </PAMProjectDetailCover>
         <div className="space-y-5 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-          {entriesSection}
-          {descSection}
-          {infoSection}
+          {sections}
           <Link
             href={{
-              pathname: ROUTE_PROJECT_GENERAL,
+              pathname: ROUTE_PROJECT_DETAIL,
               params: { projectId: project.slug }
             }}
             className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-brand text-sm font-medium text-on-brand no-underline transition hover:bg-brand-hover"
@@ -291,14 +321,12 @@ export function PAMProjectDetailBody(props: {
         </div>
         {actions ? <div className="flex shrink-0 gap-1">{actions}</div> : null}
       </div>
-      <DetailCover
+      <PAMProjectDetailCover
         tt={tt}
         project={project}
         className="rounded-xl border border-primary-border"
       />
-      {entriesSection}
-      {descSection}
-      {infoSection}
+      {sections}
     </div>
   );
 }
