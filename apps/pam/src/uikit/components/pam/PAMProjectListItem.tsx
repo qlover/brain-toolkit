@@ -36,7 +36,10 @@ interface PAMProjectListItemProps {
   project: PAMProjectListModel;
   highlightKeyword?: string;
   highlightCategory?: string;
-  /** Plain left click opens the in-list detail instead of navigating (modifier clicks still navigate). */
+  /**
+   * Clicking the row opens the in-list detail; only the project name links to the
+   * detail page, so the row does not advertise a URL on hover.
+   */
   onOpenDetail?: (slug: string) => void;
   /** Row whose detail is showing in the drawer / side column. */
   selected?: boolean;
@@ -46,7 +49,8 @@ interface PAMProjectListItemProps {
 const MOBILE_STRIP_MAX = 4;
 
 /**
- * List row (tap → in-list detail, or the project page without `onOpenDetail`). Content grows with the viewport:
+ * List row: the name opens the project page; the rest of the row opens the in-list detail
+ * (or the project page without `onOpenDetail`). Content grows with the viewport:
  * - mobile: name + summary, quick links in a strip below
  * - md: 2 envs + 2 link icons inline
  * - lg: category · stack · updated after the name
@@ -116,28 +120,24 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           : 'bg-secondary hover:bg-elevated'
       )}
     >
-      <Link
-        href={{
-          pathname: ROUTE_PROJECT_DETAIL,
-          params: { projectId: project.slug }
-        }}
-        aria-label={project.name}
-        className="absolute inset-0"
-        onClick={(event) => {
-          if (
-            !onOpenDetail ||
-            event.button !== 0 ||
-            event.metaKey ||
-            event.ctrlKey ||
-            event.shiftKey ||
-            event.altKey
-          ) {
-            return;
-          }
-          event.preventDefault();
-          onOpenDetail(project.slug);
-        }}
-      />
+      {onOpenDetail ? (
+        <button
+          type="button"
+          aria-label={project.name}
+          aria-haspopup="dialog"
+          className="absolute inset-0 cursor-pointer"
+          onClick={() => onOpenDetail(project.slug)}
+        />
+      ) : (
+        <Link
+          href={{
+            pathname: ROUTE_PROJECT_DETAIL,
+            params: { projectId: project.slug }
+          }}
+          aria-label={project.name}
+          className="absolute inset-0"
+        />
+      )}
       <div className="flex items-center gap-3">
         <PAMProjectAvatar
           name={project.name}
@@ -150,9 +150,17 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
-            <span className="truncate font-semibold text-primary-text">
+            <Link
+              data-testid="PAMProjectListItemTitle"
+              href={{
+                pathname: ROUTE_PROJECT_DETAIL,
+                params: { projectId: project.slug }
+              }}
+              title={tt.detailOpenPage}
+              className="relative truncate font-semibold text-primary-text no-underline transition hover:text-brand"
+            >
               {titleNode}
-            </span>
+            </Link>
             <PAMPublicIcon
               isPublic={isPublic}
               publicTitle={tt.public}
