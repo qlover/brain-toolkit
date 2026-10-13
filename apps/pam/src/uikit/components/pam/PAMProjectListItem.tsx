@@ -157,7 +157,7 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
                 params: { projectId: project.slug }
               }}
               title={tt.detailOpenPage}
-              className="relative truncate font-semibold text-primary-text no-underline decoration-brand/60 underline-offset-2 transition hover:text-brand hover:underline"
+              className="relative truncate font-semibold text-primary-text no-underline transition hover:text-brand"
             >
               {titleNode}
             </Link>
