@@ -119,7 +119,7 @@ export function PAMProjectDetailDrawer(props: {
         role="dialog"
         aria-label={project.name}
         className={clsx(
-          'absolute inset-y-0 right-0 w-full max-w-120 overflow-y-auto overscroll-contain border-l border-primary-border bg-secondary p-5 shadow-2xl transition-transform duration-200 ease-out',
+          'absolute inset-y-0 right-0 w-full max-w-120 overflow-y-auto overscroll-contain border-l border-primary-border bg-secondary p-5 shadow-2xl transition-transform duration-200 ease-out lg:max-w-160 lg:p-6 xl:max-w-180 2xl:max-w-208',
           shown ? 'translate-x-0' : 'translate-x-full'
         )}
       >

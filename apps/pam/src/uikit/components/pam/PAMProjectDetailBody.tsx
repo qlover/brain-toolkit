@@ -324,7 +324,7 @@ export function PAMProjectDetailBody(props: {
       <PAMProjectDetailCover
         tt={tt}
         project={project}
-        className="rounded-xl border border-primary-border"
+        className="max-h-80 rounded-xl border border-primary-border"
       />
       {sections}
     </div>

@@ -115,7 +115,8 @@ function PAMProjectRowList(props: {
     <div
       data-testid="PAMProjectRowList"
       className={clsx(
-        split && 'grid grid-cols-[minmax(0,1fr)_26rem] items-start gap-4'
+        split &&
+          'grid grid-cols-[minmax(0,1fr)_26rem] items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_32rem]'
       )}
     >
       <div
