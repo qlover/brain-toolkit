@@ -36,7 +36,10 @@ interface PAMProjectListItemProps {
   project: PAMProjectListModel;
   highlightKeyword?: string;
   highlightCategory?: string;
-  /** Plain left click opens the in-list detail instead of navigating (modifier clicks still navigate). */
+  /**
+   * Plain left click on the row opens the in-list detail (modifier clicks still navigate);
+   * the project name stays a link to the detail page.
+   */
   onOpenDetail?: (slug: string) => void;
   /** Row whose detail is showing in the drawer / side column. */
   selected?: boolean;
@@ -46,7 +49,8 @@ interface PAMProjectListItemProps {
 const MOBILE_STRIP_MAX = 4;
 
 /**
- * List row (tap → in-list detail, or the project page without `onOpenDetail`). Content grows with the viewport:
+ * List row: the name opens the project page; the rest of the row opens the in-list detail
+ * (or the project page without `onOpenDetail`). Content grows with the viewport:
  * - mobile: name + summary, quick links in a strip below
  * - md: 2 envs + 2 link icons inline
  * - lg: category · stack · updated after the name
@@ -150,9 +154,17 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
         />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
-            <span className="truncate font-semibold text-primary-text">
+            <Link
+              data-testid="PAMProjectListItemTitle"
+              href={{
+                pathname: ROUTE_PROJECT_DETAIL,
+                params: { projectId: project.slug }
+              }}
+              title={tt.detailOpenPage}
+              className="relative truncate font-semibold text-primary-text no-underline decoration-brand/60 underline-offset-2 transition hover:text-brand hover:underline"
+            >
               {titleNode}
-            </span>
+            </Link>
             <PAMPublicIcon
               isPublic={isPublic}
               publicTitle={tt.public}
