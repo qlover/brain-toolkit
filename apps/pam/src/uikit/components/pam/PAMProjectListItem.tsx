@@ -37,8 +37,8 @@ interface PAMProjectListItemProps {
   highlightKeyword?: string;
   highlightCategory?: string;
   /**
-   * Plain left click on the row opens the in-list detail (modifier clicks still navigate);
-   * the project name stays a link to the detail page.
+   * Clicking the row opens the in-list detail; only the project name links to the
+   * detail page, so the row does not advertise a URL on hover.
    */
   onOpenDetail?: (slug: string) => void;
   /** Row whose detail is showing in the drawer / side column. */
@@ -120,28 +120,24 @@ export const PAMProjectListItem: React.FC<PAMProjectListItemProps> = ({
           : 'bg-secondary hover:bg-elevated'
       )}
     >
-      <Link
-        href={{
-          pathname: ROUTE_PROJECT_DETAIL,
-          params: { projectId: project.slug }
-        }}
-        aria-label={project.name}
-        className="absolute inset-0"
-        onClick={(event) => {
-          if (
-            !onOpenDetail ||
-            event.button !== 0 ||
-            event.metaKey ||
-            event.ctrlKey ||
-            event.shiftKey ||
-            event.altKey
-          ) {
-            return;
-          }
-          event.preventDefault();
-          onOpenDetail(project.slug);
-        }}
-      />
+      {onOpenDetail ? (
+        <button
+          type="button"
+          aria-label={project.name}
+          aria-haspopup="dialog"
+          className="absolute inset-0 cursor-pointer"
+          onClick={() => onOpenDetail(project.slug)}
+        />
+      ) : (
+        <Link
+          href={{
+            pathname: ROUTE_PROJECT_DETAIL,
+            params: { projectId: project.slug }
+          }}
+          aria-label={project.name}
+          className="absolute inset-0"
+        />
+      )}
       <div className="flex items-center gap-3">
         <PAMProjectAvatar
           name={project.name}
