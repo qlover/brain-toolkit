@@ -1,6 +1,6 @@
 {
   "name": "@brain-toolkit/element-sizer",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "type": "module",
   "private": false,
   "main": "./src/index.ts",

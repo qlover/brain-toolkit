@@ -1,5 +1,116 @@
 # pam
 
+## 2.15.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 列表模式点项目名跳转详情页，点行其他位置仍打开抽屉 ([438d6a2](https://github.com/qlover/brain-toolkit/commit/438d6a2e3b4cb03c19899b52352100bc06727203)) ([#180](https://github.com/qlover/brain-toolkit/pull/180))
+
+  项目名改为指向 /projects/[id] 的链接并置于整行覆盖链接之上；
+  点行的其他位置照旧打开抽屉（手机为展开卡片）。
+
+- **pam:** 列表详情抽屉在大屏下加宽 ([32cdeb2](https://github.com/qlover/brain-toolkit/commit/32cdeb20140befe9c639ccbdfa51f95b88fed349)) ([#180](https://github.com/qlover/brain-toolkit/pull/180))
+  - 抽屉宽度按断点递增：默认 480px，lg 640px，xl 720px，2xl 832px
+  - 固定到右侧的详情列在 2xl 下由 26rem 加宽到 32rem
+  - 面板模式封面限高 max-h-80，避免抽屉变宽后封面过高
+
+- **pam:** 项目列表展示 Markdown 描述摘要与快速入口 ([b9c5ff7](https://github.com/qlover/brain-toolkit/commit/b9c5ff78a25977b92ef8431da56cb5f47fe27702)) ([#178](https://github.com/qlover/brain-toolkit/pull/178))
+  - 描述取第一段正文作为摘要，[标题](地址) 链接按域名识别类型
+  - 卡片：无截图时显示占位封面，环境与链接合并为「快速入口」
+  - 列表：按屏宽分级显示入口与元信息，点行进入详情
+  - 快速访问：桌面下拉菜单、移动端底部面板
+
+- **pam:** 列表模式点行在页内查看项目详情 ([fe6533b](https://github.com/qlover/brain-toolkit/commit/fe6533b5738e16114e1c65f0f1ab5e9c924ac690)) ([#178](https://github.com/qlover/brain-toolkit/pull/178))
+  - ≥768px 右侧抽屉：封面、快速入口、Markdown 说明、项目信息，
+    ↑ ↓ 切换项目、Esc 关闭；≥1280px 可钉成列表右侧分栏（记住偏好）
+  - 手机 iOS 风格展开卡片：行原地放大、关闭缩回原行，
+    支持下拉关闭与系统返回手势
+  - 详情内容抽成 PAMProjectDetailBody，Markdown 渲染器按需加载
+  - Ctrl / Cmd 等修饰键点击仍直接打开详情页
+
+- **pam:** 详情页新增概览 tab，新建与基本信息共用描述编辑器 ([5e76007](https://github.com/qlover/brain-toolkit/commit/5e760076538aef73907afebc568b38fb25ed3378)) ([#178](https://github.com/qlover/brain-toolkit/pull/178))
+  - /projects/[id] 不再跳转基本信息，改为概览：Markdown 说明、
+    封面与快速入口、项目信息；加载时显示同布局骨架
+  - tab 顺序为 概览 | 基本信息 | 环境变量；列表、卡片、首页、团队页等
+    查看入口统一进入概览，旧 UUID 链接保持当前 tab
+  - 新增 PAMDescEditor：编辑/预览切换、字数统计、全屏分栏编辑，
+    用于新建弹窗与基本信息
+  - 拆分详情内容组件供抽屉、移动端卡片和概览复用，Markdown 懒加载
+
+- **pam:** 登录页不再显示未开启的登录方式 ([58a4038](https://github.com/qlover/brain-toolkit/commit/58a40388d21810e4181f5ad80b36c9df7eb146f3)) ([#177](https://github.com/qlover/brain-toolkit/pull/177))
+
+  Brain SSO、Brain PKCE、Google 未在站点设置开启时不渲染按钮；
+  手机登录未开启时隐藏邮箱 / 手机 Tab。删除不再使用的
+  「暂未开通」提示文案。
+
+- **pam:** 个人中心显示已关联的 Brain / GitHub / Google 登录 ([f9d7603](https://github.com/qlover/brain-toolkit/commit/f9d76030207c155584751fb705306de42629f1fb)) ([#177](https://github.com/qlover/brain-toolkit/pull/177))
+
+  新增 GET /api/user/linked-logins：Brain 关联取自 pam_user_identities，
+  GitHub / Google 取自 Supabase Auth identities；个人中心资料卡片下方
+  列出已关联方式、账号名与最近登录时间。
+
+- **pam:** 个人中心的 Brain 关联显示环境与账号名 ([c8fa259](https://github.com/qlover/brain-toolkit/commit/c8fa259c9742a6b894958de95dbd11a808e3a19e)) ([#177](https://github.com/qlover/brain-toolkit/pull/177))
+  - pam_user_identities 新增通用 identity_data jsonb，保存各 provider
+    最近一次登录的快照；Brain 存 {env, account}
+  - 个人中心显示为「Brain · production」，并展示 Brain 账号名
+  - 需先执行 001-pam-upgrade.sql 第 5 节再部署
+
+#### 🐞 Bug Fixes
+
+- **pam:** 个人团队只对本人生效，修复协作者可编辑他人全部项目 ([871eb68](https://github.com/qlover/brain-toolkit/commit/871eb68ddc8f243a449a22f50e2f0a23cda45fb6)) ([#181](https://github.com/qlover/brain-toolkit/pull/181))
+
+  早期回填把项目协作者复制进了 owner 的个人团队，权限改为按团队
+  计算后，被邀请过任一项目的用户即可编辑、导出该 owner 的全部项目。
+  - 读取团队成员身份时忽略他人的 personal-\* 团队（详情、列表、分类、
+    团队页统一生效）
+  - 个人团队禁止添加成员和修改成员角色
+  - 移除全量 schema 中把协作者写入个人团队的回填
+  - 001 升级脚本清理个人团队中的非 owner 成员
+
+- **pam:** 只读用户隐藏 General 标签并拦截直达链接 ([3faa6c3](https://github.com/qlover/brain-toolkit/commit/3faa6c32e1d40a6cfe5ca8e9a9f52fdb23969779)) ([#181](https://github.com/qlover/brain-toolkit/pull/181))
+
+  无编辑权限时不再显示 General 标签，直接访问 general 或无权访问的
+  environments 均重定向到概览页。
+
+- **pam:** 项目搜索函数与旧搜索兜底同样忽略他人个人团队 ([c845890](https://github.com/qlover/brain-toolkit/commit/c845890e37138b5b1d6e0c181058b44a978ab39f)) ([#181](https://github.com/qlover/brain-toolkit/pull/181))
+  - pam_search_projects 的成员判断关联 pam_role_teams，他人的
+    personal-\* 团队不再授予私有项目可见性
+  - 001 升级脚本新增第 7 节，重建 pam_search_projects
+  - PAMProjectRepo 旧搜索兜底读取成员身份时同样过滤
+
+- **pam:** 列表行覆盖层改为按钮，悬停不再显示详情页链接 ([bd6baae](https://github.com/qlover/brain-toolkit/commit/bd6baae8600e10c038e4e4f36a1348a67eb45874)) ([#180](https://github.com/qlover/brain-toolkit/pull/180))
+
+  有抽屉时整行是打开抽屉的按钮而非 <a>，避免悬停显示地址却打开抽屉；
+  跳转详情页只由项目名链接负责。
+
+- **pam:** 更新 Brain 登录按钮提示文案，去掉仅本地可用的说明 ([551f3b1](https://github.com/qlover/brain-toolkit/commit/551f3b10703c9a16f0dd922149a54ab4ec97ecb4)) ([#177](https://github.com/qlover/brain-toolkit/pull/177))
+
+- **pam:** 修复后台退出登录后页面不跳转 ([1a0f8f5](https://github.com/qlover/brain-toolkit/commit/1a0f8f578a967d4c8accc502026ec611c0a3b76a)) ([#176](https://github.com/qlover/brain-toolkit/pull/176))
+
+  后台外壳未挂载 AppBridgePages，RouterService 的跳转桥为空，
+  退出后 gotoLogin 无效果。在 AdminPagesAppShell 中挂载，
+  后台内所有 routerService 跳转随之生效。
+
+#### 📝 Documentation
+
+- **pam:** 新增项目列表与详情页原型 ([bc5f00d](https://github.com/qlover/brain-toolkit/commit/bc5f00dfd9ad135433a96da5fbb6203453f9e160)) ([#178](https://github.com/qlover/brain-toolkit/pull/178))
+  - projects：卡片占位封面、快速入口合并一行、列表按屏宽分级显示
+  - general：方案 B（概览 tab）为确认方案，方案 A 保留对比
+
+- **pam:** 原型增加列表查看详情的多种交互方案 ([b5db174](https://github.com/qlover/brain-toolkit/commit/b5db1748d46a11865ff3457d309e85a295896c02)) ([#178](https://github.com/qlover/brain-toolkit/pull/178))
+  - A 抽屉（≥1280px 可钉成分栏）、B 行内展开、C 详细列表、D 预览弹窗
+  - E iOS 风格展开卡片：行原地放大成卡片，关闭缩回；手机四周留间隙、可下拉关闭
+  - 手机端统一底部面板（E 除外）
+
+#### ♻️ Refactors
+
+- **pam:** 移动端展开卡片改用 element-sizer 的 useElementZoom ([7993e7a](https://github.com/qlover/brain-toolkit/commit/7993e7abf589f200d19df1e9bc30c8567681a27c)) ([#179](https://github.com/qlover/brain-toolkit/pull/179))
+
+  删除 PAM 内手写的展开动画，改为依赖 @brain-toolkit/element-sizer；
+  新增依赖并加入 transpilePackages。
+
 ## 2.14.0
 
 ### Minor Changes

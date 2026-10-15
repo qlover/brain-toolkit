@@ -1,5 +1,25 @@
 # @brain-toolkit/element-sizer
 
+## 0.4.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **element-sizer:** 新增 ElementZoom iOS 风格展开卡片与 React hook ([11bf563](https://github.com/qlover/brain-toolkit/commit/11bf563332d07051da66da44267bafc4c708b6b6)) ([#179](https://github.com/qlover/brain-toolkit/pull/179))
+  - ElementZoom：卡片按最终尺寸布局，只动画 transform + clip-path
+    （Web Animations API），可中途打断，支持下拉关闭
+  - 新增 lockBodyScroll、bindHistoryBack 辅助函数
+  - 新增 @brain-toolkit/element-sizer/react 入口：useElementZoom，
+    react 为可选 peer 依赖
+  - exports 在工作区指向 src，发布时由 publishConfig 切到 dist
+  - 补充测试与中英文文档，添加 changeset
+
+#### 🐞 Bug Fixes
+
+- **element-sizer:** 补充 @types/react-dom，修复根目录 type-check ([6e36880](https://github.com/qlover/brain-toolkit/commit/6e3688060c6a08ef455ea80f279020689ba59b5b)) ([#179](https://github.com/qlover/brain-toolkit/pull/179))
+  新增 `ElementZoom`：iOS 风格展开卡片（Web Animations API + clip-path，可打断、下拉关闭），附 `lockBodyScroll`、`bindHistoryBack` 辅助函数；新增 `@brain-toolkit/element-sizer/react` 入口提供 `useElementZoom`（react 为可选 peer 依赖）。
+
 ## 0.3.1
 
 ### Patch Changes

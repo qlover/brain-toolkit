@@ -1,5 +1,16 @@
 # apps/brain-oauth
 
+## 2.4.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **brain-oauth:** userinfo 返回登录环境 brain_env ([d191742](https://github.com/qlover/brain-toolkit/commit/d191742e37c9600d9e485048b049750c5ae4dee9)) ([#177](https://github.com/qlover/brain-toolkit/pull/177))
+
+  sub 按 Brain 环境区分，接入方需要知道该身份属于哪个环境；
+  值取自签发 access token 时记录的环境。
+
 ## 2.3.0
 
 ### Minor Changes
