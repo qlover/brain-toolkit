@@ -332,7 +332,7 @@ export class PAMController {
   }
 
   /**
-   * Decrypted dotenv export for CLI (`pam_environments_export`).
+   * Dotenv export for CLI (`pam_environments_export`); sensitive values blanked.
    *
    * @param projectId - Project id path param
    * @param envId - Environment id path param

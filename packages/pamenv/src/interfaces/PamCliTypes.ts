@@ -57,7 +57,7 @@ export type PamCliEnvironmentSummaryType = {
 };
 
 /**
- * Decrypted export payload from PAM.
+ * Export payload from PAM; sensitive values are always empty.
  */
 export type PamCliExportResultType = {
   readonly projectId: string;
@@ -67,14 +67,14 @@ export type PamCliExportResultType = {
   readonly content: string;
   readonly sensitiveKeys?: readonly string[];
   /**
-   * Preferred source for pull: decrypted variables with raw comment lines.
+   * Preferred source for pull: variables with raw comment lines.
    * Older servers may omit this; CLI falls back to parsing `content`.
    */
   readonly variables?: readonly PamCliExportVariableType[];
 };
 
 /**
- * One decrypted variable from export (may include comments).
+ * One variable from export (may include comments).
  */
 export type PamCliExportVariableType = {
   readonly key: string;

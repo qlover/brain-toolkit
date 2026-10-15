@@ -34,7 +34,7 @@ export const PamCliTokenResponseSchema = z.object({
 export type PamCliTokenResponse = z.infer<typeof PamCliTokenResponseSchema>;
 
 /**
- * Owner-only decrypted environment export payload.
+ * Environment export payload; sensitive values are always empty.
  */
 export const PamCliExportResponseSchema = z.object({
   projectId: z.string().uuid(),

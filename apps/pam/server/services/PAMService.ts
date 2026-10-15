@@ -1417,10 +1417,10 @@ export class PAMService implements PAMServiceInterface {
     const sensitiveKeys = normalized
       .filter((variable) => variable.sensitive === true)
       .map((variable) => variable.key);
-    const decrypted =
-      this.getSecretEncryption().decryptSensitiveVariables(normalized);
-    const content = PAMEnvDotenvSerializeUtil.serialize(decrypted);
-    const variables = decrypted.map((variable) => ({
+    // Sensitive values only leave the server via resolve (process injection).
+    const redacted = PAMEnvVariableRedactUtil.redactVariables(normalized) ?? [];
+    const content = PAMEnvDotenvSerializeUtil.serialize(redacted);
+    const variables = redacted.map((variable) => ({
       key: variable.key,
       value: variable.value,
       sensitive: variable.sensitive === true,

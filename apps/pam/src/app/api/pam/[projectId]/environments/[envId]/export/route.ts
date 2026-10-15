@@ -13,7 +13,7 @@ type ExportRouteContext = {
 
 /**
  * GET /api/pam/:projectId/environments/:envId/export
- * Decrypted dotenv export (CLI Bearer + permission uid).
+ * Dotenv export with sensitive values blanked (CLI Bearer + permission uid).
  */
 export async function GET(req: NextRequest, context: ExportRouteContext) {
   const { projectId, envId } = await context.params;

@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PushCommand } from '../src/commands/PushCommand';
+import { RenderCommand } from '../src/commands/RenderCommand';
 import { RunCommand } from '../src/commands/RunCommand';
+import type { PamCliParsedVarType } from '../src/impls/PamCliDotenvUtil';
 import { PamCliOutputAdapterRegistry } from '../src/impls/PamCliOutputAdapters';
 import { PamCliProjectAccessUtil } from '../src/impls/PamCliProjectAccessUtil';
 import { PamCliRunWarningUtil } from '../src/impls/PamCliRunWarningUtil';
@@ -185,5 +188,115 @@ describe('PamCliProjectAccessUtil inject / export', () => {
     const writer: PamCliProjectType = { ...base, can_edit: true };
     expect(PamCliProjectAccessUtil.canInject(writer)).toBe(true);
     expect(PamCliProjectAccessUtil.canExport(writer)).toBe(false);
+  });
+});
+
+describe('RenderCommand sensitive values', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('omits sensitive variables from the output', async () => {
+    const project: PamCliProjectType = {
+      id: 'p1',
+      slug: 'app',
+      name: 'App',
+      my_role: 'admin',
+      environments: [{ id: 'e1', name: 'local' }]
+    };
+    const api = {
+      listProjects: async () => [project],
+      exportEnvironment: async () => ({
+        projectId: 'p1',
+        projectSlug: 'app',
+        environmentId: 'e1',
+        environmentName: 'local',
+        content: '',
+        sensitiveKeys: ['TOKEN'],
+        variables: [
+          { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+          { key: 'TOKEN', value: '', sensitive: true }
+        ]
+      })
+    };
+    const stdout = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await new RenderCommand(api as never).run('app', {
+      envName: 'local',
+      format: 'json'
+    });
+
+    expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toEqual({
+      API_URL: 'https://x.dev'
+    });
+    expect(String(stderr.mock.calls[0]?.[0])).toContain(
+      'render_sensitive_omitted'
+    );
+  });
+});
+
+describe('PushCommand sensitive values', () => {
+  class TestPushCommand extends PushCommand {
+    public clear(
+      variables: PamCliParsedVarType[],
+      remote: ReadonlySet<string>
+    ): ReturnType<PushCommand['clearSensitiveValues']> {
+      return this.clearSensitiveValues(variables, remote);
+    }
+
+    public assertPresent(
+      variables: PamCliParsedVarType[],
+      remote: ReadonlySet<string>
+    ): void {
+      this.assertSensitiveValuesPresent(variables, 'local', remote);
+    }
+  }
+
+  const parsed = (
+    key: string,
+    value: string,
+    sensitive: boolean
+  ): PamCliParsedVarType => ({
+    key,
+    value,
+    sensitive,
+    comments: [],
+    trailingComment: ''
+  });
+
+  const push = new TestPushCommand(null as never, null as never);
+
+  it('clears sensitive values (local marker or remote) after push', () => {
+    const result = push.clear(
+      [
+        parsed('API_URL', 'https://x.dev', false),
+        parsed('NEW_SECRET', 's1', true),
+        parsed('OLD_SECRET', 's2', false),
+        parsed('KEPT_SECRET', '', false)
+      ],
+      new Set(['OLD_SECRET', 'KEPT_SECRET'])
+    );
+    expect(result.keys).toEqual(['NEW_SECRET', 'OLD_SECRET']);
+    expect(result.variables.map((item) => [item.key, item.value])).toEqual([
+      ['API_URL', 'https://x.dev'],
+      ['NEW_SECRET', ''],
+      ['OLD_SECRET', ''],
+      ['KEPT_SECRET', '']
+    ]);
+    expect(result.variables.slice(1).every((item) => item.sensitive)).toBe(
+      true
+    );
+  });
+
+  it('empty value keeps an existing remote secret, but not a new one', () => {
+    expect(() =>
+      push.assertPresent([parsed('OLD_SECRET', '', true)], new Set(['OLD_SECRET']))
+    ).not.toThrow();
+    expect(() =>
+      push.assertPresent([parsed('NEW_SECRET', '', true)], new Set())
+    ).toThrow();
   });
 });
