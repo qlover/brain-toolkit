@@ -5,10 +5,11 @@ import {
   TeamRoleKey
 } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
-import type {
-  PamTeamMemberItem,
-  PamTeamMemberRow,
-  PamTeamRole
+import {
+  isTeamMembershipEffective,
+  type PamTeamMemberItem,
+  type PamTeamMemberRow,
+  type PamTeamRole
 } from '@schemas/PamTeamSchema';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 
@@ -17,6 +18,7 @@ const TABLE = 'pam_role_team_members';
 type MemberRoleJoin = {
   role_id: string;
   pam_roles: { key: string } | null;
+  pam_role_teams: { slug: string } | null;
 };
 
 @injectable()
@@ -35,7 +37,7 @@ export class PamTeamMembersRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
       .from(TABLE)
-      .select('role_id, pam_roles ( key )')
+      .select('role_id, pam_roles ( key ), pam_role_teams ( slug )')
       .eq('team_id', teamId)
       .eq('user_id', userId)
       .eq('status', 'active')
@@ -43,19 +45,29 @@ export class PamTeamMembersRepo {
     this.supabaseBridge.throwIfError(result);
 
     const row = result.data as unknown as MemberRoleJoin | null;
-    return legacyTeamRoleFromKey(row?.pam_roles?.key);
+    if (!row || !isTeamMembershipEffective(row.pam_role_teams?.slug, userId)) {
+      return null;
+    }
+    return legacyTeamRoleFromKey(row.pam_roles?.key);
   }
 
   public async listActiveTeamIdsForUser(userId: string): Promise<string[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
       .from(TABLE)
-      .select('team_id')
+      .select('team_id, pam_role_teams ( slug )')
       .eq('user_id', userId)
       .eq('status', 'active');
     this.supabaseBridge.throwIfError(result);
 
-    return (result.data ?? []).map((row) => row.team_id as string);
+    const rows = (result.data ?? []) as unknown as Array<
+      Pick<MemberRoleJoin, 'pam_role_teams'> & { team_id: string }
+    >;
+    return rows
+      .filter((row) =>
+        isTeamMembershipEffective(row.pam_role_teams?.slug, userId)
+      )
+      .map((row) => row.team_id);
   }
 
   public async listByTeamId(teamId: string): Promise<PamTeamMemberItem[]> {
@@ -207,7 +219,7 @@ export class PamTeamMembersRepo {
 
     const membersResult = await supabase
       .from(TABLE)
-      .select('team_id, role_id, pam_roles ( key )')
+      .select('team_id, role_id, pam_roles ( key ), pam_role_teams ( slug )')
       .eq('user_id', userId)
       .eq('status', 'active')
       .in('team_id', teamIds);
@@ -217,6 +229,9 @@ export class PamTeamMembersRepo {
       (membersResult.data ?? [])
         .map((m) => {
           const join = m as unknown as MemberRoleJoin & { team_id: string };
+          if (!isTeamMembershipEffective(join.pam_role_teams?.slug, userId)) {
+            return null;
+          }
           const legacy = legacyTeamRoleFromKey(join.pam_roles?.key);
           return legacy ? ([join.team_id, legacy] as const) : null;
         })

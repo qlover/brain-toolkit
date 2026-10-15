@@ -92,3 +92,14 @@ export type PamTeamDetail = PamTeamRow & {
 export function isPersonalTeamSlug(slug: string): boolean {
   return slug.startsWith('personal-');
 }
+
+/** Personal teams only ever grant access to their own user. */
+export function isTeamMembershipEffective(
+  slug: string | null | undefined,
+  userId: string
+): boolean {
+  if (!slug) {
+    return false;
+  }
+  return !isPersonalTeamSlug(slug) || slug === `personal-${userId}`;
+}

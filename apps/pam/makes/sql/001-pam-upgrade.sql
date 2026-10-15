@@ -219,3 +219,15 @@ ALTER TABLE public.pam_user_identities
 
 COMMENT ON COLUMN public.pam_user_identities.identity_data IS
   'Provider-specific snapshot from the latest login, e.g. Brain: {"env": "production", "account": "a@x.com"}.';
+
+-- #############################################################################
+-- 6) Personal teams hold only their owner
+-- #############################################################################
+-- An earlier backfill copied project collaborators into the owner's personal
+-- team, granting them every project of that owner. Slug is personal-{owner_id}.
+
+DELETE FROM public.pam_role_team_members m
+USING public.pam_role_teams t
+WHERE m.team_id = t.id
+  AND t.slug LIKE 'personal-%'
+  AND m.user_id::text <> substring(t.slug FROM 10);
