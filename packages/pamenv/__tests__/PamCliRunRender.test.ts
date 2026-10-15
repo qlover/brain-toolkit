@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { PushCommand } from '../src/commands/PushCommand';
 import { RenderCommand } from '../src/commands/RenderCommand';
 import { RunCommand } from '../src/commands/RunCommand';
+import { PamCliApiError } from '../src/impls/PamCliApiError';
 import type { PamCliParsedVarType } from '../src/impls/PamCliDotenvUtil';
 import { PamCliOutputAdapterRegistry } from '../src/impls/PamCliOutputAdapters';
 import { PamCliProjectAccessUtil } from '../src/impls/PamCliProjectAccessUtil';
@@ -112,6 +113,91 @@ describe('RunCommand child process', () => {
     await expect(
       runner.spawn(['pamenv-command-that-does-not-exist'], process.env)
     ).rejects.toThrow();
+  });
+});
+
+describe('RunCommand variable resolution', () => {
+  class TestRunCommand extends RunCommand {
+    public resolve(
+      ref: string,
+      envName?: string
+    ): Promise<{
+      variables: readonly PamCliResolvedVarType[];
+      projectSlug: string;
+      envName: string;
+    }> {
+      return this.resolveVariables(ref, { envName });
+    }
+  }
+
+  const project: PamCliProjectType = {
+    id: 'p1',
+    slug: 'app',
+    name: 'App',
+    my_role: 'member',
+    permissions: ['pam_environments_inject'],
+    environments: [{ id: 'e1', name: 'local' }]
+  };
+  const injected = [{ key: 'TOKEN', value: 'v', sensitive: true }];
+
+  it('with -e uses one by-name request and skips the project search', async () => {
+    const listProjects = vi.fn();
+    const api = {
+      listProjects,
+      resolveEnvironmentByName: async () => ({
+        projectId: 'p1',
+        projectSlug: 'app',
+        environmentId: 'e1',
+        environmentName: 'local',
+        variables: injected
+      })
+    };
+
+    const result = await new TestRunCommand(api as never).resolve(
+      'app',
+      'local'
+    );
+    expect(result).toEqual({
+      variables: injected,
+      projectSlug: 'app',
+      envName: 'local'
+    });
+    expect(listProjects).not.toHaveBeenCalled();
+  });
+
+  it('falls back to search + resolve on API errors (e.g. older server)', async () => {
+    const api = {
+      resolveEnvironmentByName: async () => {
+        throw new PamCliApiError({ id: 'not_found', httpStatus: 404 });
+      },
+      listProjects: async () => [project],
+      resolveEnvironment: async () => ({ variables: injected })
+    };
+
+    const result = await new TestRunCommand(api as never).resolve(
+      'app',
+      'local'
+    );
+    expect(result.variables).toEqual(injected);
+    expect(result.envName).toBe('local');
+  });
+
+  it('does not retry a protected environment', async () => {
+    const listProjects = vi.fn();
+    const api = {
+      listProjects,
+      resolveEnvironmentByName: async () => {
+        throw new PamCliApiError({
+          id: 'api:pam_env_protected',
+          httpStatus: 403
+        });
+      }
+    };
+
+    await expect(
+      new TestRunCommand(api as never).resolve('app', 'local')
+    ).rejects.toBeInstanceOf(PamCliApiError);
+    expect(listProjects).not.toHaveBeenCalled();
   });
 });
 

@@ -898,6 +898,32 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * One environment by project uuid + name, including variables (admin).
+   * Callers must assert access in the service layer first.
+   */
+  public async getEnvironmentByNameAdmin(
+    projectId: string,
+    name: string
+  ): Promise<Pick<
+    PAMEnvRaw,
+    'id' | 'name' | 'url' | 'variables' | 'is_protected'
+  > | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .select('id,name,url,variables,is_protected')
+      .eq('project_id', projectId)
+      .eq('name', name)
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(result);
+
+    return result.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'variables' | 'is_protected'
+    > | null;
+  }
+
+  /**
    * Sets the protected flag on one environment (admin client).
    *
    * @param projectId - Project id

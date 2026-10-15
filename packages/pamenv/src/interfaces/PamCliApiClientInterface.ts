@@ -5,6 +5,7 @@ import type {
   PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
+  PamCliResolveByNameResultType,
   PamCliResolveResultType,
   PamCliVariableInputType
 } from './PamCliTypes';
@@ -148,6 +149,20 @@ export interface PamCliApiClientInterface {
     envId: string,
     keys?: readonly string[]
   ): Promise<PamCliResolveResultType>;
+
+  /**
+   * Same as {@link resolveEnvironment}, by project slug/id + environment name
+   * (one request, no project search).
+   *
+   * @param projectRef - Exact project slug or uuid
+   * @param envName - Environment name
+   * @param keys - Optional key filter (`--only`)
+   */
+  resolveEnvironmentByName(
+    projectRef: string,
+    envName: string,
+    keys?: readonly string[]
+  ): Promise<PamCliResolveByNameResultType>;
 
   /**
    * Replaces the full variable list for one environment (owner only).

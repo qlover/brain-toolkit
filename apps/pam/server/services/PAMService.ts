@@ -6,6 +6,7 @@ import {
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { uuidSchema } from '@qlover/next-kit/common';
 import { headers } from 'next/headers';
+import { after } from 'next/server';
 import { v4 as uuid } from 'uuid';
 import { hasOrgPermission } from '@shared/auth/orgRole';
 import { PermissionKey } from '@shared/auth/permissionKeys';
@@ -44,6 +45,8 @@ import type {
   PAMEnvCreate,
   PAMEnvReplaceVariables,
   PAMEnvResolve,
+  PAMEnvResolveByName,
+  PAMEnvResolvedEnvironment,
   PAMEnvResolvedVariable,
   PAMEnvSettings,
   PAMEnvWriteable,
@@ -153,6 +156,12 @@ export class PAMService implements PAMServiceInterface {
   private readonly accessRoleByUserProject = new Map<
     string,
     Promise<PAMProjectAccessRole>
+  >();
+
+  /** Request-scoped `${projectRef}:${permissionKey}` → permission check. */
+  private readonly orgPermissionChecks = new Map<
+    string,
+    Promise<{ userId: string; role: PAMProjectAccessRole }>
   >();
 
   protected secretEncryption: PAMEnvSecretEncryption | null = null;
@@ -306,15 +315,32 @@ export class PAMService implements PAMServiceInterface {
     projectId: string,
     permissionKey: string
   ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
-    await this.permissionService.ensureLoaded();
-    const user =
-      (await this.userService.getSessionUser()) ??
-      (await this.userService.getUser(true));
+    const cacheKey = `${projectId}:${permissionKey}`;
+    let pending = this.orgPermissionChecks.get(cacheKey);
+    if (!pending) {
+      pending = this.checkOrgPermission(projectId, permissionKey);
+      this.orgPermissionChecks.set(cacheKey, pending);
+    }
+    return pending;
+  }
+
+  protected async checkOrgPermission(
+    projectId: string,
+    permissionKey: string
+  ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
+    const accessPending = this.loadProjectAccess(projectId);
+    // Avoid an unhandled rejection when the user check throws first.
+    accessPending.catch(() => undefined);
+    const [, sessionUser] = await Promise.all([
+      this.permissionService.ensureLoaded(),
+      this.userService.getSessionUser()
+    ]);
+    const user = sessionUser ?? (await this.userService.getUser(true));
     if (!user) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    const access = await this.loadProjectAccess(projectId);
+    const access = await accessPending;
     if (!access) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
@@ -1267,50 +1293,109 @@ export class PAMService implements PAMServiceInterface {
     params: PAMEnvResolve,
     context: PAMEnvAccessContext
   ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
+    const ownedPending = this.prefetchEnvironmentForExport(projectId, envId);
     const { userId, role } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_inject
     );
 
-    const owned = await this.projectRepo.getEnvironmentForExport(
-      projectId,
-      envId
-    );
+    const owned = await ownedPending;
     if (!owned) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
+    const variables = await this.decryptForInjection(
+      { userId, role, projectId },
+      owned.environment,
+      params,
+      context
+    );
+    return { variables };
+  }
+
+  /**
+   * @override
+   */
+  public async resolveEnvironmentByName(
+    projectRef: string,
+    params: PAMEnvResolveByName,
+    context: PAMEnvAccessContext
+  ): Promise<PAMEnvResolvedEnvironment> {
+    const { userId, role } = await this.assertOrgPermission(
+      projectRef,
+      PermissionKey.pam_environments_inject
+    );
+    const access = await this.loadProjectAccess(projectRef);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const environment = await this.projectRepo.getEnvironmentByNameAdmin(
+      access.id,
+      params.env
+    );
+    if (!environment) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const variables = await this.decryptForInjection(
+      { userId, role, projectId: access.id },
+      environment,
+      params,
+      context
+    );
+    return {
+      projectId: access.id,
+      projectSlug: access.slug,
+      environmentId: environment.id,
+      environmentName: environment.name,
+      variables
+    };
+  }
+
+  /**
+   * Protected check, key filter, decrypt, and audit for process injection.
+   */
+  protected async decryptForInjection(
+    actor: { userId: string; role: PAMProjectAccessRole; projectId: string },
+    environment: {
+      id: string;
+      name: string;
+      variables?: PAMVariable[] | null;
+      is_protected?: boolean | null;
+    },
+    params: PAMEnvResolve,
+    context: PAMEnvAccessContext
+  ): Promise<PAMEnvResolvedVariable[]> {
     if (
-      owned.environment.is_protected === true &&
-      !hasOrgPermission(role, PermissionKey.pam_environments_export)
+      environment.is_protected === true &&
+      !hasOrgPermission(actor.role, PermissionKey.pam_environments_export)
     ) {
       throw new ExecutorError(API_PAM_ENV_PROTECTED);
     }
 
     const wanted = params.keys?.length ? new Set(params.keys) : null;
     const normalized = PAMEnvVariableNormalizeUtil.normalizeVariables(
-      owned.environment.variables
+      environment.variables
     ).filter((variable) => !wanted || wanted.has(variable.key));
     const decrypted =
       this.getSecretEncryption().decryptSensitiveVariables(normalized);
 
     await this.writeEnvAccessLog({
-      userId,
-      projectId,
-      environmentId: owned.environment.id,
-      environmentName: owned.environment.name,
+      userId: actor.userId,
+      projectId: actor.projectId,
+      environmentId: environment.id,
+      environmentName: environment.name,
       action: 'resolve',
       keyCount: decrypted.length,
       context
     });
 
-    return {
-      variables: decrypted.map((variable) => ({
-        key: variable.key,
-        value: variable.value,
-        sensitive: variable.sensitive === true
-      }))
-    };
+    return decrypted.map((variable) => ({
+      key: variable.key,
+      value: variable.value,
+      sensitive: variable.sensitive === true
+    }));
   }
 
   /**
@@ -1349,9 +1434,33 @@ export class PAMService implements PAMServiceInterface {
   }
 
   /**
-   * Records who decrypted an environment. Never blocks the response.
+   * Starts loading the environment while permissions are checked; the result
+   * must only be used after the permission check passes.
    */
-  protected async writeEnvAccessLog(input: {
+  protected prefetchEnvironmentForExport(
+    projectId: string,
+    envId: string
+  ): ReturnType<PAMProjectRepo['getEnvironmentForExport']> {
+    const pending = this.projectRepo.getEnvironmentForExport(projectId, envId);
+    pending.catch(() => undefined);
+    return pending;
+  }
+
+  /**
+   * Records who read an environment after the response is sent (falls back to
+   * awaiting outside a Next request scope). Never fails the request.
+   */
+  protected async writeEnvAccessLog(
+    input: Parameters<PAMService['insertEnvAccessLog']>[0]
+  ): Promise<void> {
+    try {
+      after(() => this.insertEnvAccessLog(input));
+    } catch {
+      await this.insertEnvAccessLog(input);
+    }
+  }
+
+  protected async insertEnvAccessLog(input: {
     userId: string;
     projectId: string;
     environmentId: string;
@@ -1397,16 +1506,13 @@ export class PAMService implements PAMServiceInterface {
       comments?: string[];
     }>;
   }> {
+    const ownedPending = this.prefetchEnvironmentForExport(projectId, envId);
     const { userId } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_export
     );
 
-    const owned = await this.projectRepo.getEnvironmentForExport(
-      projectId,
-      envId
-    );
-
+    const owned = await ownedPending;
     if (!owned) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }

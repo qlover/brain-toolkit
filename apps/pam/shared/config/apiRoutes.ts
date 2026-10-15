@@ -297,6 +297,15 @@ export const API_PAM_ENVIRONMENTS_VARIABLES =
   '/api/pam/:projectId/environments/:envId/variables' as const;
 
 /**
+ * API path: `/api/pam/:projectId/resolve`
+ *
+ * @see [src/app/api/pam/[projectId]/resolve/route.ts](../../src/app/api/pam/[projectId]/resolve/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/resolve/route.ts`
+ */
+export const API_PAM_RESOLVE = '/api/pam/:projectId/resolve' as const;
+
+/**
  * API path: `/api/pam/categories`
  *
  * @see [src/app/api/pam/categories/route.ts](../../src/app/api/pam/categories/route.ts)
@@ -683,6 +692,7 @@ export type ApiRoutePath =
   | typeof API_PAM_ENVIRONMENTS_RESOLVE
   | typeof API_PAM_ENVIRONMENTS_SETTINGS
   | typeof API_PAM_ENVIRONMENTS_VARIABLES
+  | typeof API_PAM_RESOLVE
   | typeof API_PAM_CATEGORIES
   | typeof API_PAM_CLI_DEVICE_APPROVE
   | typeof API_PAM_CLI_DEVICE_CODE

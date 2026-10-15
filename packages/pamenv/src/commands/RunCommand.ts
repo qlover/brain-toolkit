@@ -10,6 +10,7 @@ import {
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
+import { PamCliApiError } from '../impls/PamCliApiError';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
 import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
@@ -26,6 +27,9 @@ export type PamCliRunOptionsType = {
 };
 
 const FORWARDED_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
+
+/** Server error id (`API_PAM_ENV_PROTECTED` in apps/pam). */
+const PAM_API_ENV_PROTECTED = 'api:pam_env_protected';
 
 /**
  * `pamenv run` — inject decrypted variables into a child process.
@@ -56,25 +60,9 @@ export class RunCommand {
       );
     }
 
-    const project = await PamCliProjectResolveUtil.resolve(
-      this.apiClient,
-      projectRef
-    );
-    if (!PamCliProjectAccessUtil.canInject(project)) {
-      throw new Error(
-        PamCliI18n.t(PAMENV_CLI_NO_INJECT_PERMISSION, { slug: project.slug })
-      );
-    }
-
-    const env = PamCliEnvironmentSelectUtil.select(
-      project.environments,
-      options.envName,
-      project.slug
-    );
-    const { variables } = await this.apiClient.resolveEnvironment(
-      project.id,
-      env.id,
-      options.only
+    const { variables, projectSlug, envName } = await this.resolveVariables(
+      projectRef,
+      options
     );
 
     if (options.only && options.only.length > 0) {
@@ -104,12 +92,71 @@ export class RunCommand {
     console.error(
       PamCliI18n.t(PAMENV_CLI_RUN_INJECTED, {
         count: String(variables.length),
-        slug: project.slug,
-        env: env.name
+        slug: projectSlug,
+        env: envName
       })
     );
 
     return this.spawnChild(command, childEnv);
+  }
+
+  /**
+   * With `-e`: one request by project ref + env name. Any API error (older
+   * server, slug substring, missing permission) falls back to search + resolve
+   * for the usual CLI messages; a protected env fails the same either way.
+   */
+  protected async resolveVariables(
+    projectRef: string,
+    options: PamCliRunOptionsType
+  ): Promise<{
+    variables: readonly PamCliResolvedVarType[];
+    projectSlug: string;
+    envName: string;
+  }> {
+    const wantedEnv = options.envName?.trim();
+    if (wantedEnv && projectRef.trim()) {
+      try {
+        const result = await this.apiClient.resolveEnvironmentByName(
+          projectRef.trim(),
+          wantedEnv,
+          options.only
+        );
+        return {
+          variables: result.variables,
+          projectSlug: result.projectSlug,
+          envName: result.environmentName
+        };
+      } catch (error) {
+        if (
+          !(error instanceof PamCliApiError) ||
+          error.id === PAM_API_ENV_PROTECTED
+        ) {
+          throw error;
+        }
+      }
+    }
+
+    const project = await PamCliProjectResolveUtil.resolve(
+      this.apiClient,
+      projectRef
+    );
+    if (!PamCliProjectAccessUtil.canInject(project)) {
+      throw new Error(
+        PamCliI18n.t(PAMENV_CLI_NO_INJECT_PERMISSION, { slug: project.slug })
+      );
+    }
+
+    const env = PamCliEnvironmentSelectUtil.select(
+      project.environments,
+      options.envName,
+      project.slug
+    );
+    const { variables } = await this.apiClient.resolveEnvironment(
+      project.id,
+      env.id,
+      options.only
+    );
+    return { variables, projectSlug: project.slug, envName: env.name };
   }
 
   /**

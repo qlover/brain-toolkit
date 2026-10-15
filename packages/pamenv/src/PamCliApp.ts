@@ -386,6 +386,7 @@ export class PamCliApp {
    */
   public async formatCliError(error: unknown): Promise<string> {
     if (error instanceof PamCliApiError) {
+      await PamCliI18n.hydrateFromApiOnce(this.authStore);
       return error.formatForCli((id) => PamCliI18n.lookup(id));
     }
     return error instanceof Error ? error.message : String(error);
