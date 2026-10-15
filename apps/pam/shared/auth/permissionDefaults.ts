@@ -60,7 +60,7 @@ const ORG_MEMBER = [
   PermissionKey.pam_environments_read,
   PermissionKey.pam_environments_create,
   PermissionKey.pam_environments_variables_write,
-  PermissionKey.pam_environments_export,
+  PermissionKey.pam_environments_inject,
   PermissionKey.pam_project_edit,
   PermissionKey.pam_project_preview_write,
   ...TEAM_MEMBER
@@ -69,6 +69,7 @@ const ORG_MEMBER = [
 const ORG_ADMIN = [
   ...ORG_MEMBER,
   PermissionKey.pam_environments_delete,
+  PermissionKey.pam_environments_export,
   ...TEAM_ADMIN
 ] as const;
 

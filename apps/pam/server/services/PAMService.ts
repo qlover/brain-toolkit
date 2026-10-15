@@ -22,6 +22,7 @@ import {
   API_PAM_ENV_ID_NOT_EXISTS,
   API_PAM_ENV_NAME_EXISTS,
   API_PAM_ENV_NOT_FOUND,
+  API_PAM_ENV_PROTECTED,
   API_PAM_PROJECT_NOT_FOUND,
   API_PAM_SLUG_EXISTS,
   API_PAM_TRANSFER_TO_SELF,
@@ -34,10 +35,17 @@ import {
   API_PAM_VARIABLE_KEY_DUPLICATE,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
+import { I } from '@config/ioc-identifiter';
 import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type {
+  PAMEnvAccessAction,
+  PAMEnvAccessContext,
+  PAMEnvAccessLog,
   PAMEnvCreate,
   PAMEnvReplaceVariables,
+  PAMEnvResolve,
+  PAMEnvResolvedVariable,
+  PAMEnvSettings,
   PAMEnvWriteable,
   PAMVariable
 } from '@schemas/PAMEnvironmentSchema';
@@ -61,6 +69,7 @@ import type {
   PAMServiceInterface,
   ProjectDetailParams
 } from '@server/interfaces/PAMServiceInterface';
+import { PamEnvAccessLogsRepo } from '@server/repositorys/PamEnvAccessLogsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamTeamMembersRepo } from '@server/repositorys/PamTeamMembersRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
@@ -79,6 +88,7 @@ import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';
 import { PamPermissionService } from './PamPermissionService';
 import { PamTeamService } from './PamTeamService';
+import type { LoggerInterface } from '@qlover/logger';
 
 const AUTH_USERS_SEARCH_CACHE_TTL_MS = 45_000;
 const AUTH_USERS_SEARCH_LIMIT = 20;
@@ -117,6 +127,12 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(PamTeamMembersRepo)
   protected readonly teamMembersRepo!: PamTeamMembersRepo;
+
+  @inject(PamEnvAccessLogsRepo)
+  protected readonly envAccessLogsRepo!: PamEnvAccessLogsRepo;
+
+  @inject(I.Logger)
+  protected readonly logger!: LoggerInterface;
 
   /** Coalesce identical in-flight searches (real-time; not a result cache). */
   private readonly searchInflight = new Map<
@@ -1245,9 +1261,128 @@ export class PAMService implements PAMServiceInterface {
   /**
    * @override
    */
-  public async exportEnvironment(
+  public async resolveEnvironment(
+    projectId: string,
+    envId: string,
+    params: PAMEnvResolve,
+    context: PAMEnvAccessContext
+  ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
+    const { userId, role } = await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_inject
+    );
+
+    const owned = await this.projectRepo.getEnvironmentForExport(
+      projectId,
+      envId
+    );
+    if (!owned) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    if (
+      owned.environment.is_protected === true &&
+      !hasOrgPermission(role, PermissionKey.pam_environments_export)
+    ) {
+      throw new ExecutorError(API_PAM_ENV_PROTECTED);
+    }
+
+    const wanted = params.keys?.length ? new Set(params.keys) : null;
+    const normalized = PAMEnvVariableNormalizeUtil.normalizeVariables(
+      owned.environment.variables
+    ).filter((variable) => !wanted || wanted.has(variable.key));
+    const decrypted =
+      this.getSecretEncryption().decryptSensitiveVariables(normalized);
+
+    await this.writeEnvAccessLog({
+      userId,
+      projectId,
+      environmentId: owned.environment.id,
+      environmentName: owned.environment.name,
+      action: 'resolve',
+      keyCount: decrypted.length,
+      context
+    });
+
+    return {
+      variables: decrypted.map((variable) => ({
+        key: variable.key,
+        value: variable.value,
+        sensitive: variable.sensitive === true
+      }))
+    };
+  }
+
+  /**
+   * @override
+   */
+  public async updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    params: PAMEnvSettings
+  ): Promise<PAMEnvWriteable> {
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_export
+    );
+
+    const updated = await this.projectRepo.updateEnvironmentProtectedAdmin(
+      projectId,
+      envId,
+      params.isProtected
+    );
+    return this.redactEnvironment(updated);
+  }
+
+  /**
+   * @override
+   */
+  public async listEnvironmentAccessLogs(
     projectId: string,
     envId: string
+  ): Promise<PAMEnvAccessLog[]> {
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_export
+    );
+    return this.envAccessLogsRepo.listByEnvironment(projectId, envId);
+  }
+
+  /**
+   * Records who decrypted an environment. Never blocks the response.
+   */
+  protected async writeEnvAccessLog(input: {
+    userId: string;
+    projectId: string;
+    environmentId: string;
+    environmentName: string;
+    action: PAMEnvAccessAction;
+    keyCount: number;
+    context?: PAMEnvAccessContext;
+  }): Promise<void> {
+    try {
+      await this.envAccessLogsRepo.insert({
+        userId: input.userId,
+        projectId: input.projectId,
+        environmentId: input.environmentId,
+        environmentName: input.environmentName,
+        action: input.action,
+        keyCount: input.keyCount,
+        client: input.context?.client ?? null,
+        ip: input.context?.ip ?? null
+      });
+    } catch (error) {
+      this.logger.error('PAM env access log insert failed', { error });
+    }
+  }
+
+  /**
+   * @override
+   */
+  public async exportEnvironment(
+    projectId: string,
+    envId: string,
+    context?: PAMEnvAccessContext
   ): Promise<{
     projectId: string;
     projectSlug: string;
@@ -1262,7 +1397,7 @@ export class PAMService implements PAMServiceInterface {
       comments?: string[];
     }>;
   }> {
-    await this.assertOrgPermission(
+    const { userId } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_export
     );
@@ -1293,6 +1428,16 @@ export class PAMService implements PAMServiceInterface {
         ? { comments: [...variable.comments] }
         : {})
     }));
+
+    await this.writeEnvAccessLog({
+      userId,
+      projectId,
+      environmentId: owned.environment.id,
+      environmentName: owned.environment.name,
+      action: 'export',
+      keyCount: variables.length,
+      context
+    });
 
     return {
       projectId,

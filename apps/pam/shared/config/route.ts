@@ -5,8 +5,10 @@ import {
   API_PAM_DETAIL,
   API_PAM_EDIT,
   API_PAM_ENVIRONMENTS,
+  API_PAM_ENVIRONMENTS_ACCESS_LOGS,
   API_PAM_ENVIRONMENTS_DELETE,
   API_PAM_ENVIRONMENTS_EXPORT,
+  API_PAM_ENVIRONMENTS_SETTINGS,
   API_PAM_ENVIRONMENTS_VARIABLES,
   API_PAM_FORK,
   API_PAM_TRANSFER,
@@ -632,6 +634,26 @@ export function buildApiPamEnvironmentVariables(
   envId: string
 ): string {
   return buildApiWithPath(API_PAM_ENVIRONMENTS_VARIABLES, {
+    projectId,
+    envId
+  });
+}
+
+export function buildApiPamEnvironmentSettings(
+  projectId: string,
+  envId: string
+): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS_SETTINGS, {
+    projectId,
+    envId
+  });
+}
+
+export function buildApiPamEnvironmentAccessLogs(
+  projectId: string,
+  envId: string
+): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS_ACCESS_LOGS, {
     projectId,
     envId
   });

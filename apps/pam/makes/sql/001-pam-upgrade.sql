@@ -491,3 +491,57 @@ $$;
 
 REVOKE ALL ON FUNCTION pam_search_projects(uuid, text, text, text, int, int, boolean, boolean, text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION pam_search_projects(uuid, text, text, text, int, int, boolean, boolean, text, text) TO service_role;
+
+-- #############################################################################
+-- 8) pamenv v2: inject permission, export for admin/owner only, protected env,
+--    access audit
+-- #############################################################################
+-- team_member loses pam_environments_export (pull/render); it keeps
+-- pam_environments_inject (pamenv run).
+
+INSERT INTO public.pam_role_permissions (permission_key, type, method, path, description)
+VALUES
+  ('pam_environments_inject', 'api', 'post', '/api/pam/:projectId/environments/:envId/resolve', 'Resolve environment variables for process injection')
+ON CONFLICT (permission_key) DO NOTHING;
+
+INSERT INTO public.pam_role_assignments (role_id, permission_key)
+SELECT r.id, 'pam_environments_inject'
+FROM public.pam_roles r
+WHERE r.key IN ('team_member', 'team_admin', 'team_owner')
+ON CONFLICT DO NOTHING;
+
+DELETE FROM public.pam_role_assignments a
+USING public.pam_roles r
+WHERE a.role_id = r.id
+  AND r.key = 'team_member'
+  AND a.permission_key = 'pam_environments_export';
+
+ALTER TABLE public.pam_environments
+  ADD COLUMN IF NOT EXISTS is_protected BOOLEAN NOT NULL DEFAULT FALSE;
+
+COMMENT ON COLUMN public.pam_environments.is_protected IS
+  'Protected env: resolve (pamenv run) also requires pam_environments_export.';
+
+CREATE TABLE IF NOT EXISTS public.pam_env_access_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  project_id UUID NOT NULL REFERENCES public.pam_projects (id) ON DELETE CASCADE,
+  environment_id UUID REFERENCES public.pam_environments (id) ON DELETE SET NULL,
+  environment_name TEXT NOT NULL,
+  action TEXT NOT NULL CHECK (action IN ('resolve', 'export')),
+  key_count INT NOT NULL DEFAULT 0,
+  client TEXT,
+  ip TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE public.pam_env_access_logs IS
+  'Who decrypted which environment and when (pamenv run / pull / render). Service-role only.';
+
+CREATE INDEX IF NOT EXISTS idx_pam_env_access_logs_env_created
+  ON public.pam_env_access_logs (environment_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_pam_env_access_logs_project_created
+  ON public.pam_env_access_logs (project_id, created_at DESC);
+
+ALTER TABLE public.pam_env_access_logs ENABLE ROW LEVEL SECURITY;

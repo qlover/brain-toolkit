@@ -589,13 +589,15 @@ export class PAMProjectRepo extends BaseRepository<
    */
   public async getEnvironmentsByProjectId(
     projectId: string
-  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>[]> {
+  ): Promise<
+    Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables' | 'is_protected'>[]
+  > {
     // Admin: used after ownership assert (Brain / CLI have no RLS session).
     const admin = this.supabaseRepo.getAdminSupabase();
 
     const r10 = await admin
       .from(PAMEnvTableName)
-      .select('id,name,url,variables')
+      .select('id,name,url,variables,is_protected')
       .eq('project_id', projectId);
     this.supabaseRepo.throwIfError(r10);
     const data = r10.data;
@@ -807,7 +809,7 @@ export class PAMProjectRepo extends BaseRepository<
       .update({ variables })
       .eq('id', envId)
       .eq('project_id', projectId)
-      .select('id,name,url,variables')
+      .select('id,name,url,variables,is_protected')
       .maybeSingle();
     this.supabaseRepo.throwIfError(r18);
     const data = r18.data;
@@ -857,7 +859,10 @@ export class PAMProjectRepo extends BaseRepository<
     envId: string
   ): Promise<{
     projectSlug: string;
-    environment: Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>;
+    environment: Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'variables' | 'is_protected'
+    >;
   } | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
 
@@ -874,7 +879,7 @@ export class PAMProjectRepo extends BaseRepository<
 
     const envResult = await admin
       .from(PAMEnvTableName)
-      .select('id,name,url,variables')
+      .select('id,name,url,variables,is_protected')
       .eq('project_id', projectId)
       .eq('id', envId)
       .maybeSingle();
@@ -887,9 +892,38 @@ export class PAMProjectRepo extends BaseRepository<
       projectSlug: (projectResult.data as { slug: string }).slug,
       environment: envResult.data as Pick<
         PAMEnvRaw,
-        'id' | 'name' | 'url' | 'variables'
+        'id' | 'name' | 'url' | 'variables' | 'is_protected'
       >
     };
+  }
+
+  /**
+   * Sets the protected flag on one environment (admin client).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param isProtected - New flag value
+   */
+  public async updateEnvironmentProtectedAdmin(
+    projectId: string,
+    envId: string,
+    isProtected: boolean
+  ): Promise<PAMEnvWriteable> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .update({ is_protected: isProtected })
+      .eq('id', envId)
+      .eq('project_id', projectId)
+      .select('id,name,url,variables,is_protected')
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    return result.data as PAMEnvWriteable;
   }
 
   /**

@@ -24,6 +24,23 @@ describe('teamPermissions', () => {
     ).toBe(false);
   });
 
+  it('every team role can inject, only admin and owner can export', () => {
+    for (const role of ['member', 'admin', 'owner'] as const) {
+      expect(
+        hasOrgPermission(role, PermissionKey.pam_environments_inject)
+      ).toBe(true);
+    }
+    expect(
+      hasOrgPermission('member', PermissionKey.pam_environments_export)
+    ).toBe(false);
+    expect(
+      hasOrgPermission('admin', PermissionKey.pam_environments_export)
+    ).toBe(true);
+    expect(
+      hasOrgPermission('owner', PermissionKey.pam_environments_export)
+    ).toBe(true);
+  });
+
   it('only team owner can dissolve a team', () => {
     expect(hasOrgPermission('owner', PermissionKey.pam_teams_delete)).toBe(
       true

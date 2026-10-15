@@ -1,6 +1,11 @@
 import type {
+  PAMEnvAccessContext,
+  PAMEnvAccessLog,
   PAMEnvCreate,
   PAMEnvReplaceVariables,
+  PAMEnvResolve,
+  PAMEnvResolvedVariable,
+  PAMEnvSettings,
   PAMEnvWriteable
 } from '@shared/schemas/PAMEnvironmentSchema';
 import type {
@@ -201,14 +206,59 @@ export interface PAMServiceInterface {
   ): Promise<PAMEnvWriteable>;
 
   /**
-   * Owner-only export of one environment as decrypted dotenv text.
+   * Decrypted variables for process injection (`pamenv run`).
+   * Requires `pam_environments_inject`; protected environments also require
+   * `pam_environments_export`. Each call is audited.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param params - Optional key filter
+   * @param context - Request origin for the audit log
+   */
+  resolveEnvironment(
+    projectId: string,
+    envId: string,
+    params: PAMEnvResolve,
+    context: PAMEnvAccessContext
+  ): Promise<{ variables: PAMEnvResolvedVariable[] }>;
+
+  /**
+   * Updates environment settings (protected flag). Requires export permission.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param params - New settings
+   * @returns Updated environment (redacted)
+   */
+  updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    params: PAMEnvSettings
+  ): Promise<PAMEnvWriteable>;
+
+  /**
+   * Recent resolve / export records for one environment (export permission).
    *
    * @param projectId - Project id
    * @param envId - Environment id
    */
-  exportEnvironment(
+  listEnvironmentAccessLogs(
     projectId: string,
     envId: string
+  ): Promise<PAMEnvAccessLog[]>;
+
+  /**
+   * Export of one environment as decrypted dotenv text
+   * (`pam_environments_export`, admin / owner). Each call is audited.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param context - Request origin for the audit log
+   */
+  exportEnvironment(
+    projectId: string,
+    envId: string,
+    context?: PAMEnvAccessContext
   ): Promise<{
     projectId: string;
     projectSlug: string;

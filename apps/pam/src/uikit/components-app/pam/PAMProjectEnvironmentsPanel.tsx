@@ -19,6 +19,7 @@ import { v4 as uuid } from 'uuid';
 import { PAMApi } from '@/impls/appApi/PAMApi';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
+import { PAMProjectEnvSecuritySection } from '@/uikit/components-app/pam/PAMProjectEnvSecuritySection';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
@@ -79,6 +80,7 @@ export function PAMProjectEnvironmentsPanel({
   const canWriteVars = hasPermission(
     PermissionKey.pam_environments_variables_write
   );
+  const canExportEnv = hasPermission(PermissionKey.pam_environments_export);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
@@ -145,16 +147,32 @@ export function PAMProjectEnvironmentsPanel({
 
   const loading = Boolean(projectId) && environments === null;
 
+  const selectedEnvExists = selectedEnv !== null;
+  const selectedVariables = selectedEnv?.variables;
+
   useEffect(() => {
-    if (!selectedEnv) {
+    if (!selectedEnvExists) {
       setDraftVariables([]);
       return;
     }
-    setDraftVariables(
-      (selectedEnv.variables ?? []).map((item) => ({ ...item }))
-    );
+    setDraftVariables((selectedVariables ?? []).map((item) => ({ ...item })));
     setShowImport(false);
-  }, [selectedEnv]);
+  }, [selectedEnvExists, selectedVariables]);
+
+  const onEnvSettingsUpdated = useCallback(
+    (env: PAMEnvWriteable): void => {
+      setEnvironments((prev) =>
+        prev
+          ? prev.map((item) =>
+              item.id === env.id
+                ? { ...item, is_protected: env.is_protected }
+                : item
+            )
+          : prev
+      );
+    },
+    [setEnvironments]
+  );
 
   const persistVariables = async (
     environmentId: string,
@@ -423,6 +441,14 @@ export function PAMProjectEnvironmentsPanel({
                 )}
               >
                 {env.name}
+                {env.is_protected ? (
+                  <span
+                    title={tt.envProtected}
+                    className="ml-1.5 rounded bg-brand/10 px-1 py-0.5 font-sans text-[10px] font-medium text-brand"
+                  >
+                    {tt.envProtectedBadge}
+                  </span>
+                ) : null}
               </button>
               {canDeleteEnv ? (
                 <button
@@ -605,6 +631,15 @@ export function PAMProjectEnvironmentsPanel({
                   )}
                 </button>
               </div>
+            ) : null}
+
+            {canExportEnv ? (
+              <PAMProjectEnvSecuritySection
+                projectId={projectId}
+                environment={selectedEnv}
+                tt={tt}
+                onUpdated={onEnvSettingsUpdated}
+              />
             ) : null}
           </div>
         )}
