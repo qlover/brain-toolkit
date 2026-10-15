@@ -271,16 +271,19 @@ export function PAMProjectDetailShell({
   const routeSlug = project?.slug || routeKey;
   const resolvedProjectId = project?.id ?? '';
 
-  // Read-only / no env rights: Environments tab is hidden; bounce deep links.
+  // Read-only: General / Environments tabs are hidden; bounce deep links.
   useEffect(() => {
     if (loading || error || !project) {
       return;
     }
-    if (activeTab !== 'environments' || canAccessEnvironments) {
+    const blocked =
+      (activeTab === 'general' && !canEdit) ||
+      (activeTab === 'environments' && !canAccessEnvironments);
+    if (!blocked) {
       return;
     }
     router.replace({
-      pathname: ROUTE_PROJECT_GENERAL,
+      pathname: ROUTE_PROJECT_DETAIL,
       params: { projectId: routeSlug }
     });
   }, [
@@ -288,6 +291,7 @@ export function PAMProjectDetailShell({
     error,
     project,
     activeTab,
+    canEdit,
     canAccessEnvironments,
     router,
     routeSlug
@@ -418,15 +422,17 @@ export function PAMProjectDetailShell({
             >
               {tt.tabOverview}
             </Link>
-            <Link
-              href={{
-                pathname: ROUTE_PROJECT_GENERAL,
-                params: { projectId: routeSlug }
-              }}
-              className={tabClass('general')}
-            >
-              {tt.tabGeneral}
-            </Link>
+            {canEdit ? (
+              <Link
+                href={{
+                  pathname: ROUTE_PROJECT_GENERAL,
+                  params: { projectId: routeSlug }
+                }}
+                className={tabClass('general')}
+              >
+                {tt.tabGeneral}
+              </Link>
+            ) : null}
             {canAccessEnvironments ? (
               <Link
                 href={{
