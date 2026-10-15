@@ -1840,6 +1840,7 @@ WHERE p.team_id IS NULL
 
 -- pam_search_projects: private visibility via team membership (not collaborators).
 -- Safe to re-run. Replaces visibility predicates that used pam_project_collaborators.
+-- Membership in another user's personal team (personal-{owner_id}) grants nothing.
 
 CREATE OR REPLACE FUNCTION pam_search_projects(
   p_user_id uuid DEFAULT NULL,
@@ -1911,9 +1912,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
@@ -1925,9 +1931,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
@@ -1958,9 +1969,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
@@ -1972,9 +1988,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
