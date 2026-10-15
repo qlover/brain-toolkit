@@ -431,9 +431,14 @@ export class PamCliApp {
         browser?: boolean;
         domain?: string;
       }) => {
+        // Root also declares --url/--domain and claims them after `login`.
+        const root = program.opts() as PamCliGlobalOptionsType;
         const url =
           options.url?.trim() ||
-          this.resolveHostOverride(undefined, options.domain);
+          this.resolveHostOverride(
+            root.url,
+            options.domain || root.domain
+          );
         await new LoginCommand(this.authStore, this.apiClient).run({
           url,
           email: options.email,
