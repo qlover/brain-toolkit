@@ -3,11 +3,13 @@ import { dirname, join, relative } from 'node:path';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_WARN_DOTENV_OVERLAP,
+  PAMENV_CLI_WARN_DOTENV_PLACEHOLDER,
   PAMENV_CLI_WARN_PUBLIC_PREFIX,
   PAMENV_CLI_WARN_TURBO_STRICT
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
 import { PamCliDotenvUtil } from './PamCliDotenvUtil';
+import { PamCliSensitivePlaceholderUtil } from './PamCliSensitivePlaceholderUtil';
 
 const PUBLIC_PREFIXES = ['NEXT_PUBLIC_', 'VITE_'] as const;
 
@@ -56,6 +58,15 @@ export class PamCliRunWarningUtil {
           keys: this.listKeys(overlap.keys)
         })
       );
+      if (overlap.placeholderKeys.length > 0) {
+        warnings.push(
+          PamCliI18n.t(PAMENV_CLI_WARN_DOTENV_PLACEHOLDER, {
+            file: overlap.file,
+            count: String(overlap.placeholderKeys.length),
+            keys: this.listKeys(overlap.placeholderKeys)
+          })
+        );
+      }
     }
 
     const publicKeys = this.findPublicSensitiveKeys(variables);
@@ -82,12 +93,13 @@ export class PamCliRunWarningUtil {
   }
 
   /**
-   * `.env*` files in `cwd` that define any injected key.
+   * `.env*` files in `cwd` that define any injected key; `placeholderKeys`
+   * are the overlapping keys whose file value is a sensitive placeholder.
    */
   public static async findDotenvOverlaps(
     cwd: string,
     keys: ReadonlySet<string>
-  ): Promise<Array<{ file: string; keys: string[] }>> {
+  ): Promise<Array<{ file: string; keys: string[]; placeholderKeys: string[] }>> {
     let names: string[];
     try {
       names = await readdir(cwd);
@@ -95,7 +107,11 @@ export class PamCliRunWarningUtil {
       return [];
     }
 
-    const result: Array<{ file: string; keys: string[] }> = [];
+    const result: Array<{
+      file: string;
+      keys: string[];
+      placeholderKeys: string[];
+    }> = [];
     for (const name of names.sort()) {
       if (!name.startsWith('.env') || DOTENV_TEMPLATE.test(name)) {
         continue;
@@ -106,11 +122,19 @@ export class PamCliRunWarningUtil {
       } catch {
         continue;
       }
-      const overlap = PamCliDotenvUtil.parse(text)
-        .map((variable) => variable.key)
-        .filter((key) => keys.has(key));
+      const overlap = PamCliDotenvUtil.parse(text).filter((variable) =>
+        keys.has(variable.key)
+      );
       if (overlap.length > 0) {
-        result.push({ file: name, keys: overlap });
+        result.push({
+          file: name,
+          keys: overlap.map((variable) => variable.key),
+          placeholderKeys: overlap
+            .filter((variable) =>
+              PamCliSensitivePlaceholderUtil.isPlaceholder(variable.value)
+            )
+            .map((variable) => variable.key)
+        });
       }
     }
     return result;

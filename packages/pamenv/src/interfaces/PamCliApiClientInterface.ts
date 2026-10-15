@@ -125,8 +125,8 @@ export interface PamCliApiClientInterface {
   ): Promise<PamCliRemoteEnvironmentType>;
 
   /**
-   * Exports one environment as dotenv text with sensitive values blanked
-   * (`pam_environments_export`: project admin / owner).
+   * Exports one environment as dotenv text with sensitive values replaced by
+   * the env placeholder (`pam_environments_export`: project admin / owner).
    *
    * @param projectId - Project uuid
    * @param envId - Environment uuid

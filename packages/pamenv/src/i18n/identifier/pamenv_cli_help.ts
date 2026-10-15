@@ -271,9 +271,9 @@ export const PAMENV_HELP_FORK_OPT_NAME = 'pamenv_help:fork_opt_name';
 export const PAMENV_HELP_FORK_OPT_YES = 'pamenv_help:fork_opt_yes';
 
 /**
- * @description 把环境变量拉取到当前目录（敏感变量留空）
- * @localZh 把环境变量写入当前目录的 .env，敏感变量只写键名、值留空（需导出权限；日常开发推荐 run）
- * @localEn Write variables to a .env file; sensitive keys are written with empty values (export permission; prefer `run` for development)
+ * @description 把环境变量拉取到当前目录（敏感变量写占位符）
+ * @localZh 把环境变量写入当前目录的 .env，敏感变量的值写成本环境的占位符 __PAM_SENSITIVE_…__（需导出权限；日常开发推荐 run）
+ * @localEn Write variables to a .env file; sensitive values are written as this environment's placeholder __PAM_SENSITIVE_…__ (export permission; prefer `run` for development)
  */
 export const PAMENV_HELP_PULL = 'pamenv_help:pull';
 
@@ -314,8 +314,8 @@ export const PAMENV_HELP_RUN_OPT_NO_WARN = 'pamenv_help:run_opt_no_warn';
 
 /**
  * @description render 命令说明
- * @localZh 把非敏感环境变量输出为 dotenv / json / yaml / toml（需导出权限；敏感变量请用 run）
- * @localEn Output non-sensitive variables as dotenv / json / yaml / toml (export permission; use `run` for sensitive ones)
+ * @localZh 把环境变量输出为 dotenv / json / yaml / toml，敏感变量输出占位符（需导出权限；真实敏感值请用 run 注入）
+ * @localEn Output variables as dotenv / json / yaml / toml; sensitive values are placeholders (export permission; use `run` for real sensitive values)
  */
 export const PAMENV_HELP_RENDER = 'pamenv_help:render';
 

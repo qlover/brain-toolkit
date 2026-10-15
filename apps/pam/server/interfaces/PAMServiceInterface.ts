@@ -264,8 +264,9 @@ export interface PAMServiceInterface {
   ): Promise<PAMEnvAccessLog[]>;
 
   /**
-   * Export of one environment as dotenv text with sensitive values blanked
-   * (`pam_environments_export`, admin / owner). Each call is audited.
+   * Export of one environment as dotenv text with sensitive values replaced by
+   * the environment's placeholder (`pam_environments_export`, admin / owner).
+   * Each call is audited.
    *
    * @param projectId - Project id
    * @param envId - Environment id
@@ -282,7 +283,9 @@ export interface PAMServiceInterface {
     environmentName: string;
     content: string;
     sensitiveKeys: string[];
-    /** Decrypted variables including raw `comments` lines (preferred by CLI). */
+    /** Writing this value back for a sensitive key keeps the stored secret. */
+    sensitivePlaceholder: string;
+    /** Variables including raw `comments` lines (preferred by CLI). */
     variables: Array<{
       key: string;
       value: string;

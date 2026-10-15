@@ -163,7 +163,7 @@ If an environment is marked **protected** in the web UI, only project admins / o
 
 ## `pamenv render`
 
-Outputs non-sensitive variables in the chosen format, to stdout by default; requires export permission (project admin / owner). Sensitive variables are omitted and their key names are listed on stderr.
+Outputs variables in the chosen format, to stdout by default; requires export permission (project admin / owner). Sensitive values are output as this environment's placeholder (`__PAM_SENSITIVE_…__`) and their key names are listed on stderr; real values only reach a process via `pamenv run`.
 
 ```bash
 pamenv render <slug|id> -e dev                              # dotenv to stdout
@@ -189,8 +189,9 @@ pamenv push <slug|id> -e staging -f            # conflicting keys take local val
 pamenv push <slug|id> -e staging --show-values # show non-sensitive values in the preview
 ```
 
-- `pull` requires export permission (project admin / owner); sensitive keys are written with `# pam:sensitive` and an empty value. Prefer `pamenv run` for development.
-- On `push`, an empty local value for a key already sensitive on PAM means "keep the PAM value"; a new value rotates it. After a successful push, sensitive values are cleared from the local file.
+- `pull` requires export permission (project admin / owner); sensitive keys are written with `# pam:sensitive` and this environment's fixed placeholder `__PAM_SENSITIVE_…__` (different per environment). Prefer `pamenv run` for development.
+- On `push`, this environment's placeholder (or an empty value) for a key already sensitive on PAM means "keep the PAM value"; a new value rotates it. After a successful push, sensitive values in the local file are switched back to the placeholder.
+- Placeholders from another environment (e.g. a copied file) are rejected, so a placeholder is never stored as a secret.
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
 - `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.

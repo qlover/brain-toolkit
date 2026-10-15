@@ -362,7 +362,8 @@ export class PAMController {
   }
 
   /**
-   * Dotenv export for CLI (`pam_environments_export`); sensitive values blanked.
+   * Dotenv export for CLI (`pam_environments_export`); sensitive values are
+   * the environment's placeholder.
    *
    * @param projectId - Project id path param
    * @param envId - Environment id path param
@@ -379,6 +380,7 @@ export class PAMController {
     environmentName: string;
     content: string;
     sensitiveKeys: string[];
+    sensitivePlaceholder: string;
     variables: Array<{
       key: string;
       value: string;

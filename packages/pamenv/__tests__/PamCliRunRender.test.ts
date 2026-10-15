@@ -205,13 +205,22 @@ describe('PamCliRunWarningUtil', () => {
   it('finds .env files that redefine injected keys, skipping templates', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'pamenv-run-'));
     try {
-      await writeFile(join(dir, '.env.local'), 'TOKEN=old\nOTHER=1\n');
+      await writeFile(
+        join(dir, '.env.local'),
+        'TOKEN=old\nOTHER=1\nAPI_KEY=__PAM_SENSITIVE_abc__\n'
+      );
       await writeFile(join(dir, '.env.example'), 'TOKEN=\n');
       const overlaps = await PamCliRunWarningUtil.findDotenvOverlaps(
         dir,
-        new Set(['TOKEN', 'API_URL'])
+        new Set(['TOKEN', 'API_URL', 'API_KEY'])
       );
-      expect(overlaps).toEqual([{ file: '.env.local', keys: ['TOKEN'] }]);
+      expect(overlaps).toEqual([
+        {
+          file: '.env.local',
+          keys: ['TOKEN', 'API_KEY'],
+          placeholderKeys: ['API_KEY']
+        }
+      ]);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -282,14 +291,18 @@ describe('RenderCommand sensitive values', () => {
     vi.restoreAllMocks();
   });
 
-  it('omits sensitive variables from the output', async () => {
-    const project: PamCliProjectType = {
-      id: 'p1',
-      slug: 'app',
-      name: 'App',
-      my_role: 'admin',
-      environments: [{ id: 'e1', name: 'local' }]
-    };
+  const project: PamCliProjectType = {
+    id: 'p1',
+    slug: 'app',
+    name: 'App',
+    my_role: 'admin',
+    environments: [{ id: 'e1', name: 'local' }]
+  };
+
+  async function render(sensitivePlaceholder?: string): Promise<{
+    output: unknown;
+    message: string;
+  }> {
     const api = {
       listProjects: async () => [project],
       exportEnvironment: async () => ({
@@ -299,9 +312,10 @@ describe('RenderCommand sensitive values', () => {
         environmentName: 'local',
         content: '',
         sensitiveKeys: ['TOKEN'],
+        ...(sensitivePlaceholder ? { sensitivePlaceholder } : {}),
         variables: [
           { key: 'API_URL', value: 'https://x.dev', sensitive: false },
-          { key: 'TOKEN', value: '', sensitive: true }
+          { key: 'TOKEN', value: sensitivePlaceholder ?? '', sensitive: true }
         ]
       })
     };
@@ -315,12 +329,25 @@ describe('RenderCommand sensitive values', () => {
       format: 'json'
     });
 
-    expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toEqual({
-      API_URL: 'https://x.dev'
+    return {
+      output: JSON.parse(String(stdout.mock.calls[0]?.[0])),
+      message: String(stderr.mock.calls[0]?.[0])
+    };
+  }
+
+  it('renders sensitive values as the env placeholder', async () => {
+    const { output, message } = await render('__PAM_SENSITIVE_abc__');
+    expect(output).toEqual({
+      API_URL: 'https://x.dev',
+      TOKEN: '__PAM_SENSITIVE_abc__'
     });
-    expect(String(stderr.mock.calls[0]?.[0])).toContain(
-      'render_sensitive_omitted'
-    );
+    expect(message).toContain('render_sensitive_placeholder');
+  });
+
+  it('omits sensitive variables when the server sends no placeholder', async () => {
+    const { output, message } = await render();
+    expect(output).toEqual({ API_URL: 'https://x.dev' });
+    expect(message).toContain('render_sensitive_omitted');
   });
 });
 
@@ -328,9 +355,18 @@ describe('PushCommand sensitive values', () => {
   class TestPushCommand extends PushCommand {
     public clear(
       variables: PamCliParsedVarType[],
-      remote: ReadonlySet<string>
+      remote: ReadonlySet<string>,
+      placeholder?: string
     ): ReturnType<PushCommand['clearSensitiveValues']> {
-      return this.clearSensitiveValues(variables, remote);
+      return this.clearSensitiveValues(variables, remote, placeholder);
+    }
+
+    public assertPlaceholders(
+      variables: PamCliParsedVarType[],
+      remote: ReadonlySet<string>,
+      placeholder?: string
+    ): void {
+      this.assertPlaceholdersValid(variables, 'local', remote, placeholder);
     }
 
     public assertPresent(
@@ -375,6 +411,49 @@ describe('PushCommand sensitive values', () => {
     expect(result.variables.slice(1).every((item) => item.sensitive)).toBe(
       true
     );
+  });
+
+  it('replaces sensitive values with the env placeholder when known', () => {
+    const placeholder = '__PAM_SENSITIVE_abc__';
+    const result = push.clear(
+      [
+        parsed('NEW_SECRET', 's1', true),
+        parsed('KEPT_SECRET', placeholder, true)
+      ],
+      new Set(['KEPT_SECRET']),
+      placeholder
+    );
+    expect(result.keys).toEqual(['NEW_SECRET']);
+    expect(result.variables.map((item) => item.value)).toEqual([
+      placeholder,
+      placeholder
+    ]);
+  });
+
+  it('accepts only this env placeholder on keys already sensitive remotely', () => {
+    const placeholder = '__PAM_SENSITIVE_abc__';
+    const remote = new Set(['OLD_SECRET']);
+    expect(() =>
+      push.assertPlaceholders(
+        [parsed('OLD_SECRET', placeholder, true)],
+        remote,
+        placeholder
+      )
+    ).not.toThrow();
+    expect(() =>
+      push.assertPlaceholders(
+        [parsed('OLD_SECRET', '__PAM_SENSITIVE_other__', true)],
+        remote,
+        placeholder
+      )
+    ).toThrow(/push_placeholder_invalid/);
+    expect(() =>
+      push.assertPlaceholders(
+        [parsed('NEW_SECRET', placeholder, true)],
+        remote,
+        placeholder
+      )
+    ).toThrow(/push_placeholder_invalid/);
   });
 
   it('empty value keeps an existing remote secret, but not a new one', () => {

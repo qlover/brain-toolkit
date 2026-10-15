@@ -741,9 +741,33 @@ export const PAMENV_CLI_RENDER_SENSITIVE_OMITTED =
   'pamenv_cli:render_sensitive_omitted';
 
 /**
- * @description push 成功后已从本地文件清除敏感值
- * @localZh 已从 {{path}} 清除 {{count}} 个敏感变量的值（{{keys}}）：值已加密保存在 PAM，本地不保留明文。
- * @localEn Cleared {{count}} sensitive value(s) from {{path}} ({{keys}}): they are stored encrypted in PAM; no plaintext is kept locally.
+ * @description render 用占位符输出了敏感变量（输出到 stderr）
+ * @localZh [pamenv] {{count}} 个敏感变量以占位符输出（{{keys}}）：真实值不会以明文输出，请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] {{count}} sensitive variable(s) rendered as placeholders ({{keys}}): real values are never output as plaintext; inject them with `pamenv run`.
+ */
+export const PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER =
+  'pamenv_cli:render_sensitive_placeholder';
+
+/**
+ * @description push 前发现不属于该环境的敏感占位符
+ * @localZh 以下变量的值是敏感占位符，但不属于环境 "{{env}}" 已保存的敏感变量（可能从其它环境复制而来）：{{keys}}。请填写真实值，或先 `pamenv pull` 该环境。
+ * @localEn These values are sensitive placeholders that do not match a stored secret in "{{env}}" (maybe copied from another environment): {{keys}}. Enter the real values, or `pamenv pull` this environment first.
+ */
+export const PAMENV_CLI_PUSH_PLACEHOLDER_INVALID =
+  'pamenv_cli:push_placeholder_invalid';
+
+/**
+ * @description run 前发现 .env 文件中注入的键写着占位符
+ * @localZh [pamenv] 警告：{{file}} 中 {{count}} 个注入的键写的是敏感占位符（{{keys}}）。若项目让 .env 覆盖进程环境变量，程序拿到的会是占位符而不是真实值。
+ * @localEn [pamenv] Warning: {{file}} has sensitive placeholders for {{count}} injected key(s) ({{keys}}). If your tooling lets .env override the process environment, the app gets the placeholder instead of the real value.
+ */
+export const PAMENV_CLI_WARN_DOTENV_PLACEHOLDER =
+  'pamenv_cli:warn_dotenv_placeholder';
+
+/**
+ * @description push 成功后本地文件中的敏感值已替换
+ * @localZh 已把 {{path}} 中 {{count}} 个敏感变量的值替换为占位符（{{keys}}）：值已加密保存在 PAM，本地不保留明文。
+ * @localEn Replaced {{count}} sensitive value(s) in {{path}} with placeholders ({{keys}}): they are stored encrypted in PAM; no plaintext is kept locally.
  */
 export const PAMENV_CLI_PUSH_SENSITIVE_CLEARED =
   'pamenv_cli:push_sensitive_cleared';

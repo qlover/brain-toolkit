@@ -12,6 +12,7 @@ import { hasOrgPermission } from '@shared/auth/orgRole';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
+import { PAMEnvSensitivePlaceholderUtil } from '@shared/utils/PAMEnvSensitivePlaceholderUtil';
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
@@ -34,6 +35,7 @@ import {
   API_PAM_PREVIEW_URL_MISSING,
   API_PAM_SITE_URL_INVALID,
   API_PAM_VARIABLE_KEY_DUPLICATE,
+  API_PAM_VARIABLE_PLACEHOLDER_INVALID,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
@@ -499,7 +501,10 @@ export class PAMService implements PAMServiceInterface {
       const previous = env.id ? existingById.get(env.id) : undefined;
       const merged = PAMEnvVariableMergeUtil.mergeVariables(
         previous?.variables,
-        env.variables
+        env.variables,
+        previous
+          ? this.getSecretEncryption().sensitivePlaceholder(previous.id)
+          : undefined
       );
 
       return {
@@ -707,6 +712,16 @@ export class PAMService implements PAMServiceInterface {
           throw new ExecutorError(
             API_PAM_VARIABLE_KEY_DUPLICATE,
             `Duplicate variable keys in environment "${env.name}"`
+          );
+        }
+      }
+      // Runs after merge: this env's own placeholder is already swapped back
+      // to the stored value, so any placeholder left is foreign or unresolved.
+      for (const variable of env.variables || []) {
+        if (PAMEnvSensitivePlaceholderUtil.isPlaceholder(variable.value)) {
+          throw new ExecutorError(
+            API_PAM_VARIABLE_PLACEHOLDER_INVALID,
+            `Variable "${variable.key}" in environment "${env.name}" is a sensitive placeholder`
           );
         }
       }
@@ -1263,7 +1278,8 @@ export class PAMService implements PAMServiceInterface {
     const merged = this.ensureVariableIds(
       PAMEnvVariableMergeUtil.mergeVariables(
         existing.variables,
-        params.variables
+        params.variables,
+        this.getSecretEncryption().sensitivePlaceholder(existing.id)
       )
     );
 
@@ -1499,6 +1515,7 @@ export class PAMService implements PAMServiceInterface {
     environmentName: string;
     content: string;
     sensitiveKeys: string[];
+    sensitivePlaceholder: string;
     variables: Array<{
       key: string;
       value: string;
@@ -1524,7 +1541,13 @@ export class PAMService implements PAMServiceInterface {
       .filter((variable) => variable.sensitive === true)
       .map((variable) => variable.key);
     // Sensitive values only leave the server via resolve (process injection).
-    const redacted = PAMEnvVariableRedactUtil.redactVariables(normalized) ?? [];
+    const sensitivePlaceholder =
+      this.getSecretEncryption().sensitivePlaceholder(owned.environment.id);
+    const redacted =
+      PAMEnvVariableRedactUtil.redactVariables(
+        normalized,
+        sensitivePlaceholder
+      ) ?? [];
     const content = PAMEnvDotenvSerializeUtil.serialize(redacted);
     const variables = redacted.map((variable) => ({
       key: variable.key,
@@ -1552,6 +1575,7 @@ export class PAMService implements PAMServiceInterface {
       environmentName: owned.environment.name,
       content,
       sensitiveKeys,
+      sensitivePlaceholder,
       variables
     };
   }

@@ -5,6 +5,7 @@ import {
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RENDER_BAD_FORMAT,
   PAMENV_CLI_RENDER_SENSITIVE_OMITTED,
+  PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER,
   PAMENV_CLI_RENDERED
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
@@ -27,7 +28,7 @@ export type PamCliRenderOptionsType = {
 
 /**
  * `pamenv render` — print or write one environment in a chosen format.
- * Requires export permission; sensitive variables are always omitted.
+ * Requires export permission; sensitive values are the env placeholder.
  *
  * @example
  * await new RenderCommand(api).run('my-app', { envName: 'dev', format: 'json' });
@@ -89,16 +90,26 @@ export class RenderCommand {
       }
     }
 
-    const omitted = variables
+    const sensitive = variables
       .filter((variable) => variable.sensitive)
       .map((variable) => variable.key);
-    if (omitted.length > 0) {
-      variables = variables.filter((variable) => !variable.sensitive);
+    if (sensitive.length > 0) {
+      const placeholder = exported.sensitivePlaceholder;
+      // Older servers send empty values without a placeholder: omit instead.
+      if (placeholder) {
+        variables = variables.map((variable) =>
+          variable.sensitive ? { ...variable, value: placeholder } : variable
+        );
+      } else {
+        variables = variables.filter((variable) => !variable.sensitive);
+      }
       console.error(
-        PamCliI18n.t(PAMENV_CLI_RENDER_SENSITIVE_OMITTED, {
-          count: String(omitted.length),
-          keys: omitted.join(', ')
-        })
+        PamCliI18n.t(
+          placeholder
+            ? PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER
+            : PAMENV_CLI_RENDER_SENSITIVE_OMITTED,
+          { count: String(sensitive.length), keys: sensitive.join(', ') }
+        )
       );
     }
 
