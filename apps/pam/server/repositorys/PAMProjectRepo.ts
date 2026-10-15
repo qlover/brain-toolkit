@@ -924,21 +924,26 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
-   * Sets the protected flag on one environment (admin client).
+   * Updates environment settings (protected flag / url) with admin client.
    *
    * @param projectId - Project id
    * @param envId - Environment id
-   * @param isProtected - New flag value
+   * @param patch - Fields to change
    */
-  public async updateEnvironmentProtectedAdmin(
+  public async updateEnvironmentSettingsAdmin(
     projectId: string,
     envId: string,
-    isProtected: boolean
+    patch: { isProtected?: boolean; url?: string }
   ): Promise<PAMEnvWriteable> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const result = await admin
       .from(PAMEnvTableName)
-      .update({ is_protected: isProtected })
+      .update({
+        ...(patch.isProtected !== undefined
+          ? { is_protected: patch.isProtected }
+          : {}),
+        ...(patch.url !== undefined ? { url: patch.url } : {})
+      })
       .eq('id', envId)
       .eq('project_id', projectId)
       .select('id,name,url,variables,is_protected')

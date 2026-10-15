@@ -1427,10 +1427,10 @@ export class PAMService implements PAMServiceInterface {
       PermissionKey.pam_environments_export
     );
 
-    const updated = await this.projectRepo.updateEnvironmentProtectedAdmin(
+    const updated = await this.projectRepo.updateEnvironmentSettingsAdmin(
       projectId,
       envId,
-      params.isProtected
+      params
     );
     return this.redactEnvironment(updated);
   }
@@ -1446,7 +1446,8 @@ export class PAMService implements PAMServiceInterface {
       projectId,
       PermissionKey.pam_environments_export
     );
-    return this.envAccessLogsRepo.listByEnvironment(projectId, envId);
+    // The web UI filters and pages the most recent records client-side.
+    return this.envAccessLogsRepo.listByEnvironment(projectId, envId, 200);
   }
 
   /**

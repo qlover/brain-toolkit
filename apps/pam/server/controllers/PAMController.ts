@@ -303,7 +303,7 @@ export class PAMController {
   }
 
   /**
-   * Updates environment settings (`{ isProtected }`).
+   * Updates environment settings (`{ isProtected?, url? }`).
    *
    * @param projectId - Project id path param
    * @param envId - Environment id path param

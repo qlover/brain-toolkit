@@ -10,7 +10,7 @@ type SettingsRouteContext = {
 };
 
 /**
- * POST /api/pam/:projectId/environments/:envId/settings — `{ isProtected }`.
+ * POST /api/pam/:projectId/environments/:envId/settings — `{ isProtected?, url? }`.
  */
 export async function POST(req: NextRequest, context: SettingsRouteContext) {
   const { projectId, envId } = await context.params;
