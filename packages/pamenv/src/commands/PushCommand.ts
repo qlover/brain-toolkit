@@ -30,6 +30,7 @@ import {
   PAMENV_CLI_PUSH_NO_BASELINE_CREATE,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
+  PAMENV_CLI_PUSH_SENSITIVE_CLEARED,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
 } from '../i18n/identifier/pamenv_cli';
@@ -310,7 +311,11 @@ export class PushCommand {
       }
     }
 
-    this.assertSensitiveValuesPresent(localVars, targetEnv.name);
+    this.assertSensitiveValuesPresent(
+      localVars,
+      targetEnv.name,
+      remoteSensitiveKeys
+    );
 
     const diff = PamCliEnvDiffUtil.diff(
       new Map(Object.entries(remoteMap)),
@@ -399,11 +404,30 @@ export class PushCommand {
       );
     }
 
+    const cleared = this.clearSensitiveValues(localVars, remoteSensitiveKeys);
+    if (cleared.keys.length > 0) {
+      await PamCliPrivateFsUtil.writePrivateFile(
+        target,
+        PamCliDotenvUtil.serializeDocument({
+          variables: cleared.variables,
+          trailingComments: localDoc.trailingComments
+        })
+      );
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_CLEARED, {
+          path: target,
+          count: String(cleared.keys.length),
+          keys: cleared.keys.join(', ')
+        })
+      );
+    }
+
+    // Baseline mirrors export, which never carries sensitive values.
     await this.syncStore.saveBaseline(
       project.id,
       project.slug,
       targetEnv.name,
-      PamCliDotenvUtil.toValueMap(localVars)
+      PamCliDotenvUtil.toValueMap(cleared.variables)
     );
     console.log(
       PamCliI18n.t(PAMENV_CLI_PUSHED_DETAIL, {
@@ -542,17 +566,50 @@ export class PushCommand {
   }
 
   /**
-   * Fails fast when a sensitive key has an empty value (same rule as PAM API).
+   * Blanks sensitive values after a successful push so no plaintext stays in
+   * the local file or sync baseline.
+   *
+   * @param variables - Pushed local variables
+   * @param remoteSensitiveKeys - Keys already sensitive on PAM
+   * @returns Variables with sensitive values blanked, plus the keys that had a value
+   */
+  protected clearSensitiveValues(
+    variables: readonly PamCliParsedVarType[],
+    remoteSensitiveKeys: ReadonlySet<string>
+  ): { variables: PamCliParsedVarType[]; keys: string[] } {
+    const keys: string[] = [];
+    const next = variables.map((item) => {
+      if (!item.sensitive && !remoteSensitiveKeys.has(item.key)) {
+        return item;
+      }
+      if (item.value !== '') {
+        keys.push(item.key);
+      }
+      return { ...item, value: '', sensitive: true };
+    });
+    return { variables: next, keys };
+  }
+
+  /**
+   * Fails fast when a new sensitive key has an empty value (same rule as PAM API).
+   * Empty values for keys already sensitive on PAM keep the stored secret.
    *
    * @param variables - Local variables after sensitive marking
    * @param envName - Environment name for the error message
+   * @param remoteSensitiveKeys - Keys already sensitive on PAM
    */
   protected assertSensitiveValuesPresent(
     variables: readonly PamCliParsedVarType[],
-    envName: string
+    envName: string,
+    remoteSensitiveKeys: ReadonlySet<string>
   ): void {
     const missing = variables
-      .filter((item) => item.sensitive && item.value.trim() === '')
+      .filter(
+        (item) =>
+          item.sensitive &&
+          item.value.trim() === '' &&
+          !remoteSensitiveKeys.has(item.key)
+      )
       .map((item) => item.key);
 
     if (missing.length === 0) {

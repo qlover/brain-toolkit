@@ -6,6 +6,7 @@
 - 日常开发默认把变量注入进程（`pamenv run`），不写文件。
 - `.env`、JSON、YAML、TOML 都只是按需输出的格式（`pamenv render`）。
 - 权限区分「能用」和「能看」：成员可以注入运行，但拿不到明文。
+- **敏感值只经 `run` 进入进程**：网页、`render`、`pull`、`fork` 都不返回敏感明文，owner 也一样。明文只存在于「服务端解密 → 传输 → 目标进程内存」这条链路上，唯一的例外是被运行的程序自己打印出来。
 
 ## 现状与问题
 
@@ -21,10 +22,9 @@
 PAM（按项目 / 环境 / 权限管理变量，服务端 AES-256-GCM 加密存储）
    │  CLI 用本地身份凭证（Bearer token）请求
    ▼
-服务端检查权限 → 解密 → 只返回本次需要的键值（不缓存）
-   │  值只存在于 CLI 进程内存
-   ├─ pamenv run     注入子进程环境变量（默认，需要「使用」权限）
-   └─ pamenv render  输出 dotenv / json / yaml / toml（需要「导出」权限）
+服务端检查权限 → 只返回本次需要的键值（不缓存）
+   ├─ resolve：解密敏感值 → pamenv run 注入子进程环境变量（需要「使用」权限）
+   └─ export：敏感值置空 → pamenv render / pull 输出非敏感变量（需要「导出」权限）
 ```
 
 本地只保存**身份凭证**，不保存解密密钥：
@@ -73,11 +73,13 @@ pamenv render <slug|id> -e dev --format toml --out config.toml
 | `--out <file\|->`                     | 输出到文件（0600），`-` 或省略时输出到 stdout |
 | `--only <keys>`                       | 只输出指定的键                                |
 
-需要「导出」权限，因为结果是可以留存的明文。
+需要「导出」权限。敏感变量一律省略，并在 stderr 列出被省略的键名，stdout 保持干净；没有 `--reveal` 之类的例外开关。
 
-### `pamenv pull`（保留，兼容现有用法）
+### `pamenv pull` / `pamenv push`（保留，兼容现有用法）
 
-- 行为不变：对比基线、处理冲突、保留注释、写入 `.env`。
+- 行为基本不变：对比基线、处理冲突、保留注释、写入 `.env`。
+- `pull` 时敏感变量只写 `# pam:sensitive` 和键名，值留空；本地旧文件里残留的敏感明文会在下次 `pull` 时被空值覆盖。
+- `push` 时，已在 PAM 上标记为敏感的键本地值为空，表示保留 PAM 上的值（服务端合并逻辑本来如此）；填了新值表示轮换。推送成功后清空本地文件和同步基线里的敏感值。
 - 权限检查改为导出权限；没有权限时提示改用 `pamenv run`。
 - dotenv 适配器和 `pull` 共用 `PamCliDotenvUtil` 的序列化，只保留一份实现；`pull` 额外做按文档合并（保留本地注释）。
 - 帮助信息里提示：日常开发推荐使用 `pamenv run`。
@@ -111,7 +113,7 @@ interface PamEnvOutputAdapterInterface {
 | 权限键                            | 作用                                                 | 默认角色                            |
 | --------------------------------- | ---------------------------------------------------- | ----------------------------------- |
 | `pam_environments_inject`（新增） | 调用 `resolve`，用于 `pamenv run`                    | team_member、team_admin、team_owner |
-| `pam_environments_export`（已有） | 调用 `export`，用于 `pull` / `render` / 网页查看明文 | **改为**只给 team_admin、team_owner |
+| `pam_environments_export`（已有） | 调用 `export`（不含敏感值），用于 `pull` / `render`；网页端环境安全设置 | **改为**只给 team_admin、team_owner |
 
 - 网页端：所有读取接口本来就会清空敏感值，浏览器拿不到明文，也没有「显示」功能，无需改动。
 - 这一项会改变现有成员的权限：成员原来能 `pull`，改完后只能 `run`。上线前需要通知团队；SQL 升级脚本（`001` 第 8 节）会移除 team_member 的导出权限。
@@ -129,7 +131,8 @@ interface PamEnvOutputAdapterInterface {
 
 ### 已有 `GET .../export`
 
-- 行为不变，只是权限收紧到 admin / owner，并写审计日志。
+- 权限收紧到 admin / owner，并写审计日志。
+- 不再解密：敏感变量的 `value` 一律为空字符串，`sensitiveKeys` 照常返回。`resolve` 是唯一会解密敏感值的接口。
 
 ### 新增 `POST .../settings` 与 `GET .../access-logs`
 
@@ -180,7 +183,7 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 | 阶段 | 内容                                                                                                       |
 | ---- | ---------------------------------------------------------------------------------------------------------- |
 | 一   | `resolve` 接口、`pam_environments_inject` 权限与审计日志；`pamenv run`；绕过检查（已完成）                 |
-| 二   | `pamenv render` 与四种适配器；`export` 权限收紧；受保护环境；访问记录（已完成）                            |
+| 二   | `pamenv render` 与四种适配器；`export` 权限收紧且不再返回敏感值；受保护环境；访问记录（已完成）            |
 | 三   | 钥匙串存储凭证；CI 的 OIDC 接入                                                                            |
 
 ## 待定问题

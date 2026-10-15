@@ -38,7 +38,7 @@ export class PamCliProjectAccessUtil {
     return project.is_owner === true;
   }
 
-  /** Plaintext export (`pull` / `render`): project admin / owner. */
+  /** Export without sensitive values (`pull` / `render`): project admin / owner. */
   public static canExport(project: PamCliProjectType): boolean {
     if (hasPermission(project, ENV_EXPORT_PERMISSION)) {
       return true;

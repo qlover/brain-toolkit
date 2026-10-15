@@ -4,6 +4,7 @@
 
 - For day-to-day development, `pamenv run` injects variables straight into a command's process, so no plaintext file stays on disk.
 - When you need a file, `pamenv render` outputs dotenv / JSON / YAML / TOML, and `pull` / `push` sync with `.env.<environment>` files.
+- **Sensitive values only reach a process through `run`**; the web UI, `render` and `pull` never return them in plaintext (see "Marking sensitive variables").
 - `init` creates a project from the current directory.
 
 ## Install
@@ -162,7 +163,7 @@ If an environment is marked **protected** in the web UI, only project admins / o
 
 ## `pamenv render`
 
-Outputs variables in the chosen format, to stdout by default. The result is plaintext, so it requires export permission (project admin / owner).
+Outputs non-sensitive variables in the chosen format, to stdout by default; requires export permission (project admin / owner). Sensitive variables are omitted and their key names are listed on stderr.
 
 ```bash
 pamenv render <slug|id> -e dev                              # dotenv to stdout
@@ -173,7 +174,7 @@ pamenv render <slug|id> -e dev --out .env.local --only API_URL,API_KEY
 
 | Option | Description |
 | --- | --- |
-| `--format <format>` | `dotenv` (default; keeps comments and `# pam:sensitive`), `json`, `yaml`, `toml`; the last three are flat key/values with double-quoted, escaped values |
+| `--format <format>` | `dotenv` (default; keeps comments), `json`, `yaml`, `toml`; the last three are flat key/values with double-quoted, escaped values |
 | `--out <file>` | Write to a file (mode 0600); omit or use `-` for stdout |
 | `--only <keys>` | Only output these keys |
 
@@ -188,7 +189,8 @@ pamenv push <slug|id> -e staging -f            # conflicting keys take local val
 pamenv push <slug|id> -e staging --show-values # show non-sensitive values in the preview
 ```
 
-- `pull` writes a plaintext file and requires export permission (project admin / owner); prefer `pamenv run` for development.
+- `pull` requires export permission (project admin / owner); sensitive keys are written with `# pam:sensitive` and an empty value. Prefer `pamenv run` for development.
+- On `push`, an empty local value for a key already sensitive on PAM means "keep the PAM value"; a new value rotates it. After a successful push, sensitive values are cleared from the local file.
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
 - `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.
@@ -216,6 +218,8 @@ Put `# pam:sensitive` above the key (other comments may sit in between). Comment
 API_TOKEN=xxxx # production only
 NORMAL=1
 ```
+
+Sensitive values are stored encrypted in PAM. Only `run` decrypts them (on the server) and injects them into the child process; the CLI never prints them. The web UI, `render`, `pull` and `fork` never get plaintext, owners included. The only place plaintext can appear is whatever the running program prints itself.
 
 ## `pamenv remove`
 
@@ -253,7 +257,7 @@ When a request fails, the CLI prints a readable message plus the error code (e.g
 
 Access comes from your team role on the project; teams are managed in the PAM web UI.
 
-| Role | run | push | pull / render | remove environment |
+| Role | run | push | pull / render (no sensitive values) | remove environment |
 | --- | --- | --- | --- | --- |
 | owner / admin | ✓ | ✓ | ✓ | ✓ |
 | member | ✓ (except protected environments) | ✓ | — | — |

@@ -654,9 +654,9 @@ export const PAMENV_CLI_PULL_UP_TO_DATE = 'pamenv_cli:pull_up_to_date';
 export const PAMENV_CLI_PULLED = 'pamenv_cli:pulled';
 
 /**
- * @description 导出明文需要项目管理员或所有者权限
+ * @description 导出需要项目管理员或所有者权限
  * @localZh 你没有项目 "{{slug}}" 的导出权限（需为项目管理员或所有者）。日常开发请改用 `pamenv run {{slug}} -e <env> -- <命令>`，变量只注入进程、不落盘。
- * @localEn You cannot export plaintext from project "{{slug}}" (project admin or owner required). For development use `pamenv run {{slug}} -e <env> -- <command>`, which injects variables into the process without writing files.
+ * @localEn You cannot export from project "{{slug}}" (project admin or owner required). For development use `pamenv run {{slug}} -e <env> -- <command>`, which injects variables into the process without writing files.
  */
 export const PAMENV_CLI_NOT_OWNER_EXPORT = 'pamenv_cli:not_owner_export';
 
@@ -731,6 +731,22 @@ export const PAMENV_CLI_RENDER_BAD_FORMAT = 'pamenv_cli:render_bad_format';
  * @localEn Rendered {{slug}}/{{env}} ({{format}}, {{count}} vars) → {{path}}
  */
 export const PAMENV_CLI_RENDERED = 'pamenv_cli:rendered';
+
+/**
+ * @description render 省略了敏感变量（输出到 stderr）
+ * @localZh [pamenv] 已省略 {{count}} 个敏感变量（{{keys}}）：敏感值不会以明文输出，请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] Omitted {{count}} sensitive variable(s) ({{keys}}): sensitive values are never output as plaintext; inject them with `pamenv run`.
+ */
+export const PAMENV_CLI_RENDER_SENSITIVE_OMITTED =
+  'pamenv_cli:render_sensitive_omitted';
+
+/**
+ * @description push 成功后已从本地文件清除敏感值
+ * @localZh 已从 {{path}} 清除 {{count}} 个敏感变量的值（{{keys}}）：值已加密保存在 PAM，本地不保留明文。
+ * @localEn Cleared {{count}} sensitive value(s) from {{path}} ({{keys}}): they are stored encrypted in PAM; no plaintext is kept locally.
+ */
+export const PAMENV_CLI_PUSH_SENSITIVE_CLEARED =
+  'pamenv_cli:push_sensitive_cleared';
 
 /**
  * @description 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。

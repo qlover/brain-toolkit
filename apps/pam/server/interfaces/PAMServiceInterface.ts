@@ -248,7 +248,7 @@ export interface PAMServiceInterface {
   ): Promise<PAMEnvAccessLog[]>;
 
   /**
-   * Export of one environment as decrypted dotenv text
+   * Export of one environment as dotenv text with sensitive values blanked
    * (`pam_environments_export`, admin / owner). Each call is audited.
    *
    * @param projectId - Project id

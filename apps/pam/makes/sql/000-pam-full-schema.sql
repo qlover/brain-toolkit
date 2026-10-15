@@ -2307,7 +2307,7 @@ CREATE TABLE public.pam_env_access_logs (
 );
 
 COMMENT ON TABLE public.pam_env_access_logs IS
-  'Who decrypted which environment and when (pamenv run / pull / render). Service-role only.';
+  'Who read which environment and when (resolve = pamenv run, export = pull / render without sensitive values). Service-role only.';
 
 CREATE INDEX idx_pam_env_access_logs_env_created
   ON public.pam_env_access_logs (environment_id, created_at DESC);

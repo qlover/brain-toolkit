@@ -4,6 +4,7 @@
 
 - 日常开发用 `pamenv run` 把变量直接注入命令进程，本地不留明文文件。
 - 需要文件时用 `pamenv render` 输出 dotenv / JSON / YAML / TOML，或用 `pull` / `push` 与 `.env.<环境名>` 双向同步。
+- **敏感变量的值只会通过 `run` 注入进程**，网页、`render`、`pull` 都不会给出明文（见下文「标记敏感变量」）。
 - `init` 从当前目录创建项目。
 
 ## 安装
@@ -162,7 +163,7 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 
 ## `pamenv render`
 
-把环境变量按指定格式输出，默认输出到 stdout。结果是明文，需要导出权限（项目 admin / owner）。
+把非敏感环境变量按指定格式输出，默认输出到 stdout，需要导出权限（项目 admin / owner）。敏感变量会被省略，并在 stderr 提示被省略的键名。
 
 ```bash
 pamenv render <slug|id> -e dev                              # dotenv 到 stdout
@@ -173,7 +174,7 @@ pamenv render <slug|id> -e dev --out .env.local --only API_URL,API_KEY
 
 | 参数 | 说明 |
 | --- | --- |
-| `--format <format>` | `dotenv`（默认，保留注释与 `# pam:sensitive`）、`json`、`yaml`、`toml`；后三种为平铺键值，值统一用双引号转义 |
+| `--format <format>` | `dotenv`（默认，保留注释）、`json`、`yaml`、`toml`；后三种为平铺键值，值统一用双引号转义 |
 | `--out <file>` | 写入文件（权限 0600）；省略或 `-` 时输出到 stdout |
 | `--only <keys>` | 只输出这些键 |
 
@@ -188,7 +189,8 @@ pamenv push <slug|id> -e staging -f            # 冲突键不询问，直接用�
 pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量的值
 ```
 
-- `pull` 写出的是明文文件，需要导出权限（项目 admin / owner）；日常开发推荐用 `pamenv run`。
+- `pull` 需要导出权限（项目 admin / owner）；敏感变量只写 `# pam:sensitive` 和键名，值留空。日常开发推荐用 `pamenv run`。
+- `push` 时，已在 PAM 上标记为敏感的键如果本地值为空，表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会被清空。
 - 以上次 pull/push 的同步基线逐个键合并：只有一边改过的键自动采用那一边，两边都改了同一个键才算冲突。
 - `pull` 冲突时默认用远端值，`push` 冲突时默认用本地值；会列出冲突键并让你确认（可选另一边或取消），之后提示你手动编辑本地文件再 `push`。
 - `pull` 会保留本地还没推送的修改并提示；`push` 会把远端单独改过的键合并进本地文件，不会覆盖掉。
@@ -216,6 +218,8 @@ pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量�
 API_TOKEN=xxxx # production only
 NORMAL=1
 ```
+
+敏感变量的值在 PAM 中加密保存，只有 `run` 会在服务端解密并注入子进程，CLI 不会打印。网页、`render`、`pull` 和 `fork` 都拿不到明文，owner 也一样。明文唯一可能出现的地方，是被运行的程序自己打印出来。
 
 ## `pamenv remove`
 
@@ -253,7 +257,7 @@ pamenv locales pull                         # 刷新服务端错误提示文案
 
 权限由项目上的团队角色决定，团队在 PAM 网页端管理。
 
-| 角色 | run | push | pull / render | remove 环境 |
+| 角色 | run | push | pull / render（不含敏感值） | remove 环境 |
 | --- | --- | --- | --- | --- |
 | owner / admin | ✓ | ✓ | ✓ | ✓ |
 | member | ✓（受保护环境除外） | ✓ | — | — |

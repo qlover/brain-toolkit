@@ -4,6 +4,7 @@ import {
   PAMENV_CLI_NOT_OWNER_EXPORT,
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RENDER_BAD_FORMAT,
+  PAMENV_CLI_RENDER_SENSITIVE_OMITTED,
   PAMENV_CLI_RENDERED
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
@@ -26,7 +27,7 @@ export type PamCliRenderOptionsType = {
 
 /**
  * `pamenv render` — print or write one environment in a chosen format.
- * Requires export permission because the output is persistent plaintext.
+ * Requires export permission; sensitive variables are always omitted.
  *
  * @example
  * await new RenderCommand(api).run('my-app', { envName: 'dev', format: 'json' });
@@ -86,6 +87,19 @@ export class RenderCommand {
           PamCliI18n.t(PAMENV_CLI_ONLY_MISSING, { keys: missing.join(', ') })
         );
       }
+    }
+
+    const omitted = variables
+      .filter((variable) => variable.sensitive)
+      .map((variable) => variable.key);
+    if (omitted.length > 0) {
+      variables = variables.filter((variable) => !variable.sensitive);
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RENDER_SENSITIVE_OMITTED, {
+          count: String(omitted.length),
+          keys: omitted.join(', ')
+        })
+      );
     }
 
     const text = PamCliOutputAdapterRegistry.get(format).serialize(variables);
