@@ -1,10 +1,12 @@
 import {
   createCipheriv,
   createDecipheriv,
+  createHmac,
   randomBytes,
   type BinaryLike,
   type CipherKey
 } from 'crypto';
+import { PAMEnvSensitivePlaceholderUtil } from '@shared/utils/PAMEnvSensitivePlaceholderUtil';
 import type { PAMVariable } from '@schemas/PAMEnvironmentSchema';
 import type { EncryptorInterface } from '@qlover/fe-corekit/encrypt';
 
@@ -59,6 +61,20 @@ export class PAMEnvSecretEncryption
       throw new Error('PAM_ENV_SECRET_KEY must decode to 32 bytes (AES-256)');
     }
     this.key = keyBytes as CipherKey;
+  }
+
+  /**
+   * Stable per-environment placeholder for sensitive values in exports.
+   * Derived with HMAC so it needs no storage and cannot be guessed.
+   *
+   * @param environmentId - Environment uuid
+   */
+  public sensitivePlaceholder(environmentId: string): string {
+    const token = createHmac('sha256', this.key as BinaryLike)
+      .update(`pam-sensitive-placeholder:${environmentId}`)
+      .digest('hex')
+      .slice(0, 24);
+    return PAMEnvSensitivePlaceholderUtil.format(token);
   }
 
   /**

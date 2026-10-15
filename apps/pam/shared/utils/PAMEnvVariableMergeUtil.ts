@@ -5,7 +5,7 @@ import { PAMEnvVariableNormalizeUtil } from './PAMEnvVariableNormalizeUtil';
  * Merges incoming environment variables with stored ones.
  *
  * Significance: Sensitive update payloads omit values; empty must not wipe secrets.
- * Core idea: Empty sensitive `value` keeps the existing stored value.
+ * Core idea: Empty sensitive `value` (or the env placeholder) keeps the stored value.
  * Main function: Upsert by `id` then `key`, preserving secrets when requested.
  * Main purpose: Safe write semantics for sensitive JSONB variables.
  *
@@ -18,11 +18,13 @@ export class PAMEnvVariableMergeUtil {
    *
    * @param existingRaw - Stored variables (array or legacy object)
    * @param incomingRaw - Request variables
+   * @param placeholder - This environment's sensitive placeholder; also means "keep"
    * @returns Variables ready to persist
    */
   public static mergeVariables(
     existingRaw: unknown,
-    incomingRaw: unknown
+    incomingRaw: unknown,
+    placeholder?: string
   ): PAMVariable[] {
     const existing =
       PAMEnvVariableNormalizeUtil.normalizeVariables(existingRaw);
@@ -52,7 +54,9 @@ export class PAMEnvVariableMergeUtil {
         : variable.sensitive === true;
       let value = variable.value;
 
-      if (sensitive && value.trim() === '' && previous) {
+      const keep =
+        value.trim() === '' || (!!placeholder && value === placeholder);
+      if (sensitive && keep && previous) {
         value = previous.value;
       }
 

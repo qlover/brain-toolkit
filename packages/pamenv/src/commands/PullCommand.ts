@@ -35,7 +35,7 @@ import { PamCliSyncStore } from '../impls/PamCliSyncStore';
  * `pamenv pull` — download one environment into the working directory.
  *
  * Significance: Sync PAM variables into a local dotenv file; PAM export never
- * returns sensitive values, so those keys are written with empty values.
+ * returns sensitive values, so those keys get the environment's placeholder.
  * Core idea: Prefer export `variables` (with comments); conflict on value diffs.
  * Main function: Export remote, merge comments, write cwd file, save baseline.
  * Main purpose: Direct cwd pull controlled by `-e`.

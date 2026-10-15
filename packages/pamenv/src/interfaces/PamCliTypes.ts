@@ -57,7 +57,8 @@ export type PamCliEnvironmentSummaryType = {
 };
 
 /**
- * Export payload from PAM; sensitive values are always empty.
+ * Export payload from PAM; sensitive values are the env placeholder (empty on
+ * older servers).
  */
 export type PamCliExportResultType = {
   readonly projectId: string;
@@ -66,6 +67,8 @@ export type PamCliExportResultType = {
   readonly environmentName: string;
   readonly content: string;
   readonly sensitiveKeys?: readonly string[];
+  /** Pushing this value back for a sensitive key keeps the stored secret. */
+  readonly sensitivePlaceholder?: string;
   /**
    * Preferred source for pull: variables with raw comment lines.
    * Older servers may omit this; CLI falls back to parsing `content`.

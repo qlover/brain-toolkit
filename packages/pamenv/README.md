@@ -163,7 +163,7 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 
 ## `pamenv render`
 
-把非敏感环境变量按指定格式输出，默认输出到 stdout，需要导出权限（项目 admin / owner）。敏感变量会被省略，并在 stderr 提示被省略的键名。
+把环境变量按指定格式输出，默认输出到 stdout，需要导出权限（项目 admin / owner）。敏感变量的值输出为本环境的占位符（`__PAM_SENSITIVE_…__`），并在 stderr 提示这些键名；真实值只能通过 `pamenv run` 注入进程。
 
 ```bash
 pamenv render <slug|id> -e dev                              # dotenv 到 stdout
@@ -189,8 +189,9 @@ pamenv push <slug|id> -e staging -f            # 冲突键不询问，直接用�
 pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量的值
 ```
 
-- `pull` 需要导出权限（项目 admin / owner）；敏感变量只写 `# pam:sensitive` 和键名，值留空。日常开发推荐用 `pamenv run`。
-- `push` 时，已在 PAM 上标记为敏感的键如果本地值为空，表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会被清空。
+- `pull` 需要导出权限（项目 admin / owner）；敏感变量写 `# pam:sensitive`，值是本环境固定的占位符 `__PAM_SENSITIVE_…__`（每个环境不同）。日常开发推荐用 `pamenv run`。
+- `push` 时，已在 PAM 上标记为敏感的键如果本地值是本环境的占位符（或为空），表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会换回占位符。
+- 不属于本环境的占位符（比如从别的环境的文件复制过来）会被拒绝，避免把占位符当成密钥保存。
 - 以上次 pull/push 的同步基线逐个键合并：只有一边改过的键自动采用那一边，两边都改了同一个键才算冲突。
 - `pull` 冲突时默认用远端值，`push` 冲突时默认用本地值；会列出冲突键并让你确认（可选另一边或取消），之后提示你手动编辑本地文件再 `push`。
 - `pull` 会保留本地还没推送的修改并提示；`push` 会把远端单独改过的键合并进本地文件，不会覆盖掉。

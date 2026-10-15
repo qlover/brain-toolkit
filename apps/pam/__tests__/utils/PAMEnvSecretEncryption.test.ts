@@ -43,4 +43,18 @@ describe('PAMEnvSecretEncryption', () => {
     expect(decrypted[0]?.value).toBe('visible');
     expect(decrypted[1]?.value).toBe('hidden');
   });
+
+  it('derives a stable, per-environment sensitive placeholder', () => {
+    const a = encryption.sensitivePlaceholder(
+      '11111111-1111-1111-1111-111111111111'
+    );
+    const b = encryption.sensitivePlaceholder(
+      '22222222-2222-2222-2222-222222222222'
+    );
+    expect(a).toMatch(/^__PAM_SENSITIVE_[0-9a-f]{24}__$/);
+    expect(
+      encryption.sensitivePlaceholder('11111111-1111-1111-1111-111111111111')
+    ).toBe(a);
+    expect(b).not.toBe(a);
+  });
 });

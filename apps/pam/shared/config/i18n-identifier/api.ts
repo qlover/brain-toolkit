@@ -278,6 +278,14 @@ export const API_PAM_VARIABLE_VALUE_REQUIRED =
   'api:pam_variable_value_required';
 
 /**
+ * @description A value is a sensitive placeholder that does not belong to this environment
+ * @localZh 变量值是敏感占位符，但不属于当前环境（可能从其它环境复制而来），请填写真实值
+ * @localEn Value is a sensitive placeholder from another environment; enter the real value
+ */
+export const API_PAM_VARIABLE_PLACEHOLDER_INVALID =
+  'api:pam_variable_placeholder_invalid';
+
+/**
  * @description Password hashing / encrypt failed during register or reset
  * @localZh 密码加密失败
  * @localEn Failed to encrypt password
