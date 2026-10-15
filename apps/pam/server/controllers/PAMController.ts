@@ -3,14 +3,19 @@ import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SearchParamsValidator, uuidSchema } from '@qlover/next-kit/common';
 import { isEmpty } from 'lodash-es';
 import { inject, injectable } from '@shared/container';
-import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
+import {
+  API_PAM_PROJECT_NOT_FOUND,
+  API_REQUEST_BODY_EMPTY
+} from '@config/i18n-identifier/api';
 import {
   PAMEnvCreateSchema,
   PAMEnvReplaceVariablesSchema,
+  PAMEnvResolveByNameSchema,
   PAMEnvResolveSchema,
   PAMEnvSettingsSchema,
   type PAMEnvAccessContext,
   type PAMEnvAccessLog,
+  type PAMEnvResolvedEnvironment,
   type PAMEnvResolvedVariable,
   type PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
@@ -267,6 +272,31 @@ export class PAMController {
     return this.pamService.resolveEnvironment(
       projectUuid,
       envUuid,
+      parsed,
+      this.getEnvAccessContext(request)
+    );
+  }
+
+  /**
+   * Decrypted variables by project slug/id + environment name (`pamenv run -e`).
+   *
+   * @param projectRef - Project slug or id path param
+   * @param request - Incoming request with `{ env, keys? }`
+   */
+  public async resolveEnvironmentByName(
+    projectRef: string,
+    request: NextRequest
+  ): Promise<PAMEnvResolvedEnvironment> {
+    const ref = projectRef.trim();
+    if (!ref) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+    const text = await request.text();
+    const parsed = PAMEnvResolveByNameSchema.parse(
+      text ? JSON.parse(text) : {}
+    );
+    return this.pamService.resolveEnvironmentByName(
+      ref,
       parsed,
       this.getEnvAccessContext(request)
     );

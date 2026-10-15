@@ -4,6 +4,8 @@ import type {
   PAMEnvCreate,
   PAMEnvReplaceVariables,
   PAMEnvResolve,
+  PAMEnvResolveByName,
+  PAMEnvResolvedEnvironment,
   PAMEnvResolvedVariable,
   PAMEnvSettings,
   PAMEnvWriteable
@@ -221,6 +223,20 @@ export interface PAMServiceInterface {
     params: PAMEnvResolve,
     context: PAMEnvAccessContext
   ): Promise<{ variables: PAMEnvResolvedVariable[] }>;
+
+  /**
+   * Same as {@link resolveEnvironment}, addressed by project slug/id and
+   * environment name (one request for `pamenv run -e`).
+   *
+   * @param projectRef - Project slug or id
+   * @param params - Environment name and optional key filter
+   * @param context - Request origin for the audit log
+   */
+  resolveEnvironmentByName(
+    projectRef: string,
+    params: PAMEnvResolveByName,
+    context: PAMEnvAccessContext
+  ): Promise<PAMEnvResolvedEnvironment>;
 
   /**
    * Updates environment settings (protected flag). Requires export permission.

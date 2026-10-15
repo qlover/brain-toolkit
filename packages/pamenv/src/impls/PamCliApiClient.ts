@@ -11,6 +11,7 @@ import type {
   PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
+  PamCliResolveByNameResultType,
   PamCliResolveResultType,
   PamCliVariableInputType
 } from '../interfaces/PamCliTypes';
@@ -348,6 +349,33 @@ export class PamCliApiClient implements PamCliApiClientInterface {
           ...CLIENT_HEADER
         },
         body: JSON.stringify(keys && keys.length > 0 ? { keys } : {})
+      }
+    );
+  }
+
+  /**
+   * @override
+   */
+  public async resolveEnvironmentByName(
+    projectRef: string,
+    envName: string,
+    keys?: readonly string[]
+  ): Promise<PamCliResolveByNameResultType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+
+    return this.requestJson<PamCliResolveByNameResultType>(
+      `${baseUrl}/api/pam/${encodeURIComponent(projectRef)}/resolve`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...CLIENT_HEADER
+        },
+        body: JSON.stringify(
+          keys && keys.length > 0 ? { env: envName, keys } : { env: envName }
+        )
       }
     );
   }

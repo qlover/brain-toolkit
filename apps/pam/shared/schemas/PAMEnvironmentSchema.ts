@@ -73,6 +73,24 @@ export const PAMEnvResolveSchema = z.object({
 export type PAMEnvResolve = z.infer<typeof PAMEnvResolveSchema>;
 
 /**
+ * Body for `POST /api/pam/:projectRef/resolve`: environment by name, so
+ * `pamenv run -e` needs no project search first.
+ */
+export const PAMEnvResolveByNameSchema = PAMEnvResolveSchema.extend({
+  env: z.string().trim().min(1).max(200)
+});
+
+export type PAMEnvResolveByName = z.infer<typeof PAMEnvResolveByNameSchema>;
+
+export type PAMEnvResolvedEnvironment = {
+  projectId: string;
+  projectSlug: string;
+  environmentId: string;
+  environmentName: string;
+  variables: PAMEnvResolvedVariable[];
+};
+
+/**
  * Body for `POST .../settings`.
  */
 export const PAMEnvSettingsSchema = z.object({

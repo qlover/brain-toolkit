@@ -101,6 +101,14 @@ export type PamCliResolveResultType = {
   readonly variables: readonly PamCliResolvedVarType[];
 };
 
+/** Resolve by project ref + env name: also echoes what was matched. */
+export type PamCliResolveByNameResultType = PamCliResolveResultType & {
+  readonly projectId: string;
+  readonly projectSlug: string;
+  readonly environmentId: string;
+  readonly environmentName: string;
+};
+
 /** `pamenv render --format` values. */
 export type PamCliOutputFormatType = 'dotenv' | 'json' | 'yaml' | 'toml';
 
