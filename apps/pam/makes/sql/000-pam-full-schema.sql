@@ -1767,26 +1767,19 @@ CREATE INDEX IF NOT EXISTS idx_pam_projects_team_id
 COMMENT ON COLUMN public.pam_projects.team_id IS
   'Owning pam_role_teams row. Null = legacy/unassigned.';
 
--- Backfill personal teams + members from project owners / collaborators
+-- Backfill personal teams from project owners.
+-- Personal teams hold only their owner: collaborators must never be copied in,
+-- or they would gain access to every project of that owner.
 DO $$
 DECLARE
   r RECORD;
   v_team_id UUID;
-  c RECORD;
-  v_existing UUID;
-  v_rank INT;
-  v_new_rank INT;
-  v_role_id UUID;
   RID_OWNER UUID;
-  RID_ADMIN UUID;
-  RID_MEMBER UUID;
 BEGIN
   SELECT id INTO RID_OWNER FROM public.pam_roles WHERE key = 'team_owner';
-  SELECT id INTO RID_ADMIN FROM public.pam_roles WHERE key = 'team_admin';
-  SELECT id INTO RID_MEMBER FROM public.pam_roles WHERE key = 'team_member';
 
-  IF RID_OWNER IS NULL OR RID_ADMIN IS NULL OR RID_MEMBER IS NULL THEN
-    RAISE EXCEPTION 'pam_roles team_* keys missing';
+  IF RID_OWNER IS NULL THEN
+    RAISE EXCEPTION 'pam_roles team_owner key missing';
   END IF;
 
   FOR r IN
@@ -1821,54 +1814,6 @@ BEGIN
     WHERE owner_id = r.owner_id
       AND is_deleted = 0
       AND team_id IS NULL;
-
-    FOR c IN
-      SELECT DISTINCT ON (pc.user_id)
-        pc.user_id,
-        pc.role,
-        pc.invited_by
-      FROM public.pam_project_collaborators pc
-      INNER JOIN public.pam_projects p ON p.id = pc.project_id
-      WHERE p.owner_id = r.owner_id
-        AND p.is_deleted = 0
-        AND pc.status = 'active'
-        AND pc.user_id <> r.owner_id
-      ORDER BY pc.user_id,
-        CASE pc.role WHEN 'admin' THEN 2 WHEN 'member' THEN 1 ELSE 0 END DESC
-    LOOP
-      SELECT role_id INTO v_existing
-      FROM public.pam_role_team_members
-      WHERE team_id = v_team_id
-        AND user_id = c.user_id
-        AND status = 'active';
-
-      v_rank := CASE v_existing
-        WHEN RID_OWNER THEN 3
-        WHEN RID_ADMIN THEN 2
-        WHEN RID_MEMBER THEN 1
-        ELSE 0
-      END;
-      v_new_rank := CASE c.role
-        WHEN 'admin' THEN 2
-        WHEN 'member' THEN 1
-        ELSE 0
-      END;
-      v_role_id := CASE c.role
-        WHEN 'admin' THEN RID_ADMIN
-        ELSE RID_MEMBER
-      END;
-
-      IF v_existing IS NULL THEN
-        INSERT INTO public.pam_role_team_members (team_id, user_id, role_id, invited_by)
-        VALUES (v_team_id, c.user_id, v_role_id, c.invited_by)
-        ON CONFLICT (team_id, user_id) DO NOTHING;
-      ELSIF v_new_rank > v_rank AND v_existing <> RID_OWNER THEN
-        UPDATE public.pam_role_team_members
-        SET role_id = v_role_id
-        WHERE team_id = v_team_id
-          AND user_id = c.user_id;
-      END IF;
-    END LOOP;
   END LOOP;
 END $$;
 
@@ -1895,6 +1840,7 @@ WHERE p.team_id IS NULL
 
 -- pam_search_projects: private visibility via team membership (not collaborators).
 -- Safe to re-run. Replaces visibility predicates that used pam_project_collaborators.
+-- Membership in another user's personal team (personal-{owner_id}) grants nothing.
 
 CREATE OR REPLACE FUNCTION pam_search_projects(
   p_user_id uuid DEFAULT NULL,
@@ -1966,9 +1912,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
@@ -1980,9 +1931,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
@@ -2013,9 +1969,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))
@@ -2027,9 +1988,14 @@ BEGIN
             AND EXISTS (
               SELECT 1
               FROM pam_role_team_members m
+              JOIN pam_role_teams t ON t.id = m.team_id
               WHERE m.team_id = p.team_id
                 AND m.user_id = p_user_id
                 AND m.status = 'active'
+                AND (
+                  t.slug NOT LIKE 'personal-%'
+                  OR t.slug = 'personal-' || p_user_id::text
+                )
             )
           )
         ))

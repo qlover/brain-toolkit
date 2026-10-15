@@ -165,7 +165,7 @@ export class PamTeamService {
     if (!team) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
-    if (input.user_id === team.owner_id) {
+    if (isPersonalTeamSlug(team.slug) || input.user_id === team.owner_id) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
@@ -203,7 +203,7 @@ export class PamTeamService {
     if (!team) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
-    if (userId === team.owner_id) {
+    if (isPersonalTeamSlug(team.slug) || userId === team.owner_id) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 

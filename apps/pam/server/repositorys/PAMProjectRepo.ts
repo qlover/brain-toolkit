@@ -43,6 +43,7 @@ import {
   PAMProjectCreate,
   PAMPublicType
 } from '@schemas/PAMProjectSchema';
+import { isTeamMembershipEffective } from '@schemas/PamTeamSchema';
 import { isPamSearchRpcUnavailable } from '@server/utils/postgrestError';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
@@ -239,12 +240,19 @@ export class PAMProjectRepo extends BaseRepository<
     const admin = this.supabaseRepo.getAdminSupabase();
     const r0 = await admin
       .from('pam_role_team_members')
-      .select('team_id')
+      .select('team_id, pam_role_teams ( slug )')
       .eq('user_id', userId)
       .eq('status', 'active');
     this.supabaseRepo.throwIfError(r0);
-    const data = r0.data;
-    return (data ?? []).map((row) => row.team_id as string);
+    const rows = (r0.data ?? []) as unknown as Array<{
+      team_id: string;
+      pam_role_teams: { slug: string } | null;
+    }>;
+    return rows
+      .filter((row) =>
+        isTeamMembershipEffective(row.pam_role_teams?.slug, userId)
+      )
+      .map((row) => row.team_id);
   }
 
   /**
