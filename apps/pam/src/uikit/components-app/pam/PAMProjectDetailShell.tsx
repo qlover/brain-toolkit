@@ -247,12 +247,13 @@ export function PAMProjectDetailShell({
         case PermissionKey.pam_environments_read:
         case PermissionKey.pam_environments_create:
         case PermissionKey.pam_environments_variables_write:
-        case PermissionKey.pam_environments_export:
+        case PermissionKey.pam_environments_inject:
           return canEditLegacy;
         case PermissionKey.pam_project_delete:
         case PermissionKey.pam_project_transfer:
           return Boolean(project?.is_owner);
         case PermissionKey.pam_environments_delete:
+        case PermissionKey.pam_environments_export:
           return canManageLegacy;
         default:
           return false;

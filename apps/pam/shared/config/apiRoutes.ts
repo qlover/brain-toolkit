@@ -237,6 +237,16 @@ export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 export const API_PAM_ENVIRONMENTS = '/api/pam/:projectId/environments' as const;
 
 /**
+ * API path: `/api/pam/:projectId/environments/:envId/access-logs`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/access-logs/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/access-logs/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/access-logs/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_ACCESS_LOGS =
+  '/api/pam/:projectId/environments/:envId/access-logs' as const;
+
+/**
  * API path: `/api/pam/:projectId/environments/:envId/delete`
  *
  * @see [src/app/api/pam/[projectId]/environments/[envId]/delete/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/delete/route.ts)
@@ -255,6 +265,26 @@ export const API_PAM_ENVIRONMENTS_DELETE =
  */
 export const API_PAM_ENVIRONMENTS_EXPORT =
   '/api/pam/:projectId/environments/:envId/export' as const;
+
+/**
+ * API path: `/api/pam/:projectId/environments/:envId/resolve`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/resolve/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/resolve/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/resolve/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_RESOLVE =
+  '/api/pam/:projectId/environments/:envId/resolve' as const;
+
+/**
+ * API path: `/api/pam/:projectId/environments/:envId/settings`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/settings/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/settings/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/settings/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_SETTINGS =
+  '/api/pam/:projectId/environments/:envId/settings' as const;
 
 /**
  * API path: `/api/pam/:projectId/environments/:envId/variables`
@@ -647,8 +677,11 @@ export type ApiRoutePath =
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
   | typeof API_PAM_ENVIRONMENTS
+  | typeof API_PAM_ENVIRONMENTS_ACCESS_LOGS
   | typeof API_PAM_ENVIRONMENTS_DELETE
   | typeof API_PAM_ENVIRONMENTS_EXPORT
+  | typeof API_PAM_ENVIRONMENTS_RESOLVE
+  | typeof API_PAM_ENVIRONMENTS_SETTINGS
   | typeof API_PAM_ENVIRONMENTS_VARIABLES
   | typeof API_PAM_CATEGORIES
   | typeof API_PAM_CLI_DEVICE_APPROVE

@@ -7,6 +7,11 @@ import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
 import {
   PAMEnvCreateSchema,
   PAMEnvReplaceVariablesSchema,
+  PAMEnvResolveSchema,
+  PAMEnvSettingsSchema,
+  type PAMEnvAccessContext,
+  type PAMEnvAccessLog,
+  type PAMEnvResolvedVariable,
   type PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -244,14 +249,99 @@ export class PAMController {
   }
 
   /**
-   * Owner-only decrypted dotenv export for CLI.
+   * Decrypted variables for `pamenv run` (no comments, no dotenv text).
+   *
+   * @param projectId - Project id path param
+   * @param envId - Environment id path param
+   * @param request - Incoming request with optional `{ keys }`
+   */
+  public async resolveEnvironment(
+    projectId: string,
+    envId: string,
+    request: NextRequest
+  ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
+    const projectUuid = uuidSchema.parse(projectId);
+    const envUuid = uuidSchema.parse(envId);
+    const text = await request.text();
+    const parsed = PAMEnvResolveSchema.parse(text ? JSON.parse(text) : {});
+    return this.pamService.resolveEnvironment(
+      projectUuid,
+      envUuid,
+      parsed,
+      this.getEnvAccessContext(request)
+    );
+  }
+
+  /**
+   * Updates environment settings (`{ isProtected }`).
+   *
+   * @param projectId - Project id path param
+   * @param envId - Environment id path param
+   * @param request - Incoming request
+   */
+  public async updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    request: NextRequest
+  ): Promise<PAMEnvWriteable> {
+    const projectUuid = uuidSchema.parse(projectId);
+    const envUuid = uuidSchema.parse(envId);
+    const body = await request.json();
+
+    if (isEmpty(body)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+
+    const parsed = PAMEnvSettingsSchema.parse(body);
+    return this.pamService.updateEnvironmentSettings(
+      projectUuid,
+      envUuid,
+      parsed
+    );
+  }
+
+  /**
+   * Recent access records (resolve / export) for one environment.
    *
    * @param projectId - Project id path param
    * @param envId - Environment id path param
    */
-  public exportEnvironment(
+  public listEnvironmentAccessLogs(
     projectId: string,
     envId: string
+  ): Promise<PAMEnvAccessLog[]> {
+    const projectUuid = uuidSchema.parse(projectId);
+    const envUuid = uuidSchema.parse(envId);
+    return this.pamService.listEnvironmentAccessLogs(projectUuid, envUuid);
+  }
+
+  /**
+   * Request origin for `pam_env_access_logs`.
+   */
+  protected getEnvAccessContext(request: NextRequest): PAMEnvAccessContext {
+    const client =
+      request.headers.get('x-pamenv-client') ??
+      request.headers.get('user-agent');
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip');
+    return {
+      client: client ? client.slice(0, 200) : null,
+      ip: ip || null
+    };
+  }
+
+  /**
+   * Decrypted dotenv export for CLI (`pam_environments_export`).
+   *
+   * @param projectId - Project id path param
+   * @param envId - Environment id path param
+   * @param request - Incoming request (audit origin)
+   */
+  public exportEnvironment(
+    projectId: string,
+    envId: string,
+    request?: NextRequest
   ): Promise<{
     projectId: string;
     projectSlug: string;
@@ -268,7 +358,11 @@ export class PAMController {
   }> {
     const projectUuid = uuidSchema.parse(projectId);
     const envUuid = uuidSchema.parse(envId);
-    return this.pamService.exportEnvironment(projectUuid, envUuid);
+    return this.pamService.exportEnvironment(
+      projectUuid,
+      envUuid,
+      request ? this.getEnvAccessContext(request) : undefined
+    );
   }
 
   /**

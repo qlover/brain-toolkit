@@ -11,16 +11,20 @@ import {
   buildApiPamDetail,
   buildApiPamDetele,
   buildApiPamEdit,
+  buildApiPamEnvironmentAccessLogs,
   buildApiPamEnvironmentDelete,
   buildApiPamEnvironments,
+  buildApiPamEnvironmentSettings,
   buildApiPamEnvironmentVariables,
   buildApiPamFork,
   buildApiPamPreviewImage,
   buildApiPamTransfer
 } from '@config/route';
 import type {
+  PAMEnvAccessLog,
   PAMEnvCreate,
   PAMEnvReplaceVariables,
+  PAMEnvSettings,
   PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -312,6 +316,45 @@ export class PAMApi {
     >(buildApiPamEnvironmentVariables(projectId, envId), {
       variables
     });
+
+    return response.data.data!;
+  }
+
+  /**
+   * Updates environment settings (protected flag).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param settings - New settings
+   * @returns Updated environment (redacted)
+   */
+  public async updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    settings: PAMEnvSettings
+  ): Promise<PAMEnvWriteable> {
+    const response = await this.appApiRequester.post<
+      NextKitApiSuccess<PAMEnvWriteable>,
+      PAMEnvSettings
+    >(buildApiPamEnvironmentSettings(projectId, envId), settings);
+
+    return response.data.data!;
+  }
+
+  /**
+   * Recent resolve / export records for one environment.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async listEnvironmentAccessLogs(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvAccessLog[]> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<PAMEnvAccessLog[]>,
+      Record<string, never>
+    >(buildApiPamEnvironmentAccessLogs(projectId, envId));
 
     return response.data.data!;
   }

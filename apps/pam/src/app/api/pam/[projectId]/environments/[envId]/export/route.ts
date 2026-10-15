@@ -27,7 +27,8 @@ export async function GET(req: NextRequest, context: ExportRouteContext) {
     .runWithJson(async ({ parameters: { IOC } }) => {
       const result = await IOC(PAMController).exportEnvironment(
         projectId,
-        envId
+        envId,
+        req
       );
 
       try {

@@ -206,6 +206,14 @@ export const PERMISSION_PAM_ENVIRONMENTS_EXPORT =
   'permission:pam_environments_export';
 
 /**
+ * @description Inject environment variables into a process (pamenv run)
+ * @localZh 注入环境变量到进程（pamenv run）
+ * @localEn Inject environment variables into a process (pamenv run)
+ */
+export const PERMISSION_PAM_ENVIRONMENTS_INJECT =
+  'permission:pam_environments_inject';
+
+/**
  * @description Delete project
  * @localZh 删除项目
  * @localEn Delete project

@@ -235,6 +235,13 @@ export const API_PAM_SITE_URL_INVALID = 'api:pam_site_url_invalid';
 export const API_PAM_ENV_NOT_FOUND = 'api:pam_env_not_found';
 
 /**
+ * @description 受保护环境只允许有导出权限的成员（管理员 / 所有者）使用
+ * @localZh 该环境已设为受保护，只有项目管理员或所有者可以使用
+ * @localEn This environment is protected; only project admins or owners can use it
+ */
+export const API_PAM_ENV_PROTECTED = 'api:pam_env_protected';
+
+/**
  * @description 项目 slug 不能重复
  * @localZh 项目 slug 已存在
  * @localEn PAM slug already exists

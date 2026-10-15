@@ -343,3 +343,107 @@ export const PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_EMPTY =
  */
 export const PAGE_PAM_ENVIRONMENTS_ENV_VAR_IMPORT_INVALID =
   'page_pam_environments:envVarImportInvalid';
+
+/**
+ * @description Protected environment toggle label
+ * @localZh 受保护环境
+ * @localEn Protected environment
+ */
+export const PAGE_PAM_ENVIRONMENTS_ENV_PROTECTED =
+  'page_pam_environments:envProtected';
+
+/**
+ * @description Protected environment toggle help text
+ * @localZh 开启后，只有项目管理员和所有者可以通过 pamenv run 使用该环境的变量
+ * @localEn When on, only project admins and owners can use this environment with pamenv run
+ */
+export const PAGE_PAM_ENVIRONMENTS_ENV_PROTECTED_HINT =
+  'page_pam_environments:envProtectedHint';
+
+/**
+ * @description Protected badge in the environment list
+ * @localZh 受保护
+ * @localEn Protected
+ */
+export const PAGE_PAM_ENVIRONMENTS_ENV_PROTECTED_BADGE =
+  'page_pam_environments:envProtectedBadge';
+
+/**
+ * @description Protected flag saved toast
+ * @localZh 环境设置已保存
+ * @localEn Environment settings saved
+ */
+export const PAGE_PAM_ENVIRONMENTS_ENV_SETTINGS_SAVED =
+  'page_pam_environments:envSettingsSaved';
+
+/**
+ * @description Access records section title
+ * @localZh 访问记录
+ * @localEn Access records
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_LOGS_TITLE =
+  'page_pam_environments:accessLogsTitle';
+
+/**
+ * @description Access records help text
+ * @localZh 最近通过 pamenv run / pull / render 读取该环境变量的记录（不记录变量值）
+ * @localEn Recent reads of this environment via pamenv run / pull / render (values are never logged)
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_LOGS_HINT =
+  'page_pam_environments:accessLogsHint';
+
+/**
+ * @description Show access records button
+ * @localZh 查看访问记录
+ * @localEn View access records
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_LOGS_SHOW =
+  'page_pam_environments:accessLogsShow';
+
+/**
+ * @description Hide access records button
+ * @localZh 收起访问记录
+ * @localEn Hide access records
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_LOGS_HIDE =
+  'page_pam_environments:accessLogsHide';
+
+/**
+ * @description No access records yet
+ * @localZh 暂无访问记录
+ * @localEn No access records yet
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_LOGS_EMPTY =
+  'page_pam_environments:accessLogsEmpty';
+
+/**
+ * @description Access action: resolve (pamenv run)
+ * @localZh 注入运行
+ * @localEn Run (inject)
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_ACTION_RESOLVE =
+  'page_pam_environments:accessActionResolve';
+
+/**
+ * @description Access action: export (pull / render)
+ * @localZh 导出明文
+ * @localEn Export (plaintext)
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_ACTION_EXPORT =
+  'page_pam_environments:accessActionExport';
+
+/**
+ * @description Key count in an access record
+ * @localZh %count% 个变量
+ * @localEn %count% variables
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_KEY_COUNT =
+  'page_pam_environments:accessKeyCount';
+
+/**
+ * @description Unknown user in an access record
+ * @localZh 未知用户
+ * @localEn Unknown user
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_UNKNOWN_USER =
+  'page_pam_environments:accessUnknownUser';
