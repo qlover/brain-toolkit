@@ -6,6 +6,14 @@ export { PamCliApiClient } from './impls/PamCliApiClient';
 export { PamCliApiError } from './impls/PamCliApiError';
 export { PamCliLocaleCatalog } from './impls/PamCliLocaleCatalog';
 export { PamCliDotenvUtil } from './impls/PamCliDotenvUtil';
+export {
+  PamCliDotenvAdapter,
+  PamCliJsonAdapter,
+  PamCliOutputAdapterRegistry,
+  PamCliTomlAdapter,
+  PamCliYamlAdapter
+} from './impls/PamCliOutputAdapters';
+export type { PamCliOutputAdapterInterface } from './interfaces/PamCliOutputAdapterInterface';
 export type { PamCliAuthStoreInterface } from './interfaces/PamCliAuthStoreInterface';
 export type {
   PamCliApiClientInterface,
@@ -22,8 +30,11 @@ export type {
   PamCliLocaleSourceType,
   PamCliLocaleType,
   PamCliLocalEnvOptionsType,
+  PamCliOutputFormatType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
+  PamCliResolvedVarType,
+  PamCliResolveResultType,
   PamCliVariableInputType
 } from './interfaces/PamCliTypes';
 export { PamCliI18n } from './i18n/PamCliI18n';

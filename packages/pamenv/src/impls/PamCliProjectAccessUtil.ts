@@ -1,6 +1,8 @@
 import type { PamCliProjectType } from '../interfaces/PamCliTypes';
 
 const ENV_DELETE_PERMISSION = 'pam_environments_delete';
+const ENV_EXPORT_PERMISSION = 'pam_environments_export';
+const ENV_INJECT_PERMISSION = 'pam_environments_inject';
 const PROJECT_EDIT_PERMISSION = 'pam_project_edit';
 
 function hasPermission(
@@ -34,6 +36,28 @@ export class PamCliProjectAccessUtil {
       return true;
     }
     return project.is_owner === true;
+  }
+
+  /** Plaintext export (`pull` / `render`): project admin / owner. */
+  public static canExport(project: PamCliProjectType): boolean {
+    if (hasPermission(project, ENV_EXPORT_PERMISSION)) {
+      return true;
+    }
+    if (project.permissions || project.org_permissions) {
+      return false;
+    }
+    return this.canManage(project);
+  }
+
+  /** Process injection (`run`): every team role. */
+  public static canInject(project: PamCliProjectType): boolean {
+    if (hasPermission(project, ENV_INJECT_PERMISSION)) {
+      return true;
+    }
+    if (project.permissions || project.org_permissions) {
+      return false;
+    }
+    return this.canEdit(project);
   }
 
   public static roleLabel(project: PamCliProjectType): string {

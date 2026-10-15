@@ -654,11 +654,83 @@ export const PAMENV_CLI_PULL_UP_TO_DATE = 'pamenv_cli:pull_up_to_date';
 export const PAMENV_CLI_PULLED = 'pamenv_cli:pulled';
 
 /**
- * @description 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。
- * @localZh 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。
- * @localEn You do not have write access to project "{{slug}}" (project owner or team writer required).
+ * @description 导出明文需要项目管理员或所有者权限
+ * @localZh 你没有项目 "{{slug}}" 的导出权限（需为项目管理员或所有者）。日常开发请改用 `pamenv run {{slug}} -e <env> -- <命令>`，变量只注入进程、不落盘。
+ * @localEn You cannot export plaintext from project "{{slug}}" (project admin or owner required). For development use `pamenv run {{slug}} -e <env> -- <command>`, which injects variables into the process without writing files.
  */
 export const PAMENV_CLI_NOT_OWNER_EXPORT = 'pamenv_cli:not_owner_export';
+
+/**
+ * @description run 需要注入权限
+ * @localZh 你没有项目 "{{slug}}" 的变量注入权限（需为项目团队成员）。
+ * @localEn You cannot inject variables from project "{{slug}}" (project team membership required).
+ */
+export const PAMENV_CLI_NO_INJECT_PERMISSION =
+  'pamenv_cli:no_inject_permission';
+
+/**
+ * @description run 缺少要执行的命令
+ * @localZh 请在 `--` 之后提供要运行的命令，例如：pamenv run {{slug}} -e local -- pnpm dev
+ * @localEn Provide the command to run after `--`, for example: pamenv run {{slug}} -e local -- pnpm dev
+ */
+export const PAMENV_CLI_RUN_COMMAND_REQUIRED =
+  'pamenv_cli:run_command_required';
+
+/**
+ * @description run 注入完成提示（输出到 stderr）
+ * @localZh [pamenv] 已从 {{slug}}/{{env}} 注入 {{count}} 个变量
+ * @localEn [pamenv] Injected {{count}} variable(s) from {{slug}}/{{env}}
+ */
+export const PAMENV_CLI_RUN_INJECTED = 'pamenv_cli:run_injected';
+
+/**
+ * @description run 无法启动子进程
+ * @localZh 无法启动命令 "{{command}}": {{message}}
+ * @localEn Failed to start "{{command}}": {{message}}
+ */
+export const PAMENV_CLI_RUN_SPAWN_FAILED = 'pamenv_cli:run_spawn_failed';
+
+/**
+ * @description --only 指定的键在环境中不存在
+ * @localZh [pamenv] 警告：环境中不存在这些键：{{keys}}
+ * @localEn [pamenv] Warning: these keys do not exist in the environment: {{keys}}
+ */
+export const PAMENV_CLI_ONLY_MISSING = 'pamenv_cli:only_missing';
+
+/**
+ * @description 绕过检查：.env 文件与注入的键重名
+ * @localZh [pamenv] 警告：{{file}} 中有 {{count}} 个键与注入的变量重名（{{keys}}）。若项目用 dotenv 加载且开启 override，文件里的值会覆盖注入值，建议删除该文件或这些键。
+ * @localEn [pamenv] Warning: {{file}} defines {{count}} key(s) that are also injected ({{keys}}). If dotenv loads it with override enabled, file values win; consider removing the file or those keys.
+ */
+export const PAMENV_CLI_WARN_DOTENV_OVERLAP = 'pamenv_cli:warn_dotenv_overlap';
+
+/**
+ * @description 绕过检查：敏感变量带前端公开前缀
+ * @localZh [pamenv] 警告：敏感变量 {{keys}} 带有 NEXT_PUBLIC_ / VITE_ 前缀，会在构建时写进前端代码包，不应存放密钥。
+ * @localEn [pamenv] Warning: sensitive variable(s) {{keys}} use a NEXT_PUBLIC_ / VITE_ prefix and will be bundled into client code at build time; do not store secrets there.
+ */
+export const PAMENV_CLI_WARN_PUBLIC_PREFIX = 'pamenv_cli:warn_public_prefix';
+
+/**
+ * @description 绕过检查：turbo 严格环境变量模式
+ * @localZh [pamenv] 警告：{{file}} 使用严格环境变量模式，{{count}} 个注入的变量未在 env / passThroughEnv 中声明（{{keys}}），Turbo 运行的任务可能拿不到。
+ * @localEn [pamenv] Warning: {{file}} uses strict env mode and {{count}} injected variable(s) are not declared in env / passThroughEnv ({{keys}}); Turbo tasks may not receive them.
+ */
+export const PAMENV_CLI_WARN_TURBO_STRICT = 'pamenv_cli:warn_turbo_strict';
+
+/**
+ * @description render 格式不支持
+ * @localZh 不支持的格式 "{{format}}"，可选：{{formats}}
+ * @localEn Unsupported format "{{format}}". Choose one of: {{formats}}
+ */
+export const PAMENV_CLI_RENDER_BAD_FORMAT = 'pamenv_cli:render_bad_format';
+
+/**
+ * @description render 写入文件完成（输出到 stderr）
+ * @localZh 已输出 {{slug}}/{{env}}（{{format}}，{{count}} 个变量）→ {{path}}
+ * @localEn Rendered {{slug}}/{{env}} ({{format}}, {{count}} vars) → {{path}}
+ */
+export const PAMENV_CLI_RENDERED = 'pamenv_cli:rendered';
 
 /**
  * @description 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。

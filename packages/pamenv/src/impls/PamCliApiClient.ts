@@ -11,12 +11,17 @@ import type {
   PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
+  PamCliResolveResultType,
   PamCliVariableInputType
 } from '../interfaces/PamCliTypes';
 import { PamCliConfig } from '../config/PamCliConfig';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import { PAMENV_CLI_NOT_LOGGED_IN } from '../i18n/identifier/pamenv_cli';
 import { PamCliApiError } from './PamCliApiError';
+import { version } from '../../package.json';
+
+/** Recorded in PAM env access logs. */
+const CLIENT_HEADER = { 'x-pamenv-client': `pamenv-cli/${version}` } as const;
 
 type ApiEnvelopeType<T> = {
   readonly success: boolean;
@@ -315,8 +320,34 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          ...CLIENT_HEADER
         }
+      }
+    );
+  }
+
+  /**
+   * @override
+   */
+  public async resolveEnvironment(
+    projectId: string,
+    envId: string,
+    keys?: readonly string[]
+  ): Promise<PamCliResolveResultType> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+
+    return this.requestJson<PamCliResolveResultType>(
+      `${baseUrl}/api/pam/${projectId}/environments/${envId}/resolve`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...CLIENT_HEADER
+        },
+        body: JSON.stringify(keys && keys.length > 0 ? { keys } : {})
       }
     );
   }
