@@ -61,7 +61,7 @@ export class PullCommand {
       projectRef
     );
 
-    if (!PamCliProjectAccessUtil.canEdit(project)) {
+    if (!PamCliProjectAccessUtil.canExport(project)) {
       throw new Error(
         PamCliI18n.t(PAMENV_CLI_NOT_OWNER_EXPORT, { slug: project.slug })
       );

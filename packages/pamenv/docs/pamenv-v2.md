@@ -39,8 +39,10 @@ PAM（按项目 / 环境 / 权限管理变量，服务端 AES-256-GCM 加密存�
 
 ```bash
 pamenv run <slug|id> -e dev -- pnpm dev
-pamenv run -e dev -- node server.js        # 省略项目时，从当前目录的绑定（init）解析
+pamenv run <slug|id> -e dev -- node server.js
 ```
+
+项目参数必填：`init` 目前不会在当前目录记录项目绑定，省略项目留待以后。
 
 | 选项                | 说明                                            |
 | ------------------- | ----------------------------------------------- |
@@ -61,8 +63,8 @@ pamenv run -e dev -- node server.js        # 省略项目时，从当前目录�
 
 ```bash
 pamenv render <slug|id> -e dev --format dotenv --out .env.local
-pamenv render -e dev --format json                 # 默认输出到 stdout
-pamenv render -e dev --format toml --out config.toml
+pamenv render <slug|id> -e dev --format json                 # 默认输出到 stdout
+pamenv render <slug|id> -e dev --format toml --out config.toml
 ```
 
 | 选项                                  | 说明                                          |
@@ -76,7 +78,8 @@ pamenv render -e dev --format toml --out config.toml
 ### `pamenv pull`（保留，兼容现有用法）
 
 - 行为不变：对比基线、处理冲突、保留注释、写入 `.env`。
-- 内部改为复用 `render` 的 dotenv 适配器，序列化逻辑只保留一份。
+- 权限检查改为导出权限；没有权限时提示改用 `pamenv run`。
+- dotenv 适配器和 `pull` 共用 `PamCliDotenvUtil` 的序列化，只保留一份实现；`pull` 额外做按文档合并（保留本地注释）。
 - 帮助信息里提示：日常开发推荐使用 `pamenv run`。
 
 ## 输出适配器
@@ -99,7 +102,7 @@ interface PamEnvOutputAdapterInterface {
 
 - `dotenv`：复用现有的 `PamCliDotenvUtil`，保留注释和多行值。
 - `json`：平铺的 `{ "KEY": "value" }`。
-- `yaml` / `toml`：平铺的键值对；多行值使用各自格式的多行字符串语法。
+- `yaml` / `toml`：平铺的键值对；值统一用双引号字符串并转义（含换行），不依赖第三方库。
 - 新增格式只需实现这个接口并注册，命令层不改。
 - 是否支持嵌套结构（例如把 `DB__HOST` 展开为 `db.host`）暂不做，见待定问题。
 
@@ -110,9 +113,9 @@ interface PamEnvOutputAdapterInterface {
 | `pam_environments_inject`（新增） | 调用 `resolve`，用于 `pamenv run`                    | team_member、team_admin、team_owner |
 | `pam_environments_export`（已有） | 调用 `export`，用于 `pull` / `render` / 网页查看明文 | **改为**只给 team_admin、team_owner |
 
-- 网页端：没有导出权限时，敏感变量只显示 `••••`，不提供「显示」和「导出」。
-- 这一项会改变现有成员的权限：成员原来能 `pull`，改完后只能 `run`。上线前需要通知团队，并在 SQL 升级脚本里调整角色和权限的绑定。
-- 生产环境的单独收紧（例如给环境加「受保护」标记，只允许 admin 和 CI 使用）放到第二阶段。
+- 网页端：所有读取接口本来就会清空敏感值，浏览器拿不到明文，也没有「显示」功能，无需改动。
+- 这一项会改变现有成员的权限：成员原来能 `pull`，改完后只能 `run`。上线前需要通知团队；SQL 升级脚本（`001` 第 8 节）会移除 team_member 的导出权限。
+- 受保护环境（`pam_environments.is_protected`）：`resolve` 除了注入权限还要求导出权限，即只有 admin / owner 能 `run`。开关和访问记录在网页端环境页，只对有导出权限的人显示。
 
 ## 服务端接口
 
@@ -126,7 +129,15 @@ interface PamEnvOutputAdapterInterface {
 
 ### 已有 `GET .../export`
 
-- 行为不变，只是权限收紧到 admin / owner。
+- 行为不变，只是权限收紧到 admin / owner，并写审计日志。
+
+### 新增 `POST .../settings` 与 `GET .../access-logs`
+
+- 都要求 `pam_environments_export`。
+- `settings` 请求体 `{ "isProtected": boolean }`。
+- `access-logs` 返回该环境最近 50 条记录。
+
+CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 字段记录它。
 
 ### 审计日志
 
@@ -168,13 +179,13 @@ interface PamEnvOutputAdapterInterface {
 
 | 阶段 | 内容                                                                                                       |
 | ---- | ---------------------------------------------------------------------------------------------------------- |
-| 一   | `resolve` 接口、`pam_environments_inject` 权限与审计日志；`pamenv run`；绕过检查                           |
-| 二   | `pamenv render` 与四种适配器；`pull` 改为复用 dotenv 适配器；`export` 权限收紧；网页端隐藏明文；受保护环境 |
+| 一   | `resolve` 接口、`pam_environments_inject` 权限与审计日志；`pamenv run`；绕过检查（已完成）                 |
+| 二   | `pamenv render` 与四种适配器；`export` 权限收紧；受保护环境；访问记录（已完成）                            |
 | 三   | 钥匙串存储凭证；CI 的 OIDC 接入                                                                            |
 
 ## 待定问题
 
-1. `run` 默认以 PAM 为准覆盖同名变量，还是以当前 shell 为准？本文建议以 PAM 为准，用 `--keep-env` 处理例外。
+1. ~~`run` 同名变量以谁为准~~：已实现为以 PAM 为准，`--keep-env` 处理例外。
 2. 收紧 `export` 权限后，现有依赖 `pull` 的成员如何过渡：是否需要一段时间的兼容期？
 3. 适配器是否需要支持嵌套结构，比如把 `DB__HOST` 展开为 `db.host`？
 4. 审计日志保留多久？

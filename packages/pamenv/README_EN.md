@@ -1,6 +1,10 @@
 # pamenv-cli
 
-`pamenv` syncs PAM multi-environment variables with local `.env.<environment>` files: `init` creates a project from the current directory, then `pull` / `push` keep local files and PAM in sync.
+`pamenv` uses and manages PAM multi-environment variables:
+
+- For day-to-day development, `pamenv run` injects variables straight into a command's process, so no plaintext file stays on disk.
+- When you need a file, `pamenv render` outputs dotenv / JSON / YAML / TOML, and `pull` / `push` sync with `.env.<environment>` files.
+- `init` creates a project from the current directory.
 
 ## Install
 
@@ -17,7 +21,8 @@ pamenv login                      # sign in via the browser
 cd your-project
 pamenv init                       # create a project interactively (defaults from the cwd)
 pamenv push <slug> -e local       # upload .env.local
-pamenv pull <slug> -e staging     # download into .env.staging
+pamenv run <slug> -e local -- pnpm dev   # start with variables injected, no files written
+pamenv pull <slug> -e staging     # download into .env.staging (export permission)
 ```
 
 ## Commands
@@ -29,6 +34,8 @@ pamenv pull <slug> -e staging     # download into .env.staging
 | `pamenv projects` | List projects you can access |
 | `pamenv init` | Create a project interactively |
 | `pamenv fork <slug\|id>` | Fork a readable project into your own private project |
+| `pamenv run <slug\|id> -- <command>` | Run a command with variables injected into its process; no files written |
+| `pamenv render <slug\|id>` | Output variables as dotenv / json / yaml / toml |
 | `pamenv pull <slug\|id>` | Write remote variables into a local file |
 | `pamenv push <slug\|id>` | Push variables from a local file to PAM |
 | `pamenv remove <slug\|id> -e <env>` | Delete a remote environment |
@@ -113,6 +120,63 @@ pamenv fork <slug|id> -y          # accept the default slug / name without promp
 
 Then fill in secrets with `pamenv push <new-slug> -e <env>`.
 
+## `pamenv run`
+
+Runs a command with environment variables injected into its process. Values only live in the memory of pamenv and the child process: nothing is written to disk and no value is printed.
+
+```bash
+pamenv run <slug|id> -e local -- pnpm dev
+pamenv run <slug|id> -e local --only DATABASE_URL,API_KEY -- node server.js
+pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
+```
+
+| Option | Description |
+| --- | --- |
+| `-e, --env <name>` | Environment name (default: first) |
+| `--only <keys>` | Only inject these keys (comma-separated) |
+| `--keep-env <keys>` | Keep the shell's value for these keys when already set |
+| `--no-warn` | Disable the pre-run checks |
+
+- Everything after `--` goes to the child unchanged, including the child's own options.
+- PAM wins for keys that also exist in the shell (except `--keep-env` keys).
+- Signals such as `Ctrl+C` are forwarded to the child, and pamenv exits with the child's exit code.
+- Put it in `package.json` so teammates need no `.env` file:
+
+```json
+{
+  "scripts": {
+    "dev": "pamenv run my-app -e local -- next dev"
+  }
+}
+```
+
+Before starting, pamenv checks for the following and warns on stderr (it never blocks):
+
+| Check | Why |
+| --- | --- |
+| A `.env*` file in the cwd defines the same key | If dotenv loads it with `override`, the file value wins over the injected one |
+| A sensitive key starts with `NEXT_PUBLIC_` / `VITE_` | It gets bundled into client code at build time |
+| `turbo.json` uses strict env mode and the key is not declared | Turbo filters undeclared variables |
+
+If an environment is marked **protected** in the web UI, only project admins / owners can `run` it.
+
+## `pamenv render`
+
+Outputs variables in the chosen format, to stdout by default. The result is plaintext, so it requires export permission (project admin / owner).
+
+```bash
+pamenv render <slug|id> -e dev                              # dotenv to stdout
+pamenv render <slug|id> -e dev --format json
+pamenv render <slug|id> -e dev --format toml --out config.toml
+pamenv render <slug|id> -e dev --out .env.local --only API_URL,API_KEY
+```
+
+| Option | Description |
+| --- | --- |
+| `--format <format>` | `dotenv` (default; keeps comments and `# pam:sensitive`), `json`, `yaml`, `toml`; the last three are flat key/values with double-quoted, escaped values |
+| `--out <file>` | Write to a file (mode 0600); omit or use `-` for stdout |
+| `--only <keys>` | Only output these keys |
+
 ## `pamenv pull` / `pamenv push`
 
 ```bash
@@ -124,6 +188,7 @@ pamenv push <slug|id> -e staging -f            # conflicting keys take local val
 pamenv push <slug|id> -e staging --show-values # show non-sensitive values in the preview
 ```
 
+- `pull` writes a plaintext file and requires export permission (project admin / owner); prefer `pamenv run` for development.
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
 - `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.
@@ -188,9 +253,12 @@ When a request fails, the CLI prints a readable message plus the error code (e.g
 
 Access comes from your team role on the project; teams are managed in the PAM web UI.
 
-| Role | pull / push | remove environment |
-| --- | --- | --- |
-| owner / admin | ✓ | ✓ |
-| member | ✓ | — |
+| Role | run | push | pull / render | remove environment |
+| --- | --- | --- | --- | --- |
+| owner / admin | ✓ | ✓ | ✓ | ✓ |
+| member | ✓ (except protected environments) | ✓ | — | — |
+
+- Every `run`, `pull` and `render` read is logged (who, which environment, how many keys; never values). Admins / owners can view the log on the environment page in the web UI.
+- Once a member is removed from the team, their CLI credential can no longer read the project's variables.
 
 Only the project owner can transfer or delete a project, from the web UI's General tab. The CLI has no command for either.

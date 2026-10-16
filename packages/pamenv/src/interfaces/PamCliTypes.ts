@@ -84,6 +84,27 @@ export type PamCliExportVariableType = {
 };
 
 /**
+ * One decrypted variable used by `run` and `render` output adapters.
+ */
+export type PamCliResolvedVarType = {
+  readonly key: string;
+  readonly value: string;
+  readonly sensitive: boolean;
+  /** Raw dotenv comment lines; only dotenv output keeps them. */
+  readonly comments?: readonly string[];
+};
+
+/**
+ * `POST .../resolve` response (no comments).
+ */
+export type PamCliResolveResultType = {
+  readonly variables: readonly PamCliResolvedVarType[];
+};
+
+/** `pamenv render --format` values. */
+export type PamCliOutputFormatType = 'dotenv' | 'json' | 'yaml' | 'toml';
+
+/**
  * Variable payload for environment replace / push.
  */
 export type PamCliVariableInputType = {

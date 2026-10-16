@@ -9,6 +9,8 @@ import { ProjectsCommand } from './commands/ProjectsCommand';
 import { PullCommand } from './commands/PullCommand';
 import { PushCommand } from './commands/PushCommand';
 import { RemoveCommand } from './commands/RemoveCommand';
+import { RenderCommand } from './commands/RenderCommand';
+import { RunCommand } from './commands/RunCommand';
 import { PamCliConfig } from './config/PamCliConfig';
 import { PamCliApiClient } from './impls/PamCliApiClient';
 import { PamCliApiError } from './impls/PamCliApiError';
@@ -49,6 +51,7 @@ import {
   PAMENV_HELP_OPT_ENV,
   PAMENV_HELP_OPT_FILE,
   PAMENV_HELP_OPT_LOCAL,
+  PAMENV_HELP_OPT_ONLY,
   PAMENV_HELP_OPT_URL,
   PAMENV_HELP_OPT_WORKDIR,
   PAMENV_HELP_PROGRAM,
@@ -66,6 +69,13 @@ import {
   PAMENV_HELP_REMOVE,
   PAMENV_HELP_REMOVE_OPT_ENV,
   PAMENV_HELP_REMOVE_OPT_YES,
+  PAMENV_HELP_RENDER,
+  PAMENV_HELP_RENDER_OPT_FORMAT,
+  PAMENV_HELP_RENDER_OPT_OUT,
+  PAMENV_HELP_RUN,
+  PAMENV_HELP_RUN_ARG_COMMAND,
+  PAMENV_HELP_RUN_OPT_KEEP_ENV,
+  PAMENV_HELP_RUN_OPT_NO_WARN,
   PAMENV_HELP_TITLE_ARGUMENTS,
   PAMENV_HELP_TITLE_COMMANDS,
   PAMENV_HELP_TITLE_GLOBAL_OPTIONS,
@@ -142,7 +152,8 @@ export class PamCliApp {
       });
       await PamCliI18n.syncFromStore(this.authStore);
       if (leaf.local || root.local) {
-        console.log(
+        // stderr: keeps `render` stdout clean.
+        console.error(
           PamCliI18n.t(PAMENV_CLI_USING_LOCAL_ROOT, {
             path: PamCliConfig.getLocalRoot(process.cwd())
           })
@@ -293,7 +304,79 @@ export class PamCliApp {
       );
     this.addRuntimeOptions(remove);
 
+    this.registerRun(program);
+    this.registerRender(program);
+
     await program.parseAsync(argv);
+  }
+
+  protected registerRun(program: Command): void {
+    const run = program
+      .command('run')
+      .description(t(PAMENV_HELP_RUN))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .argument('[command...]', t(PAMENV_HELP_RUN_ARG_COMMAND))
+      .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
+      .option('--only <keys>', t(PAMENV_HELP_OPT_ONLY))
+      .option('--keep-env <keys>', t(PAMENV_HELP_RUN_OPT_KEEP_ENV))
+      .option('--no-warn', t(PAMENV_HELP_RUN_OPT_NO_WARN))
+      .action(
+        async (
+          projectRef: string,
+          command: string[],
+          options: {
+            env?: string;
+            only?: string;
+            keepEnv?: string;
+            warn?: boolean;
+          }
+        ) => {
+          process.exitCode = await new RunCommand(this.apiClient).run(
+            projectRef,
+            command,
+            {
+              envName: options.env,
+              only: this.splitKeys(options.only),
+              keepEnv: this.splitKeys(options.keepEnv),
+              warn: options.warn
+            }
+          );
+        }
+      );
+    this.addRuntimeOptions(run);
+  }
+
+  protected registerRender(program: Command): void {
+    const render = program
+      .command('render')
+      .description(t(PAMENV_HELP_RENDER))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
+      .option('--format <format>', t(PAMENV_HELP_RENDER_OPT_FORMAT))
+      .option('--out <file>', t(PAMENV_HELP_RENDER_OPT_OUT))
+      .option('--only <keys>', t(PAMENV_HELP_OPT_ONLY))
+      .action(
+        async (
+          projectRef: string,
+          options: { env?: string; format?: string; out?: string; only?: string }
+        ) => {
+          await new RenderCommand(this.apiClient).run(projectRef, {
+            envName: options.env,
+            format: options.format,
+            out: options.out,
+            only: this.splitKeys(options.only)
+          });
+        }
+      );
+    this.addRuntimeOptions(render);
+  }
+
+  protected splitKeys(value?: string): string[] | undefined {
+    const keys = (value ?? '')
+      .split(',')
+      .map((key) => key.trim())
+      .filter((key) => key !== '');
+    return keys.length > 0 ? keys : undefined;
   }
 
   /**
@@ -348,9 +431,14 @@ export class PamCliApp {
         browser?: boolean;
         domain?: string;
       }) => {
+        // Root also declares --url/--domain and claims them after `login`.
+        const root = program.opts() as PamCliGlobalOptionsType;
         const url =
           options.url?.trim() ||
-          this.resolveHostOverride(undefined, options.domain);
+          this.resolveHostOverride(
+            root.url,
+            options.domain || root.domain
+          );
         await new LoginCommand(this.authStore, this.apiClient).run({
           url,
           email: options.email,
