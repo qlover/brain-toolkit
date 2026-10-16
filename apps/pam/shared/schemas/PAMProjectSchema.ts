@@ -250,4 +250,9 @@ export interface PAMSearchParams extends Omit<ResourceSearchParams, 'sort'> {
    * Sort clauses (store) or JSON string (query params / API).
    */
   sort?: string | ResourceSearchParams['sort'];
+  /**
+   * Response shape: `full` (web cards) or `compact` (CLI one-liners).
+   * Prefer query `view`; also accepted as `filters.view`.
+   */
+  view?: 'full' | 'compact';
 }

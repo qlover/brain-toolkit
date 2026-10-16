@@ -57,10 +57,20 @@ import type { NextRequest } from 'next/server';
  *         required: false
  *         description: |
  *           结构化过滤条件（JSON 对象字符串）。
- *           支持字段：category, is_public, owner_id 等。
+ *           支持字段：category, visibility (public|private), mine (bool), writable (bool) 等。
+ *           mine = 严格项目 owner；writable = owner 或活跃团队成员（服务端过滤，分页前生效）。
  *         schema:
  *           type: string
- *           example: '{"category":"后端","is_public":1}'
+ *           example: '{"category":"后端","visibility":"private","mine":true}'
+ *       - name: view
+ *         in: query
+ *         required: false
+ *         description: |
+ *           返回字段形状。full（默认，Web 卡片）；compact（CLI：id/slug/name/envs 等核心字段）。
+ *         schema:
+ *           type: string
+ *           enum: [full, compact]
+ *           default: full
  *       - name: sort
  *         in: query
  *         required: false

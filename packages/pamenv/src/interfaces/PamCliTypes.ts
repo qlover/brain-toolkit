@@ -47,6 +47,47 @@ export type PamCliProjectType = {
   readonly environments?: readonly PamCliEnvironmentSummaryType[];
 };
 
+/** Matches PAM home list `filters.visibility`. */
+export type PamCliProjectVisibilityType = 'public' | 'private';
+
+/** Matches PAM home list sort field (after `is_public`). */
+export type PamCliProjectSortByType = 'created_at' | 'updated_at';
+
+export type PamCliProjectSortOrderType = 'asc' | 'desc';
+
+/**
+ * Search options for `GET /api/pam/search` (same wire names as the web UI).
+ */
+export type PamCliListProjectsOptionsType = {
+  readonly keyword?: string;
+  readonly category?: string;
+  readonly visibility?: PamCliProjectVisibilityType;
+  readonly sortBy?: PamCliProjectSortByType;
+  readonly sortOrder?: PamCliProjectSortOrderType;
+  readonly page?: number;
+  readonly pageSize?: number;
+  /** Server `filters.mine` — strict project owner. */
+  readonly mine?: boolean;
+  /** Server `filters.writable` — owner or active team member. */
+  readonly writable?: boolean;
+  /**
+   * Response shape. CLI defaults to `compact` (core fields only).
+   * Web home uses `full` (omit / default).
+   */
+  readonly view?: 'full' | 'compact';
+};
+
+/**
+ * One page from PAM project search.
+ */
+export type PamCliProjectSearchPageType = {
+  readonly items: readonly PamCliProjectType[];
+  readonly page: number;
+  readonly pageSize: number;
+  readonly hasMore: boolean;
+  readonly total?: number;
+};
+
 /**
  * Environment summary (no secret values).
  */

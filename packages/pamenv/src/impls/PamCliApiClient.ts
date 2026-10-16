@@ -9,6 +9,8 @@ import type {
   PamCliCreateProjectInputType,
   PamCliExportResultType,
   PamCliForkProjectInputType,
+  PamCliListProjectsOptionsType,
+  PamCliProjectSearchPageType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliResolveByNameResultType,
@@ -19,6 +21,7 @@ import { PamCliConfig } from '../config/PamCliConfig';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import { PAMENV_CLI_NOT_LOGGED_IN } from '../i18n/identifier/pamenv_cli';
 import { PamCliApiError } from './PamCliApiError';
+import { PamCliProjectSearchUtil } from './PamCliProjectSearchUtil';
 import { version } from '../../package.json';
 
 /** Recorded in PAM env access logs. */
@@ -165,19 +168,38 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   /**
    * @override
    */
-  public async listProjects(keyword?: string): Promise<PamCliProjectType[]> {
+  public async listProjects(
+    keywordOrOptions?: string | PamCliListProjectsOptionsType
+  ): Promise<PamCliProjectType[]> {
+    const page = await this.searchProjects(
+      PamCliProjectSearchUtil.normalizeOptions(keywordOrOptions)
+    );
+    return [...page.items];
+  }
+
+  /**
+   * @override
+   */
+  public async searchProjects(
+    options: PamCliListProjectsOptionsType = {}
+  ): Promise<PamCliProjectSearchPageType> {
     const baseUrl = await this.authStore.getBaseUrl();
     const token = await this.requireToken();
-    const params = new URLSearchParams({
-      page: '1',
-      pageSize: '100'
+    const normalized = PamCliProjectSearchUtil.normalizeOptions(options);
+    const page = Math.max(1, normalized.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, normalized.pageSize ?? 100));
+    const params = PamCliProjectSearchUtil.buildQuery({
+      ...normalized,
+      page,
+      pageSize
     });
-    if (keyword?.trim()) {
-      params.set('keyword', keyword.trim());
-    }
 
     const result = await this.requestJson<{
-      items: PamCliProjectType[];
+      items?: PamCliProjectType[];
+      hasMore?: boolean;
+      total?: number;
+      page?: number;
+      pageSize?: number;
     }>(`${baseUrl}/api/pam/search?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -185,7 +207,19 @@ export class PamCliApiClient implements PamCliApiClientInterface {
       }
     });
 
-    return result.items || [];
+    const items = result.items || [];
+    const hasMore =
+      typeof result.hasMore === 'boolean'
+        ? result.hasMore
+        : items.length >= pageSize;
+
+    return {
+      items,
+      page: result.page ?? page,
+      pageSize: result.pageSize ?? pageSize,
+      hasMore,
+      ...(typeof result.total === 'number' ? { total: result.total } : {})
+    };
   }
 
   /**

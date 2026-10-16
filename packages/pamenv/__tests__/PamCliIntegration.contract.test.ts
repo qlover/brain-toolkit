@@ -970,7 +970,8 @@ describe('pamenv contract integration (mock PAM)', () => {
         await expect(
           new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
             'fe-base',
-            { envName: 'dev', outDir: ctx.cwd }
+            // force skips conflict prompt so we reach writePrivateFile permission check
+            { envName: 'dev', outDir: ctx.cwd, force: true }
           )
         ).rejects.toThrow(/too_permissive|可读|chmod/i);
         expect(await readFile(target, 'utf8')).toBe('OLD=1\n');
@@ -993,7 +994,7 @@ describe('pamenv contract integration (mock PAM)', () => {
 
         await new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
           'fe-base',
-          { envName: 'dev', outDir: ctx.cwd }
+          { envName: 'dev', outDir: ctx.cwd, force: true }
         );
         const text = await readFile(target, 'utf8');
         expect(text).toContain('API_URL=');

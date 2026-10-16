@@ -59,6 +59,14 @@ import {
   PAMENV_HELP_PROGRAM,
   PAMENV_HELP_PROJECTS,
   PAMENV_HELP_PROJECTS_ARG_KEYWORD,
+  PAMENV_HELP_PROJECTS_OPT_CATEGORY,
+  PAMENV_HELP_PROJECTS_OPT_MINE,
+  PAMENV_HELP_PROJECTS_OPT_ORDER,
+  PAMENV_HELP_PROJECTS_OPT_PAGE,
+  PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE,
+  PAMENV_HELP_PROJECTS_OPT_SORT,
+  PAMENV_HELP_PROJECTS_OPT_VISIBILITY,
+  PAMENV_HELP_PROJECTS_OPT_WRITABLE,
   PAMENV_HELP_PULL,
   PAMENV_HELP_PULL_OPT_FORCE,
   PAMENV_HELP_PULL_OPT_OUT,
@@ -176,9 +184,59 @@ export class PamCliApp {
       .command('projects')
       .description(t(PAMENV_HELP_PROJECTS))
       .argument('[keyword]', t(PAMENV_HELP_PROJECTS_ARG_KEYWORD))
-      .action(async (keyword?: string) => {
-        await new ProjectsCommand(this.apiClient).run(keyword);
-      });
+      .option('--category <name>', t(PAMENV_HELP_PROJECTS_OPT_CATEGORY))
+      .option(
+        '--visibility <visibility>',
+        t(PAMENV_HELP_PROJECTS_OPT_VISIBILITY)
+      )
+      .option('--sort <field>', t(PAMENV_HELP_PROJECTS_OPT_SORT))
+      .option('--order <asc|desc>', t(PAMENV_HELP_PROJECTS_OPT_ORDER))
+      .option('--page <n>', t(PAMENV_HELP_PROJECTS_OPT_PAGE))
+      .option('--page-size <n>', t(PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE))
+      .option('--mine', t(PAMENV_HELP_PROJECTS_OPT_MINE))
+      .option('--writable', t(PAMENV_HELP_PROJECTS_OPT_WRITABLE))
+      .action(
+        async (
+          keyword: string | undefined,
+          options: {
+            category?: string;
+            visibility?: string;
+            sort?: string;
+            order?: string;
+            page?: string;
+            pageSize?: string;
+            mine?: boolean;
+            writable?: boolean;
+          }
+        ) => {
+          const visibility =
+            options.visibility === 'public' || options.visibility === 'private'
+              ? options.visibility
+              : undefined;
+          const sortBy =
+            options.sort === 'created_at' || options.sort === 'updated_at'
+              ? options.sort
+              : undefined;
+          const sortOrder =
+            options.order === 'asc' || options.order === 'desc'
+              ? options.order
+              : undefined;
+          const page = options.page ? Number(options.page) : undefined;
+          const pageSize = options.pageSize
+            ? Number(options.pageSize)
+            : undefined;
+          await new ProjectsCommand(this.apiClient).run(keyword, {
+            ...(options.category ? { category: options.category } : {}),
+            ...(visibility ? { visibility } : {}),
+            ...(sortBy ? { sortBy } : {}),
+            ...(sortOrder ? { sortOrder } : {}),
+            ...(page && Number.isFinite(page) ? { page } : {}),
+            ...(pageSize && Number.isFinite(pageSize) ? { pageSize } : {}),
+            ...(options.mine ? { mine: true } : {}),
+            ...(options.writable ? { writable: true } : {})
+          });
+        }
+      );
     this.addRuntimeOptions(projects);
 
     const init = program

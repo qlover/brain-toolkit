@@ -3,6 +3,8 @@ import type {
   PamCliCreateProjectInputType,
   PamCliExportResultType,
   PamCliForkProjectInputType,
+  PamCliListProjectsOptionsType,
+  PamCliProjectSearchPageType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
   PamCliResolveByNameResultType,
@@ -77,11 +79,22 @@ export interface PamCliApiClientInterface {
   ): Promise<PamCliDevicePollResultType>;
 
   /**
-   * Lists projects visible to the authenticated user.
+   * Lists projects visible to the authenticated user (one page of items).
    *
-   * @param keyword - Optional search keyword / slug fragment
+   * @param keywordOrOptions - Keyword string or web-aligned search options
    */
-  listProjects(keyword?: string): Promise<PamCliProjectType[]>;
+  listProjects(
+    keywordOrOptions?: string | PamCliListProjectsOptionsType
+  ): Promise<PamCliProjectType[]>;
+
+  /**
+   * One page of PAM project search (`items` + `hasMore`), same query as web.
+   *
+   * @param options - Web-aligned search options
+   */
+  searchProjects(
+    options?: PamCliListProjectsOptionsType
+  ): Promise<PamCliProjectSearchPageType>;
 
   /**
    * Lists distinct categories from visible PAM projects.
