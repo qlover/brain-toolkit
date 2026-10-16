@@ -7,13 +7,12 @@ import {
   PAMENV_CLI_PULLED,
   PAMENV_CLI_PULL_CONFLICT,
   PAMENV_CLI_PULL_LOCAL_KEPT,
+  PAMENV_CLI_PULL_SENSITIVE_EMPTY,
+  PAMENV_CLI_PULL_SENSITIVE_PLACEHOLDER,
   PAMENV_CLI_PULL_UP_TO_DATE
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
-import type {
-  PamCliExportResultType,
-  PamCliLocalEnvOptionsType
-} from '../interfaces/PamCliTypes';
+import type { PamCliLocalEnvOptionsType } from '../interfaces/PamCliTypes';
 import {
   PamCliDotenvUtil,
   type PamCliParsedVarType
@@ -90,13 +89,36 @@ export class PullCommand {
     });
 
     const exported = await this.apiClient.exportEnvironment(project.id, env.id);
-    PamCliSecurityGate.assertExportRedacted(exported);
-    const remoteVars = this.toRemoteVariables(exported);
-    const sensitiveKeys = new Set(
-      exported.sensitiveKeys ||
-        remoteVars.filter((item) => item.sensitive).map((item) => item.key)
+    // Never write sensitive plaintext — force placeholders even if an older
+    // PAM export leaked real values (same policy as `pamenv render`).
+    const redacted = PamCliSecurityGate.redactExportForLocalOutput(exported);
+    const remoteVars: PamCliParsedVarType[] = redacted.variables.map(
+      (item) => ({
+        key: item.key,
+        value: item.value,
+        sensitive: item.sensitive,
+        comments: item.comments ? [...item.comments] : [],
+        trailingComment: ''
+      })
     );
+    const sensitiveKeys = redacted.sensitiveKeys;
     const remoteMap = PamCliDotenvUtil.toValueMap(remoteVars);
+
+    if (redacted.placeholderKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_PULL_SENSITIVE_PLACEHOLDER, {
+          count: String(redacted.placeholderKeys.length),
+          keys: redacted.placeholderKeys.join(', ')
+        })
+      );
+    } else if (redacted.emptyKeepKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_PULL_SENSITIVE_EMPTY, {
+          count: String(redacted.emptyKeepKeys.length),
+          keys: redacted.emptyKeepKeys.join(', ')
+        })
+      );
+    }
 
     const localExists = await this.fileExists(target);
     let localDoc = null as ReturnType<typeof PamCliDotenvUtil.parseDocument> | null;
@@ -213,39 +235,6 @@ export class PullCommand {
         })
       );
     }
-  }
-
-  /**
-   * Prefer structured export variables (includes DB comments); fall back to content.
-   */
-  protected toRemoteVariables(exported: PamCliExportResultType): Array<{
-    key: string;
-    value: string;
-    sensitive: boolean;
-    comments: readonly string[];
-    trailingComment: string;
-  }> {
-    const sensitiveKeys = new Set(exported.sensitiveKeys || []);
-
-    if (exported.variables && exported.variables.length > 0) {
-      return exported.variables.map((item) => ({
-        key: item.key,
-        value: item.value,
-        sensitive: item.sensitive === true || sensitiveKeys.has(item.key),
-        comments: item.comments ? [...item.comments] : [],
-        trailingComment: ''
-      }));
-    }
-
-    return PamCliDotenvUtil.parseDocument(exported.content).variables.map(
-      (item) => ({
-        key: item.key,
-        value: item.value,
-        sensitive: sensitiveKeys.has(item.key) || item.sensitive,
-        comments: item.comments,
-        trailingComment: item.trailingComment
-      })
-    );
   }
 
   protected async fileExists(path: string): Promise<boolean> {

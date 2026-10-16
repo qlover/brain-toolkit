@@ -72,9 +72,11 @@ import {
   PAMENV_HELP_PULL_OPT_OUT,
   PAMENV_HELP_PULL_OPT_SHOW_VALUES,
   PAMENV_HELP_PUSH,
+  PAMENV_HELP_PUSH_ARG_ASSIGNMENTS,
   PAMENV_HELP_PUSH_OPT_FORCE,
   PAMENV_HELP_PUSH_OPT_OUT,
   PAMENV_HELP_PUSH_OPT_SHOW_VALUES,
+  PAMENV_HELP_PUSH_OPT_UNSET,
   PAMENV_HELP_PUSH_OPT_YES,
   PAMENV_HELP_REMOVE,
   PAMENV_HELP_REMOVE_OPT_ENV,
@@ -312,25 +314,30 @@ export class PamCliApp {
       .command('push')
       .description(t(PAMENV_HELP_PUSH))
       .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .argument('[assignments...]', t(PAMENV_HELP_PUSH_ARG_ASSIGNMENTS))
       .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
       .option('-o, --out <dir>', t(PAMENV_HELP_PUSH_OPT_OUT))
       .option('--file <path>', t(PAMENV_HELP_OPT_FILE))
+      .option('--unset <keys>', t(PAMENV_HELP_PUSH_OPT_UNSET))
       .option('-y, --yes', t(PAMENV_HELP_PUSH_OPT_YES))
       .option('-f, --force', t(PAMENV_HELP_PUSH_OPT_FORCE))
       .option('--show-values', t(PAMENV_HELP_PUSH_OPT_SHOW_VALUES))
       .action(
         async (
           projectRef: string,
+          assignments: string[],
           options: {
             env?: string;
             out?: string;
             file?: string;
+            unset?: string;
             yes?: boolean;
             force?: boolean;
             showValues?: boolean;
           }
         ) => {
           this.bindOutDir(options.out);
+          const overrides = PushCommand.parseAssignments(assignments ?? []);
           await new PushCommand(
             this.apiClient,
             this.syncStore,
@@ -341,7 +348,9 @@ export class PamCliApp {
             file: options.file,
             yes: options.yes,
             force: options.force,
-            showValues: options.showValues
+            showValues: options.showValues,
+            ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+            unsetKeys: this.splitKeys(options.unset)
           });
         }
       );

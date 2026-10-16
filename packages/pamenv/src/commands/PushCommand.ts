@@ -18,6 +18,7 @@ import {
   PAMENV_CLI_PROMPT_ENV_URL,
   PAMENV_CLI_PUSHED_DETAIL,
   PAMENV_CLI_PUSH_ALREADY_SYNC,
+  PAMENV_CLI_PUSH_ASSIGNMENT_INVALID,
   PAMENV_CLI_PUSH_CONFIRM,
   PAMENV_CLI_PUSH_CONFIRM_CREATE,
   PAMENV_CLI_PUSH_CONFIRM_CREATE_LARGE,
@@ -30,6 +31,7 @@ import {
   PAMENV_CLI_PUSH_PLACEHOLDER_INVALID,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
+  PAMENV_CLI_PUSH_SENSITIVE_AUTO,
   PAMENV_CLI_PUSH_SENSITIVE_CLEARED,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
@@ -151,7 +153,10 @@ export class PushCommand {
     }
 
     let localVars: PamCliParsedVarType[] = [...localDoc.variables];
-    const localMap = PamCliDotenvUtil.toValueMap(localVars);
+    const overrides = options.overrides ?? {};
+    const unsetKeys = new Set(
+      (options.unsetKeys ?? []).map((key) => key.trim()).filter(Boolean)
+    );
 
     let remoteMap: Record<string, string> = {};
     let remoteSensitiveKeys = new Set<string>();
@@ -163,14 +168,32 @@ export class PushCommand {
         project.id,
         targetEnv.id
       );
-      PamCliSecurityGate.assertExportRedacted(remoteExport);
-      remoteSensitiveKeys = new Set(remoteExport.sensitiveKeys || []);
-      placeholder = remoteExport.sensitivePlaceholder;
-      remoteVars = PamCliDotenvUtil.parse(remoteExport.content).map((item) =>
-        remoteSensitiveKeys.has(item.key) ? { ...item, sensitive: true } : item
-      );
+      const redacted =
+        PamCliSecurityGate.redactExportForLocalOutput(remoteExport);
+      remoteSensitiveKeys = new Set(redacted.sensitiveKeys);
+      placeholder = redacted.placeholder || undefined;
+      remoteVars = redacted.variables.map((item) => ({
+        key: item.key,
+        value: item.value,
+        sensitive: item.sensitive,
+        comments: item.comments ? [...item.comments] : [],
+        trailingComment: ''
+      }));
       remoteMap = PamCliDotenvUtil.toValueMap(remoteVars);
     }
+
+    // File is the full desired state; overlays then explicit deletes.
+    localVars = this.applyAssignmentOverrides(
+      localVars,
+      overrides,
+      remoteSensitiveKeys
+    );
+    localVars = this.removeUnsetKeys(localVars, unsetKeys);
+    localDoc = {
+      variables: localVars,
+      trailingComments: localDoc.trailingComments
+    };
+    const localMap = PamCliDotenvUtil.toValueMap(localVars);
 
     const baseline = await this.syncStore.readSnapshot(
       project.id,
@@ -209,9 +232,29 @@ export class PushCommand {
       return;
     }
 
-    if (kind === PamCliSyncConflictKind.Conflict) {
+    const needsThreeWay =
+      kind === PamCliSyncConflictKind.Conflict ||
+      kind === PamCliSyncConflictKind.NoBase;
+
+    if (needsThreeWay) {
+      if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
+        const ok = await PamCliConfirmUtil.ask(
+          targetEnv.mode === 'create'
+            ? PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE_CREATE, {
+                slug: project.slug,
+                env: targetEnv.name
+              })
+            : PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE)
+        );
+        if (!ok) {
+          console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
+          return;
+        }
+      }
+
+      const baseMap = baseline?.variables || null;
       let result = PamCliSyncConflictUtil.merge(
-        baseline!.variables,
+        baseMap,
         localMap,
         remoteMap,
         PamCliSyncSide.Local
@@ -232,7 +275,7 @@ export class PushCommand {
         }
         if (side === PamCliSyncSide.Remote) {
           result = PamCliSyncConflictUtil.merge(
-            baseline!.variables,
+            baseMap,
             localMap,
             remoteMap,
             PamCliSyncSide.Remote
@@ -250,6 +293,8 @@ export class PushCommand {
         localVars,
         remoteVars
       );
+      // Explicit --unset wins over merge re-adds.
+      localVars = this.removeUnsetKeys(localVars, unsetKeys);
       localDoc = {
         variables: localVars,
         trailingComments: localDoc.trailingComments
@@ -265,7 +310,8 @@ export class PushCommand {
           })
         );
       }
-      if (PamCliDotenvUtil.valueMapsEqual(result.merged, remoteMap)) {
+      const mergedLocalMap = PamCliDotenvUtil.toValueMap(localVars);
+      if (PamCliDotenvUtil.valueMapsEqual(mergedLocalMap, remoteMap)) {
         await this.syncStore.saveBaseline(
           project.id,
           project.slug,
@@ -283,29 +329,18 @@ export class PushCommand {
       }
     }
 
-    if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
-      const ok = await PamCliConfirmUtil.ask(
-        targetEnv.mode === 'create'
-          ? PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE_CREATE, {
-              slug: project.slug,
-              env: targetEnv.name
-            })
-          : PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE)
-      );
-      if (!ok) {
-        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
-        return;
-      }
-    }
-
     const unmarkedNewKeys = localVars
       .filter((item) => !(item.key in remoteMap) && !item.sensitive)
       .map((item) => item.key);
 
     // Sensitive marking is interactive safety; `-f` alone must not skip it.
-    if (!options.yes && unmarkedNewKeys.length > 0) {
-      const selected =
-        await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
+    // `-y` skips the prompt but still auto-marks secret-like key names.
+    if (unmarkedNewKeys.length > 0) {
+      const selected = options.yes
+        ? unmarkedNewKeys.filter((key) =>
+            PamCliEnvDiffUtil.looksSensitiveKey(key)
+          )
+        : await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
       if (selected.length > 0) {
         const selectedSet = new Set(selected);
         localVars = localVars.map((item) =>
@@ -320,7 +355,12 @@ export class PushCommand {
           PamCliDotenvUtil.serializeDocument(localDoc)
         );
         console.log(
-          `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${selected.join(', ')}`
+          options.yes
+            ? PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_AUTO, {
+                path: target,
+                keys: selected.join(', ')
+              })
+            : `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${selected.join(', ')}`
         );
       }
     }
@@ -363,7 +403,13 @@ export class PushCommand {
       );
     }
 
-    if (!options.yes) {
+    // Large key drops (esp. deleting remote secrets) always need a confirm,
+    // even with `-y`, so unattended scripts cannot wipe an env by accident.
+    const requireConfirm =
+      !options.yes ||
+      (diff.isLargeKeyChange && diff.removedKeyCount > 0);
+
+    if (requireConfirm) {
       const message =
         targetEnv.mode === 'create'
           ? diff.isLargeKeyChange
@@ -435,7 +481,11 @@ export class PushCommand {
       remoteSensitiveKeys,
       placeholder
     );
-    if (cleared.keys.length > 0) {
+    const shouldRewriteLocal =
+      cleared.keys.length > 0 ||
+      Object.keys(overrides).length > 0 ||
+      unsetKeys.size > 0;
+    if (shouldRewriteLocal) {
       await PamCliPrivateFsUtil.writePrivateFile(
         target,
         PamCliDotenvUtil.serializeDocument({
@@ -443,6 +493,8 @@ export class PushCommand {
           trailingComments: localDoc.trailingComments
         })
       );
+    }
+    if (cleared.keys.length > 0) {
       console.log(
         PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_CLEARED, {
           path: target,
@@ -613,6 +665,96 @@ export class PushCommand {
     }
 
     return { mode: 'create', name: envName, url };
+  }
+
+  /**
+   * Parses CLI `KEY=value` arguments into a map.
+   *
+   * @param assignments - Raw assignment strings from argv
+   */
+  public static parseAssignments(
+    assignments: readonly string[]
+  ): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const raw of assignments) {
+      const separatorIndex = raw.indexOf('=');
+      if (separatorIndex <= 0) {
+        throw new Error(
+          PamCliI18n.t(PAMENV_CLI_PUSH_ASSIGNMENT_INVALID, { raw })
+        );
+      }
+      const key = raw.slice(0, separatorIndex).trim();
+      if (key === '' || /\s/.test(key)) {
+        throw new Error(
+          PamCliI18n.t(PAMENV_CLI_PUSH_ASSIGNMENT_INVALID, { raw })
+        );
+      }
+      result[key] = raw.slice(separatorIndex + 1);
+    }
+    return result;
+  }
+
+  /**
+   * Applies inline KEY=value overlays onto the file snapshot.
+   * Keys already sensitive on PAM stay marked sensitive.
+   */
+  protected applyAssignmentOverrides(
+    variables: readonly PamCliParsedVarType[],
+    overrides: Readonly<Record<string, string>>,
+    remoteSensitiveKeys: ReadonlySet<string>
+  ): PamCliParsedVarType[] {
+    const entries = Object.entries(overrides);
+    if (entries.length === 0) {
+      return [...variables];
+    }
+
+    const byKey = new Map(
+      variables.map((item) => [item.key, { ...item } as PamCliParsedVarType])
+    );
+    for (const [key, value] of entries) {
+      const existing = byKey.get(key);
+      if (existing) {
+        byKey.set(key, {
+          ...existing,
+          value,
+          sensitive: existing.sensitive || remoteSensitiveKeys.has(key)
+        });
+      } else {
+        byKey.set(key, {
+          key,
+          value,
+          sensitive: remoteSensitiveKeys.has(key),
+          comments: [],
+          trailingComment: ''
+        });
+      }
+    }
+
+    const result: PamCliParsedVarType[] = [];
+    const seen = new Set<string>();
+    for (const item of variables) {
+      result.push(byKey.get(item.key)!);
+      seen.add(item.key);
+    }
+    for (const [key, item] of byKey) {
+      if (!seen.has(key)) {
+        result.push(item);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Drops keys listed in `--unset` from the final push set.
+   */
+  protected removeUnsetKeys(
+    variables: readonly PamCliParsedVarType[],
+    unsetKeys: ReadonlySet<string>
+  ): PamCliParsedVarType[] {
+    if (unsetKeys.size === 0) {
+      return [...variables];
+    }
+    return variables.filter((item) => !unsetKeys.has(item.key));
   }
 
   /**

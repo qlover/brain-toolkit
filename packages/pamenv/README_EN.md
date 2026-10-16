@@ -254,15 +254,28 @@ pamenv push <slug|id> -e staging
 pamenv push <slug|id> -e staging -y            # skip ordinary confirmations
 pamenv push <slug|id> -e staging -f            # conflicting keys take local values without asking
 pamenv push <slug|id> -e staging --show-values # show non-sensitive values in the preview
+pamenv push <slug|id> -e staging JWT_SECRET=new…   # inline override on top of the local file
+pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines removed after success)
 ```
 
-- `pull` requires export permission (project admin / owner); sensitive keys are written with `# pam:sensitive` and this environment's fixed placeholder `__PAM_SENSITIVE_…__` (different per environment). Prefer `pamenv run` for development.
-- On `push`, this environment's placeholder (or an empty value) for a key already sensitive on PAM means "keep the PAM value"; a new value rotates it. After a successful push, sensitive values in the local file are switched back to the placeholder.
+- `pull` requires export permission (project admin / owner); sensitive keys are written with `# pam:sensitive` and this environment's fixed placeholder `__PAM_SENSITIVE_…__` (different per environment). If the server sends no placeholder, keys are kept with an empty value (empty on push means keep). Prefer `pamenv run` for development.
+- **File push = full desired state**: a missing key in the file means delete it remotely; push does not auto-pad sensitive keys back in.
+- On `push`, this environment's placeholder (or an empty value) for a key already sensitive on PAM means "keep the PAM value"; a new value rotates it. After a successful push, sensitive values in the local file are switched back to the placeholder (or empty when none exists).
+- Inline `KEY=value` overlays the local file before a full replace; `--unset <keys>` removes keys from the final set (applied after overrides).
 - Placeholders from another environment (e.g. a copied file) are rejected, so a placeholder is never stored as a secret.
+
+| Final local value | Already-sensitive key | Normal key |
+| --- | --- | --- |
+| This env's placeholder | keep | (should not appear) |
+| Empty string | keep | key kept, value cleared |
+| New plaintext | rotate | update |
+| Missing line / `--unset` | delete | delete |
+
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
 - `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.
-- Without a baseline (never pulled/pushed here), every differing key counts as a conflict.
+- **Without a baseline** (never pulled/pushed here): one-sided keys are kept; only keys present on both sides with different values conflict. A first `push` therefore does not silently drop remote-only keys (use `--unset`, or sync then delete the line); a first `pull` does not silently drop local-only keys.
+- After a baseline exists, a missing file key / `--unset` means delete (full desired state).
 - `pull` keeps comments in your local file where possible. If only the remote changed, `push` asks you to `pull` first.
 - The diff masks every value as `*****` by default; `--show-values` reveals non-sensitive values only (names like `*_SECRET` or `*_TOKEN` are treated as sensitive).
 - If the `-e` environment does not exist, `push` asks for its URL, validates everything, then creates the environment and uploads the variables together.
@@ -271,7 +284,7 @@ pamenv push <slug|id> -e staging --show-values # show non-sensitive values in th
 
 | Option | Effect |
 | --- | --- |
-| `-y` | Skips ordinary confirmations: first push, final push, sensitivity of new keys, creating a missing environment, `remove` prompts |
+| `-y` | Skips ordinary confirmations: no-baseline prompt, final push, creating a missing environment, `remove`. Still auto-marks new secret-like keys (`*_SECRET`, etc.) with `# pam:sensitive`. Large deletions of remote keys still require one more confirm |
 | `-f` | Skips conflict confirmation only and uses the default side (remote for pull, local for push) |
 
 Neither implies the other; pass both to skip everything.

@@ -363,10 +363,43 @@ describe('RenderCommand sensitive values', () => {
     expect(message).toContain('render_sensitive_placeholder');
   });
 
-  it('omits sensitive variables when the server sends no placeholder', async () => {
+  it('writes empty keep values when the server sends no placeholder', async () => {
     const { output, message } = await render();
-    expect(output).toEqual({ API_URL: 'https://x.dev' });
-    expect(message).toContain('render_sensitive_omitted');
+    expect(output).toEqual({ API_URL: 'https://x.dev', TOKEN: '' });
+    expect(message).toContain('render_sensitive_empty');
+  });
+
+  it('forces placeholder when export leaks sensitive plaintext', async () => {
+    const api = {
+      listProjects: async () => [project],
+      exportEnvironment: async () => ({
+        projectId: 'p1',
+        projectSlug: 'app',
+        environmentId: 'e1',
+        environmentName: 'local',
+        content: '',
+        sensitiveKeys: ['TOKEN'],
+        sensitivePlaceholder: '__PAM_SENSITIVE_abc__',
+        variables: [
+          { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+          { key: 'TOKEN', value: 'leaked-secret', sensitive: true }
+        ]
+      })
+    };
+    const stdout = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await new RenderCommand(api as never).run('app', {
+      envName: 'local',
+      format: 'json'
+    });
+
+    expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toEqual({
+      API_URL: 'https://x.dev',
+      TOKEN: '__PAM_SENSITIVE_abc__'
+    });
   });
 });
 
@@ -393,6 +426,21 @@ describe('PushCommand sensitive values', () => {
       remote: ReadonlySet<string>
     ): void {
       this.assertSensitiveValuesPresent(variables, 'local', remote);
+    }
+
+    public applyOverrides(
+      variables: PamCliParsedVarType[],
+      overrides: Record<string, string>,
+      remote: ReadonlySet<string>
+    ): PamCliParsedVarType[] {
+      return this.applyAssignmentOverrides(variables, overrides, remote);
+    }
+
+    public unset(
+      variables: PamCliParsedVarType[],
+      keys: ReadonlySet<string>
+    ): PamCliParsedVarType[] {
+      return this.removeUnsetKeys(variables, keys);
     }
   }
 
@@ -482,5 +530,47 @@ describe('PushCommand sensitive values', () => {
     expect(() =>
       push.assertPresent([parsed('NEW_SECRET', '', true)], new Set())
     ).toThrow();
+  });
+
+  it('parseAssignments accepts KEY=value and rejects invalid forms', () => {
+    expect(PushCommand.parseAssignments(['A=1', 'B=x=y'])).toEqual({
+      A: '1',
+      B: 'x=y'
+    });
+    expect(PushCommand.parseAssignments(['EMPTY='])).toEqual({ EMPTY: '' });
+    expect(() => PushCommand.parseAssignments(['nope'])).toThrow(
+      /push_assignment_invalid/
+    );
+    expect(() => PushCommand.parseAssignments(['=nope'])).toThrow(
+      /push_assignment_invalid/
+    );
+  });
+
+  it('applies overrides then unset on the file snapshot', () => {
+    const base = [
+      parsed('API_URL', 'https://x.dev', false),
+      parsed('TOKEN', '__PAM_SENSITIVE_abc__', true),
+      parsed('DROP_ME', '1', false)
+    ];
+    const withOverrides = push.applyOverrides(
+      base,
+      { TOKEN: 'rotated', NEW: '2' },
+      new Set(['TOKEN'])
+    );
+    expect(withOverrides.map((item) => [item.key, item.value, item.sensitive])).toEqual([
+      ['API_URL', 'https://x.dev', false],
+      ['TOKEN', 'rotated', true],
+      ['DROP_ME', '1', false],
+      ['NEW', '2', false]
+    ]);
+    const afterUnset = push.unset(
+      withOverrides,
+      new Set(['DROP_ME', 'MISSING'])
+    );
+    expect(afterUnset.map((item) => item.key)).toEqual([
+      'API_URL',
+      'TOKEN',
+      'NEW'
+    ]);
   });
 });

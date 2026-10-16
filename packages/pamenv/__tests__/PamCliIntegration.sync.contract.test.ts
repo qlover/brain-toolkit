@@ -320,6 +320,72 @@ describe('pamenv sync contract (mock PAM)', () => {
       expect(ctx.mock.replacedBodies).toHaveLength(0);
     });
 
+    it('no-baseline push -y keeps remote-only keys instead of wiping them', async () => {
+      ctx = await createPamCliIntegrationContext();
+      const project = ownerProject();
+      ctx.mock.setHandlers({
+        projects: [project],
+        exportByEnvId: {
+          'e-dev': exportFromMap(project, 'e-dev', 'dev', {
+            API_URL: 'https://x.dev',
+            TOKEN: PLACEHOLDER
+          })
+        }
+      });
+      // Local file omitted TOKEN (would have wiped it under old NoBase behavior).
+      await writeFile(join(ctx.cwd, '.env.dev'), 'API_URL=https://local.dev\n', 'utf8');
+      vi.spyOn(PamCliConfirmUtil, 'ask').mockResolvedValue(true);
+      vi.spyOn(PamCliSyncConflictUtil, 'resolveConflicts').mockResolvedValue(
+        PamCliSyncSide.Local
+      );
+
+      await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd, yes: true, force: true }
+      );
+
+      expect(ctx.mock.replacedBodies.length).toBe(1);
+      const body = ctx.mock.replacedBodies[0]?.body as {
+        variables: Array<{ key: string; value: string }>;
+      };
+      const keys = body.variables.map((item) => item.key).sort();
+      expect(keys).toEqual(['API_URL', 'TOKEN']);
+      const text = await readFile(join(ctx.cwd, '.env.dev'), 'utf8');
+      expect(text).toContain('TOKEN=');
+    });
+
+    it('push -y auto-marks secret-like new keys as sensitive', async () => {
+      const { project } = await pullOwnerDev();
+      await writeFile(
+        join(ctx!.cwd, '.env.dev'),
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\nNEW_SECRET=plain\n`,
+        'utf8'
+      );
+
+      await new PushCommand(
+        ctx!.apiClient,
+        ctx!.syncStore,
+        ctx!.authStore
+      ).run('fe-base', {
+        envName: 'dev',
+        outDir: ctx!.cwd,
+        yes: true,
+        force: true
+      });
+
+      expect(ctx!.mock.replacedBodies.length).toBe(1);
+      const body = ctx!.mock.replacedBodies[0]?.body as {
+        variables: Array<{ key: string; value: string; sensitive?: boolean }>;
+      };
+      const created = body.variables.find((item) => item.key === 'NEW_SECRET');
+      expect(created?.sensitive).toBe(true);
+      expect(created?.value).toBe('plain');
+      const text = await readFile(join(ctx!.cwd, '.env.dev'), 'utf8');
+      expect(text).toContain('# pam:sensitive');
+      expect(text).not.toContain('plain');
+      void project;
+    });
+
     it('conflict abort does not replace', async () => {
       const { project, exportByEnvId } = await pullOwnerDev();
       await writeFile(
