@@ -480,7 +480,7 @@ export function PAMProjectEnvVariablesSection({
                   key={id}
                   className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1.5 px-2.5 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_5.5rem_2rem] sm:items-center sm:px-3"
                 >
-                  <div className="min-w-0 sm:col-auto">
+                  <div className="min-w-0">
                     <input
                       value={item.key}
                       readOnly={!canWrite}
@@ -505,7 +505,7 @@ export function PAMProjectEnvVariablesSection({
                     ) : null}
                   </div>
 
-                  <div className="flex items-start justify-end sm:order-last sm:col-auto">
+                  <div className="flex items-start justify-end sm:order-last">
                     {canWrite ? (
                       <button
                         type="button"
@@ -519,12 +519,9 @@ export function PAMProjectEnvVariablesSection({
                     ) : null}
                   </div>
 
-                  <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-auto">
-                    {valueControl}
-                  </div>
-
-                  <div className="col-span-2 sm:col-span-1 sm:col-auto">
-                    {typeControl}
+                  <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
+                    <div className="min-w-0 flex-1">{valueControl}</div>
+                    <div className="shrink-0">{typeControl}</div>
                   </div>
                 </li>
               );
