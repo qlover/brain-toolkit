@@ -159,6 +159,48 @@ describe('PAMEnvVariableMergeUtil', () => {
     expect(merged[1]?.value).toBe(placeholder);
   });
 
+  it('upgrades secret-like keys and keeps the stored sensitive key name', () => {
+    const renamed = PAMEnvVariableMergeUtil.mergeVariables(
+      [
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          key: 'API_TOKEN',
+          value: 'stored',
+          sensitive: true
+        }
+      ],
+      [
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          key: 'RENAMED',
+          value: '',
+          sensitive: true
+        }
+      ]
+    );
+    expect(renamed[0]).toMatchObject({
+      key: 'API_TOKEN',
+      value: 'stored',
+      sensitive: true
+    });
+
+    const upgraded = PAMEnvVariableMergeUtil.mergeVariables(
+      [],
+      [{ key: 'DATABASE_URL', value: 'postgres://u:p@h/db', sensitive: false }]
+    );
+    expect(upgraded[0]).toMatchObject({
+      key: 'DATABASE_URL',
+      value: 'postgres://u:p@h/db',
+      sensitive: true
+    });
+
+    const plain = PAMEnvVariableMergeUtil.mergeVariables(
+      [],
+      [{ key: 'AUTHOR_NAME', value: 'ada', sensitive: false }]
+    );
+    expect(plain[0]?.sensitive).toBe(false);
+  });
+
   it('preserves comments from incoming or previous', () => {
     const merged = PAMEnvVariableMergeUtil.mergeVariables(
       [
@@ -196,7 +238,7 @@ describe('PAMEnvVariableMergeUtil', () => {
     ]);
   });
 
-  it('locks sensitive flag for existing variables', () => {
+  it('does not downgrade sensitive, but can upgrade an existing variable', () => {
     const merged = PAMEnvVariableMergeUtil.mergeVariables(
       [
         {
@@ -239,8 +281,18 @@ describe('PAMEnvVariableMergeUtil', () => {
         id: '22222222-2222-2222-2222-222222222222',
         key: 'PLAIN',
         value: 'plain2',
-        sensitive: false
+        sensitive: true
       }
+    ]);
+  });
+
+  it('upgrades an existing variable and keeps its stored value when incoming is empty', () => {
+    const merged = PAMEnvVariableMergeUtil.mergeVariables(
+      [{ key: 'API_TOKEN', value: 'stored-secret', sensitive: false }],
+      [{ key: 'API_TOKEN', value: '', sensitive: true }]
+    );
+    expect(merged).toEqual([
+      { key: 'API_TOKEN', value: 'stored-secret', sensitive: true }
     ]);
   });
 });

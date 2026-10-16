@@ -1,8 +1,14 @@
+import { execFile } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { chmod, mkdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { promisify } from 'node:util';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import { PAMENV_CLI_FILE_TOO_PERMISSIVE } from '../i18n/identifier/pamenv_cli';
+
+const execFileAsync = promisify(execFile);
+let windowsAccount: string | null | undefined;
+const windowsRestrictedPaths = new Set<string>();
 
 /**
  * Writes pamenv local state with restrictive filesystem modes.
@@ -11,7 +17,7 @@ import { PAMENV_CLI_FILE_TOO_PERMISSIVE } from '../i18n/identifier/pamenv_cli';
  * Core idea: Prefer `0700` dirs and `0600` files; atomic temp+rename; refuse
  * overwriting an existing file that is group/other-readable on POSIX.
  * Main function: mkdir / write helpers used by auth, sync, and pull/push.
- * Main purpose: Reduce local secret leakage on shared Unix machines.
+ * Main purpose: Reduce local secret leakage on shared machines (POSIX modes, Windows DACL).
  *
  * @example
  * await PamCliPrivateFsUtil.writePrivateFile(path, body);
@@ -28,6 +34,7 @@ export class PamCliPrivateFsUtil {
   public static async mkdirPrivate(dirPath: string): Promise<void> {
     await mkdir(dirPath, { recursive: true, mode: this.DIR_MODE });
     await this.tryChmod(dirPath, this.DIR_MODE);
+    await this.restrictWindowsDacl(dirPath);
   }
 
   /**
@@ -82,6 +89,7 @@ export class PamCliPrivateFsUtil {
       await this.tryChmod(tempPath, this.FILE_MODE);
       await rename(tempPath, filePath);
       await this.tryChmod(filePath, this.FILE_MODE);
+      await this.restrictWindowsDacl(filePath);
     } catch (error) {
       try {
         await unlink(tempPath);
@@ -90,6 +98,64 @@ export class PamCliPrivateFsUtil {
       }
       throw error;
     }
+  }
+
+  /**
+   * Windows 上 chmod 无效。一次 icacls：显式授权当前用户，并去掉
+   * Everyone / Authenticated Users / Users。授权失败则不改 ACL，避免把自己锁在外面。
+   *
+   * @param targetPath - 文件或目录
+   */
+  protected static async restrictWindowsDacl(targetPath: string): Promise<void> {
+    if (process.platform !== 'win32') {
+      return;
+    }
+    const normalized = targetPath.toLowerCase();
+    if (windowsRestrictedPaths.has(normalized)) {
+      return;
+    }
+    const account = await PamCliPrivateFsUtil.resolveWindowsAccount();
+    if (!account) {
+      return;
+    }
+    try {
+      await execFileAsync(
+        'icacls',
+        [
+          targetPath,
+          '/inheritance:d',
+          '/grant:r',
+          `${account}:(F)`,
+          '/remove:g',
+          '*S-1-1-0',
+          '*S-1-5-11',
+          '*S-1-5-32-545'
+        ],
+        { windowsHide: true }
+      );
+      windowsRestrictedPaths.add(normalized);
+    } catch {
+      // 收紧失败不阻断写入；POSIX 仍依赖 0600。
+    }
+  }
+
+  /**
+   * @returns 当前 Windows 账户（`DOMAIN\\user`），失败时为 null
+   */
+  protected static async resolveWindowsAccount(): Promise<string | null> {
+    if (windowsAccount !== undefined) {
+      return windowsAccount;
+    }
+    try {
+      const { stdout } = await execFileAsync('whoami', [], {
+        windowsHide: true
+      });
+      const account = String(stdout).trim();
+      windowsAccount = account || null;
+    } catch {
+      windowsAccount = null;
+    }
+    return windowsAccount;
   }
 
   /**

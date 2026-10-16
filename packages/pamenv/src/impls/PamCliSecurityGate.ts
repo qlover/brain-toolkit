@@ -19,6 +19,7 @@ import type {
 } from '../interfaces/PamCliTypes';
 import { PamCliApiError } from './PamCliApiError';
 import { PamCliDotenvUtil } from './PamCliDotenvUtil';
+import { PamCliEnvDiffUtil } from './PamCliEnvDiffUtil';
 import { PamCliProjectAccessUtil } from './PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from './PamCliProjectResolveUtil';
 import { PamCliSensitivePlaceholderUtil } from './PamCliSensitivePlaceholderUtil';
@@ -29,6 +30,13 @@ export type PamCliRedactedExportVarsType = {
   readonly placeholder: string;
   /** Sensitive keys forced to the env placeholder (including leaked plaintext). */
   readonly placeholderKeys: readonly string[];
+  /** Keys the server itself marked sensitive (not inferred from the name). */
+  readonly serverSensitiveKeys: ReadonlySet<string>;
+  /**
+   * Secret-looking keys the server did not mark. Push should upgrade them
+   * to sensitive so the stored value is encrypted.
+   */
+  readonly inferredSensitiveKeys: readonly string[];
   /**
    * Sensitive keys written as empty keep values when the server sent no
    * placeholder (key names are kept so a later file push does not delete them).
@@ -152,27 +160,39 @@ export class PamCliSecurityGate {
    * later file push still treats them as keep (not delete).
    *
    * Compatible with older PAM exports that incorrectly return plaintext for
-   * keys listed in `sensitiveKeys`.
+   * keys listed in `sensitiveKeys`. Secret-looking names (`TOKEN`,
+   * `DATABASE_URL`, `ACCESS_KEY`, …) are redacted even when the server did
+   * not mark them sensitive.
    */
   public static redactExportForLocalOutput(
     exported: PamCliExportResultType
   ): PamCliRedactedExportVarsType {
     const placeholder = exported.sensitivePlaceholder?.trim() || '';
-    const sensitiveKeys = new Set(exported.sensitiveKeys || []);
+    const serverSensitiveKeys = new Set(exported.sensitiveKeys || []);
+    const inferredSensitiveKeys: string[] = [];
+    const sensitiveKeys = new Set(serverSensitiveKeys);
+    const classify = (key: string, flagged: boolean): boolean => {
+      if (flagged || serverSensitiveKeys.has(key)) {
+        return true;
+      }
+      if (PamCliEnvDiffUtil.looksSensitiveKey(key)) {
+        inferredSensitiveKeys.push(key);
+        return true;
+      }
+      return false;
+    };
     const source =
       exported.variables && exported.variables.length > 0
         ? exported.variables.map((variable) => ({
             key: variable.key,
             value: variable.value ?? '',
-            sensitive:
-              variable.sensitive === true || sensitiveKeys.has(variable.key),
+            sensitive: classify(variable.key, variable.sensitive === true),
             ...(variable.comments ? { comments: [...variable.comments] } : {})
           }))
         : PamCliDotenvUtil.parse(exported.content).map((variable) => ({
             key: variable.key,
             value: variable.value,
-            sensitive:
-              variable.sensitive === true || sensitiveKeys.has(variable.key),
+            sensitive: classify(variable.key, variable.sensitive === true),
             ...(variable.comments ? { comments: [...variable.comments] } : {})
           }));
 
@@ -221,6 +241,10 @@ export class PamCliSecurityGate {
         a.localeCompare(b)
       ),
       emptyKeepKeys: [...new Set(emptyKeepKeys)].sort((a, b) =>
+        a.localeCompare(b)
+      ),
+      serverSensitiveKeys,
+      inferredSensitiveKeys: [...new Set(inferredSensitiveKeys)].sort((a, b) =>
         a.localeCompare(b)
       )
     };

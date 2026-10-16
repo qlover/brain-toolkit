@@ -1,4 +1,5 @@
 import type { PAMVariable } from '@schemas/PAMEnvironmentSchema';
+import { PAMEnvSensitiveKeyUtil } from './PAMEnvSensitiveKeyUtil';
 import { PAMEnvVariableNormalizeUtil } from './PAMEnvVariableNormalizeUtil';
 
 /**
@@ -48,10 +49,16 @@ export class PAMEnvVariableMergeUtil {
         (variable.id ? byId.get(variable.id) : undefined) ||
         byKey.get(variable.key);
 
-      // Sensitive is immutable after first save (Vercel-like).
-      const sensitive = previous
-        ? previous.sensitive === true
-        : variable.sensitive === true;
+      // 已敏感的不能降级，也不能改键名（调用方看不到原值）。
+      // 密钥样式的键名一律升级为敏感，避免明文从读取接口漏出。
+      const sensitive =
+        previous?.sensitive === true ||
+        variable.sensitive === true ||
+        PAMEnvSensitiveKeyUtil.looksSensitive(variable.key);
+      const key =
+        previous?.sensitive === true && previous.key
+          ? previous.key
+          : variable.key;
       let value = variable.value;
 
       const keep =
@@ -66,7 +73,7 @@ export class PAMEnvVariableMergeUtil {
 
       return {
         id: variable.id ?? previous?.id,
-        key: variable.key,
+        key,
         value,
         sensitive,
         ...(comments !== undefined && comments.length > 0 ? { comments } : {})

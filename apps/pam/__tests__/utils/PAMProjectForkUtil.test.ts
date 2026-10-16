@@ -38,6 +38,12 @@ const sourceDetail = (): PAMProjectDetail => ({
           key: 'PUBLIC_URL',
           value: 'https://cdn.example.com',
           sensitive: false
+        },
+        {
+          id: '66666666-6666-6666-6666-666666666666',
+          key: 'DATABASE_URL',
+          value: 'postgres://user:secret@db/app',
+          sensitive: false
         }
       ]
     }
@@ -91,6 +97,11 @@ describe('PAMProjectForkUtil', () => {
             key: 'PUBLIC_URL',
             value: 'https://cdn.example.com',
             sensitive: false
+          },
+          {
+            key: 'DATABASE_URL',
+            value: '',
+            sensitive: true
           }
         ]
       }

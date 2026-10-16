@@ -991,7 +991,14 @@ describe('pamenv contract integration (mock PAM)', () => {
         [
           { key: 'API_URL', value: 'https://new', sensitive: false },
           { key: 'TOKEN', value: 'super-secret', sensitive: true },
-          { key: 'DB_PASSWORD', value: 'pwd', sensitive: false }
+          { key: 'DB_PASSWORD', value: 'pwd', sensitive: false },
+          { key: 'AWS_ACCESS_KEY_ID', value: 'AKIAsecret', sensitive: false },
+          {
+            key: 'DATABASE_URL',
+            value: 'postgres://user:password@db/app',
+            sensitive: false
+          },
+          { key: 'JWT', value: 'header.payload.sig', sensitive: false }
         ],
         new Set(['TOKEN'])
       );
@@ -999,8 +1006,14 @@ describe('pamenv contract integration (mock PAM)', () => {
       expect(text).toContain('API_URL=https://new');
       expect(text).not.toContain('super-secret');
       expect(text).not.toContain('pwd');
+      expect(text).not.toContain('AKIAsecret');
+      expect(text).not.toContain('password@db');
+      expect(text).not.toContain('header.payload.sig');
       expect(text).toContain('TOKEN=*****');
       expect(text).toContain('DB_PASSWORD=*****');
+      expect(text).toContain('AWS_ACCESS_KEY_ID=*****');
+      expect(text).toContain('DATABASE_URL=*****');
+      expect(text).toContain('JWT=*****');
     });
 
     it.runIf(process.platform !== 'win32')(

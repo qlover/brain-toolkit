@@ -30,6 +30,6 @@ export async function POST(
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).resolveEnvironmentByName(projectId, req)
     );
-  response.headers.set('Cache-Control', 'no-store');
+  response.headers.set('Cache-Control', 'private, no-store');
   return response;
 }

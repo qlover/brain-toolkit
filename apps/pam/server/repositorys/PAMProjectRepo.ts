@@ -129,17 +129,21 @@ function resolveBooleanFilter(
 /**
  * Optional list shape: `view=compact` (query) or `filters.view`.
  */
-function resolveSearchView(
-  params: PAMProjectSearchParams
-): PamSearchViewType {
+function resolveSearchView(params: PAMProjectSearchParams): PamSearchViewType {
   const fromQuery =
     typeof (params as { view?: unknown }).view === 'string'
-      ? String((params as { view?: string }).view).trim().toLowerCase()
+      ? String((params as { view?: string }).view)
+          .trim()
+          .toLowerCase()
       : '';
   if (fromQuery === 'compact' || fromQuery === 'full') {
     return fromQuery;
   }
-  if (params.filters && typeof params.filters === 'object' && !Array.isArray(params.filters)) {
+  if (
+    params.filters &&
+    typeof params.filters === 'object' &&
+    !Array.isArray(params.filters)
+  ) {
     const fromFilters = (params.filters as { view?: unknown }).view;
     if (fromFilters === 'compact' || fromFilters === 'full') {
       return fromFilters;
@@ -1091,7 +1095,10 @@ export class PAMProjectRepo extends BaseRepository<
   public async getEnvironmentByIdAdmin(
     projectId: string,
     envId: string
-  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null> {
+  ): Promise<Pick<
+    PAMEnvRaw,
+    'id' | 'name' | 'url' | 'variables' | 'is_protected'
+  > | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const r17 = await admin
       .from(PAMEnvTableName)
@@ -1684,7 +1691,7 @@ export class PAMProjectRepo extends BaseRepository<
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    this.logger.info(`[PAMProjectRepo] update project ${id} success`, data);
+    this.logger.info(`[PAMProjectRepo] update project ${id} success`);
 
     const detail = data as unknown as PAMProjectDetail;
     if (envUpdates !== undefined && Array.isArray(detail.environments)) {
@@ -1800,10 +1807,7 @@ export class PAMProjectRepo extends BaseRepository<
       fields: SearchPAMProjectFields
     });
 
-    this.logger.info(
-      `[PAMProjectRepo] create project ${projectData.name} success`,
-      projectData
-    );
+    this.logger.info(`[PAMProjectRepo] create project ${project.id} success`);
 
     // 2. 创建环境（如果有）
     const createdEnvs: PAMEnvWriteable[] = [];
@@ -1871,8 +1875,7 @@ export class PAMProjectRepo extends BaseRepository<
     const project = projectRow as unknown as SearchPAMRawProject;
 
     this.logger.info(
-      `[PAMProjectRepo] create project (admin) ${projectData.name} success`,
-      projectData
+      `[PAMProjectRepo] create project (admin) ${project.id} success`
     );
 
     const createdEnvs: PAMEnvWriteable[] = [];

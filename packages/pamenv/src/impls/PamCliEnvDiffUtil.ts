@@ -64,14 +64,40 @@ export class PamCliEnvDiffUtil {
   public static readonly SENSITIVE_PLACEHOLDER = '*****' as const;
 
   /**
-   * Heuristic: key names that usually hold secrets.
+   * 键名是否像密钥。
    *
-   * @param key - Variable name
+   * 预览、pull、render 和 push 都用同一规则：命中则不当成可展示的普通配置。
+   *
+   * @param key - 变量名
    */
   public static looksSensitiveKey(key: string): boolean {
-    return /(SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE_KEY|API_KEY|CREDENTIAL|AUTH|_KEY$)/i.test(
-      key
-    );
+    // 与 apps/pam 的 PAMEnvSensitiveKeyUtil.looksSensitive 保持一致。
+    const upper = key.toUpperCase();
+    if (
+      /(?:^|_)(?:SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|JWT|SESSION|COOKIE|AUTH)(?:_|$)/.test(
+        upper
+      )
+    ) {
+      return true;
+    }
+    if (
+      /(?:^|_)API_?KEY(?:_|$)|(?:^|_)ACCESS_KEY(?:_|$)|CONNECTION_STRING/.test(
+        upper
+      )
+    ) {
+      return true;
+    }
+    if (
+      /(?:^|_)(?:DATABASE|POSTGRES|MYSQL|REDIS|MONGO(?:DB)?)_(?:URL|URI)(?:_|$)/.test(
+        upper
+      )
+    ) {
+      return true;
+    }
+    if (/_KEY$/.test(upper) && !/(?:^|_)PUBLIC_KEY$/.test(upper)) {
+      return true;
+    }
+    return false;
   }
 
   /**

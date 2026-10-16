@@ -205,8 +205,9 @@ export interface PAMServiceInterface {
    * - `{ variables }` — full replace (CLI push)
    * - `{ upsert?, deleteIds? }` — patch only changed rows (web)
    *
-   * Sensitive flag is immutable for existing variables; new plaintext secrets
-   * are encrypted before persist.
+   * An existing sensitive variable cannot be downgraded. A non-sensitive
+   * variable can be upgraded to sensitive. New plaintext secrets are
+   * encrypted before persist.
    *
    * @param projectId - Project id
    * @param envId - Environment id

@@ -1227,6 +1227,14 @@ export const PAMENV_CLI_PULL_SENSITIVE_EMPTY =
   'pamenv_cli:pull_sensitive_empty';
 
 /**
+ * @description pull 用占位符盖掉本地残留的敏感明文
+ * @localZh [pamenv] 已用占位符覆盖 {{count}} 个敏感变量的本地明文（{{keys}}）。未推送的新值不会保留，请用 `pamenv run` 注入。
+ * @localEn [pamenv] Replaced local plaintext for {{count}} sensitive variable(s) ({{keys}}) with placeholders. Unpushed values were not kept; inject with `pamenv run`.
+ */
+export const PAMENV_CLI_PULL_SENSITIVE_OVERWRITTEN =
+  'pamenv_cli:pull_sensitive_overwritten';
+
+/**
  * @description push 行内赋值格式非法
  * @localZh 非法赋值 "{{raw}}"：请使用 KEY=value（可多个）。
  * @localEn Invalid assignment "{{raw}}": use KEY=value (repeatable).

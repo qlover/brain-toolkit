@@ -389,6 +389,7 @@ export function PAMProjectEnvVariablesSection({
               const hidden = locked && sensitive;
               const replacing = replacingIds.has(id);
               const comment = commentText(item.comments);
+              const keyLocked = locked && sensitive;
               const typeControl =
                 locked || !canWrite ? (
                   <span
@@ -483,8 +484,9 @@ export function PAMProjectEnvVariablesSection({
                   <div className="min-w-0">
                     <input
                       value={item.key}
-                      readOnly={!canWrite}
-                      disabled={!canWrite}
+                      readOnly={!canWrite || keyLocked}
+                      disabled={!canWrite || keyLocked}
+                      title={keyLocked ? tt.envVarSensitiveLocked : undefined}
                       placeholder={tt.placeholderEnvVar}
                       onChange={(event) =>
                         patchVariable(id, { key: event.target.value.trim() })

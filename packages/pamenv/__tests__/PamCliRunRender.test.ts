@@ -416,9 +416,16 @@ describe('PushCommand sensitive values', () => {
     public assertPlaceholders(
       variables: PamCliParsedVarType[],
       remote: ReadonlySet<string>,
-      placeholder?: string
+      placeholder?: string,
+      remoteKeys?: ReadonlySet<string>
     ): void {
-      this.assertPlaceholdersValid(variables, 'local', remote, placeholder);
+      this.assertPlaceholdersValid(
+        variables,
+        'local',
+        remote,
+        placeholder,
+        remoteKeys
+      );
     }
 
     public assertPresent(
@@ -464,16 +471,18 @@ describe('PushCommand sensitive values', () => {
         parsed('API_URL', 'https://x.dev', false),
         parsed('NEW_SECRET', 's1', true),
         parsed('OLD_SECRET', 's2', false),
-        parsed('KEPT_SECRET', '', false)
+        parsed('KEPT_SECRET', '', false),
+        parsed('API_TOKEN', 'leak-me', false)
       ],
       new Set(['OLD_SECRET', 'KEPT_SECRET'])
     );
-    expect(result.keys).toEqual(['NEW_SECRET', 'OLD_SECRET']);
+    expect(result.keys).toEqual(['NEW_SECRET', 'OLD_SECRET', 'API_TOKEN']);
     expect(result.variables.map((item) => [item.key, item.value])).toEqual([
       ['API_URL', 'https://x.dev'],
       ['NEW_SECRET', ''],
       ['OLD_SECRET', ''],
-      ['KEPT_SECRET', '']
+      ['KEPT_SECRET', ''],
+      ['API_TOKEN', '']
     ]);
     expect(result.variables.slice(1).every((item) => item.sensitive)).toBe(
       true
@@ -519,6 +528,23 @@ describe('PushCommand sensitive values', () => {
         [parsed('NEW_SECRET', placeholder, true)],
         remote,
         placeholder
+      )
+    ).toThrow(/push_placeholder_invalid/);
+    const placeholderKeep = '__PAM_SENSITIVE_abc__';
+    expect(() =>
+      push.assertPlaceholders(
+        [parsed('DATABASE_URL', placeholderKeep, false)],
+        new Set(),
+        placeholderKeep,
+        new Set(['DATABASE_URL'])
+      )
+    ).not.toThrow();
+    expect(() =>
+      push.assertPlaceholders(
+        [parsed('API_URL', placeholderKeep, false)],
+        new Set(),
+        placeholderKeep,
+        new Set(['API_URL'])
       )
     ).toThrow(/push_placeholder_invalid/);
   });

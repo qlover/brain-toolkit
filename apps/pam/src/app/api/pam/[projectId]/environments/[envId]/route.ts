@@ -14,7 +14,7 @@ type EnvironmentRouteContext = {
  */
 export async function GET(req: NextRequest, context: EnvironmentRouteContext) {
   const { projectId, envId } = await context.params;
-  return new NextApiServer(API_PAM_ENVIRONMENTS_2, req)
+  const response = await new NextApiServer(API_PAM_ENVIRONMENTS_2, req)
     .use(
       new RequirePermissionPlugin(PermissionKey.pam_environments_read, {
         projectId
@@ -23,4 +23,6 @@ export async function GET(req: NextRequest, context: EnvironmentRouteContext) {
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).getEnvironment(projectId, envId)
     );
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }

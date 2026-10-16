@@ -8,6 +8,7 @@ import {
   PAMENV_CLI_PULL_CONFLICT,
   PAMENV_CLI_PULL_LOCAL_KEPT,
   PAMENV_CLI_PULL_SENSITIVE_EMPTY,
+  PAMENV_CLI_PULL_SENSITIVE_OVERWRITTEN,
   PAMENV_CLI_PULL_SENSITIVE_PLACEHOLDER,
   PAMENV_CLI_PULL_UP_TO_DATE
 } from '../i18n/identifier/pamenv_cli';
@@ -124,10 +125,16 @@ export class PullCommand {
     let localDoc = null as ReturnType<typeof PamCliDotenvUtil.parseDocument> | null;
     let nextVars: PamCliParsedVarType[] = remoteVars;
     let localKeptKeys: string[] = [];
+    let overwrittenSensitive: string[] = [];
     if (localExists) {
       const localText = await readFile(target, 'utf8');
       localDoc = PamCliDotenvUtil.parseDocument(localText);
-      const localMap = PamCliDotenvUtil.toValueMap(localDoc.variables);
+      const scrubbed = this.scrubLocalSensitivePlaintext(
+        localDoc.variables,
+        remoteVars
+      );
+      overwrittenSensitive = scrubbed.keys;
+      const localMap = PamCliDotenvUtil.toValueMap(scrubbed.variables);
 
       if (!PamCliDotenvUtil.valueMapsEqual(localMap, remoteMap)) {
         const baseline = await this.syncStore.readSnapshot(
@@ -179,7 +186,7 @@ export class PullCommand {
         nextVars = PamCliDotenvUtil.pickMergedVariables(
           result.merged,
           remoteVars,
-          localDoc.variables
+          scrubbed.variables
         );
         localKeptKeys = Object.keys({ ...result.merged, ...remoteMap })
           .filter((key) => result.merged[key] !== remoteMap[key])
@@ -235,6 +242,43 @@ export class PullCommand {
         })
       );
     }
+    if (overwrittenSensitive.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_PULL_SENSITIVE_OVERWRITTEN, {
+          count: String(overwrittenSensitive.length),
+          keys: overwrittenSensitive.join(', ')
+        })
+      );
+    }
+  }
+
+  /**
+   * 远端已有的敏感键（含密钥式键名）用脱敏后的远端值。
+   * 本地残留明文不当作未推送修改留下来。
+   *
+   * @param local - 本地变量
+   * @param remote - 已脱敏的远端变量
+   * @returns 替换后的变量，以及被盖掉明文的键
+   */
+  protected scrubLocalSensitivePlaintext(
+    local: readonly PamCliParsedVarType[],
+    remote: readonly PamCliParsedVarType[]
+  ): { variables: PamCliParsedVarType[]; keys: string[] } {
+    const remoteByKey = new Map(remote.map((item) => [item.key, item]));
+    const keys: string[] = [];
+    const variables = local.map((item) => {
+      const remoteItem = remoteByKey.get(item.key);
+      if (!remoteItem?.sensitive || item.value === remoteItem.value) {
+        return item;
+      }
+      keys.push(item.key);
+      return {
+        ...item,
+        value: remoteItem.value,
+        sensitive: true
+      };
+    });
+    return { variables, keys };
   }
 
   protected async fileExists(path: string): Promise<boolean> {

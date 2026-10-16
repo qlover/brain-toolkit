@@ -354,8 +354,8 @@ export const PAGE_PAM_ENVIRONMENTS_ENV_PROTECTED =
 
 /**
  * @description Protected environment toggle help text
- * @localZh 开启后，只有项目管理员和所有者可以通过 pamenv run 使用该环境的变量
- * @localEn When on, only project admins and owners can use this environment with pamenv run
+ * @localZh 开启后，只有项目管理员和所有者可以修改变量，或通过 pamenv run 使用该环境
+ * @localEn When on, only project admins and owners can edit variables or use this environment with pamenv run
  */
 export const PAGE_PAM_ENVIRONMENTS_ENV_PROTECTED_HINT =
   'page_pam_environments:envProtectedHint';

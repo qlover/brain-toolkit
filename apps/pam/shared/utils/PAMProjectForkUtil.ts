@@ -8,6 +8,7 @@ import {
   type PAMProjectCreate,
   type PAMProjectDetail
 } from '@schemas/PAMProjectSchema';
+import { PAMEnvSensitiveKeyUtil } from './PAMEnvSensitiveKeyUtil';
 import { PAMEnvVariableRedactUtil } from './PAMEnvVariableRedactUtil';
 
 /**
@@ -85,7 +86,11 @@ export class PAMProjectForkUtil {
       return [];
     }
 
-    const redacted = PAMEnvVariableRedactUtil.redactEnvironments(environments);
+    const marked = environments.map((environment: PAMEnvWriteable) => ({
+      ...environment,
+      variables: PAMEnvSensitiveKeyUtil.markLookalikes(environment.variables)
+    }));
+    const redacted = PAMEnvVariableRedactUtil.redactEnvironments(marked);
 
     return redacted.map((environment: PAMEnvWriteable) => ({
       name: environment.name,

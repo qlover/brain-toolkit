@@ -122,8 +122,8 @@ Contract tests (~78) use an in-memory mock PAM covering identity / exact slug / 
 - **Exact project:** `pull` / `push` / `run` / `render` / `remove` / `fork` accept an **exact** slug or uuid only (no substring match like `pam` → `pamenv-…`).
 - **Fail-closed permissions:** trust server `permissions[]`; on missing permission or 401/403 there is no disk write and no injection. CLI checks are not a substitute for server auth.
 - **pull ≠ run:** `pull` / `render` need `pam_environments_export` (admin+); sensitive values are placeholders. `run` needs `pam_environments_inject` (member+); plaintext stays in the child process only.
-- **Protected envs:** with `is_protected=true`, resolve also requires export-tier permission — enable this for secrets members must not fetch via `run`.
-- **On disk:** refuses to overwrite files readable by group/others; writes are atomic + `0600` (best-effort on Windows). `--force` rebind requires interactive confirmation (non-TTY is refused).
+- **Protected envs:** with `is_protected=true`, both resolve and variable writes require export-tier permission — members cannot `run`, `push`, or edit that environment in the web UI.
+- **On disk:** refuses to overwrite files readable by group/others; writes are atomic + `0600`. On Windows, the current user is granted access and Everyone / Users entries are removed (best-effort). `--force` rebind requires interactive confirmation (non-TTY is refused).
 
 ## Environments and local files
 
@@ -226,7 +226,7 @@ Before starting, pamenv checks for the following and warns on stderr (it never b
 | A sensitive key starts with `NEXT_PUBLIC_` / `VITE_` | It gets bundled into client code at build time |
 | `turbo.json` uses strict env mode and the key is not declared | Turbo filters undeclared variables |
 
-If an environment is marked **protected** in the web UI, only project admins / owners can `run` it.
+If an environment is marked **protected** in the web UI, only project admins / owners can `run` it or change its variables (including `push`).
 
 ## `pamenv render`
 
@@ -258,9 +258,9 @@ pamenv push <slug|id> -e staging JWT_SECRET=new…   # inline override on top of
 pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines removed after success)
 ```
 
-- `pull` requires export permission (project admin / owner); sensitive keys are written with `# pam:sensitive` and this environment's fixed placeholder `__PAM_SENSITIVE_…__` (different per environment). If the server sends no placeholder, keys are kept with an empty value (empty on push means keep). Prefer `pamenv run` for development.
+- `pull` requires export permission (project admin / owner). Sensitive keys, and secret-looking names (`TOKEN`, `SECRET`, `PASSWORD`, `ACCESS_KEY`, `APIKEY`, `JWT`, `SESSION`, `COOKIE`, `DATABASE_URL`, and similar), are written with `# pam:sensitive` and this environment's placeholder `__PAM_SENSITIVE_…__` (different per environment), even when the server did not mark them. Leftover local plaintext for those keys is replaced; unpushed values are not kept. If the server sends no placeholder, keys are kept with an empty value (empty on push means keep). Prefer `pamenv run` for development.
 - **File push = full desired state**: a missing key in the file means delete it remotely; push does not auto-pad sensitive keys back in.
-- On `push`, this environment's placeholder (or an empty value) for a key already sensitive on PAM means "keep the PAM value"; a new value rotates it. After a successful push, sensitive values in the local file are switched back to the placeholder (or empty when none exists).
+- On `push`, a placeholder (or an empty value) for a key that is already sensitive, or whose name looks like a secret, means "keep the PAM value"; a new value rotates it. An existing non-sensitive key can be upgraded to sensitive, and cannot be downgraded. Remote values are not written into the local file until the push succeeds. After success, sensitive values in the local file are switched back to the placeholder (or empty when none exists).
 - Inline `KEY=value` overlays the local file before a full replace; `--unset <keys>` removes keys from the final set (applied after overrides).
 - Placeholders from another environment (e.g. a copied file) are rejected, so a placeholder is never stored as a secret.
 
@@ -273,18 +273,18 @@ pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines re
 
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
-- `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.
+- `pull` keeps unpushed local edits of ordinary keys and tells you about them. Sensitive and secret-looking keys are always replaced with the placeholder. `push` merges keys changed only on the remote into your local file after a successful push, instead of overwriting your other edits.
 - **Without a baseline** (never pulled/pushed here): one-sided keys are kept; only keys present on both sides with different values conflict. A first `push` therefore does not silently drop remote-only keys (use `--unset`, or sync then delete the line); a first `pull` does not silently drop local-only keys.
 - After a baseline exists, a missing file key / `--unset` means delete (full desired state).
 - `pull` keeps comments in your local file where possible. If only the remote changed, `push` asks you to `pull` first.
-- The diff masks every value as `*****` by default; `--show-values` reveals non-sensitive values only (names like `*_SECRET` or `*_TOKEN` are treated as sensitive).
+- The diff masks every value as `*****` by default; `--show-values` reveals non-sensitive values only. Names like `SECRET`, `TOKEN`, `PASSWORD`, `ACCESS_KEY`, `APIKEY`, `JWT`, `SESSION`, `COOKIE`, or `DATABASE_URL` stay masked.
 - If the `-e` environment does not exist, `push` asks for its URL, validates everything, then creates the environment and uploads the variables together.
 
 ### `-y` and `-f`
 
 | Option | Effect |
 | --- | --- |
-| `-y` | Skips ordinary confirmations: no-baseline prompt, final push, creating a missing environment, `remove`. Still auto-marks new secret-like keys (`*_SECRET`, etc.) with `# pam:sensitive`. Large deletions of remote keys still require one more confirm |
+| `-y` | Skips ordinary confirmations: no-baseline prompt, final push, creating a missing environment, `remove`. Secret-like names (`*_SECRET`, `ACCESS_KEY`, and similar) are always marked `# pam:sensitive`, not only with `-y`. Large deletions of remote keys still require one more confirm |
 | `-f` | Skips conflict confirmation only and uses the default side (remote for pull, local for push) |
 
 Neither implies the other; pass both to skip everything.
@@ -341,7 +341,7 @@ Access comes from your team role on the project; teams are managed in the PAM we
 | Role | run | push | pull / render (no sensitive values) | remove environment |
 | --- | --- | --- | --- | --- |
 | owner / admin | ✓ | ✓ | ✓ | ✓ |
-| member | ✓ (except protected environments) | ✓ | — | — |
+| member | ✓ (except protected environments) | ✓ (except protected environments) | — | — |
 
 - Every `run`, `pull` and `render` read is logged (who, which environment, how many keys; never values). Admins / owners can view the log on the environment page in the web UI.
 - Once a member is removed from the team, their CLI credential can no longer read the project's variables.

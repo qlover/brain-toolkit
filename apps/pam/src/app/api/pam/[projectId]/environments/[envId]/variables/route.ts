@@ -17,7 +17,7 @@ export async function POST(
   context: EnvironmentVariablesRouteContext
 ) {
   const { projectId, envId } = await context.params;
-  return new NextApiServer(API_PAM_ENVIRONMENTS_VARIABLES, req)
+  const response = await new NextApiServer(API_PAM_ENVIRONMENTS_VARIABLES, req)
     .use(
       new RequirePermissionPlugin(
         PermissionKey.pam_environments_variables_write,
@@ -27,4 +27,6 @@ export async function POST(
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).replaceEnvironmentVariables(projectId, envId, req)
     );
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }

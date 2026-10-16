@@ -123,8 +123,8 @@ pnpm --filter pamenv-cli test:live
 - **精确项目**：`pull` / `push` / `run` / `render` / `remove` / `fork` 只接受**精确** slug 或 uuid（不会 `pam` 误匹配 `pamenv-…`）。
 - **权限 fail-closed**：以服务端返回的 `permissions[]` 为准；缺权限或 401/403 时零落盘、零注入。CLI 预检不能替代服务端鉴权。
 - **pull ≠ run**：`pull` / `render` 需要 `pam_environments_export`（admin+），敏感值为 placeholder；`run` 需要 `pam_environments_inject`（member+），明文只进子进程。
-- **protected 环境**：`is_protected=true` 时，即便有 inject，resolve 仍要求 export 档权限——含密钥且不许 member 取出的环境请开启 protected。
-- **落盘**：目标文件若对 group/other 可读则拒绝覆盖；写入为 atomic + `0600`（Windows 为 best-effort）。`--force` 换绑需交互确认（非 TTY 拒绝）。
+- **protected 环境**：`is_protected=true` 时，resolve 和变量写入都要求 export 档权限——成员既不能 `run`，也不能 `push` 或在网页上改这个环境的变量。
+- **落盘**：目标文件若对 group/other 可读则拒绝覆盖；写入为 atomic + `0600`。Windows 上会授予当前用户并去掉 Everyone / Users（best-effort）。`--force` 换绑需交互确认（非 TTY 拒绝）。
 
 ## 环境与本地文件
 
@@ -227,7 +227,7 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | 敏感变量以 `NEXT_PUBLIC_` / `VITE_` 开头 | 会在构建时写进前端代码包 |
 | `turbo.json` 是严格环境变量模式，且变量未声明 | Turbo 会过滤未声明的变量 |
 
-如果环境在网页端被设为「受保护」，只有项目 admin / owner 可以 `run`。
+如果环境在网页端被设为「受保护」，只有项目 admin / owner 可以 `run` 或修改它的变量（含 `push`）。
 
 ## `pamenv render`
 
@@ -259,9 +259,9 @@ pamenv push <slug|id> -e staging JWT_SECRET=new…   # 行内覆盖（叠在本�
 pamenv push <slug|id> -e staging --unset OLD_KEY   # 删除指定键（成功后同步删本地行）
 ```
 
-- `pull` 需要导出权限（项目 admin / owner）；敏感变量写 `# pam:sensitive`，值是本环境固定的占位符 `__PAM_SENSITIVE_…__`（每个环境不同）。若服务端未提供占位符，则写成空值并保留键名（空值 push 表示 keep）。日常开发推荐用 `pamenv run`。
+- `pull` 需要导出权限（项目 admin / owner）。敏感变量，以及键名像密钥的变量（`TOKEN`、`SECRET`、`PASSWORD`、`ACCESS_KEY`、`APIKEY`、`JWT`、`SESSION`、`COOKIE`、`DATABASE_URL` 等），都写 `# pam:sensitive` 和本环境占位符 `__PAM_SENSITIVE_…__`（每个环境不同）。服务端没标敏感也会强制占位符。这些键在本地文件里的残留明文会被盖掉，未推送的新值不会留下。若服务端未提供占位符，则写成空值并保留键名（空值 push 表示 keep）。日常开发推荐用 `pamenv run`。
 - **文件 push = 完整期望状态**：文件里少一个键表示远端要删除该键；不要依赖 push 自动补回敏感键。
-- `push` 时，已在 PAM 上标记为敏感的键如果本地值是本环境的占位符（或为空），表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会换回占位符（无占位符时清成空）。
+- `push` 时，已敏感的键、或键名像密钥的键，本地值如果是本环境占位符（或为空），表示「保留 PAM 上的值」；填了新值则表示轮换。原先没标敏感的已有键可以升级为敏感，不能从敏感改回普通。确认推送成功之前，不会把远端值写进本地文件。推送成功后，本地文件里的敏感值会换回占位符（无占位符时清成空）。
 - 行内 `KEY=value` 叠在本地文件上再全量推送；`--unset <keys>` 从最终集合中删键（可与行内覆盖同用：先覆盖再 unset）。
 - 不属于本环境的占位符（比如从别的环境的文件复制过来）会被拒绝，避免把占位符当成密钥保存。
 
@@ -274,18 +274,18 @@ pamenv push <slug|id> -e staging --unset OLD_KEY   # 删除指定键（成功后
 
 - 以上次 pull/push 的同步基线逐个键合并：只有一边改过的键自动采用那一边，两边都改了同一个键才算冲突。
 - `pull` 冲突时默认用远端值，`push` 冲突时默认用本地值；会列出冲突键并让你确认（可选另一边或取消），之后提示你手动编辑本地文件再 `push`。
-- `pull` 会保留本地还没推送的修改并提示；`push` 会把远端单独改过的键合并进本地文件，不会覆盖掉。
+- `pull` 会保留普通键还没推送的修改并提示；敏感键和密钥式键名一律换回占位符。`push` 在推送成功后才把远端单独改过的键合并进本地文件，不会覆盖掉你的其它修改。
 - **没有基线**（此处从未 pull/push）时：只出现在一边的键会保留；两边同键但值不同才算冲突。因此首次 `push` 不会默默删掉远端独有键（要用 `--unset` 或先同步再删行）；首次 `pull` 也不会默默丢掉本地独有键。
 - 有基线后，文件缺键 / `--unset` 才表示删除（完整期望状态）。
 - `pull` 会尽量保留本地文件里的注释。如果只有远端改过、本地没改，`push` 会提示先 `pull`。
-- 差异预览默认把所有值显示为 `*****`；`--show-values` 只显示非敏感变量的明文（名称像 `*_SECRET`、`*_TOKEN` 的也按敏感处理）。
+- 差异预览默认把所有值显示为 `*****`；`--show-values` 只显示非敏感变量的明文。键名像 `SECRET`、`TOKEN`、`PASSWORD`、`ACCESS_KEY`、`APIKEY`、`JWT`、`SESSION`、`COOKIE`、`DATABASE_URL` 的仍遮盖。
 - `-e` 指定的环境不存在时，`push` 会先询问环境 URL，确认无误后再一并创建环境并写入变量。
 
 ### `-y` 与 `-f`
 
 | 参数 | 作用 |
 | --- | --- |
-| `-y` | 跳过普通确认：无基线提示、最终推送、创建缺失环境、`remove` 确认。仍会按键名（如 `*_SECRET`）自动给新键加 `# pam:sensitive`。若变更很大且会删远端键，仍会再问一次 |
+| `-y` | 跳过普通确认：无基线提示、最终推送、创建缺失环境、`remove` 确认。密钥式键名（如 `*_SECRET`、`ACCESS_KEY`）总会自动加 `# pam:sensitive`，不只在 `-y` 时。若变更很大且会删远端键，仍会再问一次 |
 | `-f` | 只跳过冲突确认，按默认一边处理（pull 用远端，push 用本地） |
 
 两者互不包含，需要都跳过时一起传。
@@ -342,7 +342,7 @@ pamenv locales pull                         # 刷新服务端错误提示文案
 | 角色 | run | push | pull / render（不含敏感值） | remove 环境 |
 | --- | --- | --- | --- | --- |
 | owner / admin | ✓ | ✓ | ✓ | ✓ |
-| member | ✓（受保护环境除外） | ✓ | — | — |
+| member | ✓（受保护环境除外） | ✓（受保护环境除外） | — | — |
 
 - 每次 `run`、`pull`、`render` 读取变量都会记录访问日志（谁、哪个环境、多少个键，不记录值），admin / owner 可在网页端环境页查看。
 - 成员被移出团队后，CLI 凭证立即无法再读取该项目的变量。

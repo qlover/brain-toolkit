@@ -93,6 +93,8 @@ export function PAMProjectEnvironmentsPanel({
     () => envList.find((env) => env.id === selectedEnvId) ?? null,
     [envList, selectedEnvId]
   );
+  const variablesLocked = selectedEnv?.is_protected === true && !canExportEnv;
+  const canEditVariables = canWriteVars && !variablesLocked;
 
   /** Saved variables; legacy rows without an id get a stable deterministic id. */
   const baselineVariables = useMemo(() => {
@@ -118,7 +120,7 @@ export function PAMProjectEnvironmentsPanel({
       PAMEnvVariableDraftUtil.countChanges(baselineVariables, draftVariables),
     [baselineVariables, draftVariables]
   );
-  const dirty = canWriteVars && changeCount > 0;
+  const dirty = canEditVariables && changeCount > 0;
 
   useEffect(() => {
     setDraftVariables(baselineVariables.map((item) => ({ ...item })));
@@ -257,7 +259,7 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onSave = async (): Promise<void> => {
-    if (!canWriteVars || !selectedEnvId) {
+    if (!canEditVariables || !selectedEnvId) {
       return;
     }
     const issue = PAMEnvVariableDraftUtil.findIssue(draftVariables, lockedIds);
@@ -563,14 +565,21 @@ export function PAMProjectEnvironmentsPanel({
                   </span>
                 </div>
               ) : (
-                <PAMProjectEnvVariablesSection
-                  key={selectedEnv.id}
-                  draft={draftVariables}
-                  setDraft={setDraftVariables}
-                  lockedIds={lockedIds}
-                  canWrite={canWriteVars}
-                  tt={tt}
-                />
+                <>
+                  <PAMProjectEnvVariablesSection
+                    key={selectedEnv.id}
+                    draft={draftVariables}
+                    setDraft={setDraftVariables}
+                    lockedIds={lockedIds}
+                    canWrite={canEditVariables}
+                    tt={tt}
+                  />
+                  {variablesLocked ? (
+                    <p className="text-xs leading-snug text-tertiary-text">
+                      {tt.envProtectedHint}
+                    </p>
+                  ) : null}
+                </>
               )
             ) : null}
 
