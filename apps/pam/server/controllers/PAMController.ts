@@ -404,10 +404,10 @@ export class PAMController {
       comments?: string[];
     }>;
   }> {
-    const projectUuid = uuidSchema.parse(projectId);
+    // projectId may be slug or uuid (assertOrgPermission / loadProjectAccess).
     const envUuid = uuidSchema.parse(envId);
     return this.pamService.exportEnvironment(
-      projectUuid,
+      projectId,
       envUuid,
       request ? this.getEnvAccessContext(request) : undefined
     );

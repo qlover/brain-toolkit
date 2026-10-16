@@ -1388,19 +1388,25 @@ export class PAMService implements PAMServiceInterface {
     params: PAMEnvResolve,
     context: PAMEnvAccessContext
   ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
-    const ownedPending = this.prefetchEnvironmentForExport(projectId, envId);
     const { userId, role } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_inject
     );
+    const access = await this.loadProjectAccess(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
 
-    const owned = await ownedPending;
+    const owned = await this.projectRepo.getEnvironmentForExport(
+      access.id,
+      envId
+    );
     if (!owned) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
     const variables = await this.decryptForInjection(
-      { userId, role, projectId },
+      { userId, role, projectId: access.id },
       owned.environment,
       params,
       context
@@ -1530,19 +1536,6 @@ export class PAMService implements PAMServiceInterface {
   }
 
   /**
-   * Starts loading the environment while permissions are checked; the result
-   * must only be used after the permission check passes.
-   */
-  protected prefetchEnvironmentForExport(
-    projectId: string,
-    envId: string
-  ): ReturnType<PAMProjectRepo['getEnvironmentForExport']> {
-    const pending = this.projectRepo.getEnvironmentForExport(projectId, envId);
-    pending.catch(() => undefined);
-    return pending;
-  }
-
-  /**
    * Records who read an environment after the response is sent (falls back to
    * awaiting outside a Next request scope). Never fails the request.
    */
@@ -1603,13 +1596,19 @@ export class PAMService implements PAMServiceInterface {
       comments?: string[];
     }>;
   }> {
-    const ownedPending = this.prefetchEnvironmentForExport(projectId, envId);
     const { userId } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_export
     );
+    const access = await this.loadProjectAccess(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
 
-    const owned = await ownedPending;
+    const owned = await this.projectRepo.getEnvironmentForExport(
+      access.id,
+      envId
+    );
     if (!owned) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
@@ -1628,35 +1627,45 @@ export class PAMService implements PAMServiceInterface {
         normalized,
         sensitivePlaceholder
       ) ?? [];
-    const content = PAMEnvDotenvSerializeUtil.serialize(redacted);
-    const variables = redacted.map((variable) => ({
-      key: variable.key,
-      value: variable.value,
-      sensitive: variable.sensitive === true,
-      ...(variable.comments && variable.comments.length > 0
-        ? { comments: [...variable.comments] }
-        : {})
-    }));
+    // Defense in depth: never ship a sensitive value that is not the placeholder.
+    const safeVariables = redacted.map((variable) => {
+      const sensitive = variable.sensitive === true;
+      const value =
+        sensitive &&
+        variable.value !== '' &&
+        variable.value !== sensitivePlaceholder
+          ? sensitivePlaceholder
+          : variable.value;
+      return {
+        key: variable.key,
+        value,
+        sensitive,
+        ...(variable.comments && variable.comments.length > 0
+          ? { comments: [...variable.comments] }
+          : {})
+      };
+    });
+    const content = PAMEnvDotenvSerializeUtil.serialize(safeVariables);
 
     await this.writeEnvAccessLog({
       userId,
-      projectId,
+      projectId: access.id,
       environmentId: owned.environment.id,
       environmentName: owned.environment.name,
       action: 'export',
-      keyCount: variables.length,
+      keyCount: safeVariables.length,
       context
     });
 
     return {
-      projectId,
+      projectId: access.id,
       projectSlug: owned.projectSlug,
       environmentId: owned.environment.id,
       environmentName: owned.environment.name,
       content,
       sensitiveKeys,
       sensitivePlaceholder,
-      variables
+      variables: safeVariables
     };
   }
 }

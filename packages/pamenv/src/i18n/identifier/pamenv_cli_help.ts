@@ -81,11 +81,18 @@ export const PAMENV_HELP_OPT_URL = 'pamenv_help:opt_url';
 export const PAMENV_HELP_OPT_DOMAIN = 'pamenv_help:opt_domain';
 
 /**
- * @description 使用工作目录下的 ./.pam 配置与同步数据（而不是 ~/.pam）
- * @localZh 使用工作目录下的 ./.pam 配置与同步数据（而不是 ~/.pam）
- * @localEn Use ./.pam config + sync under the working directory (not ~/.pam)
+ * @description 强制使用工作目录 ./.pam（通常可省略：存在 .pam/ 时自动隔离，不读 ~/.pam）
+ * @localZh 强制使用工作目录 ./.pam（通常可省略：存在 .pam/ 时自动隔离，不读 ~/.pam）
+ * @localEn Force cwd ./.pam (usually optional: .pam/ auto-isolates from ~/.pam)
  */
 export const PAMENV_HELP_OPT_LOCAL = 'pamenv_help:opt_local';
+
+/**
+ * @description 强制使用 ~/.pam（-g；即使当前目录已有 ./.pam）
+ * @localZh 强制使用 ~/.pam（-g；即使当前目录已有 ./.pam）
+ * @localEn Force ~/.pam (-g; even when ./.pam exists in cwd)
+ */
+export const PAMENV_HELP_OPT_GLOBAL = 'pamenv_help:opt_global';
 
 /**
  * @description 项目 slug 或项目 id
@@ -116,9 +123,9 @@ export const PAMENV_HELP_OPT_FILE = 'pamenv_help:opt_file';
 export const PAMENV_HELP_OPT_WORKDIR = 'pamenv_help:opt_workdir';
 
 /**
- * @description 登录并保存 CLI token（默认浏览器登录；--local 时保存在 cwd/.pam）
- * @localZh 登录并保存 CLI token（默认浏览器登录；--local 时保存在 cwd/.pam）
- * @localEn Login and store CLI token (browser by default; use --local for cwd/.pam)
+ * @description 登录并保存 CLI token（默认浏览器登录；--local 写入 cwd/.pam）
+ * @localZh 登录并保存 CLI token（默认浏览器登录；--local 写入 cwd/.pam）
+ * @localEn Login and store CLI token (browser by default; --local writes cwd/.pam)
  */
 export const PAMENV_HELP_LOGIN = 'pamenv_help:login';
 

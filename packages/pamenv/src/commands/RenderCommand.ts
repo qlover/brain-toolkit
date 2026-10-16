@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
-  PAMENV_CLI_NOT_OWNER_EXPORT,
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RENDER_BAD_FORMAT,
   PAMENV_CLI_RENDER_SENSITIVE_OMITTED,
@@ -9,13 +8,13 @@ import {
   PAMENV_CLI_RENDERED
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
+import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
 import { PamCliDotenvUtil } from '../impls/PamCliDotenvUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
 import { PamCliOutputAdapterRegistry } from '../impls/PamCliOutputAdapters';
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
-import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
-import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 
 export type PamCliRenderOptionsType = {
   readonly envName?: string;
@@ -34,7 +33,10 @@ export type PamCliRenderOptionsType = {
  * await new RenderCommand(api).run('my-app', { envName: 'dev', format: 'json' });
  */
 export class RenderCommand {
-  constructor(protected readonly apiClient: PamCliApiClientInterface) {}
+  constructor(
+    protected readonly apiClient: PamCliApiClientInterface,
+    protected readonly authStore?: PamCliAuthStoreInterface
+  ) {}
 
   public async run(
     projectRef: string,
@@ -50,15 +52,15 @@ export class RenderCommand {
       );
     }
 
-    const project = await PamCliProjectResolveUtil.resolve(
+    if (this.authStore) {
+      await PamCliSecurityGate.assertIdentity(this.authStore);
+    }
+
+    const project = await PamCliSecurityGate.resolveProjectExact(
       this.apiClient,
       projectRef
     );
-    if (!PamCliProjectAccessUtil.canExport(project)) {
-      throw new Error(
-        PamCliI18n.t(PAMENV_CLI_NOT_OWNER_EXPORT, { slug: project.slug })
-      );
-    }
+    PamCliSecurityGate.assertCanExport(project);
 
     const env = PamCliEnvironmentSelectUtil.select(
       project.environments,
@@ -66,6 +68,7 @@ export class RenderCommand {
       project.slug
     );
     const exported = await this.apiClient.exportEnvironment(project.id, env.id);
+    PamCliSecurityGate.assertExportRedacted(exported);
     const sensitiveKeys = new Set(exported.sensitiveKeys ?? []);
     const source =
       exported.variables && exported.variables.length > 0

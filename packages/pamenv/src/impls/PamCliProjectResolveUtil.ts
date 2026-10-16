@@ -13,12 +13,12 @@ const PROJECT_ID_PATTERN =
  * Resolves a PAM project from a slug or project id reference.
  *
  * Significance: Shared matching rules for CLI project lookup.
- * Core idea: Prefer exact id, then exact slug, then slug substring.
+ * Core idea: Privileged commands use exact id/slug only; substring is list-only.
  * Main function: Find a project in a list and detect uuid-like ids.
  * Main purpose: Let `pamenv pull` / `pamenv push` accept either slug or projectId.
  *
  * @example
- * const project = await PamCliProjectResolveUtil.resolve(apiClient, ref);
+ * const project = await PamCliProjectResolveUtil.resolveExact(apiClient, ref);
  */
 export class PamCliProjectResolveUtil {
   /**
@@ -31,11 +31,30 @@ export class PamCliProjectResolveUtil {
   }
 
   /**
-   * Finds a project by id (exact), slug (exact), then slug substring.
+   * Finds a project by id (exact) or slug (exact). Never substring.
    *
    * @param projects - Candidate projects from search / list
    * @param ref - User-provided slug or id
    * @returns Matching project or undefined
+   */
+  public static findExactInList(
+    projects: readonly PamCliProjectType[],
+    ref: string
+  ): PamCliProjectType | undefined {
+    const trimmed = ref.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+
+    return (
+      projects.find((item) => item.id === trimmed) ||
+      projects.find((item) => item.slug === trimmed)
+    );
+  }
+
+  /**
+   * @deprecated Prefer {@link findExactInList} for privileged commands.
+   * Kept for fuzzy list UX only (id → exact slug → substring).
    */
   public static findInList(
     projects: readonly PamCliProjectType[],
@@ -47,8 +66,7 @@ export class PamCliProjectResolveUtil {
     }
 
     return (
-      projects.find((item) => item.id === trimmed) ||
-      projects.find((item) => item.slug === trimmed) ||
+      this.findExactInList(projects, trimmed) ||
       projects.find((item) => item.slug.includes(trimmed))
     );
   }
@@ -72,13 +90,13 @@ export class PamCliProjectResolveUtil {
   }
 
   /**
-   * Resolves a project via search, with uuid fallback to a full list.
+   * Resolves a project via exact slug/id only (privileged commands).
    *
    * @param apiClient - Authenticated PAM API client
    * @param projectRef - Slug or project id
    * @returns Matched project
    */
-  public static async resolve(
+  public static async resolveExact(
     apiClient: PamCliApiClientInterface,
     projectRef: string
   ): Promise<PamCliProjectType> {
@@ -88,7 +106,7 @@ export class PamCliProjectResolveUtil {
     }
 
     const searched = await apiClient.listProjects(ref);
-    let project = this.findInList(searched, ref);
+    let project = this.findExactInList(searched, ref);
 
     if (!project && this.isLikelyProjectId(ref)) {
       const all = await apiClient.listProjects();
@@ -102,5 +120,15 @@ export class PamCliProjectResolveUtil {
     }
 
     return project;
+  }
+
+  /**
+   * @deprecated Use {@link resolveExact} for pull/push/run/render/remove/fork.
+   */
+  public static async resolve(
+    apiClient: PamCliApiClientInterface,
+    projectRef: string
+  ): Promise<PamCliProjectType> {
+    return this.resolveExact(apiClient, projectRef);
   }
 }

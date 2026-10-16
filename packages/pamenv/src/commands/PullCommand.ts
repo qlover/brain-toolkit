@@ -4,7 +4,6 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_CANCELLED,
   PAMENV_CLI_LOCAL_FILE,
-  PAMENV_CLI_NOT_OWNER_EXPORT,
   PAMENV_CLI_PULLED,
   PAMENV_CLI_PULL_CONFLICT,
   PAMENV_CLI_PULL_LOCAL_KEPT,
@@ -21,15 +20,16 @@ import {
 } from '../impls/PamCliDotenvUtil';
 import { PamCliEnvDiffUtil } from '../impls/PamCliEnvDiffUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
+import { PamCliEnvFileBindingUtil } from '../impls/PamCliEnvFileBindingUtil';
 import { PamCliLocalEnvFileUtil } from '../impls/PamCliLocalEnvFileUtil';
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
-import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
-import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 import {
   PamCliSyncConflictUtil,
   PamCliSyncSide
 } from '../impls/PamCliSyncConflictUtil';
 import { PamCliSyncStore } from '../impls/PamCliSyncStore';
+import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 
 /**
  * `pamenv pull` — download one environment into the working directory.
@@ -46,7 +46,8 @@ import { PamCliSyncStore } from '../impls/PamCliSyncStore';
 export class PullCommand {
   constructor(
     protected readonly apiClient: PamCliApiClientInterface,
-    protected readonly syncStore: PamCliSyncStore = new PamCliSyncStore()
+    protected readonly syncStore: PamCliSyncStore = new PamCliSyncStore(),
+    protected readonly authStore?: PamCliAuthStoreInterface
   ) {}
 
   /**
@@ -57,16 +58,15 @@ export class PullCommand {
     projectRef: string,
     options: PamCliLocalEnvOptionsType = {}
   ): Promise<void> {
-    const project = await PamCliProjectResolveUtil.resolve(
+    if (this.authStore) {
+      await PamCliSecurityGate.assertIdentity(this.authStore);
+    }
+
+    const project = await PamCliSecurityGate.resolveProjectExact(
       this.apiClient,
       projectRef
     );
-
-    if (!PamCliProjectAccessUtil.canExport(project)) {
-      throw new Error(
-        PamCliI18n.t(PAMENV_CLI_NOT_OWNER_EXPORT, { slug: project.slug })
-      );
-    }
+    PamCliSecurityGate.assertCanExport(project);
 
     const env = PamCliEnvironmentSelectUtil.select(
       project.environments,
@@ -79,8 +79,18 @@ export class PullCommand {
       env.name,
       options.file
     );
+    await PamCliEnvFileBindingUtil.assertCompatibleOrThrow({
+      syncRoot: this.syncStore.getSyncRoot(),
+      outDir,
+      absoluteFilePath: target,
+      projectId: project.id,
+      projectSlug: project.slug,
+      envName: env.name,
+      force: options.force
+    });
 
     const exported = await this.apiClient.exportEnvironment(project.id, env.id);
+    PamCliSecurityGate.assertExportRedacted(exported);
     const remoteVars = this.toRemoteVariables(exported);
     const sensitiveKeys = new Set(
       exported.sensitiveKeys ||
@@ -173,6 +183,14 @@ export class PullCommand {
       env.name,
       remoteMap
     );
+    await PamCliEnvFileBindingUtil.writeBinding({
+      syncRoot: this.syncStore.getSyncRoot(),
+      outDir,
+      absoluteFilePath: target,
+      projectId: project.id,
+      projectSlug: project.slug,
+      envName: env.name
+    });
     console.log(
       upToDate
         ? PamCliI18n.t(PAMENV_CLI_PULL_UP_TO_DATE, {

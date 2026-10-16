@@ -14,7 +14,6 @@ import {
   PAMENV_CLI_LOCAL_FILE_HINT_CUSTOM,
   PAMENV_CLI_LOCAL_FILE_HINT_PULL,
   PAMENV_CLI_LOCAL_FILE_NOT_FOUND,
-  PAMENV_CLI_NOT_OWNER_PUSH,
   PAMENV_CLI_OPEN_PROJECT_DETAIL,
   PAMENV_CLI_PROMPT_ENV_URL,
   PAMENV_CLI_PUSHED_DETAIL,
@@ -50,11 +49,11 @@ import {
 } from '../impls/PamCliDotenvUtil';
 import { PamCliEnvDiffUtil } from '../impls/PamCliEnvDiffUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
+import { PamCliEnvFileBindingUtil } from '../impls/PamCliEnvFileBindingUtil';
 import { PamCliLocalEnvFileUtil } from '../impls/PamCliLocalEnvFileUtil';
 import { PamCliLocalProjectScanUtil } from '../impls/PamCliLocalProjectScanUtil';
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
-import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
-import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 import { PamCliSensitivePlaceholderUtil } from '../impls/PamCliSensitivePlaceholderUtil';
 import { PamCliSensitivePromptUtil } from '../impls/PamCliSensitivePromptUtil';
 import {
@@ -108,16 +107,15 @@ export class PushCommand {
     projectRef: string,
     options: PamCliLocalEnvOptionsType = {}
   ): Promise<void> {
-    const project = await PamCliProjectResolveUtil.resolve(
+    if (this.authStore) {
+      await PamCliSecurityGate.assertIdentity(this.authStore);
+    }
+
+    const project = await PamCliSecurityGate.resolveProjectExact(
       this.apiClient,
       projectRef
     );
-
-    if (!PamCliProjectAccessUtil.canEdit(project)) {
-      throw new Error(
-        PamCliI18n.t(PAMENV_CLI_NOT_OWNER_PUSH, { slug: project.slug })
-      );
-    }
+    PamCliSecurityGate.assertCanEdit(project);
 
     const outDir = resolve(options.outDir || process.cwd());
     const targetEnv = await this.planEnvironment(project, options, outDir);
@@ -126,6 +124,15 @@ export class PushCommand {
       targetEnv.name,
       options.file
     );
+    await PamCliEnvFileBindingUtil.assertCompatibleOrThrow({
+      syncRoot: this.syncStore.getSyncRoot(),
+      outDir,
+      absoluteFilePath: target,
+      projectId: project.id,
+      projectSlug: project.slug,
+      envName: targetEnv.name,
+      force: options.force
+    });
 
     let localDoc: PamCliDotenvDocumentType;
     try {
@@ -156,6 +163,7 @@ export class PushCommand {
         project.id,
         targetEnv.id
       );
+      PamCliSecurityGate.assertExportRedacted(remoteExport);
       remoteSensitiveKeys = new Set(remoteExport.sensitiveKeys || []);
       placeholder = remoteExport.sensitivePlaceholder;
       remoteVars = PamCliDotenvUtil.parse(remoteExport.content).map((item) =>
@@ -181,6 +189,7 @@ export class PushCommand {
         targetEnv.name,
         localMap
       );
+      await this.bindLocalEnvFile(outDir, target, project, targetEnv.name);
       console.log(
         PamCliI18n.t(PAMENV_CLI_PUSH_ALREADY_SYNC, {
           slug: project.slug,
@@ -263,6 +272,7 @@ export class PushCommand {
           targetEnv.name,
           remoteMap
         );
+        await this.bindLocalEnvFile(outDir, target, project, targetEnv.name);
         console.log(
           PamCliI18n.t(PAMENV_CLI_PUSH_ALREADY_SYNC, {
             slug: project.slug,
@@ -449,6 +459,7 @@ export class PushCommand {
       targetEnv.name,
       PamCliDotenvUtil.toValueMap(cleared.variables)
     );
+    await this.bindLocalEnvFile(outDir, target, project, targetEnv.name);
     console.log(
       PamCliI18n.t(PAMENV_CLI_PUSHED_DETAIL, {
         path: target,
@@ -458,6 +469,25 @@ export class PushCommand {
       })
     );
     await this.printProjectDetailHint(project.slug);
+  }
+
+  /**
+   * Records which project owns a local dotenv path (cross-project guard).
+   */
+  protected async bindLocalEnvFile(
+    outDir: string,
+    absoluteFilePath: string,
+    project: Pick<PamCliProjectType, 'id' | 'slug'>,
+    envName: string
+  ): Promise<void> {
+    await PamCliEnvFileBindingUtil.writeBinding({
+      syncRoot: this.syncStore.getSyncRoot(),
+      outDir,
+      absoluteFilePath,
+      projectId: project.id,
+      projectSlug: project.slug,
+      envName
+    });
   }
 
   /**

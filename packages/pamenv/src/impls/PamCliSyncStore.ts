@@ -48,6 +48,16 @@ export class PamCliSyncStore {
   }
 
   /**
+   * @param preferLocal - When true, sync under `{workingDir}/.pam/sync`
+   */
+  public setPreferLocal(preferLocal: boolean): void {
+    this.runtime = {
+      ...this.runtime,
+      preferLocal
+    };
+  }
+
+  /**
    * @param projectId - Project uuid
    * @param envName - Environment name
    */
@@ -62,7 +72,10 @@ export class PamCliSyncStore {
     return PamCliConfig.getSyncSnapshotPath(projectId, envName);
   }
 
-  protected getSyncRoot(): string {
+  /**
+   * Active sync root (`~/.pam/sync` or `{cwd}/.pam/sync`).
+   */
+  public getSyncRoot(): string {
     return this.runtime.preferLocal
       ? PamCliConfig.getLocalSyncRoot(this.runtime.workingDir)
       : PamCliConfig.getSyncRoot();

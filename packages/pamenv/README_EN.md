@@ -50,25 +50,38 @@ pamenv pull <slug> -e staging     # download into .env.staging (export permissio
 | --- | --- |
 | `--url <url>` | PAM origin, e.g. `https://pam.example.com` |
 | `--domain <host>` | Same as `--url` but accepts a bare host; `localhost` and private addresses default to `http`, others to `https` |
-| `--local` | Keep sign-in and sync state in `.pam/` under the current directory, isolated from the global sign-in; add `.pam/` to `.gitignore` |
+| `--local` | Force cwd `.pam/`; if `.pam/` exists it auto-isolates (never reads `~/.pam`) |
+| `-g, --global` | Force `~/.pam` even when cwd already has `.pam/` |
 
-Do not pass `--url` and `--domain` together.
+Do not pass `--url` and `--domain` together, or `--local` and `--global` together. Add `.pam/` to `.gitignore`.
 
 ```bash
 pamenv --domain pam.localhost:3400 login
-pamenv --local --domain pam.localhost:3400 login
-pamenv --local projects
+pamenv --local --domain pam.localhost:3400 login   # first write to cwd/.pam
+pamenv projects                                   # with .pam/, local only (fails if not logged in locally)
+pamenv -g projects                                # force global sign-in
 ```
+
+## Security model
+
+- **Identity isolation:** if cwd has `.pam/`, only local credentials are used — never fall back to `~/.pam`. Missing token fails immediately. Use `-g` for the home root.
+- **Exact project:** `pull` / `push` / `run` / `render` / `remove` / `fork` accept an **exact** slug or uuid only (no substring match like `pam` → `pamenv-…`).
+- **Fail-closed permissions:** trust server `permissions[]`; on missing permission or 401/403 there is no disk write and no injection. CLI checks are not a substitute for server auth.
+- **pull ≠ run:** `pull` / `render` need `pam_environments_export` (admin+); sensitive values are placeholders. `run` needs `pam_environments_inject` (member+); plaintext stays in the child process only.
+- **Protected envs:** with `is_protected=true`, resolve also requires export-tier permission — enable this for secrets members must not fetch via `run`.
+- **On disk:** refuses to overwrite files readable by group/others; writes are atomic + `0600` (best-effort on Windows). `--force` rebind requires interactive confirmation (non-TTY is refused).
 
 ## Environments and local files
 
 - `-e <env>` selects the environment: `-e local` maps to `.env.local`, `-e staging` to `.env.staging`.
 - Without `-e`, the project's first environment is used (`remove` always requires `-e`).
 - `--file <path>` uses another file, relative to the current directory (or `-o`), or an absolute path.
+- **Multiple projects in one cwd:** the default filename is only the env name. After `pull fe-base -e dev` (owns `.env.dev`), `pull pam -e dev` is refused — use `--file .env.pam.dev`, another directory, or `--force` in a TTY with confirmation.
 
 ```bash
 pamenv pull <slug> -e local --file .env   # write .env instead of .env.local
 pamenv push <slug> -e local --file .env   # read .env and push to local
+pamenv pull pam -e dev --file .env.pam.dev
 ```
 
 ## `pamenv init`
