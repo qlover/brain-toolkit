@@ -279,7 +279,7 @@ describe('pamenv contract integration (mock PAM)', () => {
       expect(await fileExists(join(ctx.cwd, '.env.dev'))).toBe(false);
     });
 
-    it('refuses write when export returns plaintext for sensitive keys', async () => {
+    it('writes placeholders when export returns plaintext for sensitive keys', async () => {
       ctx = await createPamCliIntegrationContext();
       const project = ownerProject();
       ctx.mock.setHandlers({
@@ -289,13 +289,14 @@ describe('pamenv contract integration (mock PAM)', () => {
         }
       });
 
-      await expect(
-        new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
-          'fe-base',
-          { envName: 'dev', outDir: ctx.cwd }
-        )
-      ).rejects.toThrow(/export_sensitive_leak|TOKEN|plaintext|明文|拒绝/i);
-      expect(await fileExists(join(ctx.cwd, '.env.dev'))).toBe(false);
+      await new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd }
+      );
+      const text = await readFile(join(ctx.cwd, '.env.dev'), 'utf8');
+      expect(text).toContain('API_URL=https://x.dev');
+      expect(text).toContain(`TOKEN=${PLACEHOLDER}`);
+      expect(text).not.toContain('leaked-secret');
     });
 
     it('second pull that matches remote is up-to-date (file stays)', async () => {
@@ -773,6 +774,53 @@ describe('pamenv contract integration (mock PAM)', () => {
       expect(keys).toContain('NEW_KEY');
     });
 
+    it('inline KEY=value rotates sensitive and --unset deletes a key', async () => {
+      ctx = await createPamCliIntegrationContext();
+      const project = ownerProject();
+      ctx.mock.setHandlers({
+        projects: [project],
+        exportByEnvId: { 'e-dev': okExport(project, 'e-dev', 'dev') }
+      });
+
+      await new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd }
+      );
+      await writeFile(
+        join(ctx.cwd, '.env.dev'),
+        `API_URL=https://x.dev\nTOKEN=${PLACEHOLDER}\nEXTRA=keep\n`,
+        'utf8'
+      );
+
+      await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        {
+          envName: 'dev',
+          outDir: ctx.cwd,
+          yes: true,
+          force: true,
+          overrides: { TOKEN: 'rotated-secret' },
+          unsetKeys: ['EXTRA']
+        }
+      );
+
+      expect(ctx.mock.replacedBodies.length).toBe(1);
+      const body = ctx.mock.replacedBodies[0]?.body as {
+        variables: Array<{ key: string; value: string }>;
+      };
+      const byKey = Object.fromEntries(
+        body.variables.map((item) => [item.key, item.value])
+      );
+      expect(byKey.TOKEN).toBe('rotated-secret');
+      expect(byKey.EXTRA).toBeUndefined();
+      expect(Object.keys(byKey).sort()).toEqual(['API_URL', 'TOKEN']);
+
+      const text = await readFile(join(ctx.cwd, '.env.dev'), 'utf8');
+      expect(text).not.toContain('rotated-secret');
+      expect(text).toContain(`TOKEN=${PLACEHOLDER}`);
+      expect(text).not.toContain('EXTRA=');
+    });
+
     it('push respects env-file binding conflict', async () => {
       ctx = await createPamCliIntegrationContext();
       const fe = ownerProject();
@@ -843,7 +891,7 @@ describe('pamenv contract integration (mock PAM)', () => {
       ).rejects.toThrow(/export|导出/i);
     });
 
-    it('refuses render --out when export leaks sensitive plaintext', async () => {
+    it('render --out writes placeholders when export leaks sensitive plaintext', async () => {
       ctx = await createPamCliIntegrationContext();
       const project = ownerProject();
       ctx.mock.setHandlers({
@@ -853,13 +901,15 @@ describe('pamenv contract integration (mock PAM)', () => {
         }
       });
 
-      await expect(
-        new RenderCommand(ctx.apiClient, ctx.authStore).run('fe-base', {
-          envName: 'dev',
-          out: join(ctx.cwd, 'leak.env')
-        })
-      ).rejects.toThrow(/export_sensitive_leak|TOKEN|明文|拒绝/i);
-      expect(await fileExists(join(ctx.cwd, 'leak.env'))).toBe(false);
+      const out = join(ctx.cwd, 'leak.env');
+      await new RenderCommand(ctx.apiClient, ctx.authStore).run('fe-base', {
+        envName: 'dev',
+        out
+      });
+      const text = await readFile(out, 'utf8');
+      expect(text).toContain('API_URL=https://x.dev');
+      expect(text).toContain(`TOKEN=${PLACEHOLDER}`);
+      expect(text).not.toContain('leaked-secret');
     });
 
     it('json format omits comments but keeps values', async () => {

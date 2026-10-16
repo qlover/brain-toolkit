@@ -14,12 +14,27 @@ import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInte
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type {
   PamCliExportResultType,
-  PamCliProjectType
+  PamCliProjectType,
+  PamCliResolvedVarType
 } from '../interfaces/PamCliTypes';
 import { PamCliApiError } from './PamCliApiError';
+import { PamCliDotenvUtil } from './PamCliDotenvUtil';
 import { PamCliProjectAccessUtil } from './PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from './PamCliProjectResolveUtil';
 import { PamCliSensitivePlaceholderUtil } from './PamCliSensitivePlaceholderUtil';
+
+export type PamCliRedactedExportVarsType = {
+  readonly variables: readonly PamCliResolvedVarType[];
+  readonly sensitiveKeys: ReadonlySet<string>;
+  readonly placeholder: string;
+  /** Sensitive keys forced to the env placeholder (including leaked plaintext). */
+  readonly placeholderKeys: readonly string[];
+  /**
+   * Sensitive keys written as empty keep values when the server sent no
+   * placeholder (key names are kept so a later file push does not delete them).
+   */
+  readonly emptyKeepKeys: readonly string[];
+};
 
 /**
  * Fail-closed preflight for pamenv commands that touch secrets or disk.
@@ -94,6 +109,8 @@ export class PamCliSecurityGate {
 
   /**
    * Rejects export payloads where a sensitive key still carries a real value.
+   * Prefer {@link redactExportForLocalOutput} for pull/render/push — older PAM
+   * builds may leak plaintext; clients must force placeholders instead of failing.
    */
   public static assertExportRedacted(
     exported: PamCliExportResultType
@@ -126,6 +143,87 @@ export class PamCliSecurityGate {
         })
       );
     }
+  }
+
+  /**
+   * Builds local-safe variables from an export: sensitive values become the
+   * env placeholder (never plaintext). If the server omits
+   * `sensitivePlaceholder`, sensitive keys are kept with an empty value so a
+   * later file push still treats them as keep (not delete).
+   *
+   * Compatible with older PAM exports that incorrectly return plaintext for
+   * keys listed in `sensitiveKeys`.
+   */
+  public static redactExportForLocalOutput(
+    exported: PamCliExportResultType
+  ): PamCliRedactedExportVarsType {
+    const placeholder = exported.sensitivePlaceholder?.trim() || '';
+    const sensitiveKeys = new Set(exported.sensitiveKeys || []);
+    const source =
+      exported.variables && exported.variables.length > 0
+        ? exported.variables.map((variable) => ({
+            key: variable.key,
+            value: variable.value ?? '',
+            sensitive:
+              variable.sensitive === true || sensitiveKeys.has(variable.key),
+            ...(variable.comments ? { comments: [...variable.comments] } : {})
+          }))
+        : PamCliDotenvUtil.parse(exported.content).map((variable) => ({
+            key: variable.key,
+            value: variable.value,
+            sensitive:
+              variable.sensitive === true || sensitiveKeys.has(variable.key),
+            ...(variable.comments ? { comments: [...variable.comments] } : {})
+          }));
+
+    const placeholderKeys: string[] = [];
+    const emptyKeepKeys: string[] = [];
+    const variables: PamCliResolvedVarType[] = [];
+
+    for (const variable of source) {
+      if (!variable.sensitive) {
+        variables.push({
+          key: variable.key,
+          value: variable.value,
+          sensitive: false,
+          ...(variable.comments ? { comments: variable.comments } : {})
+        });
+        continue;
+      }
+
+      sensitiveKeys.add(variable.key);
+
+      if (placeholder) {
+        placeholderKeys.push(variable.key);
+        variables.push({
+          key: variable.key,
+          value: placeholder,
+          sensitive: true,
+          ...(variable.comments ? { comments: variable.comments } : {})
+        });
+        continue;
+      }
+
+      emptyKeepKeys.push(variable.key);
+      variables.push({
+        key: variable.key,
+        value: '',
+        sensitive: true,
+        ...(variable.comments ? { comments: variable.comments } : {})
+      });
+    }
+
+    return {
+      variables,
+      sensitiveKeys,
+      placeholder,
+      placeholderKeys: [...new Set(placeholderKeys)].sort((a, b) =>
+        a.localeCompare(b)
+      ),
+      emptyKeepKeys: [...new Set(emptyKeepKeys)].sort((a, b) =>
+        a.localeCompare(b)
+      )
+    };
   }
 
   /**

@@ -457,6 +457,21 @@ export const PAMENV_HELP_PUSH_OPT_FORCE = 'pamenv_help:push_opt_force';
 export const PAMENV_HELP_PUSH_OPT_SHOW_VALUES = 'pamenv_help:push_opt_show_values';
 
 /**
+ * @description push 行内 KEY=value 覆盖（叠在本地文件上）
+ * @localZh 覆盖或新增变量（KEY=value，可多个；叠在本地文件上）
+ * @localEn Override or add variables (KEY=value, repeatable; applied on top of the local file)
+ */
+export const PAMENV_HELP_PUSH_ARG_ASSIGNMENTS =
+  'pamenv_help:push_arg_assignments';
+
+/**
+ * @description push 时从最终集合中删除指定键
+ * @localZh 从本次推送中删除这些键（逗号分隔；成功后同步删本地行）
+ * @localEn Remove these keys from this push (comma-separated; local lines removed after success)
+ */
+export const PAMENV_HELP_PUSH_OPT_UNSET = 'pamenv_help:push_opt_unset';
+
+/**
  * @description 删除项目中的一个 PAM 环境（需管理员及以上）
  * @localZh 删除项目中的一个 PAM 环境（需管理员及以上）
  * @localEn Delete a PAM environment from a project (admin+)

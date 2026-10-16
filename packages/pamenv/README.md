@@ -255,11 +255,23 @@ pamenv push <slug|id> -e staging
 pamenv push <slug|id> -e staging -y            # 跳过普通确认
 pamenv push <slug|id> -e staging -f            # 冲突键不询问，直接用本地值
 pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量的值
+pamenv push <slug|id> -e staging JWT_SECRET=new…   # 行内覆盖（叠在本地文件上）
+pamenv push <slug|id> -e staging --unset OLD_KEY   # 删除指定键（成功后同步删本地行）
 ```
 
-- `pull` 需要导出权限（项目 admin / owner）；敏感变量写 `# pam:sensitive`，值是本环境固定的占位符 `__PAM_SENSITIVE_…__`（每个环境不同）。日常开发推荐用 `pamenv run`。
-- `push` 时，已在 PAM 上标记为敏感的键如果本地值是本环境的占位符（或为空），表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会换回占位符。
+- `pull` 需要导出权限（项目 admin / owner）；敏感变量写 `# pam:sensitive`，值是本环境固定的占位符 `__PAM_SENSITIVE_…__`（每个环境不同）。若服务端未提供占位符，则写成空值并保留键名（空值 push 表示 keep）。日常开发推荐用 `pamenv run`。
+- **文件 push = 完整期望状态**：文件里少一个键表示远端要删除该键；不要依赖 push 自动补回敏感键。
+- `push` 时，已在 PAM 上标记为敏感的键如果本地值是本环境的占位符（或为空），表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会换回占位符（无占位符时清成空）。
+- 行内 `KEY=value` 叠在本地文件上再全量推送；`--unset <keys>` 从最终集合中删键（可与行内覆盖同用：先覆盖再 unset）。
 - 不属于本环境的占位符（比如从别的环境的文件复制过来）会被拒绝，避免把占位符当成密钥保存。
+
+| 本地最终值 | 已敏感键 | 普通键 |
+| --- | --- | --- |
+| 本环境占位符 | keep | （一般不应出现） |
+| 空字符串 | keep | 键保留，值清空 |
+| 新明文 | 轮换 | 更新 |
+| 行不存在 / `--unset` | 删除 | 删除 |
+
 - 以上次 pull/push 的同步基线逐个键合并：只有一边改过的键自动采用那一边，两边都改了同一个键才算冲突。
 - `pull` 冲突时默认用远端值，`push` 冲突时默认用本地值；会列出冲突键并让你确认（可选另一边或取消），之后提示你手动编辑本地文件再 `push`。
 - `pull` 会保留本地还没推送的修改并提示；`push` 会把远端单独改过的键合并进本地文件，不会覆盖掉。

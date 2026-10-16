@@ -741,12 +741,12 @@ export const PAMENV_CLI_RENDER_BAD_FORMAT = 'pamenv_cli:render_bad_format';
 export const PAMENV_CLI_RENDERED = 'pamenv_cli:rendered';
 
 /**
- * @description render 省略了敏感变量（输出到 stderr）
- * @localZh [pamenv] 已省略 {{count}} 个敏感变量（{{keys}}）：敏感值不会以明文输出，请用 `pamenv run` 注入进程。
- * @localEn [pamenv] Omitted {{count}} sensitive variable(s) ({{keys}}): sensitive values are never output as plaintext; inject them with `pamenv run`.
+ * @description render 将敏感变量写成空值 keep（旧服务端无占位符，输出到 stderr）
+ * @localZh [pamenv] {{count}} 个敏感变量已写成空值（{{keys}}）：不含明文；空值 push 时表示保留远端密钥。请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] {{count}} sensitive variable(s) written as empty ({{keys}}): no plaintext; empty on push keeps the remote secret. Inject with `pamenv run`.
  */
-export const PAMENV_CLI_RENDER_SENSITIVE_OMITTED =
-  'pamenv_cli:render_sensitive_omitted';
+export const PAMENV_CLI_RENDER_SENSITIVE_EMPTY =
+  'pamenv_cli:render_sensitive_empty';
 
 /**
  * @description render 用占位符输出了敏感变量（输出到 stderr）
@@ -1196,12 +1196,36 @@ export const PAMENV_CLI_PERMISSIONS_MISSING =
   'pamenv_cli:permissions_missing';
 
 /**
- * @description export 返回了敏感明文，拒绝落盘
+ * @description export 返回了敏感明文（旧检测；现已改为客户端强制占位符）
  * @localZh 拒绝写入：导出结果中敏感键 "{{key}}"（{{slug}}/{{env}}）仍含明文。请检查服务端 redact，或将该变量标记为 sensitive。
  * @localEn Refusing to write: export returned plaintext for sensitive key "{{key}}" ({{slug}}/{{env}}). Check server redaction, or mark the variable sensitive.
  */
 export const PAMENV_CLI_EXPORT_SENSITIVE_LEAK =
   'pamenv_cli:export_sensitive_leak';
+
+/**
+ * @description pull 将敏感值写成占位符（含兼容旧服务端漏明文）
+ * @localZh [pamenv] {{count}} 个敏感变量已写入占位符（{{keys}}）：本地文件不含明文，请用 `pamenv run` 注入真实值。
+ * @localEn [pamenv] {{count}} sensitive variable(s) written as placeholders ({{keys}}): no plaintext is kept locally; inject real values with `pamenv run`.
+ */
+export const PAMENV_CLI_PULL_SENSITIVE_PLACEHOLDER =
+  'pamenv_cli:pull_sensitive_placeholder';
+
+/**
+ * @description pull 将敏感变量写成空值 keep（旧服务端未提供占位符）
+ * @localZh [pamenv] {{count}} 个敏感变量已写成空值（{{keys}}）：本地不含明文；空值 push 时表示保留远端密钥。请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] {{count}} sensitive variable(s) written as empty ({{keys}}): no plaintext locally; empty on push keeps the remote secret. Inject with `pamenv run`.
+ */
+export const PAMENV_CLI_PULL_SENSITIVE_EMPTY =
+  'pamenv_cli:pull_sensitive_empty';
+
+/**
+ * @description push 行内赋值格式非法
+ * @localZh 非法赋值 "{{raw}}"：请使用 KEY=value（可多个）。
+ * @localEn Invalid assignment "{{raw}}": use KEY=value (repeatable).
+ */
+export const PAMENV_CLI_PUSH_ASSIGNMENT_INVALID =
+  'pamenv_cli:push_assignment_invalid';
 
 /**
  * @description run 解析到的项目与请求不一致

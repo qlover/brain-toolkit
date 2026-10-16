@@ -69,6 +69,55 @@ describe('PamCliSecurityGate.assertExportRedacted', () => {
   });
 });
 
+describe('PamCliSecurityGate.redactExportForLocalOutput', () => {
+  const base: PamCliExportResultType = {
+    projectId: 'p1',
+    projectSlug: 'app',
+    environmentId: 'e1',
+    environmentName: 'dev',
+    content: '',
+    sensitiveKeys: ['TOKEN'],
+    sensitivePlaceholder: '__PAM_SENSITIVE_abc__',
+    variables: []
+  };
+
+  it('forces placeholders when export leaks plaintext', () => {
+    const result = PamCliSecurityGate.redactExportForLocalOutput({
+      ...base,
+      variables: [
+        { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+        { key: 'TOKEN', value: 'real-secret', sensitive: true }
+      ]
+    });
+    expect(result.variables).toEqual([
+      { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+      {
+        key: 'TOKEN',
+        value: '__PAM_SENSITIVE_abc__',
+        sensitive: true
+      }
+    ]);
+    expect(result.placeholderKeys).toEqual(['TOKEN']);
+    expect(result.emptyKeepKeys).toEqual([]);
+  });
+
+  it('writes empty keep values when the server sends no placeholder', () => {
+    const result = PamCliSecurityGate.redactExportForLocalOutput({
+      ...base,
+      sensitivePlaceholder: undefined,
+      variables: [
+        { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+        { key: 'TOKEN', value: 'real-secret', sensitive: true }
+      ]
+    });
+    expect(result.variables).toEqual([
+      { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+      { key: 'TOKEN', value: '', sensitive: true }
+    ]);
+    expect(result.emptyKeepKeys).toEqual(['TOKEN']);
+  });
+});
+
 describe('PamCliSecurityGate.run guards', () => {
   it('detects auth denials', () => {
     expect(

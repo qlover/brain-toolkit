@@ -225,4 +225,14 @@ export type PamCliLocalEnvOptionsType = {
   readonly force?: boolean;
   /** Print non-sensitive values in diff review (default: mask all). */
   readonly showValues?: boolean;
+  /**
+   * Inline `KEY=value` overrides applied on top of the local file before push.
+   * The resulting set is still a full replace (missing keys = delete).
+   */
+  readonly overrides?: Readonly<Record<string, string>>;
+  /**
+   * Keys to remove from the push set (and from the local file after success).
+   * Applied after overrides.
+   */
+  readonly unsetKeys?: readonly string[];
 };

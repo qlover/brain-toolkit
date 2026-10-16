@@ -343,11 +343,11 @@ describe('pamenv warnings & render contract (mock PAM)', () => {
       ).toBe(true);
     });
 
-    it('omits sensitive keys when server sends no placeholder', async () => {
+    it('writes empty keep for sensitive keys when server sends no placeholder', async () => {
       mockConsole();
       ctx = await createPamCliIntegrationContext();
       const project = ownerProject();
-      const out = join(ctx.cwd, 'omit.env');
+      const out = join(ctx.cwd, 'empty-keep.env');
       ctx.mock.setHandlers({
         projects: [project],
         exportByEnvId: {
@@ -371,7 +371,9 @@ describe('pamenv warnings & render contract (mock PAM)', () => {
 
       const text = await readFile(out, 'utf8');
       expect(text).toContain('API_URL=https://x.dev');
-      expect(text).not.toContain('TOKEN=');
+      expect(text).toMatch(/TOKEN=(?:\"\")?\s*$/m);
+      expect(text).toContain('# pam:sensitive');
+      expect(text).not.toContain('leaked');
     });
   });
 

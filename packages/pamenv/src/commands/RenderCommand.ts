@@ -3,14 +3,13 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RENDER_BAD_FORMAT,
-  PAMENV_CLI_RENDER_SENSITIVE_OMITTED,
+  PAMENV_CLI_RENDER_SENSITIVE_EMPTY,
   PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER,
   PAMENV_CLI_RENDERED
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
-import { PamCliDotenvUtil } from '../impls/PamCliDotenvUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
 import { PamCliOutputAdapterRegistry } from '../impls/PamCliOutputAdapters';
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
@@ -68,18 +67,9 @@ export class RenderCommand {
       project.slug
     );
     const exported = await this.apiClient.exportEnvironment(project.id, env.id);
-    PamCliSecurityGate.assertExportRedacted(exported);
-    const sensitiveKeys = new Set(exported.sensitiveKeys ?? []);
-    const source =
-      exported.variables && exported.variables.length > 0
-        ? exported.variables
-        : PamCliDotenvUtil.parse(exported.content);
-    let variables: PamCliResolvedVarType[] = source.map((variable) => ({
-      key: variable.key,
-      value: variable.value,
-      sensitive: variable.sensitive === true || sensitiveKeys.has(variable.key),
-      ...(variable.comments ? { comments: variable.comments } : {})
-    }));
+    // Force placeholders / omit — never emit sensitive plaintext (incl. leaky exports).
+    const redacted = PamCliSecurityGate.redactExportForLocalOutput(exported);
+    let variables: PamCliResolvedVarType[] = [...redacted.variables];
 
     if (options.only && options.only.length > 0) {
       const only = new Set(options.only);
@@ -93,26 +83,19 @@ export class RenderCommand {
       }
     }
 
-    const sensitive = variables
-      .filter((variable) => variable.sensitive)
-      .map((variable) => variable.key);
-    if (sensitive.length > 0) {
-      const placeholder = exported.sensitivePlaceholder;
-      // Older servers send empty values without a placeholder: omit instead.
-      if (placeholder) {
-        variables = variables.map((variable) =>
-          variable.sensitive ? { ...variable, value: placeholder } : variable
-        );
-      } else {
-        variables = variables.filter((variable) => !variable.sensitive);
-      }
+    if (redacted.placeholderKeys.length > 0) {
       console.error(
-        PamCliI18n.t(
-          placeholder
-            ? PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER
-            : PAMENV_CLI_RENDER_SENSITIVE_OMITTED,
-          { count: String(sensitive.length), keys: sensitive.join(', ') }
-        )
+        PamCliI18n.t(PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER, {
+          count: String(redacted.placeholderKeys.length),
+          keys: redacted.placeholderKeys.join(', ')
+        })
+      );
+    } else if (redacted.emptyKeepKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RENDER_SENSITIVE_EMPTY, {
+          count: String(redacted.emptyKeepKeys.length),
+          keys: redacted.emptyKeepKeys.join(', ')
+        })
       );
     }
 
