@@ -153,17 +153,107 @@ export class PamCliMockPamServer {
 
       if (method === 'GET' && url.pathname === '/api/pam/search') {
         const keyword = url.searchParams.get('keyword')?.trim() || '';
-        const items = (this.handlers.projects || []).filter((project) => {
-          if (!keyword) {
-            return true;
+        const view = url.searchParams.get('view')?.trim() || 'full';
+        let filters: {
+          category?: string;
+          visibility?: string;
+          mine?: boolean | string;
+          writable?: boolean | string;
+        } = {};
+        const filtersRaw = url.searchParams.get('filters');
+        if (filtersRaw) {
+          try {
+            filters = JSON.parse(filtersRaw) as typeof filters;
+          } catch {
+            filters = {};
           }
-          return (
-            project.slug.includes(keyword) ||
-            project.name.includes(keyword) ||
-            project.id === keyword
+        }
+        const page = Math.max(
+          1,
+          Number(url.searchParams.get('page') || '1') || 1
+        );
+        const pageSize = Math.min(
+          100,
+          Math.max(1, Number(url.searchParams.get('pageSize') || '100') || 100)
+        );
+        const mine = filters.mine === true || filters.mine === 'true';
+        const writable =
+          filters.writable === true || filters.writable === 'true';
+        let items = [...(this.handlers.projects || [])];
+        if (keyword) {
+          items = items.filter(
+            (project) =>
+              project.slug.includes(keyword) ||
+              project.name.includes(keyword) ||
+              project.id === keyword
           );
+        }
+        if (filters.category) {
+          items = items.filter(
+            (project) =>
+              (project as { category?: string }).category === filters.category
+          );
+        }
+        if (filters.visibility === 'public') {
+          items = items.filter(
+            (project) => (project as { is_public?: boolean }).is_public === true
+          );
+        } else if (filters.visibility === 'private') {
+          items = items.filter(
+            (project) =>
+              (project as { is_public?: boolean }).is_public !== true ||
+              project.is_owner === true ||
+              project.my_role === 'owner' ||
+              project.my_role === 'admin' ||
+              project.my_role === 'member'
+          );
+        }
+        if (mine) {
+          items = items.filter(
+            (project) =>
+              project.is_owner === true || project.my_role === 'owner'
+          );
+        }
+        if (writable) {
+          items = items.filter(
+            (project) =>
+              project.is_owner === true ||
+              project.my_role === 'owner' ||
+              project.can_edit === true ||
+              project.my_role === 'admin' ||
+              project.my_role === 'member'
+          );
+        }
+        const total = items.length;
+        const start = (page - 1) * pageSize;
+        let slice = items.slice(start, start + pageSize);
+        if (view === 'compact') {
+          // Keep access flags (CLI still needs them); drop card-only fields.
+          slice = slice.map((project) => ({
+            id: project.id,
+            slug: project.slug,
+            name: project.name,
+            is_owner: project.is_owner,
+            my_role: project.my_role,
+            can_edit: project.can_edit,
+            permissions: project.permissions,
+            org_permissions: project.org_permissions,
+            environments: project.environments?.map((env) => ({
+              id: env.id,
+              name: env.name
+            }))
+          }));
+        }
+        this.json(res, 200, {
+          success: true,
+          data: {
+            items: slice,
+            page,
+            pageSize,
+            total,
+            hasMore: start + slice.length < total
+          }
         });
-        this.json(res, 200, { success: true, data: { items } });
         return;
       }
 

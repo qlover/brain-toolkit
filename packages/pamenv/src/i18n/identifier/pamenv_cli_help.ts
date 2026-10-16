@@ -236,6 +236,66 @@ export const PAMENV_HELP_PROJECTS = 'pamenv_help:projects';
 export const PAMENV_HELP_PROJECTS_ARG_KEYWORD = 'pamenv_help:projects_arg_keyword';
 
 /**
+ * @description 按分类过滤（与 Web filters.category 一致）
+ * @localZh 按分类过滤（与 Web filters.category 一致）
+ * @localEn Filter by category (same as Web filters.category)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_CATEGORY =
+  'pamenv_help:projects_opt_category';
+
+/**
+ * @description 可见性：public | private（与 Web filters.visibility 一致）
+ * @localZh 可见性：public | private（与 Web filters.visibility 一致）
+ * @localEn Visibility: public | private (same as Web filters.visibility)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_VISIBILITY =
+  'pamenv_help:projects_opt_visibility';
+
+/**
+ * @description 排序字段：created_at | updated_at
+ * @localZh 排序字段：created_at | updated_at
+ * @localEn Sort field: created_at | updated_at
+ */
+export const PAMENV_HELP_PROJECTS_OPT_SORT = 'pamenv_help:projects_opt_sort';
+
+/**
+ * @description 排序方向：asc | desc
+ * @localZh 排序方向：asc | desc
+ * @localEn Sort order: asc | desc
+ */
+export const PAMENV_HELP_PROJECTS_OPT_ORDER = 'pamenv_help:projects_opt_order';
+
+/**
+ * @description 页码（从 1 开始，默认 1；要看更多请传 --page；与 --mine/--writable 同时使用时会自动翻页）
+ * @localZh 页码（从 1 开始，默认 1；要看更多请传 --page；与 --mine/--writable 同时使用时会自动翻页）
+ * @localEn Page number (1-based, default 1; pass --page for more; auto-pages with --mine/--writable)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_PAGE = 'pamenv_help:projects_opt_page';
+
+/**
+ * @description 每页条数（默认 10，与 Web 一致；最大 100）
+ * @localZh 每页条数（默认 10，与 Web 一致；最大 100）
+ * @localEn Page size (default 10, same as Web; max 100)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE =
+  'pamenv_help:projects_opt_page_size';
+
+/**
+ * @description 仅列出我拥有的项目（严格 owner）
+ * @localZh 仅列出我拥有的项目（严格 owner）
+ * @localEn Only projects I own (strict owner)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_MINE = 'pamenv_help:projects_opt_mine';
+
+/**
+ * @description 仅列出可编辑的项目（含团队可写）
+ * @localZh 仅列出可编辑的项目（含团队可写）
+ * @localEn Only writable projects (includes team editors)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_WRITABLE =
+  'pamenv_help:projects_opt_writable';
+
+/**
  * @description 根据当前目录交互式创建 PAM 项目
  * @localZh 根据当前目录交互式创建 PAM 项目
  * @localEn Interactively create a PAM project from the current directory

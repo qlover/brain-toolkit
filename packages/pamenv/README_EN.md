@@ -32,7 +32,7 @@ pamenv pull <slug> -e staging     # download into .env.staging (export permissio
 | --- | --- |
 | `pamenv login` | Sign in through the browser |
 | `pamenv logout` | Sign out and revoke the current CLI credential |
-| `pamenv projects` | List projects you can access |
+| `pamenv projects` | List projects (compact: slug / name / role / envs / id) |
 | `pamenv init` | Create a project interactively |
 | `pamenv fork <slug\|id>` | Fork a readable project into your own private project |
 | `pamenv run <slug\|id> -- <command>` | Run a command with variables injected into its process; no files written |
@@ -61,6 +61,41 @@ pamenv --local --domain pam.localhost:3400 login   # first write to cwd/.pam
 pamenv projects                                   # with .pam/, local only (fails if not logged in locally)
 pamenv -g projects                                # force global sign-in
 ```
+
+## `pamenv projects`
+
+Lists projects visible to the current identity. Uses the same `GET /api/pam/search` as the web home list; **CLI prints one compact row** (slug / name / role / envs / id) — not web card fields like description, category, or timestamps.
+
+Role column: `owner` · `admin` · `member` · `member, writable` · `readonly`.
+
+```bash
+pamenv projects
+pamenv projects fe
+pamenv projects --visibility private
+pamenv projects --category frontend --sort updated_at --order desc
+pamenv projects --mine
+pamenv projects --writable
+pamenv projects --page 2
+pamenv projects fe --writable --page 1 --page-size 20
+```
+
+| Option | Wire param | Description |
+| --- | --- | --- |
+| `[keyword]` | `keyword` | Optional search keyword (slug / name; compact view skips card text fields) |
+| `--category <name>` | `filters.category` | Filter by category (same as Web) |
+| `--visibility <public\|private>` | `filters.visibility` | Visibility; omit for the default “all visible” scope (public + owned / team) |
+| `--sort <created_at\|updated_at>` | `sort` | Sort field (server still sorts `is_public` first) |
+| `--order <asc\|desc>` | `sort` | Sort direction, default `desc` |
+| `--page <n>` | `page` | 1-based page, default `1`; pass `--page` for more |
+| `--page-size <n>` | `pageSize` | Page size, **default `10` (same as Web)**, max `100` |
+| `--mine` | `filters.mine` | **Server-side**: strict project owner (`owner_id = me`) |
+| `--writable` | `filters.writable` | **Server-side**: owner or active team member; with `--mine` → intersection |
+| (fixed) | `view=compact` | CLI compact payload (id/slug/name/envs/…); web cards use `full` (default) |
+
+Also accepts global options: `--url` / `--domain` / `--local` / `-g`.
+
+- `--mine` / `--writable` are applied in SQL before pagination (correct totals — not post-filter).
+- Pagination follows `--page` / `--page-size` exactly (same as Web).
 
 ## Testing
 

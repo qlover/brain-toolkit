@@ -32,7 +32,7 @@ pamenv pull <slug> -e staging     # 拉取到 .env.staging（需导出权限）
 | --- | --- |
 | `pamenv login` | 打开浏览器完成授权登录 |
 | `pamenv logout` | 退出登录，并使当前 CLI 凭证失效 |
-| `pamenv projects` | 列出你可访问的项目 |
+| `pamenv projects` | 列出项目（核心字段：slug / name / 身份 / envs / id） |
 | `pamenv init` | 交互创建项目 |
 | `pamenv fork <slug\|id>` | 把可读项目 fork 为自己的私有项目 |
 | `pamenv run <slug\|id> -- <命令>` | 把环境变量注入子进程并运行命令，不写文件 |
@@ -61,6 +61,41 @@ pamenv --local --domain pam.localhost:3400 login   # 首次写入 cwd/.pam
 pamenv projects                                   # 有 .pam/ 时只用本地身份（未登录会失败，不会偷用全局）
 pamenv -g projects                                # 明确要用全局登录时
 ```
+
+## `pamenv projects`
+
+列出当前身份可见的项目。与 Web 首页共用 `GET /api/pam/search`；**CLI 只输出一行核心字段**（slug / name / 身份 / envs / id），不展示 Web 卡片上的描述、分类、时间戳等。
+
+身份列：`owner` · `admin` · `member` · `member, writable` · `readonly`。
+
+```bash
+pamenv projects
+pamenv projects fe
+pamenv projects --visibility private
+pamenv projects --category frontend --sort updated_at --order desc
+pamenv projects --mine
+pamenv projects --writable
+pamenv projects --page 2
+pamenv projects fe --writable --page 1 --page-size 20
+```
+
+| 参数 | 线上对应 | 说明 |
+| --- | --- | --- |
+| `[keyword]` | `keyword` | 可选搜索关键词（slug / 名称；compact 视图不搜描述等卡片字段） |
+| `--category <name>` | `filters.category` | 按分类过滤（与 Web 一致） |
+| `--visibility <public\|private>` | `filters.visibility` | 可见性；省略时为「全部可见范围」（公开 + 自己的 / 团队的） |
+| `--sort <created_at\|updated_at>` | `sort` | 排序字段（服务端仍会先按 `is_public` 再按此字段） |
+| `--order <asc\|desc>` | `sort` | 排序方向，默认 `desc` |
+| `--page <n>` | `page` | 页码，从 1 开始，默认 `1`；要看更多请翻页 |
+| `--page-size <n>` | `pageSize` | 每页条数，**默认 `10`（与 Web 一致）**，最大 `100` |
+| `--mine` | `filters.mine` | **服务端**过滤：仅严格项目 owner（`owner_id = me`） |
+| `--writable` | `filters.writable` | **服务端**过滤：owner 或活跃团队成员（可编辑）；可与 `--mine` 同时用（取交集） |
+| （固定） | `view=compact` | CLI 默认精简字段（id/slug/name/envs/…）；Web 卡片用 `full`（默认） |
+
+另可叠加全局参数：`--url` / `--domain` / `--local` / `-g`。
+
+- `--mine` / `--writable` 在数据库分页前过滤，分页总数正确，不是拉回后再滤。
+- 分页严格按 `--page` / `--page-size`（与 Web 行为一致）。
 
 ## 测试
 

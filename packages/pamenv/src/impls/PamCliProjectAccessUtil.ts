@@ -52,16 +52,36 @@ export class PamCliProjectAccessUtil {
     return hasPermission(project, ENV_INJECT_PERMISSION);
   }
 
+  /** Strict project owner (`--mine`). */
+  public static isOwner(project: PamCliProjectType): boolean {
+    return project.my_role === 'owner' || project.is_owner === true;
+  }
+
+  /** Can edit project / env structure (`--writable`, includes team writers). */
+  public static isWritable(project: PamCliProjectType): boolean {
+    if (this.canEdit(project)) {
+      return true;
+    }
+    return project.can_edit === true || this.isOwner(project);
+  }
+
+  /**
+   * Compact identity for `pamenv projects` (not a web card dump).
+   * e.g. `owner` | `member, writable` | `readonly`
+   */
   public static roleLabel(project: PamCliProjectType): string {
-    if (project.my_role === 'owner' || project.is_owner) {
+    if (this.isOwner(project)) {
       return 'owner';
     }
     if (project.my_role === 'admin') {
-      return 'admin';
+      return this.isWritable(project) ? 'admin, writable' : 'admin';
     }
-    if (project.my_role === 'member' || project.can_edit) {
-      return 'member';
+    if (project.my_role === 'member' || project.can_edit === true) {
+      return this.isWritable(project) ? 'member, writable' : 'member';
     }
-    return '';
+    if (this.isWritable(project)) {
+      return 'writable';
+    }
+    return 'readonly';
   }
 }
