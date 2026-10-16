@@ -274,7 +274,8 @@ pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines re
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
 - `pull` keeps unpushed local edits and tells you about them; `push` merges keys changed only on the remote into your local file instead of overwriting them.
-- Without a baseline (never pulled/pushed here), every differing key counts as a conflict.
+- **Without a baseline** (never pulled/pushed here): one-sided keys are kept; only keys present on both sides with different values conflict. A first `push` therefore does not silently drop remote-only keys (use `--unset`, or sync then delete the line); a first `pull` does not silently drop local-only keys.
+- After a baseline exists, a missing file key / `--unset` means delete (full desired state).
 - `pull` keeps comments in your local file where possible. If only the remote changed, `push` asks you to `pull` first.
 - The diff masks every value as `*****` by default; `--show-values` reveals non-sensitive values only (names like `*_SECRET` or `*_TOKEN` are treated as sensitive).
 - If the `-e` environment does not exist, `push` asks for its URL, validates everything, then creates the environment and uploads the variables together.
@@ -283,7 +284,7 @@ pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines re
 
 | Option | Effect |
 | --- | --- |
-| `-y` | Skips ordinary confirmations: first push, final push, sensitivity of new keys, creating a missing environment, `remove` prompts |
+| `-y` | Skips ordinary confirmations: no-baseline prompt, final push, creating a missing environment, `remove`. Still auto-marks new secret-like keys (`*_SECRET`, etc.) with `# pam:sensitive`. Large deletions of remote keys still require one more confirm |
 | `-f` | Skips conflict confirmation only and uses the default side (remote for pull, local for push) |
 
 Neither implies the other; pass both to skip everything.

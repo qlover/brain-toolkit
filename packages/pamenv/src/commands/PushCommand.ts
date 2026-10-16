@@ -31,6 +31,7 @@ import {
   PAMENV_CLI_PUSH_PLACEHOLDER_INVALID,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
+  PAMENV_CLI_PUSH_SENSITIVE_AUTO,
   PAMENV_CLI_PUSH_SENSITIVE_CLEARED,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
@@ -231,9 +232,29 @@ export class PushCommand {
       return;
     }
 
-    if (kind === PamCliSyncConflictKind.Conflict) {
+    const needsThreeWay =
+      kind === PamCliSyncConflictKind.Conflict ||
+      kind === PamCliSyncConflictKind.NoBase;
+
+    if (needsThreeWay) {
+      if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
+        const ok = await PamCliConfirmUtil.ask(
+          targetEnv.mode === 'create'
+            ? PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE_CREATE, {
+                slug: project.slug,
+                env: targetEnv.name
+              })
+            : PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE)
+        );
+        if (!ok) {
+          console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
+          return;
+        }
+      }
+
+      const baseMap = baseline?.variables || null;
       let result = PamCliSyncConflictUtil.merge(
-        baseline!.variables,
+        baseMap,
         localMap,
         remoteMap,
         PamCliSyncSide.Local
@@ -254,7 +275,7 @@ export class PushCommand {
         }
         if (side === PamCliSyncSide.Remote) {
           result = PamCliSyncConflictUtil.merge(
-            baseline!.variables,
+            baseMap,
             localMap,
             remoteMap,
             PamCliSyncSide.Remote
@@ -289,7 +310,8 @@ export class PushCommand {
           })
         );
       }
-      if (PamCliDotenvUtil.valueMapsEqual(result.merged, remoteMap)) {
+      const mergedLocalMap = PamCliDotenvUtil.toValueMap(localVars);
+      if (PamCliDotenvUtil.valueMapsEqual(mergedLocalMap, remoteMap)) {
         await this.syncStore.saveBaseline(
           project.id,
           project.slug,
@@ -307,29 +329,18 @@ export class PushCommand {
       }
     }
 
-    if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
-      const ok = await PamCliConfirmUtil.ask(
-        targetEnv.mode === 'create'
-          ? PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE_CREATE, {
-              slug: project.slug,
-              env: targetEnv.name
-            })
-          : PamCliI18n.t(PAMENV_CLI_PUSH_NO_BASELINE)
-      );
-      if (!ok) {
-        console.log(PamCliI18n.t(PAMENV_CLI_CANCELLED));
-        return;
-      }
-    }
-
     const unmarkedNewKeys = localVars
       .filter((item) => !(item.key in remoteMap) && !item.sensitive)
       .map((item) => item.key);
 
     // Sensitive marking is interactive safety; `-f` alone must not skip it.
-    if (!options.yes && unmarkedNewKeys.length > 0) {
-      const selected =
-        await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
+    // `-y` skips the prompt but still auto-marks secret-like key names.
+    if (unmarkedNewKeys.length > 0) {
+      const selected = options.yes
+        ? unmarkedNewKeys.filter((key) =>
+            PamCliEnvDiffUtil.looksSensitiveKey(key)
+          )
+        : await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
       if (selected.length > 0) {
         const selectedSet = new Set(selected);
         localVars = localVars.map((item) =>
@@ -344,7 +355,12 @@ export class PushCommand {
           PamCliDotenvUtil.serializeDocument(localDoc)
         );
         console.log(
-          `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${selected.join(', ')}`
+          options.yes
+            ? PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_AUTO, {
+                path: target,
+                keys: selected.join(', ')
+              })
+            : `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${selected.join(', ')}`
         );
       }
     }
@@ -387,7 +403,13 @@ export class PushCommand {
       );
     }
 
-    if (!options.yes) {
+    // Large key drops (esp. deleting remote secrets) always need a confirm,
+    // even with `-y`, so unattended scripts cannot wipe an env by accident.
+    const requireConfirm =
+      !options.yes ||
+      (diff.isLargeKeyChange && diff.removedKeyCount > 0);
+
+    if (requireConfirm) {
       const message =
         targetEnv.mode === 'create'
           ? diff.isLargeKeyChange

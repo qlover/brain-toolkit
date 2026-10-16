@@ -900,6 +900,13 @@ export const PAMENV_CLI_PUSH_LARGE_WARNING = 'pamenv_cli:push_large_warning';
 export const PAMENV_CLI_PUSHED_DETAIL = 'pamenv_cli:pushed_detail';
 
 /**
+ * @description push -y 时按键名启发式自动标记敏感
+ * @localZh 已在 {{path}} 按键名自动加上 {{keys}} 的 `# pam:sensitive`（`-y` 跳过交互选择）。
+ * @localEn Auto-marked {{keys}} as `# pam:sensitive` in {{path}} (`-y` skips the interactive picker).
+ */
+export const PAMENV_CLI_PUSH_SENSITIVE_AUTO = 'pamenv_cli:push_sensitive_auto';
+
+/**
  * @description {{count}} 个新变量未标记为敏感。现在选择？
  * @localZh {{count}} 个新变量未标记为敏感。现在选择？
  * @localEn {{count}} new variable(s) are not marked sensitive. Choose some now?

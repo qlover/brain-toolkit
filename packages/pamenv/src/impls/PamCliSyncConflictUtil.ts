@@ -114,8 +114,12 @@ export class PamCliSyncConflictUtil {
 
   /**
    * Per-key three-way merge. Keys changed on one side only take that side;
-   * keys changed on both sides (or every differing key without a baseline)
-   * are conflicts resolved with `prefer`.
+   * keys changed on both sides are conflicts resolved with `prefer`.
+   *
+   * Without a baseline, one-sided keys are still kept (not conflicts): only
+   * keys present on both sides with different values conflict. This stops a
+   * first pull from dropping local-only keys and a first push from wiping
+   * remote-only keys without review (`--unset` still removes after merge).
    *
    * @param base - Last sync map (null when missing)
    * @param local - Local file map
@@ -141,6 +145,10 @@ export class PamCliSyncConflictUtil {
         value = remoteValue;
       } else if (base && remoteValue === base[key]) {
         value = localValue;
+      } else if (!base && localValue !== undefined && remoteValue === undefined) {
+        value = localValue;
+      } else if (!base && remoteValue !== undefined && localValue === undefined) {
+        value = remoteValue;
       } else {
         conflicts.push(key);
         value = prefer === PamCliSyncSide.Local ? localValue : remoteValue;
