@@ -29,7 +29,8 @@
     "build": "tsup",
     "gen:locales": "node ./tools/generateLocales.mjs",
     "type-check": "tsc --build",
-    "test": "pnpm gen:locales && vitest run --config vitest.config.ts"
+    "test": "pnpm gen:locales && vitest run --config vitest.config.ts",
+    "test:live": "pnpm gen:locales && vitest run --config vitest.config.ts __tests__/PamCliIntegration.live.test.ts"
   },
   "repository": {
     "type": "git",

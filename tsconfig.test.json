@@ -13,6 +13,8 @@
     "packages/**/*.test.tsx",
     "packages/**/*.spec.ts",
     "packages/**/*.spec.tsx",
+    "packages/**/__tests__/**/*.ts",
+    "packages/**/__tests__/**/*.tsx",
     "packages/**/src/**/*.ts",
     "packages/**/src/**/*.tsx"
   ],

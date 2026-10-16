@@ -62,6 +62,26 @@ pamenv projects                                   # 有 .pam/ 时只用本地身
 pamenv -g projects                                # 明确要用全局登录时
 ```
 
+## 测试
+
+```bash
+# 默认：单元 + mock 契约集成（不需要 PAM 账号）
+pnpm --filter pamenv-cli test
+
+# 可选：对接真实 PAM（专用项目 + token，切勿提交密钥）
+# Windows PowerShell: $env:PAMENV_LIVE=1; $env:PAMENV_BASE_URL=...; ...
+PAMENV_LIVE=1 \
+PAMENV_BASE_URL=https://pam.example.com \
+PAMENV_OWNER_TOKEN=... \
+PAMENV_MEMBER_TOKEN=... \
+PAMENV_PROJECT_SLUG=ci-pamenv-harness \
+PAMENV_ENV_NAME=dev \
+PAMENV_PROTECTED_ENV_NAME=secret \
+pnpm --filter pamenv-cli test:live
+```
+
+契约测试（约 78）用内存 mock PAM 覆盖：身份/精确 slug/`-o`、pull（403/401/明文泄漏/多环境/`--file`）、绑定与 `--force` TTY、run（403/protected/404 回退/slug mismatch/keepEnv/预警）、push/pull 三方同步与冲突、render（yaml/toml/`--only`）、remove（清 snapshot）、过宽文件权限等。
+
 ## 安全模型
 
 - **身份隔离**：cwd 存在 `.pam/` 时只用本地凭证，绝不回退到 `~/.pam`；缺 token 立即失败。`-g` 才强制全局。
