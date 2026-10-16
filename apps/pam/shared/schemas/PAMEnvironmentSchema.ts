@@ -3,6 +3,9 @@ import { V_PAM_ENV_VAR_KEY_REQUIRED } from '@config/i18n-identifier/common/valid
 
 export const PAMEnvTableName = 'pam_environments' as const;
 
+/** One row per environment variable key (replaces JSONB `variables`). */
+export const PAMEnvVariableTableName = 'pam_env_variables' as const;
+
 export const PAMVariableSchema = z.object({
   id: z.uuid().optional(),
   key: z.string().trim().min(1, V_PAM_ENV_VAR_KEY_REQUIRED),

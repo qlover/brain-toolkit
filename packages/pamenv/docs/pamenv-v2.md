@@ -1,5 +1,9 @@
 # pamenv v2：变量注入进程，`.env` 只是一种输出格式
 
+## 存储
+
+变量按行存在 `pam_env_variables`（`environment_id` + `key` 唯一），不再以 `pam_environments.variables` JSONB 为读写源。旧 JSONB 列暂保留不删除，便于回滚与核对；应用只读写新表，API 仍组装成 `variables[]`。
+
 ## 目标
 
 - PAM 是变量的唯一数据源，本地不再常驻明文。
