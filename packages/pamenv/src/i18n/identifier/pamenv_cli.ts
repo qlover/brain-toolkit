@@ -8,9 +8,9 @@
  */
 
 /**
- * @description 使用配置: {{path}}
- * @localZh 使用配置: {{path}}
- * @localEn Using config: {{path}}
+ * @description 使用 {{kind}} 配置: {{path}} ({{email}})
+ * @localZh 使用 {{kind}} 配置: {{path}} ({{email}})
+ * @localEn Using {{kind}} config: {{path}} ({{email}})
  */
 export const PAMENV_CLI_USING_CONFIG = 'pamenv_cli:using_config';
 
@@ -654,11 +654,131 @@ export const PAMENV_CLI_PULL_UP_TO_DATE = 'pamenv_cli:pull_up_to_date';
 export const PAMENV_CLI_PULLED = 'pamenv_cli:pulled';
 
 /**
- * @description 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。
- * @localZh 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。
- * @localEn You do not have write access to project "{{slug}}" (project owner or team writer required).
+ * @description 本地文件已绑定到其他项目
+ * @localZh 本地文件 {{path}} 已绑定到 {{boundSlug}}/{{boundEnv}}，不能直接用于 {{slug}}/{{env}}（默认都是 {{defaultFile}}）。请使用 `--file {{suggestedFile}}`，或换目录 / `-o`，或加 `--force` 覆盖绑定。
+ * @localEn Local file {{path}} is bound to {{boundSlug}}/{{boundEnv}} and cannot be used for {{slug}}/{{env}} (both default to {{defaultFile}}). Use `--file {{suggestedFile}}`, another directory / `-o`, or `--force` to overwrite the binding.
+ */
+export const PAMENV_CLI_ENV_FILE_BOUND_TO_OTHER_PROJECT =
+  'pamenv_cli:env_file_bound_to_other_project';
+
+/**
+ * @description 导出需要项目管理员或所有者权限
+ * @localZh 你没有项目 "{{slug}}" 的导出权限（需为项目管理员或所有者）。日常开发请改用 `pamenv run {{slug}} -e <env> -- <命令>`，变量只注入进程、不落盘。
+ * @localEn You cannot export from project "{{slug}}" (project admin or owner required). For development use `pamenv run {{slug}} -e <env> -- <command>`, which injects variables into the process without writing files.
  */
 export const PAMENV_CLI_NOT_OWNER_EXPORT = 'pamenv_cli:not_owner_export';
+
+/**
+ * @description run 需要注入权限
+ * @localZh 你没有项目 "{{slug}}" 的变量注入权限（需为项目团队成员）。
+ * @localEn You cannot inject variables from project "{{slug}}" (project team membership required).
+ */
+export const PAMENV_CLI_NO_INJECT_PERMISSION =
+  'pamenv_cli:no_inject_permission';
+
+/**
+ * @description run 缺少要执行的命令
+ * @localZh 请在 `--` 之后提供要运行的命令，例如：pamenv run {{slug}} -e local -- pnpm dev
+ * @localEn Provide the command to run after `--`, for example: pamenv run {{slug}} -e local -- pnpm dev
+ */
+export const PAMENV_CLI_RUN_COMMAND_REQUIRED =
+  'pamenv_cli:run_command_required';
+
+/**
+ * @description run 注入完成提示（输出到 stderr）
+ * @localZh [pamenv] 已从 {{slug}}/{{env}} 注入 {{count}} 个变量
+ * @localEn [pamenv] Injected {{count}} variable(s) from {{slug}}/{{env}}
+ */
+export const PAMENV_CLI_RUN_INJECTED = 'pamenv_cli:run_injected';
+
+/**
+ * @description run 无法启动子进程
+ * @localZh 无法启动命令 "{{command}}": {{message}}
+ * @localEn Failed to start "{{command}}": {{message}}
+ */
+export const PAMENV_CLI_RUN_SPAWN_FAILED = 'pamenv_cli:run_spawn_failed';
+
+/**
+ * @description --only 指定的键在环境中不存在
+ * @localZh [pamenv] 警告：环境中不存在这些键：{{keys}}
+ * @localEn [pamenv] Warning: these keys do not exist in the environment: {{keys}}
+ */
+export const PAMENV_CLI_ONLY_MISSING = 'pamenv_cli:only_missing';
+
+/**
+ * @description 绕过检查：.env 文件与注入的键重名
+ * @localZh [pamenv] 警告：{{file}} 中有 {{count}} 个键与注入的变量重名（{{keys}}）。若项目用 dotenv 加载且开启 override，文件里的值会覆盖注入值，建议删除该文件或这些键。
+ * @localEn [pamenv] Warning: {{file}} defines {{count}} key(s) that are also injected ({{keys}}). If dotenv loads it with override enabled, file values win; consider removing the file or those keys.
+ */
+export const PAMENV_CLI_WARN_DOTENV_OVERLAP = 'pamenv_cli:warn_dotenv_overlap';
+
+/**
+ * @description 绕过检查：敏感变量带前端公开前缀
+ * @localZh [pamenv] 警告：敏感变量 {{keys}} 带有 NEXT_PUBLIC_ / VITE_ 前缀，会在构建时写进前端代码包，不应存放密钥。
+ * @localEn [pamenv] Warning: sensitive variable(s) {{keys}} use a NEXT_PUBLIC_ / VITE_ prefix and will be bundled into client code at build time; do not store secrets there.
+ */
+export const PAMENV_CLI_WARN_PUBLIC_PREFIX = 'pamenv_cli:warn_public_prefix';
+
+/**
+ * @description 绕过检查：turbo 严格环境变量模式
+ * @localZh [pamenv] 警告：{{file}} 使用严格环境变量模式，{{count}} 个注入的变量未在 env / passThroughEnv 中声明（{{keys}}），Turbo 运行的任务可能拿不到。
+ * @localEn [pamenv] Warning: {{file}} uses strict env mode and {{count}} injected variable(s) are not declared in env / passThroughEnv ({{keys}}); Turbo tasks may not receive them.
+ */
+export const PAMENV_CLI_WARN_TURBO_STRICT = 'pamenv_cli:warn_turbo_strict';
+
+/**
+ * @description render 格式不支持
+ * @localZh 不支持的格式 "{{format}}"，可选：{{formats}}
+ * @localEn Unsupported format "{{format}}". Choose one of: {{formats}}
+ */
+export const PAMENV_CLI_RENDER_BAD_FORMAT = 'pamenv_cli:render_bad_format';
+
+/**
+ * @description render 写入文件完成（输出到 stderr）
+ * @localZh 已输出 {{slug}}/{{env}}（{{format}}，{{count}} 个变量）→ {{path}}
+ * @localEn Rendered {{slug}}/{{env}} ({{format}}, {{count}} vars) → {{path}}
+ */
+export const PAMENV_CLI_RENDERED = 'pamenv_cli:rendered';
+
+/**
+ * @description render 将敏感变量写成空值 keep（旧服务端无占位符，输出到 stderr）
+ * @localZh [pamenv] {{count}} 个敏感变量已写成空值（{{keys}}）：不含明文；空值 push 时表示保留远端密钥。请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] {{count}} sensitive variable(s) written as empty ({{keys}}): no plaintext; empty on push keeps the remote secret. Inject with `pamenv run`.
+ */
+export const PAMENV_CLI_RENDER_SENSITIVE_EMPTY =
+  'pamenv_cli:render_sensitive_empty';
+
+/**
+ * @description render 用占位符输出了敏感变量（输出到 stderr）
+ * @localZh [pamenv] {{count}} 个敏感变量以占位符输出（{{keys}}）：真实值不会以明文输出，请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] {{count}} sensitive variable(s) rendered as placeholders ({{keys}}): real values are never output as plaintext; inject them with `pamenv run`.
+ */
+export const PAMENV_CLI_RENDER_SENSITIVE_PLACEHOLDER =
+  'pamenv_cli:render_sensitive_placeholder';
+
+/**
+ * @description push 前发现不属于该环境的敏感占位符
+ * @localZh 以下变量的值是敏感占位符，但不属于环境 "{{env}}" 已保存的敏感变量（可能从其它环境复制而来）：{{keys}}。请填写真实值，或先 `pamenv pull` 该环境。
+ * @localEn These values are sensitive placeholders that do not match a stored secret in "{{env}}" (maybe copied from another environment): {{keys}}. Enter the real values, or `pamenv pull` this environment first.
+ */
+export const PAMENV_CLI_PUSH_PLACEHOLDER_INVALID =
+  'pamenv_cli:push_placeholder_invalid';
+
+/**
+ * @description run 前发现 .env 文件中注入的键写着占位符
+ * @localZh [pamenv] 警告：{{file}} 中 {{count}} 个注入的键写的是敏感占位符（{{keys}}）。若项目让 .env 覆盖进程环境变量，程序拿到的会是占位符而不是真实值。
+ * @localEn [pamenv] Warning: {{file}} has sensitive placeholders for {{count}} injected key(s) ({{keys}}). If your tooling lets .env override the process environment, the app gets the placeholder instead of the real value.
+ */
+export const PAMENV_CLI_WARN_DOTENV_PLACEHOLDER =
+  'pamenv_cli:warn_dotenv_placeholder';
+
+/**
+ * @description push 成功后本地文件中的敏感值已替换
+ * @localZh 已把 {{path}} 中 {{count}} 个敏感变量的值替换为占位符（{{keys}}）：值已加密保存在 PAM，本地不保留明文。
+ * @localEn Replaced {{count}} sensitive value(s) in {{path}} with placeholders ({{keys}}): they are stored encrypted in PAM; no plaintext is kept locally.
+ */
+export const PAMENV_CLI_PUSH_SENSITIVE_CLEARED =
+  'pamenv_cli:push_sensitive_cleared';
 
 /**
  * @description 你没有项目 "{{slug}}" 的写权限（需为项目拥有者或团队可写成员）。
@@ -778,6 +898,13 @@ export const PAMENV_CLI_PUSH_LARGE_WARNING = 'pamenv_cli:push_large_warning';
  * @localEn Pushed {{path}} → {{slug}}/{{env}} ({{count}} vars)
  */
 export const PAMENV_CLI_PUSHED_DETAIL = 'pamenv_cli:pushed_detail';
+
+/**
+ * @description push -y 时按键名启发式自动标记敏感
+ * @localZh 已在 {{path}} 按键名自动加上 {{keys}} 的 `# pam:sensitive`（`-y` 跳过交互选择）。
+ * @localEn Auto-marked {{keys}} as `# pam:sensitive` in {{path}} (`-y` skips the interactive picker).
+ */
+export const PAMENV_CLI_PUSH_SENSITIVE_AUTO = 'pamenv_cli:push_sensitive_auto';
 
 /**
  * @description {{count}} 个新变量未标记为敏感。现在选择？
@@ -995,6 +1122,14 @@ export const PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE =
   'pamenv_cli:url_and_domain_exclusive';
 
 /**
+ * @description 请只使用 --local 或 --global 其中一个。
+ * @localZh 请只使用 --local 或 --global 其中一个。
+ * @localEn Use only one of --local or --global, not both.
+ */
+export const PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE =
+  'pamenv_cli:local_and_global_exclusive';
+
+/**
  * @description 新增 ({{count}}):
  * @localZh 新增 ({{count}}):
  * @localEn Created ({{count}}):
@@ -1058,4 +1193,76 @@ export const PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE =
  * @localEn Not logged in. Run `pamenv login` first.
  */
 export const PAMENV_CLI_NOT_LOGGED_IN = 'pamenv_cli:not_logged_in';
+
+/**
+ * @description 项目权限列表缺失，需重新登录
+ * @localZh 项目 "{{slug}}" 的权限列表缺失。请重新执行 `pamenv login`，或升级 PAM 服务端后再试。
+ * @localEn Project "{{slug}}" is missing a permissions list. Run `pamenv login` again, or upgrade the PAM server.
+ */
+export const PAMENV_CLI_PERMISSIONS_MISSING =
+  'pamenv_cli:permissions_missing';
+
+/**
+ * @description export 返回了敏感明文（旧检测；现已改为客户端强制占位符）
+ * @localZh 拒绝写入：导出结果中敏感键 "{{key}}"（{{slug}}/{{env}}）仍含明文。请检查服务端 redact，或将该变量标记为 sensitive。
+ * @localEn Refusing to write: export returned plaintext for sensitive key "{{key}}" ({{slug}}/{{env}}). Check server redaction, or mark the variable sensitive.
+ */
+export const PAMENV_CLI_EXPORT_SENSITIVE_LEAK =
+  'pamenv_cli:export_sensitive_leak';
+
+/**
+ * @description pull 将敏感值写成占位符（含兼容旧服务端漏明文）
+ * @localZh [pamenv] {{count}} 个敏感变量已写入占位符（{{keys}}）：本地文件不含明文，请用 `pamenv run` 注入真实值。
+ * @localEn [pamenv] {{count}} sensitive variable(s) written as placeholders ({{keys}}): no plaintext is kept locally; inject real values with `pamenv run`.
+ */
+export const PAMENV_CLI_PULL_SENSITIVE_PLACEHOLDER =
+  'pamenv_cli:pull_sensitive_placeholder';
+
+/**
+ * @description pull 将敏感变量写成空值 keep（旧服务端未提供占位符）
+ * @localZh [pamenv] {{count}} 个敏感变量已写成空值（{{keys}}）：本地不含明文；空值 push 时表示保留远端密钥。请用 `pamenv run` 注入进程。
+ * @localEn [pamenv] {{count}} sensitive variable(s) written as empty ({{keys}}): no plaintext locally; empty on push keeps the remote secret. Inject with `pamenv run`.
+ */
+export const PAMENV_CLI_PULL_SENSITIVE_EMPTY =
+  'pamenv_cli:pull_sensitive_empty';
+
+/**
+ * @description push 行内赋值格式非法
+ * @localZh 非法赋值 "{{raw}}"：请使用 KEY=value（可多个）。
+ * @localEn Invalid assignment "{{raw}}": use KEY=value (repeatable).
+ */
+export const PAMENV_CLI_PUSH_ASSIGNMENT_INVALID =
+  'pamenv_cli:push_assignment_invalid';
+
+/**
+ * @description run 解析到的项目与请求不一致
+ * @localZh 拒绝注入：请求的是 "{{ref}}"，但服务端返回了 "{{slug}}"。请使用精确的项目 slug。
+ * @localEn Refusing to inject: requested "{{ref}}" but the server returned "{{slug}}". Use an exact project slug.
+ */
+export const PAMENV_CLI_RUN_PROJECT_MISMATCH =
+  'pamenv_cli:run_project_mismatch';
+
+/**
+ * @description 目标文件权限过宽，拒绝覆盖
+ * @localZh 拒绝写入 {{path}}：文件对 group/other 可读。请先 `chmod 600 {{path}}`，或换路径。
+ * @localEn Refusing to write {{path}}: the file is readable by group/others. Run `chmod 600 {{path}}`, or use another path.
+ */
+export const PAMENV_CLI_FILE_TOO_PERMISSIVE =
+  'pamenv_cli:file_too_permissive';
+
+/**
+ * @description --force 换绑需要交互确认
+ * @localZh 本地文件 {{path}} 已绑定到 {{boundSlug}}/{{boundEnv}}。使用 `--force` 覆盖绑定需要交互确认；当前非 TTY，请改用 `--file {{suggestedFile}}`，或在终端中运行。
+ * @localEn Local file {{path}} is bound to {{boundSlug}}/{{boundEnv}}. `--force` rebind requires interactive confirmation; this is not a TTY. Use `--file {{suggestedFile}}`, or run in a terminal.
+ */
+export const PAMENV_CLI_FORCE_REBIND_NEEDS_TTY =
+  'pamenv_cli:force_rebind_needs_tty';
+
+/**
+ * @description 确认覆盖环境文件绑定
+ * @localZh 确认将 {{path}} 的绑定从 {{boundSlug}}/{{boundEnv}} 改为 {{slug}}/{{env}}？
+ * @localEn Rebind {{path}} from {{boundSlug}}/{{boundEnv}} to {{slug}}/{{env}}?
+ */
+export const PAMENV_CLI_FORCE_REBIND_CONFIRM =
+  'pamenv_cli:force_rebind_confirm';
 

@@ -13,7 +13,7 @@ type ExportRouteContext = {
 
 /**
  * GET /api/pam/:projectId/environments/:envId/export
- * Decrypted dotenv export (CLI Bearer + permission uid).
+ * Dotenv export with sensitive values as the env placeholder (CLI Bearer + permission uid).
  */
 export async function GET(req: NextRequest, context: ExportRouteContext) {
   const { projectId, envId } = await context.params;
@@ -27,7 +27,8 @@ export async function GET(req: NextRequest, context: ExportRouteContext) {
     .runWithJson(async ({ parameters: { IOC } }) => {
       const result = await IOC(PAMController).exportEnvironment(
         projectId,
-        envId
+        envId,
+        req
       );
 
       try {

@@ -55,9 +55,14 @@ export class LoginCommand {
   }): Promise<void> {
     await PamCliI18n.syncFromStore(this.authStore);
     const current = await this.authStore.getConfig();
+    const pamRoot = this.authStore.getActivePamRoot();
+    const kind =
+      pamRoot === PamCliConfig.getHomeRoot() ? 'global' : 'local';
     console.log(
       PamCliI18n.t(PAMENV_CLI_USING_CONFIG, {
-        path: this.authStore.getActiveConfigPath()
+        kind,
+        path: this.authStore.getActiveConfigPath(),
+        email: current.email?.trim() || 'not-logged-in'
       })
     );
 

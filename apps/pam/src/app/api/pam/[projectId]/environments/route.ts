@@ -10,7 +10,7 @@ type EnvironmentsRouteContext = {
 };
 
 /**
- * GET /api/pam/:projectId/environments — list environments (redacted).
+ * GET /api/pam/:projectId/environments — list env metadata (variables empty).
  */
 export async function GET(req: NextRequest, context: EnvironmentsRouteContext) {
   const { projectId } = await context.params;

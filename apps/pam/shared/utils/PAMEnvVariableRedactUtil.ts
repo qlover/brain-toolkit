@@ -20,10 +20,12 @@ export class PAMEnvVariableRedactUtil {
    * Clears values for sensitive variables.
    *
    * @param variables - Variables to redact
-   * @returns Variables with sensitive values set to an empty string
+   * @param replacement - Value used instead (empty, or the env placeholder)
+   * @returns Variables with sensitive values replaced
    */
   public static redactVariables(
-    variables: PAMVariable[] | undefined
+    variables: PAMVariable[] | undefined,
+    replacement = ''
   ): PAMVariable[] | undefined {
     if (variables === undefined) {
       return undefined;
@@ -36,7 +38,7 @@ export class PAMEnvVariableRedactUtil {
         }
         return {
           ...variable,
-          value: ''
+          value: replacement
         };
       }
     );

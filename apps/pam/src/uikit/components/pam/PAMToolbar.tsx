@@ -102,6 +102,10 @@ function PAMToolbarFiltersContent({
   visibilityValue,
   onVisibilityChange,
   showPrivateVisibility,
+  mineActive,
+  writableActive,
+  onAccessChange,
+  showAccessFilters,
   sortValue,
   sortOrder,
   onSortChange
@@ -110,6 +114,10 @@ function PAMToolbarFiltersContent({
   visibilityValue: string;
   onVisibilityChange: (value: string) => void;
   showPrivateVisibility: boolean;
+  mineActive: boolean;
+  writableActive: boolean;
+  onAccessChange: (next: { mine: boolean; writable: boolean }) => void;
+  showAccessFilters: boolean;
   sortValue: PAMListSortByType;
   sortOrder: PAMListSortOrderType;
   onSortChange: (
@@ -151,6 +159,37 @@ function PAMToolbarFiltersContent({
           ) : null}
         </div>
       </div>
+
+      {showAccessFilters ? (
+        <div className="border-t border-primary-border pt-3">
+          <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
+            {tt.labelAccess}
+          </p>
+          <div
+            data-testid="PAMToolbarAccessChips"
+            className="flex flex-wrap gap-1"
+            role="group"
+            aria-label={tt.labelAccess}
+          >
+            <FilterOption
+              active={mineActive}
+              onClick={() =>
+                onAccessChange({ mine: !mineActive, writable: writableActive })
+              }
+            >
+              {tt.filterMine}
+            </FilterOption>
+            <FilterOption
+              active={writableActive}
+              onClick={() =>
+                onAccessChange({ mine: mineActive, writable: !writableActive })
+              }
+            >
+              {tt.filterWritable}
+            </FilterOption>
+          </div>
+        </div>
+      ) : null}
 
       <div className="border-t border-primary-border pt-3">
         <p className="text-tertiary-text mb-2 text-[11px] font-semibold tracking-wide uppercase">
@@ -272,6 +311,10 @@ interface PAMToolbarProps {
   onCategoryChange: (value: string) => void;
   visibilityValue: string;
   onVisibilityChange: (value: string) => void;
+  mineActive?: boolean;
+  writableActive?: boolean;
+  onAccessChange?: (next: { mine: boolean; writable: boolean }) => void;
+  showAccessFilters?: boolean;
   sortValue: PAMListSortByType;
   sortOrder: PAMListSortOrderType;
   onSortChange: (
@@ -298,6 +341,10 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
   onCategoryChange,
   visibilityValue,
   onVisibilityChange,
+  mineActive = false,
+  writableActive = false,
+  onAccessChange,
+  showAccessFilters = false,
   sortValue,
   sortOrder,
   onSortChange,
@@ -463,6 +510,8 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
 
   const filterBadgeCount =
     (visibilityValue ? 1 : 0) +
+    (mineActive ? 1 : 0) +
+    (writableActive ? 1 : 0) +
     (isDefaultPamListSortState(sortValue, sortOrder) ? 0 : 1);
 
   const categoryChipClass = (active: boolean) =>
@@ -478,6 +527,10 @@ export const PAMToolbar: React.FC<PAMToolbarProps> = ({
     visibilityValue,
     onVisibilityChange,
     showPrivateVisibility,
+    mineActive,
+    writableActive,
+    onAccessChange: onAccessChange ?? (() => undefined),
+    showAccessFilters,
     sortValue,
     sortOrder,
     onSortChange

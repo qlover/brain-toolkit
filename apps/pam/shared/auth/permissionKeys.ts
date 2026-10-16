@@ -57,6 +57,7 @@ export const PermissionKey = {
   pam_environments_delete: 'pam_environments_delete',
   pam_environments_variables_write: 'pam_environments_variables_write',
   pam_environments_export: 'pam_environments_export',
+  pam_environments_inject: 'pam_environments_inject',
   pam_project_edit: 'pam_project_edit',
   pam_project_delete: 'pam_project_delete',
   pam_project_transfer: 'pam_project_transfer',

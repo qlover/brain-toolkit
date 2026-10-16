@@ -47,6 +47,47 @@ export type PamCliProjectType = {
   readonly environments?: readonly PamCliEnvironmentSummaryType[];
 };
 
+/** Matches PAM home list `filters.visibility`. */
+export type PamCliProjectVisibilityType = 'public' | 'private';
+
+/** Matches PAM home list sort field (after `is_public`). */
+export type PamCliProjectSortByType = 'created_at' | 'updated_at';
+
+export type PamCliProjectSortOrderType = 'asc' | 'desc';
+
+/**
+ * Search options for `GET /api/pam/search` (same wire names as the web UI).
+ */
+export type PamCliListProjectsOptionsType = {
+  readonly keyword?: string;
+  readonly category?: string;
+  readonly visibility?: PamCliProjectVisibilityType;
+  readonly sortBy?: PamCliProjectSortByType;
+  readonly sortOrder?: PamCliProjectSortOrderType;
+  readonly page?: number;
+  readonly pageSize?: number;
+  /** Server `filters.mine` — strict project owner. */
+  readonly mine?: boolean;
+  /** Server `filters.writable` — owner or active team member. */
+  readonly writable?: boolean;
+  /**
+   * Response shape. CLI defaults to `compact` (core fields only).
+   * Web home uses `full` (omit / default).
+   */
+  readonly view?: 'full' | 'compact';
+};
+
+/**
+ * One page from PAM project search.
+ */
+export type PamCliProjectSearchPageType = {
+  readonly items: readonly PamCliProjectType[];
+  readonly page: number;
+  readonly pageSize: number;
+  readonly hasMore: boolean;
+  readonly total?: number;
+};
+
 /**
  * Environment summary (no secret values).
  */
@@ -57,7 +98,8 @@ export type PamCliEnvironmentSummaryType = {
 };
 
 /**
- * Decrypted export payload from PAM.
+ * Export payload from PAM; sensitive values are the env placeholder (empty on
+ * older servers).
  */
 export type PamCliExportResultType = {
   readonly projectId: string;
@@ -66,15 +108,17 @@ export type PamCliExportResultType = {
   readonly environmentName: string;
   readonly content: string;
   readonly sensitiveKeys?: readonly string[];
+  /** Pushing this value back for a sensitive key keeps the stored secret. */
+  readonly sensitivePlaceholder?: string;
   /**
-   * Preferred source for pull: decrypted variables with raw comment lines.
+   * Preferred source for pull: variables with raw comment lines.
    * Older servers may omit this; CLI falls back to parsing `content`.
    */
   readonly variables?: readonly PamCliExportVariableType[];
 };
 
 /**
- * One decrypted variable from export (may include comments).
+ * One variable from export (may include comments).
  */
 export type PamCliExportVariableType = {
   readonly key: string;
@@ -82,6 +126,35 @@ export type PamCliExportVariableType = {
   readonly sensitive?: boolean;
   readonly comments?: readonly string[];
 };
+
+/**
+ * One decrypted variable used by `run` and `render` output adapters.
+ */
+export type PamCliResolvedVarType = {
+  readonly key: string;
+  readonly value: string;
+  readonly sensitive: boolean;
+  /** Raw dotenv comment lines; only dotenv output keeps them. */
+  readonly comments?: readonly string[];
+};
+
+/**
+ * `POST .../resolve` response (no comments).
+ */
+export type PamCliResolveResultType = {
+  readonly variables: readonly PamCliResolvedVarType[];
+};
+
+/** Resolve by project ref + env name: also echoes what was matched. */
+export type PamCliResolveByNameResultType = PamCliResolveResultType & {
+  readonly projectId: string;
+  readonly projectSlug: string;
+  readonly environmentId: string;
+  readonly environmentName: string;
+};
+
+/** `pamenv render --format` values. */
+export type PamCliOutputFormatType = 'dotenv' | 'json' | 'yaml' | 'toml';
 
 /**
  * Variable payload for environment replace / push.
@@ -152,4 +225,14 @@ export type PamCliLocalEnvOptionsType = {
   readonly force?: boolean;
   /** Print non-sensitive values in diff review (default: mask all). */
   readonly showValues?: boolean;
+  /**
+   * Inline `KEY=value` overrides applied on top of the local file before push.
+   * The resulting set is still a full replace (missing keys = delete).
+   */
+  readonly overrides?: Readonly<Record<string, string>>;
+  /**
+   * Keys to remove from the push set (and from the local file after success).
+   * Applied after overrides.
+   */
+  readonly unsetKeys?: readonly string[];
 };

@@ -230,15 +230,24 @@ describe('PamCliSyncConflictUtil', () => {
     expect(push.merged.BOTH).toBe('local');
   });
 
-  it('treats every differing key as a conflict without a baseline', () => {
-    const result = PamCliSyncConflictUtil.merge(
+  it('without a baseline keeps one-sided keys and conflicts only on both-side diffs', () => {
+    const remotePrefer = PamCliSyncConflictUtil.merge(
       null,
       { A: '1', ONLY_L: 'l' },
       { A: '2', ONLY_R: 'r' },
       PamCliSyncSide.Remote
     );
-    expect(result.conflicts).toEqual(['A', 'ONLY_L', 'ONLY_R']);
-    expect(result.merged).toEqual({ A: '2', ONLY_R: 'r' });
+    expect(remotePrefer.conflicts).toEqual(['A']);
+    expect(remotePrefer.merged).toEqual({ A: '2', ONLY_L: 'l', ONLY_R: 'r' });
+
+    const localPrefer = PamCliSyncConflictUtil.merge(
+      null,
+      { A: '1', ONLY_L: 'l' },
+      { A: '2', ONLY_R: 'r' },
+      PamCliSyncSide.Local
+    );
+    expect(localPrefer.conflicts).toEqual(['A']);
+    expect(localPrefer.merged).toEqual({ A: '1', ONLY_L: 'l', ONLY_R: 'r' });
   });
 });
 

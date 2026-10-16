@@ -463,6 +463,28 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   /**
    * @override
    */
+  public async searchProjectWithAccess(options: {
+    readonly mine?: boolean;
+    readonly writable?: boolean;
+  }): Promise<ResourceSearchResult<SearchPAMProject>> {
+    const patch: Record<string, boolean | undefined> = {};
+    if ('mine' in options) {
+      patch.mine = options.mine === true ? true : undefined;
+    }
+    if ('writable' in options) {
+      patch.writable = options.writable === true ? true : undefined;
+    }
+    return this.pullProjectList({
+      page: defaultSearchParams.page,
+      resetResult: false,
+      projectsStrategy: ProjectsStrategy.Replace,
+      filters: this.mergeListFilters(patch)
+    });
+  }
+
+  /**
+   * @override
+   */
   public async searchProjectWithSort(
     sortBy: PAMListSortByType,
     sortOrder: PAMListSortOrderType = PAMListSortOrder.Desc
@@ -527,7 +549,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
   }
 
   protected mergeListFilters(
-    patch: Record<string, string | undefined>
+    patch: Record<string, string | boolean | undefined>
   ): Record<string, unknown> | undefined {
     const prevFilters = this.searchStore.getState().searchParams.filters;
     const nextFilters: Record<string, unknown> =
@@ -538,7 +560,7 @@ export class PAMFacade implements PAMFacadeInterface<SearchPAMProject> {
         : {};
 
     for (const [key, value] of Object.entries(patch)) {
-      if (value) {
+      if (value === true || (typeof value === 'string' && value.length > 0)) {
         nextFilters[key] = value;
       } else {
         delete nextFilters[key];

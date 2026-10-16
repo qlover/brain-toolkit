@@ -4,32 +4,27 @@ import {
   ArrowPathIcon,
   CheckIcon,
   PlusIcon,
-  TrashIcon
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { useStrictEffect, usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
-import { v4 as uuid } from 'uuid';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
+import { PAMProjectEnvAccessLogs } from '@/uikit/components-app/pam/PAMProjectEnvAccessLogs';
+import { PAMProjectEnvSettingsSection } from '@/uikit/components-app/pam/PAMProjectEnvSettingsSection';
+import { PAMProjectEnvUsageCard } from '@/uikit/components-app/pam/PAMProjectEnvUsageCard';
+import { PAMProjectEnvVariablesSection } from '@/uikit/components-app/pam/PAMProjectEnvVariablesSection';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
-import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
+import { PAMEnvVariableDraftUtil } from '@shared/utils/PAMEnvVariableDraftUtil';
 import type { PAMEnvironmentsI18nInterface } from '@config/i18n-mapping/PAMEnvironmentsI18n';
 import { I } from '@config/ioc-identifiter';
 import type {
   PAMEnvWriteable,
   PAMVariable
 } from '@schemas/PAMEnvironmentSchema';
-import { PAMFormEnvImportPanel } from '../../components/pam/PAMFormEnvImportPanel';
-import { PAMFormEnvironmentVarRow } from '../../components/pam/PAMFormEnvironmentVarRow';
 import {
   pamFormFieldClass,
   pamFormLabelClass,
@@ -40,21 +35,15 @@ export type PAMProjectEnvironmentsPanelProps = {
   readonly projectId: string;
 };
 
-function formatImportResult(
-  template: string,
-  imported: number,
-  skipped: number
-): string {
-  return template
-    .replaceAll('%imported%', String(imported))
-    .replaceAll('%skipped%', String(skipped));
-}
+type EnvSubTab = 'variables' | 'settings' | 'logs';
 
 /**
- * Project environments tab — list, select, edit variables, import.
+ * Project environments tab — env tabs, usage commands, variables table,
+ * settings, and access records.
  *
  * Significance: Full environment management outside the create modal.
- * Core idea: Select one env, mutate variables, persist via PAMApi env methods.
+ * Core idea: One selected env; variable edits stay in a draft until saved,
+ * and switching env with unsaved edits asks first.
  * Main function: CRUD env + variables with sensitive lock and dotenv import.
  * Main purpose: Dedicated environments UX for project detail pages.
  *
@@ -69,9 +58,13 @@ export function PAMProjectEnvironmentsPanel({
   const dialogHandler = useIOC(I.DialogHandler);
   const {
     projectId,
+    project,
     hasPermission,
     environments,
     ensureEnvironments,
+    ensureEnvironmentDetail,
+    environmentDetailLoadedIds,
+    markEnvironmentDetailLoaded,
     setEnvironments
   } = usePAMProjectDetail();
   const canCreateEnv = hasPermission(PermissionKey.pam_environments_create);
@@ -79,36 +72,72 @@ export function PAMProjectEnvironmentsPanel({
   const canWriteVars = hasPermission(
     PermissionKey.pam_environments_variables_write
   );
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const canExportEnv = hasPermission(PermissionKey.pam_environments_export);
 
   const [saving, setSaving] = useState(false);
   const [selectedEnvId, setSelectedEnvId] = useState<string | null>(null);
+  const [envDetailLoading, setEnvDetailLoading] = useState(false);
+  const [subTab, setSubTab] = useState<EnvSubTab>('variables');
   const [draftVariables, setDraftVariables] = useState<PAMVariable[]>([]);
-  const [showImport, setShowImport] = useState(false);
+  /** Create mode replaces the detail panel (same idea as switching env tabs). */
+  const [showCreate, setShowCreate] = useState(false);
   const [newEnvName, setNewEnvName] = useState('');
   const [newEnvUrl, setNewEnvUrl] = useState('');
+  /** Keep access-logs mounted after first visit so tab switches don't refetch. */
+  const [logsVisited, setLogsVisited] = useState(false);
+  const detailRef = useRef<HTMLElement>(null);
 
   const envList = useMemo(() => environments ?? [], [environments]);
-
-  const lockedSensitiveIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const env of envList) {
-      for (const variable of env.variables || []) {
-        if (variable.id) {
-          ids.add(variable.id);
-        }
-      }
-    }
-    return ids;
-  }, [envList]);
 
   const selectedEnv = useMemo(
     () => envList.find((env) => env.id === selectedEnvId) ?? null,
     [envList, selectedEnvId]
   );
 
+  /** Saved variables; legacy rows without an id get a stable deterministic id. */
+  const baselineVariables = useMemo(() => {
+    const envId = selectedEnv?.id ?? '';
+    return (selectedEnv?.variables ?? []).map((item) => ({
+      ...item,
+      id: item.id ?? `legacy:${envId}:${item.key}`
+    }));
+  }, [selectedEnv?.id, selectedEnv?.variables]);
+
+  const lockedIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const item of baselineVariables) {
+      if (item.id) {
+        ids.add(item.id);
+      }
+    }
+    return ids;
+  }, [baselineVariables]);
+
+  const changeCount = useMemo(
+    () =>
+      PAMEnvVariableDraftUtil.countChanges(baselineVariables, draftVariables),
+    [baselineVariables, draftVariables]
+  );
+  const dirty = canWriteVars && changeCount > 0;
+
+  useEffect(() => {
+    setDraftVariables(baselineVariables.map((item) => ({ ...item })));
+  }, [baselineVariables]);
+
+  useEffect(() => {
+    if (!dirty) {
+      return;
+    }
+    const onBeforeUnload = (event: BeforeUnloadEvent): void => {
+      event.preventDefault();
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
+
   const upsertEnvironment = useCallback(
     (env: PAMEnvWriteable): void => {
+      markEnvironmentDetailLoaded(env.id);
       setEnvironments((prev) => {
         const list = prev ?? [];
         const index = list.findIndex((item) => item.id === env.id);
@@ -121,7 +150,7 @@ export function PAMProjectEnvironmentsPanel({
       });
       setSelectedEnvId(env.id);
     },
-    [setEnvironments]
+    [markEnvironmentDetailLoaded, setEnvironments]
   );
 
   useStrictEffect(() => {
@@ -143,32 +172,118 @@ export function PAMProjectEnvironmentsPanel({
     });
   }, [environments]);
 
-  const loading = Boolean(projectId) && environments === null;
-
   useEffect(() => {
-    if (!selectedEnv) {
-      setDraftVariables([]);
+    if (!projectId || !selectedEnvId || showCreate) {
       return;
     }
-    setDraftVariables(
-      (selectedEnv.variables ?? []).map((item) => ({ ...item }))
-    );
-    setShowImport(false);
-  }, [selectedEnv]);
+    if (environmentDetailLoadedIds.has(selectedEnvId)) {
+      setEnvDetailLoading(false);
+      return;
+    }
 
-  const persistVariables = async (
-    environmentId: string,
-    variables: PAMVariable[]
-  ): Promise<void> => {
-    if (!canWriteVars) {
+    let cancelled = false;
+    setEnvDetailLoading(true);
+    void ensureEnvironmentDetail(selectedEnvId).finally(() => {
+      if (!cancelled) {
+        setEnvDetailLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    projectId,
+    selectedEnvId,
+    showCreate,
+    environmentDetailLoadedIds,
+    ensureEnvironmentDetail
+  ]);
+
+  const loading = Boolean(projectId) && environments === null;
+  const selectedEnvDetailReady =
+    selectedEnvId != null && environmentDetailLoadedIds.has(selectedEnvId);
+
+  const confirmDiscard = (onOk: () => void): void => {
+    if (!dirty) {
+      onOk();
+      return;
+    }
+    dialogHandler.confirm({
+      okType: 'danger',
+      title: tt.discardChanges,
+      content: tt.discardConfirm,
+      onOk
+    });
+  };
+
+  const onSelectEnv = (envId: string): void => {
+    if (envId === selectedEnvId && !showCreate) {
+      return;
+    }
+    confirmDiscard(() => {
+      setShowCreate(false);
+      setSelectedEnvId(envId);
+      setSubTab('variables');
+      setLogsVisited(false);
+    });
+  };
+
+  const onOpenCreate = (): void => {
+    if (showCreate) {
+      setShowCreate(false);
+      return;
+    }
+    confirmDiscard(() => {
+      setShowCreate(true);
+      setSubTab('variables');
+    });
+  };
+
+  const onChangeSubTab = (tab: EnvSubTab): void => {
+    setSubTab(tab);
+    if (tab === 'logs') {
+      setLogsVisited(true);
+    }
+    requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const onDiscard = (): void => {
+    confirmDiscard(() =>
+      setDraftVariables(baselineVariables.map((item) => ({ ...item })))
+    );
+  };
+
+  const onSave = async (): Promise<void> => {
+    if (!canWriteVars || !selectedEnvId) {
+      return;
+    }
+    const issue = PAMEnvVariableDraftUtil.findIssue(draftVariables, lockedIds);
+    if (issue) {
+      dialogHandler.warn(
+        issue.kind === 'key_required'
+          ? tt.validationKeyRequired
+          : issue.kind === 'key_duplicate'
+            ? tt.validationKeyDuplicate.replace('[key]', issue.key)
+            : tt.validationSensitiveValue.replace('[key]', issue.key)
+      );
+      return;
+    }
+    const patch = PAMEnvVariableDraftUtil.buildPatch(
+      baselineVariables,
+      draftVariables
+    );
+    if (patch.upsert.length === 0 && patch.deleteIds.length === 0) {
       return;
     }
     setSaving(true);
     try {
       const updated = await pamApi.setEnvironmentVariables(
         projectId,
-        environmentId,
-        variables
+        selectedEnvId,
+        patch
       );
       upsertEnvironment(updated);
       dialogHandler.success(tt.envVarsSaved);
@@ -179,146 +294,20 @@ export function PAMProjectEnvironmentsPanel({
     }
   };
 
-  const onAddVariable = (): void => {
-    if (!canWriteVars) {
-      return;
-    }
-    const hasIncomplete = draftVariables.some((item) => {
-      if (item.key.trim() === '') {
-        return true;
-      }
-      if (item.sensitive) {
-        return false;
-      }
-      return item.value.trim() === '';
-    });
-    if (hasIncomplete) {
-      dialogHandler.warn(tt.tipEnvVariables);
-      return;
-    }
-    setDraftVariables((prev) => [
-      ...prev,
-      { id: uuid(), key: '', value: '', sensitive: false }
-    ]);
-  };
-
-  const onUpdateVariable = (
-    _envIndex: number,
-    oldKey: string,
-    newKey: string,
-    value: string,
-    sensitive?: boolean
-  ): void => {
-    setDraftVariables((prev) => {
-      const index = prev.findIndex((item) => item.key === oldKey);
-      if (index === -1) {
-        return prev;
-      }
-      if (newKey.trim() === '' && oldKey.trim() !== '') {
-        return prev.filter((item) => item.key !== oldKey);
-      }
-      const oldItem = prev[index];
-      const nextSensitive =
-        oldItem.id && lockedSensitiveIds.has(oldItem.id)
-          ? oldItem.sensitive === true
-          : (sensitive ?? oldItem.sensitive ?? false);
-      const next = [...prev];
-      next[index] = {
-        ...oldItem,
-        key: newKey.trim(),
-        value,
-        sensitive: nextSensitive
-      };
-      return next;
-    });
-  };
-
-  const onRemoveVariable = (_envIndex: number, key: string): void => {
-    dialogHandler.confirm({
-      okType: 'danger',
-      title: tt.delete,
-      content: tt.envVarDeleteConfirm.replace('[key]', key || '—'),
-      onOk: () => {
-        setDraftVariables((prev) => prev.filter((item) => item.key !== key));
-      }
-    });
-  };
-
-  /**
-   * Client-side parse into draft only. User must click Save to persist.
-   * New keys default to sensitive (editable until first save); existing keys keep theirs.
-   */
-  const onImportText = (text: string): void => {
-    if (!selectedEnvId) {
-      return;
-    }
-    const parsed = PAMEnvDotenvParseUtil.parse(text);
-    if (parsed.length === 0) {
-      dialogHandler.warn(tt.envVarImportEmpty);
-      return;
-    }
-
-    const byKey = new Map(draftVariables.map((item) => [item.key, item]));
-    let imported = 0;
-    let overwritten = 0;
-
-    for (const item of parsed) {
-      const existing = byKey.get(item.key);
-      if (existing) {
-        byKey.set(item.key, {
-          ...existing,
-          value: item.value,
-          sensitive: existing.sensitive === true,
-          ...(item.comments !== undefined && item.comments.length > 0
-            ? { comments: [...item.comments] }
-            : {})
-        });
-        overwritten += 1;
-      } else {
-        byKey.set(item.key, {
-          id: uuid(),
-          key: item.key,
-          value: item.value,
-          sensitive: true,
-          ...(item.comments !== undefined && item.comments.length > 0
-            ? { comments: [...item.comments] }
-            : {})
-        });
-        imported += 1;
-      }
-    }
-
-    const next = Array.from(byKey.values());
-    setDraftVariables(next);
-    setShowImport(false);
-    dialogHandler.success(
-      formatImportResult(tt.envVarImportResult, imported + overwritten, 0)
-    );
-  };
-
-  const onImportFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) {
-      return;
-    }
-    if (!PAMEnvDotenvParseUtil.isAllowedImportFileName(file.name)) {
-      dialogHandler.warn(tt.envVarImportInvalid);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = typeof reader.result === 'string' ? reader.result : '';
-      if (PAMEnvDotenvParseUtil.parse(text).length === 0) {
-        dialogHandler.warn(tt.envVarImportInvalid);
-        return;
-      }
-      onImportText(text);
-    };
-    reader.readAsText(file);
-  };
+  const onEnvSettingsUpdated = useCallback(
+    (env: PAMEnvWriteable): void => {
+      setEnvironments((prev) =>
+        prev
+          ? prev.map((item) =>
+              item.id === env.id
+                ? { ...item, is_protected: env.is_protected, url: env.url }
+                : item
+            )
+          : prev
+      );
+    },
+    [setEnvironments]
+  );
 
   const onCreateEnvironment = async (): Promise<void> => {
     if (!canCreateEnv) {
@@ -338,8 +327,11 @@ export function PAMProjectEnvironmentsPanel({
         variables: []
       });
       upsertEnvironment(created);
+      setSubTab('variables');
+      setLogsVisited(false);
       setNewEnvName('');
       setNewEnvUrl('');
+      setShowCreate(false);
     } catch {
       // DialogErrorPlugin already toasts API failures.
     } finally {
@@ -370,6 +362,7 @@ export function PAMProjectEnvironmentsPanel({
             });
             return next;
           });
+          setSubTab('variables');
         } catch {
           // DialogErrorPlugin already toasts API failures.
         } finally {
@@ -391,224 +384,252 @@ export function PAMProjectEnvironmentsPanel({
     );
   }
 
-  return (
-    <div
-      data-testid="PAMProjectEnvironmentsPanel"
-      className="grid grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr]"
-    >
-      <aside className="space-y-3 rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-primary-text">{tt.mulitEnv}</h2>
-          <span className="text-xs text-tertiary-text">({envList.length})</span>
-        </div>
+  const subTabs: { id: EnvSubTab; label: string }[] = [
+    { id: 'variables', label: tt.tabVariables },
+    ...(canExportEnv || canDeleteEnv
+      ? [{ id: 'settings' as const, label: tt.tabSettings }]
+      : []),
+    ...(canExportEnv ? [{ id: 'logs' as const, label: tt.tabAccessLogs }] : [])
+  ];
 
-        <ul className="space-y-1">
+  return (
+    <div data-testid="PAMProjectEnvironmentsPanel" className="space-y-4">
+      <div className="space-y-3 rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="mr-1 text-sm font-bold text-primary-text">
+            {tt.mulitEnv}
+            <span className="ml-1 text-xs font-normal text-tertiary-text">
+              ({envList.length})
+            </span>
+          </h2>
           {envList.map((env) => (
-            <li
+            <button
               data-testid="PAMProjectEnvironmentsPanel"
               key={env.id}
+              type="button"
+              onClick={() => onSelectEnv(env.id)}
               className={clsx(
-                'flex items-center gap-1 rounded-lg',
-                selectedEnvId === env.id ? 'bg-brand/10' : 'hover:bg-elevated'
+                'flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-sm transition',
+                !showCreate && selectedEnvId === env.id
+                  ? 'border-brand/40 bg-brand/10 font-semibold text-brand'
+                  : 'border-primary-border text-secondary-text hover:bg-elevated hover:text-primary-text'
               )}
             >
-              <button
-                type="button"
-                onClick={() => setSelectedEnvId(env.id)}
-                className={clsx(
-                  'min-w-0 flex-1 truncate rounded-lg px-2.5 py-2 text-left font-mono text-sm transition',
-                  selectedEnvId === env.id
-                    ? 'font-semibold text-brand'
-                    : 'text-secondary-text hover:text-primary-text'
-                )}
-              >
-                {env.name}
-              </button>
-              {canDeleteEnv ? (
-                <button
-                  type="button"
-                  data-permission={PermissionKey.pam_environments_delete}
-                  title={tt.envDelete}
-                  aria-label={tt.envDelete}
-                  onClick={() => onDeleteEnvironment(env)}
-                  className="mr-1 shrink-0 rounded p-1 text-(--fe-color-error) transition hover:bg-(--fe-color-error)/10"
+              {env.name}
+              {env.is_protected ? (
+                <span
+                  title={tt.envProtected}
+                  className="inline-flex items-center gap-0.5 rounded bg-brand/10 px-1 py-0.5 font-sans text-[10px] font-medium text-brand"
                 >
-                  <TrashIcon className="h-3.5 w-3.5" />
-                </button>
+                  <ShieldCheckIcon className="h-3 w-3" />
+                  {tt.envProtectedBadge}
+                </span>
               ) : null}
-            </li>
+            </button>
           ))}
-        </ul>
-
-        {canCreateEnv ? (
-          <div className="space-y-2 border-t border-primary-border pt-3">
-            <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
-            <input
-              value={newEnvName}
-              onChange={(event) => setNewEnvName(event.target.value)}
-              placeholder={tt.placeholerEnvName}
-              className={clsx(pamFormMonoFieldClass, 'py-1.5 text-sm')}
-            />
-            <label className={pamFormLabelClass}>{tt.labelEnvUrl}</label>
-            <input
-              value={newEnvUrl}
-              onChange={(event) => setNewEnvUrl(event.target.value)}
-              placeholder={tt.placeholderEnvUrl}
-              className={clsx(pamFormFieldClass, 'py-1.5 text-sm')}
-            />
+          {canCreateEnv ? (
             <button
               type="button"
               data-permission={PermissionKey.pam_environments_create}
-              disabled={saving}
-              onClick={() => void onCreateEnvironment()}
-              className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-brand/10 px-3 py-2 text-xs font-medium text-brand transition hover:bg-brand/15 disabled:opacity-50 sm:text-sm"
+              onClick={onOpenCreate}
+              className={clsx(
+                'flex cursor-pointer items-center gap-1 rounded-lg border px-3 py-1.5 text-sm transition',
+                showCreate
+                  ? 'border-brand/40 bg-brand/10 font-semibold text-brand'
+                  : 'border-dashed border-primary-border text-secondary-text hover:bg-elevated hover:text-primary-text'
+              )}
             >
               <PlusIcon className="h-4 w-4" />
               {tt.envAdd}
             </button>
-          </div>
-        ) : null}
-      </aside>
+          ) : null}
+        </div>
+      </div>
 
-      <section className="rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4">
-        {!selectedEnv ? (
+      <section
+        ref={detailRef}
+        className="rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4"
+      >
+        {showCreate && canCreateEnv ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-primary-text">
+                {tt.envAdd}
+              </h3>
+              <p className="mt-0.5 text-xs text-tertiary-text">{tt.envTip}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1.5fr]">
+              <div className="space-y-1">
+                <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
+                <input
+                  value={newEnvName}
+                  onChange={(event) => setNewEnvName(event.target.value)}
+                  placeholder={tt.placeholerEnvName}
+                  autoFocus
+                  className={clsx(pamFormMonoFieldClass, 'py-1.5 text-sm')}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={pamFormLabelClass}>{tt.labelEnvUrl}</label>
+                <input
+                  value={newEnvUrl}
+                  onChange={(event) => setNewEnvUrl(event.target.value)}
+                  placeholder={tt.placeholderEnvUrl}
+                  className={clsx(pamFormFieldClass, 'py-1.5 text-sm')}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-primary-border pt-3">
+              <button
+                type="button"
+                onClick={() => setShowCreate(false)}
+                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-secondary-text transition hover:bg-elevated"
+              >
+                {tt.envAddCancel}
+              </button>
+              <button
+                type="button"
+                data-permission={PermissionKey.pam_environments_create}
+                disabled={saving}
+                onClick={() => void onCreateEnvironment()}
+                className="cursor-pointer rounded-lg bg-brand px-3 py-2 text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-50"
+              >
+                {tt.envAdd}
+              </button>
+            </div>
+          </div>
+        ) : !selectedEnv ? (
           <p className="py-8 text-center text-sm text-tertiary-text">
             {tt.envSelectHint}
           </p>
         ) : (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h3 className="font-mono text-base font-bold text-primary-text">
-                  {selectedEnv.name}
-                </h3>
-                {selectedEnv.url ? (
-                  <a
-                    href={selectedEnv.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={selectedEnv.url}
-                    className="mt-0.5 block truncate text-xs text-tertiary-text no-underline transition hover:text-secondary-text hover:underline"
-                  >
-                    {selectedEnv.url}
-                  </a>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {canWriteVars ? (
-                  <>
-                    <button
-                      type="button"
-                      data-permission={
-                        PermissionKey.pam_environments_variables_write
-                      }
-                      onClick={() => setShowImport((prev) => !prev)}
-                      className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
-                    >
-                      {tt.envVarImport}
-                    </button>
-                    <button
-                      type="button"
-                      data-permission={
-                        PermissionKey.pam_environments_variables_write
-                      }
-                      onClick={() => fileInputRef.current?.click()}
-                      className="cursor-pointer rounded-lg border border-primary-border px-2.5 py-1.5 text-xs text-secondary-text transition hover:bg-elevated sm:text-sm"
-                    >
-                      {tt.envVarImportFile}
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".env,.txt,text/plain"
-                      className="hidden"
-                      onChange={onImportFileChange}
-                    />
-                    <button
-                      type="button"
-                      data-permission={
-                        PermissionKey.pam_environments_variables_write
-                      }
-                      onClick={onAddVariable}
-                      className="flex cursor-pointer items-center gap-1 rounded-lg bg-brand/10 px-2.5 py-1.5 text-xs text-brand transition hover:bg-brand/15 sm:text-sm"
-                    >
-                      <PlusIcon className="h-3.5 w-3.5" />
-                      {tt.envVarAddLabel}
-                    </button>
-                  </>
-                ) : null}
-              </div>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="min-w-0">
+              <h3 className="font-mono text-base font-bold text-primary-text">
+                {selectedEnv.name}
+              </h3>
+              {selectedEnv.url ? (
+                <a
+                  href={selectedEnv.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={selectedEnv.url}
+                  className="mt-0.5 block truncate text-xs text-tertiary-text no-underline transition hover:text-secondary-text hover:underline"
+                >
+                  {selectedEnv.url}
+                </a>
+              ) : null}
             </div>
 
-            {canWriteVars && showImport ? (
-              <PAMFormEnvImportPanel
+            {project?.slug ? (
+              <PAMProjectEnvUsageCard
+                projectSlug={project.slug}
+                envName={selectedEnv.name}
+                canExport={canExportEnv}
                 tt={tt}
-                onImport={onImportText}
-                onCancel={() => setShowImport(false)}
               />
             ) : null}
 
-            <div className="space-y-2">
-              <div className="text-xs font-bold tracking-wide text-tertiary-text uppercase">
-                {tt.envVarTitle}
+            {subTabs.length > 1 ? (
+              <div className="flex gap-1 border-b border-primary-border">
+                {subTabs.map((tab) => (
+                  <button
+                    data-testid="PAMProjectEnvironmentsPanel"
+                    key={tab.id}
+                    type="button"
+                    onClick={() => onChangeSubTab(tab.id)}
+                    className={clsx(
+                      '-mb-px cursor-pointer border-b-2 px-3 py-2 text-sm transition',
+                      subTab === tab.id
+                        ? 'border-brand font-medium text-brand'
+                        : 'border-transparent text-secondary-text hover:text-primary-text'
+                    )}
+                  >
+                    {tab.label}
+                    {tab.id === 'variables' && dirty ? (
+                      <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-(--fe-color-warning) align-middle" />
+                    ) : null}
+                  </button>
+                ))}
               </div>
-              {draftVariables.length === 0 ? (
-                <p className="text-sm text-tertiary-text">{tt.noEnvVar}</p>
-              ) : (
-                <div className="space-y-2.5">
-                  {draftVariables.map((item) => (
-                    <PAMFormEnvironmentVarRow
-                      key={item.id ?? item.key}
-                      envIndex={0}
-                      item={item}
-                      tt={tt}
-                      readOnly={!canWriteVars}
-                      sensitiveLocked={Boolean(
-                        item.id && lockedSensitiveIds.has(item.id)
-                      )}
-                      onUpdateVariable={onUpdateVariable}
-                      onRemoveVariable={onRemoveVariable}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            ) : null}
 
-            {canWriteVars ? (
-              <div className="flex justify-end border-t border-primary-border pt-3">
-                <button
-                  type="button"
-                  data-permission={
-                    PermissionKey.pam_environments_variables_write
-                  }
-                  disabled={saving || !selectedEnvId}
-                  onClick={() => {
-                    if (selectedEnvId) {
-                      void persistVariables(selectedEnvId, draftVariables);
-                    }
-                  }}
-                  className={clsx(
-                    'flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-sm font-medium text-on-brand shadow-sm transition',
-                    'hover:bg-brand-hover active:bg-brand-active disabled:cursor-not-allowed disabled:opacity-50'
-                  )}
-                >
-                  {saving ? (
-                    <>
-                      <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                      {tt.formSaveing}
-                    </>
-                  ) : (
-                    <>
-                      <CheckIcon className="h-4 w-4" />
-                      {tt.settingsSave}
-                    </>
-                  )}
-                </button>
+            {subTab === 'variables' ? (
+              envDetailLoading || !selectedEnvDetailReady ? (
+                <div className="flex min-h-32 flex-col items-center justify-center gap-2 py-8">
+                  <PamLoadingIndicator />
+                  <span className="text-sm text-tertiary-text">
+                    {tt.loadingText}
+                  </span>
+                </div>
+              ) : (
+                <PAMProjectEnvVariablesSection
+                  key={selectedEnv.id}
+                  draft={draftVariables}
+                  setDraft={setDraftVariables}
+                  lockedIds={lockedIds}
+                  canWrite={canWriteVars}
+                  tt={tt}
+                />
+              )
+            ) : null}
+
+            {subTab === 'settings' ? (
+              <PAMProjectEnvSettingsSection
+                projectId={projectId}
+                environment={selectedEnv}
+                canEditSettings={canExportEnv}
+                canDelete={canDeleteEnv}
+                tt={tt}
+                onUpdated={onEnvSettingsUpdated}
+                onDelete={onDeleteEnvironment}
+              />
+            ) : null}
+
+            {logsVisited && canExportEnv ? (
+              <div className={subTab === 'logs' ? undefined : 'hidden'}>
+                <PAMProjectEnvAccessLogs
+                  projectId={projectId}
+                  envId={selectedEnv.id}
+                  tt={tt}
+                />
               </div>
             ) : null}
           </div>
         )}
       </section>
+
+      {dirty && selectedEnvDetailReady ? (
+        <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-(--fe-color-warning)/40 bg-elevated px-4 py-2.5 shadow-lg">
+          <span className="text-sm text-primary-text">
+            {tt.unsavedChanges.replace('%count%', String(changeCount))}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={onDiscard}
+              className="cursor-pointer rounded-lg px-3 py-1.5 text-sm text-secondary-text transition hover:bg-secondary disabled:opacity-50"
+            >
+              {tt.discardChanges}
+            </button>
+            <button
+              type="button"
+              data-permission={PermissionKey.pam_environments_variables_write}
+              disabled={saving}
+              onClick={() => void onSave()}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckIcon className="h-4 w-4" />
+              )}
+              {saving ? tt.formSaveing : tt.settingsSave}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
