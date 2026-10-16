@@ -8,8 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useStrictEffect, usePageI18nMapping } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { v4 as uuid } from 'uuid';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { usePAMProjectDetail } from '@/uikit/components-app/pam/PAMProjectDetailShell';
@@ -76,9 +75,13 @@ export function PAMProjectEnvironmentsPanel({
   const [selectedEnvId, setSelectedEnvId] = useState<string | null>(null);
   const [subTab, setSubTab] = useState<EnvSubTab>('variables');
   const [draftVariables, setDraftVariables] = useState<PAMVariable[]>([]);
+  /** Create mode replaces the detail panel (same idea as switching env tabs). */
   const [showCreate, setShowCreate] = useState(false);
   const [newEnvName, setNewEnvName] = useState('');
   const [newEnvUrl, setNewEnvUrl] = useState('');
+  /** Keep access-logs mounted after first visit so tab switches don't refetch. */
+  const [logsVisited, setLogsVisited] = useState(false);
+  const detailRef = useRef<HTMLElement>(null);
 
   const envList = useMemo(() => environments ?? [], [environments]);
 
@@ -87,20 +90,24 @@ export function PAMProjectEnvironmentsPanel({
     [envList, selectedEnvId]
   );
 
-  /** Saved variables; legacy rows without an id get one so drafts can match them. */
-  const baselineVariables = useMemo(
-    () =>
-      (selectedEnv?.variables ?? []).map((item) => ({
-        ...item,
-        id: item.id ?? uuid()
-      })),
-    [selectedEnv?.variables]
-  );
+  /** Saved variables; legacy rows without an id get a stable deterministic id. */
+  const baselineVariables = useMemo(() => {
+    const envId = selectedEnv?.id ?? '';
+    return (selectedEnv?.variables ?? []).map((item) => ({
+      ...item,
+      id: item.id ?? `legacy:${envId}:${item.key}`
+    }));
+  }, [selectedEnv?.id, selectedEnv?.variables]);
 
-  const lockedIds = useMemo(
-    () => new Set(baselineVariables.map((item) => item.id)),
-    [baselineVariables]
-  );
+  const lockedIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const item of baselineVariables) {
+      if (item.id) {
+        ids.add(item.id);
+      }
+    }
+    return ids;
+  }, [baselineVariables]);
 
   const changeCount = useMemo(
     () =>
@@ -176,12 +183,35 @@ export function PAMProjectEnvironmentsPanel({
   };
 
   const onSelectEnv = (envId: string): void => {
-    if (envId === selectedEnvId) {
+    if (envId === selectedEnvId && !showCreate) {
       return;
     }
     confirmDiscard(() => {
+      setShowCreate(false);
       setSelectedEnvId(envId);
       setSubTab('variables');
+      setLogsVisited(false);
+    });
+  };
+
+  const onOpenCreate = (): void => {
+    if (showCreate) {
+      setShowCreate(false);
+      return;
+    }
+    confirmDiscard(() => {
+      setShowCreate(true);
+      setSubTab('variables');
+    });
+  };
+
+  const onChangeSubTab = (tab: EnvSubTab): void => {
+    setSubTab(tab);
+    if (tab === 'logs') {
+      setLogsVisited(true);
+    }
+    requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
 
@@ -256,6 +286,7 @@ export function PAMProjectEnvironmentsPanel({
       });
       upsertEnvironment(created);
       setSubTab('variables');
+      setLogsVisited(false);
       setNewEnvName('');
       setNewEnvUrl('');
       setShowCreate(false);
@@ -337,7 +368,7 @@ export function PAMProjectEnvironmentsPanel({
               onClick={() => onSelectEnv(env.id)}
               className={clsx(
                 'flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-sm transition',
-                selectedEnvId === env.id
+                !showCreate && selectedEnvId === env.id
                   ? 'border-brand/40 bg-brand/10 font-semibold text-brand'
                   : 'border-primary-border text-secondary-text hover:bg-elevated hover:text-primary-text'
               )}
@@ -358,36 +389,55 @@ export function PAMProjectEnvironmentsPanel({
             <button
               type="button"
               data-permission={PermissionKey.pam_environments_create}
-              onClick={() => setShowCreate((prev) => !prev)}
-              className="flex cursor-pointer items-center gap-1 rounded-lg border border-dashed border-primary-border px-3 py-1.5 text-sm text-secondary-text transition hover:bg-elevated hover:text-primary-text"
+              onClick={onOpenCreate}
+              className={clsx(
+                'flex cursor-pointer items-center gap-1 rounded-lg border px-3 py-1.5 text-sm transition',
+                showCreate
+                  ? 'border-brand/40 bg-brand/10 font-semibold text-brand'
+                  : 'border-dashed border-primary-border text-secondary-text hover:bg-elevated hover:text-primary-text'
+              )}
             >
               <PlusIcon className="h-4 w-4" />
               {tt.envAdd}
             </button>
           ) : null}
         </div>
+      </div>
 
-        {canCreateEnv && showCreate ? (
-          <div className="grid grid-cols-1 gap-2 rounded-lg border border-primary-border bg-elevated/40 p-3 sm:grid-cols-[1fr_1.5fr_auto] sm:items-end">
-            <div className="space-y-1">
-              <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
-              <input
-                value={newEnvName}
-                onChange={(event) => setNewEnvName(event.target.value)}
-                placeholder={tt.placeholerEnvName}
-                className={clsx(pamFormMonoFieldClass, 'py-1.5 text-sm')}
-              />
+      <section
+        ref={detailRef}
+        className="rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4"
+      >
+        {showCreate && canCreateEnv ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-primary-text">
+                {tt.envAdd}
+              </h3>
+              <p className="mt-0.5 text-xs text-tertiary-text">{tt.envTip}</p>
             </div>
-            <div className="space-y-1">
-              <label className={pamFormLabelClass}>{tt.labelEnvUrl}</label>
-              <input
-                value={newEnvUrl}
-                onChange={(event) => setNewEnvUrl(event.target.value)}
-                placeholder={tt.placeholderEnvUrl}
-                className={clsx(pamFormFieldClass, 'py-1.5 text-sm')}
-              />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1.5fr]">
+              <div className="space-y-1">
+                <label className={pamFormLabelClass}>{tt.labelEnvName}</label>
+                <input
+                  value={newEnvName}
+                  onChange={(event) => setNewEnvName(event.target.value)}
+                  placeholder={tt.placeholerEnvName}
+                  autoFocus
+                  className={clsx(pamFormMonoFieldClass, 'py-1.5 text-sm')}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={pamFormLabelClass}>{tt.labelEnvUrl}</label>
+                <input
+                  value={newEnvUrl}
+                  onChange={(event) => setNewEnvUrl(event.target.value)}
+                  placeholder={tt.placeholderEnvUrl}
+                  className={clsx(pamFormFieldClass, 'py-1.5 text-sm')}
+                />
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex justify-end gap-2 border-t border-primary-border pt-3">
               <button
                 type="button"
                 onClick={() => setShowCreate(false)}
@@ -406,16 +456,12 @@ export function PAMProjectEnvironmentsPanel({
               </button>
             </div>
           </div>
-        ) : null}
-      </div>
-
-      <section className="rounded-2xl border border-primary-border bg-secondary p-3 sm:p-4">
-        {!selectedEnv ? (
+        ) : !selectedEnv ? (
           <p className="py-8 text-center text-sm text-tertiary-text">
             {tt.envSelectHint}
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="min-w-0">
               <h3 className="font-mono text-base font-bold text-primary-text">
                 {selectedEnv.name}
@@ -449,7 +495,7 @@ export function PAMProjectEnvironmentsPanel({
                     data-testid="PAMProjectEnvironmentsPanel"
                     key={tab.id}
                     type="button"
-                    onClick={() => setSubTab(tab.id)}
+                    onClick={() => onChangeSubTab(tab.id)}
                     className={clsx(
                       '-mb-px cursor-pointer border-b-2 px-3 py-2 text-sm transition',
                       subTab === tab.id
@@ -489,12 +535,14 @@ export function PAMProjectEnvironmentsPanel({
               />
             ) : null}
 
-            {subTab === 'logs' && canExportEnv ? (
-              <PAMProjectEnvAccessLogs
-                projectId={projectId}
-                envId={selectedEnv.id}
-                tt={tt}
-              />
+            {logsVisited && canExportEnv ? (
+              <div className={subTab === 'logs' ? undefined : 'hidden'}>
+                <PAMProjectEnvAccessLogs
+                  projectId={projectId}
+                  envId={selectedEnv.id}
+                  tt={tt}
+                />
+              </div>
             ) : null}
           </div>
         )}

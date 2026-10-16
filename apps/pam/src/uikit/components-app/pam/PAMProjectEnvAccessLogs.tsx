@@ -1,8 +1,9 @@
 'use client';
 
+import { useStrictEffect } from '@qlover/next-kit/client';
 import { clsx } from 'clsx';
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PAMApi } from '@/impls/appApi/PAMApi';
 import { PamLoadingIndicator } from '@/uikit/components/PamLoadingIndicator';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -35,7 +36,9 @@ export function PAMProjectEnvAccessLogs({
   const [user, setUser] = useState('');
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
+  // useStrictEffect: React Strict Mode remounts once in dev; plain useEffect
+  // would fire the request twice.
+  useStrictEffect(() => {
     let cancelled = false;
     setLogs(null);
     pamApi

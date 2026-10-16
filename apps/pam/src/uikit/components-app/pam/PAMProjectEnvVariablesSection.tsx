@@ -359,12 +359,18 @@ export function PAMProjectEnvVariablesSection({
         </div>
       ) : null}
 
+      {canWrite ? (
+        <p className="text-[11px] leading-snug text-tertiary-text sm:text-xs">
+          {tt.sensitiveHint}
+        </p>
+      ) : null}
+
       {draft.length === 0 ? (
-        <p className="py-6 text-center text-sm text-tertiary-text">
+        <p className="py-4 text-center text-sm text-tertiary-text">
           {tt.noEnvVar}
         </p>
       ) : visible.length === 0 ? (
-        <p className="py-6 text-center text-sm text-tertiary-text">
+        <p className="py-4 text-center text-sm text-tertiary-text">
           {tt.searchEmpty}
         </p>
       ) : (
@@ -383,13 +389,98 @@ export function PAMProjectEnvVariablesSection({
               const hidden = locked && sensitive;
               const replacing = replacingIds.has(id);
               const comment = commentText(item.comments);
+              const typeControl =
+                locked || !canWrite ? (
+                  <span
+                    title={sensitive ? tt.envVarSensitiveLocked : undefined}
+                    className={clsx(
+                      'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] sm:text-xs',
+                      sensitive
+                        ? 'bg-brand/10 text-brand'
+                        : 'bg-elevated text-tertiary-text'
+                    )}
+                  >
+                    {sensitive ? <LockClosedIcon className="h-3 w-3" /> : null}
+                    {sensitive ? tt.envVarSensitive : tt.typePlain}
+                  </span>
+                ) : (
+                  <label
+                    title={tt.sensitiveHint}
+                    className="flex cursor-pointer items-center gap-1 text-[11px] text-secondary-text sm:text-xs"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={sensitive}
+                      onChange={(event) =>
+                        patchVariable(id, { sensitive: event.target.checked })
+                      }
+                      className="h-3.5 w-3.5 accent-brand"
+                    />
+                    {tt.envVarSensitive}
+                  </label>
+                );
+              const valueControl =
+                hidden && !replacing ? (
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-elevated px-2 py-1 text-xs text-secondary-text sm:px-2.5 sm:py-1.5 sm:text-sm">
+                      <span className="tracking-widest">●●●●</span>
+                      <span>{tt.sensitiveEncrypted}</span>
+                    </span>
+                    {canWrite ? (
+                      <button
+                        type="button"
+                        onClick={() => setReplacing(id, true)}
+                        className="cursor-pointer rounded px-1.5 py-1 text-xs text-brand transition hover:bg-brand/10"
+                      >
+                        {tt.sensitiveReplace}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="flex min-w-0 items-center gap-2">
+                    <input
+                      type={sensitive ? 'password' : 'text'}
+                      value={item.value}
+                      readOnly={!canWrite}
+                      disabled={!canWrite}
+                      autoComplete="new-password"
+                      placeholder={
+                        hidden
+                          ? tt.sensitiveReplacePlaceholder
+                          : sensitive
+                            ? tt.envVarSensitivePlaceholder
+                            : tt.placehoderEnvValue
+                      }
+                      onChange={(event) =>
+                        patchVariable(id, { value: event.target.value })
+                      }
+                      className={clsx(
+                        pamFormMonoFieldClass,
+                        'min-w-0 flex-1 py-1.5 text-xs sm:text-sm',
+                        !canWrite && 'cursor-default opacity-90'
+                      )}
+                    />
+                    {replacing ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          patchVariable(id, { value: '' });
+                          setReplacing(id, false);
+                        }}
+                        className="shrink-0 cursor-pointer rounded px-1.5 py-1 text-xs text-secondary-text transition hover:bg-elevated"
+                      >
+                        {tt.sensitiveReplaceCancel}
+                      </button>
+                    ) : null}
+                  </div>
+                );
               return (
                 <li
                   data-testid="PAMProjectEnvVariablesSection"
                   key={id}
-                  className="grid grid-cols-1 gap-2 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_5.5rem_2rem] sm:items-center"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1.5 px-2.5 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_5.5rem_2rem] sm:items-center sm:px-3"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 sm:col-auto">
                     <input
                       value={item.key}
                       readOnly={!canWrite}
@@ -414,100 +505,7 @@ export function PAMProjectEnvVariablesSection({
                     ) : null}
                   </div>
 
-                  <div className="min-w-0">
-                    {hidden && !replacing ? (
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-elevated px-2.5 py-1.5 text-xs text-secondary-text sm:text-sm">
-                          <span className="tracking-widest">●●●●</span>
-                          <span>{tt.sensitiveEncrypted}</span>
-                        </span>
-                        {canWrite ? (
-                          <button
-                            type="button"
-                            onClick={() => setReplacing(id, true)}
-                            className="cursor-pointer rounded px-1.5 py-1 text-xs text-brand transition hover:bg-brand/10"
-                          >
-                            {tt.sensitiveReplace}
-                          </button>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type={sensitive ? 'password' : 'text'}
-                          value={item.value}
-                          readOnly={!canWrite}
-                          disabled={!canWrite}
-                          autoComplete="new-password"
-                          placeholder={
-                            hidden
-                              ? tt.sensitiveReplacePlaceholder
-                              : sensitive
-                                ? tt.envVarSensitivePlaceholder
-                                : tt.placehoderEnvValue
-                          }
-                          onChange={(event) =>
-                            patchVariable(id, { value: event.target.value })
-                          }
-                          className={clsx(
-                            pamFormMonoFieldClass,
-                            'min-w-0 flex-1 py-1.5 text-xs sm:text-sm',
-                            !canWrite && 'cursor-default opacity-90'
-                          )}
-                        />
-                        {replacing ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              patchVariable(id, { value: '' });
-                              setReplacing(id, false);
-                            }}
-                            className="shrink-0 cursor-pointer rounded px-1.5 py-1 text-xs text-secondary-text transition hover:bg-elevated"
-                          >
-                            {tt.sensitiveReplaceCancel}
-                          </button>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    {locked || !canWrite ? (
-                      <span
-                        title={sensitive ? tt.envVarSensitiveLocked : undefined}
-                        className={clsx(
-                          'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] sm:text-xs',
-                          sensitive
-                            ? 'bg-brand/10 text-brand'
-                            : 'bg-elevated text-tertiary-text'
-                        )}
-                      >
-                        {sensitive ? (
-                          <LockClosedIcon className="h-3 w-3" />
-                        ) : null}
-                        {sensitive ? tt.envVarSensitive : tt.typePlain}
-                      </span>
-                    ) : (
-                      <label
-                        title={tt.sensitiveHint}
-                        className="flex cursor-pointer items-center gap-1 text-[11px] text-secondary-text sm:text-xs"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={sensitive}
-                          onChange={(event) =>
-                            patchVariable(id, {
-                              sensitive: event.target.checked
-                            })
-                          }
-                          className="h-3.5 w-3.5 accent-brand"
-                        />
-                        {tt.envVarSensitive}
-                      </label>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end">
+                  <div className="flex items-start justify-end sm:order-last sm:col-auto">
                     {canWrite ? (
                       <button
                         type="button"
@@ -520,18 +518,20 @@ export function PAMProjectEnvVariablesSection({
                       </button>
                     ) : null}
                   </div>
+
+                  <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-auto">
+                    {valueControl}
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1 sm:col-auto">
+                    {typeControl}
+                  </div>
                 </li>
               );
             })}
           </ul>
         </div>
       )}
-
-      {canWrite ? (
-        <p className="text-[11px] text-tertiary-text sm:text-xs">
-          {tt.sensitiveHint}
-        </p>
-      ) : null}
     </div>
   );
 }

@@ -52,6 +52,9 @@ export function PAMProjectEnvSettingsSection({
   }, [environment.id, environment.url]);
 
   const save = async (settings: PAMEnvSettings): Promise<void> => {
+    if (saving) {
+      return;
+    }
     setSaving(true);
     try {
       const updated = await pamApi.updateEnvironmentSettings(
