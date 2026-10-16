@@ -426,8 +426,8 @@ export const PAGE_PAM_ENVIRONMENTS_ACCESS_ACTION_RESOLVE =
 
 /**
  * @description Access action: export (pull / render)
- * @localZh 导出明文
- * @localEn Export (plaintext)
+ * @localZh 导出（pull / render）
+ * @localEn Export (pull / render)
  */
 export const PAGE_PAM_ENVIRONMENTS_ACCESS_ACTION_EXPORT =
   'page_pam_environments:accessActionExport';
@@ -447,3 +447,347 @@ export const PAGE_PAM_ENVIRONMENTS_ACCESS_KEY_COUNT =
  */
 export const PAGE_PAM_ENVIRONMENTS_ACCESS_UNKNOWN_USER =
   'page_pam_environments:accessUnknownUser';
+
+/**
+ * @description Environment sub-tab: variables
+ * @localZh 变量
+ * @localEn Variables
+ */
+export const PAGE_PAM_ENVIRONMENTS_TAB_VARIABLES =
+  'page_pam_environments:tabVariables';
+
+/**
+ * @description Environment sub-tab: settings
+ * @localZh 设置
+ * @localEn Settings
+ */
+export const PAGE_PAM_ENVIRONMENTS_TAB_SETTINGS =
+  'page_pam_environments:tabSettings';
+
+/**
+ * @description Environment sub-tab: access records
+ * @localZh 访问记录
+ * @localEn Access records
+ */
+export const PAGE_PAM_ENVIRONMENTS_TAB_ACCESS_LOGS =
+  'page_pam_environments:tabAccessLogs';
+
+/**
+ * @description Usage card title
+ * @localZh 在本地使用
+ * @localEn Use locally
+ */
+export const PAGE_PAM_ENVIRONMENTS_USAGE_TITLE =
+  'page_pam_environments:usageTitle';
+
+/**
+ * @description Usage card: run command hint
+ * @localZh 推荐：把变量直接注入进程，不写入磁盘（敏感值只走这一条路）
+ * @localEn Recommended: inject variables into the process, nothing written to disk (the only way sensitive values reach a process)
+ */
+export const PAGE_PAM_ENVIRONMENTS_USAGE_RUN_HINT =
+  'page_pam_environments:usageRunHint';
+
+/**
+ * @description Usage card: pull command hint
+ * @localZh 写入本地 .env 文件，敏感变量写成占位符（需导出权限）
+ * @localEn Write a local .env file; sensitive values become placeholders (export permission)
+ */
+export const PAGE_PAM_ENVIRONMENTS_USAGE_PULL_HINT =
+  'page_pam_environments:usagePullHint';
+
+/**
+ * @description Copy button
+ * @localZh 复制
+ * @localEn Copy
+ */
+export const PAGE_PAM_ENVIRONMENTS_COPY = 'page_pam_environments:copy';
+
+/**
+ * @description Copied toast
+ * @localZh 已复制
+ * @localEn Copied
+ */
+export const PAGE_PAM_ENVIRONMENTS_COPIED = 'page_pam_environments:copied';
+
+/**
+ * @description Variable search placeholder
+ * @localZh 搜索变量名
+ * @localEn Search variables
+ */
+export const PAGE_PAM_ENVIRONMENTS_SEARCH_PLACEHOLDER =
+  'page_pam_environments:searchPlaceholder';
+
+/**
+ * @description No variables match the search
+ * @localZh 没有匹配的变量
+ * @localEn No matching variables
+ */
+export const PAGE_PAM_ENVIRONMENTS_SEARCH_EMPTY =
+  'page_pam_environments:searchEmpty';
+
+/**
+ * @description Variables table column: key
+ * @localZh 名称
+ * @localEn Key
+ */
+export const PAGE_PAM_ENVIRONMENTS_COL_KEY = 'page_pam_environments:colKey';
+
+/**
+ * @description Variables table column: value
+ * @localZh 值
+ * @localEn Value
+ */
+export const PAGE_PAM_ENVIRONMENTS_COL_VALUE = 'page_pam_environments:colValue';
+
+/**
+ * @description Variables table column: type
+ * @localZh 类型
+ * @localEn Type
+ */
+export const PAGE_PAM_ENVIRONMENTS_COL_TYPE = 'page_pam_environments:colType';
+
+/**
+ * @description Variable type: plain
+ * @localZh 普通
+ * @localEn Plain
+ */
+export const PAGE_PAM_ENVIRONMENTS_TYPE_PLAIN =
+  'page_pam_environments:typePlain';
+
+/**
+ * @description Saved sensitive value display
+ * @localZh 已加密
+ * @localEn Encrypted
+ */
+export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_ENCRYPTED =
+  'page_pam_environments:sensitiveEncrypted';
+
+/**
+ * @description Replace a saved sensitive value
+ * @localZh 替换
+ * @localEn Replace
+ */
+export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_REPLACE =
+  'page_pam_environments:sensitiveReplace';
+
+/**
+ * @description Cancel replacing a sensitive value
+ * @localZh 取消
+ * @localEn Cancel
+ */
+export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_REPLACE_CANCEL =
+  'page_pam_environments:sensitiveReplaceCancel';
+
+/**
+ * @description Placeholder for a new sensitive value
+ * @localZh 输入新值（留空则保留原值）
+ * @localEn New value (leave empty to keep the current one)
+ */
+export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_REPLACE_PLACEHOLDER =
+  'page_pam_environments:sensitiveReplacePlaceholder';
+
+/**
+ * @description Sensitive type tooltip
+ * @localZh 敏感变量保存后加密存储、不可查看，只能通过 pamenv run 注入进程；保存后不能改回普通变量
+ * @localEn Sensitive values are encrypted and never shown; they only reach a process via pamenv run. Cannot be changed back to plain after saving.
+ */
+export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_HINT =
+  'page_pam_environments:sensitiveHint';
+
+/**
+ * @description Unsaved changes bar
+ * @localZh 有 %count% 处未保存的修改
+ * @localEn %count% unsaved change(s)
+ */
+export const PAGE_PAM_ENVIRONMENTS_UNSAVED_CHANGES =
+  'page_pam_environments:unsavedChanges';
+
+/**
+ * @description Discard unsaved changes
+ * @localZh 放弃修改
+ * @localEn Discard
+ */
+export const PAGE_PAM_ENVIRONMENTS_DISCARD_CHANGES =
+  'page_pam_environments:discardChanges';
+
+/**
+ * @description Confirm leaving with unsaved changes
+ * @localZh 当前环境有未保存的修改，确定放弃吗？
+ * @localEn This environment has unsaved changes. Discard them?
+ */
+export const PAGE_PAM_ENVIRONMENTS_DISCARD_CONFIRM =
+  'page_pam_environments:discardConfirm';
+
+/**
+ * @description Validation: empty key
+ * @localZh 变量名不能为空
+ * @localEn Variable name is required
+ */
+export const PAGE_PAM_ENVIRONMENTS_VALIDATION_KEY_REQUIRED =
+  'page_pam_environments:validationKeyRequired';
+
+/**
+ * @description Validation: duplicate key
+ * @localZh 变量名重复：[key]
+ * @localEn Duplicate variable name: [key]
+ */
+export const PAGE_PAM_ENVIRONMENTS_VALIDATION_KEY_DUPLICATE =
+  'page_pam_environments:validationKeyDuplicate';
+
+/**
+ * @description Validation: new sensitive variable without value
+ * @localZh 新的敏感变量需要填写值：[key]
+ * @localEn New sensitive variable needs a value: [key]
+ */
+export const PAGE_PAM_ENVIRONMENTS_VALIDATION_SENSITIVE_VALUE =
+  'page_pam_environments:validationSensitiveValue';
+
+/**
+ * @description Import preview title
+ * @localZh 导入预览（确认后加入草稿，仍需保存）
+ * @localEn Import preview (applied to the draft; you still need to save)
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_PREVIEW_TITLE =
+  'page_pam_environments:importPreviewTitle';
+
+/**
+ * @description Import preview: new keys
+ * @localZh 新增
+ * @localEn New
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_ADDED =
+  'page_pam_environments:importAdded';
+
+/**
+ * @description Import preview: changed keys
+ * @localZh 更新
+ * @localEn Updated
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_CHANGED =
+  'page_pam_environments:importChanged';
+
+/**
+ * @description Import preview: unchanged keys
+ * @localZh 不变
+ * @localEn Unchanged
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_UNCHANGED =
+  'page_pam_environments:importUnchanged';
+
+/**
+ * @description Import preview: apply
+ * @localZh 加入草稿
+ * @localEn Apply to draft
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_APPLY =
+  'page_pam_environments:importApply';
+
+/**
+ * @description Import preview: back to editing the text
+ * @localZh 返回修改
+ * @localEn Back
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_BACK =
+  'page_pam_environments:importBack';
+
+/**
+ * @description Import preview note about sensitive keys
+ * @localZh 新增的键默认标记为敏感，可在保存前修改；已加密的键若导入的是占位符或空值，会保留原值
+ * @localEn New keys default to sensitive (change before saving); encrypted keys keep their value when the import has a placeholder or empty value
+ */
+export const PAGE_PAM_ENVIRONMENTS_IMPORT_SENSITIVE_NOTE =
+  'page_pam_environments:importSensitiveNote';
+
+/**
+ * @description Read-only notice for members
+ * @localZh 你只有查看权限；敏感变量的值不会显示
+ * @localEn You have read-only access; sensitive values are never shown
+ */
+export const PAGE_PAM_ENVIRONMENTS_READ_ONLY_HINT =
+  'page_pam_environments:readOnlyHint';
+
+/**
+ * @description Settings: URL section title
+ * @localZh 环境地址
+ * @localEn Environment URL
+ */
+export const PAGE_PAM_ENVIRONMENTS_SETTINGS_URL_TITLE =
+  'page_pam_environments:settingsUrlTitle';
+
+/**
+ * @description Settings: save URL
+ * @localZh 保存地址
+ * @localEn Save URL
+ */
+export const PAGE_PAM_ENVIRONMENTS_SETTINGS_URL_SAVE =
+  'page_pam_environments:settingsUrlSave';
+
+/**
+ * @description Settings: danger zone title
+ * @localZh 危险操作
+ * @localEn Danger zone
+ */
+export const PAGE_PAM_ENVIRONMENTS_DANGER_ZONE =
+  'page_pam_environments:dangerZone';
+
+/**
+ * @description Settings: delete environment hint
+ * @localZh 删除后不可恢复，使用该环境的 pamenv 命令也会失败
+ * @localEn This cannot be undone; pamenv commands using this environment will fail
+ */
+export const PAGE_PAM_ENVIRONMENTS_ENV_DELETE_HINT =
+  'page_pam_environments:envDeleteHint';
+
+/**
+ * @description Settings: nothing the user can change
+ * @localZh 你没有修改该环境设置的权限
+ * @localEn You don't have permission to change this environment's settings
+ */
+export const PAGE_PAM_ENVIRONMENTS_SETTINGS_NO_PERMISSION =
+  'page_pam_environments:settingsNoPermission';
+
+/**
+ * @description Access records filter: all actions
+ * @localZh 全部操作
+ * @localEn All actions
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_FILTER_ALL =
+  'page_pam_environments:accessFilterAll';
+
+/**
+ * @description Access records filter: user search
+ * @localZh 按用户筛选
+ * @localEn Filter by user
+ */
+export const PAGE_PAM_ENVIRONMENTS_ACCESS_FILTER_USER =
+  'page_pam_environments:accessFilterUser';
+
+/**
+ * @description Pager: previous page
+ * @localZh 上一页
+ * @localEn Previous
+ */
+export const PAGE_PAM_ENVIRONMENTS_PAGE_PREV = 'page_pam_environments:pagePrev';
+
+/**
+ * @description Pager: next page
+ * @localZh 下一页
+ * @localEn Next
+ */
+export const PAGE_PAM_ENVIRONMENTS_PAGE_NEXT = 'page_pam_environments:pageNext';
+
+/**
+ * @description Pager: current page info
+ * @localZh 第 %page% / %total% 页，共 %count% 条（最近 200 条）
+ * @localEn Page %page% / %total%, %count% records (latest 200)
+ */
+export const PAGE_PAM_ENVIRONMENTS_PAGE_INFO = 'page_pam_environments:pageInfo';
+
+/**
+ * @description Cancel creating an environment
+ * @localZh 取消
+ * @localEn Cancel
+ */
+export const PAGE_PAM_ENVIRONMENTS_ENV_ADD_CANCEL =
+  'page_pam_environments:envAddCancel';

@@ -93,9 +93,15 @@ export type PAMEnvResolvedEnvironment = {
 /**
  * Body for `POST .../settings`.
  */
-export const PAMEnvSettingsSchema = z.object({
-  isProtected: z.boolean()
-});
+export const PAMEnvSettingsSchema = z
+  .object({
+    isProtected: z.boolean().optional(),
+    url: z.url().optional()
+  })
+  .refine(
+    (value) => value.isProtected !== undefined || value.url !== undefined,
+    { message: 'isProtected or url is required' }
+  );
 
 export type PAMEnvSettings = z.infer<typeof PAMEnvSettingsSchema>;
 
