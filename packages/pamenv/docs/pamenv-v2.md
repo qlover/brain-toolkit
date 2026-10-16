@@ -1,5 +1,11 @@
 # pamenv v2：变量注入进程，`.env` 只是一种输出格式
 
+## 存储
+
+变量按行存在 `pam_env_variables`（`environment_id` + `key` 唯一）。`pam_environments.variables` JSONB 列暂保留不 DROP，但已不再读写；应用与 RPC 一律只走新表，API 仍组装成 `variables[]`。
+
+Web：`GET .../environments` 只返回环境元数据；选中环境再 `GET .../environments/:envId` 拉变量。保存走 `POST .../variables` 的 `{ upsert, deleteIds }` 增量；CLI push 仍用 `{ variables }` 全量替换。
+
 ## 目标
 
 - PAM 是变量的唯一数据源，本地不再常驻明文。

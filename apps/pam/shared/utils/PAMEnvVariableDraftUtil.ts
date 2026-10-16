@@ -15,6 +15,11 @@ export type PAMEnvDraftIssue =
   | { readonly kind: 'key_duplicate'; readonly key: string }
   | { readonly kind: 'sensitive_value'; readonly key: string };
 
+export type PAMEnvVariablePatch = {
+  readonly upsert: PAMVariable[];
+  readonly deleteIds: string[];
+};
+
 function sameComments(a?: string[], b?: string[]): boolean {
   const left = a ?? [];
   const right = b ?? [];
@@ -143,6 +148,47 @@ export class PAMEnvVariableDraftUtil {
       }
     }
     return next;
+  }
+
+  /**
+   * Diff draft against baseline for an incremental save payload.
+   * Unchanged rows are omitted; removed baseline ids go into `deleteIds`.
+   */
+  public static buildPatch(
+    baseline: readonly PAMVariable[],
+    draft: readonly PAMVariable[]
+  ): PAMEnvVariablePatch {
+    const byId = new Map(
+      baseline.filter((item) => item.id).map((item) => [item.id!, item])
+    );
+    const upsert: PAMVariable[] = [];
+    const seen = new Set<string>();
+
+    for (const item of draft) {
+      const saved = item.id ? byId.get(item.id) : undefined;
+      if (!saved) {
+        upsert.push({ ...item });
+        continue;
+      }
+      seen.add(saved.id!);
+      if (
+        saved.key !== item.key ||
+        saved.value !== item.value ||
+        (saved.sensitive === true) !== (item.sensitive === true) ||
+        !sameComments(saved.comments, item.comments)
+      ) {
+        upsert.push({ ...item });
+      }
+    }
+
+    const deleteIds: string[] = [];
+    for (const id of byId.keys()) {
+      if (!seen.has(id)) {
+        deleteIds.push(id);
+      }
+    }
+
+    return { upsert, deleteIds };
   }
 
   /**

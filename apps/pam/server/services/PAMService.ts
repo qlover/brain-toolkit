@@ -487,8 +487,10 @@ export class PAMService implements PAMServiceInterface {
     projectId: string,
     requestEnvs: NonNullable<PAMProjectUpdate['environments']>
   ): Promise<NonNullable<PAMProjectUpdate['environments']>> {
-    const existingEnvs =
-      await this.projectRepo.getEnvironmentsByProjectId(projectId);
+    const existingEnvs = await this.projectRepo.getEnvironmentsByProjectId(
+      projectId,
+      { withVariables: true }
+    );
     const existingById = new Map(
       existingEnvs.map((env) => [env.id, env] as const)
     );
@@ -1191,10 +1193,34 @@ export class PAMService implements PAMServiceInterface {
       PermissionKey.pam_environments_read
     );
 
+    // Metadata only — variables load via getEnvironment when selected.
     const envs = await this.projectRepo.getEnvironmentsByProjectId(projectId);
-    return PAMEnvVariableRedactUtil.redactEnvironments(
-      envs as PAMEnvWriteable[]
+    return envs as PAMEnvWriteable[];
+  }
+
+  /**
+   * One environment with redacted variables (web lazy load).
+   *
+   * @override
+   */
+  public async getEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvWriteable> {
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_read
     );
+
+    const existing = await this.projectRepo.getEnvironmentByIdAdmin(
+      projectId,
+      envId
+    );
+    if (!existing) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    return this.redactEnvironment(existing as PAMEnvWriteable);
   }
 
   /**
@@ -1275,29 +1301,82 @@ export class PAMService implements PAMServiceInterface {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
-    const merged = this.ensureVariableIds(
-      PAMEnvVariableMergeUtil.mergeVariables(
-        existing.variables,
-        params.variables,
-        this.getSecretEncryption().sensitivePlaceholder(existing.id)
-      )
+    const placeholder = this.getSecretEncryption().sensitivePlaceholder(
+      existing.id
     );
 
-    this.validateVariableKeys([{ name: existing.name, variables: merged }]);
+    // Full replace (CLI push): merge against stored list then rewrite all rows.
+    if (params.variables !== undefined) {
+      const merged = this.ensureVariableIds(
+        PAMEnvVariableMergeUtil.mergeVariables(
+          existing.variables,
+          params.variables,
+          placeholder
+        )
+      );
+
+      this.validateVariableKeys([{ name: existing.name, variables: merged }]);
+      this.assertSensitiveValuesPresent([
+        { name: existing.name, variables: merged }
+      ]);
+
+      const encrypted =
+        this.getSecretEncryption().encryptSensitiveVariables(merged);
+
+      const updated = await this.projectRepo.updateEnvironmentVariablesAdmin(
+        projectId,
+        envId,
+        encrypted
+      );
+      return this.redactEnvironment(updated);
+    }
+
+    // Patch (web): only upsert / delete changed rows.
+    const deleteIds = params.deleteIds ?? [];
+    const upsertRaw = params.upsert ?? [];
+    const existingById = new Map(
+      (existing.variables ?? [])
+        .filter((item) => item.id)
+        .map((item) => [item.id!, item])
+    );
+
+    const upsertMerged = this.ensureVariableIds(
+      upsertRaw.map((incoming) => {
+        const previous = incoming.id
+          ? existingById.get(incoming.id)
+          : undefined;
+        const [merged] = PAMEnvVariableMergeUtil.mergeVariables(
+          previous ? [previous] : [],
+          [incoming],
+          placeholder
+        );
+        return merged!;
+      })
+    );
+
+    this.validateVariableKeys([
+      { name: existing.name, variables: upsertMerged }
+    ]);
     this.assertSensitiveValuesPresent([
-      { name: existing.name, variables: merged }
+      { name: existing.name, variables: upsertMerged }
     ]);
 
-    const encrypted =
-      this.getSecretEncryption().encryptSensitiveVariables(merged);
+    const encryptedUpsert =
+      this.getSecretEncryption().encryptSensitiveVariables(upsertMerged);
 
-    const updated = await this.projectRepo.updateEnvironmentVariablesAdmin(
+    await this.projectRepo.patchEnvironmentVariableRowsAdmin(envId, {
+      upsert: encryptedUpsert,
+      deleteIds
+    });
+
+    const refreshed = await this.projectRepo.getEnvironmentByIdAdmin(
       projectId,
-      envId,
-      encrypted
+      envId
     );
-
-    return this.redactEnvironment(updated);
+    if (!refreshed) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+    return this.redactEnvironment(refreshed as PAMEnvWriteable);
   }
 
   /**

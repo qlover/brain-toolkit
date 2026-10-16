@@ -3,6 +3,9 @@ import { V_PAM_ENV_VAR_KEY_REQUIRED } from '@config/i18n-identifier/common/valid
 
 export const PAMEnvTableName = 'pam_environments' as const;
 
+/** One row per environment variable key (replaces JSONB `variables`). */
+export const PAMEnvVariableTableName = 'pam_env_variables' as const;
+
 export const PAMVariableSchema = z.object({
   id: z.uuid().optional(),
   key: z.string().trim().min(1, V_PAM_ENV_VAR_KEY_REQUIRED),
@@ -53,11 +56,24 @@ export const PAMEnvCreateSchema = z.object({
 export type PAMEnvCreate = z.infer<typeof PAMEnvCreateSchema>;
 
 /**
- * Body for replacing the full variable list of one environment.
+ * Body for writing environment variables.
+ *
+ * - `{ variables }` — full replace (CLI push)
+ * - `{ upsert?, deleteIds? }` — patch only changed rows (web)
  */
-export const PAMEnvReplaceVariablesSchema = z.object({
-  variables: z.array(PAMVariableSchema)
-});
+export const PAMEnvReplaceVariablesSchema = z
+  .object({
+    variables: z.array(PAMVariableSchema).optional(),
+    upsert: z.array(PAMVariableSchema).optional(),
+    deleteIds: z.array(z.uuid()).optional()
+  })
+  .refine(
+    (body) =>
+      body.variables !== undefined ||
+      (body.upsert !== undefined && body.upsert.length > 0) ||
+      (body.deleteIds !== undefined && body.deleteIds.length > 0),
+    { message: 'variables, upsert, or deleteIds is required' }
+  );
 
 export type PAMEnvReplaceVariables = z.infer<
   typeof PAMEnvReplaceVariablesSchema
