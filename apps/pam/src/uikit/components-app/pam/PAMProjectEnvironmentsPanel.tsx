@@ -62,6 +62,9 @@ export function PAMProjectEnvironmentsPanel({
     hasPermission,
     environments,
     ensureEnvironments,
+    ensureEnvironmentDetail,
+    environmentDetailLoadedIds,
+    markEnvironmentDetailLoaded,
     setEnvironments
   } = usePAMProjectDetail();
   const canCreateEnv = hasPermission(PermissionKey.pam_environments_create);
@@ -73,6 +76,7 @@ export function PAMProjectEnvironmentsPanel({
 
   const [saving, setSaving] = useState(false);
   const [selectedEnvId, setSelectedEnvId] = useState<string | null>(null);
+  const [envDetailLoading, setEnvDetailLoading] = useState(false);
   const [subTab, setSubTab] = useState<EnvSubTab>('variables');
   const [draftVariables, setDraftVariables] = useState<PAMVariable[]>([]);
   /** Create mode replaces the detail panel (same idea as switching env tabs). */
@@ -133,6 +137,7 @@ export function PAMProjectEnvironmentsPanel({
 
   const upsertEnvironment = useCallback(
     (env: PAMEnvWriteable): void => {
+      markEnvironmentDetailLoaded(env.id);
       setEnvironments((prev) => {
         const list = prev ?? [];
         const index = list.findIndex((item) => item.id === env.id);
@@ -145,7 +150,7 @@ export function PAMProjectEnvironmentsPanel({
       });
       setSelectedEnvId(env.id);
     },
-    [setEnvironments]
+    [markEnvironmentDetailLoaded, setEnvironments]
   );
 
   useStrictEffect(() => {
@@ -167,7 +172,37 @@ export function PAMProjectEnvironmentsPanel({
     });
   }, [environments]);
 
+  useEffect(() => {
+    if (!projectId || !selectedEnvId || showCreate) {
+      return;
+    }
+    if (environmentDetailLoadedIds.has(selectedEnvId)) {
+      setEnvDetailLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setEnvDetailLoading(true);
+    void ensureEnvironmentDetail(selectedEnvId).finally(() => {
+      if (!cancelled) {
+        setEnvDetailLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    projectId,
+    selectedEnvId,
+    showCreate,
+    environmentDetailLoadedIds,
+    ensureEnvironmentDetail
+  ]);
+
   const loading = Boolean(projectId) && environments === null;
+  const selectedEnvDetailReady =
+    selectedEnvId != null && environmentDetailLoadedIds.has(selectedEnvId);
 
   const confirmDiscard = (onOk: () => void): void => {
     if (!dirty) {
@@ -236,12 +271,19 @@ export function PAMProjectEnvironmentsPanel({
       );
       return;
     }
+    const patch = PAMEnvVariableDraftUtil.buildPatch(
+      baselineVariables,
+      draftVariables
+    );
+    if (patch.upsert.length === 0 && patch.deleteIds.length === 0) {
+      return;
+    }
     setSaving(true);
     try {
       const updated = await pamApi.setEnvironmentVariables(
         projectId,
         selectedEnvId,
-        draftVariables
+        patch
       );
       upsertEnvironment(updated);
       dialogHandler.success(tt.envVarsSaved);
@@ -513,14 +555,23 @@ export function PAMProjectEnvironmentsPanel({
             ) : null}
 
             {subTab === 'variables' ? (
-              <PAMProjectEnvVariablesSection
-                key={selectedEnv.id}
-                draft={draftVariables}
-                setDraft={setDraftVariables}
-                lockedIds={lockedIds}
-                canWrite={canWriteVars}
-                tt={tt}
-              />
+              envDetailLoading || !selectedEnvDetailReady ? (
+                <div className="flex min-h-32 flex-col items-center justify-center gap-2 py-8">
+                  <PamLoadingIndicator />
+                  <span className="text-sm text-tertiary-text">
+                    {tt.loadingText}
+                  </span>
+                </div>
+              ) : (
+                <PAMProjectEnvVariablesSection
+                  key={selectedEnv.id}
+                  draft={draftVariables}
+                  setDraft={setDraftVariables}
+                  lockedIds={lockedIds}
+                  canWrite={canWriteVars}
+                  tt={tt}
+                />
+              )
             ) : null}
 
             {subTab === 'settings' ? (
@@ -548,7 +599,7 @@ export function PAMProjectEnvironmentsPanel({
         )}
       </section>
 
-      {dirty ? (
+      {dirty && selectedEnvDetailReady ? (
         <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-(--fe-color-warning)/40 bg-elevated px-4 py-2.5 shadow-lg">
           <span className="text-sm text-primary-text">
             {tt.unsavedChanges.replace('%count%', String(changeCount))}

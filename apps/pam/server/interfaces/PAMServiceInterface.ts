@@ -164,11 +164,20 @@ export interface PAMServiceInterface {
 
   /**
    * Lists environments for a project with sensitive values redacted.
+   * Metadata only (`variables` empty); load one env via {@link getEnvironment}.
    *
    * @param projectId - Project id
    * @returns Redacted environment list
    */
   listEnvironments(projectId: string): Promise<PAMEnvWriteable[]>;
+
+  /**
+   * One environment with redacted variables (web lazy load).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  getEnvironment(projectId: string, envId: string): Promise<PAMEnvWriteable>;
 
   /**
    * Creates an environment under a project.
@@ -191,14 +200,17 @@ export interface PAMServiceInterface {
   deleteEnvironment(projectId: string, envId: string): Promise<void>;
 
   /**
-   * Replaces the full variable list for one environment.
+   * Replaces or patches variables for one environment.
+   *
+   * - `{ variables }` — full replace (CLI push)
+   * - `{ upsert?, deleteIds? }` — patch only changed rows (web)
    *
    * Sensitive flag is immutable for existing variables; new plaintext secrets
    * are encrypted before persist.
    *
    * @param projectId - Project id
    * @param envId - Environment id
-   * @param params - Full variables payload
+   * @param params - Full replace or incremental patch
    * @returns Updated environment with redacted sensitive values
    */
   replaceEnvironmentVariables(

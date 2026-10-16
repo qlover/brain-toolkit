@@ -237,6 +237,16 @@ export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 export const API_PAM_ENVIRONMENTS = '/api/pam/:projectId/environments' as const;
 
 /**
+ * API path: `/api/pam/:projectId/environments/:envId`
+ *
+ * @see [src/app/api/pam/[projectId]/environments/[envId]/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/environments/[envId]/route.ts`
+ */
+export const API_PAM_ENVIRONMENTS_2 =
+  '/api/pam/:projectId/environments/:envId' as const;
+
+/**
  * API path: `/api/pam/:projectId/environments/:envId/access-logs`
  *
  * @see [src/app/api/pam/[projectId]/environments/[envId]/access-logs/route.ts](../../src/app/api/pam/[projectId]/environments/[envId]/access-logs/route.ts)
@@ -686,6 +696,7 @@ export type ApiRoutePath =
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
   | typeof API_PAM_ENVIRONMENTS
+  | typeof API_PAM_ENVIRONMENTS_2
   | typeof API_PAM_ENVIRONMENTS_ACCESS_LOGS
   | typeof API_PAM_ENVIRONMENTS_DELETE
   | typeof API_PAM_ENVIRONMENTS_EXPORT

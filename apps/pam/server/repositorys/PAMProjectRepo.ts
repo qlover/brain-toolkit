@@ -413,6 +413,89 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Incremental write: delete by id, then upsert rows (by id when present).
+   */
+  public async patchEnvironmentVariableRowsAdmin(
+    environmentId: string,
+    patch: { upsert: PAMVariable[]; deleteIds: string[] }
+  ): Promise<void> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+
+    if (patch.deleteIds.length > 0) {
+      const del = await admin
+        .from(PAMEnvVariableTableName)
+        .delete()
+        .eq('environment_id', environmentId)
+        .in('id', patch.deleteIds);
+      this.supabaseRepo.throwIfError(del);
+    }
+
+    if (patch.upsert.length === 0) {
+      return;
+    }
+
+    // Keep sort_order after existing max so new rows append stably.
+    const maxOrderResult = await admin
+      .from(PAMEnvVariableTableName)
+      .select('sort_order')
+      .eq('environment_id', environmentId)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(maxOrderResult);
+    let nextOrder =
+      typeof maxOrderResult.data?.sort_order === 'number'
+        ? maxOrderResult.data.sort_order + 1
+        : 0;
+
+    for (const variable of patch.upsert) {
+      const id = variable.id || uuid();
+      const row = {
+        id,
+        environment_id: environmentId,
+        key: variable.key,
+        value: variable.value ?? '',
+        sensitive: variable.sensitive === true,
+        comments:
+          variable.comments && variable.comments.length > 0
+            ? variable.comments
+            : null,
+        sort_order: nextOrder,
+        updated_at: new Date().toISOString()
+      };
+
+      if (variable.id) {
+        const existing = await admin
+          .from(PAMEnvVariableTableName)
+          .select('id,sort_order')
+          .eq('environment_id', environmentId)
+          .eq('id', variable.id)
+          .maybeSingle();
+        this.supabaseRepo.throwIfError(existing);
+        if (existing.data) {
+          const upd = await admin
+            .from(PAMEnvVariableTableName)
+            .update({
+              key: row.key,
+              value: row.value,
+              sensitive: row.sensitive,
+              comments: row.comments,
+              updated_at: row.updated_at
+            })
+            .eq('id', variable.id)
+            .eq('environment_id', environmentId);
+          this.supabaseRepo.throwIfError(upd);
+          continue;
+        }
+      }
+
+      const ins = await admin.from(PAMEnvVariableTableName).insert(row);
+      this.supabaseRepo.throwIfError(ins);
+      nextOrder += 1;
+    }
+  }
+
+  /**
    * 搜索项目列表 — prefers `pam_search_projects` RPC (one DB round-trip).
    *
    * @param params
@@ -717,13 +800,14 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
-   * Loads environments with variables for merge/write workflows.
+   * Loads environments for a project.
    *
    * @param projectId - Project id
-   * @returns Environments including variables from `pam_env_variables`
+   * @param options.withVariables - When true, hydrate from `pam_env_variables`
    */
   public async getEnvironmentsByProjectId(
-    projectId: string
+    projectId: string,
+    options?: { withVariables?: boolean }
   ): Promise<
     Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables' | 'is_protected'>[]
   > {
@@ -740,7 +824,11 @@ export class PAMProjectRepo extends BaseRepository<
       'id' | 'name' | 'url' | 'is_protected'
     >[];
 
-    return this.hydrateEnvironmentsVariables(data);
+    if (options?.withVariables) {
+      return this.hydrateEnvironmentsVariables(data);
+    }
+
+    return data.map((env) => ({ ...env, variables: [] }));
   }
 
   /**

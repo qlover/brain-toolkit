@@ -79,6 +79,31 @@ describe('PAMEnvVariableDraftUtil.applyImport', () => {
   });
 });
 
+describe('PAMEnvVariableDraftUtil.buildPatch', () => {
+  it('returns empty patch when draft matches baseline', () => {
+    expect(
+      PAMEnvVariableDraftUtil.buildPatch(
+        baseline,
+        baseline.map((item) => ({ ...item }))
+      )
+    ).toEqual({ upsert: [], deleteIds: [] });
+  });
+
+  it('upserts changed and new rows; deleteIds for removals', () => {
+    const draft: PAMVariable[] = [
+      { id: 'a', key: 'PLAIN', value: 'two', sensitive: false },
+      { id: 'c', key: 'NEW', value: 'x', sensitive: false }
+    ];
+    expect(PAMEnvVariableDraftUtil.buildPatch(baseline, draft)).toEqual({
+      upsert: [
+        { id: 'a', key: 'PLAIN', value: 'two', sensitive: false },
+        { id: 'c', key: 'NEW', value: 'x', sensitive: false }
+      ],
+      deleteIds: ['b']
+    });
+  });
+});
+
 describe('PAMEnvVariableDraftUtil.findIssue', () => {
   it('accepts saved sensitive variables with empty values', () => {
     expect(PAMEnvVariableDraftUtil.findIssue(baseline, locked)).toBeNull();

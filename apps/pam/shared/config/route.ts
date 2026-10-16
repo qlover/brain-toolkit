@@ -5,6 +5,7 @@ import {
   API_PAM_DETAIL,
   API_PAM_EDIT,
   API_PAM_ENVIRONMENTS,
+  API_PAM_ENVIRONMENTS_2,
   API_PAM_ENVIRONMENTS_ACCESS_LOGS,
   API_PAM_ENVIRONMENTS_DELETE,
   API_PAM_ENVIRONMENTS_EXPORT,
@@ -608,6 +609,19 @@ export function buildApiPamPreviewImage(id: string): string {
  */
 export function buildApiPamEnvironments(projectId: string): string {
   return buildApiWithPath(API_PAM_ENVIRONMENTS, { projectId });
+}
+
+/**
+ * @see {@link API_PAM_ENVIRONMENTS_2}
+ * @param projectId - Project id
+ * @param envId - Environment id
+ * @returns `/api/pam/:projectId/environments/:envId`
+ */
+export function buildApiPamEnvironment(
+  projectId: string,
+  envId: string
+): string {
+  return buildApiWithPath(API_PAM_ENVIRONMENTS_2, { projectId, envId });
 }
 
 /**

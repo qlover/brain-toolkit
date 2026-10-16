@@ -181,6 +181,7 @@ export class PAMController {
 
   /**
    * Lists environments for a project (sensitive values redacted).
+   * Metadata only — variables load via {@link getEnvironment}.
    *
    * @param projectId - Project id path param
    * @returns Redacted environment list
@@ -188,6 +189,21 @@ export class PAMController {
   public listEnvironments(projectId: string): Promise<PAMEnvWriteable[]> {
     const id = uuidSchema.parse(projectId);
     return this.pamService.listEnvironments(id);
+  }
+
+  /**
+   * One environment with redacted variables (web lazy load).
+   *
+   * @param projectId - Project id path param
+   * @param envId - Environment id path param
+   */
+  public getEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvWriteable> {
+    const projectUuid = uuidSchema.parse(projectId);
+    const envUuid = uuidSchema.parse(envId);
+    return this.pamService.getEnvironment(projectUuid, envUuid);
   }
 
   /**
@@ -225,11 +241,11 @@ export class PAMController {
   }
 
   /**
-   * Replaces the full variable list for one environment.
+   * Replaces or patches variables for one environment.
    *
    * @param projectId - Project id path param
    * @param envId - Environment id path param
-   * @param request - Incoming request with `{ variables }`
+   * @param request - `{ variables }` (full) or `{ upsert, deleteIds }` (patch)
    * @returns Updated environment (redacted)
    */
   public async replaceEnvironmentVariables(

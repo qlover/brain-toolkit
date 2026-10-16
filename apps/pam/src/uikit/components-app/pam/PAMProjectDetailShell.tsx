@@ -69,6 +69,11 @@ export type PAMProjectDetailValue = {
   readonly environments: PAMEnvWriteable[] | null;
   readonly environmentsLoading: boolean;
   readonly ensureEnvironments: () => Promise<void>;
+  /** Load variables for one env (cached after first fetch / save / create). */
+  readonly ensureEnvironmentDetail: (envId: string) => Promise<void>;
+  /** Env ids whose variables have been loaded into `environments`. */
+  readonly environmentDetailLoadedIds: ReadonlySet<string>;
+  readonly markEnvironmentDetailLoaded: (envId: string) => void;
   readonly setEnvironments: Dispatch<SetStateAction<PAMEnvWriteable[] | null>>;
 };
 
@@ -121,8 +126,13 @@ export function PAMProjectDetailShell({
     null
   );
   const [environmentsLoading, setEnvironmentsLoading] = useState(false);
+  const [environmentDetailLoadedIds, setEnvironmentDetailLoadedIds] = useState(
+    () => new Set<string>()
+  );
   const envLoadedForProjectRef = useRef('');
   const envLoadInflightRef = useRef<Promise<void> | null>(null);
+  const envDetailInflightRef = useRef(new Map<string, Promise<void>>());
+  const envDetailLoadedRef = useRef(new Set<string>());
 
   const project = detailState.result;
   const loading = detailState.loading;
@@ -168,9 +178,20 @@ export function PAMProjectDetailShell({
   useEffect(() => {
     envLoadedForProjectRef.current = '';
     envLoadInflightRef.current = null;
+    envDetailInflightRef.current.clear();
+    envDetailLoadedRef.current = new Set();
+    setEnvironmentDetailLoadedIds(new Set());
     setEnvironments(null);
     setEnvironmentsLoading(false);
   }, [routeKey]);
+
+  const markEnvironmentDetailLoaded = useCallback((envId: string): void => {
+    if (envDetailLoadedRef.current.has(envId)) {
+      return;
+    }
+    envDetailLoadedRef.current.add(envId);
+    setEnvironmentDetailLoadedIds(new Set(envDetailLoadedRef.current));
+  }, []);
 
   const ensureEnvironments = useCallback(async (): Promise<void> => {
     const id = project?.id ?? '';
@@ -206,6 +227,52 @@ export function PAMProjectDetailShell({
     envLoadInflightRef.current = load;
     await load;
   }, [pamApi, project?.id]);
+
+  const ensureEnvironmentDetail = useCallback(
+    async (envId: string): Promise<void> => {
+      const id = project?.id ?? '';
+      if (!id || !envId) {
+        return;
+      }
+      if (envDetailLoadedRef.current.has(envId)) {
+        return;
+      }
+      const pending = envDetailInflightRef.current.get(envId);
+      if (pending) {
+        await pending;
+        return;
+      }
+
+      const load = (async () => {
+        try {
+          const env = await pamApi.getEnvironment(id, envId);
+          markEnvironmentDetailLoaded(envId);
+          setEnvironments((prev) => {
+            const list = prev ?? [];
+            const index = list.findIndex((item) => item.id === env.id);
+            if (index === -1) {
+              return [...list, env];
+            }
+            const next = [...list];
+            next[index] = env;
+            return next;
+          });
+        } catch (caught) {
+          if (isAbortError(caught)) {
+            return;
+          }
+          // Keep list metadata; panel will show empty vars for this env.
+          markEnvironmentDetailLoaded(envId);
+        } finally {
+          envDetailInflightRef.current.delete(envId);
+        }
+      })();
+
+      envDetailInflightRef.current.set(envId, load);
+      await load;
+    },
+    [markEnvironmentDetailLoaded, pamApi, project?.id]
+  );
 
   // Legacy UUID URLs → replace with slug while keeping the current tab.
   useEffect(() => {
@@ -345,6 +412,9 @@ export function PAMProjectDetailShell({
       environments,
       environmentsLoading,
       ensureEnvironments,
+      ensureEnvironmentDetail,
+      environmentDetailLoadedIds,
+      markEnvironmentDetailLoaded,
       setEnvironments
     }),
     [
@@ -360,7 +430,10 @@ export function PAMProjectDetailShell({
       setProject,
       environments,
       environmentsLoading,
-      ensureEnvironments
+      ensureEnvironments,
+      ensureEnvironmentDetail,
+      environmentDetailLoadedIds,
+      markEnvironmentDetailLoaded
     ]
   );
 
