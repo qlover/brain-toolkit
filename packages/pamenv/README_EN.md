@@ -62,6 +62,25 @@ pamenv projects                                   # with .pam/, local only (fail
 pamenv -g projects                                # force global sign-in
 ```
 
+## Testing
+
+```bash
+# Default: unit + mock contract integration (no PAM account)
+pnpm --filter pamenv-cli test
+
+# Optional: live PAM (dedicated harness project + tokens; never commit secrets)
+PAMENV_LIVE=1 \
+PAMENV_BASE_URL=https://pam.example.com \
+PAMENV_OWNER_TOKEN=... \
+PAMENV_MEMBER_TOKEN=... \
+PAMENV_PROJECT_SLUG=ci-pamenv-harness \
+PAMENV_ENV_NAME=dev \
+PAMENV_PROTECTED_ENV_NAME=secret \
+pnpm --filter pamenv-cli test:live
+```
+
+Contract tests (~78) use an in-memory mock PAM covering identity / exact slug / `-o`, pull (403/401/leaks/multi-env/`--file`), bindings + `--force` TTY, run (403/protected/404 fallback/slug mismatch/keepEnv/warnings), pull/push three-way sync and conflicts, render (yaml/toml/`--only`), remove (clears snapshot), and over-permissive files.
+
 ## Security model
 
 - **Identity isolation:** if cwd has `.pam/`, only local credentials are used — never fall back to `~/.pam`. Missing token fails immediately. Use `-g` for the home root.
