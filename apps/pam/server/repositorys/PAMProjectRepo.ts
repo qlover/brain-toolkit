@@ -51,6 +51,8 @@ import { isPamSearchRpcUnavailable } from '@server/utils/postgrestError';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
+type PamSearchViewType = 'full' | 'compact';
+
 interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
   /**
    * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
@@ -58,6 +60,11 @@ interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
   user_id?: string;
   /** Structured filters from ResourceSearchParams (e.g. `{ category }`). */
   filters?: unknown;
+  /**
+   * Response shape: `full` (web cards) or `compact` (CLI one-liners).
+   * Also accepted via `filters.view`.
+   */
+  view?: PamSearchViewType | string;
   /** When set, overrides automatic exact vs planned count selection. */
   exactCount?: boolean;
   /** When false, skip row count (used for page 2+). */
@@ -103,6 +110,42 @@ function resolveVisibilityFilter(
     return visibility;
   }
   return undefined;
+}
+
+/**
+ * Reads a boolean flag from filters (`mine` / `writable`).
+ */
+function resolveBooleanFilter(
+  filters: unknown,
+  key: 'mine' | 'writable'
+): boolean {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return false;
+  }
+  const value = (filters as Record<string, unknown>)[key];
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
+/**
+ * Optional list shape: `view=compact` (query) or `filters.view`.
+ */
+function resolveSearchView(
+  params: PAMProjectSearchParams
+): PamSearchViewType {
+  const fromQuery =
+    typeof (params as { view?: unknown }).view === 'string'
+      ? String((params as { view?: string }).view).trim().toLowerCase()
+      : '';
+  if (fromQuery === 'compact' || fromQuery === 'full') {
+    return fromQuery;
+  }
+  if (params.filters && typeof params.filters === 'object' && !Array.isArray(params.filters)) {
+    const fromFilters = (params.filters as { view?: unknown }).view;
+    if (fromFilters === 'compact' || fromFilters === 'full') {
+      return fromFilters;
+    }
+  }
+  return 'full';
 }
 
 type JoinEnvFieldsResult<T extends '*' | readonly EnvField[]> = T extends '*'
@@ -157,8 +200,14 @@ export class PAMProjectRepo extends BaseRepository<
     const keyword = params.keyword?.trim();
     const categoryFilter = resolveCategoryFilter(params.filters);
     const visibilityFilter = resolveVisibilityFilter(params.filters);
+    const mineFilter = resolveBooleanFilter(params.filters, 'mine');
+    const writableFilter = resolveBooleanFilter(params.filters, 'writable');
+    const searchView = resolveSearchView(params);
 
-    if (visibilityFilter === 'private' && !user_id) {
+    if (
+      (visibilityFilter === 'private' || mineFilter || writableFilter) &&
+      !user_id
+    ) {
       return {
         page,
         pageSize,
@@ -173,6 +222,9 @@ export class PAMProjectRepo extends BaseRepository<
     ];
     if (categoryFilter) {
       where.push(['category', Operators.eq, categoryFilter]);
+    }
+    if (mineFilter && user_id) {
+      where.push(['owner_id', Operators.eq, user_id]);
     }
 
     const teamIds = user_id
@@ -207,9 +259,36 @@ export class PAMProjectRepo extends BaseRepository<
       }
     }
 
+    if (writableFilter && user_id && !mineFilter) {
+      // Writable = owner OR active team member (same set as teamIds).
+      const writableOr: FilterTriple<PAMProjectRaw>[] = [
+        ['owner_id', Operators.eq, user_id]
+      ];
+      if (teamIds.length > 0) {
+        writableOr.push([
+          'team_id',
+          Operators.in,
+          teamIds
+        ] as FilterTriple<PAMProjectRaw>);
+      }
+      // Intersect with prior whereOr via AND(owner|team) — replace visibility
+      // OR with writable OR when no public branch should remain.
+      whereOr = writableOr;
+    }
+
+    const compactFields = [
+      'id',
+      'slug',
+      'name',
+      'owner_id',
+      'team_id'
+    ] as (keyof SearchPAMRawProject)[];
+
     return await this.supabaseRepo.search({
       table: this.getRepoName(),
-      fields: fields ?? SearchPAMProjectFields,
+      fields:
+        fields ??
+        (searchView === 'compact' ? compactFields : SearchPAMProjectFields),
       page: page,
       pageSize: pageSize,
       sort: params.sort,
@@ -218,14 +297,17 @@ export class PAMProjectRepo extends BaseRepository<
       // Substring match across project text fields (not FTS / search_vector).
       ilikeOr: keyword
         ? {
-            columns: [
-              'name',
-              'slug',
-              'description',
-              'stack',
-              'category',
-              'repo_url'
-            ],
+            columns:
+              searchView === 'compact'
+                ? ['name', 'slug']
+                : [
+                    'name',
+                    'slug',
+                    'description',
+                    'stack',
+                    'category',
+                    'repo_url'
+                  ],
             query: keyword
           }
         : undefined,
@@ -524,6 +606,9 @@ export class PAMProjectRepo extends BaseRepository<
     const keyword = params.keyword?.trim();
     const categoryFilter = resolveCategoryFilter(params.filters);
     const visibilityFilter = resolveVisibilityFilter(params.filters);
+    const mineFilter = resolveBooleanFilter(params.filters, 'mine');
+    const writableFilter = resolveBooleanFilter(params.filters, 'writable');
+    const searchView = resolveSearchView(params);
 
     const admin = this.supabaseRepo.getAdminSupabase();
     const sortBy = resolvePamListSortBy(params.sort);
@@ -538,7 +623,10 @@ export class PAMProjectRepo extends BaseRepository<
       p_include_count: params.includeCount ?? page <= 1,
       p_include_owner_id: Boolean(user_id),
       p_sort_by: sortBy,
-      p_sort_order: sortOrder
+      p_sort_order: sortOrder,
+      p_mine: mineFilter,
+      p_writable: writableFilter,
+      p_view: searchView
     });
 
     this.supabaseRepo.throwIfError({ data, error });
