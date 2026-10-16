@@ -50,25 +50,38 @@ pamenv pull <slug> -e staging     # 拉取到 .env.staging（需导出权限）
 | --- | --- |
 | `--url <url>` | 指定 PAM 地址，如 `https://pam.example.com` |
 | `--domain <host>` | 同 `--url`，可只写主机名；`localhost` 与内网地址默认 `http`，其余 `https` |
-| `--local` | 登录和同步状态只保存在当前目录的 `.pam/`，与全局登录隔离；请把 `.pam/` 加入 `.gitignore` |
+| `--local` | 强制使用当前目录 `.pam/`；只要存在 `.pam/`，不写也会自动隔离（不读 `~/.pam`） |
+| `-g, --global` | 强制使用 `~/.pam`（即使 cwd 已有 `.pam/`） |
 
-`--url` 与 `--domain` 不能同时使用。
+`--url` 与 `--domain` 不能同时使用；`--local` 与 `--global` 也不能同时使用。请把 `.pam/` 加入 `.gitignore`。
 
 ```bash
 pamenv --domain pam.localhost:3400 login
-pamenv --local --domain pam.localhost:3400 login
-pamenv --local projects
+pamenv --local --domain pam.localhost:3400 login   # 首次写入 cwd/.pam
+pamenv projects                                   # 有 .pam/ 时只用本地身份（未登录会失败，不会偷用全局）
+pamenv -g projects                                # 明确要用全局登录时
 ```
+
+## 安全模型
+
+- **身份隔离**：cwd 存在 `.pam/` 时只用本地凭证，绝不回退到 `~/.pam`；缺 token 立即失败。`-g` 才强制全局。
+- **精确项目**：`pull` / `push` / `run` / `render` / `remove` / `fork` 只接受**精确** slug 或 uuid（不会 `pam` 误匹配 `pamenv-…`）。
+- **权限 fail-closed**：以服务端返回的 `permissions[]` 为准；缺权限或 401/403 时零落盘、零注入。CLI 预检不能替代服务端鉴权。
+- **pull ≠ run**：`pull` / `render` 需要 `pam_environments_export`（admin+），敏感值为 placeholder；`run` 需要 `pam_environments_inject`（member+），明文只进子进程。
+- **protected 环境**：`is_protected=true` 时，即便有 inject，resolve 仍要求 export 档权限——含密钥且不许 member 取出的环境请开启 protected。
+- **落盘**：目标文件若对 group/other 可读则拒绝覆盖；写入为 atomic + `0600`（Windows 为 best-effort）。`--force` 换绑需交互确认（非 TTY 拒绝）。
 
 ## 环境与本地文件
 
 - `-e <env>` 指定环境；`-e local` 对应 `.env.local`，`-e staging` 对应 `.env.staging`。
 - 不传 `-e` 时使用项目的第一个环境（`remove` 必须传 `-e`）。
 - `--file <path>` 改用其它文件，相对当前目录（或 `-o` 指定的目录），也可以写绝对路径。
+- **同目录多项目**：默认文件名只含环境名。若已 `pull fe-base -e dev`（占用 `.env.dev`），再 `pull pam -e dev` 会被拒绝；请用 `--file .env.pam.dev`、换目录，或在终端用 `--force` 并确认后覆盖绑定。
 
 ```bash
 pamenv pull <slug> -e local --file .env   # 写入 .env 而不是 .env.local
 pamenv push <slug> -e local --file .env   # 从 .env 读取并推到 local
+pamenv pull pam -e dev --file .env.pam.dev
 ```
 
 ## `pamenv init`

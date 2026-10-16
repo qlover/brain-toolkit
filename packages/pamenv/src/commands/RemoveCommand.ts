@@ -11,7 +11,7 @@ import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInte
 import { PamCliConfirmUtil } from '../impls/PamCliConfirmUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
 import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
-import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 import { PamCliSyncStore } from '../impls/PamCliSyncStore';
 
 export type PamCliRemoveOptionsType = {
@@ -50,7 +50,7 @@ export class RemoveCommand {
       throw new Error(PamCliI18n.t(PAMENV_CLI_REMOVE_ENV_REQUIRED));
     }
 
-    const project = await PamCliProjectResolveUtil.resolve(
+    const project = await PamCliSecurityGate.resolveProjectExact(
       this.apiClient,
       projectRef
     );

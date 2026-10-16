@@ -47,6 +47,18 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
   }
 
   /**
+   * Updates whether the active root is local `.pam` vs `~/.pam` (e.g. `-o`).
+   *
+   * @param preferLocal - When true, use `{workingDir}/.pam`
+   */
+  public setPreferLocal(preferLocal: boolean): void {
+    this.runtime = {
+      ...this.runtime,
+      preferLocal
+    };
+  }
+
+  /**
    * @override
    * @returns Absolute path of the active config file
    */

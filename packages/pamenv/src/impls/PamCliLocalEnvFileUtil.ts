@@ -6,7 +6,8 @@ import { PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE } from '../i18n/identifier/pamenv
  * Local working-directory env file naming for pull / push.
  *
  * Significance: Keeps pull and push on the same `.env.<envName>` convention.
- * Core idea: One local dotenv file per PAM environment name.
+ * Core idea: Default one dotenv file per env name; cross-project collisions
+ * are blocked via {@link PamCliEnvFileBindingUtil} (use `--file` / `-o`).
  * Main function: Build dotenv filenames from environment names.
  * Main purpose: Write/read env files in the current project directory.
  *

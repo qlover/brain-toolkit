@@ -1,8 +1,11 @@
+import { existsSync } from 'node:fs';
+
 /**
  * Shared config and path constants for pamenv.
  *
  * Significance: Centralizes local CLI state paths and defaults.
- * Core idea: Auth config lives under `~/.pam`, or `cwd/.pam` with `--local`.
+ * Core idea: Auth under `~/.pam` by default; any `cwd/.pam` isolates from
+ * home (`--local` / `--global` to force). Local never falls back to global.
  * Main function: Resolve home/local paths and normalize PAM origins.
  * Main purpose: Keep file layout consistent across commands.
  *
@@ -63,6 +66,49 @@ export class PamCliConfig {
    */
   public static getLocalConfigPath(cwd: string): string {
     return `${this.getLocalRoot(cwd)}/${this.CONFIG_FILE_NAME}`;
+  }
+
+  /**
+   * Whether the working directory has a `.pam` root (isolated from `~/.pam`).
+   *
+   * @param cwd - Working directory
+   */
+  public static hasLocalPamRoot(cwd: string): boolean {
+    return existsSync(this.getLocalRoot(cwd));
+  }
+
+  /**
+   * Whether the working directory already has an isolated CLI login file.
+   *
+   * @param cwd - Working directory
+   */
+  public static hasLocalConfig(cwd: string): boolean {
+    return existsSync(this.getLocalConfigPath(cwd));
+  }
+
+  /**
+   * Picks local vs home auth root.
+   *
+   * Priority: `--global` → home; `--local` → cwd; else auto if `{cwd}/.pam`
+   * exists (folder alone is enough — never bleed global creds into a local
+   * workspace).
+   *
+   * @param options.local - Explicit `--local`
+   * @param options.global - Explicit `--global`
+   * @param options.workingDir - Directory to probe for local `.pam`
+   */
+  public static resolvePreferLocal(options: {
+    readonly local?: boolean;
+    readonly global?: boolean;
+    readonly workingDir: string;
+  }): boolean {
+    if (options.global) {
+      return false;
+    }
+    if (options.local) {
+      return true;
+    }
+    return this.hasLocalPamRoot(options.workingDir);
   }
 
   /**

@@ -2,18 +2,17 @@ import { constants } from 'node:os';
 import crossSpawn from 'cross-spawn';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
-  PAMENV_CLI_NO_INJECT_PERMISSION,
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RUN_COMMAND_REQUIRED,
   PAMENV_CLI_RUN_INJECTED,
   PAMENV_CLI_RUN_SPAWN_FAILED
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
+import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
 import { PamCliApiError } from '../impls/PamCliApiError';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
-import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
-import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 import { PamCliRunWarningUtil } from '../impls/PamCliRunWarningUtil';
 
 export type PamCliRunOptionsType = {
@@ -41,7 +40,10 @@ const PAM_API_ENV_PROTECTED = 'api:pam_env_protected';
  * const code = await new RunCommand(api).run('my-app', ['pnpm', 'dev'], { envName: 'local' });
  */
 export class RunCommand {
-  constructor(protected readonly apiClient: PamCliApiClientInterface) {}
+  constructor(
+    protected readonly apiClient: PamCliApiClientInterface,
+    protected readonly authStore?: PamCliAuthStoreInterface
+  ) {}
 
   /**
    * @param projectRef - Project slug or id
@@ -58,6 +60,10 @@ export class RunCommand {
       throw new Error(
         PamCliI18n.t(PAMENV_CLI_RUN_COMMAND_REQUIRED, { slug: projectRef })
       );
+    }
+
+    if (this.authStore) {
+      await PamCliSecurityGate.assertIdentity(this.authStore);
     }
 
     const { variables, projectSlug, envName } = await this.resolveVariables(
@@ -101,9 +107,8 @@ export class RunCommand {
   }
 
   /**
-   * With `-e`: one request by project ref + env name. Any API error (older
-   * server, slug substring, missing permission) falls back to search + resolve
-   * for the usual CLI messages; a protected env fails the same either way.
+   * With `-e`: one request by project ref + env name. Auth denials (401/403)
+   * never fall back to search. Only 404 / older servers may fall back.
    */
   protected async resolveVariables(
     projectRef: string,
@@ -121,6 +126,11 @@ export class RunCommand {
           wantedEnv,
           options.only
         );
+        PamCliSecurityGate.assertResolvedProjectMatches(
+          projectRef,
+          result.projectSlug,
+          result.projectId
+        );
         return {
           variables: result.variables,
           projectSlug: result.projectSlug,
@@ -129,22 +139,21 @@ export class RunCommand {
       } catch (error) {
         if (
           !(error instanceof PamCliApiError) ||
-          error.id === PAM_API_ENV_PROTECTED
+          error.id === PAM_API_ENV_PROTECTED ||
+          PamCliSecurityGate.isAuthDenied(error) ||
+          error.httpStatus !== 404
         ) {
           throw error;
         }
+        // 404 only: older servers without resolve-by-name fall back to search.
       }
     }
 
-    const project = await PamCliProjectResolveUtil.resolve(
+    const project = await PamCliSecurityGate.resolveProjectExact(
       this.apiClient,
       projectRef
     );
-    if (!PamCliProjectAccessUtil.canInject(project)) {
-      throw new Error(
-        PamCliI18n.t(PAMENV_CLI_NO_INJECT_PERMISSION, { slug: project.slug })
-      );
-    }
+    PamCliSecurityGate.assertCanInject(project);
 
     const env = PamCliEnvironmentSelectUtil.select(
       project.environments,

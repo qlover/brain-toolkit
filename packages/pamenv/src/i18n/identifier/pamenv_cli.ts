@@ -8,9 +8,9 @@
  */
 
 /**
- * @description 使用配置: {{path}}
- * @localZh 使用配置: {{path}}
- * @localEn Using config: {{path}}
+ * @description 使用 {{kind}} 配置: {{path}} ({{email}})
+ * @localZh 使用 {{kind}} 配置: {{path}} ({{email}})
+ * @localEn Using {{kind}} config: {{path}} ({{email}})
  */
 export const PAMENV_CLI_USING_CONFIG = 'pamenv_cli:using_config';
 
@@ -654,6 +654,14 @@ export const PAMENV_CLI_PULL_UP_TO_DATE = 'pamenv_cli:pull_up_to_date';
 export const PAMENV_CLI_PULLED = 'pamenv_cli:pulled';
 
 /**
+ * @description 本地文件已绑定到其他项目
+ * @localZh 本地文件 {{path}} 已绑定到 {{boundSlug}}/{{boundEnv}}，不能直接用于 {{slug}}/{{env}}（默认都是 {{defaultFile}}）。请使用 `--file {{suggestedFile}}`，或换目录 / `-o`，或加 `--force` 覆盖绑定。
+ * @localEn Local file {{path}} is bound to {{boundSlug}}/{{boundEnv}} and cannot be used for {{slug}}/{{env}} (both default to {{defaultFile}}). Use `--file {{suggestedFile}}`, another directory / `-o`, or `--force` to overwrite the binding.
+ */
+export const PAMENV_CLI_ENV_FILE_BOUND_TO_OTHER_PROJECT =
+  'pamenv_cli:env_file_bound_to_other_project';
+
+/**
  * @description 导出需要项目管理员或所有者权限
  * @localZh 你没有项目 "{{slug}}" 的导出权限（需为项目管理员或所有者）。日常开发请改用 `pamenv run {{slug}} -e <env> -- <命令>`，变量只注入进程、不落盘。
  * @localEn You cannot export from project "{{slug}}" (project admin or owner required). For development use `pamenv run {{slug}} -e <env> -- <command>`, which injects variables into the process without writing files.
@@ -1107,6 +1115,14 @@ export const PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE =
   'pamenv_cli:url_and_domain_exclusive';
 
 /**
+ * @description 请只使用 --local 或 --global 其中一个。
+ * @localZh 请只使用 --local 或 --global 其中一个。
+ * @localEn Use only one of --local or --global, not both.
+ */
+export const PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE =
+  'pamenv_cli:local_and_global_exclusive';
+
+/**
  * @description 新增 ({{count}}):
  * @localZh 新增 ({{count}}):
  * @localEn Created ({{count}}):
@@ -1170,4 +1186,52 @@ export const PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE =
  * @localEn Not logged in. Run `pamenv login` first.
  */
 export const PAMENV_CLI_NOT_LOGGED_IN = 'pamenv_cli:not_logged_in';
+
+/**
+ * @description 项目权限列表缺失，需重新登录
+ * @localZh 项目 "{{slug}}" 的权限列表缺失。请重新执行 `pamenv login`，或升级 PAM 服务端后再试。
+ * @localEn Project "{{slug}}" is missing a permissions list. Run `pamenv login` again, or upgrade the PAM server.
+ */
+export const PAMENV_CLI_PERMISSIONS_MISSING =
+  'pamenv_cli:permissions_missing';
+
+/**
+ * @description export 返回了敏感明文，拒绝落盘
+ * @localZh 拒绝写入：导出结果中敏感键 "{{key}}"（{{slug}}/{{env}}）仍含明文。请检查服务端 redact，或将该变量标记为 sensitive。
+ * @localEn Refusing to write: export returned plaintext for sensitive key "{{key}}" ({{slug}}/{{env}}). Check server redaction, or mark the variable sensitive.
+ */
+export const PAMENV_CLI_EXPORT_SENSITIVE_LEAK =
+  'pamenv_cli:export_sensitive_leak';
+
+/**
+ * @description run 解析到的项目与请求不一致
+ * @localZh 拒绝注入：请求的是 "{{ref}}"，但服务端返回了 "{{slug}}"。请使用精确的项目 slug。
+ * @localEn Refusing to inject: requested "{{ref}}" but the server returned "{{slug}}". Use an exact project slug.
+ */
+export const PAMENV_CLI_RUN_PROJECT_MISMATCH =
+  'pamenv_cli:run_project_mismatch';
+
+/**
+ * @description 目标文件权限过宽，拒绝覆盖
+ * @localZh 拒绝写入 {{path}}：文件对 group/other 可读。请先 `chmod 600 {{path}}`，或换路径。
+ * @localEn Refusing to write {{path}}: the file is readable by group/others. Run `chmod 600 {{path}}`, or use another path.
+ */
+export const PAMENV_CLI_FILE_TOO_PERMISSIVE =
+  'pamenv_cli:file_too_permissive';
+
+/**
+ * @description --force 换绑需要交互确认
+ * @localZh 本地文件 {{path}} 已绑定到 {{boundSlug}}/{{boundEnv}}。使用 `--force` 覆盖绑定需要交互确认；当前非 TTY，请改用 `--file {{suggestedFile}}`，或在终端中运行。
+ * @localEn Local file {{path}} is bound to {{boundSlug}}/{{boundEnv}}. `--force` rebind requires interactive confirmation; this is not a TTY. Use `--file {{suggestedFile}}`, or run in a terminal.
+ */
+export const PAMENV_CLI_FORCE_REBIND_NEEDS_TTY =
+  'pamenv_cli:force_rebind_needs_tty';
+
+/**
+ * @description 确认覆盖环境文件绑定
+ * @localZh 确认将 {{path}} 的绑定从 {{boundSlug}}/{{boundEnv}} 改为 {{slug}}/{{env}}？
+ * @localEn Rebind {{path}} from {{boundSlug}}/{{boundEnv}} to {{slug}}/{{env}}?
+ */
+export const PAMENV_CLI_FORCE_REBIND_CONFIRM =
+  'pamenv_cli:force_rebind_confirm';
 

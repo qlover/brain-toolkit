@@ -165,7 +165,7 @@ describe('RunCommand variable resolution', () => {
     expect(listProjects).not.toHaveBeenCalled();
   });
 
-  it('falls back to search + resolve on API errors (e.g. older server)', async () => {
+  it('falls back to search + resolve on 404 (older server)', async () => {
     const api = {
       resolveEnvironmentByName: async () => {
         throw new PamCliApiError({ id: 'not_found', httpStatus: 404 });
@@ -180,6 +180,24 @@ describe('RunCommand variable resolution', () => {
     );
     expect(result.variables).toEqual(injected);
     expect(result.envName).toBe('local');
+  });
+
+  it('does not fall back on 403 auth denial', async () => {
+    const listProjects = vi.fn();
+    const api = {
+      listProjects,
+      resolveEnvironmentByName: async () => {
+        throw new PamCliApiError({
+          id: 'forbidden',
+          httpStatus: 403
+        });
+      }
+    };
+
+    await expect(
+      new TestRunCommand(api as never).resolve('app', 'local')
+    ).rejects.toBeInstanceOf(PamCliApiError);
+    expect(listProjects).not.toHaveBeenCalled();
   });
 
   it('does not retry a protected environment', async () => {
@@ -277,11 +295,11 @@ describe('PamCliProjectAccessUtil inject / export', () => {
     expect(PamCliProjectAccessUtil.canExport(member)).toBe(false);
   });
 
-  it('falls back to role flags for payloads without permissions', () => {
+  it('denies export/inject when permissions array is missing (fail-closed)', () => {
     const admin: PamCliProjectType = { ...base, my_role: 'admin' };
-    expect(PamCliProjectAccessUtil.canExport(admin)).toBe(true);
+    expect(PamCliProjectAccessUtil.canExport(admin)).toBe(false);
     const writer: PamCliProjectType = { ...base, can_edit: true };
-    expect(PamCliProjectAccessUtil.canInject(writer)).toBe(true);
+    expect(PamCliProjectAccessUtil.canInject(writer)).toBe(false);
     expect(PamCliProjectAccessUtil.canExport(writer)).toBe(false);
   });
 });
@@ -296,6 +314,7 @@ describe('RenderCommand sensitive values', () => {
     slug: 'app',
     name: 'App',
     my_role: 'admin',
+    permissions: ['pam_environments_export'],
     environments: [{ id: 'e1', name: 'local' }]
   };
 

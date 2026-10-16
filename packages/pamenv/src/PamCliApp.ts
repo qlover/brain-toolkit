@@ -18,6 +18,7 @@ import { PamCliAuthStore } from './impls/PamCliAuthStore';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
 import { PamCliI18n } from './i18n/PamCliI18n';
 import {
+  PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE,
   PAMENV_CLI_LOGOUT_DONE,
   PAMENV_CLI_LOGOUT_REVOKE_FAILED,
   PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE,
@@ -50,6 +51,7 @@ import {
   PAMENV_HELP_OPT_DOMAIN,
   PAMENV_HELP_OPT_ENV,
   PAMENV_HELP_OPT_FILE,
+  PAMENV_HELP_OPT_GLOBAL,
   PAMENV_HELP_OPT_LOCAL,
   PAMENV_HELP_OPT_ONLY,
   PAMENV_HELP_OPT_URL,
@@ -89,6 +91,7 @@ type PamCliGlobalOptionsType = {
   readonly url?: string;
   readonly domain?: string;
   readonly local?: boolean;
+  readonly global?: boolean;
 };
 
 /** commander section titles → help i18n keys. */
@@ -145,14 +148,17 @@ export class PamCliApp {
     program.hook('preAction', async (_thisCommand, actionCommand) => {
       const root = program.opts() as PamCliGlobalOptionsType;
       const leaf = actionCommand.opts() as PamCliGlobalOptionsType;
+      const local = Boolean(leaf.local || root.local);
+      const global = Boolean(leaf.global || root.global);
       this.applyRuntime({
         url: leaf.url || root.url,
         domain: leaf.domain || root.domain,
-        local: Boolean(leaf.local || root.local)
+        local,
+        global
       });
       await PamCliI18n.syncFromStore(this.authStore);
-      if (leaf.local || root.local) {
-        // stderr: keeps `render` stdout clean.
+      if (this.authStore.getActivePamRoot() === PamCliConfig.getLocalRoot(process.cwd())) {
+        // stderr: keeps `render` stdout clean; covers --local and auto-detect.
         console.error(
           PamCliI18n.t(PAMENV_CLI_USING_LOCAL_ROOT, {
             path: PamCliConfig.getLocalRoot(process.cwd())
@@ -229,16 +235,17 @@ export class PamCliApp {
           }
         ) => {
           this.bindOutDir(options.out);
-          await new PullCommand(this.apiClient, this.syncStore).run(
-            projectRef,
-            {
-              envName: options.env,
-              outDir: options.out,
-              file: options.file,
-              force: options.force,
-              showValues: options.showValues
-            }
-          );
+          await new PullCommand(
+            this.apiClient,
+            this.syncStore,
+            this.authStore
+          ).run(projectRef, {
+            envName: options.env,
+            outDir: options.out,
+            file: options.file,
+            force: options.force,
+            showValues: options.showValues
+          });
         }
       );
     this.addRuntimeOptions(pull);
@@ -331,16 +338,15 @@ export class PamCliApp {
             warn?: boolean;
           }
         ) => {
-          process.exitCode = await new RunCommand(this.apiClient).run(
-            projectRef,
-            command,
-            {
-              envName: options.env,
-              only: this.splitKeys(options.only),
-              keepEnv: this.splitKeys(options.keepEnv),
-              warn: options.warn
-            }
-          );
+          process.exitCode = await new RunCommand(
+            this.apiClient,
+            this.authStore
+          ).run(projectRef, command, {
+            envName: options.env,
+            only: this.splitKeys(options.only),
+            keepEnv: this.splitKeys(options.keepEnv),
+            warn: options.warn
+          });
         }
       );
     this.addRuntimeOptions(run);
@@ -360,12 +366,15 @@ export class PamCliApp {
           projectRef: string,
           options: { env?: string; format?: string; out?: string; only?: string }
         ) => {
-          await new RenderCommand(this.apiClient).run(projectRef, {
-            envName: options.env,
-            format: options.format,
-            out: options.out,
-            only: this.splitKeys(options.only)
-          });
+          await new RenderCommand(this.apiClient, this.authStore).run(
+            projectRef,
+            {
+              envName: options.env,
+              format: options.format,
+              out: options.out,
+              only: this.splitKeys(options.only)
+            }
+          );
         }
       );
     this.addRuntimeOptions(render);
@@ -400,9 +409,14 @@ export class PamCliApp {
    */
   protected async loadHelpLocale(argv: readonly string[]): Promise<void> {
     try {
+      const workingDir = process.cwd();
       const store = new PamCliAuthStore({
-        preferLocal: argv.includes('--local'),
-        workingDir: process.cwd()
+        preferLocal: PamCliConfig.resolvePreferLocal({
+          local: argv.includes('--local'),
+          global: argv.includes('--global') || argv.includes('-g'),
+          workingDir
+        }),
+        workingDir
       });
       PamCliI18n.setLocale(await store.getLocale());
     } catch {
@@ -536,17 +550,28 @@ export class PamCliApp {
     command
       .option('--url <url>', t(PAMENV_HELP_OPT_URL))
       .option('--domain <host>', t(PAMENV_HELP_OPT_DOMAIN))
-      .option('--local', t(PAMENV_HELP_OPT_LOCAL));
+      .option('--local', t(PAMENV_HELP_OPT_LOCAL))
+      .option('-g, --global', t(PAMENV_HELP_OPT_GLOBAL));
   }
+
+  protected runtimeGlobals: PamCliGlobalOptionsType = {};
 
   protected applyRuntime(globals: PamCliGlobalOptionsType): void {
     if (globals.url?.trim() && globals.domain?.trim()) {
       throw new Error(PamCliI18n.t(PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE));
     }
+    if (globals.local && globals.global) {
+      throw new Error(PamCliI18n.t(PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE));
+    }
 
+    this.runtimeGlobals = globals;
     const urlOverride = this.resolveHostOverride(globals.url, globals.domain);
-    const preferLocal = Boolean(globals.local);
     const workingDir = process.cwd();
+    const preferLocal = PamCliConfig.resolvePreferLocal({
+      local: globals.local,
+      global: globals.global,
+      workingDir
+    });
 
     this.authStore = new PamCliAuthStore({
       preferLocal,
@@ -560,13 +585,24 @@ export class PamCliApp {
     this.apiClient = new PamCliApiClient(this.authStore);
   }
 
+  /**
+   * Aligns sync/auth root with `-o`: if `outDir/.pam` exists, prefer that
+   * identity (unless `-g`); binding paths stay relative to `outDir`.
+   */
   protected bindOutDir(outDir?: string): void {
     if (!outDir?.trim()) {
       return;
     }
     const workingDir = resolve(outDir);
+    const preferLocal = PamCliConfig.resolvePreferLocal({
+      local: this.runtimeGlobals.local,
+      global: this.runtimeGlobals.global,
+      workingDir
+    });
     this.authStore.setWorkingDir(workingDir);
+    this.authStore.setPreferLocal(preferLocal);
     this.syncStore.setWorkingDir(workingDir);
+    this.syncStore.setPreferLocal(preferLocal);
   }
 
   protected resolveHostOverride(

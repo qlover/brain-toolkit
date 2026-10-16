@@ -5,26 +5,30 @@ const ENV_EXPORT_PERMISSION = 'pam_environments_export';
 const ENV_INJECT_PERMISSION = 'pam_environments_inject';
 const PROJECT_EDIT_PERMISSION = 'pam_project_edit';
 
+function permissionKeys(
+  project: PamCliProjectType
+): readonly string[] | undefined {
+  const keys = project.permissions ?? project.org_permissions;
+  return Array.isArray(keys) ? keys : undefined;
+}
+
 function hasPermission(
   project: PamCliProjectType,
   permissionKey: string
 ): boolean {
-  const keys = project.permissions ?? project.org_permissions;
-  return Array.isArray(keys) && keys.includes(permissionKey);
+  const keys = permissionKeys(project);
+  return keys !== undefined && keys.includes(permissionKey);
 }
 
 /**
  * Project write / manage access for pamenv (team membership flags from PAM).
+ *
+ * Fail-closed for export / inject / edit: when `permissions` is absent, deny
+ * and require a server that returns the array (re-login / upgrade).
  */
 export class PamCliProjectAccessUtil {
   public static canEdit(project: PamCliProjectType): boolean {
-    if (hasPermission(project, PROJECT_EDIT_PERMISSION)) {
-      return true;
-    }
-    if (project.can_edit === true) {
-      return true;
-    }
-    return project.is_owner === true;
+    return hasPermission(project, PROJECT_EDIT_PERMISSION);
   }
 
   /** Admin+ — delete environments / manage project structure. */
@@ -40,24 +44,12 @@ export class PamCliProjectAccessUtil {
 
   /** Export without sensitive values (`pull` / `render`): project admin / owner. */
   public static canExport(project: PamCliProjectType): boolean {
-    if (hasPermission(project, ENV_EXPORT_PERMISSION)) {
-      return true;
-    }
-    if (project.permissions || project.org_permissions) {
-      return false;
-    }
-    return this.canManage(project);
+    return hasPermission(project, ENV_EXPORT_PERMISSION);
   }
 
   /** Process injection (`run`): every team role. */
   public static canInject(project: PamCliProjectType): boolean {
-    if (hasPermission(project, ENV_INJECT_PERMISSION)) {
-      return true;
-    }
-    if (project.permissions || project.org_permissions) {
-      return false;
-    }
-    return this.canEdit(project);
+    return hasPermission(project, ENV_INJECT_PERMISSION);
   }
 
   public static roleLabel(project: PamCliProjectType): string {
