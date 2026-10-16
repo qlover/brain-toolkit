@@ -143,6 +143,22 @@ describe('PAMEnvVariableMergeUtil', () => {
     ]);
   });
 
+  it('treats the env placeholder like empty for existing sensitive keys', () => {
+    const placeholder = '__PAM_SENSITIVE_abc__';
+    const merged = PAMEnvVariableMergeUtil.mergeVariables(
+      [{ key: 'SECRET', value: 'stored', sensitive: true }],
+      [
+        { key: 'SECRET', value: placeholder },
+        { key: 'NEW', value: placeholder, sensitive: true }
+      ],
+      placeholder
+    );
+
+    expect(merged[0]?.value).toBe('stored');
+    // New keys have nothing to keep; the service rejects the leftover placeholder.
+    expect(merged[1]?.value).toBe(placeholder);
+  });
+
   it('preserves comments from incoming or previous', () => {
     const merged = PAMEnvVariableMergeUtil.mergeVariables(
       [

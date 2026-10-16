@@ -235,10 +235,14 @@ CREATE TABLE pam_environments (
     name TEXT NOT NULL,
     url TEXT,
     variables JSONB DEFAULT '{}'::jsonb,
+    is_protected BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (project_id, name)
 );
+
+COMMENT ON COLUMN pam_environments.is_protected IS
+  'Protected env: resolve (pamenv run) also requires pam_environments_export.';
 
 -- ============================================================
 -- 4. 索引
@@ -1472,6 +1476,7 @@ INSERT INTO public.pam_role_permissions (permission_key, type, method, path, des
   ('pam_environments_delete', 'api', 'post', '/api/pam/:projectId/environments/:envId/delete', 'Delete environment'),
   ('pam_environments_variables_write', 'api', 'post', '/api/pam/:projectId/environments/:envId/variables', 'Replace environment variables'),
   ('pam_environments_export', 'api', 'get', '/api/pam/:projectId/environments/:envId/export', 'Export environment dotenv'),
+  ('pam_environments_inject', 'api', 'post', '/api/pam/:projectId/environments/:envId/resolve', 'Resolve environment variables for process injection'),
   ('pam_project_delete', 'api', 'post', '/api/pam/delete/:id', 'Delete project'),
   ('pam_project_edit', 'api', 'post', '/api/pam/edit/:id', 'Update project'),
   ('pam_project_transfer', 'api', 'post', '/api/pam/transfer/:id', 'Transfer project ownership'),
@@ -1555,7 +1560,7 @@ JOIN (VALUES
   ('pam_environments_read'),
   ('pam_environments_create'),
   ('pam_environments_variables_write'),
-  ('pam_environments_export'),
+  ('pam_environments_inject'),
   ('pam_project_edit'),
   ('pam_project_preview_write'),
   ('pam_teams_read')
@@ -1571,6 +1576,7 @@ JOIN (VALUES
   ('pam_environments_delete'),
   ('pam_environments_variables_write'),
   ('pam_environments_export'),
+  ('pam_environments_inject'),
   ('pam_project_edit'),
   ('pam_project_preview_write'),
   ('pam_teams_read'),
@@ -1590,6 +1596,7 @@ JOIN (VALUES
   ('pam_environments_delete'),
   ('pam_environments_variables_write'),
   ('pam_environments_export'),
+  ('pam_environments_inject'),
   ('pam_project_delete'),
   ('pam_project_edit'),
   ('pam_project_transfer'),
@@ -2279,4 +2286,34 @@ COMMENT ON COLUMN public.pam_user_identities.identity_data IS
   'Provider-specific snapshot from the latest login, e.g. Brain: {"env": "production", "account": "a@x.com"}.';
 
 ALTER TABLE public.pam_user_identities ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- Environment variable access audit (resolve / export); never stores values
+-- ---------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS public.pam_env_access_logs;
+
+CREATE TABLE public.pam_env_access_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  project_id UUID NOT NULL REFERENCES pam_projects (id) ON DELETE CASCADE,
+  environment_id UUID REFERENCES pam_environments (id) ON DELETE SET NULL,
+  environment_name TEXT NOT NULL,
+  action TEXT NOT NULL CHECK (action IN ('resolve', 'export')),
+  key_count INT NOT NULL DEFAULT 0,
+  client TEXT,
+  ip TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE public.pam_env_access_logs IS
+  'Who read which environment and when (resolve = pamenv run, export = pull / render without sensitive values). Service-role only.';
+
+CREATE INDEX idx_pam_env_access_logs_env_created
+  ON public.pam_env_access_logs (environment_id, created_at DESC);
+
+CREATE INDEX idx_pam_env_access_logs_project_created
+  ON public.pam_env_access_logs (project_id, created_at DESC);
+
+ALTER TABLE public.pam_env_access_logs ENABLE ROW LEVEL SECURITY;
 

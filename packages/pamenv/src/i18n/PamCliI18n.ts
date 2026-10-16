@@ -67,9 +67,9 @@ function resolvePackageRoot(): string {
  * pamenv CLI UX i18n（`pamenv_cli:*`）+ PAM API 错误 i18n（`api:*`）。
  *
  * 存在意义：CLI 文案独立于 PAM，离线也能显示中英文提示。
- * 核心思路：本地 `dist/locales` 加载 CLI 文案；`api:*` 每次从
+ * 核心思路：本地 `dist/locales` 加载 CLI 文案；`api:*` 在需要翻译 API 错误时从
  * `{baseUrl}/api/locales/json?namespaces=api` 拉到内存，不写 config。
- * 主要能力：ensureLoaded / hydrateFromApi / syncFromStore / t / lookup。
+ * 主要能力：ensureLoaded / hydrateFromApi / hydrateFromApiOnce / syncFromStore / t / lookup。
  * 主要用途：login / init / push 等交互，以及 API 错误翻译。
  *
  * @example
@@ -198,7 +198,26 @@ export class PamCliI18n {
   }
 
   /**
-   * 读取 config 语言，加载本地 CLI 文案，并尽力拉取 PAM `api:*`。
+   * 仅在需要翻译 API 错误时调用：已加载则跳过，失败不抛错。
+   *
+   * @param authStore - 提供 baseUrl / locale
+   */
+  public static async hydrateFromApiOnce(
+    authStore: PamCliAuthStoreInterface
+  ): Promise<void> {
+    if (this.apiCatalogs[this.locale]) {
+      return;
+    }
+    try {
+      await this.hydrateFromApi(authStore);
+    } catch {
+      // PAM 不可达时 API 错误回退为服务端 message / key
+    }
+  }
+
+  /**
+   * 读取 config 语言并加载本地 CLI 文案。PAM `api:*` 不在这里拉取，
+   * 出错时由 {@link hydrateFromApiOnce} 按需拉取，正常命令少一次请求。
    *
    * @param authStore - 当前配置
    */
@@ -209,11 +228,6 @@ export class PamCliI18n {
     await this.ensureLoaded(this.locale);
     if (this.locale !== 'en') {
       await this.ensureLoaded('en');
-    }
-    try {
-      await this.hydrateFromApi(authStore);
-    } catch {
-      // PAM 不可达时 API 错误回退为服务端 message / key
     }
   }
 

@@ -1,6 +1,13 @@
 import type {
+  PAMEnvAccessContext,
+  PAMEnvAccessLog,
   PAMEnvCreate,
   PAMEnvReplaceVariables,
+  PAMEnvResolve,
+  PAMEnvResolveByName,
+  PAMEnvResolvedEnvironment,
+  PAMEnvResolvedVariable,
+  PAMEnvSettings,
   PAMEnvWriteable
 } from '@shared/schemas/PAMEnvironmentSchema';
 import type {
@@ -201,14 +208,74 @@ export interface PAMServiceInterface {
   ): Promise<PAMEnvWriteable>;
 
   /**
-   * Owner-only export of one environment as decrypted dotenv text.
+   * Decrypted variables for process injection (`pamenv run`).
+   * Requires `pam_environments_inject`; protected environments also require
+   * `pam_environments_export`. Each call is audited.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param params - Optional key filter
+   * @param context - Request origin for the audit log
+   */
+  resolveEnvironment(
+    projectId: string,
+    envId: string,
+    params: PAMEnvResolve,
+    context: PAMEnvAccessContext
+  ): Promise<{ variables: PAMEnvResolvedVariable[] }>;
+
+  /**
+   * Same as {@link resolveEnvironment}, addressed by project slug/id and
+   * environment name (one request for `pamenv run -e`).
+   *
+   * @param projectRef - Project slug or id
+   * @param params - Environment name and optional key filter
+   * @param context - Request origin for the audit log
+   */
+  resolveEnvironmentByName(
+    projectRef: string,
+    params: PAMEnvResolveByName,
+    context: PAMEnvAccessContext
+  ): Promise<PAMEnvResolvedEnvironment>;
+
+  /**
+   * Updates environment settings (protected flag). Requires export permission.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param params - New settings
+   * @returns Updated environment (redacted)
+   */
+  updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    params: PAMEnvSettings
+  ): Promise<PAMEnvWriteable>;
+
+  /**
+   * Recent resolve / export records for one environment (export permission).
    *
    * @param projectId - Project id
    * @param envId - Environment id
    */
-  exportEnvironment(
+  listEnvironmentAccessLogs(
     projectId: string,
     envId: string
+  ): Promise<PAMEnvAccessLog[]>;
+
+  /**
+   * Export of one environment as dotenv text with sensitive values replaced by
+   * the environment's placeholder (`pam_environments_export`, admin / owner).
+   * Each call is audited.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param context - Request origin for the audit log
+   */
+  exportEnvironment(
+    projectId: string,
+    envId: string,
+    context?: PAMEnvAccessContext
   ): Promise<{
     projectId: string;
     projectSlug: string;
@@ -216,7 +283,9 @@ export interface PAMServiceInterface {
     environmentName: string;
     content: string;
     sensitiveKeys: string[];
-    /** Decrypted variables including raw `comments` lines (preferred by CLI). */
+    /** Writing this value back for a sensitive key keeps the stored secret. */
+    sensitivePlaceholder: string;
+    /** Variables including raw `comments` lines (preferred by CLI). */
     variables: Array<{
       key: string;
       value: string;

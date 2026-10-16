@@ -28,8 +28,10 @@ import {
   PAMENV_CLI_PUSH_MERGED_REMOTE,
   PAMENV_CLI_PUSH_NO_BASELINE,
   PAMENV_CLI_PUSH_NO_BASELINE_CREATE,
+  PAMENV_CLI_PUSH_PLACEHOLDER_INVALID,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
+  PAMENV_CLI_PUSH_SENSITIVE_CLEARED,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
 } from '../i18n/identifier/pamenv_cli';
@@ -53,6 +55,7 @@ import { PamCliLocalProjectScanUtil } from '../impls/PamCliLocalProjectScanUtil'
 import { PamCliPrivateFsUtil } from '../impls/PamCliPrivateFsUtil';
 import { PamCliProjectAccessUtil } from '../impls/PamCliProjectAccessUtil';
 import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSensitivePlaceholderUtil } from '../impls/PamCliSensitivePlaceholderUtil';
 import { PamCliSensitivePromptUtil } from '../impls/PamCliSensitivePromptUtil';
 import {
   PamCliSyncConflictKind,
@@ -146,6 +149,7 @@ export class PushCommand {
     let remoteMap: Record<string, string> = {};
     let remoteSensitiveKeys = new Set<string>();
     let remoteVars: PamCliParsedVarType[] = [];
+    let placeholder: string | undefined;
 
     if (targetEnv.mode === 'existing') {
       const remoteExport = await this.apiClient.exportEnvironment(
@@ -153,6 +157,7 @@ export class PushCommand {
         targetEnv.id
       );
       remoteSensitiveKeys = new Set(remoteExport.sensitiveKeys || []);
+      placeholder = remoteExport.sensitivePlaceholder;
       remoteVars = PamCliDotenvUtil.parse(remoteExport.content).map((item) =>
         remoteSensitiveKeys.has(item.key) ? { ...item, sensitive: true } : item
       );
@@ -310,7 +315,17 @@ export class PushCommand {
       }
     }
 
-    this.assertSensitiveValuesPresent(localVars, targetEnv.name);
+    this.assertPlaceholdersValid(
+      localVars,
+      targetEnv.name,
+      remoteSensitiveKeys,
+      placeholder
+    );
+    this.assertSensitiveValuesPresent(
+      localVars,
+      targetEnv.name,
+      remoteSensitiveKeys
+    );
 
     const diff = PamCliEnvDiffUtil.diff(
       new Map(Object.entries(remoteMap)),
@@ -370,7 +385,8 @@ export class PushCommand {
       const isNew = !(item.key in remoteMap);
       const base: PamCliVariableInputType = {
         key: item.key,
-        value: item.value,
+        // Empty keeps the stored secret on every server version.
+        value: placeholder && item.value === placeholder ? '' : item.value,
         ...(comments !== undefined ? { comments } : {})
       };
       if (isNew && item.sensitive) {
@@ -391,6 +407,11 @@ export class PushCommand {
           name: created.name
         })
       );
+      if (localVars.some((item) => item.sensitive)) {
+        placeholder = (
+          await this.apiClient.exportEnvironment(project.id, created.id)
+        ).sensitivePlaceholder;
+      }
     } else {
       await this.apiClient.replaceEnvironmentVariables(
         project.id,
@@ -399,11 +420,34 @@ export class PushCommand {
       );
     }
 
+    const cleared = this.clearSensitiveValues(
+      localVars,
+      remoteSensitiveKeys,
+      placeholder
+    );
+    if (cleared.keys.length > 0) {
+      await PamCliPrivateFsUtil.writePrivateFile(
+        target,
+        PamCliDotenvUtil.serializeDocument({
+          variables: cleared.variables,
+          trailingComments: localDoc.trailingComments
+        })
+      );
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_CLEARED, {
+          path: target,
+          count: String(cleared.keys.length),
+          keys: cleared.keys.join(', ')
+        })
+      );
+    }
+
+    // Baseline mirrors export, which never carries sensitive values.
     await this.syncStore.saveBaseline(
       project.id,
       project.slug,
       targetEnv.name,
-      PamCliDotenvUtil.toValueMap(localVars)
+      PamCliDotenvUtil.toValueMap(cleared.variables)
     );
     console.log(
       PamCliI18n.t(PAMENV_CLI_PUSHED_DETAIL, {
@@ -542,17 +586,89 @@ export class PushCommand {
   }
 
   /**
-   * Fails fast when a sensitive key has an empty value (same rule as PAM API).
+   * Replaces sensitive values with the env placeholder (empty on older
+   * servers) after a successful push, so no plaintext stays in the local file
+   * or sync baseline.
+   *
+   * @param variables - Pushed local variables
+   * @param remoteSensitiveKeys - Keys already sensitive on PAM
+   * @param placeholder - Env placeholder from export
+   * @returns Variables with sensitive values replaced, plus the keys that changed
+   */
+  protected clearSensitiveValues(
+    variables: readonly PamCliParsedVarType[],
+    remoteSensitiveKeys: ReadonlySet<string>,
+    placeholder = ''
+  ): { variables: PamCliParsedVarType[]; keys: string[] } {
+    const keys: string[] = [];
+    const next = variables.map((item) => {
+      if (!item.sensitive && !remoteSensitiveKeys.has(item.key)) {
+        return item;
+      }
+      if (item.value !== placeholder && item.value !== '') {
+        keys.push(item.key);
+      }
+      return { ...item, value: placeholder, sensitive: true };
+    });
+    return { variables: next, keys };
+  }
+
+  /**
+   * A placeholder is only valid as this env's placeholder on a key that is
+   * already sensitive on PAM (it means "keep"); anything else would store the
+   * placeholder text as the secret.
+   *
+   * @param variables - Local variables
+   * @param envName - Environment name for the error message
+   * @param remoteSensitiveKeys - Keys already sensitive on PAM
+   * @param placeholder - Env placeholder from export (none for new envs)
+   */
+  protected assertPlaceholdersValid(
+    variables: readonly PamCliParsedVarType[],
+    envName: string,
+    remoteSensitiveKeys: ReadonlySet<string>,
+    placeholder: string | undefined
+  ): void {
+    const invalid = variables
+      .filter(
+        (item) =>
+          PamCliSensitivePlaceholderUtil.isPlaceholder(item.value) &&
+          !(item.value === placeholder && remoteSensitiveKeys.has(item.key))
+      )
+      .map((item) => item.key);
+
+    if (invalid.length === 0) {
+      return;
+    }
+
+    throw new Error(
+      PamCliI18n.t(PAMENV_CLI_PUSH_PLACEHOLDER_INVALID, {
+        env: envName,
+        keys: invalid.join(', ')
+      })
+    );
+  }
+
+  /**
+   * Fails fast when a new sensitive key has an empty value (same rule as PAM API).
+   * Empty values for keys already sensitive on PAM keep the stored secret.
    *
    * @param variables - Local variables after sensitive marking
    * @param envName - Environment name for the error message
+   * @param remoteSensitiveKeys - Keys already sensitive on PAM
    */
   protected assertSensitiveValuesPresent(
     variables: readonly PamCliParsedVarType[],
-    envName: string
+    envName: string,
+    remoteSensitiveKeys: ReadonlySet<string>
   ): void {
     const missing = variables
-      .filter((item) => item.sensitive && item.value.trim() === '')
+      .filter(
+        (item) =>
+          item.sensitive &&
+          item.value.trim() === '' &&
+          !remoteSensitiveKeys.has(item.key)
+      )
       .map((item) => item.key);
 
     if (missing.length === 0) {

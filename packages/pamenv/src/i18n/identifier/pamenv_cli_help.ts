@@ -271,11 +271,67 @@ export const PAMENV_HELP_FORK_OPT_NAME = 'pamenv_help:fork_opt_name';
 export const PAMENV_HELP_FORK_OPT_YES = 'pamenv_help:fork_opt_yes';
 
 /**
- * @description 把解密后的环境变量拉取到当前目录
- * @localZh 把解密后的环境变量拉取到当前目录
- * @localEn Pull decrypted environments into the current directory
+ * @description 把环境变量拉取到当前目录（敏感变量写占位符）
+ * @localZh 把环境变量写入当前目录的 .env，敏感变量的值写成本环境的占位符 __PAM_SENSITIVE_…__（需导出权限；日常开发推荐 run）
+ * @localEn Write variables to a .env file; sensitive values are written as this environment's placeholder __PAM_SENSITIVE_…__ (export permission; prefer `run` for development)
  */
 export const PAMENV_HELP_PULL = 'pamenv_help:pull';
+
+/**
+ * @description run 命令说明
+ * @localZh 把环境变量注入子进程并运行命令（不写文件）
+ * @localEn Run a command with environment variables injected (no files written)
+ */
+export const PAMENV_HELP_RUN = 'pamenv_help:run';
+
+/**
+ * @description run 命令参数
+ * @localZh 要运行的命令及其参数（放在 -- 之后）
+ * @localEn Command and arguments to run (after --)
+ */
+export const PAMENV_HELP_RUN_ARG_COMMAND = 'pamenv_help:run_arg_command';
+
+/**
+ * @description --only 选项
+ * @localZh 只使用这些键，逗号分隔
+ * @localEn Only use these keys (comma-separated)
+ */
+export const PAMENV_HELP_OPT_ONLY = 'pamenv_help:opt_only';
+
+/**
+ * @description --keep-env 选项
+ * @localZh 这些键如果当前 shell 已有值，就保留不覆盖（逗号分隔）
+ * @localEn Keep these keys from the current shell when already set (comma-separated)
+ */
+export const PAMENV_HELP_RUN_OPT_KEEP_ENV = 'pamenv_help:run_opt_keep_env';
+
+/**
+ * @description --no-warn 选项
+ * @localZh 关闭启动前的绕过检查提示
+ * @localEn Disable pre-run bypass warnings
+ */
+export const PAMENV_HELP_RUN_OPT_NO_WARN = 'pamenv_help:run_opt_no_warn';
+
+/**
+ * @description render 命令说明
+ * @localZh 把环境变量输出为 dotenv / json / yaml / toml，敏感变量输出占位符（需导出权限；真实敏感值请用 run 注入）
+ * @localEn Output variables as dotenv / json / yaml / toml; sensitive values are placeholders (export permission; use `run` for real sensitive values)
+ */
+export const PAMENV_HELP_RENDER = 'pamenv_help:render';
+
+/**
+ * @description render --format 选项
+ * @localZh 输出格式：dotenv | json | yaml | toml（默认 dotenv）
+ * @localEn Output format: dotenv | json | yaml | toml (default: dotenv)
+ */
+export const PAMENV_HELP_RENDER_OPT_FORMAT = 'pamenv_help:render_opt_format';
+
+/**
+ * @description render --out 选项
+ * @localZh 输出文件（权限 0600）；省略或 - 时输出到 stdout
+ * @localEn Output file (mode 0600); omit or use - for stdout
+ */
+export const PAMENV_HELP_RENDER_OPT_OUT = 'pamenv_help:render_opt_out';
 
 /**
  * @description 输出目录（默认：当前目录）

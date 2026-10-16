@@ -5,6 +5,8 @@ import type {
   PamCliForkProjectInputType,
   PamCliProjectType,
   PamCliRemoteEnvironmentType,
+  PamCliResolveByNameResultType,
+  PamCliResolveResultType,
   PamCliVariableInputType
 } from './PamCliTypes';
 
@@ -123,7 +125,8 @@ export interface PamCliApiClientInterface {
   ): Promise<PamCliRemoteEnvironmentType>;
 
   /**
-   * Exports one environment as decrypted dotenv text (owner only).
+   * Exports one environment as dotenv text with sensitive values replaced by
+   * the env placeholder (`pam_environments_export`: project admin / owner).
    *
    * @param projectId - Project uuid
    * @param envId - Environment uuid
@@ -132,6 +135,34 @@ export interface PamCliApiClientInterface {
     projectId: string,
     envId: string
   ): Promise<PamCliExportResultType>;
+
+  /**
+   * Decrypted key/values for process injection (`pam_environments_inject`).
+   * Values must stay in memory.
+   *
+   * @param projectId - Project uuid
+   * @param envId - Environment uuid
+   * @param keys - Optional key filter (`--only`)
+   */
+  resolveEnvironment(
+    projectId: string,
+    envId: string,
+    keys?: readonly string[]
+  ): Promise<PamCliResolveResultType>;
+
+  /**
+   * Same as {@link resolveEnvironment}, by project slug/id + environment name
+   * (one request, no project search).
+   *
+   * @param projectRef - Exact project slug or uuid
+   * @param envName - Environment name
+   * @param keys - Optional key filter (`--only`)
+   */
+  resolveEnvironmentByName(
+    projectRef: string,
+    envName: string,
+    keys?: readonly string[]
+  ): Promise<PamCliResolveByNameResultType>;
 
   /**
    * Replaces the full variable list for one environment (owner only).

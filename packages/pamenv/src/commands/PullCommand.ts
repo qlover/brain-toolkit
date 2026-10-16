@@ -32,9 +32,10 @@ import {
 import { PamCliSyncStore } from '../impls/PamCliSyncStore';
 
 /**
- * `pamenv pull` — download one decrypted environment into the working directory.
+ * `pamenv pull` — download one environment into the working directory.
  *
- * Significance: Sync PAM secrets into a local dotenv file for development.
+ * Significance: Sync PAM variables into a local dotenv file; PAM export never
+ * returns sensitive values, so those keys get the environment's placeholder.
  * Core idea: Prefer export `variables` (with comments); conflict on value diffs.
  * Main function: Export remote, merge comments, write cwd file, save baseline.
  * Main purpose: Direct cwd pull controlled by `-e`.
@@ -61,7 +62,7 @@ export class PullCommand {
       projectRef
     );
 
-    if (!PamCliProjectAccessUtil.canEdit(project)) {
+    if (!PamCliProjectAccessUtil.canExport(project)) {
       throw new Error(
         PamCliI18n.t(PAMENV_CLI_NOT_OWNER_EXPORT, { slug: project.slug })
       );

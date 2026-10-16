@@ -1,6 +1,11 @@
 # pamenv-cli
 
-`pamenv` 用来把 PAM 上的多环境变量同步到本地 `.env.<环境名>` 文件：`init` 从当前目录创建项目，之后用 `pull` / `push` 在本地与 PAM 之间来回同步。
+`pamenv` 用来使用和管理 PAM 上的多环境变量：
+
+- 日常开发用 `pamenv run` 把变量直接注入命令进程，本地不留明文文件。
+- 需要文件时用 `pamenv render` 输出 dotenv / JSON / YAML / TOML，或用 `pull` / `push` 与 `.env.<环境名>` 双向同步。
+- **敏感变量的值只会通过 `run` 注入进程**，网页、`render`、`pull` 都不会给出明文（见下文「标记敏感变量」）。
+- `init` 从当前目录创建项目。
 
 ## 安装
 
@@ -17,7 +22,8 @@ pamenv login                      # 浏览器授权登录
 cd your-project
 pamenv init                       # 交互创建项目（按当前目录给默认值）
 pamenv push <slug> -e local       # 上传 .env.local
-pamenv pull <slug> -e staging     # 拉取到 .env.staging
+pamenv run <slug> -e local -- pnpm dev   # 注入变量并启动，不写文件
+pamenv pull <slug> -e staging     # 拉取到 .env.staging（需导出权限）
 ```
 
 ## 命令一览
@@ -29,6 +35,8 @@ pamenv pull <slug> -e staging     # 拉取到 .env.staging
 | `pamenv projects` | 列出你可访问的项目 |
 | `pamenv init` | 交互创建项目 |
 | `pamenv fork <slug\|id>` | 把可读项目 fork 为自己的私有项目 |
+| `pamenv run <slug\|id> -- <命令>` | 把环境变量注入子进程并运行命令，不写文件 |
+| `pamenv render <slug\|id>` | 按 dotenv / json / yaml / toml 输出环境变量 |
 | `pamenv pull <slug\|id>` | 把远端环境变量写入本地文件 |
 | `pamenv push <slug\|id>` | 把本地文件的变量推送到远端 |
 | `pamenv remove <slug\|id> -e <env>` | 删除远端环境 |
@@ -113,6 +121,63 @@ pamenv fork <slug|id> -y          # 使用默认 slug / name 并跳过确认
 
 fork 后用 `pamenv push <new-slug> -e <env>` 填入密钥。
 
+## `pamenv run`
+
+把环境变量注入子进程后运行命令。变量只存在于 pamenv 和子进程的内存中，不写文件，也不会打印变量值。
+
+```bash
+pamenv run <slug|id> -e local -- pnpm dev
+pamenv run <slug|id> -e local --only DATABASE_URL,API_KEY -- node server.js
+pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `-e, --env <name>` | 环境名，默认第一个 |
+| `--only <keys>` | 只注入这些键，逗号分隔 |
+| `--keep-env <keys>` | 这些键如果当前 shell 已有值，就保留 shell 的值 |
+| `--no-warn` | 关闭启动前的检查提示 |
+
+- `--` 之后的内容原样交给子进程，包括子命令自己的参数。
+- 同名变量以 PAM 为准（`--keep-env` 例外）。
+- `Ctrl+C` 等信号会转发给子进程，pamenv 的退出码与子进程一致。
+- 可以写进 `package.json`，团队成员不需要 `.env` 文件：
+
+```json
+{
+  "scripts": {
+    "dev": "pamenv run my-app -e local -- next dev"
+  }
+}
+```
+
+启动前会检查以下情况并在 stderr 提示（不阻止运行）：
+
+| 检查 | 原因 |
+| --- | --- |
+| 当前目录的 `.env*` 文件里有同名键 | 若项目用 dotenv 加载且开启 `override`，文件里的值会覆盖注入值 |
+| 敏感变量以 `NEXT_PUBLIC_` / `VITE_` 开头 | 会在构建时写进前端代码包 |
+| `turbo.json` 是严格环境变量模式，且变量未声明 | Turbo 会过滤未声明的变量 |
+
+如果环境在网页端被设为「受保护」，只有项目 admin / owner 可以 `run`。
+
+## `pamenv render`
+
+把环境变量按指定格式输出，默认输出到 stdout，需要导出权限（项目 admin / owner）。敏感变量的值输出为本环境的占位符（`__PAM_SENSITIVE_…__`），并在 stderr 提示这些键名；真实值只能通过 `pamenv run` 注入进程。
+
+```bash
+pamenv render <slug|id> -e dev                              # dotenv 到 stdout
+pamenv render <slug|id> -e dev --format json
+pamenv render <slug|id> -e dev --format toml --out config.toml
+pamenv render <slug|id> -e dev --out .env.local --only API_URL,API_KEY
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `--format <format>` | `dotenv`（默认，保留注释）、`json`、`yaml`、`toml`；后三种为平铺键值，值统一用双引号转义 |
+| `--out <file>` | 写入文件（权限 0600）；省略或 `-` 时输出到 stdout |
+| `--only <keys>` | 只输出这些键 |
+
 ## `pamenv pull` / `pamenv push`
 
 ```bash
@@ -124,6 +189,9 @@ pamenv push <slug|id> -e staging -f            # 冲突键不询问，直接用�
 pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量的值
 ```
 
+- `pull` 需要导出权限（项目 admin / owner）；敏感变量写 `# pam:sensitive`，值是本环境固定的占位符 `__PAM_SENSITIVE_…__`（每个环境不同）。日常开发推荐用 `pamenv run`。
+- `push` 时，已在 PAM 上标记为敏感的键如果本地值是本环境的占位符（或为空），表示「保留 PAM 上的值」；填了新值则表示轮换。推送成功后，本地文件里的敏感值会换回占位符。
+- 不属于本环境的占位符（比如从别的环境的文件复制过来）会被拒绝，避免把占位符当成密钥保存。
 - 以上次 pull/push 的同步基线逐个键合并：只有一边改过的键自动采用那一边，两边都改了同一个键才算冲突。
 - `pull` 冲突时默认用远端值，`push` 冲突时默认用本地值；会列出冲突键并让你确认（可选另一边或取消），之后提示你手动编辑本地文件再 `push`。
 - `pull` 会保留本地还没推送的修改并提示；`push` 会把远端单独改过的键合并进本地文件，不会覆盖掉。
@@ -151,6 +219,8 @@ pamenv push <slug|id> -e staging --show-values # 预览时显示非敏感变量�
 API_TOKEN=xxxx # production only
 NORMAL=1
 ```
+
+敏感变量的值在 PAM 中加密保存，只有 `run` 会在服务端解密并注入子进程，CLI 不会打印。网页、`render`、`pull` 和 `fork` 都拿不到明文，owner 也一样。明文唯一可能出现的地方，是被运行的程序自己打印出来。
 
 ## `pamenv remove`
 
@@ -188,9 +258,12 @@ pamenv locales pull                         # 刷新服务端错误提示文案
 
 权限由项目上的团队角色决定，团队在 PAM 网页端管理。
 
-| 角色 | pull / push | remove 环境 |
-| --- | --- | --- |
-| owner / admin | ✓ | ✓ |
-| member | ✓ | — |
+| 角色 | run | push | pull / render（不含敏感值） | remove 环境 |
+| --- | --- | --- | --- | --- |
+| owner / admin | ✓ | ✓ | ✓ | ✓ |
+| member | ✓（受保护环境除外） | ✓ | — | — |
+
+- 每次 `run`、`pull`、`render` 读取变量都会记录访问日志（谁、哪个环境、多少个键，不记录值），admin / owner 可在网页端环境页查看。
+- 成员被移出团队后，CLI 凭证立即无法再读取该项目的变量。
 
 项目转让和删除只能由项目拥有者在网页端「General」中操作，CLI 不提供这两个命令。

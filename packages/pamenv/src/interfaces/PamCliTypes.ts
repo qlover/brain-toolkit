@@ -57,7 +57,8 @@ export type PamCliEnvironmentSummaryType = {
 };
 
 /**
- * Decrypted export payload from PAM.
+ * Export payload from PAM; sensitive values are the env placeholder (empty on
+ * older servers).
  */
 export type PamCliExportResultType = {
   readonly projectId: string;
@@ -66,15 +67,17 @@ export type PamCliExportResultType = {
   readonly environmentName: string;
   readonly content: string;
   readonly sensitiveKeys?: readonly string[];
+  /** Pushing this value back for a sensitive key keeps the stored secret. */
+  readonly sensitivePlaceholder?: string;
   /**
-   * Preferred source for pull: decrypted variables with raw comment lines.
+   * Preferred source for pull: variables with raw comment lines.
    * Older servers may omit this; CLI falls back to parsing `content`.
    */
   readonly variables?: readonly PamCliExportVariableType[];
 };
 
 /**
- * One decrypted variable from export (may include comments).
+ * One variable from export (may include comments).
  */
 export type PamCliExportVariableType = {
   readonly key: string;
@@ -82,6 +85,35 @@ export type PamCliExportVariableType = {
   readonly sensitive?: boolean;
   readonly comments?: readonly string[];
 };
+
+/**
+ * One decrypted variable used by `run` and `render` output adapters.
+ */
+export type PamCliResolvedVarType = {
+  readonly key: string;
+  readonly value: string;
+  readonly sensitive: boolean;
+  /** Raw dotenv comment lines; only dotenv output keeps them. */
+  readonly comments?: readonly string[];
+};
+
+/**
+ * `POST .../resolve` response (no comments).
+ */
+export type PamCliResolveResultType = {
+  readonly variables: readonly PamCliResolvedVarType[];
+};
+
+/** Resolve by project ref + env name: also echoes what was matched. */
+export type PamCliResolveByNameResultType = PamCliResolveResultType & {
+  readonly projectId: string;
+  readonly projectSlug: string;
+  readonly environmentId: string;
+  readonly environmentName: string;
+};
+
+/** `pamenv render --format` values. */
+export type PamCliOutputFormatType = 'dotenv' | 'json' | 'yaml' | 'toml';
 
 /**
  * Variable payload for environment replace / push.

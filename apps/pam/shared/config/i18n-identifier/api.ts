@@ -235,6 +235,13 @@ export const API_PAM_SITE_URL_INVALID = 'api:pam_site_url_invalid';
 export const API_PAM_ENV_NOT_FOUND = 'api:pam_env_not_found';
 
 /**
+ * @description 受保护环境只允许有导出权限的成员（管理员 / 所有者）使用
+ * @localZh 该环境已设为受保护，只有项目管理员或所有者可以使用
+ * @localEn This environment is protected; only project admins or owners can use it
+ */
+export const API_PAM_ENV_PROTECTED = 'api:pam_env_protected';
+
+/**
  * @description 项目 slug 不能重复
  * @localZh 项目 slug 已存在
  * @localEn PAM slug already exists
@@ -269,6 +276,14 @@ export const API_PAM_VARIABLE_KEY_DUPLICATE = 'api:pam_variable_key_duplicate';
  */
 export const API_PAM_VARIABLE_VALUE_REQUIRED =
   'api:pam_variable_value_required';
+
+/**
+ * @description A value is a sensitive placeholder that does not belong to this environment
+ * @localZh 变量值是敏感占位符，但不属于当前环境（可能从其它环境复制而来），请填写真实值
+ * @localEn Value is a sensitive placeholder from another environment; enter the real value
+ */
+export const API_PAM_VARIABLE_PLACEHOLDER_INVALID =
+  'api:pam_variable_placeholder_invalid';
 
 /**
  * @description Password hashing / encrypt failed during register or reset
