@@ -60,6 +60,14 @@ function visibilityFromFilters(filters: unknown): string {
   return '';
 }
 
+function booleanFromFilters(filters: unknown, key: 'mine' | 'writable'): boolean {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return false;
+  }
+  const value = (filters as Record<string, unknown>)[key];
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
 function visibilitySummaryLabel(value: string, tt: PAMI18nInterface): string {
   if (value === 'public') {
     return tt.public;
@@ -128,6 +136,8 @@ export function PAMRoot({
   const listStatus = useStore(pamFacadeStore, (state) => state.status);
   const categoryValue = categoryFromFilters(searchFilters);
   const visibilityValue = visibilityFromFilters(searchFilters);
+  const mineActive = booleanFromFilters(searchFilters, 'mine');
+  const writableActive = booleanFromFilters(searchFilters, 'writable');
   const sortValue = useStore(pamFacadeStore, (state) =>
     resolvePamListSortBy(state.searchParams.sort)
   );
@@ -157,7 +167,9 @@ export function PAMRoot({
   const hasActiveFilter =
     searchKeyword.length > 0 ||
     categoryValue.length > 0 ||
-    visibilityValue.length > 0;
+    visibilityValue.length > 0 ||
+    mineActive ||
+    writableActive;
   const searchingWithRows = listLoading && projects.length > 0;
 
   // Wait for session restore so we do not pull as guest then again as user.
@@ -189,6 +201,13 @@ export function PAMRoot({
     }
     void pamFacade.searchProjectWithVisibility('');
   }, [authLoading, user?.id, visibilityValue, pamFacade]);
+
+  useStrictEffect(() => {
+    if (authLoading || user?.id || (!mineActive && !writableActive)) {
+      return;
+    }
+    void pamFacade.searchProjectWithAccess({ mine: false, writable: false });
+  }, [authLoading, user?.id, mineActive, writableActive, pamFacade]);
 
   useStrictEffect(() => {
     if (authLoading || !user?.id || !canCreateProject) {
@@ -241,6 +260,12 @@ export function PAMRoot({
           .replace('%count%', String(resultTotal))
       );
     }
+    if (mineActive) {
+      parts.push(tt.filterMine);
+    }
+    if (writableActive) {
+      parts.push(tt.filterWritable);
+    }
     if (categoryValue) {
       parts.push(
         tt.categoryFilterSummary
@@ -251,9 +276,13 @@ export function PAMRoot({
     if (parts.length === 0) {
       return '';
     }
-    const activeCount = [searchKeyword, visibilityValue, categoryValue].filter(
-      Boolean
-    ).length;
+    const activeCount = [
+      searchKeyword,
+      visibilityValue,
+      categoryValue,
+      mineActive ? 'mine' : '',
+      writableActive ? 'writable' : ''
+    ].filter(Boolean).length;
     if (activeCount > 1) {
       const keywordPart = searchKeyword
         ? tt.searchResultSummary
@@ -264,7 +293,10 @@ export function PAMRoot({
         ? visibilitySummaryLabel(visibilityValue, tt)
         : '';
       const categoryPart = categoryValue || '';
-      return [keywordPart, visibilityPart, categoryPart]
+      const accessPart = [mineActive ? tt.filterMine : '', writableActive ? tt.filterWritable : '']
+        .filter(Boolean)
+        .join(' · ');
+      return [keywordPart, visibilityPart, accessPart, categoryPart]
         .filter(Boolean)
         .join(' · ');
     }
@@ -289,6 +321,12 @@ export function PAMRoot({
         visibilityValue={visibilityValue}
         onVisibilityChange={(value) => {
           void pamFacade.searchProjectWithVisibility(value);
+        }}
+        mineActive={mineActive}
+        writableActive={writableActive}
+        showAccessFilters={isAuthenticated}
+        onAccessChange={(next) => {
+          void pamFacade.searchProjectWithAccess(next);
         }}
         sortValue={sortValue}
         sortOrder={sortOrder}

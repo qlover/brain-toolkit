@@ -114,6 +114,15 @@ export interface PAMFacadeInterface<T extends SearchPAMProject> {
   ): Promise<ResourceSearchResult<T>>;
 
   /**
+   * Server-side access filters (`filters.mine` / `filters.writable`), same as CLI.
+   * Pass `true` to enable, `false`/`undefined` to clear that flag.
+   */
+  searchProjectWithAccess(options: {
+    readonly mine?: boolean;
+    readonly writable?: boolean;
+  }): Promise<ResourceSearchResult<T>>;
+
+  /**
    * Re-sort list by created_at or updated_at.
    *
    * @param sortBy - Date field (after is_public)
