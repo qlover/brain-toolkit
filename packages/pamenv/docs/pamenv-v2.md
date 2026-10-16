@@ -2,7 +2,7 @@
 
 ## 存储
 
-变量按行存在 `pam_env_variables`（`environment_id` + `key` 唯一），不再以 `pam_environments.variables` JSONB 为读写源。旧 JSONB 列暂保留不删除，便于回滚与核对；应用只读写新表，API 仍组装成 `variables[]`。
+变量按行存在 `pam_env_variables`（`environment_id` + `key` 唯一）。`pam_environments.variables` JSONB 列暂保留不 DROP，但已不再读写；应用与 RPC 一律只走新表，API 仍组装成 `variables[]`。
 
 ## 目标
 

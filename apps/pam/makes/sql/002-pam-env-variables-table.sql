@@ -27,7 +27,7 @@ COMMENT ON TABLE public.pam_env_variables IS
   'Per-key environment variables (replaces pam_environments.variables JSONB as source of truth).';
 
 COMMENT ON COLUMN public.pam_environments.variables IS
-  'Legacy JSONB blob. Prefer pam_env_variables. App stops writing after 002 migration.';
+  'Unused legacy JSONB. Source of truth is pam_env_variables; column kept only to avoid DROP.';
 
 CREATE INDEX IF NOT EXISTS idx_pam_env_variables_environment_id
   ON public.pam_env_variables (environment_id);
@@ -222,19 +222,17 @@ BEGIN
     LOOP
       v_env_id := COALESCE(v_env_record.id, gen_random_uuid());
 
-      INSERT INTO pam_environments (id, project_id, name, url, variables)
+      -- Legacy pam_environments.variables is unused; only name/url are updated here.
+      INSERT INTO pam_environments (id, project_id, name, url)
       VALUES (
         v_env_id,
         p_project_id,
         v_env_record.name,
-        v_env_record.url,
-        COALESCE(v_env_record.variables, '[]'::jsonb)
+        v_env_record.url
       )
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         url = EXCLUDED.url,
-        -- Keep legacy column in sync for rollback visibility; app reads pam_env_variables.
-        variables = EXCLUDED.variables,
         updated_at = now();
 
       IF v_env_record.variables IS NOT NULL THEN

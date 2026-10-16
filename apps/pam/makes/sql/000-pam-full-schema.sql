@@ -1,6 +1,6 @@
 -- =============================================================================
 -- PAM full schema (single script, safe to re-run in DEV)
--- FRESH INSTALLS ONLY: drops and recreates tables. Existing DB 鈫?001-pam-upgrade.sql
+-- FRESH INSTALLS ONLY: drops and recreates tables. Existing DB 閳?001-pam-upgrade.sql
 -- Prefix: pam_ (incl. pam_oauth_* / pam_request_logs / pam_cli_tokens)
 -- Request audit table: pam_request_logs (NOT request_logs / fe_request_logs)
 -- Keep permission_key seeds in sync with apps/pam/shared/auth/permissionKeys.ts
@@ -66,7 +66,7 @@ create policy "pam_request_logs_insert_self_or_anon" on public.pam_request_logs
 -- SOURCE: 002-oauth-clients.sql
 -- #############################################################################
 
--- Next OAuth Wrapper middleware schema (full recreate 鈥?safe to re-run in dev)
+-- Next OAuth Wrapper middleware schema (full recreate 閳?safe to re-run in dev)
 -- Drops existing pam_oauth_* (and legacy n_oauth_wrapper__*) then creates fresh objects.
 -- OAuth tables below optionally enable RLS (see end of file). Without RLS, server can use SUPABASE_ANON_KEY; with RLS and no anon policies, use service role or add policies.
 
@@ -86,7 +86,7 @@ drop table if exists public.n_oauth_wrapper__user_credentials cascade;
 drop table if exists public.n_oauth_wrapper__clients cascade;
 
 -- ---------------------------------------------------------------------------
--- pam_oauth_clients 鈥?registered third-party OAuth 2.0 applications
+-- pam_oauth_clients 閳?registered third-party OAuth 2.0 applications
 -- ---------------------------------------------------------------------------
 
 create table public.pam_oauth_clients (
@@ -112,7 +112,7 @@ comment on table public.pam_oauth_clients is 'Registered OAuth 2.0 clients for N
 alter table public.pam_oauth_clients enable row level security;
 
 -- ---------------------------------------------------------------------------
--- pam_oauth_authorization_codes 鈥?one-time authorization codes (5 min TTL)
+-- pam_oauth_authorization_codes 閳?one-time authorization codes (5 min TTL)
 -- ---------------------------------------------------------------------------
 
 create table public.pam_oauth_authorization_codes (
@@ -138,7 +138,7 @@ create index idx_pam_oauth_auth_codes_expires on public.pam_oauth_authorization_
 alter table public.pam_oauth_authorization_codes enable row level security;
 
 -- ---------------------------------------------------------------------------
--- pam_oauth_refresh_tokens 鈥?middleware refresh_token 鈫?client/user mapping
+-- pam_oauth_refresh_tokens 閳?middleware refresh_token 閳?client/user mapping
 -- ---------------------------------------------------------------------------
 
 create table public.pam_oauth_refresh_tokens (
@@ -158,7 +158,7 @@ comment on column public.pam_oauth_refresh_tokens.refresh_token is 'Hashed middl
 alter table public.pam_oauth_refresh_tokens enable row level security;
 
 -- ---------------------------------------------------------------------------
--- pam_oauth_user_credentials 鈥?long-lived upstream provider tokens per user_id
+-- pam_oauth_user_credentials 閳?long-lived upstream provider tokens per user_id
 -- ---------------------------------------------------------------------------
 
 create table public.pam_oauth_user_credentials (
@@ -173,7 +173,7 @@ comment on column public.pam_oauth_user_credentials.provider_refresh_token is 'E
 alter table public.pam_oauth_user_credentials enable row level security;
 
 -- ---------------------------------------------------------------------------
--- pam_oauth_consent_grants 鈥?remembered "trust this app" per user + client + device
+-- pam_oauth_consent_grants 閳?remembered "trust this app" per user + client + device
 -- ---------------------------------------------------------------------------
 
 create table public.pam_oauth_consent_grants (
@@ -202,13 +202,13 @@ alter table public.pam_oauth_consent_grants enable row level security;
 -- #############################################################################
 
 -- ============================================================
--- 1. 鍒犻櫎鏃ц〃锛堣皑鎱庯紒锛?-- ============================================================
+-- 1. 閸掔娀娅庨弮褑銆冮敍鍫ｇ殤閹卞函绱掗敍?-- ============================================================
 DROP TABLE IF EXISTS pam_env_variables CASCADE;
 DROP TABLE IF EXISTS pam_environments CASCADE;
 DROP TABLE IF EXISTS pam_projects CASCADE;
 
 -- ============================================================
--- 2. 鍒涘缓椤圭洰琛?-- ============================================================
+-- 2. 閸掓稑缂撴い鍦窗鐞?-- ============================================================
 CREATE TABLE pam_projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -226,7 +226,7 @@ CREATE TABLE pam_projects (
 );
 
 -- ============================================================
--- 3. 鍒涘缓鐜琛?-- ============================================================
+-- 3. 閸掓稑缂撻悳顖氼暔鐞?-- ============================================================
 CREATE TABLE pam_environments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES pam_projects(id) ON DELETE CASCADE,
@@ -263,8 +263,7 @@ COMMENT ON TABLE pam_env_variables IS
   'Per-key environment variables (replaces pam_environments.variables JSONB as source of truth).';
 
 -- ============================================================
--- 4. 绱㈠紩
--- ============================================================
+-- 4. 缁便垹绱?-- ============================================================
 CREATE INDEX idx_pam_projects_owner_id ON pam_projects(owner_id);
 CREATE INDEX idx_pam_projects_visibility ON pam_projects(is_public);
 CREATE INDEX idx_pam_projects_category ON pam_projects(category);
@@ -277,7 +276,7 @@ CREATE INDEX idx_pam_environments_project_id ON pam_environments(project_id);
 CREATE INDEX idx_pam_env_variables_environment_id ON pam_env_variables(environment_id);
 
 -- ============================================================
--- 5. 鑷姩鏇存柊鏃堕棿鎴冲嚱鏁?-- ============================================================
+-- 5. 閼奉亜濮╅弴瀛樻煀閺冨爼妫块幋鍐插毐閺?-- ============================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -299,13 +298,13 @@ BEFORE UPDATE ON pam_env_variables
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
--- 6. 鍚敤 RLS
+-- 6. 閸氼垳鏁?RLS
 -- ============================================================
 ALTER TABLE pam_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pam_environments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pam_env_variables ENABLE ROW LEVEL SECURITY;
 
--- 涓轰簡娴嬭瘯鏂逛究锛屽厛鍒涘缓瀹芥澗鐨?RLS锛堝彲鍚庣画璋冩暣锛?CREATE POLICY "Select pam_projects" ON pam_projects
+-- 娑撹桨绨″ù瀣槸閺傞€涚┒閿涘苯鍘涢崚娑樼紦鐎硅姤婢楅惃?RLS閿涘牆褰查崥搴ｇ敾鐠嬪啯鏆ｉ敍?CREATE POLICY "Select pam_projects" ON pam_projects
 FOR SELECT
 USING (is_public = 1 OR owner_id = auth.uid());
 
@@ -322,7 +321,7 @@ CREATE POLICY "Delete pam_projects" ON pam_projects
 FOR DELETE
 USING (auth.uid() = owner_id);
 
--- 鐜绛栫暐
+-- 閻滎垰顣ㄧ粵鏍殣
 CREATE POLICY "Select pam_environments" ON pam_environments
 FOR SELECT
 USING (
@@ -487,19 +486,17 @@ BEGIN
     LOOP
       v_env_id := COALESCE(v_env_record.id, gen_random_uuid());
 
-      INSERT INTO pam_environments (id, project_id, name, url, variables)
+      -- Legacy pam_environments.variables is unused; only name/url are updated here.
+      INSERT INTO pam_environments (id, project_id, name, url)
       VALUES (
         v_env_id,
         p_project_id,
         v_env_record.name,
-        v_env_record.url,
-        COALESCE(v_env_record.variables, '[]'::jsonb)
+        v_env_record.url
       )
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         url = EXCLUDED.url,
-        -- Keep legacy column in sync for rollback visibility; app reads pam_env_variables.
-        variables = EXCLUDED.variables,
         updated_at = now();
 
       IF v_env_record.variables IS NOT NULL THEN
@@ -716,19 +713,17 @@ BEGIN
     LOOP
       v_env_id := COALESCE(v_env_record.id, gen_random_uuid());
 
-      INSERT INTO pam_environments (id, project_id, name, url, variables)
+      -- Legacy pam_environments.variables is unused; only name/url are updated here.
+      INSERT INTO pam_environments (id, project_id, name, url)
       VALUES (
         v_env_id,
         p_project_id,
         v_env_record.name,
-        v_env_record.url,
-        COALESCE(v_env_record.variables, '[]'::jsonb)
+        v_env_record.url
       )
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         url = EXCLUDED.url,
-        -- Keep legacy column in sync for rollback visibility; app reads pam_env_variables.
-        variables = EXCLUDED.variables,
         updated_at = now();
 
       IF v_env_record.variables IS NOT NULL THEN
@@ -887,7 +882,7 @@ CREATE POLICY "Public read pam-previews"
 -- #############################################################################
 
 -- Faster transfer-picker search query plan (function only).
--- Do NOT create indexes on auth.users here 鈥?that requires table ownership
+-- Do NOT create indexes on auth.users here 閳?that requires table ownership
 -- (ERROR 42501: must be owner of table users). Safe to re-run.
 
 -- Prefer prefix match then fall back to contains (same GRANT as 009).
@@ -998,103 +993,103 @@ insert into public.pam_site_settings (key, value, description, is_sensitive) val
   (
     'auth.phone_login_enabled',
     'true'::jsonb,
-    '鏄惁鍦ㄧ櫥褰曢〉灞曠ず銆屾墜鏈哄彿銆峊ab銆傚紑鍙?鍐呮祴鍙敤 Supabase Test phone + 鍥哄畾 OTP锛圓uthentication 鈫?Phone 鈫?Test phone numbers锛夛紝鏃犻渶鐪熷疄鐭俊锛涙寮忕幆澧冨啀鎺?SMS Provider銆?,
+    '閺勵垰鎯侀崷銊ф瑜版洟銆夌仦鏇犮仛閵嗗本澧滈張鍝勫娇閵嗗硦ab閵嗗倸绱戦崣?閸愬懏绁撮崣顖滄暏 Supabase Test phone + 閸ュ搫鐣?OTP閿涘湏uthentication 閳?Phone 閳?Test phone numbers閿涘绱濋弮鐘绘付閻喎鐤勯惌顓濅繆閿涙稒顒滃蹇曞箚婢у啫鍟€閹?SMS Provider閵?,
     false
   ),
   (
     'auth.google_oauth_enabled',
     'false'::jsonb,
-    '鏄惁鍦ㄧ櫥褰曢〉灞曠ず Google OAuth 鎸夐挳銆傞渶鍦?Supabase Auth 涓惎鐢?Google 鎻愪緵鍟嗐€?,
+    '閺勵垰鎯侀崷銊ф瑜版洟銆夌仦鏇犮仛 Google OAuth 閹稿鎸抽妴鍌炴付閸?Supabase Auth 娑擃厼鎯庨悽?Google 閹绘劒绶甸崯鍡愨偓?,
     false
   ),
   (
     'auth.brain_pkce_enabled',
     'false'::jsonb,
-    '鏄惁鍚敤 Brain OAuth 鎺堟潈鐮?+ PKCE 娴佺▼锛圥AM 鐩磋繛 brain-oauth锛夈€傞€傚悎鏈湴鎴栧凡閰嶇疆 CORS 鐨勮法鍩熷満鏅€?,
+    '閺勵垰鎯侀崥顖滄暏 Brain OAuth 閹哄牊娼堥惍?+ PKCE 濞翠胶鈻奸敍鍦M 閻╃绻?brain-oauth閿涘鈧倿鈧倸鎮庨張顒€婀撮幋鏍у嚒闁板秶鐤?CORS 閻ㄥ嫯娉曢崺鐔锋簚閺咁垬鈧?,
     false
   ),
   (
     'auth.brain_supabase_enabled',
     'false'::jsonb,
-    '鏄惁鍚敤 Supabase custom:brain 鑱斿悎鐧诲綍銆侭rain AS 椤昏兘琚?Supabase 鍏綉璁块棶锛屾湰鍦?localhost 閫氬父涓嶅彲鐢ㄣ€?,
+    '閺勵垰鎯侀崥顖滄暏 Supabase custom:brain 閼辨柨鎮庨惂璇茬秿閵嗕经rain AS 妞ゆ槒鍏樼悮?Supabase 閸忣剛缍夌拋鍧楁６閿涘本婀伴崷?localhost 闁艾鐖舵稉宥呭讲閻劊鈧?,
     false
   ),
   (
     'auth.cli_token_expires_in',
     '"30d"'::jsonb,
-    'pamenv CLI Bearer JWT 鐨勬湁鏁堟湡锛坢s 鏍煎紡锛屽 30d銆?d锛夈€傚埌鏈熸垨 pam logout 鍚庨渶閲嶆柊鐧诲綍銆?,
+    'pamenv CLI Bearer JWT 閻ㄥ嫭婀侀弫鍫熸埂閿涘潰s 閺嶇厧绱￠敍灞筋洤 30d閵?d閿涘鈧倸鍩岄張鐔稿灗 pam logout 閸氬酣娓堕柌宥嗘煀閻ц缍嶉妴?,
     false
   ),
   (
     'brain_oauth.site_url',
     '""'::jsonb,
-    'brain-oauth 鏈嶅姟鏍?URL锛屼笉鍚湯灏炬枩鏉犮€傜ず渚嬶細http://localhost:3122',
+    'brain-oauth 閺堝秴濮熼弽?URL閿涘奔绗夐崥顐ｆ汞鐏忕偓鏋╅弶鐘偓鍌溿仛娓氬绱癶ttp://localhost:3122',
     false
   ),
   (
     'brain_oauth.client_id',
     '""'::jsonb,
-    '鍦?Brain OAuth 寮€鍙戣€呮帶鍒跺彴娉ㄥ唽鐨?client_id銆?,
+    '閸?Brain OAuth 瀵偓閸欐垼鈧懏甯堕崚璺哄酱濞夈劌鍞介惃?client_id閵?,
     false
   ),
   (
     'brain_oauth.client_secret',
     '""'::jsonb,
-    '鏈哄瘑瀹㈡埛绔瘑閽ワ紱绾?PKCE 鍏叡瀹㈡埛绔彲鐣欑┖銆備繚瀛樺悗鍔犲瘑瀛樺偍锛岀晫闈笉鍥炴樉鏄庢枃銆?,
+    '閺堝搫鐦戠€广垺鍩涚粩顖氱槕闁姐儻绱辩痪?PKCE 閸忣剙鍙＄€广垺鍩涚粩顖氬讲閻ｆ瑧鈹栭妴鍌欑箽鐎涙ê鎮楅崝鐘茬槕鐎涙ê鍋嶉敍宀€鏅棃顫瑝閸ョ偞妯夐弰搴㈡瀮閵?,
     true
   ),
   (
     'brain_oauth.redirect_uri',
     '""'::jsonb,
-    '椤讳笌 Brain OAuth 鎺у埗鍙?redirect_uri 瀹屽叏涓€鑷淬€傜暀绌烘椂榛樿 {SITE_URL}/api/callback/brain-oauth銆?,
+    '妞よ绗?Brain OAuth 閹貉冨煑閸?redirect_uri 鐎瑰苯鍙忔稉鈧懛娣偓鍌滄殌缁岀儤妞傛妯款吇 {SITE_URL}/api/callback/brain-oauth閵?,
     false
   ),
   (
     'brain_oauth.scopes',
     '"openid profile email"'::jsonb,
-    '鎺堟潈 scope锛岀┖鏍煎垎闅斻€傞粯璁?openid profile email銆?,
+    '閹哄牊娼?scope閿涘瞼鈹栭弽鐓庡瀻闂呮柣鈧倿绮拋?openid profile email閵?,
     false
   ),
   (
     'brain_oauth.locale',
     '""'::jsonb,
-    '鍥哄畾鎺堟潈椤?locale锛坋n | zh锛夈€傜暀绌哄垯浣跨敤鐢ㄦ埛褰撳墠 UI 璇█銆?,
+    '閸ュ搫鐣鹃幒鍫熸綀妞?locale閿涘潒n | zh閿涘鈧倻鏆€缁屽搫鍨担璺ㄦ暏閻劍鍩涜ぐ鎾冲 UI 鐠囶叀鈻堥妴?,
     false
   ),
   (
     'openai.api_key',
     '""'::jsonb,
-    'OpenAI 鎴栧吋瀹圭綉鍏筹紙Cerebras銆佽嚜寤轰唬鐞嗙瓑锛夌殑 API 瀵嗛挜銆傚姞瀵嗗瓨鍌紝鐣岄潰涓嶅洖鏄炬槑鏂囥€?,
+    'OpenAI 閹存牕鍚嬬€瑰湱缍夐崗绛圭礄Cerebras閵嗕浇鍤滃杞板敩閻炲棛鐡戦敍澶屾畱 API 鐎靛棝鎸滈妴鍌氬鐎靛棗鐡ㄩ崒顭掔礉閻ｅ矂娼版稉宥呮礀閺勭偓妲戦弬鍥モ偓?,
     true
   ),
   (
     'openai.base_url',
     '""'::jsonb,
-    'Chat Completions 鍏煎鎺ュ彛鏍瑰湴鍧€銆傜ず渚嬶細https://api.openai.com/v1',
+    'Chat Completions 閸忕厧顔愰幒銉ュ經閺嶇懓婀撮崸鈧妴鍌溿仛娓氬绱癶ttps://api.openai.com/v1',
     false
   ),
   (
     'api.cors_origins',
     '[]'::jsonb,
-    '閫楀彿鍒嗛殧鐨勮法鍩熺櫧鍚嶅崟 Origin銆傜敤浜?/oauth/token 绛夋満鍣ㄧ鐐广€傜暀绌鸿〃绀轰笉鍚敤 CORS銆?,
+    '闁褰块崚鍡涙閻ㄥ嫯娉曢崺鐔烘閸氬秴宕?Origin閵嗗倻鏁ゆ禍?/oauth/token 缁涘婧€閸ｃ劎顏悙骞库偓鍌滄殌缁岄缚銆冪粈杞扮瑝閸氼垳鏁?CORS閵?,
     false
   ),
   (
     'api.cors_methods',
     '["GET","POST","OPTIONS"]'::jsonb,
-    '閫楀彿鍒嗛殧鐨?HTTP 鏂规硶鍒楄〃銆傞粯璁?GET,POST,OPTIONS銆?,
+    '闁褰块崚鍡涙閻?HTTP 閺傝纭堕崚妤勩€冮妴鍌炵帛鐠?GET,POST,OPTIONS閵?,
     false
   ),
   (
     'storage.preview_bucket',
     '"pam-previews"'::jsonb,
-    '椤圭洰灏侀潰/棰勮鍥句笂浼犵殑 Supabase Storage bucket 鍚嶇О銆傞粯璁?pam-previews銆?,
+    '妞ゅ湱娲扮亸渚€娼?妫板嫯顫嶉崶鍙ョ瑐娴肩姷娈?Supabase Storage bucket 閸氬秶袨閵嗗倿绮拋?pam-previews閵?,
     false
   ),
   (
     'storage.screenshot_url_template',
     '""'::jsonb,
-    '鐢熸垚椤圭洰棰勮鍥炬椂浣跨敤鐨勬埅鍥炬湇鍔″湴鍧€锛寋url} 涓哄崰浣嶇銆傜暀绌哄垯浣跨敤 Microlink 榛樿銆?,
+    '閻㈢喐鍨氭い鍦窗妫板嫯顫嶉崶鐐娴ｈ法鏁ら惃鍕焻閸ョ偓婀囬崝鈥虫勾閸р偓閿涘瘚url} 娑撳搫宕版担宥囶儊閵嗗倻鏆€缁屽搫鍨担璺ㄦ暏 Microlink 姒涙顓婚妴?,
     false
   )
 on conflict (key) do nothing;
@@ -1209,7 +1204,7 @@ INSERT INTO public.pam_site_settings (key, value, description, is_sensitive)
 VALUES (
   'auth.phone_otp_provider',
   '"memory"'::jsonb,
-  '鎵嬫満楠岃瘉鐮佸彂閫侀€氶亾锛歮emory=涓嶅彂鐭俊锛堢爜杩?Admin 鐩戞帶椤碉級锛沘liyun=闃块噷浜戠煭淇★紙Admin銆岄樋閲屼簯鐭俊銆嶉厤缃級銆?,
+  '閹靛婧€妤犲矁鐦夐惍浣稿絺闁線鈧岸浜鹃敍姝甧mory=娑撳秴褰傞惌顓濅繆閿涘牏鐖滄潻?Admin 閻╂垶甯舵い纰夌礆閿涙矘liyun=闂冨潡鍣锋禍鎴犵叚娣団槄绱橝dmin閵嗗矂妯嬮柌灞肩隘閻厺淇婇妴宥夊帳缂冾噯绱氶妴?,
   false
 )
 ON CONFLICT (key) DO UPDATE
@@ -1221,43 +1216,43 @@ VALUES
   (
     'aliyun_sms.access_key_id',
     '""'::jsonb,
-    '鐭俊鏈嶅姟 AccessKey ID銆傚缓璁娇鐢ㄤ粎鐭俊鏉冮檺鐨?RAM 瀛愯处鍙枫€?,
+    '閻厺淇婇張宥呭 AccessKey ID閵嗗倸缂撶拋顔诲▏閻劋绮庨惌顓濅繆閺夊啴妾洪惃?RAM 鐎涙劘澶勯崣鏋偓?,
     false
   ),
   (
     'aliyun_sms.access_key_secret',
     '""'::jsonb,
-    '鐭俊鏈嶅姟 AccessKey Secret銆傚姞瀵嗗瓨鍌紝鐣岄潰涓嶅洖鏄炬槑鏂囥€?,
+    '閻厺淇婇張宥呭 AccessKey Secret閵嗗倸濮炵€靛棗鐡ㄩ崒顭掔礉閻ｅ矂娼版稉宥呮礀閺勭偓妲戦弬鍥モ偓?,
     true
   ),
   (
     'aliyun_sms.sign_name',
     '""'::jsonb,
-    '鎺у埗鍙板凡瀹℃牳閫氳繃鐨勭鍚嶅悕绉帮紙涓嶆槸绛惧悕 ID锛夈€?,
+    '閹貉冨煑閸欐澘鍑＄€光剝鐗抽柅姘崇箖閻ㄥ嫮顒烽崥宥呮倳缁夊府绱欐稉宥嗘Ц缁涙儳鎮?ID閿涘鈧?,
     false
   ),
   (
     'aliyun_sms.template_code',
     '""'::jsonb,
-    '鎺у埗鍙板凡瀹℃牳閫氳繃鐨勬ā鏉?CODE锛岄』鍚獙璇佺爜鍙橀噺銆傜ず渚嬶細SMS_123456789',
+    '閹貉冨煑閸欐澘鍑＄€光剝鐗抽柅姘崇箖閻ㄥ嫭膩閺?CODE閿涘矂銆忛崥顐︾崣鐠囦胶鐖滈崣姗€鍣洪妴鍌溿仛娓氬绱癝MS_123456789',
     false
   ),
   (
     'aliyun_sms.template_param_key',
     '"code"'::jsonb,
-    '妯℃澘 JSON 涓獙璇佺爜瀛楁鍚嶃€傞粯璁?code 鈫?TemplateParam={"code":"123456"}銆?,
+    '濡剝婢?JSON 娑擃參鐛欑拠浣虹垳鐎涙顔岄崥宥冣偓鍌炵帛鐠?code 閳?TemplateParam={"code":"123456"}閵?,
     false
   ),
   (
     'aliyun_sms.region_id',
     '"cn-hangzhou"'::jsonb,
-    'DysmsAPI RegionId銆傞粯璁?cn-hangzhou銆?,
+    'DysmsAPI RegionId閵嗗倿绮拋?cn-hangzhou閵?,
     false
   ),
   (
     'aliyun_sms.endpoint',
     '"https://dysmsapi.aliyuncs.com"'::jsonb,
-    'DysmsAPI 鍦板潃銆傞粯璁?https://dysmsapi.aliyuncs.com銆備竴鑸棤闇€淇敼銆?,
+    'DysmsAPI 閸︽澘娼冮妴鍌炵帛鐠?https://dysmsapi.aliyuncs.com閵嗗倷绔撮懜顒佹￥闂団偓娣囶喗鏁奸妴?,
     false
   )
 ON CONFLICT (key) DO NOTHING;
@@ -1267,7 +1262,7 @@ INSERT INTO public.pam_site_settings (key, value, description, is_sensitive)
 VALUES (
   'auth.phone_login_enabled',
   'true'::jsonb,
-  '鏄惁鍦ㄧ櫥褰曢〉灞曠ず銆屾墜鏈哄彿銆峊ab銆俶emory 妯″紡涓嬬爜鍦?Admin銆岄獙璇佺爜鐩戞帶銆嶆煡鐪嬶紱aliyun 妯″紡璧扮湡瀹炵煭淇°€?,
+  '閺勵垰鎯侀崷銊ф瑜版洟銆夌仦鏇犮仛閵嗗本澧滈張鍝勫娇閵嗗硦ab閵嗕慷emory 濡€崇础娑撳鐖滈崷?Admin閵嗗矂鐛欑拠浣虹垳閻╂垶甯堕妴宥嗙叀閻绱盿liyun 濡€崇础鐠ф壆婀＄€圭偟鐓穱掳鈧?,
   false
 )
 ON CONFLICT (key) DO UPDATE
@@ -1627,12 +1622,12 @@ COMMENT ON TABLE public.pam_roles IS
   'Flat role templates. kind=platform|team. Bound via role_id only.';
 
 INSERT INTO public.pam_roles (key, name, kind, description, is_system) VALUES
-  ('user', '鏅€氱敤鎴?, 'platform', 'Default registered user', TRUE),
-  ('operator', '杩愯惀', 'platform', 'Admin console read', TRUE),
-  ('admin', '绯荤粺绠＄悊鍛?, 'platform', 'Admin console write', TRUE),
-  ('team_owner', '鍥㈤槦鎵€鏈夎€?, 'team', 'Team creator / owner', TRUE),
-  ('team_admin', '鍥㈤槦绠＄悊鍛?, 'team', 'Team admin', TRUE),
-  ('team_member', '鍥㈤槦鎴愬憳', 'team', 'Team member', TRUE);
+  ('user', '閺咁噣鈧氨鏁ら幋?, 'platform', 'Default registered user', TRUE),
+  ('operator', '鏉╂劘鎯€', 'platform', 'Admin console read', TRUE),
+  ('admin', '缁崵绮虹粻锛勬倞閸?, 'platform', 'Admin console write', TRUE),
+  ('team_owner', '閸ャ垽妲﹂幍鈧張澶庘偓?, 'team', 'Team creator / owner', TRUE),
+  ('team_admin', '閸ャ垽妲︾粻锛勬倞閸?, 'team', 'Team admin', TRUE),
+  ('team_member', '閸ャ垽妲﹂幋鎰喅', 'team', 'Team member', TRUE);
 
 -- ---------------------------------------------------------------------------
 -- 2) Permission catalog (permission_key PK)
@@ -1675,7 +1670,7 @@ CREATE INDEX idx_pam_role_assignments_role_id
   ON public.pam_role_assignments (role_id);
 
 COMMENT ON TABLE public.pam_role_assignments IS
-  'role_id 鈫?permission_key (flat).';
+  'role_id 閳?permission_key (flat).';
 
 INSERT INTO public.pam_role_permissions (permission_key, type, method, path, description) VALUES
   ('admin_users_read', 'api', 'get', '/api/admin/users', 'List platform users'),
@@ -1947,7 +1942,7 @@ CREATE INDEX idx_pam_role_team_members_role_id
   ON public.pam_role_team_members (role_id);
 
 COMMENT ON TABLE public.pam_role_team_members IS
-  'Team membership; permissions via role_id 鈫?pam_role_assignments.';
+  'Team membership; permissions via role_id 閳?pam_role_assignments.';
 
 ALTER TABLE public.pam_role_teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pam_role_team_members ENABLE ROW LEVEL SECURITY;
@@ -2491,7 +2486,7 @@ COMMENT ON COLUMN public.pam_users.sessions_revoked_at IS
   'Session JWTs with iat before this time are rejected (set after password reset).';
 
 -- ---------------------------------------------------------------------------
--- External login identities (brain-oauth sub 鈫?PAM user)
+-- External login identities (brain-oauth sub 閳?PAM user)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS public.pam_user_identities (
