@@ -1,3 +1,10 @@
+export { RunCommand } from './commands/RunCommand';
+export type { PamCliRunOptionsType } from './commands/RunCommand';
+export {
+  injectPamenvProcessEnv,
+  resetPamenvInjectCache
+} from './impls/PamenvInject';
+export type { PamenvInjectOptions } from './impls/PamenvInject';
 export { PamCliApp } from './PamCliApp';
 export { PamCliConfig } from './config/PamCliConfig';
 export type { PamCliRuntimeContextType } from './config/PamCliRuntimeContext';

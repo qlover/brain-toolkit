@@ -62,6 +62,30 @@ export class RunCommand {
       );
     }
 
+    const prepared = await this.prepare(projectRef, options);
+    return this.spawnChild(command, prepared.env);
+  }
+
+  /**
+   * Resolves PAM variables and merges them onto `baseEnv` without spawning.
+   * Used by `run` and by framework plugins (`@pamenv/next`).
+   *
+   * @param projectRef - Project slug or id
+   * @param options - Environment and filters
+   * @param cwd - Directory for warnings and the active `.pam` root
+   * @param baseEnv - Env to merge onto (defaults to `process.env`)
+   */
+  public async prepare(
+    projectRef: string,
+    options: PamCliRunOptionsType = {},
+    cwd: string = process.cwd(),
+    baseEnv: NodeJS.ProcessEnv = process.env
+  ): Promise<{
+    readonly variables: readonly PamCliResolvedVarType[];
+    readonly projectSlug: string;
+    readonly envName: string;
+    readonly env: NodeJS.ProcessEnv;
+  }> {
     if (this.authStore) {
       await PamCliSecurityGate.assertIdentity(this.authStore);
     }
@@ -82,19 +106,12 @@ export class RunCommand {
     }
 
     if (options.warn !== false) {
-      for (const line of await PamCliRunWarningUtil.collect(
-        process.cwd(),
-        variables
-      )) {
+      for (const line of await PamCliRunWarningUtil.collect(cwd, variables)) {
         console.error(line);
       }
     }
 
-    const childEnv = RunCommand.mergeEnv(
-      process.env,
-      variables,
-      options.keepEnv
-    );
+    const env = RunCommand.mergeEnv(baseEnv, variables, options.keepEnv);
     console.error(
       PamCliI18n.t(PAMENV_CLI_RUN_INJECTED, {
         count: String(variables.length),
@@ -103,7 +120,7 @@ export class RunCommand {
       })
     );
 
-    return this.spawnChild(command, childEnv);
+    return { variables, projectSlug, envName, env };
   }
 
   /**
