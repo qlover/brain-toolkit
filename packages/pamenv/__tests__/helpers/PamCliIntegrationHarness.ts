@@ -87,3 +87,19 @@ export async function writeWorldReadable(
     await chmod(filePath, 0o644);
   }
 }
+
+/**
+ * Fixture dotenv / local file that pamenv may later rewrite (needs 0600 on POSIX).
+ */
+export async function writeOwnerOnlyFile(
+  filePath: string,
+  content: string
+): Promise<void> {
+  await writeFile(filePath, content, {
+    encoding: 'utf8',
+    mode: 0o600
+  });
+  if (process.platform !== 'win32') {
+    await chmod(filePath, 0o600);
+  }
+}

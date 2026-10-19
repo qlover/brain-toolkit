@@ -335,7 +335,7 @@ When a request fails, the CLI prints a readable message plus the error code (e.g
 
 - A CLI sign-in lasts **30 days** by default; run `pamenv login` again when it expires.
 - `pamenv logout` revokes the credential on the server immediately and clears local sign-in and sync records.
-- `config.json` (mode 0600) keeps only non-secret fields (baseUrl / locale / email). The bearer token goes into an OS-bound vault: DPAPI-protected `credentials.enc` on Windows, the login keychain on macOS, and a 0600 private file elsewhere. Tokens still sitting in an old config.json are migrated out on the next read.
+- `config.json` (mode 0600) keeps only non-secret fields (baseUrl / locale / email). The bearer token goes into an OS-bound vault: DPAPI-protected `credentials.enc` on Windows, the login keychain on macOS, and a 0600 private file elsewhere. Tokens still sitting in an old config.json are migrated out on the next read. Different `.pam` roots do not share credentials.
 
 ## Project permissions
 

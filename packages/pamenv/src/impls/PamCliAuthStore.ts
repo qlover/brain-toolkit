@@ -268,8 +268,11 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
       ...config,
       token: null
     };
+    const configPath = this.getActiveConfigPath();
+    // 旧 config 可能是 umask 0644；迁出 token 前先收紧，否则 writePrivateFile 会拒绝覆盖。
+    await PamCliPrivateFsUtil.ensurePrivateFileMode(configPath);
     await PamCliPrivateFsUtil.writePrivateFile(
-      this.getActiveConfigPath(),
+      configPath,
       `${JSON.stringify(safe, null, 2)}\n`
     );
   }

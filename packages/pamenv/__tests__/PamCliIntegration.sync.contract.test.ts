@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PullCommand } from '../src/commands/PullCommand';
 import { PushCommand } from '../src/commands/PushCommand';
@@ -21,6 +21,7 @@ import {
 import {
   createPamCliIntegrationContext,
   fileExists,
+  writeOwnerOnlyFile,
   type PamCliIntegrationContextType
 } from './helpers/PamCliIntegrationHarness';
 
@@ -77,11 +78,9 @@ describe('pamenv sync contract (mock PAM)', () => {
     it('local-only drift: keeps local value and reports kept keys', async () => {
       await pullOwnerDev();
       const target = join(ctx!.cwd, '.env.dev');
-      await writeFile(
+      await writeOwnerOnlyFile(
         target,
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`);
 
       await new PullCommand(ctx!.apiClient, ctx!.syncStore, ctx!.authStore).run(
         'fe-base',
@@ -115,11 +114,9 @@ describe('pamenv sync contract (mock PAM)', () => {
     it('conflict abort leaves local file unchanged', async () => {
       const { project, exportByEnvId } = await pullOwnerDev();
       const target = join(ctx!.cwd, '.env.dev');
-      await writeFile(
+      await writeOwnerOnlyFile(
         target,
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`);
       exportByEnvId['e-dev'] = exportFromMap(project, 'e-dev', 'dev', {
         API_URL: 'https://remote.dev',
         TOKEN: PLACEHOLDER
@@ -141,11 +138,9 @@ describe('pamenv sync contract (mock PAM)', () => {
     it('conflict choose local keeps local value', async () => {
       const { project, exportByEnvId } = await pullOwnerDev();
       const target = join(ctx!.cwd, '.env.dev');
-      await writeFile(
+      await writeOwnerOnlyFile(
         target,
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`);
       exportByEnvId['e-dev'] = exportFromMap(project, 'e-dev', 'dev', {
         API_URL: 'https://remote.dev',
         TOKEN: PLACEHOLDER
@@ -167,11 +162,9 @@ describe('pamenv sync contract (mock PAM)', () => {
     it('conflict --force skips prompt and takes remote default', async () => {
       const { project, exportByEnvId } = await pullOwnerDev();
       const target = join(ctx!.cwd, '.env.dev');
-      await writeFile(
+      await writeOwnerOnlyFile(
         target,
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`);
       exportByEnvId['e-dev'] = exportFromMap(project, 'e-dev', 'dev', {
         API_URL: 'https://remote.dev',
         TOKEN: PLACEHOLDER
@@ -198,11 +191,9 @@ describe('pamenv sync contract (mock PAM)', () => {
     it('overwrites leftover sensitive plaintext with the placeholder', async () => {
       await pullOwnerDev();
       const target = join(ctx!.cwd, '.env.dev');
-      await writeFile(
+      await writeOwnerOnlyFile(
         target,
-        `API_URL=https://x.dev\nTOKEN=leftover-secret\n`,
-        'utf8'
-      );
+        `API_URL=https://x.dev\nTOKEN=leftover-secret\n`);
 
       await new PullCommand(ctx!.apiClient, ctx!.syncStore, ctx!.authStore).run(
         'fe-base',
@@ -355,11 +346,9 @@ describe('pamenv sync contract (mock PAM)', () => {
           })
         }
       });
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx.cwd, '.env.dev'),
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`);
       vi.spyOn(PamCliConfirmUtil, 'ask').mockResolvedValue(false);
 
       await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
@@ -382,7 +371,7 @@ describe('pamenv sync contract (mock PAM)', () => {
         }
       });
       // Local file omitted TOKEN (would have wiped it under old NoBase behavior).
-      await writeFile(join(ctx.cwd, '.env.dev'), 'API_URL=https://local.dev\n', 'utf8');
+      await writeOwnerOnlyFile(join(ctx.cwd, '.env.dev'), 'API_URL=https://local.dev\n');
       vi.spyOn(PamCliConfirmUtil, 'ask').mockResolvedValue(true);
       vi.spyOn(PamCliSyncConflictUtil, 'resolveConflicts').mockResolvedValue(
         PamCliSyncSide.Local
@@ -405,11 +394,9 @@ describe('pamenv sync contract (mock PAM)', () => {
 
     it('push -y hints lookalike new keys but does not auto-mark them', async () => {
       const { project } = await pullOwnerDev();
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx!.cwd, '.env.dev'),
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\nNEW_SECRET=plain\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\nNEW_SECRET=plain\n`);
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       await new PushCommand(
@@ -441,11 +428,9 @@ describe('pamenv sync contract (mock PAM)', () => {
 
     it('conflict abort does not replace', async () => {
       const { project, exportByEnvId } = await pullOwnerDev();
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx!.cwd, '.env.dev'),
-        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\n`);
       exportByEnvId['e-dev'] = exportFromMap(project, 'e-dev', 'dev', {
         API_URL: 'https://remote.dev',
         TOKEN: PLACEHOLDER
@@ -468,11 +453,9 @@ describe('pamenv sync contract (mock PAM)', () => {
 
     it('successful push clears sensitive local values to placeholder', async () => {
       await pullOwnerDev();
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx!.cwd, '.env.dev'),
-        `API_URL=https://local.dev\nTOKEN=real-local-secret\n`,
-        'utf8'
-      );
+        `API_URL=https://local.dev\nTOKEN=real-local-secret\n`);
 
       await new PushCommand(
         ctx!.apiClient,
@@ -505,7 +488,7 @@ describe('pamenv sync contract (mock PAM)', () => {
         }
       });
       const target = join(ctx.cwd, '.env.dev');
-      await writeFile(target, 'API_URL=https://local.dev\n', 'utf8');
+      await writeOwnerOnlyFile(target, 'API_URL=https://local.dev\n');
       vi.spyOn(PamCliConfirmUtil, 'ask')
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(false);
@@ -550,11 +533,9 @@ describe('pamenv sync contract (mock PAM)', () => {
       const pulled = await readFile(join(ctx.cwd, '.env.dev'), 'utf8');
       expect(pulled).toContain('API_TOKEN=server-plaintext');
 
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx.cwd, '.env.dev'),
-        `API_URL=https://x.dev\n# pam:sensitive\nAPI_TOKEN=server-plaintext\n`,
-        'utf8'
-      );
+        `API_URL=https://x.dev\n# pam:sensitive\nAPI_TOKEN=server-plaintext\n`);
 
       await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
         'fe-base',
@@ -591,11 +572,9 @@ describe('pamenv sync contract (mock PAM)', () => {
         'fe-base',
         { envName: 'dev', outDir: ctx.cwd }
       );
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx.cwd, '.env.dev'),
-        `API_URL=https://changed.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://changed.dev\nTOKEN=${PLACEHOLDER}\n`);
 
       await expect(
         new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
@@ -607,11 +586,9 @@ describe('pamenv sync contract (mock PAM)', () => {
 
     it('invalid placeholder from another env is rejected before API', async () => {
       await pullOwnerDev();
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx!.cwd, '.env.dev'),
-        `API_URL=https://x.dev\nTOKEN=__PAM_SENSITIVE_otherenv__\n`,
-        'utf8'
-      );
+        `API_URL=https://x.dev\nTOKEN=__PAM_SENSITIVE_otherenv__\n`);
 
       await expect(
         new PushCommand(ctx!.apiClient, ctx!.syncStore, ctx!.authStore).run(
@@ -638,11 +615,9 @@ describe('pamenv sync contract (mock PAM)', () => {
         'fe-base',
         { envName: 'dev', outDir: ctx.cwd, file: '.env.custom' }
       );
-      await writeFile(
+      await writeOwnerOnlyFile(
         join(ctx.cwd, '.env.custom'),
-        `API_URL=https://custom.dev\nTOKEN=${PLACEHOLDER}\n`,
-        'utf8'
-      );
+        `API_URL=https://custom.dev\nTOKEN=${PLACEHOLDER}\n`);
 
       await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
         'fe-base',

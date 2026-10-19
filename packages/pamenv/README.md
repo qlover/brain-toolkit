@@ -336,7 +336,7 @@ pamenv locales pull                         # 刷新服务端错误提示文案
 
 - CLI 登录默认 **30 天**有效，过期后重新 `pamenv login`。
 - `pamenv logout` 会让当前凭证在服务端立即失效，并清除本地的登录和同步记录。
-- `config.json`（0600）只存 baseUrl / locale / email 等非密钥字段；Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI 加密的 `credentials.enc`，macOS 为登录钥匙串，其它平台为同目录下 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。
+- `config.json`（0600）只存 baseUrl / locale / email 等非密钥字段；Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI 加密的 `credentials.enc`，macOS 为登录钥匙串，其它平台为同目录下 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。不同目录的 `.pam` 互不共用凭证。
 
 ## 项目权限
 
