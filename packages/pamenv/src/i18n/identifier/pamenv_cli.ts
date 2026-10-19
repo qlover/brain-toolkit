@@ -686,8 +686,8 @@ export const PAMENV_CLI_RUN_COMMAND_REQUIRED =
 
 /**
  * @description run 注入完成提示（输出到 stderr）
- * @localZh [pamenv] 已从 {{slug}}/{{env}} 注入 {{count}} 个变量
- * @localEn [pamenv] Injected {{count}} variable(s) from {{slug}}/{{env}}
+ * @localZh [pamenv] 已从 {{slug}}/{{env}} 注入 {{count}} 个变量（明文只在子进程环境里；请勿在程序中打印密钥）
+ * @localEn [pamenv] Injected {{count}} variable(s) from {{slug}}/{{env}} (plaintext is only in the child process env; do not print secrets)
  */
 export const PAMENV_CLI_RUN_INJECTED = 'pamenv_cli:run_injected';
 

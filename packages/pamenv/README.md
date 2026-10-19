@@ -191,7 +191,9 @@ fork 后用 `pamenv push <new-slug> -e <env>` 填入密钥。
 
 ## `pamenv run`
 
-把环境变量注入子进程后运行命令。变量只存在于 pamenv 和子进程的内存中，不写文件，也不会打印变量值。
+把环境变量注入子进程后运行命令。变量只存在于 pamenv 和子进程的内存中，不写文件，CLI 也不会打印变量值。
+
+**明文边界：** 敏感值在子进程的环境里是真实明文。CLI 保证不落盘、不打印；拦不住的是——被启动的程序自己 `console.log` / 写日志、同机其它进程读该进程环境、以及调试器附加。请勿在应用里打印密钥；生产注入面尽量用 `--only` 收窄。
 
 ```bash
 pamenv run <slug|id> -e local -- pnpm dev
@@ -301,7 +303,7 @@ API_TOKEN=xxxx # production only
 NORMAL=1
 ```
 
-敏感变量的值在 PAM 中加密保存，只有 `run` 会在服务端解密并注入子进程，CLI 不会打印。网页、`render`、`pull` 和 `fork` 都拿不到明文，owner 也一样。明文唯一可能出现的地方，是被运行的程序自己打印出来。
+敏感变量的值在 PAM 中加密保存，只有 `run` 会在服务端解密并注入子进程，CLI 不会打印。网页、`render`、`pull` 和 `fork` 都拿不到明文，owner 也一样。明文只存在于子进程环境；若程序自行打印、写日志或被同机读环境，不在 CLI 防护范围内。
 
 ## `pamenv remove`
 
@@ -330,10 +332,11 @@ pamenv locales pull                         # 刷新服务端错误提示文案
 
 接口出错时，CLI 会显示可读的错误说明，并附带错误码（如 `api:not_authorized`）和 `requestId`，反馈问题时请一并提供。
 
-## 登录有效期
+## 登录与本地凭证
 
 - CLI 登录默认 **30 天**有效，过期后重新 `pamenv login`。
 - `pamenv logout` 会让当前凭证在服务端立即失效，并清除本地的登录和同步记录。
+- `config.json`（0600）只存 baseUrl / locale / email 等非密钥字段；Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI 加密的 `credentials.enc`，macOS 为登录钥匙串，其它平台为同目录下 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。
 
 ## 项目权限
 

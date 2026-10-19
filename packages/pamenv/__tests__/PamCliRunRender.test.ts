@@ -472,21 +472,27 @@ describe('PushCommand sensitive values', () => {
         parsed('NEW_SECRET', 's1', true),
         parsed('OLD_SECRET', 's2', false),
         parsed('KEPT_SECRET', '', false),
+        // Unmarked lookalike keys are not auto-sensitive — value stays.
         parsed('API_TOKEN', 'leak-me', false)
       ],
       new Set(['OLD_SECRET', 'KEPT_SECRET'])
     );
-    expect(result.keys).toEqual(['NEW_SECRET', 'OLD_SECRET', 'API_TOKEN']);
+    expect(result.keys).toEqual(['NEW_SECRET', 'OLD_SECRET']);
     expect(result.variables.map((item) => [item.key, item.value])).toEqual([
       ['API_URL', 'https://x.dev'],
       ['NEW_SECRET', ''],
       ['OLD_SECRET', ''],
       ['KEPT_SECRET', ''],
-      ['API_TOKEN', '']
+      ['API_TOKEN', 'leak-me']
     ]);
-    expect(result.variables.slice(1).every((item) => item.sensitive)).toBe(
-      true
-    );
+    expect(
+      result.variables
+        .filter((item) => item.key !== 'API_URL' && item.key !== 'API_TOKEN')
+        .every((item) => item.sensitive)
+    ).toBe(true);
+    expect(
+      result.variables.find((item) => item.key === 'API_TOKEN')?.sensitive
+    ).toBe(false);
   });
 
   it('replaces sensitive values with the env placeholder when known', () => {
@@ -531,6 +537,15 @@ describe('PushCommand sensitive values', () => {
       )
     ).toThrow(/push_placeholder_invalid/);
     const placeholderKeep = '__PAM_SENSITIVE_abc__';
+    // Lookalike name alone is not enough: local must mark sensitive to keep.
+    expect(() =>
+      push.assertPlaceholders(
+        [parsed('DATABASE_URL', placeholderKeep, true)],
+        new Set(),
+        placeholderKeep,
+        new Set(['DATABASE_URL'])
+      )
+    ).not.toThrow();
     expect(() =>
       push.assertPlaceholders(
         [parsed('DATABASE_URL', placeholderKeep, false)],
@@ -538,7 +553,7 @@ describe('PushCommand sensitive values', () => {
         placeholderKeep,
         new Set(['DATABASE_URL'])
       )
-    ).not.toThrow();
+    ).toThrow(/push_placeholder_invalid/);
     expect(() =>
       push.assertPlaceholders(
         [parsed('API_URL', placeholderKeep, false)],

@@ -482,8 +482,8 @@ export const PAGE_PAM_ENVIRONMENTS_USAGE_TITLE =
 
 /**
  * @description Usage card: run command hint
- * @localZh 推荐：把变量直接注入进程，不写入磁盘（敏感值只走这一条路）
- * @localEn Recommended: inject variables into the process, nothing written to disk (the only way sensitive values reach a process)
+ * @localZh 推荐：把变量直接注入进程，不写入磁盘。敏感明文只在目标进程环境里；进程打印或同机读环境变量时 CLI 拦不住
+ * @localEn Recommended: inject into the process, nothing on disk. Sensitive plaintext lives only in the child process env; CLI cannot stop the app from printing it or another local user from reading process env
  */
 export const PAGE_PAM_ENVIRONMENTS_USAGE_RUN_HINT =
   'page_pam_environments:usageRunHint';

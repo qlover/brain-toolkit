@@ -17,7 +17,7 @@ export type PamCliSetLocaleOptionsType = {
  * Local auth / config persistence for pamenv.
  *
  * Significance: Stores base URL, locale, and CLI bearer token.
- * Core idea: Everything lives in the active `.pam/config.json`.
+ * Core idea: Non-secret settings in `.pam/config.json`; token in OS-bound vault.
  * Main function: Read/write CLI credentials.
  * Main purpose: Support interactive login and authenticated API calls.
  */

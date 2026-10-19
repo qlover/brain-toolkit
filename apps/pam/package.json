@@ -9,11 +9,14 @@
     "directory": "apps/pam"
   },
   "scripts": {
+    "gen:locales": "node ./tools/generateLocales.mjs",
+    "predev": "pnpm gen:locales",
     "dev": "cross-env APP_ENV=localhost next dev --hostname pam.localhost --port 3400",
     "dev:localhost": "cross-env APP_ENV=localhost next dev --port 3400",
     "dev:staging": "cross-env APP_ENV=staging next dev --port 3400",
     "dev:prod": "cross-env APP_ENV=production next dev --port 3400",
     "dev:turbo": "cross-env APP_ENV=localhost next dev --turbopack --port 3400",
+    "prebuild": "pnpm gen:locales",
     "build": "cross-env APP_ENV=production NODE_ENV=production next build && next-sitemap",
     "build:staging": "cross-env APP_ENV=staging NODE_ENV=production next build && next-sitemap",
     "build:dev": "cross-env APP_ENV=localhost NODE_ENV=production next build && next-sitemap",
