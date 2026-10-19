@@ -14,12 +14,14 @@ import type {
   PamCliLocaleType
 } from '../interfaces/PamCliTypes';
 import { PamCliPrivateFsUtil } from './PamCliPrivateFsUtil';
+import { PamCliTokenVault } from './PamCliTokenVault';
 
 /**
  * File-backed auth store under `~/.pam/config.json` or `{cwd}/.pam` with `--local`.
  *
  * Significance: Persists CLI credentials between invocations.
- * Core idea: JSON file with baseUrl + token + locale (`0600`).
+ * Core idea: Non-secret settings in config.json；Bearer token 进 OS 绑定保险库
+ * （Windows DPAPI / macOS Keychain / 其它平台 0600 文件）。
  * Main function: Load and mutate CLI config; honor url override.
  * Main purpose: Enable login once, reuse token for pull/export.
  *
@@ -82,24 +84,24 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
    * @override
    */
   public async getConfig(): Promise<PamCliConfigFileType> {
-    try {
-      const raw = await readFile(this.getActiveConfigPath(), 'utf8');
-      const parsed = JSON.parse(raw) as Partial<PamCliConfigFileType>;
-      return this.normalizeConfig(parsed);
-    } catch {
-      // `--local` must not silently fall back to ~/.pam credentials.
-      return this.normalizeConfig({});
-    }
+    const base = await this.readConfigFile();
+    const vault = await this.ensureVaultMigrated(base);
+    return {
+      ...base,
+      token: vault?.token ?? null,
+      email: vault?.email || base.email
+    };
   }
 
   /**
    * @override
    */
   public async setBaseUrl(baseUrl: string): Promise<void> {
-    const current = await this.getConfig();
+    const current = await this.readConfigFile();
     await this.writeConfig({
       ...current,
       baseUrl: PamCliConfig.normalizeOrigin(baseUrl),
+      token: null,
       updatedAt: new Date().toISOString()
     });
   }
@@ -111,7 +113,7 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
     locale: PamCliLocaleType,
     options?: PamCliSetLocaleOptionsType
   ): Promise<void> {
-    const current = await this.getConfig();
+    const current = await this.readConfigFile();
     const locked =
       options?.locked === true
         ? true
@@ -126,6 +128,7 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
       locale,
       localeLocked: locked,
       localeSource: source,
+      token: null,
       updatedAt: new Date().toISOString()
     });
   }
@@ -134,7 +137,7 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
    * @override
    */
   public async getLocale(): Promise<PamCliLocaleType> {
-    const config = await this.getConfig();
+    const config = await this.readConfigFile();
     return config.locale;
   }
 
@@ -142,10 +145,13 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
    * @override
    */
   public async setToken(token: string, email: string): Promise<void> {
-    const current = await this.getConfig();
+    const root = this.getActivePamRoot();
+    await PamCliPrivateFsUtil.mkdirPrivate(root);
+    await PamCliTokenVault.write(root, { token, email });
+    const current = await this.readConfigFile();
     await this.writeConfig({
       ...current,
-      token,
+      token: null,
       email,
       updatedAt: new Date().toISOString()
     });
@@ -155,7 +161,8 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
    * @override
    */
   public async clearToken(): Promise<void> {
-    const current = await this.getConfig();
+    await PamCliTokenVault.clear(this.getActivePamRoot());
+    const current = await this.readConfigFile();
     await this.writeConfig({
       ...current,
       token: null,
@@ -179,8 +186,55 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
     if (this.runtime.urlOverride?.trim()) {
       return PamCliConfig.normalizeOrigin(this.runtime.urlOverride);
     }
-    const config = await this.getConfig();
+    const config = await this.readConfigFile();
     return PamCliConfig.normalizeOrigin(config.baseUrl);
+  }
+
+  protected async readConfigFile(): Promise<PamCliConfigFileType> {
+    try {
+      const raw = await readFile(this.getActiveConfigPath(), 'utf8');
+      const parsed = JSON.parse(raw) as Partial<PamCliConfigFileType>;
+      return this.normalizeConfig(parsed);
+    } catch {
+      // `--local` must not silently fall back to ~/.pam credentials.
+      return this.normalizeConfig({});
+    }
+  }
+
+  /**
+   * 把仍写在 config.json 里的旧 token 迁到保险库，并清空 JSON 中的 token。
+   */
+  protected async ensureVaultMigrated(
+    config: PamCliConfigFileType
+  ): Promise<{ token: string; email: string } | null> {
+    const root = this.getActivePamRoot();
+    const existing = await PamCliTokenVault.read(root);
+    if (existing?.token) {
+      return existing;
+    }
+
+    const legacyToken = config.token?.trim();
+    if (!legacyToken) {
+      return null;
+    }
+
+    const entry = {
+      token: legacyToken,
+      email: config.email?.trim() || ''
+    };
+    try {
+      await PamCliPrivateFsUtil.mkdirPrivate(root);
+      await PamCliTokenVault.write(root, entry);
+      await this.writeConfig({
+        ...config,
+        token: null,
+        updatedAt: new Date().toISOString()
+      });
+    } catch {
+      // 迁移失败时仍允许用旧 JSON 登录，避免锁死。
+      return entry;
+    }
+    return entry;
   }
 
   protected normalizeConfig(
@@ -209,9 +263,14 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
 
   protected async writeConfig(config: PamCliConfigFileType): Promise<void> {
     await PamCliPrivateFsUtil.mkdirPrivate(this.getActivePamRoot());
+    // token 只进保险库，config.json 永久写 null。
+    const safe: PamCliConfigFileType = {
+      ...config,
+      token: null
+    };
     await PamCliPrivateFsUtil.writePrivateFile(
       this.getActiveConfigPath(),
-      `${JSON.stringify(config, null, 2)}\n`
+      `${JSON.stringify(safe, null, 2)}\n`
     );
   }
 }

@@ -104,11 +104,11 @@ describe('PamCliAuthStore --local isolation', () => {
       const raw = await readFile(store.getActiveConfigPath(), 'utf8');
       const parsed = JSON.parse(raw) as {
         baseUrl: string;
-        token: string;
+        token?: string;
         email: string;
       };
       expect(parsed.baseUrl).toBe('http://pam.localhost:3400');
-      expect(parsed.token).toBe('tok');
+      expect(parsed.token).toBeNull();
       expect(parsed.email).toBe('a@b.c');
 
       const other = new PamCliAuthStore({

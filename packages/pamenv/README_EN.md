@@ -190,7 +190,9 @@ Then fill in secrets with `pamenv push <new-slug> -e <env>`.
 
 ## `pamenv run`
 
-Runs a command with environment variables injected into its process. Values only live in the memory of pamenv and the child process: nothing is written to disk and no value is printed.
+Runs a command with environment variables injected into its process. Values only live in the memory of pamenv and the child process: nothing is written to disk and the CLI never prints values.
+
+**Plaintext boundary:** Sensitive values are real plaintext in the child process environment. The CLI guarantees no disk writes and no printing; it cannot stop the launched app from logging secrets, another local process from reading that process's env, or a debugger attach. Do not print secrets in your app; prefer `--only` to narrow the injection surface in production-like runs.
 
 ```bash
 pamenv run <slug|id> -e local -- pnpm dev
@@ -300,7 +302,7 @@ API_TOKEN=xxxx # production only
 NORMAL=1
 ```
 
-Sensitive values are stored encrypted in PAM. Only `run` decrypts them (on the server) and injects them into the child process; the CLI never prints them. The web UI, `render`, `pull` and `fork` never get plaintext, owners included. The only place plaintext can appear is whatever the running program prints itself.
+Sensitive values are stored encrypted in PAM. Only `run` decrypts them (on the server) and injects them into the child process; the CLI never prints them. The web UI, `render`, `pull` and `fork` never get plaintext, owners included. Plaintext exists only in the child process environment; if the app prints, logs, or another local reader inspects that env, that is outside the CLI's control.
 
 ## `pamenv remove`
 
@@ -329,10 +331,11 @@ Without `locale`, the CLI follows the language of the browser sign-in page.
 
 When a request fails, the CLI prints a readable message plus the error code (e.g. `api:not_authorized`) and a `requestId`. Include both when reporting a problem.
 
-## Sign-in lifetime
+## Sign-in and local credentials
 
 - A CLI sign-in lasts **30 days** by default; run `pamenv login` again when it expires.
 - `pamenv logout` revokes the credential on the server immediately and clears local sign-in and sync records.
+- `config.json` (mode 0600) keeps only non-secret fields (baseUrl / locale / email). The bearer token goes into an OS-bound vault: DPAPI-protected `credentials.enc` on Windows, the login keychain on macOS, and a 0600 private file elsewhere. Tokens still sitting in an old config.json are migrated out on the next read.
 
 ## Project permissions
 

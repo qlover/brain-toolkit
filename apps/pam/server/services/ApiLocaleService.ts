@@ -52,7 +52,8 @@ export class ApiLocaleService {
         () => this.localesRepository.getLocaleTextMap(localeName),
         { ttlMs: LOCALE_DB_CACHE_TTL_MS }
       );
-      return { ...staticJson, ...fromDb };
+      // 本构建静态文案优先；库表只补全尚未打包的键，避免旧翻译盖住发版新句。
+      return { ...fromDb, ...staticJson };
     } catch {
       return staticJson;
     }

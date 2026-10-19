@@ -12,7 +12,7 @@ Web：`GET .../environments` 只返回环境元数据；选中环境再 `GET ...
 - 日常开发默认把变量注入进程（`pamenv run`），不写文件。
 - `.env`、JSON、YAML、TOML 都只是按需输出的格式（`pamenv render`）。
 - 权限区分「能用」和「能看」：成员可以注入运行，但拿不到明文。
-- **敏感值只经 `run` 进入进程**：网页、`render`、`pull`、`fork` 都不返回敏感明文，owner 也一样。明文只存在于「服务端解密 → 传输 → 目标进程内存」这条链路上，唯一的例外是被运行的程序自己打印出来。
+- **敏感值只经 `run` 进入进程**：网页、`render`、`pull`、`fork` 都不返回敏感明文，owner 也一样。明文只存在于「服务端解密 → 传输 → 目标进程环境」这条链路上。CLI 保证不落盘、不打印；拦不住的是进程自己打印/写日志、同机读该进程环境、调试器附加——请用 `--only` 收窄注入面，并避免在应用里打印密钥。
 
 ## 现状与问题
 
@@ -64,6 +64,7 @@ pamenv run <slug|id> -e dev -- node server.js
 3. 用 `cross-spawn` 启动子进程，兼容 Windows 下的 `.cmd` 和路径解析；`stdio: 'inherit'`。
 4. 把 `SIGINT` / `SIGTERM` 转发给子进程；CLI 的退出码等于子进程的退出码。
 5. 不写任何文件，不打印变量值。
+6. **明文边界**：注入后的值在子进程环境里是真实明文；CLI 不负责拦截进程内打印、同机读环境或调试器。生产类场景用 `--only` 收窄。
 
 ### `pamenv render`
 
@@ -182,8 +183,9 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 
 ## 本地凭证
 
-- 第一阶段沿用现有方式：`~/.pam/config.json`（0600），有效期由站点设置 `AUTH_CLI_TOKEN_EXPIRES_IN` 控制。
-- 第二阶段可选改为存入系统钥匙串（Windows 凭据管理器、macOS 钥匙串、Linux Secret Service），配置文件里只保留 baseUrl 等非敏感信息。
+- `config.json`（0600）只保留 baseUrl / locale / email 等非密钥字段。
+- Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI（CurrentUser）加密的 `credentials.enc`；macOS 为登录钥匙串；其它平台为 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。
+- 有效期由站点设置 `AUTH_CLI_TOKEN_EXPIRES_IN` 控制。
 
 ## 不在本次范围
 
@@ -198,7 +200,7 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 | ---- | ---------------------------------------------------------------------------------------------------------- |
 | 一   | `resolve` 接口、`pam_environments_inject` 权限与审计日志；`pamenv run`；绕过检查（已完成）                 |
 | 二   | `pamenv render` 与四种适配器；`export` 权限收紧且不再返回敏感值；受保护环境；访问记录（已完成）            |
-| 三   | 钥匙串存储凭证；CI 的 OIDC 接入                                                                            |
+| 三   | OS 绑定凭证存储（已落地初版）；CI 的 OIDC 接入（待做）                                                      |
 
 ## 待定问题
 

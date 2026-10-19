@@ -60,7 +60,10 @@ function visibilityFromFilters(filters: unknown): string {
   return '';
 }
 
-function booleanFromFilters(filters: unknown, key: 'mine' | 'writable'): boolean {
+function booleanFromFilters(
+  filters: unknown,
+  key: 'mine' | 'writable'
+): boolean {
   if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
     return false;
   }
@@ -293,7 +296,10 @@ export function PAMRoot({
         ? visibilitySummaryLabel(visibilityValue, tt)
         : '';
       const categoryPart = categoryValue || '';
-      const accessPart = [mineActive ? tt.filterMine : '', writableActive ? tt.filterWritable : '']
+      const accessPart = [
+        mineActive ? tt.filterMine : '',
+        writableActive ? tt.filterWritable : ''
+      ]
         .filter(Boolean)
         .join(' · ');
       return [keywordPart, visibilityPart, accessPart, categoryPart]
