@@ -84,8 +84,8 @@ pamenv render <slug|id> -e dev --format toml --out config.toml
 ### `pamenv pull` / `pamenv push`（保留，兼容现有用法）
 
 - 行为基本不变：对比基线、处理冲突、保留注释、写入 `.env`。
-- `pull` 时敏感变量写 `# pam:sensitive` 和本环境的占位符；本地旧文件里残留的敏感明文会在下次 `pull` 时被占位符覆盖。
-- `push` 时，已在 PAM 上标记为敏感的键本地值为本环境占位符（或为空），表示保留 PAM 上的值；填了新值表示轮换。推送成功后，本地文件和同步基线里的敏感值换回占位符。
+- `pull` 时已标记敏感的变量写 `# pam:sensitive` 和本环境的占位符；本地旧文件里残留的敏感明文会在下次 `pull` 时被占位符覆盖。未标记的变量即使键名像密钥也按普通值写出。
+- `push` 时，已在 PAM 上标记为敏感的键本地值为本环境占位符（或为空），表示保留 PAM 上的值；填了新值表示轮换。新键是否敏感由用户勾选（疑似密钥预勾提示）或 `# pam:sensitive`；`-y` 不自动标敏感。推送成功后，本地文件和同步基线里的敏感值换回占位符。
 
 #### 敏感占位符
 
@@ -131,7 +131,7 @@ interface PamEnvOutputAdapterInterface {
 
 - 网页端：所有读取接口本来就会清空敏感值，浏览器拿不到明文，也没有「显示」功能，无需改动。
 - 这一项会改变现有成员的权限：成员原来能 `pull`，改完后只能 `run`。上线前需要通知团队；SQL 升级脚本（`001` 第 8 节）会移除 team_member 的导出权限。
-- 受保护环境（`pam_environments.is_protected`）：`resolve` 除了注入权限还要求导出权限，即只有 admin / owner 能 `run`。开关和访问记录在网页端环境页，只对有导出权限的人显示。
+- 受保护环境（`pam_environments.is_protected`）：`resolve` 和变量写入都要求导出权限，即只有 admin / owner 能 `run` 或修改该环境的变量。开关和访问记录在网页端环境页，只对有导出权限的人显示。
 
 ## 服务端接口
 

@@ -195,6 +195,55 @@ describe('pamenv sync contract (mock PAM)', () => {
       );
     });
 
+    it('overwrites leftover sensitive plaintext with the placeholder', async () => {
+      await pullOwnerDev();
+      const target = join(ctx!.cwd, '.env.dev');
+      await writeFile(
+        target,
+        `API_URL=https://x.dev\nTOKEN=leftover-secret\n`,
+        'utf8'
+      );
+
+      await new PullCommand(ctx!.apiClient, ctx!.syncStore, ctx!.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx!.cwd }
+      );
+
+      const text = await readFile(target, 'utf8');
+      expect(text).not.toContain('leftover-secret');
+      expect(text).toContain(`TOKEN=${PLACEHOLDER}`);
+    });
+
+    it('keeps unmarked lookalike keys as plain values on pull', async () => {
+      ctx = await createPamCliIntegrationContext();
+      const project = ownerProject();
+      ctx.mock.setHandlers({
+        projects: [project],
+        exportByEnvId: {
+          'e-dev': exportFromMap(
+            project,
+            'e-dev',
+            'dev',
+            {
+              API_URL: 'https://x.dev',
+              DATABASE_URL: 'postgres://user:password@db/app'
+            },
+            []
+          )
+        }
+      });
+
+      await new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd }
+      );
+
+      const text = await readFile(join(ctx.cwd, '.env.dev'), 'utf8');
+      expect(text).toContain('API_URL=https://x.dev');
+      expect(text).toContain('DATABASE_URL=postgres://user:password@db/app');
+      expect(text).not.toContain('# pam:sensitive');
+    });
+
     it('export without variables[] falls back to content parse', async () => {
       ctx = await createPamCliIntegrationContext();
       const project = ownerProject();
@@ -354,13 +403,14 @@ describe('pamenv sync contract (mock PAM)', () => {
       expect(text).toContain('TOKEN=');
     });
 
-    it('push -y auto-marks secret-like new keys as sensitive', async () => {
+    it('push -y hints lookalike new keys but does not auto-mark them', async () => {
       const { project } = await pullOwnerDev();
       await writeFile(
         join(ctx!.cwd, '.env.dev'),
         `API_URL=https://local.dev\nTOKEN=${PLACEHOLDER}\nNEW_SECRET=plain\n`,
         'utf8'
       );
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       await new PushCommand(
         ctx!.apiClient,
@@ -378,11 +428,14 @@ describe('pamenv sync contract (mock PAM)', () => {
         variables: Array<{ key: string; value: string; sensitive?: boolean }>;
       };
       const created = body.variables.find((item) => item.key === 'NEW_SECRET');
-      expect(created?.sensitive).toBe(true);
+      expect(created?.sensitive).toBeUndefined();
       expect(created?.value).toBe('plain');
       const text = await readFile(join(ctx!.cwd, '.env.dev'), 'utf8');
-      expect(text).toContain('# pam:sensitive');
-      expect(text).not.toContain('plain');
+      expect(text).toContain('NEW_SECRET=plain');
+      expect(errSpy.mock.calls.some((call) => String(call[0]).includes('NEW_SECRET'))).toBe(
+        true
+      );
+      errSpy.mockRestore();
       void project;
     });
 
@@ -436,6 +489,85 @@ describe('pamenv sync contract (mock PAM)', () => {
       const text = await readFile(join(ctx!.cwd, '.env.dev'), 'utf8');
       expect(text).not.toContain('real-local-secret');
       expect(text).toMatch(/TOKEN=.+/);
+    });
+
+    it('confirm cancel does not write remote values into the local file', async () => {
+      ctx = await createPamCliIntegrationContext();
+      const project = ownerProject();
+      ctx.mock.setHandlers({
+        projects: [project],
+        exportByEnvId: {
+          'e-dev': exportFromMap(project, 'e-dev', 'dev', {
+            API_URL: 'https://x.dev',
+            TOKEN: PLACEHOLDER,
+            EXTRA: 'from-remote'
+          })
+        }
+      });
+      const target = join(ctx.cwd, '.env.dev');
+      await writeFile(target, 'API_URL=https://local.dev\n', 'utf8');
+      vi.spyOn(PamCliConfirmUtil, 'ask')
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
+      vi.spyOn(PamCliSyncConflictUtil, 'resolveConflicts').mockResolvedValue(
+        PamCliSyncSide.Local
+      );
+
+      await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd }
+      );
+
+      expect(ctx.mock.replacedBodies).toHaveLength(0);
+      const text = await readFile(target, 'utf8');
+      expect(text).toBe('API_URL=https://local.dev\n');
+      expect(text).not.toContain('from-remote');
+    });
+
+    it('push upgrades an existing key only when locally marked sensitive', async () => {
+      ctx = await createPamCliIntegrationContext();
+      const project = ownerProject();
+      ctx.mock.setHandlers({
+        projects: [project],
+        exportByEnvId: {
+          'e-dev': exportFromMap(
+            project,
+            'e-dev',
+            'dev',
+            {
+              API_URL: 'https://x.dev',
+              API_TOKEN: 'server-plaintext'
+            },
+            []
+          )
+        }
+      });
+
+      await new PullCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd }
+      );
+      const pulled = await readFile(join(ctx.cwd, '.env.dev'), 'utf8');
+      expect(pulled).toContain('API_TOKEN=server-plaintext');
+
+      await writeFile(
+        join(ctx.cwd, '.env.dev'),
+        `API_URL=https://x.dev\n# pam:sensitive\nAPI_TOKEN=server-plaintext\n`,
+        'utf8'
+      );
+
+      await new PushCommand(ctx.apiClient, ctx.syncStore, ctx.authStore).run(
+        'fe-base',
+        { envName: 'dev', outDir: ctx.cwd, yes: true, force: true }
+      );
+
+      expect(ctx.mock.replacedBodies.length).toBe(1);
+      const body = ctx.mock.replacedBodies[0]?.body as {
+        variables: Array<{ key: string; value: string; sensitive?: boolean }>;
+      };
+      const token = body.variables.find((item) => item.key === 'API_TOKEN');
+      expect(token?.sensitive).toBe(true);
+      expect(token?.value).toBe('server-plaintext');
     });
 
     it('replace API 403 fails closed with no silent success', async () => {

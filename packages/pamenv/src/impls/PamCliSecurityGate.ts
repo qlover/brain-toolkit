@@ -29,6 +29,8 @@ export type PamCliRedactedExportVarsType = {
   readonly placeholder: string;
   /** Sensitive keys forced to the env placeholder (including leaked plaintext). */
   readonly placeholderKeys: readonly string[];
+  /** Keys the server itself marked sensitive. */
+  readonly serverSensitiveKeys: ReadonlySet<string>;
   /**
    * Sensitive keys written as empty keep values when the server sent no
    * placeholder (key names are kept so a later file push does not delete them).
@@ -152,27 +154,32 @@ export class PamCliSecurityGate {
    * later file push still treats them as keep (not delete).
    *
    * Compatible with older PAM exports that incorrectly return plaintext for
-   * keys listed in `sensitiveKeys`.
+   * keys listed in `sensitiveKeys`. Only server-marked sensitive keys are
+   * redacted; unmarked lookalike names stay as plain values until the user
+   * marks them.
    */
   public static redactExportForLocalOutput(
     exported: PamCliExportResultType
   ): PamCliRedactedExportVarsType {
     const placeholder = exported.sensitivePlaceholder?.trim() || '';
-    const sensitiveKeys = new Set(exported.sensitiveKeys || []);
+    const serverSensitiveKeys = new Set(exported.sensitiveKeys || []);
+    const sensitiveKeys = new Set(serverSensitiveKeys);
     const source =
       exported.variables && exported.variables.length > 0
         ? exported.variables.map((variable) => ({
             key: variable.key,
             value: variable.value ?? '',
             sensitive:
-              variable.sensitive === true || sensitiveKeys.has(variable.key),
+              variable.sensitive === true ||
+              serverSensitiveKeys.has(variable.key),
             ...(variable.comments ? { comments: [...variable.comments] } : {})
           }))
         : PamCliDotenvUtil.parse(exported.content).map((variable) => ({
             key: variable.key,
             value: variable.value,
             sensitive:
-              variable.sensitive === true || sensitiveKeys.has(variable.key),
+              variable.sensitive === true ||
+              serverSensitiveKeys.has(variable.key),
             ...(variable.comments ? { comments: [...variable.comments] } : {})
           }));
 
@@ -222,7 +229,8 @@ export class PamCliSecurityGate {
       ),
       emptyKeepKeys: [...new Set(emptyKeepKeys)].sort((a, b) =>
         a.localeCompare(b)
-      )
+      ),
+      serverSensitiveKeys
     };
   }
 

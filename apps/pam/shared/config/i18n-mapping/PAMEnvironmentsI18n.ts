@@ -96,6 +96,8 @@ export const pamEnvironmentsI18n = Object.freeze({
   sensitiveReplacePlaceholder:
     i18nKeys.PAGE_PAM_ENVIRONMENTS_SENSITIVE_REPLACE_PLACEHOLDER,
   sensitiveHint: i18nKeys.PAGE_PAM_ENVIRONMENTS_SENSITIVE_HINT,
+  sensitiveLookalikeHint:
+    i18nKeys.PAGE_PAM_ENVIRONMENTS_SENSITIVE_LOOKALIKE_HINT,
   unsavedChanges: i18nKeys.PAGE_PAM_ENVIRONMENTS_UNSAVED_CHANGES,
   discardChanges: i18nKeys.PAGE_PAM_ENVIRONMENTS_DISCARD_CHANGES,
   discardConfirm: i18nKeys.PAGE_PAM_ENVIRONMENTS_DISCARD_CONFIRM,

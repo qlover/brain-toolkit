@@ -170,7 +170,18 @@ describe('PamCliEnvDiffUtil', () => {
       PamCliEnvDiffUtil.formatLine(diff.modified[1]!, { showValues: true })
     ).toBe('SECRET=*****');
     expect(PamCliEnvDiffUtil.looksSensitiveKey('API_TOKEN')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('AWS_ACCESS_KEY_ID')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('OPENAI_APIKEY')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('JWT')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('DATABASE_URL')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('SESSION_ID')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('NEXT_PUBLIC_API_KEY')).toBe(
+      true
+    );
     expect(PamCliEnvDiffUtil.looksSensitiveKey('SITE_URL')).toBe(false);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('API_URL')).toBe(false);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('AUTHOR_NAME')).toBe(false);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('PUBLIC_KEY')).toBe(false);
   });
 
   it('flags large key-name changes', () => {

@@ -27,6 +27,6 @@ export async function POST(req: NextRequest, context: ResolveRouteContext) {
     .runWithJson(async ({ parameters: { IOC } }) =>
       IOC(PAMController).resolveEnvironment(projectId, envId, req)
     );
-  response.headers.set('Cache-Control', 'no-store');
+  response.headers.set('Cache-Control', 'private, no-store');
   return response;
 }

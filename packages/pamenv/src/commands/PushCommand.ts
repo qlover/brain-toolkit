@@ -31,8 +31,8 @@ import {
   PAMENV_CLI_PUSH_PLACEHOLDER_INVALID,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
-  PAMENV_CLI_PUSH_SENSITIVE_AUTO,
   PAMENV_CLI_PUSH_SENSITIVE_CLEARED,
+  PAMENV_CLI_PUSH_SENSITIVE_HINT,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
 } from '../i18n/identifier/pamenv_cli';
@@ -160,6 +160,7 @@ export class PushCommand {
 
     let remoteMap: Record<string, string> = {};
     let remoteSensitiveKeys = new Set<string>();
+    let serverSensitiveKeys = new Set<string>();
     let remoteVars: PamCliParsedVarType[] = [];
     let placeholder: string | undefined;
 
@@ -171,6 +172,7 @@ export class PushCommand {
       const redacted =
         PamCliSecurityGate.redactExportForLocalOutput(remoteExport);
       remoteSensitiveKeys = new Set(redacted.sensitiveKeys);
+      serverSensitiveKeys = new Set(redacted.serverSensitiveKeys);
       placeholder = redacted.placeholder || undefined;
       remoteVars = redacted.variables.map((item) => ({
         key: item.key,
@@ -205,7 +207,15 @@ export class PushCommand {
       remoteMap
     );
 
-    if (kind === PamCliSyncConflictKind.Noop) {
+    // 本地已用 `# pam:sensitive` 标了远端尚未敏感的键时，仍要推一次以升级。
+    const needsSensitiveUpgrade = localVars.some(
+      (item) =>
+        item.key in remoteMap &&
+        !serverSensitiveKeys.has(item.key) &&
+        item.sensitive
+    );
+
+    if (kind === PamCliSyncConflictKind.Noop && !needsSensitiveUpgrade) {
       await this.syncStore.saveBaseline(
         project.id,
         project.slug,
@@ -235,6 +245,9 @@ export class PushCommand {
     const needsThreeWay =
       kind === PamCliSyncConflictKind.Conflict ||
       kind === PamCliSyncConflictKind.NoBase;
+    let pendingRemoteMerge: string[] = [];
+    let promptMarkedKeys: string[] = [];
+    let hintedUnmarkedKeys: string[] = [];
 
     if (needsThreeWay) {
       if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
@@ -299,19 +312,21 @@ export class PushCommand {
         variables: localVars,
         trailingComments: localDoc.trailingComments
       };
-      if (takenFromRemote.length > 0) {
-        await PamCliPrivateFsUtil.writePrivateFile(
-          target,
-          PamCliDotenvUtil.serializeDocument(localDoc)
-        );
-        console.log(
-          PamCliI18n.t(PAMENV_CLI_PUSH_MERGED_REMOTE, {
-            keys: takenFromRemote.join(', ')
-          })
-        );
-      }
+      // 确认推送成功之前不把远端值写入本地文件；取消时磁盘保持原样。
+      pendingRemoteMerge = takenFromRemote;
       const mergedLocalMap = PamCliDotenvUtil.toValueMap(localVars);
       if (PamCliDotenvUtil.valueMapsEqual(mergedLocalMap, remoteMap)) {
+        if (pendingRemoteMerge.length > 0) {
+          await PamCliPrivateFsUtil.writePrivateFile(
+            target,
+            PamCliDotenvUtil.serializeDocument(localDoc)
+          );
+          console.log(
+            PamCliI18n.t(PAMENV_CLI_PUSH_MERGED_REMOTE, {
+              keys: pendingRemoteMerge.join(', ')
+            })
+          );
+        }
         await this.syncStore.saveBaseline(
           project.id,
           project.slug,
@@ -333,48 +348,44 @@ export class PushCommand {
       .filter((item) => !(item.key in remoteMap) && !item.sensitive)
       .map((item) => item.key);
 
-    // Sensitive marking is interactive safety; `-f` alone must not skip it.
-    // `-y` skips the prompt but still auto-marks secret-like key names.
+    // 是否敏感由用户决定：交互勾选（疑似密钥预勾），`-y` 跳过勾选只提示。
+    // 标记先留在内存里，确认并推送成功后才写文件。
     if (unmarkedNewKeys.length > 0) {
-      const selected = options.yes
-        ? unmarkedNewKeys.filter((key) =>
-            PamCliEnvDiffUtil.looksSensitiveKey(key)
-          )
-        : await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
-      if (selected.length > 0) {
-        const selectedSet = new Set(selected);
-        localVars = localVars.map((item) =>
-          selectedSet.has(item.key) ? { ...item, sensitive: true } : item
-        );
-        localDoc = {
-          variables: localVars,
-          trailingComments: localDoc.trailingComments
-        };
-        await PamCliPrivateFsUtil.writePrivateFile(
-          target,
-          PamCliDotenvUtil.serializeDocument(localDoc)
-        );
-        console.log(
-          options.yes
-            ? PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_AUTO, {
-                path: target,
-                keys: selected.join(', ')
-              })
-            : `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${selected.join(', ')}`
-        );
+      const lookalike = unmarkedNewKeys.filter((key) =>
+        PamCliEnvDiffUtil.looksSensitiveKey(key)
+      );
+      if (options.yes) {
+        hintedUnmarkedKeys = lookalike;
+      } else {
+        const picked =
+          await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
+        promptMarkedKeys = picked;
+        if (picked.length > 0) {
+          const selectedSet = new Set(picked);
+          localVars = localVars.map((item) =>
+            selectedSet.has(item.key) ? { ...item, sensitive: true } : item
+          );
+          localDoc = {
+            variables: localVars,
+            trailingComments: localDoc.trailingComments
+          };
+        }
       }
     }
 
+    const remoteKeySet = new Set(Object.keys(remoteMap));
     this.assertPlaceholdersValid(
       localVars,
       targetEnv.name,
       remoteSensitiveKeys,
-      placeholder
+      placeholder,
+      remoteKeySet
     );
     this.assertSensitiveValuesPresent(
       localVars,
       targetEnv.name,
-      remoteSensitiveKeys
+      remoteSensitiveKeys,
+      remoteKeySet
     );
 
     const diff = PamCliEnvDiffUtil.diff(
@@ -438,14 +449,13 @@ export class PushCommand {
 
     const payload: PamCliVariableInputType[] = localVars.map((item) => {
       const comments = PamCliDotenvUtil.toApiComments(item);
-      const isNew = !(item.key in remoteMap);
       const base: PamCliVariableInputType = {
         key: item.key,
         // Empty keeps the stored secret on every server version.
         value: placeholder && item.value === placeholder ? '' : item.value,
         ...(comments !== undefined ? { comments } : {})
       };
-      if (isNew && item.sensitive) {
+      if (item.sensitive || remoteSensitiveKeys.has(item.key)) {
         return { ...base, sensitive: true };
       }
       return base;
@@ -484,13 +494,34 @@ export class PushCommand {
     const shouldRewriteLocal =
       cleared.keys.length > 0 ||
       Object.keys(overrides).length > 0 ||
-      unsetKeys.size > 0;
+      unsetKeys.size > 0 ||
+      pendingRemoteMerge.length > 0 ||
+      promptMarkedKeys.length > 0;
     if (shouldRewriteLocal) {
       await PamCliPrivateFsUtil.writePrivateFile(
         target,
         PamCliDotenvUtil.serializeDocument({
           variables: cleared.variables,
           trailingComments: localDoc.trailingComments
+        })
+      );
+    }
+    if (pendingRemoteMerge.length > 0) {
+      console.log(
+        PamCliI18n.t(PAMENV_CLI_PUSH_MERGED_REMOTE, {
+          keys: pendingRemoteMerge.join(', ')
+        })
+      );
+    }
+    if (promptMarkedKeys.length > 0) {
+      console.log(
+        `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${promptMarkedKeys.join(', ')}`
+      );
+    }
+    if (hintedUnmarkedKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_HINT, {
+          keys: hintedUnmarkedKeys.join(', ')
         })
       );
     }
@@ -774,7 +805,9 @@ export class PushCommand {
   ): { variables: PamCliParsedVarType[]; keys: string[] } {
     const keys: string[] = [];
     const next = variables.map((item) => {
-      if (!item.sensitive && !remoteSensitiveKeys.has(item.key)) {
+      const sensitive =
+        item.sensitive || remoteSensitiveKeys.has(item.key);
+      if (!sensitive) {
         return item;
       }
       if (item.value !== placeholder && item.value !== '') {
@@ -786,26 +819,32 @@ export class PushCommand {
   }
 
   /**
-   * A placeholder is only valid as this env's placeholder on a key that is
-   * already sensitive on PAM (it means "keep"); anything else would store the
-   * placeholder text as the secret.
+   * 占位符只有在表示「保留远端原值」时合法：键已敏感，或远端已有且这次会标成敏感。
+   * 其它占位符不能写回，否则会把占位符文本存成密钥。
    *
    * @param variables - Local variables
    * @param envName - Environment name for the error message
    * @param remoteSensitiveKeys - Keys already sensitive on PAM
    * @param placeholder - Env placeholder from export (none for new envs)
+   * @param remoteKeys - Keys that already exist on PAM (upgrade + keep)
    */
   protected assertPlaceholdersValid(
     variables: readonly PamCliParsedVarType[],
     envName: string,
     remoteSensitiveKeys: ReadonlySet<string>,
-    placeholder: string | undefined
+    placeholder: string | undefined,
+    remoteKeys?: ReadonlySet<string>
   ): void {
     const invalid = variables
       .filter(
         (item) =>
           PamCliSensitivePlaceholderUtil.isPlaceholder(item.value) &&
-          !(item.value === placeholder && remoteSensitiveKeys.has(item.key))
+          !this.isPlaceholderKeep(
+            item,
+            remoteSensitiveKeys,
+            placeholder,
+            remoteKeys
+          )
       )
       .map((item) => item.key);
 
@@ -828,18 +867,20 @@ export class PushCommand {
    * @param variables - Local variables after sensitive marking
    * @param envName - Environment name for the error message
    * @param remoteSensitiveKeys - Keys already sensitive on PAM
+   * @param remoteKeys - Keys that already exist on PAM (empty upgrades them)
    */
   protected assertSensitiveValuesPresent(
     variables: readonly PamCliParsedVarType[],
     envName: string,
-    remoteSensitiveKeys: ReadonlySet<string>
+    remoteSensitiveKeys: ReadonlySet<string>,
+    remoteKeys?: ReadonlySet<string>
   ): void {
     const missing = variables
       .filter(
         (item) =>
           item.sensitive &&
           item.value.trim() === '' &&
-          !remoteSensitiveKeys.has(item.key)
+          !this.isExistingSecretKeep(item, remoteSensitiveKeys, remoteKeys)
       )
       .map((item) => item.key);
 
@@ -853,5 +894,46 @@ export class PushCommand {
         keys: missing.join(', ')
       })
     );
+  }
+
+  /**
+   * 本环境占位符表示保留远端原值：键已敏感，或已存在且这次会标成敏感。
+   *
+   * @param item - 本地变量
+   * @param remoteSensitiveKeys - 远端已敏感的键
+   * @param placeholder - 本环境占位符
+   * @param remoteKeys - 远端已有的键
+   */
+  protected isPlaceholderKeep(
+    item: PamCliParsedVarType,
+    remoteSensitiveKeys: ReadonlySet<string>,
+    placeholder: string | undefined,
+    remoteKeys?: ReadonlySet<string>
+  ): boolean {
+    if (!placeholder || item.value !== placeholder) {
+      return false;
+    }
+    return this.isExistingSecretKeep(item, remoteSensitiveKeys, remoteKeys);
+  }
+
+  /**
+   * 空值或占位符可以保留远端原值的键：已经敏感，或远端已有且本地会把它标成敏感。
+   *
+   * @param item - 本地变量
+   * @param remoteSensitiveKeys - 远端已敏感的键
+   * @param remoteKeys - 远端已有的键；缺省时只认已敏感键
+   */
+  protected isExistingSecretKeep(
+    item: PamCliParsedVarType,
+    remoteSensitiveKeys: ReadonlySet<string>,
+    remoteKeys?: ReadonlySet<string>
+  ): boolean {
+    if (remoteSensitiveKeys.has(item.key)) {
+      return true;
+    }
+    if (!remoteKeys?.has(item.key)) {
+      return false;
+    }
+    return item.sensitive === true;
   }
 }

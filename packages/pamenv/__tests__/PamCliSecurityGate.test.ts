@@ -116,6 +116,29 @@ describe('PamCliSecurityGate.redactExportForLocalOutput', () => {
     ]);
     expect(result.emptyKeepKeys).toEqual(['TOKEN']);
   });
+
+  it('keeps unmarked lookalike keys as plain values', () => {
+    const result = PamCliSecurityGate.redactExportForLocalOutput({
+      ...base,
+      sensitiveKeys: [],
+      variables: [
+        { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+        {
+          key: 'DATABASE_URL',
+          value: 'postgres://user:password@db/app',
+          sensitive: false
+        }
+      ]
+    });
+    expect(result.variables).toEqual([
+      { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+      {
+        key: 'DATABASE_URL',
+        value: 'postgres://user:password@db/app',
+        sensitive: false
+      }
+    ]);
+  });
 });
 
 describe('PamCliSecurityGate.run guards', () => {

@@ -900,11 +900,11 @@ export const PAMENV_CLI_PUSH_LARGE_WARNING = 'pamenv_cli:push_large_warning';
 export const PAMENV_CLI_PUSHED_DETAIL = 'pamenv_cli:pushed_detail';
 
 /**
- * @description push -y 时按键名启发式自动标记敏感
- * @localZh 已在 {{path}} 按键名自动加上 {{keys}} 的 `# pam:sensitive`（`-y` 跳过交互选择）。
- * @localEn Auto-marked {{keys}} as `# pam:sensitive` in {{path}} (`-y` skips the interactive picker).
+ * @description push -y 跳过敏感勾选时，提示疑似密钥未标记
+ * @localZh [pamenv] {{keys}} 看起来像密钥，但尚未标记敏感。需要时请加 `# pam:sensitive`，或去掉 `-y` 再推送以手动勾选。
+ * @localEn [pamenv] {{keys}} look like secrets but are not marked sensitive. Add `# pam:sensitive`, or omit `-y` to pick them interactively.
  */
-export const PAMENV_CLI_PUSH_SENSITIVE_AUTO = 'pamenv_cli:push_sensitive_auto';
+export const PAMENV_CLI_PUSH_SENSITIVE_HINT = 'pamenv_cli:push_sensitive_hint';
 
 /**
  * @description {{count}} 个新变量未标记为敏感。现在选择？
@@ -1225,6 +1225,14 @@ export const PAMENV_CLI_PULL_SENSITIVE_PLACEHOLDER =
  */
 export const PAMENV_CLI_PULL_SENSITIVE_EMPTY =
   'pamenv_cli:pull_sensitive_empty';
+
+/**
+ * @description pull 用占位符盖掉本地残留的敏感明文
+ * @localZh [pamenv] 已用占位符覆盖 {{count}} 个敏感变量的本地明文（{{keys}}）。未推送的新值不会保留，请用 `pamenv run` 注入。
+ * @localEn [pamenv] Replaced local plaintext for {{count}} sensitive variable(s) ({{keys}}) with placeholders. Unpushed values were not kept; inject with `pamenv run`.
+ */
+export const PAMENV_CLI_PULL_SENSITIVE_OVERWRITTEN =
+  'pamenv_cli:pull_sensitive_overwritten';
 
 /**
  * @description push 行内赋值格式非法

@@ -483,9 +483,28 @@ export class PAMService implements PAMServiceInterface {
    * @param requestEnvs - Environments from the update request
    * @returns Environments with secrets preserved where requested
    */
+  /**
+   * 受保护环境的变量只允许有导出权限的成员修改。
+   *
+   * @param role - 当前用户在项目上的角色
+   * @param isProtected - 环境是否受保护
+   */
+  protected assertCanWriteProtectedEnvironment(
+    role: PAMProjectAccessRole,
+    isProtected: boolean | null | undefined
+  ): void {
+    if (
+      isProtected === true &&
+      !hasOrgPermission(role, PermissionKey.pam_environments_export)
+    ) {
+      throw new ExecutorError(API_PAM_ENV_PROTECTED);
+    }
+  }
+
   protected async mergeRequestEnvironments(
     projectId: string,
-    requestEnvs: NonNullable<PAMProjectUpdate['environments']>
+    requestEnvs: NonNullable<PAMProjectUpdate['environments']>,
+    role: PAMProjectAccessRole
   ): Promise<NonNullable<PAMProjectUpdate['environments']>> {
     const existingEnvs = await this.projectRepo.getEnvironmentsByProjectId(
       projectId,
@@ -501,6 +520,7 @@ export class PAMService implements PAMServiceInterface {
       }
 
       const previous = env.id ? existingById.get(env.id) : undefined;
+      this.assertCanWriteProtectedEnvironment(role, previous?.is_protected);
       const merged = PAMEnvVariableMergeUtil.mergeVariables(
         previous?.variables,
         env.variables,
@@ -764,7 +784,8 @@ export class PAMService implements PAMServiceInterface {
 
       const mergedEnvironments = await this.mergeRequestEnvironments(
         id,
-        params.environments
+        params.environments,
+        role
       );
       this.validateVariableKeys(mergedEnvironments);
       this.assertSensitiveValuesPresent(mergedEnvironments);
@@ -1287,7 +1308,7 @@ export class PAMService implements PAMServiceInterface {
     envId: string,
     params: PAMEnvReplaceVariables
   ): Promise<PAMEnvWriteable> {
-    await this.assertOrgPermission(
+    const { role } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_variables_write
     );
@@ -1300,6 +1321,7 @@ export class PAMService implements PAMServiceInterface {
     if (!existing) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
+    this.assertCanWriteProtectedEnvironment(role, existing.is_protected);
 
     const placeholder = this.getSecretEncryption().sensitivePlaceholder(
       existing.id

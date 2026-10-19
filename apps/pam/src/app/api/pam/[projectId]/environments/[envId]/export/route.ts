@@ -17,7 +17,7 @@ type ExportRouteContext = {
  */
 export async function GET(req: NextRequest, context: ExportRouteContext) {
   const { projectId, envId } = await context.params;
-  return new NextApiServer(API_PAM_ENVIRONMENTS_EXPORT, req)
+  const response = await new NextApiServer(API_PAM_ENVIRONMENTS_EXPORT, req)
     .use(new PamCliAuthPlugin())
     .use(
       new RequirePermissionPlugin(PermissionKey.pam_environments_export, {
@@ -46,4 +46,6 @@ export async function GET(req: NextRequest, context: ExportRouteContext) {
 
       return result;
     });
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }
