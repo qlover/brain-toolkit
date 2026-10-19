@@ -38,6 +38,24 @@ export class PamCliPrivateFsUtil {
   }
 
   /**
+   * Best-effort: set an existing file to owner-only (`0600`) on POSIX.
+   * Used when rewriting our own config after vault migration (legacy files
+   * may have been created with a loose umask). Does not create the file.
+   *
+   * @param filePath - Absolute file path
+   */
+  public static async ensurePrivateFileMode(filePath: string): Promise<void> {
+    if (process.platform === 'win32') {
+      return;
+    }
+    try {
+      await chmod(filePath, this.FILE_MODE);
+    } catch {
+      // Missing path or unsupported FS — writePrivateFile will create fresh.
+    }
+  }
+
+  /**
    * Refuses to overwrite a file that is readable by group or others (POSIX).
    * No-op when the path does not exist or the platform has no mode bits.
    *

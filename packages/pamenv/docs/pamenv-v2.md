@@ -192,7 +192,6 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 - 端到端加密（服务端无法解密）。
 - 服务端代理第三方 API 密钥。
 - 动态凭证（按次生成数据库账号等）。
-- CI 的 OIDC 免密钥接入：思路同 npm Trusted Publishing，放到第三阶段单独设计。
 
 ## 分阶段
 
@@ -200,7 +199,7 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 | ---- | ---------------------------------------------------------------------------------------------------------- |
 | 一   | `resolve` 接口、`pam_environments_inject` 权限与审计日志；`pamenv run`；绕过检查（已完成）                 |
 | 二   | `pamenv render` 与四种适配器；`export` 权限收紧且不再返回敏感值；受保护环境；访问记录（已完成）            |
-| 三   | OS 绑定凭证存储（已落地初版）；CI 的 OIDC 接入（待做）                                                      |
+| 三   | OS 绑定凭证存储（已落地初版）；CI 的 OIDC 接入（见下方 TODO）                                               |
 
 ## 待定问题
 
@@ -208,3 +207,19 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 2. 收紧 `export` 权限后，现有依赖 `pull` 的成员如何过渡：是否需要一段时间的兼容期？
 3. 适配器是否需要支持嵌套结构，比如把 `DB__HOST` 展开为 `db.host`？
 4. 审计日志保留多久？
+
+## TODO：CI OIDC（Trusted Publishing 式，待单独分支）
+
+现状：CLI 是「真人登录 → 长寿命 `pam_cli` JWT（`jti` 可吊销）→ 项目角色鉴权」。无 GitHub Actions 等联邦交换；CI 目前只能塞长寿命用户 token（不推荐）。
+
+目标：CI 用平台 OIDC `id_token` 换短寿命 `pam_cli`，再走现有 `resolve` / `export`，本地 vault 登录不变。
+
+建议切片（另开 `feat/pam-cli-oidc-exchange`）：
+
+1. **信任配置**：`issuer` + `aud` + claim 匹配（如 `repository` / `environment`）→ `projectId` + 权限档；第一刀绑固定 bot 用户。
+2. **交换 API**：`POST /api/pam/cli/oidc/exchange` — 验 JWKS → 签发分钟级 `pam_cli` + 审计（repo / run_id）。
+3. **pamenv CI 模式**：读 `ACTIONS_ID_TOKEN_REQUEST_*` → exchange → 内存用 token（不写 vault）。
+4. **默认只授 inject**；export 需单独绑定。claim 绑死具体 repo，禁止任意 fork。
+5. 产品化（第二刀）：多 issuer、网页管理信任关系、环境级绑定。
+
+过渡（非 OIDC）：专用 bot + 短 TTL CLI token + CI secret，权限复用现有 `pam_environments_*`。

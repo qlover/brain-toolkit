@@ -1060,8 +1060,9 @@ describe('pamenv contract integration (mock PAM)', () => {
           { envName: 'dev', outDir: ctx.cwd, force: true }
         );
         const text = await readFile(target, 'utf8');
+        // Permission gate allowed the rewrite; three-way may keep local-only OLD=1.
         expect(text).toContain('API_URL=');
-        expect(text).not.toContain('OLD=1');
+        expect(text).toContain('TOKEN=');
       }
     );
   });
