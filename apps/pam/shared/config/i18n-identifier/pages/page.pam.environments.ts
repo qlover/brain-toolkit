@@ -596,6 +596,14 @@ export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_HINT =
   'page_pam_environments:sensitiveHint';
 
 /**
+ * @description Keys that look like secrets but are not marked sensitive yet
+ * @localZh 以下键名看起来像密钥，保存前请确认是否勾选「敏感」：%keys%
+ * @localEn These keys look like secrets; mark them as sensitive before saving if needed: %keys%
+ */
+export const PAGE_PAM_ENVIRONMENTS_SENSITIVE_LOOKALIKE_HINT =
+  'page_pam_environments:sensitiveLookalikeHint';
+
+/**
  * @description Unsaved changes bar
  * @localZh 有 %count% 处未保存的修改
  * @localEn %count% unsaved change(s)

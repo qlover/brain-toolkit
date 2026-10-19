@@ -31,8 +31,8 @@ import {
   PAMENV_CLI_PUSH_PLACEHOLDER_INVALID,
   PAMENV_CLI_PUSH_REMOTE_ONLY,
   PAMENV_CLI_PUSH_REVIEW,
-  PAMENV_CLI_PUSH_SENSITIVE_AUTO,
   PAMENV_CLI_PUSH_SENSITIVE_CLEARED,
+  PAMENV_CLI_PUSH_SENSITIVE_HINT,
   PAMENV_CLI_SENSITIVE_VALUES_REQUIRED,
   PAMENV_CLI_WILL_CREATE_ENV
 } from '../i18n/identifier/pamenv_cli';
@@ -207,11 +207,12 @@ export class PushCommand {
       remoteMap
     );
 
+    // 本地已用 `# pam:sensitive` 标了远端尚未敏感的键时，仍要推一次以升级。
     const needsSensitiveUpgrade = localVars.some(
       (item) =>
         item.key in remoteMap &&
         !serverSensitiveKeys.has(item.key) &&
-        (item.sensitive || PamCliEnvDiffUtil.looksSensitiveKey(item.key))
+        item.sensitive
     );
 
     if (kind === PamCliSyncConflictKind.Noop && !needsSensitiveUpgrade) {
@@ -245,8 +246,8 @@ export class PushCommand {
       kind === PamCliSyncConflictKind.Conflict ||
       kind === PamCliSyncConflictKind.NoBase;
     let pendingRemoteMerge: string[] = [];
-    let autoMarkedKeys: string[] = [];
     let promptMarkedKeys: string[] = [];
+    let hintedUnmarkedKeys: string[] = [];
 
     if (needsThreeWay) {
       if (kind === PamCliSyncConflictKind.NoBase && !options.yes) {
@@ -347,31 +348,28 @@ export class PushCommand {
       .filter((item) => !(item.key in remoteMap) && !item.sensitive)
       .map((item) => item.key);
 
-    // 密钥式键名一律标敏感。其余新键仍可交互选择；`-y` 不再询问。
+    // 是否敏感由用户决定：交互勾选（疑似密钥预勾），`-y` 跳过勾选只提示。
     // 标记先留在内存里，确认并推送成功后才写文件。
     if (unmarkedNewKeys.length > 0) {
-      const secretLike = unmarkedNewKeys.filter((key) =>
+      const lookalike = unmarkedNewKeys.filter((key) =>
         PamCliEnvDiffUtil.looksSensitiveKey(key)
       );
-      const rest = unmarkedNewKeys.filter(
-        (key) => !PamCliEnvDiffUtil.looksSensitiveKey(key)
-      );
-      const picked =
-        options.yes || rest.length === 0
-          ? []
-          : await PamCliSensitivePromptUtil.pickNewSensitiveKeys(rest);
-      const selected = [...secretLike, ...picked];
-      autoMarkedKeys = secretLike;
-      promptMarkedKeys = picked;
-      if (selected.length > 0) {
-        const selectedSet = new Set(selected);
-        localVars = localVars.map((item) =>
-          selectedSet.has(item.key) ? { ...item, sensitive: true } : item
-        );
-        localDoc = {
-          variables: localVars,
-          trailingComments: localDoc.trailingComments
-        };
+      if (options.yes) {
+        hintedUnmarkedKeys = lookalike;
+      } else {
+        const picked =
+          await PamCliSensitivePromptUtil.pickNewSensitiveKeys(unmarkedNewKeys);
+        promptMarkedKeys = picked;
+        if (picked.length > 0) {
+          const selectedSet = new Set(picked);
+          localVars = localVars.map((item) =>
+            selectedSet.has(item.key) ? { ...item, sensitive: true } : item
+          );
+          localDoc = {
+            variables: localVars,
+            trailingComments: localDoc.trailingComments
+          };
+        }
       }
     }
 
@@ -457,11 +455,7 @@ export class PushCommand {
         value: placeholder && item.value === placeholder ? '' : item.value,
         ...(comments !== undefined ? { comments } : {})
       };
-      if (
-        item.sensitive ||
-        remoteSensitiveKeys.has(item.key) ||
-        PamCliEnvDiffUtil.looksSensitiveKey(item.key)
-      ) {
+      if (item.sensitive || remoteSensitiveKeys.has(item.key)) {
         return { ...base, sensitive: true };
       }
       return base;
@@ -502,7 +496,6 @@ export class PushCommand {
       Object.keys(overrides).length > 0 ||
       unsetKeys.size > 0 ||
       pendingRemoteMerge.length > 0 ||
-      autoMarkedKeys.length > 0 ||
       promptMarkedKeys.length > 0;
     if (shouldRewriteLocal) {
       await PamCliPrivateFsUtil.writePrivateFile(
@@ -520,17 +513,16 @@ export class PushCommand {
         })
       );
     }
-    if (autoMarkedKeys.length > 0) {
-      console.log(
-        PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_AUTO, {
-          path: target,
-          keys: autoMarkedKeys.join(', ')
-        })
-      );
-    }
     if (promptMarkedKeys.length > 0) {
       console.log(
         `Updated ${target} with ${PamCliDotenvUtil.SENSITIVE_MARKER} for: ${promptMarkedKeys.join(', ')}`
+      );
+    }
+    if (hintedUnmarkedKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_PUSH_SENSITIVE_HINT, {
+          keys: hintedUnmarkedKeys.join(', ')
+        })
       );
     }
     if (cleared.keys.length > 0) {
@@ -814,9 +806,7 @@ export class PushCommand {
     const keys: string[] = [];
     const next = variables.map((item) => {
       const sensitive =
-        item.sensitive ||
-        remoteSensitiveKeys.has(item.key) ||
-        PamCliEnvDiffUtil.looksSensitiveKey(item.key);
+        item.sensitive || remoteSensitiveKeys.has(item.key);
       if (!sensitive) {
         return item;
       }
@@ -944,8 +934,6 @@ export class PushCommand {
     if (!remoteKeys?.has(item.key)) {
       return false;
     }
-    return (
-      item.sensitive || PamCliEnvDiffUtil.looksSensitiveKey(item.key)
-    );
+    return item.sensitive === true;
   }
 }

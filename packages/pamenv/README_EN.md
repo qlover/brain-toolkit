@@ -258,9 +258,9 @@ pamenv push <slug|id> -e staging JWT_SECRET=new…   # inline override on top of
 pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines removed after success)
 ```
 
-- `pull` requires export permission (project admin / owner). Sensitive keys, and secret-looking names (`TOKEN`, `SECRET`, `PASSWORD`, `ACCESS_KEY`, `APIKEY`, `JWT`, `SESSION`, `COOKIE`, `DATABASE_URL`, and similar), are written with `# pam:sensitive` and this environment's placeholder `__PAM_SENSITIVE_…__` (different per environment), even when the server did not mark them. Leftover local plaintext for those keys is replaced; unpushed values are not kept. If the server sends no placeholder, keys are kept with an empty value (empty on push means keep). Prefer `pamenv run` for development.
+- `pull` requires export permission (project admin / owner). **Already-sensitive** keys are written with `# pam:sensitive` and this environment's placeholder `__PAM_SENSITIVE_…__` (different per environment); leftover local plaintext for those keys is replaced. Unmarked keys (even names like `DATABASE_URL`) stay as plain values. If the server sends no placeholder, sensitive keys are kept with an empty value (empty on push means keep). Prefer `pamenv run` for development.
 - **File push = full desired state**: a missing key in the file means delete it remotely; push does not auto-pad sensitive keys back in.
-- On `push`, a placeholder (or an empty value) for a key that is already sensitive, or whose name looks like a secret, means "keep the PAM value"; a new value rotates it. An existing non-sensitive key can be upgraded to sensitive, and cannot be downgraded. Remote values are not written into the local file until the push succeeds. After success, sensitive values in the local file are switched back to the placeholder (or empty when none exists).
+- On `push`, a placeholder (or an empty value) for an already-sensitive key means "keep the PAM value"; a new value rotates it. New unmarked keys can be picked interactively (lookalike names are pre-checked as a hint); `-y` skips the picker and only warns about lookalikes. Use `# pam:sensitive` to upgrade an existing plain key; sensitive cannot be downgraded. Remote values are not written into the local file until the push succeeds. After success, sensitive values in the local file are switched back to the placeholder (or empty when none exists).
 - Inline `KEY=value` overlays the local file before a full replace; `--unset <keys>` removes keys from the final set (applied after overrides).
 - Placeholders from another environment (e.g. a copied file) are rejected, so a placeholder is never stored as a secret.
 
@@ -273,7 +273,7 @@ pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines re
 
 - Changes are merged key by key against the last pull/push baseline: a key changed on one side only takes that side; only keys changed on both sides conflict.
 - On conflict, `pull` defaults to remote values and `push` defaults to local values. The conflicting keys are listed and you confirm (or pick the other side, or abort); you are then told to edit the local file manually and `push`.
-- `pull` keeps unpushed local edits of ordinary keys and tells you about them. Sensitive and secret-looking keys are always replaced with the placeholder. `push` merges keys changed only on the remote into your local file after a successful push, instead of overwriting your other edits.
+- `pull` keeps unpushed local edits of ordinary keys and tells you about them. Already-sensitive keys are always replaced with the placeholder. `push` merges keys changed only on the remote into your local file after a successful push, instead of overwriting your other edits.
 - **Without a baseline** (never pulled/pushed here): one-sided keys are kept; only keys present on both sides with different values conflict. A first `push` therefore does not silently drop remote-only keys (use `--unset`, or sync then delete the line); a first `pull` does not silently drop local-only keys.
 - After a baseline exists, a missing file key / `--unset` means delete (full desired state).
 - `pull` keeps comments in your local file where possible. If only the remote changed, `push` asks you to `pull` first.
@@ -284,7 +284,7 @@ pamenv push <slug|id> -e staging --unset OLD_KEY   # delete keys (local lines re
 
 | Option | Effect |
 | --- | --- |
-| `-y` | Skips ordinary confirmations: no-baseline prompt, final push, creating a missing environment, `remove`. Secret-like names (`*_SECRET`, `ACCESS_KEY`, and similar) are always marked `# pam:sensitive`, not only with `-y`. Large deletions of remote keys still require one more confirm |
+| `-y` | Skips ordinary confirmations: no-baseline prompt, final push, creating a missing environment, sensitive picker, `remove`. Lookalike new keys are only hinted, never auto-marked. Large deletions of remote keys still require one more confirm |
 | `-f` | Skips conflict confirmation only and uses the default side (remote for pull, local for push) |
 
 Neither implies the other; pass both to skip everything.

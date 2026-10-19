@@ -1,5 +1,4 @@
 import type { PAMVariable } from '@schemas/PAMEnvironmentSchema';
-import { PAMEnvSensitiveKeyUtil } from './PAMEnvSensitiveKeyUtil';
 import { PAMEnvVariableNormalizeUtil } from './PAMEnvVariableNormalizeUtil';
 
 /**
@@ -50,11 +49,9 @@ export class PAMEnvVariableMergeUtil {
         byKey.get(variable.key);
 
       // 已敏感的不能降级，也不能改键名（调用方看不到原值）。
-      // 密钥样式的键名一律升级为敏感，避免明文从读取接口漏出。
+      // 是否敏感由用户显式标记，服务端不根据键名自动升级。
       const sensitive =
-        previous?.sensitive === true ||
-        variable.sensitive === true ||
-        PAMEnvSensitiveKeyUtil.looksSensitive(variable.key);
+        previous?.sensitive === true || variable.sensitive === true;
       const key =
         previous?.sensitive === true && previous.key
           ? previous.key

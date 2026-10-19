@@ -71,7 +71,7 @@ export class PamCliEnvDiffUtil {
    * @param key - 变量名
    */
   public static looksSensitiveKey(key: string): boolean {
-    // 与 apps/pam 的 PAMEnvSensitiveKeyUtil.looksSensitive 保持一致。
+    // 仅用于 diff 遮罩与提交前提示；与 apps/pam PAMEnvSensitiveKeyUtil 一致。
     const upper = key.toUpperCase();
     if (
       /(?:^|_)(?:SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|JWT|SESSION|COOKIE|AUTH)(?:_|$)/.test(

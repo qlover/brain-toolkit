@@ -117,7 +117,7 @@ describe('PamCliSecurityGate.redactExportForLocalOutput', () => {
     expect(result.emptyKeepKeys).toEqual(['TOKEN']);
   });
 
-  it('redacts secret-looking keys the server did not mark sensitive', () => {
+  it('keeps unmarked lookalike keys as plain values', () => {
     const result = PamCliSecurityGate.redactExportForLocalOutput({
       ...base,
       sensitiveKeys: [],
@@ -127,22 +127,17 @@ describe('PamCliSecurityGate.redactExportForLocalOutput', () => {
           key: 'DATABASE_URL',
           value: 'postgres://user:password@db/app',
           sensitive: false
-        },
-        { key: 'AWS_ACCESS_KEY_ID', value: 'AKIASECRET', sensitive: false },
-        { key: 'JWT', value: 'header.payload.sig', sensitive: false }
+        }
       ]
     });
-    expect(result.variables.find((item) => item.key === 'API_URL')?.value).toBe(
-      'https://x.dev'
-    );
-    for (const key of ['DATABASE_URL', 'AWS_ACCESS_KEY_ID', 'JWT']) {
-      expect(result.variables.find((item) => item.key === key)).toMatchObject({
-        value: '__PAM_SENSITIVE_abc__',
-        sensitive: true
-      });
-    }
-    expect(JSON.stringify(result.variables)).not.toContain('password');
-    expect(JSON.stringify(result.variables)).not.toContain('AKIASECRET');
+    expect(result.variables).toEqual([
+      { key: 'API_URL', value: 'https://x.dev', sensitive: false },
+      {
+        key: 'DATABASE_URL',
+        value: 'postgres://user:password@db/app',
+        sensitive: false
+      }
+    ]);
   });
 });
 

@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { PAMEnvDotenvParseUtil } from '@shared/utils/PAMEnvDotenvParseUtil';
+import { PAMEnvSensitiveKeyUtil } from '@shared/utils/PAMEnvSensitiveKeyUtil';
 import {
   PAMEnvVariableDraftUtil,
   type PAMEnvImportEntry,
@@ -96,6 +97,20 @@ export function PAMProjectEnvVariablesSection({
     }
     return draft.filter((item) => item.key.toLowerCase().includes(query));
   }, [draft, search]);
+
+  const lookalikeKeys = useMemo(
+    () =>
+      draft
+        .filter(
+          (item) =>
+            item.key.trim() !== '' &&
+            item.sensitive !== true &&
+            PAMEnvSensitiveKeyUtil.looksSensitive(item.key)
+        )
+        .map((item) => item.key)
+        .sort((a, b) => a.localeCompare(b)),
+    [draft]
+  );
 
   const isLocked = (item: PAMVariable): boolean =>
     Boolean(item.id && lockedIds.has(item.id));
@@ -360,9 +375,17 @@ export function PAMProjectEnvVariablesSection({
       ) : null}
 
       {canWrite ? (
-        <p className="text-[11px] leading-snug text-tertiary-text sm:text-xs">
-          {tt.sensitiveHint}
-        </p>
+        <div className="space-y-1 text-[11px] leading-snug text-tertiary-text sm:text-xs">
+          <p>{tt.sensitiveHint}</p>
+          {lookalikeKeys.length > 0 ? (
+            <p className="text-(--fe-color-warning)">
+              {tt.sensitiveLookalikeHint.replace(
+                '%keys%',
+                lookalikeKeys.join(', ')
+              )}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {draft.length === 0 ? (

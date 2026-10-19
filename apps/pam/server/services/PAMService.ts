@@ -12,7 +12,6 @@ import { hasOrgPermission } from '@shared/auth/orgRole';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
-import { PAMEnvSensitiveKeyUtil } from '@shared/utils/PAMEnvSensitiveKeyUtil';
 import { PAMEnvSensitivePlaceholderUtil } from '@shared/utils/PAMEnvSensitivePlaceholderUtil';
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
@@ -840,9 +839,7 @@ export class PAMService implements PAMServiceInterface {
     this.validateVariableKeys(envs);
     const normalizedEnvs = envs?.map((env) => ({
       ...env,
-      variables: PAMEnvSensitiveKeyUtil.markLookalikes(
-        PAMEnvVariableNormalizeUtil.normalizeVariables(env.variables)
-      )
+      variables: PAMEnvVariableNormalizeUtil.normalizeVariables(env.variables)
     }));
     if (!options?.allowEmptySensitive) {
       this.assertSensitiveValuesPresent(normalizedEnvs);
@@ -1265,9 +1262,7 @@ export class PAMService implements PAMServiceInterface {
     this.validateEnvironmentNames(existingEnvs, [{ name: params.name }]);
 
     const normalizedVariables = this.ensureVariableIds(
-      PAMEnvSensitiveKeyUtil.markLookalikes(
-        PAMEnvVariableNormalizeUtil.normalizeVariables(params.variables)
-      )
+      PAMEnvVariableNormalizeUtil.normalizeVariables(params.variables)
     );
     this.validateVariableKeys([
       { name: params.name, variables: normalizedVariables }

@@ -159,7 +159,7 @@ describe('PAMEnvVariableMergeUtil', () => {
     expect(merged[1]?.value).toBe(placeholder);
   });
 
-  it('upgrades secret-like keys and keeps the stored sensitive key name', () => {
+  it('keeps the stored sensitive key name and does not auto-mark lookalikes', () => {
     const renamed = PAMEnvVariableMergeUtil.mergeVariables(
       [
         {
@@ -184,21 +184,15 @@ describe('PAMEnvVariableMergeUtil', () => {
       sensitive: true
     });
 
-    const upgraded = PAMEnvVariableMergeUtil.mergeVariables(
+    const unmarked = PAMEnvVariableMergeUtil.mergeVariables(
       [],
       [{ key: 'DATABASE_URL', value: 'postgres://u:p@h/db', sensitive: false }]
     );
-    expect(upgraded[0]).toMatchObject({
+    expect(unmarked[0]).toMatchObject({
       key: 'DATABASE_URL',
       value: 'postgres://u:p@h/db',
-      sensitive: true
+      sensitive: false
     });
-
-    const plain = PAMEnvVariableMergeUtil.mergeVariables(
-      [],
-      [{ key: 'AUTHOR_NAME', value: 'ada', sensitive: false }]
-    );
-    expect(plain[0]?.sensitive).toBe(false);
   });
 
   it('preserves comments from incoming or previous', () => {
