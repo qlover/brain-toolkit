@@ -81,11 +81,18 @@ export const PAMENV_HELP_OPT_URL = 'pamenv_help:opt_url';
 export const PAMENV_HELP_OPT_DOMAIN = 'pamenv_help:opt_domain';
 
 /**
- * @description 使用工作目录下的 ./.pam 配置与同步数据（而不是 ~/.pam）
- * @localZh 使用工作目录下的 ./.pam 配置与同步数据（而不是 ~/.pam）
- * @localEn Use ./.pam config + sync under the working directory (not ~/.pam)
+ * @description 强制使用工作目录 ./.pam（通常可省略：存在 .pam/ 时自动隔离，不读 ~/.pam）
+ * @localZh 强制使用工作目录 ./.pam（通常可省略：存在 .pam/ 时自动隔离，不读 ~/.pam）
+ * @localEn Force cwd ./.pam (usually optional: .pam/ auto-isolates from ~/.pam)
  */
 export const PAMENV_HELP_OPT_LOCAL = 'pamenv_help:opt_local';
+
+/**
+ * @description 强制使用 ~/.pam（-g；即使当前目录已有 ./.pam）
+ * @localZh 强制使用 ~/.pam（-g；即使当前目录已有 ./.pam）
+ * @localEn Force ~/.pam (-g; even when ./.pam exists in cwd)
+ */
+export const PAMENV_HELP_OPT_GLOBAL = 'pamenv_help:opt_global';
 
 /**
  * @description 项目 slug 或项目 id
@@ -116,9 +123,9 @@ export const PAMENV_HELP_OPT_FILE = 'pamenv_help:opt_file';
 export const PAMENV_HELP_OPT_WORKDIR = 'pamenv_help:opt_workdir';
 
 /**
- * @description 登录并保存 CLI token（默认浏览器登录；--local 时保存在 cwd/.pam）
- * @localZh 登录并保存 CLI token（默认浏览器登录；--local 时保存在 cwd/.pam）
- * @localEn Login and store CLI token (browser by default; use --local for cwd/.pam)
+ * @description 登录并保存 CLI token（默认浏览器登录；--local 写入 cwd/.pam）
+ * @localZh 登录并保存 CLI token（默认浏览器登录；--local 写入 cwd/.pam）
+ * @localEn Login and store CLI token (browser by default; --local writes cwd/.pam)
  */
 export const PAMENV_HELP_LOGIN = 'pamenv_help:login';
 
@@ -229,6 +236,66 @@ export const PAMENV_HELP_PROJECTS = 'pamenv_help:projects';
 export const PAMENV_HELP_PROJECTS_ARG_KEYWORD = 'pamenv_help:projects_arg_keyword';
 
 /**
+ * @description 按分类过滤（与 Web filters.category 一致）
+ * @localZh 按分类过滤（与 Web filters.category 一致）
+ * @localEn Filter by category (same as Web filters.category)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_CATEGORY =
+  'pamenv_help:projects_opt_category';
+
+/**
+ * @description 可见性：public | private（与 Web filters.visibility 一致）
+ * @localZh 可见性：public | private（与 Web filters.visibility 一致）
+ * @localEn Visibility: public | private (same as Web filters.visibility)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_VISIBILITY =
+  'pamenv_help:projects_opt_visibility';
+
+/**
+ * @description 排序字段：created_at | updated_at
+ * @localZh 排序字段：created_at | updated_at
+ * @localEn Sort field: created_at | updated_at
+ */
+export const PAMENV_HELP_PROJECTS_OPT_SORT = 'pamenv_help:projects_opt_sort';
+
+/**
+ * @description 排序方向：asc | desc
+ * @localZh 排序方向：asc | desc
+ * @localEn Sort order: asc | desc
+ */
+export const PAMENV_HELP_PROJECTS_OPT_ORDER = 'pamenv_help:projects_opt_order';
+
+/**
+ * @description 页码（从 1 开始，默认 1；要看更多请传 --page；与 --mine/--writable 同时使用时会自动翻页）
+ * @localZh 页码（从 1 开始，默认 1；要看更多请传 --page；与 --mine/--writable 同时使用时会自动翻页）
+ * @localEn Page number (1-based, default 1; pass --page for more; auto-pages with --mine/--writable)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_PAGE = 'pamenv_help:projects_opt_page';
+
+/**
+ * @description 每页条数（默认 10，与 Web 一致；最大 100）
+ * @localZh 每页条数（默认 10，与 Web 一致；最大 100）
+ * @localEn Page size (default 10, same as Web; max 100)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE =
+  'pamenv_help:projects_opt_page_size';
+
+/**
+ * @description 仅列出我拥有的项目（严格 owner）
+ * @localZh 仅列出我拥有的项目（严格 owner）
+ * @localEn Only projects I own (strict owner)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_MINE = 'pamenv_help:projects_opt_mine';
+
+/**
+ * @description 仅列出可编辑的项目（含团队可写）
+ * @localZh 仅列出可编辑的项目（含团队可写）
+ * @localEn Only writable projects (includes team editors)
+ */
+export const PAMENV_HELP_PROJECTS_OPT_WRITABLE =
+  'pamenv_help:projects_opt_writable';
+
+/**
  * @description 根据当前目录交互式创建 PAM 项目
  * @localZh 根据当前目录交互式创建 PAM 项目
  * @localEn Interactively create a PAM project from the current directory
@@ -271,11 +338,83 @@ export const PAMENV_HELP_FORK_OPT_NAME = 'pamenv_help:fork_opt_name';
 export const PAMENV_HELP_FORK_OPT_YES = 'pamenv_help:fork_opt_yes';
 
 /**
- * @description 把解密后的环境变量拉取到当前目录
- * @localZh 把解密后的环境变量拉取到当前目录
- * @localEn Pull decrypted environments into the current directory
+ * @description 把环境变量拉取到当前目录（敏感变量写占位符）
+ * @localZh 把环境变量写入当前目录的 .env，敏感变量的值写成本环境的占位符 __PAM_SENSITIVE_…__（需导出权限；日常开发推荐 run）
+ * @localEn Write variables to a .env file; sensitive values are written as this environment's placeholder __PAM_SENSITIVE_…__ (export permission; prefer `run` for development)
  */
 export const PAMENV_HELP_PULL = 'pamenv_help:pull';
+
+/**
+ * @description run 命令说明
+ * @localZh 把环境变量注入子进程并运行命令（不写文件）
+ * @localEn Run a command with environment variables injected (no files written)
+ */
+export const PAMENV_HELP_RUN = 'pamenv_help:run';
+
+/**
+ * @description run 命令参数
+ * @localZh 要运行的命令及其参数（放在 -- 之后）
+ * @localEn Command and arguments to run (after --)
+ */
+export const PAMENV_HELP_RUN_ARG_COMMAND = 'pamenv_help:run_arg_command';
+
+/**
+ * @description --only 选项
+ * @localZh 只使用这些键，逗号分隔
+ * @localEn Only use these keys (comma-separated)
+ */
+export const PAMENV_HELP_OPT_ONLY = 'pamenv_help:opt_only';
+
+/**
+ * @description --keep-env 选项
+ * @localZh 这些键如果当前 shell 已有值，就保留不覆盖（逗号分隔）
+ * @localEn Keep these keys from the current shell when already set (comma-separated)
+ */
+export const PAMENV_HELP_RUN_OPT_KEEP_ENV = 'pamenv_help:run_opt_keep_env';
+
+/**
+ * @description --no-warn 选项
+ * @localZh 关闭启动前的绕过检查提示
+ * @localEn Disable pre-run bypass warnings
+ */
+export const PAMENV_HELP_RUN_OPT_NO_WARN = 'pamenv_help:run_opt_no_warn';
+
+/**
+ * @description --env-priority 选项
+ * @localZh 同名键优先级：remote（默认，PAM 优先）| local（process → 磁盘 .env* → PAM，便于本地改值测试）
+ * @localEn Key priority: remote (default, PAM wins) | local (process → on-disk .env* → PAM, for local overrides)
+ */
+export const PAMENV_HELP_RUN_OPT_ENV_PRIORITY =
+  'pamenv_help:run_opt_env_priority';
+
+/**
+ * @description --client-public-prefixes 选项
+ * @localZh 敏感变量「公开前缀」告警用的前缀列表，逗号分隔（默认内置 VITE_/NEXT_PUBLIC_ 等）；传空字符串可关闭该告警
+ * @localEn Comma-separated prefixes for the sensitive client-bundle warning (default: built-in VITE_/NEXT_PUBLIC_/…); pass empty to disable
+ */
+export const PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES =
+  'pamenv_help:run_opt_client_public_prefixes';
+
+/**
+ * @description render 命令说明
+ * @localZh 把环境变量输出为 dotenv / json / yaml / toml，敏感变量输出占位符（需导出权限；真实敏感值请用 run 注入）
+ * @localEn Output variables as dotenv / json / yaml / toml; sensitive values are placeholders (export permission; use `run` for real sensitive values)
+ */
+export const PAMENV_HELP_RENDER = 'pamenv_help:render';
+
+/**
+ * @description render --format 选项
+ * @localZh 输出格式：dotenv | json | yaml | toml（默认 dotenv）
+ * @localEn Output format: dotenv | json | yaml | toml (default: dotenv)
+ */
+export const PAMENV_HELP_RENDER_OPT_FORMAT = 'pamenv_help:render_opt_format';
+
+/**
+ * @description render --out 选项
+ * @localZh 输出文件（权限 0600）；省略或 - 时输出到 stdout
+ * @localEn Output file (mode 0600); omit or use - for stdout
+ */
+export const PAMENV_HELP_RENDER_OPT_OUT = 'pamenv_help:render_opt_out';
 
 /**
  * @description 输出目录（默认：当前目录）
@@ -332,6 +471,21 @@ export const PAMENV_HELP_PUSH_OPT_FORCE = 'pamenv_help:push_opt_force';
  * @localEn Show non-sensitive values in push review (default: mask all)
  */
 export const PAMENV_HELP_PUSH_OPT_SHOW_VALUES = 'pamenv_help:push_opt_show_values';
+
+/**
+ * @description push 行内 KEY=value 覆盖（叠在本地文件上）
+ * @localZh 覆盖或新增变量（KEY=value，可多个；叠在本地文件上）
+ * @localEn Override or add variables (KEY=value, repeatable; applied on top of the local file)
+ */
+export const PAMENV_HELP_PUSH_ARG_ASSIGNMENTS =
+  'pamenv_help:push_arg_assignments';
+
+/**
+ * @description push 时从最终集合中删除指定键
+ * @localZh 从本次推送中删除这些键（逗号分隔；成功后同步删本地行）
+ * @localEn Remove these keys from this push (comma-separated; local lines removed after success)
+ */
+export const PAMENV_HELP_PUSH_OPT_UNSET = 'pamenv_help:push_opt_unset';
 
 /**
  * @description 删除项目中的一个 PAM 环境（需管理员及以上）

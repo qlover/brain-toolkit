@@ -5,7 +5,7 @@ import { PAMEnvVariableNormalizeUtil } from './PAMEnvVariableNormalizeUtil';
  * Merges incoming environment variables with stored ones.
  *
  * Significance: Sensitive update payloads omit values; empty must not wipe secrets.
- * Core idea: Empty sensitive `value` keeps the existing stored value.
+ * Core idea: Empty sensitive `value` (or the env placeholder) keeps the stored value.
  * Main function: Upsert by `id` then `key`, preserving secrets when requested.
  * Main purpose: Safe write semantics for sensitive JSONB variables.
  *
@@ -18,11 +18,13 @@ export class PAMEnvVariableMergeUtil {
    *
    * @param existingRaw - Stored variables (array or legacy object)
    * @param incomingRaw - Request variables
+   * @param placeholder - This environment's sensitive placeholder; also means "keep"
    * @returns Variables ready to persist
    */
   public static mergeVariables(
     existingRaw: unknown,
-    incomingRaw: unknown
+    incomingRaw: unknown,
+    placeholder?: string
   ): PAMVariable[] {
     const existing =
       PAMEnvVariableNormalizeUtil.normalizeVariables(existingRaw);
@@ -46,13 +48,19 @@ export class PAMEnvVariableMergeUtil {
         (variable.id ? byId.get(variable.id) : undefined) ||
         byKey.get(variable.key);
 
-      // Sensitive is immutable after first save (Vercel-like).
-      const sensitive = previous
-        ? previous.sensitive === true
-        : variable.sensitive === true;
+      // 已敏感的不能降级，也不能改键名（调用方看不到原值）。
+      // 是否敏感由用户显式标记，服务端不根据键名自动升级。
+      const sensitive =
+        previous?.sensitive === true || variable.sensitive === true;
+      const key =
+        previous?.sensitive === true && previous.key
+          ? previous.key
+          : variable.key;
       let value = variable.value;
 
-      if (sensitive && value.trim() === '' && previous) {
+      const keep =
+        value.trim() === '' || (!!placeholder && value === placeholder);
+      if (sensitive && keep && previous) {
         value = previous.value;
       }
 
@@ -62,7 +70,7 @@ export class PAMEnvVariableMergeUtil {
 
       return {
         id: variable.id ?? previous?.id,
-        key: variable.key,
+        key,
         value,
         sensitive,
         ...(comments !== undefined && comments.length > 0 ? { comments } : {})

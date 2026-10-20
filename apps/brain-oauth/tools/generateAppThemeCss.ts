@@ -44,6 +44,5 @@ export function generateAppThemeCss(
     'utf-8'
   );
 
-  console.log(`✅ App theme CSS generated at ${outPath}`);
   return outPath;
 }

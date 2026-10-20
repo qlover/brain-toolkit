@@ -1,0 +1,56 @@
+{
+  "name": "@pamenv/next",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "description": "Load PAM env into process.env before Next.js reads its config",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/pamenv-next"
+  },
+  "homepage": "https://pam.qlover.top/docs/cli",
+  "keywords": [
+    "brain toolkit",
+    "pam",
+    "pamenv",
+    "next",
+    "next.js",
+    "dotenv"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "pamenv-cli": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

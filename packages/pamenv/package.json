@@ -29,7 +29,8 @@
     "build": "tsup",
     "gen:locales": "node ./tools/generateLocales.mjs",
     "type-check": "tsc --build",
-    "test": "pnpm gen:locales && vitest run --config vitest.config.ts"
+    "test": "pnpm gen:locales && vitest run --config vitest.config.ts",
+    "test:live": "pnpm gen:locales && vitest run --config vitest.config.ts __tests__/PamCliIntegration.live.test.ts"
   },
   "repository": {
     "type": "git",
@@ -51,10 +52,12 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.5.2",
-    "commander": "^15.0.0"
+    "commander": "^15.0.0",
+    "cross-spawn": "^7.0.6"
   },
   "devDependencies": {
     "@brain-toolkit/ts2locales": "workspace:*",
+    "@types/cross-spawn": "^6.0.6",
     "@types/node": "^22.9.0"
   },
   "engines": {

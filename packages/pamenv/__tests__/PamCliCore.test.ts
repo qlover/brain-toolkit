@@ -170,7 +170,18 @@ describe('PamCliEnvDiffUtil', () => {
       PamCliEnvDiffUtil.formatLine(diff.modified[1]!, { showValues: true })
     ).toBe('SECRET=*****');
     expect(PamCliEnvDiffUtil.looksSensitiveKey('API_TOKEN')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('AWS_ACCESS_KEY_ID')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('OPENAI_APIKEY')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('JWT')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('DATABASE_URL')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('SESSION_ID')).toBe(true);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('NEXT_PUBLIC_API_KEY')).toBe(
+      true
+    );
     expect(PamCliEnvDiffUtil.looksSensitiveKey('SITE_URL')).toBe(false);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('API_URL')).toBe(false);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('AUTHOR_NAME')).toBe(false);
+    expect(PamCliEnvDiffUtil.looksSensitiveKey('PUBLIC_KEY')).toBe(false);
   });
 
   it('flags large key-name changes', () => {
@@ -230,15 +241,24 @@ describe('PamCliSyncConflictUtil', () => {
     expect(push.merged.BOTH).toBe('local');
   });
 
-  it('treats every differing key as a conflict without a baseline', () => {
-    const result = PamCliSyncConflictUtil.merge(
+  it('without a baseline keeps one-sided keys and conflicts only on both-side diffs', () => {
+    const remotePrefer = PamCliSyncConflictUtil.merge(
       null,
       { A: '1', ONLY_L: 'l' },
       { A: '2', ONLY_R: 'r' },
       PamCliSyncSide.Remote
     );
-    expect(result.conflicts).toEqual(['A', 'ONLY_L', 'ONLY_R']);
-    expect(result.merged).toEqual({ A: '2', ONLY_R: 'r' });
+    expect(remotePrefer.conflicts).toEqual(['A']);
+    expect(remotePrefer.merged).toEqual({ A: '2', ONLY_L: 'l', ONLY_R: 'r' });
+
+    const localPrefer = PamCliSyncConflictUtil.merge(
+      null,
+      { A: '1', ONLY_L: 'l' },
+      { A: '2', ONLY_R: 'r' },
+      PamCliSyncSide.Local
+    );
+    expect(localPrefer.conflicts).toEqual(['A']);
+    expect(localPrefer.merged).toEqual({ A: '1', ONLY_L: 'l', ONLY_R: 'r' });
   });
 });
 

@@ -13,11 +13,11 @@ type ExportRouteContext = {
 
 /**
  * GET /api/pam/:projectId/environments/:envId/export
- * Decrypted dotenv export (CLI Bearer + permission uid).
+ * Dotenv export with sensitive values as the env placeholder (CLI Bearer + permission uid).
  */
 export async function GET(req: NextRequest, context: ExportRouteContext) {
   const { projectId, envId } = await context.params;
-  return new NextApiServer(API_PAM_ENVIRONMENTS_EXPORT, req)
+  const response = await new NextApiServer(API_PAM_ENVIRONMENTS_EXPORT, req)
     .use(new PamCliAuthPlugin())
     .use(
       new RequirePermissionPlugin(PermissionKey.pam_environments_export, {
@@ -27,7 +27,8 @@ export async function GET(req: NextRequest, context: ExportRouteContext) {
     .runWithJson(async ({ parameters: { IOC } }) => {
       const result = await IOC(PAMController).exportEnvironment(
         projectId,
-        envId
+        envId,
+        req
       );
 
       try {
@@ -45,4 +46,6 @@ export async function GET(req: NextRequest, context: ExportRouteContext) {
 
       return result;
     });
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }

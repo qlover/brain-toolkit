@@ -49,6 +49,10 @@ export type PamCliCreateTokenMetaType = {
 export class PamCliTokenService {
   protected readonly sessionSecret: string;
   protected readonly expiresIn: SignOptions['expiresIn'];
+  protected readonly verifyCache = new Map<
+    string,
+    Promise<WithUserSession<OAuthSessionPayload, UserSchema> | null>
+  >();
 
   constructor(
     @inject(ServerConfig)
@@ -117,7 +121,20 @@ export class PamCliTokenService {
    * @param token - Raw bearer token
    * @returns Session payload or null when invalid / revoked
    */
-  public async verifyToken(
+  public verifyToken(
+    token: string
+  ): Promise<WithUserSession<OAuthSessionPayload, UserSchema> | null> {
+    // Instances are request-scoped (fresh IOC per request); auth plugins and
+    // session resolution call this several times per request.
+    let pending = this.verifyCache.get(token);
+    if (!pending) {
+      pending = this.verifyTokenUncached(token);
+      this.verifyCache.set(token, pending);
+    }
+    return pending;
+  }
+
+  protected async verifyTokenUncached(
     token: string
   ): Promise<WithUserSession<OAuthSessionPayload, UserSchema> | null> {
     try {

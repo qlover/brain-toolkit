@@ -52,6 +52,40 @@ describe('PamCliConfig.buildProjectGeneralUrl', () => {
   });
 });
 
+describe('PamCliConfig.resolvePreferLocal', () => {
+  it('auto-isolates when cwd/.pam exists, without falling back to home', async () => {
+    const { mkdir } = await import('node:fs/promises');
+    const dir = await mkdtemp(join(tmpdir(), 'pamenv-auto-local-'));
+    try {
+      expect(PamCliConfig.resolvePreferLocal({ workingDir: dir })).toBe(false);
+
+      await mkdir(PamCliConfig.getLocalRoot(dir));
+      expect(PamCliConfig.resolvePreferLocal({ workingDir: dir })).toBe(true);
+      expect(
+        PamCliConfig.resolvePreferLocal({
+          workingDir: dir,
+          global: true
+        })
+      ).toBe(false);
+      expect(
+        PamCliConfig.resolvePreferLocal({
+          workingDir: dir,
+          local: true
+        })
+      ).toBe(true);
+
+      const store = new PamCliAuthStore({
+        preferLocal: true,
+        workingDir: dir
+      });
+      // Empty local config: no token — must not inherit ~/.pam.
+      expect(await store.getToken()).toBeNull();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('PamCliAuthStore --local isolation', () => {
   it('reads and writes under cwd/.pam without using home', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'pamenv-local-'));
@@ -70,11 +104,11 @@ describe('PamCliAuthStore --local isolation', () => {
       const raw = await readFile(store.getActiveConfigPath(), 'utf8');
       const parsed = JSON.parse(raw) as {
         baseUrl: string;
-        token: string;
+        token?: string;
         email: string;
       };
       expect(parsed.baseUrl).toBe('http://pam.localhost:3400');
-      expect(parsed.token).toBe('tok');
+      expect(parsed.token).toBeNull();
       expect(parsed.email).toBe('a@b.c');
 
       const other = new PamCliAuthStore({

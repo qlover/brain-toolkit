@@ -13,6 +13,7 @@ Frontend toolkit for Brain AI - Providing powerful frontend tools collection for
   - [Installation](#installation)
   - [Basic Usage](#basic-usage)
 - [Package List](#-package-list)
+- [PAM / pamenv](#-pam--pamenv)
 - [Development Guide](#-development-guide)
   - [Project Build and Dependency Management](./docs/en/project-builder.md)
   - [Commit Convention](./docs/en/commit-convention.md)
@@ -37,6 +38,7 @@ brain-toolkit is a collection of tools specifically designed for AI frontend app
 - 🎯 **Modular Design** - Monorepo architecture based on pnpm workspace
 - 🔧 **TypeScript Support** - Complete type definitions and intelligent hints
 - 📦 **Independent Publishing** - Each package can be installed and used independently
+- 🔐 **PAM env vars** - `pamenv` CLI + Next/Vite plugins; secrets inject into processes on demand
 - 🚀 **Modern Toolchain** - Using modern tools like Vite, ESLint, Prettier
 - 🔄 **Automated Release** - Version management and release process based on Changesets
 - 🧪 **Test Coverage** - Integrated Vitest testing framework
@@ -80,6 +82,34 @@ pnpm add @brain-toolkit/element-sizer
 | [@brain-toolkit/ts2locales](./packages/ts2locales/README_EN.md)                | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales)          | TypeScript internationalization file generator      |
 | [@brain-toolkit/antd-theme-override](./packages/antd-theme-override/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/antd-theme-override) | Ant Design theme override and customization utility |
 | [@brain-toolkit/brain-user](./packages/brain-user/README.en.md)                | ![npm](https://img.shields.io/npm/v/@brain-toolkit/brain-user)          | Brain user authentication and management library    |
+| [pamenv-cli](./packages/pamenv/README_EN.md)                                   | ![npm](https://img.shields.io/npm/v/pamenv-cli)                         | PAM multi-env CLI (run / pull / push)               |
+| [@pamenv/next](./packages/pamenv-next/README.md)                               | ![npm](https://img.shields.io/npm/v/@pamenv/next)                       | Inject PAM at Next.js config time                   |
+| [@pamenv/vite](./packages/pamenv-vite/README.md)                               | ![npm](https://img.shields.io/npm/v/@pamenv/vite)                       | Vite plugin: inject PAM at config time              |
+
+## 🔐 PAM / pamenv
+
+Manage multi-environment variables with [PAM](https://pam.qlover.top); inject into processes via CLI or framework plugins without keeping secrets on disk by default.
+
+| npm | Description |
+| --- | --- |
+| [pamenv-cli](https://www.npmjs.com/package/pamenv-cli) | Install globally or in a project; use the `pamenv` command |
+| [@pamenv/next](https://www.npmjs.com/package/@pamenv/next) | Wrap `next.config`; injects during `next dev` |
+| [@pamenv/vite](https://www.npmjs.com/package/@pamenv/vite) | Vite plugin; injects during `vite` / `vite dev` |
+
+```bash
+# CLI
+npm install -g pamenv-cli
+pamenv login
+pamenv run <slug> -e local -- pnpm dev
+
+# Next (run pamenv login --local in the project)
+pnpm add @pamenv/next pamenv-cli
+
+# Vite
+pnpm add @pamenv/vite pamenv-cli
+```
+
+Docs: [packages/pamenv/README_EN.md](./packages/pamenv/README_EN.md) · [pamenv v2](./packages/pamenv/docs/pamenv-v2.md) · example app `apps/pamenv-vite-app`
 
 ## 🛠️ Development Guide
 
@@ -127,7 +157,11 @@ pnpm check-packages
 
 ```
 brain-toolkit/
+├── apps/                     # Apps (pam, brain-oauth, pamenv-vite-app, …)
 ├── packages/                 # Subpackage directory
+│   ├── pamenv/               # pamenv-cli
+│   ├── pamenv-next/          # @pamenv/next
+│   ├── pamenv-vite/          # @pamenv/vite
 │   ├── element-sizer/        # DOM element animation tool
 │   └── brain-user/           # Brain user authentication and management library
 ├── docs/                     # Documentation directory

@@ -49,7 +49,7 @@ export async function loadMessages(
   const staticMessages = await loadLocaleFromFile(locale);
   let allMessages: Record<string, string> = staticMessages;
 
-  // 如果配置了使用 API 加载本地化数据：静态为底 + API 覆盖（与 ApiLocaleService 一致）
+  // API 可补全后台独有键；本构建生成的静态文案优先，避免库里旧翻译盖住发版新句。
   if (useApiLocales) {
     try {
       const SITE_URL = process.env.SITE_URL;
@@ -73,7 +73,7 @@ export async function loadMessages(
       }
 
       const fromApi = (await response.json()) as Record<string, string>;
-      allMessages = { ...staticMessages, ...fromApi };
+      allMessages = { ...fromApi, ...staticMessages };
     } catch (error) {
       console.warn(`Failed to load locale from API for ${locale}`, error);
       allMessages = staticMessages;

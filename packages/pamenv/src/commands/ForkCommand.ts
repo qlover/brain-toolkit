@@ -17,7 +17,7 @@ import {
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliForkProjectInputType } from '../interfaces/PamCliTypes';
 import { PamCliLocalProjectScanUtil } from '../impls/PamCliLocalProjectScanUtil';
-import { PamCliProjectResolveUtil } from '../impls/PamCliProjectResolveUtil';
+import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 
 export type PamCliForkOptionsType = {
   readonly slug?: string;
@@ -48,7 +48,7 @@ export class ForkCommand {
     projectRef: string,
     options: PamCliForkOptionsType = {}
   ): Promise<void> {
-    const source = await PamCliProjectResolveUtil.resolve(
+    const source = await PamCliSecurityGate.resolveProjectExact(
       this.apiClient,
       projectRef
     );

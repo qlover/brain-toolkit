@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "./ts-build",
+    "allowJs": false,
+    "esModuleInterop": true,
+    "tsBuildInfoFile": "./ts-build/.tsbuildinfo",
+    "types": ["node"],
+    "lib": ["ESNext"]
+  },
+  "include": ["src", "package.json"],
+  "exclude": ["dist", "node_modules", "ts-build"],
+  "references": [{ "path": "../pamenv" }]
+}

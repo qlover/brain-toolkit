@@ -11,16 +11,21 @@ import {
   buildApiPamDetail,
   buildApiPamDetele,
   buildApiPamEdit,
+  buildApiPamEnvironment,
+  buildApiPamEnvironmentAccessLogs,
   buildApiPamEnvironmentDelete,
   buildApiPamEnvironments,
+  buildApiPamEnvironmentSettings,
   buildApiPamEnvironmentVariables,
   buildApiPamFork,
   buildApiPamPreviewImage,
   buildApiPamTransfer
 } from '@config/route';
 import type {
+  PAMEnvAccessLog,
   PAMEnvCreate,
   PAMEnvReplaceVariables,
+  PAMEnvSettings,
   PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -38,7 +43,9 @@ import { AppApiRequester } from './AppApiRequester';
 /** Abort ids for `pamApi.stop(...)`. Wired internally on each request. */
 export const PAMAbortId = {
   projectDetail: (projectId: string) => `pam:projectDetail:${projectId}`,
-  listEnvironments: (projectId: string) => `pam:listEnvironments:${projectId}`
+  listEnvironments: (projectId: string) => `pam:listEnvironments:${projectId}`,
+  getEnvironment: (projectId: string, envId: string) =>
+    `pam:getEnvironment:${projectId}:${envId}`
 } as const;
 
 @injectable()
@@ -260,6 +267,26 @@ export class PAMApi {
   }
 
   /**
+   * One environment with redacted variables (web lazy load).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async getEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvWriteable> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<PAMEnvWriteable>,
+      Record<string, never>
+    >(buildApiPamEnvironment(projectId, envId), {
+      abortId: PAMAbortId.getEnvironment(projectId, envId)
+    });
+
+    return response.data.data!;
+  }
+
+  /**
    * Creates an environment under a project.
    *
    * @param projectId - Project id
@@ -294,24 +321,61 @@ export class PAMApi {
   }
 
   /**
-   * Replaces the full variable list for one environment.
+   * Replaces or patches variables for one environment.
    *
    * @param projectId - Project id
    * @param envId - Environment id
-   * @param variables - Full variables list
+   * @param body - `{ variables }` (full) or `{ upsert, deleteIds }` (patch)
    * @returns Updated environment (redacted)
    */
   public async setEnvironmentVariables(
     projectId: string,
     envId: string,
-    variables: PAMEnvReplaceVariables['variables']
+    body: PAMEnvReplaceVariables
   ): Promise<PAMEnvWriteable> {
     const response = await this.appApiRequester.post<
       NextKitApiSuccess<PAMEnvWriteable>,
       PAMEnvReplaceVariables
-    >(buildApiPamEnvironmentVariables(projectId, envId), {
-      variables
-    });
+    >(buildApiPamEnvironmentVariables(projectId, envId), body);
+
+    return response.data.data!;
+  }
+
+  /**
+   * Updates environment settings (protected flag).
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param settings - New settings
+   * @returns Updated environment (redacted)
+   */
+  public async updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    settings: PAMEnvSettings
+  ): Promise<PAMEnvWriteable> {
+    const response = await this.appApiRequester.post<
+      NextKitApiSuccess<PAMEnvWriteable>,
+      PAMEnvSettings
+    >(buildApiPamEnvironmentSettings(projectId, envId), settings);
+
+    return response.data.data!;
+  }
+
+  /**
+   * Recent resolve / export records for one environment.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   */
+  public async listEnvironmentAccessLogs(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvAccessLog[]> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<PAMEnvAccessLog[]>,
+      Record<string, never>
+    >(buildApiPamEnvironmentAccessLogs(projectId, envId));
 
     return response.data.data!;
   }

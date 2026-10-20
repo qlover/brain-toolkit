@@ -9,6 +9,11 @@ import { ProjectsCommand } from './commands/ProjectsCommand';
 import { PullCommand } from './commands/PullCommand';
 import { PushCommand } from './commands/PushCommand';
 import { RemoveCommand } from './commands/RemoveCommand';
+import { RenderCommand } from './commands/RenderCommand';
+import {
+  RunCommand,
+  type PamCliEnvPriorityType
+} from './commands/RunCommand';
 import { PamCliConfig } from './config/PamCliConfig';
 import { PamCliApiClient } from './impls/PamCliApiClient';
 import { PamCliApiError } from './impls/PamCliApiError';
@@ -16,6 +21,7 @@ import { PamCliAuthStore } from './impls/PamCliAuthStore';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
 import { PamCliI18n } from './i18n/PamCliI18n';
 import {
+  PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE,
   PAMENV_CLI_LOGOUT_DONE,
   PAMENV_CLI_LOGOUT_REVOKE_FAILED,
   PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE,
@@ -48,24 +54,45 @@ import {
   PAMENV_HELP_OPT_DOMAIN,
   PAMENV_HELP_OPT_ENV,
   PAMENV_HELP_OPT_FILE,
+  PAMENV_HELP_OPT_GLOBAL,
   PAMENV_HELP_OPT_LOCAL,
+  PAMENV_HELP_OPT_ONLY,
   PAMENV_HELP_OPT_URL,
   PAMENV_HELP_OPT_WORKDIR,
   PAMENV_HELP_PROGRAM,
   PAMENV_HELP_PROJECTS,
   PAMENV_HELP_PROJECTS_ARG_KEYWORD,
+  PAMENV_HELP_PROJECTS_OPT_CATEGORY,
+  PAMENV_HELP_PROJECTS_OPT_MINE,
+  PAMENV_HELP_PROJECTS_OPT_ORDER,
+  PAMENV_HELP_PROJECTS_OPT_PAGE,
+  PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE,
+  PAMENV_HELP_PROJECTS_OPT_SORT,
+  PAMENV_HELP_PROJECTS_OPT_VISIBILITY,
+  PAMENV_HELP_PROJECTS_OPT_WRITABLE,
   PAMENV_HELP_PULL,
   PAMENV_HELP_PULL_OPT_FORCE,
   PAMENV_HELP_PULL_OPT_OUT,
   PAMENV_HELP_PULL_OPT_SHOW_VALUES,
   PAMENV_HELP_PUSH,
+  PAMENV_HELP_PUSH_ARG_ASSIGNMENTS,
   PAMENV_HELP_PUSH_OPT_FORCE,
   PAMENV_HELP_PUSH_OPT_OUT,
   PAMENV_HELP_PUSH_OPT_SHOW_VALUES,
+  PAMENV_HELP_PUSH_OPT_UNSET,
   PAMENV_HELP_PUSH_OPT_YES,
   PAMENV_HELP_REMOVE,
   PAMENV_HELP_REMOVE_OPT_ENV,
   PAMENV_HELP_REMOVE_OPT_YES,
+  PAMENV_HELP_RENDER,
+  PAMENV_HELP_RENDER_OPT_FORMAT,
+  PAMENV_HELP_RENDER_OPT_OUT,
+  PAMENV_HELP_RUN,
+  PAMENV_HELP_RUN_ARG_COMMAND,
+  PAMENV_HELP_RUN_OPT_KEEP_ENV,
+  PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES,
+  PAMENV_HELP_RUN_OPT_ENV_PRIORITY,
+  PAMENV_HELP_RUN_OPT_NO_WARN,
   PAMENV_HELP_TITLE_ARGUMENTS,
   PAMENV_HELP_TITLE_COMMANDS,
   PAMENV_HELP_TITLE_GLOBAL_OPTIONS,
@@ -79,6 +106,7 @@ type PamCliGlobalOptionsType = {
   readonly url?: string;
   readonly domain?: string;
   readonly local?: boolean;
+  readonly global?: boolean;
 };
 
 /** commander section titles → help i18n keys. */
@@ -135,14 +163,18 @@ export class PamCliApp {
     program.hook('preAction', async (_thisCommand, actionCommand) => {
       const root = program.opts() as PamCliGlobalOptionsType;
       const leaf = actionCommand.opts() as PamCliGlobalOptionsType;
+      const local = Boolean(leaf.local || root.local);
+      const global = Boolean(leaf.global || root.global);
       this.applyRuntime({
         url: leaf.url || root.url,
         domain: leaf.domain || root.domain,
-        local: Boolean(leaf.local || root.local)
+        local,
+        global
       });
       await PamCliI18n.syncFromStore(this.authStore);
-      if (leaf.local || root.local) {
-        console.log(
+      if (this.authStore.getActivePamRoot() === PamCliConfig.getLocalRoot(process.cwd())) {
+        // stderr: keeps `render` stdout clean; covers --local and auto-detect.
+        console.error(
           PamCliI18n.t(PAMENV_CLI_USING_LOCAL_ROOT, {
             path: PamCliConfig.getLocalRoot(process.cwd())
           })
@@ -159,9 +191,59 @@ export class PamCliApp {
       .command('projects')
       .description(t(PAMENV_HELP_PROJECTS))
       .argument('[keyword]', t(PAMENV_HELP_PROJECTS_ARG_KEYWORD))
-      .action(async (keyword?: string) => {
-        await new ProjectsCommand(this.apiClient).run(keyword);
-      });
+      .option('--category <name>', t(PAMENV_HELP_PROJECTS_OPT_CATEGORY))
+      .option(
+        '--visibility <visibility>',
+        t(PAMENV_HELP_PROJECTS_OPT_VISIBILITY)
+      )
+      .option('--sort <field>', t(PAMENV_HELP_PROJECTS_OPT_SORT))
+      .option('--order <asc|desc>', t(PAMENV_HELP_PROJECTS_OPT_ORDER))
+      .option('--page <n>', t(PAMENV_HELP_PROJECTS_OPT_PAGE))
+      .option('--page-size <n>', t(PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE))
+      .option('--mine', t(PAMENV_HELP_PROJECTS_OPT_MINE))
+      .option('--writable', t(PAMENV_HELP_PROJECTS_OPT_WRITABLE))
+      .action(
+        async (
+          keyword: string | undefined,
+          options: {
+            category?: string;
+            visibility?: string;
+            sort?: string;
+            order?: string;
+            page?: string;
+            pageSize?: string;
+            mine?: boolean;
+            writable?: boolean;
+          }
+        ) => {
+          const visibility =
+            options.visibility === 'public' || options.visibility === 'private'
+              ? options.visibility
+              : undefined;
+          const sortBy =
+            options.sort === 'created_at' || options.sort === 'updated_at'
+              ? options.sort
+              : undefined;
+          const sortOrder =
+            options.order === 'asc' || options.order === 'desc'
+              ? options.order
+              : undefined;
+          const page = options.page ? Number(options.page) : undefined;
+          const pageSize = options.pageSize
+            ? Number(options.pageSize)
+            : undefined;
+          await new ProjectsCommand(this.apiClient).run(keyword, {
+            ...(options.category ? { category: options.category } : {}),
+            ...(visibility ? { visibility } : {}),
+            ...(sortBy ? { sortBy } : {}),
+            ...(sortOrder ? { sortOrder } : {}),
+            ...(page && Number.isFinite(page) ? { page } : {}),
+            ...(pageSize && Number.isFinite(pageSize) ? { pageSize } : {}),
+            ...(options.mine ? { mine: true } : {}),
+            ...(options.writable ? { writable: true } : {})
+          });
+        }
+      );
     this.addRuntimeOptions(projects);
 
     const init = program
@@ -218,16 +300,17 @@ export class PamCliApp {
           }
         ) => {
           this.bindOutDir(options.out);
-          await new PullCommand(this.apiClient, this.syncStore).run(
-            projectRef,
-            {
-              envName: options.env,
-              outDir: options.out,
-              file: options.file,
-              force: options.force,
-              showValues: options.showValues
-            }
-          );
+          await new PullCommand(
+            this.apiClient,
+            this.syncStore,
+            this.authStore
+          ).run(projectRef, {
+            envName: options.env,
+            outDir: options.out,
+            file: options.file,
+            force: options.force,
+            showValues: options.showValues
+          });
         }
       );
     this.addRuntimeOptions(pull);
@@ -236,25 +319,30 @@ export class PamCliApp {
       .command('push')
       .description(t(PAMENV_HELP_PUSH))
       .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .argument('[assignments...]', t(PAMENV_HELP_PUSH_ARG_ASSIGNMENTS))
       .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
       .option('-o, --out <dir>', t(PAMENV_HELP_PUSH_OPT_OUT))
       .option('--file <path>', t(PAMENV_HELP_OPT_FILE))
+      .option('--unset <keys>', t(PAMENV_HELP_PUSH_OPT_UNSET))
       .option('-y, --yes', t(PAMENV_HELP_PUSH_OPT_YES))
       .option('-f, --force', t(PAMENV_HELP_PUSH_OPT_FORCE))
       .option('--show-values', t(PAMENV_HELP_PUSH_OPT_SHOW_VALUES))
       .action(
         async (
           projectRef: string,
+          assignments: string[],
           options: {
             env?: string;
             out?: string;
             file?: string;
+            unset?: string;
             yes?: boolean;
             force?: boolean;
             showValues?: boolean;
           }
         ) => {
           this.bindOutDir(options.out);
+          const overrides = PushCommand.parseAssignments(assignments ?? []);
           await new PushCommand(
             this.apiClient,
             this.syncStore,
@@ -265,7 +353,9 @@ export class PamCliApp {
             file: options.file,
             yes: options.yes,
             force: options.force,
-            showValues: options.showValues
+            showValues: options.showValues,
+            ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+            unsetKeys: this.splitKeys(options.unset)
           });
         }
       );
@@ -293,7 +383,123 @@ export class PamCliApp {
       );
     this.addRuntimeOptions(remove);
 
+    this.registerRun(program);
+    this.registerRender(program);
+
     await program.parseAsync(argv);
+  }
+
+  protected registerRun(program: Command): void {
+    const run = program
+      .command('run')
+      .description(t(PAMENV_HELP_RUN))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .argument('[command...]', t(PAMENV_HELP_RUN_ARG_COMMAND))
+      .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
+      .option('--only <keys>', t(PAMENV_HELP_OPT_ONLY))
+      .option('--keep-env <keys>', t(PAMENV_HELP_RUN_OPT_KEEP_ENV))
+      .option('--no-warn', t(PAMENV_HELP_RUN_OPT_NO_WARN))
+      .option(
+        '--env-priority <remote|local>',
+        t(PAMENV_HELP_RUN_OPT_ENV_PRIORITY),
+        'remote'
+      )
+      .option(
+        '--client-public-prefixes <list>',
+        t(PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES)
+      )
+      .action(
+        async (
+          projectRef: string,
+          command: string[],
+          options: {
+            env?: string;
+            only?: string;
+            keepEnv?: string;
+            warn?: boolean;
+            envPriority?: string;
+            clientPublicPrefixes?: string;
+          }
+        ) => {
+          const envPriority = this.parseEnvPriority(options.envPriority);
+          process.exitCode = await new RunCommand(
+            this.apiClient,
+            this.authStore
+          ).run(projectRef, command, {
+            envName: options.env,
+            only: this.splitKeys(options.only),
+            keepEnv: this.splitKeys(options.keepEnv),
+            warn: options.warn,
+            envPriority,
+            clientPublicPrefixes: this.parseClientPublicPrefixes(
+              options.clientPublicPrefixes
+            )
+          });
+        }
+      );
+    this.addRuntimeOptions(run);
+  }
+
+  protected registerRender(program: Command): void {
+    const render = program
+      .command('render')
+      .description(t(PAMENV_HELP_RENDER))
+      .argument('<slug|id>', t(PAMENV_HELP_ARG_PROJECT))
+      .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
+      .option('--format <format>', t(PAMENV_HELP_RENDER_OPT_FORMAT))
+      .option('--out <file>', t(PAMENV_HELP_RENDER_OPT_OUT))
+      .option('--only <keys>', t(PAMENV_HELP_OPT_ONLY))
+      .action(
+        async (
+          projectRef: string,
+          options: { env?: string; format?: string; out?: string; only?: string }
+        ) => {
+          await new RenderCommand(this.apiClient, this.authStore).run(
+            projectRef,
+            {
+              envName: options.env,
+              format: options.format,
+              out: options.out,
+              only: this.splitKeys(options.only)
+            }
+          );
+        }
+      );
+    this.addRuntimeOptions(render);
+  }
+
+  protected splitKeys(value?: string): string[] | undefined {
+    const keys = (value ?? '')
+      .split(',')
+      .map((key) => key.trim())
+      .filter((key) => key !== '');
+    return keys.length > 0 ? keys : undefined;
+  }
+
+  protected parseEnvPriority(value?: string): PamCliEnvPriorityType {
+    const normalized = (value ?? 'remote').trim().toLowerCase();
+    if (normalized === 'remote' || normalized === 'local') {
+      return normalized;
+    }
+    throw new Error(
+      `Invalid --env-priority "${value ?? ''}". Use remote or local.`
+    );
+  }
+
+  /**
+   * Parses `--client-public-prefixes`. `undefined` = built-in defaults;
+   * present (including empty) = explicit list (`[]` disables the warning).
+   */
+  protected parseClientPublicPrefixes(
+    value?: string
+  ): string[] | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+    return value
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part !== '');
   }
 
   /**
@@ -303,6 +509,7 @@ export class PamCliApp {
    */
   public async formatCliError(error: unknown): Promise<string> {
     if (error instanceof PamCliApiError) {
+      await PamCliI18n.hydrateFromApiOnce(this.authStore);
       return error.formatForCli((id) => PamCliI18n.lookup(id));
     }
     return error instanceof Error ? error.message : String(error);
@@ -316,9 +523,14 @@ export class PamCliApp {
    */
   protected async loadHelpLocale(argv: readonly string[]): Promise<void> {
     try {
+      const workingDir = process.cwd();
       const store = new PamCliAuthStore({
-        preferLocal: argv.includes('--local'),
-        workingDir: process.cwd()
+        preferLocal: PamCliConfig.resolvePreferLocal({
+          local: argv.includes('--local'),
+          global: argv.includes('--global') || argv.includes('-g'),
+          workingDir
+        }),
+        workingDir
       });
       PamCliI18n.setLocale(await store.getLocale());
     } catch {
@@ -348,9 +560,14 @@ export class PamCliApp {
         browser?: boolean;
         domain?: string;
       }) => {
+        // Root also declares --url/--domain and claims them after `login`.
+        const root = program.opts() as PamCliGlobalOptionsType;
         const url =
           options.url?.trim() ||
-          this.resolveHostOverride(undefined, options.domain);
+          this.resolveHostOverride(
+            root.url,
+            options.domain || root.domain
+          );
         await new LoginCommand(this.authStore, this.apiClient).run({
           url,
           email: options.email,
@@ -447,17 +664,28 @@ export class PamCliApp {
     command
       .option('--url <url>', t(PAMENV_HELP_OPT_URL))
       .option('--domain <host>', t(PAMENV_HELP_OPT_DOMAIN))
-      .option('--local', t(PAMENV_HELP_OPT_LOCAL));
+      .option('--local', t(PAMENV_HELP_OPT_LOCAL))
+      .option('-g, --global', t(PAMENV_HELP_OPT_GLOBAL));
   }
+
+  protected runtimeGlobals: PamCliGlobalOptionsType = {};
 
   protected applyRuntime(globals: PamCliGlobalOptionsType): void {
     if (globals.url?.trim() && globals.domain?.trim()) {
       throw new Error(PamCliI18n.t(PAMENV_CLI_URL_AND_DOMAIN_EXCLUSIVE));
     }
+    if (globals.local && globals.global) {
+      throw new Error(PamCliI18n.t(PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE));
+    }
 
+    this.runtimeGlobals = globals;
     const urlOverride = this.resolveHostOverride(globals.url, globals.domain);
-    const preferLocal = Boolean(globals.local);
     const workingDir = process.cwd();
+    const preferLocal = PamCliConfig.resolvePreferLocal({
+      local: globals.local,
+      global: globals.global,
+      workingDir
+    });
 
     this.authStore = new PamCliAuthStore({
       preferLocal,
@@ -471,13 +699,24 @@ export class PamCliApp {
     this.apiClient = new PamCliApiClient(this.authStore);
   }
 
+  /**
+   * Aligns sync/auth root with `-o`: if `outDir/.pam` exists, prefer that
+   * identity (unless `-g`); binding paths stay relative to `outDir`.
+   */
   protected bindOutDir(outDir?: string): void {
     if (!outDir?.trim()) {
       return;
     }
     const workingDir = resolve(outDir);
+    const preferLocal = PamCliConfig.resolvePreferLocal({
+      local: this.runtimeGlobals.local,
+      global: this.runtimeGlobals.global,
+      workingDir
+    });
     this.authStore.setWorkingDir(workingDir);
+    this.authStore.setPreferLocal(preferLocal);
     this.syncStore.setWorkingDir(workingDir);
+    this.syncStore.setPreferLocal(preferLocal);
   }
 
   protected resolveHostOverride(

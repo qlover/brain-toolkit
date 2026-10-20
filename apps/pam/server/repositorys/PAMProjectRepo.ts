@@ -10,14 +10,17 @@ import {
   RepoSearchParams
 } from '@qlover/next-kit/server';
 import { isEmpty } from 'lodash-es';
+import { v4 as uuid } from 'uuid';
 import { inject, injectable } from '@shared/container';
 import {
   PAMEnvWriteable,
   PAMEnvRaw,
   PAMEnvTableName,
+  PAMEnvVariableTableName,
   PAMVariable
 } from '@shared/schemas/PAMEnvironmentSchema';
 import { Join } from '@shared/type';
+import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_ENV_NOT_FOUND,
@@ -48,6 +51,8 @@ import { isPamSearchRpcUnavailable } from '@server/utils/postgrestError';
 import { PAMSupabaseRepo } from './PAMSupabaseRepo';
 import type { LoggerInterface } from '@qlover/logger';
 
+type PamSearchViewType = 'full' | 'compact';
+
 interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
   /**
    * 用户 ID，如果提供id则查询用户相关的(rls)数据，否则查询 public 数据
@@ -55,6 +60,11 @@ interface PAMProjectSearchParams extends RepoSearchParams<PAMProjectRaw> {
   user_id?: string;
   /** Structured filters from ResourceSearchParams (e.g. `{ category }`). */
   filters?: unknown;
+  /**
+   * Response shape: `full` (web cards) or `compact` (CLI one-liners).
+   * Also accepted via `filters.view`.
+   */
+  view?: PamSearchViewType | string;
   /** When set, overrides automatic exact vs planned count selection. */
   exactCount?: boolean;
   /** When false, skip row count (used for page 2+). */
@@ -100,6 +110,46 @@ function resolveVisibilityFilter(
     return visibility;
   }
   return undefined;
+}
+
+/**
+ * Reads a boolean flag from filters (`mine` / `writable`).
+ */
+function resolveBooleanFilter(
+  filters: unknown,
+  key: 'mine' | 'writable'
+): boolean {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+    return false;
+  }
+  const value = (filters as Record<string, unknown>)[key];
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
+/**
+ * Optional list shape: `view=compact` (query) or `filters.view`.
+ */
+function resolveSearchView(params: PAMProjectSearchParams): PamSearchViewType {
+  const fromQuery =
+    typeof (params as { view?: unknown }).view === 'string'
+      ? String((params as { view?: string }).view)
+          .trim()
+          .toLowerCase()
+      : '';
+  if (fromQuery === 'compact' || fromQuery === 'full') {
+    return fromQuery;
+  }
+  if (
+    params.filters &&
+    typeof params.filters === 'object' &&
+    !Array.isArray(params.filters)
+  ) {
+    const fromFilters = (params.filters as { view?: unknown }).view;
+    if (fromFilters === 'compact' || fromFilters === 'full') {
+      return fromFilters;
+    }
+  }
+  return 'full';
 }
 
 type JoinEnvFieldsResult<T extends '*' | readonly EnvField[]> = T extends '*'
@@ -154,8 +204,14 @@ export class PAMProjectRepo extends BaseRepository<
     const keyword = params.keyword?.trim();
     const categoryFilter = resolveCategoryFilter(params.filters);
     const visibilityFilter = resolveVisibilityFilter(params.filters);
+    const mineFilter = resolveBooleanFilter(params.filters, 'mine');
+    const writableFilter = resolveBooleanFilter(params.filters, 'writable');
+    const searchView = resolveSearchView(params);
 
-    if (visibilityFilter === 'private' && !user_id) {
+    if (
+      (visibilityFilter === 'private' || mineFilter || writableFilter) &&
+      !user_id
+    ) {
       return {
         page,
         pageSize,
@@ -170,6 +226,9 @@ export class PAMProjectRepo extends BaseRepository<
     ];
     if (categoryFilter) {
       where.push(['category', Operators.eq, categoryFilter]);
+    }
+    if (mineFilter && user_id) {
+      where.push(['owner_id', Operators.eq, user_id]);
     }
 
     const teamIds = user_id
@@ -204,9 +263,36 @@ export class PAMProjectRepo extends BaseRepository<
       }
     }
 
+    if (writableFilter && user_id && !mineFilter) {
+      // Writable = owner OR active team member (same set as teamIds).
+      const writableOr: FilterTriple<PAMProjectRaw>[] = [
+        ['owner_id', Operators.eq, user_id]
+      ];
+      if (teamIds.length > 0) {
+        writableOr.push([
+          'team_id',
+          Operators.in,
+          teamIds
+        ] as FilterTriple<PAMProjectRaw>);
+      }
+      // Intersect with prior whereOr via AND(owner|team) — replace visibility
+      // OR with writable OR when no public branch should remain.
+      whereOr = writableOr;
+    }
+
+    const compactFields = [
+      'id',
+      'slug',
+      'name',
+      'owner_id',
+      'team_id'
+    ] as (keyof SearchPAMRawProject)[];
+
     return await this.supabaseRepo.search({
       table: this.getRepoName(),
-      fields: fields ?? SearchPAMProjectFields,
+      fields:
+        fields ??
+        (searchView === 'compact' ? compactFields : SearchPAMProjectFields),
       page: page,
       pageSize: pageSize,
       sort: params.sort,
@@ -215,14 +301,17 @@ export class PAMProjectRepo extends BaseRepository<
       // Substring match across project text fields (not FTS / search_vector).
       ilikeOr: keyword
         ? {
-            columns: [
-              'name',
-              'slug',
-              'description',
-              'stack',
-              'category',
-              'repo_url'
-            ],
+            columns:
+              searchView === 'compact'
+                ? ['name', 'slug']
+                : [
+                    'name',
+                    'slug',
+                    'description',
+                    'stack',
+                    'category',
+                    'repo_url'
+                  ],
             query: keyword
           }
         : undefined,
@@ -296,6 +385,203 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * Maps a `pam_env_variables` row to the API variable shape.
+   */
+  protected mapVariableRow(row: {
+    id: string;
+    key: string;
+    value: string;
+    sensitive: boolean | null;
+    comments: unknown;
+  }): PAMVariable {
+    const comments = PAMEnvVariableNormalizeUtil.normalizeComments(
+      row.comments
+    );
+    return {
+      id: row.id,
+      key: row.key,
+      value: row.value ?? '',
+      sensitive: row.sensitive === true,
+      ...(comments !== undefined ? { comments } : {})
+    };
+  }
+
+  /**
+   * Loads variables for many environments (admin), ordered by sort_order.
+   */
+  protected async listVariablesByEnvironmentIdsAdmin(
+    environmentIds: readonly string[]
+  ): Promise<Map<string, PAMVariable[]>> {
+    const map = new Map<string, PAMVariable[]>();
+    if (environmentIds.length === 0) {
+      return map;
+    }
+
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvVariableTableName)
+      .select('id,environment_id,key,value,sensitive,comments,sort_order')
+      .in('environment_id', [...environmentIds])
+      .order('sort_order', { ascending: true })
+      .order('key', { ascending: true });
+    this.supabaseRepo.throwIfError(result);
+
+    for (const row of result.data ?? []) {
+      const envId = String(row.environment_id);
+      const variable = this.mapVariableRow(row);
+      const list = map.get(envId);
+      if (list) {
+        list.push(variable);
+      } else {
+        map.set(envId, [variable]);
+      }
+    }
+
+    return map;
+  }
+
+  /**
+   * Overwrites `variables` on each environment from `pam_env_variables`.
+   */
+  protected async hydrateEnvironmentsVariables<
+    T extends { id: string; variables?: PAMVariable[] }
+  >(environments: T[]): Promise<T[]> {
+    if (environments.length === 0) {
+      return environments;
+    }
+    const byEnv = await this.listVariablesByEnvironmentIdsAdmin(
+      environments.map((env) => env.id)
+    );
+    return environments.map((env) => ({
+      ...env,
+      variables: byEnv.get(env.id) ?? []
+    }));
+  }
+
+  /**
+   * Replaces all variable rows for one environment (delete + insert).
+   * Does not write the legacy JSONB column.
+   */
+  protected async replaceEnvironmentVariableRows(
+    environmentId: string,
+    variables: PAMVariable[],
+    options?: { admin?: boolean }
+  ): Promise<void> {
+    const client = options?.admin
+      ? this.supabaseRepo.getAdminSupabase()
+      : await this.supabaseRepo.getSupabase();
+
+    const del = await client
+      .from(PAMEnvVariableTableName)
+      .delete()
+      .eq('environment_id', environmentId);
+    this.supabaseRepo.throwIfError(del);
+
+    if (variables.length === 0) {
+      return;
+    }
+
+    const rows = variables.map((variable, index) => ({
+      id: variable.id || uuid(),
+      environment_id: environmentId,
+      key: variable.key,
+      value: variable.value ?? '',
+      sensitive: variable.sensitive === true,
+      comments:
+        variable.comments && variable.comments.length > 0
+          ? variable.comments
+          : null,
+      sort_order: index
+    }));
+
+    const ins = await client.from(PAMEnvVariableTableName).insert(rows);
+    this.supabaseRepo.throwIfError(ins);
+  }
+
+  /**
+   * Incremental write: delete by id, then upsert rows (by id when present).
+   */
+  public async patchEnvironmentVariableRowsAdmin(
+    environmentId: string,
+    patch: { upsert: PAMVariable[]; deleteIds: string[] }
+  ): Promise<void> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+
+    if (patch.deleteIds.length > 0) {
+      const del = await admin
+        .from(PAMEnvVariableTableName)
+        .delete()
+        .eq('environment_id', environmentId)
+        .in('id', patch.deleteIds);
+      this.supabaseRepo.throwIfError(del);
+    }
+
+    if (patch.upsert.length === 0) {
+      return;
+    }
+
+    // Keep sort_order after existing max so new rows append stably.
+    const maxOrderResult = await admin
+      .from(PAMEnvVariableTableName)
+      .select('sort_order')
+      .eq('environment_id', environmentId)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(maxOrderResult);
+    let nextOrder =
+      typeof maxOrderResult.data?.sort_order === 'number'
+        ? maxOrderResult.data.sort_order + 1
+        : 0;
+
+    for (const variable of patch.upsert) {
+      const id = variable.id || uuid();
+      const row = {
+        id,
+        environment_id: environmentId,
+        key: variable.key,
+        value: variable.value ?? '',
+        sensitive: variable.sensitive === true,
+        comments:
+          variable.comments && variable.comments.length > 0
+            ? variable.comments
+            : null,
+        sort_order: nextOrder,
+        updated_at: new Date().toISOString()
+      };
+
+      if (variable.id) {
+        const existing = await admin
+          .from(PAMEnvVariableTableName)
+          .select('id,sort_order')
+          .eq('environment_id', environmentId)
+          .eq('id', variable.id)
+          .maybeSingle();
+        this.supabaseRepo.throwIfError(existing);
+        if (existing.data) {
+          const upd = await admin
+            .from(PAMEnvVariableTableName)
+            .update({
+              key: row.key,
+              value: row.value,
+              sensitive: row.sensitive,
+              comments: row.comments,
+              updated_at: row.updated_at
+            })
+            .eq('id', variable.id)
+            .eq('environment_id', environmentId);
+          this.supabaseRepo.throwIfError(upd);
+          continue;
+        }
+      }
+
+      const ins = await admin.from(PAMEnvVariableTableName).insert(row);
+      this.supabaseRepo.throwIfError(ins);
+      nextOrder += 1;
+    }
+  }
+
+  /**
    * 搜索项目列表 — prefers `pam_search_projects` RPC (one DB round-trip).
    *
    * @param params
@@ -324,6 +610,9 @@ export class PAMProjectRepo extends BaseRepository<
     const keyword = params.keyword?.trim();
     const categoryFilter = resolveCategoryFilter(params.filters);
     const visibilityFilter = resolveVisibilityFilter(params.filters);
+    const mineFilter = resolveBooleanFilter(params.filters, 'mine');
+    const writableFilter = resolveBooleanFilter(params.filters, 'writable');
+    const searchView = resolveSearchView(params);
 
     const admin = this.supabaseRepo.getAdminSupabase();
     const sortBy = resolvePamListSortBy(params.sort);
@@ -338,7 +627,10 @@ export class PAMProjectRepo extends BaseRepository<
       p_include_count: params.includeCount ?? page <= 1,
       p_include_owner_id: Boolean(user_id),
       p_sort_by: sortBy,
-      p_sort_order: sortOrder
+      p_sort_order: sortOrder,
+      p_mine: mineFilter,
+      p_writable: writableFilter,
+      p_view: searchView
     });
 
     this.supabaseRepo.throwIfError({ data, error });
@@ -420,7 +712,7 @@ export class PAMProjectRepo extends BaseRepository<
       .from(this.getRepoName())
       .select(
         SearchPAMProjectFields.join(',') +
-          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
+          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(id,name,url,is_protected)`
       )
       .eq(column, idOrSlug)
       .eq('is_deleted', DeleteStatus.UNDELETE)
@@ -432,7 +724,13 @@ export class PAMProjectRepo extends BaseRepository<
       return null;
     }
 
-    return data as never;
+    const detail = data as unknown as PAMProjectDetail;
+    if (Array.isArray(detail.environments)) {
+      detail.environments = await this.hydrateEnvironmentsVariables(
+        detail.environments
+      );
+    }
+    return detail;
   }
 
   /**
@@ -449,7 +747,7 @@ export class PAMProjectRepo extends BaseRepository<
       .from(this.getRepoName())
       .select(
         SearchPAMProjectFields.join(',') +
-          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
+          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(id,name,url,is_protected)`
       )
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE) // 新增过滤
@@ -461,7 +759,13 @@ export class PAMProjectRepo extends BaseRepository<
       return null;
     }
 
-    return data as never;
+    const detail = data as unknown as PAMProjectDetail;
+    if (Array.isArray(detail.environments)) {
+      detail.environments = await this.hydrateEnvironmentsVariables(
+        detail.environments
+      );
+    }
+    return detail;
   }
 
   /**
@@ -477,7 +781,7 @@ export class PAMProjectRepo extends BaseRepository<
       .from(this.getRepoName())
       .select(
         SearchPAMProjectFields.join(',') +
-          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(*)`
+          `,${PAMProjectEnvKey}: ${PAMEnvTableName}(id,name,url,is_protected)`
       )
       .eq('id', id)
       .eq('is_deleted', DeleteStatus.UNDELETE)
@@ -489,7 +793,13 @@ export class PAMProjectRepo extends BaseRepository<
       return null;
     }
 
-    return data as never;
+    const detail = data as unknown as PAMProjectDetail;
+    if (Array.isArray(detail.environments)) {
+      detail.environments = await this.hydrateEnvironmentsVariables(
+        detail.environments
+      );
+    }
+    return detail;
   }
 
   /**
@@ -582,25 +892,35 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
-   * Loads environments with variables for merge/write workflows.
+   * Loads environments for a project.
    *
    * @param projectId - Project id
-   * @returns Environments including JSONB variables
+   * @param options.withVariables - When true, hydrate from `pam_env_variables`
    */
   public async getEnvironmentsByProjectId(
-    projectId: string
-  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>[]> {
+    projectId: string,
+    options?: { withVariables?: boolean }
+  ): Promise<
+    Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables' | 'is_protected'>[]
+  > {
     // Admin: used after ownership assert (Brain / CLI have no RLS session).
     const admin = this.supabaseRepo.getAdminSupabase();
 
     const r10 = await admin
       .from(PAMEnvTableName)
-      .select('id,name,url,variables')
+      .select('id,name,url,is_protected')
       .eq('project_id', projectId);
     this.supabaseRepo.throwIfError(r10);
-    const data = r10.data;
+    const data = (r10.data || []) as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'is_protected'
+    >[];
 
-    return data || [];
+    if (options?.withVariables) {
+      return this.hydrateEnvironmentsVariables(data);
+    }
+
+    return data.map((env) => ({ ...env, variables: [] }));
   }
 
   /**
@@ -775,18 +1095,28 @@ export class PAMProjectRepo extends BaseRepository<
   public async getEnvironmentByIdAdmin(
     projectId: string,
     envId: string
-  ): Promise<Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null> {
+  ): Promise<Pick<
+    PAMEnvRaw,
+    'id' | 'name' | 'url' | 'variables' | 'is_protected'
+  > | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
     const r17 = await admin
       .from(PAMEnvTableName)
-      .select('id,name,url,variables')
+      .select('id,name,url,is_protected')
       .eq('project_id', projectId)
       .eq('id', envId)
       .maybeSingle();
     this.supabaseRepo.throwIfError(r17);
-    const data = r17.data;
+    const data = r17.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'is_protected'
+    > | null;
 
-    return data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null;
+    if (!data) {
+      return null;
+    }
+    const [hydrated] = await this.hydrateEnvironmentsVariables([data]);
+    return hydrated ?? null;
   }
 
   /**
@@ -802,21 +1132,25 @@ export class PAMProjectRepo extends BaseRepository<
     variables: PAMVariable[]
   ): Promise<PAMEnvWriteable> {
     const admin = this.supabaseRepo.getAdminSupabase();
-    const r18 = await admin
+    const meta = await admin
       .from(PAMEnvTableName)
-      .update({ variables })
+      .select('id,name,url,is_protected')
       .eq('id', envId)
       .eq('project_id', projectId)
-      .select('id,name,url,variables')
       .maybeSingle();
-    this.supabaseRepo.throwIfError(r18);
-    const data = r18.data;
-
-    if (!data) {
+    this.supabaseRepo.throwIfError(meta);
+    if (!meta.data) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
-    return data as PAMEnvWriteable;
+    await this.replaceEnvironmentVariableRows(envId, variables, {
+      admin: true
+    });
+
+    const [hydrated] = await this.hydrateEnvironmentsVariables([
+      meta.data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'is_protected'>
+    ]);
+    return hydrated as PAMEnvWriteable;
   }
 
   /**
@@ -834,14 +1168,21 @@ export class PAMProjectRepo extends BaseRepository<
 
     const r19 = await supabase
       .from(PAMEnvTableName)
-      .select('id,name,url,variables')
+      .select('id,name,url,is_protected')
       .eq('project_id', projectId)
       .eq('id', envId)
       .maybeSingle();
     this.supabaseRepo.throwIfError(r19);
-    const data = r19.data;
+    const data = r19.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'is_protected'
+    > | null;
 
-    return data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'> | null;
+    if (!data) {
+      return null;
+    }
+    const [hydrated] = await this.hydrateEnvironmentsVariables([data]);
+    return hydrated ?? null;
   }
 
   /**
@@ -857,7 +1198,10 @@ export class PAMProjectRepo extends BaseRepository<
     envId: string
   ): Promise<{
     projectSlug: string;
-    environment: Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'variables'>;
+    environment: Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'variables' | 'is_protected'
+    >;
   } | null> {
     const admin = this.supabaseRepo.getAdminSupabase();
 
@@ -874,7 +1218,7 @@ export class PAMProjectRepo extends BaseRepository<
 
     const envResult = await admin
       .from(PAMEnvTableName)
-      .select('id,name,url,variables')
+      .select('id,name,url,is_protected')
       .eq('project_id', projectId)
       .eq('id', envId)
       .maybeSingle();
@@ -883,13 +1227,83 @@ export class PAMProjectRepo extends BaseRepository<
       return null;
     }
 
+    const [environment] = await this.hydrateEnvironmentsVariables([
+      envResult.data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'is_protected'>
+    ]);
+
     return {
       projectSlug: (projectResult.data as { slug: string }).slug,
-      environment: envResult.data as Pick<
+      environment: environment as Pick<
         PAMEnvRaw,
-        'id' | 'name' | 'url' | 'variables'
+        'id' | 'name' | 'url' | 'variables' | 'is_protected'
       >
     };
+  }
+
+  /**
+   * One environment by project uuid + name, including variables (admin).
+   * Callers must assert access in the service layer first.
+   */
+  public async getEnvironmentByNameAdmin(
+    projectId: string,
+    name: string
+  ): Promise<Pick<
+    PAMEnvRaw,
+    'id' | 'name' | 'url' | 'variables' | 'is_protected'
+  > | null> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .select('id,name,url,is_protected')
+      .eq('project_id', projectId)
+      .eq('name', name)
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      return null;
+    }
+    const [hydrated] = await this.hydrateEnvironmentsVariables([
+      result.data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'is_protected'>
+    ]);
+    return hydrated ?? null;
+  }
+
+  /**
+   * Updates environment settings (protected flag / url) with admin client.
+   *
+   * @param projectId - Project id
+   * @param envId - Environment id
+   * @param patch - Fields to change
+   */
+  public async updateEnvironmentSettingsAdmin(
+    projectId: string,
+    envId: string,
+    patch: { isProtected?: boolean; url?: string }
+  ): Promise<PAMEnvWriteable> {
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(PAMEnvTableName)
+      .update({
+        ...(patch.isProtected !== undefined
+          ? { is_protected: patch.isProtected }
+          : {}),
+        ...(patch.url !== undefined ? { url: patch.url } : {})
+      })
+      .eq('id', envId)
+      .eq('project_id', projectId)
+      .select('id,name,url,is_protected')
+      .maybeSingle();
+    this.supabaseRepo.throwIfError(result);
+
+    if (!result.data) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const [hydrated] = await this.hydrateEnvironmentsVariables([
+      result.data as Pick<PAMEnvRaw, 'id' | 'name' | 'url' | 'is_protected'>
+    ]);
+    return hydrated as PAMEnvWriteable;
   }
 
   /**
@@ -932,15 +1346,23 @@ export class PAMProjectRepo extends BaseRepository<
       .insert({
         project_id: projectId,
         name: data.name,
-        url: data.url,
-        variables: data.variables || []
+        url: data.url
       })
-      .select('id,name,url,variables')
+      .select('id,name,url,is_protected')
       .single();
     this.supabaseRepo.throwIfError(r22);
-    const created = r22.data;
+    const created = r22.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'is_protected'
+    >;
 
-    return created as PAMEnvWriteable;
+    const variables = data.variables || [];
+    if (variables.length > 0) {
+      await this.replaceEnvironmentVariableRows(created.id, variables);
+    }
+
+    const [hydrated] = await this.hydrateEnvironmentsVariables([created]);
+    return hydrated as PAMEnvWriteable;
   }
 
   /**
@@ -966,15 +1388,25 @@ export class PAMProjectRepo extends BaseRepository<
       .insert({
         project_id: projectId,
         name: data.name,
-        url: data.url,
-        variables: data.variables || []
+        url: data.url
       })
-      .select('id,name,url,variables')
+      .select('id,name,url,is_protected')
       .single();
     this.supabaseRepo.throwIfError(r23);
-    const created = r23.data;
+    const created = r23.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'is_protected'
+    >;
 
-    return created as PAMEnvWriteable;
+    const variables = data.variables || [];
+    if (variables.length > 0) {
+      await this.replaceEnvironmentVariableRows(created.id, variables, {
+        admin: true
+      });
+    }
+
+    const [hydrated] = await this.hydrateEnvironmentsVariables([created]);
+    return hydrated as PAMEnvWriteable;
   }
 
   /**
@@ -1046,7 +1478,7 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
-   * Replaces the JSONB variables array for one environment.
+   * Replaces variable rows for one environment.
    *
    * @param projectId - Project id
    * @param envId - Environment id
@@ -1061,19 +1493,23 @@ export class PAMProjectRepo extends BaseRepository<
     const supabase = await this.supabaseRepo.getSupabase();
     const r27 = await supabase
       .from(PAMEnvTableName)
-      .update({ variables })
+      .select('id,name,url,is_protected')
       .eq('id', envId)
       .eq('project_id', projectId)
-      .select('id,name,url,variables')
       .maybeSingle();
     this.supabaseRepo.throwIfError(r27);
-    const data = r27.data;
+    const data = r27.data as Pick<
+      PAMEnvRaw,
+      'id' | 'name' | 'url' | 'is_protected'
+    > | null;
 
     if (!data) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
 
-    return data as PAMEnvWriteable;
+    await this.replaceEnvironmentVariableRows(envId, variables);
+    const [hydrated] = await this.hydrateEnvironmentsVariables([data]);
+    return hydrated as PAMEnvWriteable;
   }
 
   /**
@@ -1140,42 +1576,51 @@ export class PAMProjectRepo extends BaseRepository<
 
     // 5. 执行更新（确保 id 存在，但可以在更新时用 project_id 限制）
     for (const env of toUpdate) {
-      const updateData: Partial<Pick<PAMEnvRaw, 'name' | 'url' | 'variables'>> =
-        {};
+      const updateData: Partial<Pick<PAMEnvRaw, 'name' | 'url'>> = {};
       if (env.name !== undefined) updateData.name = env.name;
       if (env.url !== undefined) updateData.url = env.url;
-      if (env.variables !== undefined) updateData.variables = env.variables;
-      if (Object.keys(updateData).length === 0) continue;
+      if (Object.keys(updateData).length > 0) {
+        const r31 = await supabase
+          .from(PAMEnvTableName)
+          .update(updateData)
+          .eq('id', env.id)
+          .eq('project_id', projectId); // 防止跨项目更新
+        this.supabaseRepo.throwIfError(r31);
+        const count = r31.count;
 
-      const r31 = await supabase
-        .from(PAMEnvTableName)
-        .update(updateData)
-        .eq('id', env.id)
-        .eq('project_id', projectId); // 防止跨项目更新
-      this.supabaseRepo.throwIfError(r31);
-      const count = r31.count;
+        if (count !== undefined && count === 0) {
+          throw new ExecutorError(
+            API_PAM_ENV_NOT_FOUND,
+            `Environment ${env.id} not found in this project`
+          );
+        }
+      }
 
-      if (count !== undefined && count === 0) {
-        throw new ExecutorError(
-          API_PAM_ENV_NOT_FOUND,
-          `Environment ${env.id} not found in this project`
-        );
+      if (env.variables !== undefined && env.id) {
+        await this.replaceEnvironmentVariableRows(env.id, env.variables, {
+          admin: true
+        });
       }
     }
 
     // 6. 执行新增
-    if (toInsert.length > 0) {
-      const insertData = toInsert.map((env) => ({
-        project_id: projectId,
-        name: env.name!,
-        url: env.url!,
-        variables: env.variables || []
-      }));
+    for (const env of toInsert) {
       const r32 = await supabase
         .from(PAMEnvTableName)
-        .insert(insertData)
-        .select();
+        .insert({
+          project_id: projectId,
+          name: env.name!,
+          url: env.url!
+        })
+        .select('id')
+        .single();
       this.supabaseRepo.throwIfError(r32);
+      const createdId = (r32.data as { id: string } | null)?.id;
+      if (createdId && env.variables && env.variables.length > 0) {
+        await this.replaceEnvironmentVariableRows(createdId, env.variables, {
+          admin: true
+        });
+      }
     }
   }
 
@@ -1189,7 +1634,8 @@ export class PAMProjectRepo extends BaseRepository<
     fields: '*' | readonly EnvField[]
   ): JoinEnvFieldsResult<'*' | readonly EnvField[]> {
     if (fields === '*') {
-      fields = ['id', 'name', 'url', 'variables'];
+      // Variables come from pam_env_variables via hydrateEnvironmentsVariables.
+      fields = ['id', 'name', 'url', 'is_protected'];
     }
 
     const joinedFields = Array.isArray(fields) ? fields.join(',') : fields;
@@ -1245,9 +1691,15 @@ export class PAMProjectRepo extends BaseRepository<
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
 
-    this.logger.info(`[PAMProjectRepo] update project ${id} success`, data);
+    this.logger.info(`[PAMProjectRepo] update project ${id} success`);
 
-    return data as never;
+    const detail = data as unknown as PAMProjectDetail;
+    if (envUpdates !== undefined && Array.isArray(detail.environments)) {
+      detail.environments = await this.hydrateEnvironmentsVariables(
+        detail.environments
+      );
+    }
+    return detail;
   }
 
   /**
@@ -1355,33 +1807,35 @@ export class PAMProjectRepo extends BaseRepository<
       fields: SearchPAMProjectFields
     });
 
-    this.logger.info(
-      `[PAMProjectRepo] create project ${projectData.name} success`,
-      projectData
-    );
+    this.logger.info(`[PAMProjectRepo] create project ${project.id} success`);
 
     // 2. 创建环境（如果有）
-    let createdEnvs: PAMEnvWriteable[] = [];
+    const createdEnvs: PAMEnvWriteable[] = [];
 
     this.logger.debug('[PAMProjectRepo] create envs length:', envs?.length);
 
     if (Array.isArray(envs) && envs.length > 0) {
-      const envsToInsert = envs.map((env) => ({
-        project_id: project.id,
-        name: env.name,
-        url: env.url,
-        variables: env.variables || []
-      }));
-
-      const r37 = await supabase
-        .from(PAMEnvTableName)
-        .insert(envsToInsert)
-        .select('*');
-      this.supabaseRepo.throwIfError(r37);
-      const envRows = r37.data;
-
-      if (envRows) {
-        createdEnvs = envRows;
+      for (const env of envs) {
+        const r37 = await supabase
+          .from(PAMEnvTableName)
+          .insert({
+            project_id: project.id,
+            name: env.name,
+            url: env.url
+          })
+          .select('id,name,url,is_protected')
+          .single();
+        this.supabaseRepo.throwIfError(r37);
+        const row = r37.data as Pick<
+          PAMEnvRaw,
+          'id' | 'name' | 'url' | 'is_protected'
+        >;
+        const variables = env.variables || [];
+        if (variables.length > 0) {
+          await this.replaceEnvironmentVariableRows(row.id, variables);
+        }
+        const [hydrated] = await this.hydrateEnvironmentsVariables([row]);
+        createdEnvs.push(hydrated as PAMEnvWriteable);
       }
     }
 
@@ -1421,11 +1875,10 @@ export class PAMProjectRepo extends BaseRepository<
     const project = projectRow as unknown as SearchPAMRawProject;
 
     this.logger.info(
-      `[PAMProjectRepo] create project (admin) ${projectData.name} success`,
-      projectData
+      `[PAMProjectRepo] create project (admin) ${project.id} success`
     );
 
-    let createdEnvs: PAMEnvWriteable[] = [];
+    const createdEnvs: PAMEnvWriteable[] = [];
 
     this.logger.debug(
       '[PAMProjectRepo] create envs (admin) length:',
@@ -1433,22 +1886,29 @@ export class PAMProjectRepo extends BaseRepository<
     );
 
     if (Array.isArray(envs) && envs.length > 0) {
-      const envsToInsert = envs.map((env) => ({
-        project_id: project.id,
-        name: env.name,
-        url: env.url,
-        variables: env.variables || []
-      }));
-
-      const r39 = await admin
-        .from(PAMEnvTableName)
-        .insert(envsToInsert)
-        .select('*');
-      this.supabaseRepo.throwIfError(r39);
-      const envRows = r39.data;
-
-      if (envRows) {
-        createdEnvs = envRows;
+      for (const env of envs) {
+        const r39 = await admin
+          .from(PAMEnvTableName)
+          .insert({
+            project_id: project.id,
+            name: env.name,
+            url: env.url
+          })
+          .select('id,name,url,is_protected')
+          .single();
+        this.supabaseRepo.throwIfError(r39);
+        const row = r39.data as Pick<
+          PAMEnvRaw,
+          'id' | 'name' | 'url' | 'is_protected'
+        >;
+        const variables = env.variables || [];
+        if (variables.length > 0) {
+          await this.replaceEnvironmentVariableRows(row.id, variables, {
+            admin: true
+          });
+        }
+        const [hydrated] = await this.hydrateEnvironmentsVariables([row]);
+        createdEnvs.push(hydrated as PAMEnvWriteable);
       }
     }
 

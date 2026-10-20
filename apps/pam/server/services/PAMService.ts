@@ -6,11 +6,13 @@ import {
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { uuidSchema } from '@qlover/next-kit/common';
 import { headers } from 'next/headers';
+import { after } from 'next/server';
 import { v4 as uuid } from 'uuid';
 import { hasOrgPermission } from '@shared/auth/orgRole';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { inject, injectable } from '@shared/container';
 import { PAMEnvDotenvSerializeUtil } from '@shared/utils/PAMEnvDotenvSerializeUtil';
+import { PAMEnvSensitivePlaceholderUtil } from '@shared/utils/PAMEnvSensitivePlaceholderUtil';
 import { PAMEnvVariableMergeUtil } from '@shared/utils/PAMEnvVariableMergeUtil';
 import { PAMEnvVariableNormalizeUtil } from '@shared/utils/PAMEnvVariableNormalizeUtil';
 import { PAMEnvVariableRedactUtil } from '@shared/utils/PAMEnvVariableRedactUtil';
@@ -22,6 +24,7 @@ import {
   API_PAM_ENV_ID_NOT_EXISTS,
   API_PAM_ENV_NAME_EXISTS,
   API_PAM_ENV_NOT_FOUND,
+  API_PAM_ENV_PROTECTED,
   API_PAM_PROJECT_NOT_FOUND,
   API_PAM_SLUG_EXISTS,
   API_PAM_TRANSFER_TO_SELF,
@@ -32,12 +35,22 @@ import {
   API_PAM_PREVIEW_URL_MISSING,
   API_PAM_SITE_URL_INVALID,
   API_PAM_VARIABLE_KEY_DUPLICATE,
+  API_PAM_VARIABLE_PLACEHOLDER_INVALID,
   API_PAM_VARIABLE_VALUE_REQUIRED
 } from '@config/i18n-identifier/api';
+import { I } from '@config/ioc-identifiter';
 import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type {
+  PAMEnvAccessAction,
+  PAMEnvAccessContext,
+  PAMEnvAccessLog,
   PAMEnvCreate,
   PAMEnvReplaceVariables,
+  PAMEnvResolve,
+  PAMEnvResolveByName,
+  PAMEnvResolvedEnvironment,
+  PAMEnvResolvedVariable,
+  PAMEnvSettings,
   PAMEnvWriteable,
   PAMVariable
 } from '@schemas/PAMEnvironmentSchema';
@@ -61,6 +74,7 @@ import type {
   PAMServiceInterface,
   ProjectDetailParams
 } from '@server/interfaces/PAMServiceInterface';
+import { PamEnvAccessLogsRepo } from '@server/repositorys/PamEnvAccessLogsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamTeamMembersRepo } from '@server/repositorys/PamTeamMembersRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
@@ -79,6 +93,7 @@ import { PAMCategoryCacheService } from './PAMCategoryCacheService';
 import { PamCliTokenService } from './PamCliTokenService';
 import { PamPermissionService } from './PamPermissionService';
 import { PamTeamService } from './PamTeamService';
+import type { LoggerInterface } from '@qlover/logger';
 
 const AUTH_USERS_SEARCH_CACHE_TTL_MS = 45_000;
 const AUTH_USERS_SEARCH_LIMIT = 20;
@@ -118,6 +133,12 @@ export class PAMService implements PAMServiceInterface {
   @inject(PamTeamMembersRepo)
   protected readonly teamMembersRepo!: PamTeamMembersRepo;
 
+  @inject(PamEnvAccessLogsRepo)
+  protected readonly envAccessLogsRepo!: PamEnvAccessLogsRepo;
+
+  @inject(I.Logger)
+  protected readonly logger!: LoggerInterface;
+
   /** Coalesce identical in-flight searches (real-time; not a result cache). */
   private readonly searchInflight = new Map<
     string,
@@ -137,6 +158,12 @@ export class PAMService implements PAMServiceInterface {
   private readonly accessRoleByUserProject = new Map<
     string,
     Promise<PAMProjectAccessRole>
+  >();
+
+  /** Request-scoped `${projectRef}:${permissionKey}` → permission check. */
+  private readonly orgPermissionChecks = new Map<
+    string,
+    Promise<{ userId: string; role: PAMProjectAccessRole }>
   >();
 
   protected secretEncryption: PAMEnvSecretEncryption | null = null;
@@ -290,15 +317,32 @@ export class PAMService implements PAMServiceInterface {
     projectId: string,
     permissionKey: string
   ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
-    await this.permissionService.ensureLoaded();
-    const user =
-      (await this.userService.getSessionUser()) ??
-      (await this.userService.getUser(true));
+    const cacheKey = `${projectId}:${permissionKey}`;
+    let pending = this.orgPermissionChecks.get(cacheKey);
+    if (!pending) {
+      pending = this.checkOrgPermission(projectId, permissionKey);
+      this.orgPermissionChecks.set(cacheKey, pending);
+    }
+    return pending;
+  }
+
+  protected async checkOrgPermission(
+    projectId: string,
+    permissionKey: string
+  ): Promise<{ userId: string; role: PAMProjectAccessRole }> {
+    const accessPending = this.loadProjectAccess(projectId);
+    // Avoid an unhandled rejection when the user check throws first.
+    accessPending.catch(() => undefined);
+    const [, sessionUser] = await Promise.all([
+      this.permissionService.ensureLoaded(),
+      this.userService.getSessionUser()
+    ]);
+    const user = sessionUser ?? (await this.userService.getUser(true));
     if (!user) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    const access = await this.loadProjectAccess(projectId);
+    const access = await accessPending;
     if (!access) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
@@ -439,12 +483,33 @@ export class PAMService implements PAMServiceInterface {
    * @param requestEnvs - Environments from the update request
    * @returns Environments with secrets preserved where requested
    */
+  /**
+   * 受保护环境的变量只允许有导出权限的成员修改。
+   *
+   * @param role - 当前用户在项目上的角色
+   * @param isProtected - 环境是否受保护
+   */
+  protected assertCanWriteProtectedEnvironment(
+    role: PAMProjectAccessRole,
+    isProtected: boolean | null | undefined
+  ): void {
+    if (
+      isProtected === true &&
+      !hasOrgPermission(role, PermissionKey.pam_environments_export)
+    ) {
+      throw new ExecutorError(API_PAM_ENV_PROTECTED);
+    }
+  }
+
   protected async mergeRequestEnvironments(
     projectId: string,
-    requestEnvs: NonNullable<PAMProjectUpdate['environments']>
+    requestEnvs: NonNullable<PAMProjectUpdate['environments']>,
+    role: PAMProjectAccessRole
   ): Promise<NonNullable<PAMProjectUpdate['environments']>> {
-    const existingEnvs =
-      await this.projectRepo.getEnvironmentsByProjectId(projectId);
+    const existingEnvs = await this.projectRepo.getEnvironmentsByProjectId(
+      projectId,
+      { withVariables: true }
+    );
     const existingById = new Map(
       existingEnvs.map((env) => [env.id, env] as const)
     );
@@ -455,9 +520,13 @@ export class PAMService implements PAMServiceInterface {
       }
 
       const previous = env.id ? existingById.get(env.id) : undefined;
+      this.assertCanWriteProtectedEnvironment(role, previous?.is_protected);
       const merged = PAMEnvVariableMergeUtil.mergeVariables(
         previous?.variables,
-        env.variables
+        env.variables,
+        previous
+          ? this.getSecretEncryption().sensitivePlaceholder(previous.id)
+          : undefined
       );
 
       return {
@@ -668,6 +737,16 @@ export class PAMService implements PAMServiceInterface {
           );
         }
       }
+      // Runs after merge: this env's own placeholder is already swapped back
+      // to the stored value, so any placeholder left is foreign or unresolved.
+      for (const variable of env.variables || []) {
+        if (PAMEnvSensitivePlaceholderUtil.isPlaceholder(variable.value)) {
+          throw new ExecutorError(
+            API_PAM_VARIABLE_PLACEHOLDER_INVALID,
+            `Variable "${variable.key}" in environment "${env.name}" is a sensitive placeholder`
+          );
+        }
+      }
     }
   }
 
@@ -705,7 +784,8 @@ export class PAMService implements PAMServiceInterface {
 
       const mergedEnvironments = await this.mergeRequestEnvironments(
         id,
-        params.environments
+        params.environments,
+        role
       );
       this.validateVariableKeys(mergedEnvironments);
       this.assertSensitiveValuesPresent(mergedEnvironments);
@@ -1134,10 +1214,34 @@ export class PAMService implements PAMServiceInterface {
       PermissionKey.pam_environments_read
     );
 
+    // Metadata only — variables load via getEnvironment when selected.
     const envs = await this.projectRepo.getEnvironmentsByProjectId(projectId);
-    return PAMEnvVariableRedactUtil.redactEnvironments(
-      envs as PAMEnvWriteable[]
+    return envs as PAMEnvWriteable[];
+  }
+
+  /**
+   * One environment with redacted variables (web lazy load).
+   *
+   * @override
+   */
+  public async getEnvironment(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvWriteable> {
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_read
     );
+
+    const existing = await this.projectRepo.getEnvironmentByIdAdmin(
+      projectId,
+      envId
+    );
+    if (!existing) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    return this.redactEnvironment(existing as PAMEnvWriteable);
   }
 
   /**
@@ -1204,7 +1308,7 @@ export class PAMService implements PAMServiceInterface {
     envId: string,
     params: PAMEnvReplaceVariables
   ): Promise<PAMEnvWriteable> {
-    await this.assertOrgPermission(
+    const { role } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_variables_write
     );
@@ -1217,29 +1321,279 @@ export class PAMService implements PAMServiceInterface {
     if (!existing) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
+    this.assertCanWriteProtectedEnvironment(role, existing.is_protected);
 
-    const merged = this.ensureVariableIds(
-      PAMEnvVariableMergeUtil.mergeVariables(
-        existing.variables,
-        params.variables
-      )
+    const placeholder = this.getSecretEncryption().sensitivePlaceholder(
+      existing.id
     );
 
-    this.validateVariableKeys([{ name: existing.name, variables: merged }]);
+    // Full replace (CLI push): merge against stored list then rewrite all rows.
+    if (params.variables !== undefined) {
+      const merged = this.ensureVariableIds(
+        PAMEnvVariableMergeUtil.mergeVariables(
+          existing.variables,
+          params.variables,
+          placeholder
+        )
+      );
+
+      this.validateVariableKeys([{ name: existing.name, variables: merged }]);
+      this.assertSensitiveValuesPresent([
+        { name: existing.name, variables: merged }
+      ]);
+
+      const encrypted =
+        this.getSecretEncryption().encryptSensitiveVariables(merged);
+
+      const updated = await this.projectRepo.updateEnvironmentVariablesAdmin(
+        projectId,
+        envId,
+        encrypted
+      );
+      return this.redactEnvironment(updated);
+    }
+
+    // Patch (web): only upsert / delete changed rows.
+    const deleteIds = params.deleteIds ?? [];
+    const upsertRaw = params.upsert ?? [];
+    const existingById = new Map(
+      (existing.variables ?? [])
+        .filter((item) => item.id)
+        .map((item) => [item.id!, item])
+    );
+
+    const upsertMerged = this.ensureVariableIds(
+      upsertRaw.map((incoming) => {
+        const previous = incoming.id
+          ? existingById.get(incoming.id)
+          : undefined;
+        const [merged] = PAMEnvVariableMergeUtil.mergeVariables(
+          previous ? [previous] : [],
+          [incoming],
+          placeholder
+        );
+        return merged!;
+      })
+    );
+
+    this.validateVariableKeys([
+      { name: existing.name, variables: upsertMerged }
+    ]);
     this.assertSensitiveValuesPresent([
-      { name: existing.name, variables: merged }
+      { name: existing.name, variables: upsertMerged }
     ]);
 
-    const encrypted =
-      this.getSecretEncryption().encryptSensitiveVariables(merged);
+    const encryptedUpsert =
+      this.getSecretEncryption().encryptSensitiveVariables(upsertMerged);
 
-    const updated = await this.projectRepo.updateEnvironmentVariablesAdmin(
+    await this.projectRepo.patchEnvironmentVariableRowsAdmin(envId, {
+      upsert: encryptedUpsert,
+      deleteIds
+    });
+
+    const refreshed = await this.projectRepo.getEnvironmentByIdAdmin(
       projectId,
-      envId,
-      encrypted
+      envId
+    );
+    if (!refreshed) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+    return this.redactEnvironment(refreshed as PAMEnvWriteable);
+  }
+
+  /**
+   * @override
+   */
+  public async resolveEnvironment(
+    projectId: string,
+    envId: string,
+    params: PAMEnvResolve,
+    context: PAMEnvAccessContext
+  ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
+    const { userId, role } = await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_inject
+    );
+    const access = await this.loadProjectAccess(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const owned = await this.projectRepo.getEnvironmentForExport(
+      access.id,
+      envId
+    );
+    if (!owned) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const variables = await this.decryptForInjection(
+      { userId, role, projectId: access.id },
+      owned.environment,
+      params,
+      context
+    );
+    return { variables };
+  }
+
+  /**
+   * @override
+   */
+  public async resolveEnvironmentByName(
+    projectRef: string,
+    params: PAMEnvResolveByName,
+    context: PAMEnvAccessContext
+  ): Promise<PAMEnvResolvedEnvironment> {
+    const { userId, role } = await this.assertOrgPermission(
+      projectRef,
+      PermissionKey.pam_environments_inject
+    );
+    const access = await this.loadProjectAccess(projectRef);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const environment = await this.projectRepo.getEnvironmentByNameAdmin(
+      access.id,
+      params.env
+    );
+    if (!environment) {
+      throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
+    }
+
+    const variables = await this.decryptForInjection(
+      { userId, role, projectId: access.id },
+      environment,
+      params,
+      context
+    );
+    return {
+      projectId: access.id,
+      projectSlug: access.slug,
+      environmentId: environment.id,
+      environmentName: environment.name,
+      variables
+    };
+  }
+
+  /**
+   * Protected check, key filter, decrypt, and audit for process injection.
+   */
+  protected async decryptForInjection(
+    actor: { userId: string; role: PAMProjectAccessRole; projectId: string },
+    environment: {
+      id: string;
+      name: string;
+      variables?: PAMVariable[] | null;
+      is_protected?: boolean | null;
+    },
+    params: PAMEnvResolve,
+    context: PAMEnvAccessContext
+  ): Promise<PAMEnvResolvedVariable[]> {
+    if (
+      environment.is_protected === true &&
+      !hasOrgPermission(actor.role, PermissionKey.pam_environments_export)
+    ) {
+      throw new ExecutorError(API_PAM_ENV_PROTECTED);
+    }
+
+    const wanted = params.keys?.length ? new Set(params.keys) : null;
+    const normalized = PAMEnvVariableNormalizeUtil.normalizeVariables(
+      environment.variables
+    ).filter((variable) => !wanted || wanted.has(variable.key));
+    const decrypted =
+      this.getSecretEncryption().decryptSensitiveVariables(normalized);
+
+    await this.writeEnvAccessLog({
+      userId: actor.userId,
+      projectId: actor.projectId,
+      environmentId: environment.id,
+      environmentName: environment.name,
+      action: 'resolve',
+      keyCount: decrypted.length,
+      context
+    });
+
+    return decrypted.map((variable) => ({
+      key: variable.key,
+      value: variable.value,
+      sensitive: variable.sensitive === true
+    }));
+  }
+
+  /**
+   * @override
+   */
+  public async updateEnvironmentSettings(
+    projectId: string,
+    envId: string,
+    params: PAMEnvSettings
+  ): Promise<PAMEnvWriteable> {
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_export
     );
 
+    const updated = await this.projectRepo.updateEnvironmentSettingsAdmin(
+      projectId,
+      envId,
+      params
+    );
     return this.redactEnvironment(updated);
+  }
+
+  /**
+   * @override
+   */
+  public async listEnvironmentAccessLogs(
+    projectId: string,
+    envId: string
+  ): Promise<PAMEnvAccessLog[]> {
+    await this.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_environments_export
+    );
+    // The web UI filters and pages the most recent records client-side.
+    return this.envAccessLogsRepo.listByEnvironment(projectId, envId, 200);
+  }
+
+  /**
+   * Records who read an environment after the response is sent (falls back to
+   * awaiting outside a Next request scope). Never fails the request.
+   */
+  protected async writeEnvAccessLog(
+    input: Parameters<PAMService['insertEnvAccessLog']>[0]
+  ): Promise<void> {
+    try {
+      after(() => this.insertEnvAccessLog(input));
+    } catch {
+      await this.insertEnvAccessLog(input);
+    }
+  }
+
+  protected async insertEnvAccessLog(input: {
+    userId: string;
+    projectId: string;
+    environmentId: string;
+    environmentName: string;
+    action: PAMEnvAccessAction;
+    keyCount: number;
+    context?: PAMEnvAccessContext;
+  }): Promise<void> {
+    try {
+      await this.envAccessLogsRepo.insert({
+        userId: input.userId,
+        projectId: input.projectId,
+        environmentId: input.environmentId,
+        environmentName: input.environmentName,
+        action: input.action,
+        keyCount: input.keyCount,
+        client: input.context?.client ?? null,
+        ip: input.context?.ip ?? null
+      });
+    } catch (error) {
+      this.logger.error('PAM env access log insert failed', { error });
+    }
   }
 
   /**
@@ -1247,7 +1601,8 @@ export class PAMService implements PAMServiceInterface {
    */
   public async exportEnvironment(
     projectId: string,
-    envId: string
+    envId: string,
+    context?: PAMEnvAccessContext
   ): Promise<{
     projectId: string;
     projectSlug: string;
@@ -1255,6 +1610,7 @@ export class PAMService implements PAMServiceInterface {
     environmentName: string;
     content: string;
     sensitiveKeys: string[];
+    sensitivePlaceholder: string;
     variables: Array<{
       key: string;
       value: string;
@@ -1262,16 +1618,19 @@ export class PAMService implements PAMServiceInterface {
       comments?: string[];
     }>;
   }> {
-    await this.assertOrgPermission(
+    const { userId } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_export
     );
+    const access = await this.loadProjectAccess(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
 
     const owned = await this.projectRepo.getEnvironmentForExport(
-      projectId,
+      access.id,
       envId
     );
-
     if (!owned) {
       throw new ExecutorError(API_PAM_ENV_NOT_FOUND);
     }
@@ -1282,26 +1641,53 @@ export class PAMService implements PAMServiceInterface {
     const sensitiveKeys = normalized
       .filter((variable) => variable.sensitive === true)
       .map((variable) => variable.key);
-    const decrypted =
-      this.getSecretEncryption().decryptSensitiveVariables(normalized);
-    const content = PAMEnvDotenvSerializeUtil.serialize(decrypted);
-    const variables = decrypted.map((variable) => ({
-      key: variable.key,
-      value: variable.value,
-      sensitive: variable.sensitive === true,
-      ...(variable.comments && variable.comments.length > 0
-        ? { comments: [...variable.comments] }
-        : {})
-    }));
+    // Sensitive values only leave the server via resolve (process injection).
+    const sensitivePlaceholder =
+      this.getSecretEncryption().sensitivePlaceholder(owned.environment.id);
+    const redacted =
+      PAMEnvVariableRedactUtil.redactVariables(
+        normalized,
+        sensitivePlaceholder
+      ) ?? [];
+    // Defense in depth: never ship a sensitive value that is not the placeholder.
+    const safeVariables = redacted.map((variable) => {
+      const sensitive = variable.sensitive === true;
+      const value =
+        sensitive &&
+        variable.value !== '' &&
+        variable.value !== sensitivePlaceholder
+          ? sensitivePlaceholder
+          : variable.value;
+      return {
+        key: variable.key,
+        value,
+        sensitive,
+        ...(variable.comments && variable.comments.length > 0
+          ? { comments: [...variable.comments] }
+          : {})
+      };
+    });
+    const content = PAMEnvDotenvSerializeUtil.serialize(safeVariables);
+
+    await this.writeEnvAccessLog({
+      userId,
+      projectId: access.id,
+      environmentId: owned.environment.id,
+      environmentName: owned.environment.name,
+      action: 'export',
+      keyCount: safeVariables.length,
+      context
+    });
 
     return {
-      projectId,
+      projectId: access.id,
       projectSlug: owned.projectSlug,
       environmentId: owned.environment.id,
       environmentName: owned.environment.name,
       content,
       sensitiveKeys,
-      variables
+      sensitivePlaceholder,
+      variables: safeVariables
     };
   }
 }

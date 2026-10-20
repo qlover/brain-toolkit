@@ -56,6 +56,27 @@ export const PAGE_PAM_ALL_VISIBILITY = 'page_pam:allVisibility';
 export const PAGE_PAM_LABEL_VISIBILITY = 'page_pam:labelVisibility';
 
 /**
+ * @description Access filter group aria label (mine / writable)
+ * @localZh 归属
+ * @localEn Access
+ */
+export const PAGE_PAM_LABEL_ACCESS = 'page_pam:labelAccess';
+
+/**
+ * @description Filter: projects I own (strict owner)
+ * @localZh 我拥有的
+ * @localEn Owned by me
+ */
+export const PAGE_PAM_FILTER_MINE = 'page_pam:filterMine';
+
+/**
+ * @description Filter: projects I can edit (owner or team)
+ * @localZh 可编辑
+ * @localEn Writable
+ */
+export const PAGE_PAM_FILTER_WRITABLE = 'page_pam:filterWritable';
+
+/**
  * @description Sort filter group aria label
  * @localZh 排序
  * @localEn Sort
