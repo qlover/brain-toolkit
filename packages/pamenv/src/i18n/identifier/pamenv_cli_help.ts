@@ -388,6 +388,14 @@ export const PAMENV_HELP_RUN_OPT_ENV_PRIORITY =
   'pamenv_help:run_opt_env_priority';
 
 /**
+ * @description --client-public-prefixes 选项
+ * @localZh 敏感变量「公开前缀」告警用的前缀列表，逗号分隔（默认内置 VITE_/NEXT_PUBLIC_ 等）；传空字符串可关闭该告警
+ * @localEn Comma-separated prefixes for the sensitive client-bundle warning (default: built-in VITE_/NEXT_PUBLIC_/…); pass empty to disable
+ */
+export const PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES =
+  'pamenv_help:run_opt_client_public_prefixes';
+
+/**
  * @description render 命令说明
  * @localZh 把环境变量输出为 dotenv / json / yaml / toml，敏感变量输出占位符（需导出权限；真实敏感值请用 run 注入）
  * @localEn Output variables as dotenv / json / yaml / toml; sensitive values are placeholders (export permission; use `run` for real sensitive values)

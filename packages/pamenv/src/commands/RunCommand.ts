@@ -46,6 +46,12 @@ export type PamCliRunOptionsType = {
    * `local`: process → on-disk `.env*` → PAM (for temporary local overrides).
    */
   readonly envPriority?: PamCliEnvPriorityType;
+  /**
+   * Prefixes treated as client-bundled for the sensitive-key warning.
+   * Omit to use built-in defaults (VITE_, NEXT_PUBLIC_, …).
+   * Pass `[]` to disable that warning.
+   */
+  readonly clientPublicPrefixes?: readonly string[];
 };
 
 const FORWARDED_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
@@ -133,7 +139,9 @@ export class RunCommand {
 
     // Security / bypass warnings stay on unless explicitly disabled.
     if (options.warn !== false) {
-      for (const line of await PamCliRunWarningUtil.collect(cwd, variables)) {
+      for (const line of await PamCliRunWarningUtil.collect(cwd, variables, {
+        clientPublicPrefixes: options.clientPublicPrefixes
+      })) {
         console.error(line);
       }
     }

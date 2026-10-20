@@ -56,7 +56,10 @@ export async function injectPamenvProcessEnv(
     options.preferLocal === false ? 'global' : 'local',
     options.envPriority === 'local' ? 'env-local' : 'env-remote',
     (options.only ?? []).join(','),
-    (options.keepEnv ?? []).join(',')
+    (options.keepEnv ?? []).join(','),
+    options.clientPublicPrefixes === undefined
+      ? 'prefixes-default'
+      : `prefixes:${options.clientPublicPrefixes.join(',')}`
   ].join('\0');
 
   const pending = injected.get(key);
@@ -99,6 +102,7 @@ async function applyPamenvProcessEnv(
       keepEnv: options.keepEnv,
       warn: options.warn,
       envPriority: options.envPriority,
+      clientPublicPrefixes: options.clientPublicPrefixes,
       // Inject / Next plugin stay quiet unless opted in.
       debug: options.debug === true
     },

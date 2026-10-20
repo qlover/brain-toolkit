@@ -735,9 +735,9 @@ export const PAMENV_CLI_ONLY_MISSING = 'pamenv_cli:only_missing';
 export const PAMENV_CLI_WARN_DOTENV_OVERLAP = 'pamenv_cli:warn_dotenv_overlap';
 
 /**
- * @description 绕过检查：敏感变量带前端公开前缀
- * @localZh [pamenv] 警告：敏感变量 {{keys}} 带有 NEXT_PUBLIC_ / VITE_ 前缀，会在构建时写进前端代码包，不应存放密钥。
- * @localEn [pamenv] Warning: sensitive variable(s) {{keys}} use a NEXT_PUBLIC_ / VITE_ prefix and will be bundled into client code at build time; do not store secrets there.
+ * @description 绕过检查：敏感变量带前端公开前缀（合并为一条）
+ * @localZh [pamenv] 警告：{{count}} 个敏感变量使用了会打进前端包的公开前缀（{{keys}}）
+ * @localEn [pamenv] Warning: {{count}} sensitive variable(s) use a client-exposed prefix ({{keys}})
  */
 export const PAMENV_CLI_WARN_PUBLIC_PREFIX = 'pamenv_cli:warn_public_prefix';
 
@@ -1238,6 +1238,13 @@ export const PAMENV_CLI_ENV_NAME_REQUIRED_FOR_FILE =
  * @localEn Not logged in. Run `pamenv login` first.
  */
 export const PAMENV_CLI_NOT_LOGGED_IN = 'pamenv_cli:not_logged_in';
+
+/**
+ * @description 本地 .pam 尚未登录（插件 / --local）
+ * @localZh 尚未登录（本地 .pam：{{path}}）。请在项目目录执行：pamenv login --local
+ * @localEn Not logged in (local .pam: {{path}}). In this project directory run: pamenv login --local
+ */
+export const PAMENV_CLI_NOT_LOGGED_IN_LOCAL = 'pamenv_cli:not_logged_in_local';
 
 /**
  * @description 项目权限列表缺失，需重新登录

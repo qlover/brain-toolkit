@@ -208,6 +208,7 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--keep-env <keys>` | 这些键如果当前 shell 已有值，就保留 shell 的值 |
 | `--no-warn` | 关闭启动前的检查提示 |
 | `--env-priority <remote\|local>` | 同名键优先级：`remote`（默认，PAM 优先）\| `local`（process → 磁盘 `.env*` → PAM，便于本地临时改值） |
+| `--client-public-prefixes <list>` | 敏感变量「公开前缀」告警用的前缀，逗号分隔（默认内置）；传空可关闭该告警 |
 
 程序化注入（`injectPamenvProcessEnv` / `@pamenv/next` / `@pamenv/vite`）另有：
 

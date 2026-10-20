@@ -3,6 +3,7 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_EXPORT_SENSITIVE_LEAK,
   PAMENV_CLI_NOT_LOGGED_IN,
+  PAMENV_CLI_NOT_LOGGED_IN_LOCAL,
   PAMENV_CLI_NO_INJECT_PERMISSION,
   PAMENV_CLI_NOT_OWNER_EXPORT,
   PAMENV_CLI_NOT_OWNER_PUSH,
@@ -74,6 +75,11 @@ export class PamCliSecurityGate {
     }
 
     if (!token) {
+      if (kind === 'local') {
+        throw new Error(
+          PamCliI18n.t(PAMENV_CLI_NOT_LOGGED_IN_LOCAL, { path: root })
+        );
+      }
       throw new Error(PamCliI18n.t(PAMENV_CLI_NOT_LOGGED_IN));
     }
   }

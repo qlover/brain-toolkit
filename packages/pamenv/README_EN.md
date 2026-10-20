@@ -207,6 +207,7 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--keep-env <keys>` | Keep the shell's value for these keys when already set |
 | `--no-warn` | Disable the pre-run checks |
 | `--env-priority <remote\|local>` | Overlap priority: `remote` (default, PAM wins) \| `local` (process → on-disk `.env*` → PAM, for temporary local overrides) |
+| `--client-public-prefixes <list>` | Prefixes for the sensitive client-bundle warning (comma-separated; built-in default); pass empty to disable |
 
 Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next` / `@pamenv/vite`) also accepts:
 
