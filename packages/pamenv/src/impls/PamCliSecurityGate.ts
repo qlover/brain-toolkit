@@ -48,9 +48,13 @@ export class PamCliSecurityGate {
   /**
    * Requires a token on the active `.pam` root and prints which identity is used.
    * Local `.pam` never falls back to `~/.pam` — missing token fails here.
+   *
+   * @param authStore - Active auth store
+   * @param options.debug - When false, skip the "Using … config" line (errors still throw)
    */
   public static async assertIdentity(
-    authStore: PamCliAuthStoreInterface
+    authStore: PamCliAuthStoreInterface,
+    options?: { readonly debug?: boolean }
   ): Promise<void> {
     const token = await authStore.getToken();
     const config = await authStore.getConfig();
@@ -59,13 +63,15 @@ export class PamCliSecurityGate {
     const kind = root === homeRoot ? 'global' : 'local';
     const email = config.email?.trim() || 'not-logged-in';
 
-    console.error(
-      PamCliI18n.t(PAMENV_CLI_USING_CONFIG, {
-        kind,
-        path: root,
-        email
-      })
-    );
+    if (options?.debug !== false) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_USING_CONFIG, {
+          kind,
+          path: root,
+          email
+        })
+      );
+    }
 
     if (!token) {
       throw new Error(PamCliI18n.t(PAMENV_CLI_NOT_LOGGED_IN));

@@ -1,3 +1,4 @@
+import { createPamenvPlugin } from '@pamenv/next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import { generateApiRoutes } from './tools/generateApiRoutes';
 import { generateAppThemeCss } from './tools/generateAppThemeCss';
@@ -48,4 +49,14 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: localIp ? [localIp as string] : []
 };
 
-export default withNextIntl(nextConfig);
+const withPamenv = createPamenvPlugin({
+  slug: 'brain-oauth',
+  env: 'local',
+  keepEnv: ['APP_ENV'],
+  debug: process.env.PAMENV_DEBUG === '1',
+  // 本地临时改 .env.local / process 测值：envPriority: 'local',
+  enabled: (phase) =>
+    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+});
+
+export default withPamenv(withNextIntl(nextConfig));

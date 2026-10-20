@@ -207,6 +207,12 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--only <keys>` | 只注入这些键，逗号分隔 |
 | `--keep-env <keys>` | 这些键如果当前 shell 已有值，就保留 shell 的值 |
 | `--no-warn` | 关闭启动前的检查提示 |
+| `--env-priority <remote\|local>` | 同名键优先级：`remote`（默认，PAM 优先）\| `local`（process → 磁盘 `.env*` → PAM，便于本地临时改值） |
+
+程序化注入（`injectPamenvProcessEnv` / `@pamenv/next`）另有：
+
+- `debug`：默认 `false`，不打印 “Using local config…”、注入数量、键名、`baseUrl` / `.pam` 路径；设为 `true` 时输出这些元数据（**从不打印变量值**）。CLI `pamenv run` 保持原有啰嗦输出。
+- `envPriority`：与 CLI `--env-priority` 相同；默认 `remote`。本地联调可设 `local`（process → `.env*` → PAM）。敏感占位符会 resolve 成 PAM 明文；远程敏感而本地是明文时会告警但不拦截。
 
 - `--` 之后的内容原样交给子进程，包括子命令自己的参数。
 - 同名变量以 PAM 为准（`--keep-env` 例外）。

@@ -4,16 +4,29 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RUN_COMMAND_REQUIRED,
+  PAMENV_CLI_RUN_DEBUG_KEYS,
+  PAMENV_CLI_RUN_DEBUG_PRIORITY,
+  PAMENV_CLI_RUN_DEBUG_SENSITIVE_KEYS,
+  PAMENV_CLI_RUN_DEBUG_SUMMARY,
   PAMENV_CLI_RUN_INJECTED,
-  PAMENV_CLI_RUN_SPAWN_FAILED
+  PAMENV_CLI_RUN_SPAWN_FAILED,
+  PAMENV_CLI_WARN_ORPHAN_PLACEHOLDER,
+  PAMENV_CLI_WARN_REMOTE_SENSITIVE_LOCAL_PLAINTEXT
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
 import { PamCliApiError } from '../impls/PamCliApiError';
+import {
+  PamCliEnvMergeUtil,
+  type PamCliEnvMergeWarningType,
+  type PamCliEnvPriorityType
+} from '../impls/PamCliEnvMergeUtil';
 import { PamCliEnvironmentSelectUtil } from '../impls/PamCliEnvironmentSelectUtil';
 import { PamCliSecurityGate } from '../impls/PamCliSecurityGate';
 import { PamCliRunWarningUtil } from '../impls/PamCliRunWarningUtil';
+
+export type { PamCliEnvPriorityType };
 
 export type PamCliRunOptionsType = {
   readonly envName?: string;
@@ -23,6 +36,16 @@ export type PamCliRunOptionsType = {
   readonly keepEnv?: readonly string[];
   /** Pre-run bypass warnings (default true). */
   readonly warn?: boolean;
+  /**
+   * Verbose stderr for config path / inject summary / key names (never values).
+   * CLI `run` defaults to true; `injectPamenvProcessEnv` / `@pamenv/next` default false.
+   */
+  readonly debug?: boolean;
+  /**
+   * Overlap priority. `remote` (default): PAM wins.
+   * `local`: process → on-disk `.env*` → PAM (for temporary local overrides).
+   */
+  readonly envPriority?: PamCliEnvPriorityType;
 };
 
 const FORWARDED_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
@@ -62,8 +85,35 @@ export class RunCommand {
       );
     }
 
+    const prepared = await this.prepare(projectRef, options);
+    return this.spawnChild(command, prepared.env);
+  }
+
+  /**
+   * Resolves PAM variables and merges them onto `baseEnv` without spawning.
+   * Used by `run` and by framework plugins (`@pamenv/next`).
+   *
+   * @param projectRef - Project slug or id
+   * @param options - Environment and filters
+   * @param cwd - Directory for warnings and the active `.pam` root
+   * @param baseEnv - Env to merge onto (defaults to `process.env`)
+   */
+  public async prepare(
+    projectRef: string,
+    options: PamCliRunOptionsType = {},
+    cwd: string = process.cwd(),
+    baseEnv: NodeJS.ProcessEnv = process.env
+  ): Promise<{
+    readonly variables: readonly PamCliResolvedVarType[];
+    readonly projectSlug: string;
+    readonly envName: string;
+    readonly env: NodeJS.ProcessEnv;
+  }> {
+    // CLI run keeps historical verbosity; plugins pass `debug: false` by default.
+    const debug = options.debug !== false;
+
     if (this.authStore) {
-      await PamCliSecurityGate.assertIdentity(this.authStore);
+      await PamCliSecurityGate.assertIdentity(this.authStore, { debug });
     }
 
     const { variables, projectSlug, envName } = await this.resolveVariables(
@@ -81,29 +131,119 @@ export class RunCommand {
       }
     }
 
+    // Security / bypass warnings stay on unless explicitly disabled.
     if (options.warn !== false) {
-      for (const line of await PamCliRunWarningUtil.collect(
-        process.cwd(),
-        variables
-      )) {
+      for (const line of await PamCliRunWarningUtil.collect(cwd, variables)) {
         console.error(line);
       }
     }
 
-    const childEnv = RunCommand.mergeEnv(
-      process.env,
-      variables,
-      options.keepEnv
-    );
+    const priority = options.envPriority === 'local' ? 'local' : 'remote';
+    const fileLayer =
+      priority === 'local'
+        ? await PamCliEnvMergeUtil.loadFileLayer(cwd)
+        : undefined;
+    const merged = PamCliEnvMergeUtil.merge(baseEnv, variables, {
+      priority,
+      keepEnv: options.keepEnv,
+      fileLayer
+    });
+
+    if (options.warn !== false) {
+      for (const line of RunCommand.formatMergeWarnings(merged.warnings)) {
+        console.error(line);
+      }
+    }
+
+    if (debug) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_INJECTED, {
+          count: String(variables.length),
+          slug: projectSlug,
+          env: envName
+        })
+      );
+      await this.printDebugDetails(variables, projectSlug, envName);
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_PRIORITY, {
+          process: merged.picks.process.join(', ') || '-',
+          file: merged.picks.file.join(', ') || '-',
+          remote: merged.picks.remote.join(', ') || '-',
+          placeholder: merged.picks.placeholder.join(', ') || '-'
+        })
+      );
+    }
+
+    return { variables, projectSlug, envName, env: merged.env };
+  }
+
+  protected static formatMergeWarnings(
+    warnings: readonly PamCliEnvMergeWarningType[]
+  ): string[] {
+    const lines: string[] = [];
+    for (const warning of warnings) {
+      const keys = warning.keys.join(', ');
+      if (warning.kind === 'remote_sensitive_local_plaintext') {
+        lines.push(
+          PamCliI18n.t(PAMENV_CLI_WARN_REMOTE_SENSITIVE_LOCAL_PLAINTEXT, {
+            count: String(warning.keys.length),
+            keys
+          })
+        );
+      } else {
+        lines.push(
+          PamCliI18n.t(PAMENV_CLI_WARN_ORPHAN_PLACEHOLDER, {
+            count: String(warning.keys.length),
+            keys
+          })
+        );
+      }
+    }
+    return lines;
+  }
+
+  /**
+   * Debug-only lines: counts, baseUrl, pam root, key names — never values.
+   */
+  protected async printDebugDetails(
+    variables: readonly PamCliResolvedVarType[],
+    projectSlug: string,
+    envName: string
+  ): Promise<void> {
+    const sensitiveKeys = variables
+      .filter((variable) => variable.sensitive)
+      .map((variable) => variable.key)
+      .sort((left, right) => left.localeCompare(right));
+    const keys = variables
+      .map((variable) => variable.key)
+      .sort((left, right) => left.localeCompare(right));
+    const baseUrl = this.authStore
+      ? await this.authStore.getBaseUrl()
+      : '(unknown)';
+    const root = this.authStore?.getActivePamRoot() ?? '(unknown)';
+
     console.error(
-      PamCliI18n.t(PAMENV_CLI_RUN_INJECTED, {
+      PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_SUMMARY, {
+        baseUrl,
+        root,
+        sensitive: String(sensitiveKeys.length),
         count: String(variables.length),
         slug: projectSlug,
         env: envName
       })
     );
-
-    return this.spawnChild(command, childEnv);
+    if (keys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_KEYS, { keys: keys.join(', ') })
+      );
+    }
+    if (sensitiveKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_SENSITIVE_KEYS, {
+          keys: sensitiveKeys.join(', ')
+        })
+      );
+    }
   }
 
   /**
@@ -170,6 +310,7 @@ export class RunCommand {
 
   /**
    * Current env < PAM variables; `keepEnv` keys already set in the shell win.
+   * Equivalent to `envPriority: 'remote'`.
    *
    * @param base - Current process env
    * @param variables - Resolved variables
@@ -180,15 +321,10 @@ export class RunCommand {
     variables: readonly PamCliResolvedVarType[],
     keepEnv: readonly string[] = []
   ): NodeJS.ProcessEnv {
-    const keep = new Set(keepEnv);
-    const merged: NodeJS.ProcessEnv = { ...base };
-    for (const variable of variables) {
-      if (keep.has(variable.key) && base[variable.key] !== undefined) {
-        continue;
-      }
-      merged[variable.key] = variable.value;
-    }
-    return merged;
+    return PamCliEnvMergeUtil.merge(base, variables, {
+      priority: 'remote',
+      keepEnv
+    }).env;
   }
 
   protected spawnChild(

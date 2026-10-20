@@ -692,6 +692,28 @@ export const PAMENV_CLI_RUN_COMMAND_REQUIRED =
 export const PAMENV_CLI_RUN_INJECTED = 'pamenv_cli:run_injected';
 
 /**
+ * @description run/inject debug：地址与敏感变量数量（不含值）
+ * @localZh [pamenv] debug: baseUrl={{baseUrl}} root={{root}} sensitive={{sensitive}}/{{count}}
+ * @localEn [pamenv] debug: baseUrl={{baseUrl}} root={{root}} sensitive={{sensitive}}/{{count}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_SUMMARY = 'pamenv_cli:run_debug_summary';
+
+/**
+ * @description run/inject debug：全部键名（不含值）
+ * @localZh [pamenv] debug keys: {{keys}}
+ * @localEn [pamenv] debug keys: {{keys}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_KEYS = 'pamenv_cli:run_debug_keys';
+
+/**
+ * @description run/inject debug：敏感键名（不含值）
+ * @localZh [pamenv] debug sensitive keys: {{keys}}
+ * @localEn [pamenv] debug sensitive keys: {{keys}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_SENSITIVE_KEYS =
+  'pamenv_cli:run_debug_sensitive_keys';
+
+/**
  * @description run 无法启动子进程
  * @localZh 无法启动命令 "{{command}}": {{message}}
  * @localEn Failed to start "{{command}}": {{message}}
@@ -771,6 +793,29 @@ export const PAMENV_CLI_PUSH_PLACEHOLDER_INVALID =
  */
 export const PAMENV_CLI_WARN_DOTENV_PLACEHOLDER =
   'pamenv_cli:warn_dotenv_placeholder';
+
+/**
+ * @description 合并：远程敏感键在本地是明文
+ * @localZh [pamenv] 警告：{{count}} 个远程敏感键在本地是明文（{{keys}}）。本地优先时会用本地值；请确认不是误提交的密钥。
+ * @localEn [pamenv] Warning: {{count}} remote sensitive key(s) have local plaintext ({{keys}}). With local priority the local value is used; make sure this is not a leaked secret.
+ */
+export const PAMENV_CLI_WARN_REMOTE_SENSITIVE_LOCAL_PLAINTEXT =
+  'pamenv_cli:warn_remote_sensitive_local_plaintext';
+
+/**
+ * @description 合并：本地占位符在远程没有对应键，无法 resolve
+ * @localZh [pamenv] 警告：{{count}} 个键的本地值是敏感占位符，但远程没有对应变量，无法换成明文（{{keys}}）。
+ * @localEn [pamenv] Warning: {{count}} key(s) have local sensitive placeholders but no matching remote variable to resolve ({{keys}}).
+ */
+export const PAMENV_CLI_WARN_ORPHAN_PLACEHOLDER =
+  'pamenv_cli:warn_orphan_placeholder';
+
+/**
+ * @description run/inject debug：各层赢下的键名（不含值）
+ * @localZh [pamenv] debug priority: process={{process}} file={{file}} remote={{remote}} placeholderResolved={{placeholder}}
+ * @localEn [pamenv] debug priority: process={{process}} file={{file}} remote={{remote}} placeholderResolved={{placeholder}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_PRIORITY = 'pamenv_cli:run_debug_priority';
 
 /**
  * @description push 成功后本地文件中的敏感值已替换
