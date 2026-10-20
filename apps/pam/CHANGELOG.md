@@ -1,5 +1,169 @@
 # pam
 
+## 3.0.0
+
+### Major Changes
+
+#### ✨ Features
+
+- **pamenv:** pamenv v2 首批实现（run / 敏感隔离 / 环境界面） ([60ed506](https://github.com/qlover/brain-toolkit/commit/60ed506ed7ec1054483f6ba312161b713b371c25)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+  - docs(pamenv): 新增 v2 设计文档（变量注入进程，.env 改为输出格式）
+
+  (cherry picked from commit a763148ee98441502e98e2977831a710c4775570)
+  - feat(pam): 新增变量注入接口、受保护环境与访问审计
+  * 新增权限 pam_environments_inject 与 POST .../resolve，供 pamenv run
+    在内存中获取变量（Cache-Control: no-store）
+  * pam_environments_export 收紧为 team_admin / team_owner
+  * 环境新增 is_protected：受保护环境的 resolve 还需导出权限
+  * 新增 pam_env_access_logs，记录 resolve / export（不记录键值）
+  * 网页端环境页：受保护开关与访问记录（仅导出权限可见）
+  * SQL：000 与 001（第 8 节）同步
+
+  (cherry picked from commit 491cbfafbdc4bfd85d9e7a6946789d3ef3ece025)
+  - feat(pamenv): 新增 run 注入进程与 render 多格式输出
+  * pamenv run 将变量注入子进程，不写磁盘
+  * pamenv render 支持 dotenv / json / yaml / toml
+  * 修复 login --url / --domain 被根命令吞掉
+  - feat(pam): 敏感变量只经 run 注入进程，其它出口不再给出明文
+  * export 接口不再解密，敏感值一律为空；resolve 是唯一会解密的接口
+  * render 省略敏感变量，并在 stderr 列出键名
+  * pull 敏感变量只写键名、值留空
+  * push 已有敏感键本地为空时保留远端值；成功后清空本地文件与基线中的敏感值
+  * 移除 changeset 文件（发布由 PR 自动完成）
+
+  (cherry picked from commit ca2a3a581dd75f1aece3a6be5b8be2dd87360520)
+  - perf(pamenv): run 单请求注入，服务端减少重复鉴权查询
+  * 新增 POST /api/pam/:projectRef/resolve（按 slug/id + 环境名），
+    run -e 不再先搜索项目；接口出错时回退原流程
+  * CLI 启动不再请求 /api/locales/json，仅在格式化 API 错误时按需拉取
+  * PamCliTokenService.verifyToken 请求内缓存，避免重复查 token 表
+  * assertOrgPermission 请求内缓存并并行加载会话/项目/权限
+  * resolve/export 与权限校验并行取环境；访问记录改用 after() 写入
+
+  本地实测 run -e 由约 6-11s 降至约 1.8s。
+
+  (cherry picked from commit 162792f056d55d38d5cf5fa5dd5d7e49544dfd7f)
+  - feat(pamenv): 敏感变量用每个环境固定的随机占位符代替空值
+  * 占位符 **PAM*SENSITIVE*<hex>** 由 PAM_ENV_SECRET_KEY 对环境 id
+    做 HMAC 得出，每个环境不同且固定，无需新增数据库字段
+  * export 返回占位符和 sensitivePlaceholder；pull/render 原样写出
+    （旧服务端无占位符时 render 仍省略敏感变量）
+  * 写回时本环境占位符等同空值（保留原值）；合并后残留的占位符一律
+    拒绝，CLI push 推送前也会检查
+  * push 成功后本地敏感值换回占位符；run 发现 .env\* 中注入的键写着
+    占位符时额外提示
+
+  (cherry picked from commit f1c60a805bccc9894fac173baf245f1ebe3ab054)
+  - feat(pam): 升级环境管理界面
+  * 横向环境标签、使用方式卡片、变量表格与导入预览
+  * 设置（URL / 保护 / 删除）与访问记录筛选分页
+  * 吸底未保存条、只读视图；修复切换 / 双请求 / 移动端布局
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **pam:** 环境变量拆表，并支持懒加载与增量保存 ([125f23f](https://github.com/qlover/brain-toolkit/commit/125f23fc9e4478f2505652a037bdaa9204c77067)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+  - feat(pam): 环境变量拆到 pam_env_variables 表
+  * 新增 pam_env_variables（按 environment_id + key），读写走新表
+  * 保留 pam_environments.variables JSONB 不 DROP，应用停止写入
+  * 迁移脚本回填 JSONB → 行；RPC update_project_with_environments 同步写行并按行组装返回
+  * API 仍返回 variables[]，CLI / Web 无感
+  - fix(pam): RPC 停止写入 legacy variables JSONB
+
+  环境变量只读写 pam_env_variables；旧列保留但不更新。
+  - feat(pam): 环境列表懒加载变量并支持增量保存
+
+  列表只返回元数据；选中环境再拉变量。Web 保存走 upsert/deleteIds，CLI 仍全量替换。
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **pamenv:** 本地身份隔离与 fail-closed 安全门禁 ([0608687](https://github.com/qlover/brain-toolkit/commit/06086878e46d15c3ffc9c4d0a229f98853d0065c)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+
+  cwd 有 .pam 时强制本地凭证；同目录多项目 env 文件绑定；
+  精确项目解析、权限 fail-closed、403 零落盘；服务端先鉴权再读库并双 redact。
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **pam:** search 支持 mine/writable，CLI/Web 过滤对齐 ([1d91f08](https://github.com/qlover/brain-toolkit/commit/1d91f08b5b5d0e2c491c5f16381a43dba3fe4938)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+  - feat(pam): search 支持 mine/writable 与 compact 视图
+
+  服务端 filters.mine / filters.writable 在分页前过滤；
+  view=compact 返回 CLI 精简字段，降低列表负载。
+  - feat(pam): 首页筛选增加我拥有的与可编辑
+
+  筛选面板对齐 CLI：filters.mine / filters.writable，登录可见。
+  - feat(pamenv): projects 对齐 Web search 过滤与精简列表
+
+  支持 category/visibility/sort/page、--mine/--writable（服务端 filters），
+  默认 page-size 10 与 view=compact；文档列出全部参数。
+  - fix(pamenv): pull 权限用例加 force 避免冲突提示超时
+
+  本地与远端内容不一致时会卡在交互冲突；加 force 跳过提示以覆盖写权限校验。
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **pamenv:** 语言包静态优先、run 明文边界与 OS 绑定凭证 ([3330c83](https://github.com/qlover/brain-toolkit/commit/3330c83697cf64959ffbceb6ea7afee5e767e9ff)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+
+  静态 JSON 覆盖库表旧文案；文档与 CLI/网页标明 run 明文边界；
+  Bearer token 迁入 DPAPI/钥匙串/0600 vault，并支持旧 config 迁移。
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **pamenv:** 增加 @pamenv/vite，并支持本地登录提示与公开前缀配置 ([b7bf305](https://github.com/qlover/brain-toolkit/commit/b7bf305e169190e3873f08b3d8320ca61bb58155)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+  - feat(pamenv): 增加 @pamenv/vite，dev 可直接注入 PAM 环境
+
+  Vite 插件在 config 早期钩子写入 process.env；默认仅 serve。
+  - feat(pamenv): 本地未登录提示与可配置公开前缀告警
+
+  未登录时提示 pamenv login --local；扩展客户端前缀检测，并支持 clientPublicPrefixes。
+  - docs(pamenv-next): 补充项目本地 .pam 登录说明
+  - docs(pamenv-vite): 补充本地登录与 clientPublicPrefixes
+  - feat(pamenv-vite-app): 增加 @pamenv/vite 验证示例应用
+  - fix(workspace): 锁定 @types/react，修复 Heroicons 类型报错
+
+  pamenv-vite-app 曾拉起 @types/react 19.3，导致 pam/brain-oauth
+  中 Heroicons 无法赋给 ComponentType<SVGProps>。对齐示例应用依赖，
+  并在 pnpm overrides 中固定 19.2.2。
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+#### 🐞 Bug Fixes
+
+- **pam:** 受保护环境禁止成员改写，敏感标记改为提示+手动勾选 ([3b3f18b](https://github.com/qlover/brain-toolkit/commit/3b3f18b823224ea99f4a3fdf84d4f75aae654b23)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+  - fix(pam): 受保护环境禁止成员改写，密钥样式变量不再以明文保存
+
+  成员不能再 push 或在网页上修改受保护环境。
+  DATABASE_URL 一类键名在保存、fork 和 pull 时按敏感值处理。
+  导出响应禁止缓存；Windows 上凭证文件收紧到当前用户。
+  - refactor(pamenv): 取消按键名自动标敏感，改为提交时提示与手动勾选
+
+  服务端与 CLI 不再因 DATABASE_URL 一类键名强制敏感。
+  push 交互预勾疑似项；-y 只提示；网页保存前同样提示。
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
+- **pamenv:** 修复 Linux CI 权限用例并补充 OIDC TODO ([34222ff](https://github.com/qlover/brain-toolkit/commit/34222ff90ef38c611bcb9c609dd932e2143edc12)) ([#185](https://github.com/qlover/brain-toolkit/pull/185))
+  - fix(pamenv): 修复 Linux CI 权限用例并补充 OIDC TODO
+
+  旧 config/fixture 过宽权限导致 vault 迁移与 push 写入失败；契约测试改用 0600 fixture。
+  pamenv-v2 文档补充 CI OIDC 待办切片。
+  - chore(pam): 移除多余的 generateLocales.mjs
+
+  语言包仍由 next.config 中的 generateLocales.ts 在启动/构建时生成。
+
+  ***
+
+  Co-authored-by: QRJ <github-actions[bot]@users.noreply.github.com>
+
 ## 2.15.0
 
 ### Minor Changes
