@@ -206,8 +206,12 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--only <keys>` | Only inject these keys (comma-separated) |
 | `--keep-env <keys>` | Keep the shell's value for these keys when already set |
 | `--no-warn` | Disable the pre-run checks |
+| `--env-priority <remote\|local>` | Overlap priority: `remote` (default, PAM wins) \| `local` (process → on-disk `.env*` → PAM, for temporary local overrides) |
 
-Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next`) also accepts `debug` (default `false`): quiet by default — no “Using local config…”, inject count, key names, `baseUrl` / `.pam` root. When `true`, those metadata lines go to stderr (**never values**). Security / bypass warnings still print unless `warn: false`. CLI `pamenv run` stays verbose.
+Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next`) also accepts:
+
+- `debug` (default `false`): quiet by default — no “Using local config…”, inject count, key names, `baseUrl` / `.pam` root. When `true`, those metadata lines go to stderr (**never values**). CLI `pamenv run` stays verbose.
+- `envPriority`: same as `--env-priority`; default `remote`. Use `local` for local overrides (process → `.env*` → PAM). Sensitive placeholders resolve to PAM plaintext; remote-sensitive + local plaintext warns but does not block.
 
 - Everything after `--` goes to the child unchanged, including the child's own options.
 - PAM wins for keys that also exist in the shell (except `--keep-env` keys).

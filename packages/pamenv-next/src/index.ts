@@ -23,7 +23,8 @@ export type PamenvNextConfigContext = {
  * });
  * export default withPamenv(withNextIntl(nextConfig));
  *
- * @param options - Same fields as `pamenv run <slug> -e <env>`; `debug` defaults to false
+ * @param options - Same fields as `pamenv run <slug> -e <env>`;
+ *   `debug` / `envPriority` default false / `remote`
  */
 export function createPamenvPlugin(options: PamenvInjectOptions) {
   return function withPamenv<TConfig>(

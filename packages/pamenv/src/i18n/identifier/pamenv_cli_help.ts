@@ -380,6 +380,14 @@ export const PAMENV_HELP_RUN_OPT_KEEP_ENV = 'pamenv_help:run_opt_keep_env';
 export const PAMENV_HELP_RUN_OPT_NO_WARN = 'pamenv_help:run_opt_no_warn';
 
 /**
+ * @description --env-priority 选项
+ * @localZh 同名键优先级：remote（默认，PAM 优先）| local（process → 磁盘 .env* → PAM，便于本地改值测试）
+ * @localEn Key priority: remote (default, PAM wins) | local (process → on-disk .env* → PAM, for local overrides)
+ */
+export const PAMENV_HELP_RUN_OPT_ENV_PRIORITY =
+  'pamenv_help:run_opt_env_priority';
+
+/**
  * @description render 命令说明
  * @localZh 把环境变量输出为 dotenv / json / yaml / toml，敏感变量输出占位符（需导出权限；真实敏感值请用 run 注入）
  * @localEn Output variables as dotenv / json / yaml / toml; sensitive values are placeholders (export permission; use `run` for real sensitive values)

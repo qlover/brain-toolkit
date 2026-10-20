@@ -10,7 +10,10 @@ import { PullCommand } from './commands/PullCommand';
 import { PushCommand } from './commands/PushCommand';
 import { RemoveCommand } from './commands/RemoveCommand';
 import { RenderCommand } from './commands/RenderCommand';
-import { RunCommand } from './commands/RunCommand';
+import {
+  RunCommand,
+  type PamCliEnvPriorityType
+} from './commands/RunCommand';
 import { PamCliConfig } from './config/PamCliConfig';
 import { PamCliApiClient } from './impls/PamCliApiClient';
 import { PamCliApiError } from './impls/PamCliApiError';
@@ -87,6 +90,7 @@ import {
   PAMENV_HELP_RUN,
   PAMENV_HELP_RUN_ARG_COMMAND,
   PAMENV_HELP_RUN_OPT_KEEP_ENV,
+  PAMENV_HELP_RUN_OPT_ENV_PRIORITY,
   PAMENV_HELP_RUN_OPT_NO_WARN,
   PAMENV_HELP_TITLE_ARGUMENTS,
   PAMENV_HELP_TITLE_COMMANDS,
@@ -394,6 +398,11 @@ export class PamCliApp {
       .option('--only <keys>', t(PAMENV_HELP_OPT_ONLY))
       .option('--keep-env <keys>', t(PAMENV_HELP_RUN_OPT_KEEP_ENV))
       .option('--no-warn', t(PAMENV_HELP_RUN_OPT_NO_WARN))
+      .option(
+        '--env-priority <remote|local>',
+        t(PAMENV_HELP_RUN_OPT_ENV_PRIORITY),
+        'remote'
+      )
       .action(
         async (
           projectRef: string,
@@ -403,8 +412,10 @@ export class PamCliApp {
             only?: string;
             keepEnv?: string;
             warn?: boolean;
+            envPriority?: string;
           }
         ) => {
+          const envPriority = this.parseEnvPriority(options.envPriority);
           process.exitCode = await new RunCommand(
             this.apiClient,
             this.authStore
@@ -412,7 +423,8 @@ export class PamCliApp {
             envName: options.env,
             only: this.splitKeys(options.only),
             keepEnv: this.splitKeys(options.keepEnv),
-            warn: options.warn
+            warn: options.warn,
+            envPriority
           });
         }
       );
@@ -453,6 +465,16 @@ export class PamCliApp {
       .map((key) => key.trim())
       .filter((key) => key !== '');
     return keys.length > 0 ? keys : undefined;
+  }
+
+  protected parseEnvPriority(value?: string): PamCliEnvPriorityType {
+    const normalized = (value ?? 'remote').trim().toLowerCase();
+    if (normalized === 'remote' || normalized === 'local') {
+      return normalized;
+    }
+    throw new Error(
+      `Invalid --env-priority "${value ?? ''}". Use remote or local.`
+    );
   }
 
   /**

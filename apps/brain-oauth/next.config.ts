@@ -54,6 +54,7 @@ const withPamenv = createPamenvPlugin({
   env: 'local',
   keepEnv: ['APP_ENV'],
   debug: process.env.PAMENV_DEBUG === '1',
+  // 本地临时改 .env.local / process 测值：envPriority: 'local',
   enabled: (phase) =>
     phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
 });
