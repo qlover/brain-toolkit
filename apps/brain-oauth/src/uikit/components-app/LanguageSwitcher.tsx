@@ -3,15 +3,39 @@
 import { LanguageIcon } from '@heroicons/react/24/outline';
 import { LocaleRouter } from '@qlover/corekit-bridge/url-helper';
 import { Button, Dropdown, useMountedClient } from '@qlover/next-kit/client';
+import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useTransition } from 'react';
 import { usePathname, useRouter } from '@/i18n/routing';
+import {
+  LOCALE_PREFERENCE_QUERY_KEYS,
+  persistLocaleCookie
+} from '@shared/utils/localePreference';
 import { localeQueryParam, useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
 
+/**
+ * Build dynamic route params for next-intl navigation (exclude `locale`).
+ */
+function pathParamsFromNextParams(
+  params: ReturnType<typeof useParams>
+): Record<string, string | string[]> {
+  const pathParams: Record<string, string | string[]> = {};
+  for (const [key, raw] of Object.entries(
+    params as Record<string, string | string[]>
+  )) {
+    if (key === 'locale' || raw == null) {
+      continue;
+    }
+    pathParams[key] = raw;
+  }
+  return pathParams;
+}
+
 export function LanguageSwitcher() {
   const pathname = usePathname();
+  const params = useParams();
   const router = useRouter();
   const currentLocale = useLocale() as LocaleType;
   const [isPending, startTransition] = useTransition();
@@ -44,20 +68,46 @@ export function LanguageSwitcher() {
       if (!mounted || isPending || value === currentLocale) return;
 
       startTransition(() => {
-        const currentPath =
-          pathname + window.location.search + window.location.hash;
+        const nextLocale = value as LocaleType;
+        persistLocaleCookie(nextLocale);
 
         if (useLocaleRoutes) {
-          router.replace(currentPath as '/', { locale: value });
+          const pathParams = pathParamsFromNextParams(params);
+          const query = Object.fromEntries(
+            new URLSearchParams(window.location.search)
+          );
+          for (const key of LOCALE_PREFERENCE_QUERY_KEYS) {
+            delete query[key];
+          }
+
+          router.replace(
+            {
+              pathname,
+              params: pathParams,
+              ...(Object.keys(query).length > 0 ? { query } : {})
+            } as never,
+            { locale: nextLocale }
+          );
           return;
         }
 
+        const search = new URLSearchParams(window.location.search);
+        for (const key of LOCALE_PREFERENCE_QUERY_KEYS) {
+          search.delete(key);
+        }
+        const qs = search.toString();
+        const currentPath =
+          pathname + (qs ? `?${qs}` : '') + window.location.hash;
         router.replace(
-          localeRouter!.switchLocale(currentPath, currentLocale, value) as '/'
+          localeRouter!.switchLocale(
+            currentPath,
+            currentLocale,
+            nextLocale
+          ) as '/'
         );
       });
     },
-    [mounted, isPending, pathname, currentLocale, localeRouter, router]
+    [mounted, isPending, pathname, params, currentLocale, localeRouter, router]
   );
 
   const currentLocaleLabel =

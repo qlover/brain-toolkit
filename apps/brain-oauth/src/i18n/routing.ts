@@ -1,5 +1,6 @@
 import { createNavigation } from 'next-intl/navigation';
 import { defineRouting } from 'next-intl/routing';
+import { localeCookieConfig } from '@shared/utils/localePreference';
 import { useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import {
@@ -21,6 +22,10 @@ export const routing = defineRouting({
   defaultLocale: i18nConfig.fallbackLng,
 
   localePrefix: useLocaleRoutes ? 'always' : 'as-needed',
+
+  localeDetection: i18nConfig.localeDetection,
+
+  localeCookie: localeCookieConfig,
 
   pathnames: {
     '/': {

@@ -6,6 +6,10 @@ import { Button, Dropdown, useMountedClient } from '@qlover/next-kit/client';
 import { useRouter } from 'next/router';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
+import {
+  LOCALE_PREFERENCE_QUERY_KEYS,
+  persistLocaleCookie
+} from '@shared/utils/localePreference';
 import { localeQueryParam, useLocaleRoutes } from '@config/common';
 import { i18nConfig } from '@config/i18n';
 import type { LocaleType } from '@config/i18n';
@@ -47,7 +51,20 @@ export function LanguageSwitcherPages() {
 
       try {
         const { asPath } = router;
-        const newPath = localeRouter.switchLocale(asPath, currentLocale, value);
+        const nextLocale = value as LocaleType;
+        persistLocaleCookie(nextLocale);
+
+        const url = new URL(asPath, window.location.origin);
+        for (const key of LOCALE_PREFERENCE_QUERY_KEYS) {
+          url.searchParams.delete(key);
+        }
+        const cleaned = url.pathname + url.search + url.hash;
+
+        const newPath = localeRouter.switchLocale(
+          cleaned,
+          currentLocale,
+          nextLocale
+        );
         router.replace(newPath).finally(() => setIsPending(false));
       } catch {
         setIsPending(false);
