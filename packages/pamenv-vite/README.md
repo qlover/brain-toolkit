@@ -29,6 +29,14 @@ export default defineConfig({
 
 也可用命名导出：`import { createPamenvPlugin } from '@pamenv/vite'`（与 `@pamenv/next` 同名）。
 
-Token 来自当前目录 `.pam`，不要写进配置对象。`enabled: false` 时不请求 PAM。未传 `enabled` 时只在 **`vite` / `vite dev`（serve）** 注入；`vite build` 默认跳过。需要构建期注入时设 `enabled: true`，或 `enabled: (command) => command === 'serve' || command === 'build'`。
+Token 来自**当前项目**的 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进配置对象。未登录时请在项目目录执行：
+
+```bash
+pamenv login --local
+```
+
+`enabled: false` 时不请求 PAM。未传 `enabled` 时只在 **`vite` / `vite dev`（serve）** 注入；`vite build` 默认跳过。需要构建期注入时设 `enabled: true`，或 `enabled: (command) => command === 'serve' || command === 'build'`。
 
 `debug` 默认 `false`；`envPriority` 默认 `remote`（与 CLI / `@pamenv/next` 相同）。
+
+`clientPublicPrefixes` 可覆盖「敏感 + 公开前缀」告警用的前缀（如 `['VITE_']`）；传 `[]` 关闭该告警。
