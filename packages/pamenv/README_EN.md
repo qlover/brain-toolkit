@@ -1,10 +1,17 @@
 # pamenv-cli
 
+[![npm](https://img.shields.io/npm/v/pamenv-cli.svg)](https://www.npmjs.com/package/pamenv-cli)
+[![npm](https://img.shields.io/npm/v/@pamenv/next.svg?label=%40pamenv%2Fnext)](https://www.npmjs.com/package/@pamenv/next)
+[![npm](https://img.shields.io/npm/v/@pamenv/vite.svg?label=%40pamenv%2Fvite)](https://www.npmjs.com/package/@pamenv/vite)
+
+- npm: [pamenv-cli](https://www.npmjs.com/package/pamenv-cli) · [@pamenv/next](https://www.npmjs.com/package/@pamenv/next) · [@pamenv/vite](https://www.npmjs.com/package/@pamenv/vite)
+
 `pamenv` uses and manages PAM multi-environment variables:
 
 - For day-to-day development, `pamenv run` injects variables straight into a command's process, so no plaintext file stays on disk.
+- For Next / Vite you can also use `@pamenv/next` or `@pamenv/vite` to inject at config time (see "Framework plugins") without wrapping `pamenv run`.
 - When you need a file, `pamenv render` outputs dotenv / JSON / YAML / TOML, and `pull` / `push` sync with `.env.<environment>` files.
-- **Sensitive values only reach a process through `run`**; the web UI, `render` and `pull` never return them in plaintext (see "Marking sensitive variables").
+- **Sensitive values only reach a process through `run` / framework plugins**; the web UI, `render` and `pull` never return them in plaintext (see "Marking sensitive variables").
 - `init` creates a project from the current directory.
 
 ## Install
@@ -14,6 +21,8 @@ npm install -g pamenv-cli
 # or run once
 npx pamenv --help
 ```
+
+Package: https://www.npmjs.com/package/pamenv-cli
 
 ## Quick start
 
@@ -209,11 +218,6 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--env-priority <remote\|local>` | Overlap priority: `remote` (default, PAM wins) \| `local` (process → on-disk `.env*` → PAM, for temporary local overrides) |
 | `--client-public-prefixes <list>` | Prefixes for the sensitive client-bundle warning (comma-separated; built-in default); pass empty to disable |
 
-Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next` / `@pamenv/vite`) also accepts:
-
-- `debug` (default `false`): quiet by default — no “Using local config…”, inject count, key names, `baseUrl` / `.pam` root. When `true`, those metadata lines go to stderr (**never values**). CLI `pamenv run` stays verbose.
-- `envPriority`: same as `--env-priority`; default `remote`. Use `local` for local overrides (process → `.env*` → PAM). Sensitive placeholders resolve to PAM plaintext; remote-sensitive + local plaintext warns but does not block.
-
 - Everything after `--` goes to the child unchanged, including the child's own options.
 - PAM wins for keys that also exist in the shell (except `--keep-env` keys).
 - Signals such as `Ctrl+C` are forwarded to the child, and pamenv exits with the child's exit code.
@@ -227,6 +231,8 @@ Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next` / `@pamenv/vite`)
 }
 ```
 
+With the framework plugins below, `dev` can stay plain `next dev` / `vite`.
+
 Before starting, pamenv checks for the following and warns on stderr (it never blocks):
 
 | Check | Why |
@@ -236,6 +242,81 @@ Before starting, pamenv checks for the following and warns on stderr (it never b
 | `turbo.json` uses strict env mode and the key is not declared | Turbo filters undeclared variables |
 
 If an environment is marked **protected** in the web UI, only project admins / owners can `run` it or change its variables (including `push`).
+
+## Framework plugins (`@pamenv/next` / `@pamenv/vite`)
+
+These call `injectPamenvProcessEnv` while the framework loads config, writing PAM into the current Node `process.env` so scripts need not wrap `pamenv run … --`.
+
+| | [`@pamenv/next`](https://www.npmjs.com/package/@pamenv/next) | [`@pamenv/vite`](https://www.npmjs.com/package/@pamenv/vite) |
+| --- | --- | --- |
+| Install | `pnpm add @pamenv/next pamenv-cli` | `pnpm add @pamenv/vite pamenv-cli` |
+| Wire-up | wrap `next.config` with `createPamenvPlugin` | `plugins: [pamenv({ … })]` |
+| Default inject | `next dev` only | `vite` / `vite dev` (serve) only |
+| Credentials | project `.pam` (`preferLocal`, no `~/.pam` fallback) | same |
+
+First-time login in the project directory:
+
+```bash
+pamenv login --local
+```
+
+### Next.js
+
+```ts
+// next.config.ts
+import { createPamenvPlugin } from '@pamenv/next';
+
+const withPamenv = createPamenvPlugin({
+  slug: 'my-app',
+  env: 'local',
+  keepEnv: ['APP_ENV'],
+  // envPriority: 'local', // when overriding via .env / process
+  debug: process.env.PAMENV_DEBUG === '1',
+  enabled: (phase) =>
+    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+});
+
+export default withPamenv(nextConfig);
+```
+
+```json
+{ "scripts": { "dev": "next dev" } }
+```
+
+### Vite
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import pamenv from '@pamenv/vite';
+
+export default defineConfig({
+  plugins: [
+    pamenv({
+      slug: 'my-app',
+      env: 'local',
+      debug: process.env.PAMENV_DEBUG === '1',
+      clientPublicPrefixes: ['VITE_'] // do not put secrets on VITE_; [] disables
+    })
+  ]
+});
+```
+
+Client-readable keys still need Vite’s public prefix (`VITE_*` → `import.meta.env.VITE_*`). Example app: `apps/pamenv-vite-app`.
+
+### Common options
+
+| Option | Description |
+| --- | --- |
+| `slug` / `env` | Same as `pamenv run <slug> -e <env>` |
+| `keepEnv` | Keep process values for these keys when already set |
+| `envPriority` | `remote` (default) \| `local` (process → `.env*` → PAM) |
+| `debug` | Metadata on stderr (paths / key names); **never values** |
+| `enabled` | `false` off; `true` includes build; or a phase/command predicate |
+| `clientPublicPrefixes` | Sensitive + public-prefix warning (e.g. `['VITE_']`); `[]` disables |
+| `preferLocal` | Default `true`; never put a token in the plugin options |
+
+See `packages/pamenv-next/README.md`, `packages/pamenv-vite/README.md`, and [docs/pamenv-v2.md](./docs/pamenv-v2.md).
 
 ## `pamenv render`
 

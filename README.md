@@ -13,6 +13,7 @@ Brain AI 前端工具包 - 为 AI 应用提供强大的前端工具集合
   - [安装](#安装)
   - [基础使用](#基础使用)
 - [包列表](#-包列表)
+- [PAM / pamenv](#-pam--pamenv)
 - [开发指南](#-开发指南)
   - [项目的构建与依赖管理](./docs/zh/project-builder.md)
   - [提交规范](./docs/zh/commit-convention.md)
@@ -37,6 +38,7 @@ brain-toolkit 是一个专为 AI 前端应用设计的工具包集合，采用 m
 - 🎯 **模块化设计** - 基于 pnpm workspace 的 monorepo 架构
 - 🔧 **TypeScript 支持** - 完整的类型定义和智能提示
 - 📦 **独立发布** - 每个包可独立安装和使用
+- 🔐 **PAM 环境变量** - `pamenv` CLI + Next/Vite 插件，敏感值按需注入进程
 - 🚀 **现代化工具链** - 使用 Vite、ESLint、Prettier 等现代工具
 - 🔄 **自动化发布** - 基于 Changesets 的版本管理和发布流程
 - 🧪 **测试覆盖** - 集成 Vitest 测试框架
@@ -80,6 +82,34 @@ pnpm add @brain-toolkit/element-sizer
 | [@brain-toolkit/ts2locales](./packages/ts2locales/README.md)                   | ![npm](https://img.shields.io/npm/v/@brain-toolkit/ts2locales)          | TypeScript 国际化文件生成工具   |
 | [@brain-toolkit/antd-theme-override](./packages/antd-theme-override/README.md) | ![npm](https://img.shields.io/npm/v/@brain-toolkit/antd-theme-override) | Ant Design 主题覆盖和自定义工具 |
 | [@brain-toolkit/brain-user](./packages/brain-user/README.md)                   | ![npm](https://img.shields.io/npm/v/@brain-toolkit/brain-user)          | Brain 用户认证和管理库          |
+| [pamenv-cli](./packages/pamenv/README.md)                                      | ![npm](https://img.shields.io/npm/v/pamenv-cli)                         | PAM 多环境变量 CLI（run / pull / push） |
+| [@pamenv/next](./packages/pamenv-next/README.md)                               | ![npm](https://img.shields.io/npm/v/@pamenv/next)                       | Next.js 配置阶段注入 PAM        |
+| [@pamenv/vite](./packages/pamenv-vite/README.md)                               | ![npm](https://img.shields.io/npm/v/@pamenv/vite)                       | Vite 插件：配置阶段注入 PAM     |
+
+## 🔐 PAM / pamenv
+
+用 [PAM](https://pam.qlover.top) 管理多环境变量；本地用 CLI 或框架插件注入进程，敏感值默认不落盘。
+
+| npm | 说明 |
+| --- | --- |
+| [pamenv-cli](https://www.npmjs.com/package/pamenv-cli) | 全局 / 项目安装后使用 `pamenv` 命令 |
+| [@pamenv/next](https://www.npmjs.com/package/@pamenv/next) | `next.config` 外包一层，`next dev` 时注入 |
+| [@pamenv/vite](https://www.npmjs.com/package/@pamenv/vite) | Vite 插件，`vite` / `vite dev` 时注入 |
+
+```bash
+# CLI
+npm install -g pamenv-cli
+pamenv login
+pamenv run <slug> -e local -- pnpm dev
+
+# Next（项目目录需 pamenv login --local）
+pnpm add @pamenv/next pamenv-cli
+
+# Vite
+pnpm add @pamenv/vite pamenv-cli
+```
+
+文档：[packages/pamenv/README.md](./packages/pamenv/README.md) · [pamenv v2](./packages/pamenv/docs/pamenv-v2.md) · 示例应用 `apps/pamenv-vite-app`
 
 ## 🛠️ 开发指南
 
@@ -127,7 +157,11 @@ pnpm check-packages
 
 ```
 brain-toolkit/
+├── apps/                     # 应用（pam、brain-oauth、pamenv-vite-app 等）
 ├── packages/                 # 子包目录
+│   ├── pamenv/               # pamenv-cli
+│   ├── pamenv-next/          # @pamenv/next
+│   ├── pamenv-vite/          # @pamenv/vite
 │   ├── element-sizer/        # DOM 元素动画工具
 │   └── brain-user/           # Brain 用户认证和管理库
 ├── docs/                     # 文档目录

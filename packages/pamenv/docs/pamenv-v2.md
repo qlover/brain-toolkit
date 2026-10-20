@@ -66,6 +66,79 @@ pamenv run <slug|id> -e dev -- node server.js
 5. 不写任何文件，不打印变量值。
 6. **明文边界**：注入后的值在子进程环境里是真实明文；CLI 不负责拦截进程内打印、同机读环境或调试器。生产类场景用 `--only` 收窄。
 
+### 框架插件：`@pamenv/next` / `@pamenv/vite`
+
+不想每次包一层 `pamenv run … -- next dev` / `vite` 时，可用插件在框架读配置前把 PAM 写进当前进程的 `process.env`。底层都走 `injectPamenvProcessEnv`（与 `run` 同一条 resolve / 合并 / 告警逻辑）。
+
+| 包 | 接入点 | 默认何时注入 |
+| --- | --- | --- |
+| `@pamenv/next` | `next.config` 外包一层 `createPamenvPlugin` | 仅 `next dev`（`phase-development-server`） |
+| `@pamenv/vite` | `vite.config` 的 `plugins` | 仅 `vite` / `vite dev`（`command === 'serve'`） |
+
+共同点：
+
+- 默认 **`preferLocal: true`**：只用项目目录的 `.pam`，**不回落** `~/.pam`。未登录时在项目根执行 `pamenv login --local`。
+- `envPriority` 默认 `remote`（PAM 盖同名键）；本地临时改 `.env` / process 测值时用 `local`（process → 磁盘 `.env*` → PAM）。
+- `debug` 默认关；`PAMENV_DEBUG=1` 或 `debug: true` 只打路径 / 键名 / baseUrl，**从不打印变量值**。
+- 正式构建默认不注入；需要时显式 `enabled: true` 或传入函数。
+
+#### Next.js
+
+```bash
+pnpm add @pamenv/next pamenv-cli
+# 项目根：pamenv login --local
+```
+
+```ts
+// next.config.ts
+import { createPamenvPlugin } from '@pamenv/next';
+
+const withPamenv = createPamenvPlugin({
+  slug: 'my-app',
+  env: 'local',
+  keepEnv: ['APP_ENV'],
+  // envPriority: 'local',
+  debug: process.env.PAMENV_DEBUG === '1',
+  // 仅本地 dev：与现有 APP_ENV 门禁组合示例
+  enabled: (phase) =>
+    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+});
+
+export default withPamenv(/* 其它 withXxx */ nextConfig);
+```
+
+`package.json` 可继续写 `"dev": "next dev"`，不必再包 `pamenv run`。
+
+#### Vite
+
+```bash
+pnpm add @pamenv/vite pamenv-cli
+# 项目根：pamenv login --local
+```
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import pamenv from '@pamenv/vite';
+
+export default defineConfig({
+  plugins: [
+    pamenv({
+      slug: 'my-app',
+      env: 'local',
+      keepEnv: ['APP_ENV'],
+      debug: process.env.PAMENV_DEBUG === '1',
+      // 前端包公开前缀告警（敏感键勿挂 VITE_）；[] 可关闭
+      clientPublicPrefixes: ['VITE_']
+    })
+  ]
+});
+```
+
+客户端可读的键仍须符合 Vite 约定（如 `VITE_*` → `import.meta.env.VITE_*`）。仓库内示例：`apps/pamenv-vite-app`。
+
+更细的选项见各包 README：`packages/pamenv-next/README.md`、`packages/pamenv-vite/README.md`。
+
 ### `pamenv render`
 
 ```bash
@@ -199,7 +272,7 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 | ---- | ---------------------------------------------------------------------------------------------------------- |
 | 一   | `resolve` 接口、`pam_environments_inject` 权限与审计日志；`pamenv run`；绕过检查（已完成）                 |
 | 二   | `pamenv render` 与四种适配器；`export` 权限收紧且不再返回敏感值；受保护环境；访问记录（已完成）            |
-| 三   | OS 绑定凭证存储（已落地初版）；CI 的 OIDC 接入（见下方 TODO）                                               |
+| 三   | OS 绑定凭证；`@pamenv/next` / `@pamenv/vite` 进程注入（已完成）；CI 的 OIDC 接入（见下方 TODO）             |
 
 ## 待定问题
 

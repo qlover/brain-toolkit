@@ -1,10 +1,17 @@
 # pamenv-cli
 
+[![npm](https://img.shields.io/npm/v/pamenv-cli.svg)](https://www.npmjs.com/package/pamenv-cli)
+[![npm](https://img.shields.io/npm/v/@pamenv/next.svg?label=%40pamenv%2Fnext)](https://www.npmjs.com/package/@pamenv/next)
+[![npm](https://img.shields.io/npm/v/@pamenv/vite.svg?label=%40pamenv%2Fvite)](https://www.npmjs.com/package/@pamenv/vite)
+
+- npm：[pamenv-cli](https://www.npmjs.com/package/pamenv-cli) · [@pamenv/next](https://www.npmjs.com/package/@pamenv/next) · [@pamenv/vite](https://www.npmjs.com/package/@pamenv/vite)
+
 `pamenv` 用来使用和管理 PAM 上的多环境变量：
 
 - 日常开发用 `pamenv run` 把变量直接注入命令进程，本地不留明文文件。
+- Next / Vite 也可用 `@pamenv/next`、`@pamenv/vite` 在框架配置阶段注入（见下文「框架插件」），不必再包一层 `pamenv run`。
 - 需要文件时用 `pamenv render` 输出 dotenv / JSON / YAML / TOML，或用 `pull` / `push` 与 `.env.<环境名>` 双向同步。
-- **敏感变量的值只会通过 `run` 注入进程**，网页、`render`、`pull` 都不会给出明文（见下文「标记敏感变量」）。
+- **敏感变量的值只会通过 `run` / 插件注入进进程**，网页、`render`、`pull` 都不会给出明文（见下文「标记敏感变量」）。
 - `init` 从当前目录创建项目。
 
 ## 安装
@@ -14,6 +21,8 @@ npm install -g pamenv-cli
 # 或临时使用
 npx pamenv --help
 ```
+
+包地址：https://www.npmjs.com/package/pamenv-cli
 
 ## 快速开始
 
@@ -210,11 +219,6 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--env-priority <remote\|local>` | 同名键优先级：`remote`（默认，PAM 优先）\| `local`（process → 磁盘 `.env*` → PAM，便于本地临时改值） |
 | `--client-public-prefixes <list>` | 敏感变量「公开前缀」告警用的前缀，逗号分隔（默认内置）；传空可关闭该告警 |
 
-程序化注入（`injectPamenvProcessEnv` / `@pamenv/next` / `@pamenv/vite`）另有：
-
-- `debug`：默认 `false`，不打印 “Using local config…”、注入数量、键名、`baseUrl` / `.pam` 路径；设为 `true` 时输出这些元数据（**从不打印变量值**）。CLI `pamenv run` 保持原有啰嗦输出。
-- `envPriority`：与 CLI `--env-priority` 相同；默认 `remote`。本地联调可设 `local`（process → `.env*` → PAM）。敏感占位符会 resolve 成 PAM 明文；远程敏感而本地是明文时会告警但不拦截。
-
 - `--` 之后的内容原样交给子进程，包括子命令自己的参数。
 - 同名变量以 PAM 为准（`--keep-env` 例外）。
 - `Ctrl+C` 等信号会转发给子进程，pamenv 的退出码与子进程一致。
@@ -228,6 +232,8 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 }
 ```
 
+若用下面的框架插件，`dev` 可改回普通的 `next dev` / `vite`。
+
 启动前会检查以下情况并在 stderr 提示（不阻止运行）：
 
 | 检查 | 原因 |
@@ -237,6 +243,81 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `turbo.json` 是严格环境变量模式，且变量未声明 | Turbo 会过滤未声明的变量 |
 
 如果环境在网页端被设为「受保护」，只有项目 admin / owner 可以 `run` 或修改它的变量（含 `push`）。
+
+## 框架插件（`@pamenv/next` / `@pamenv/vite`）
+
+在框架加载配置时调用 `injectPamenvProcessEnv`，把 PAM 写入当前 Node 进程的 `process.env`，这样脚本里不必再写 `pamenv run … --`。
+
+| | [`@pamenv/next`](https://www.npmjs.com/package/@pamenv/next) | [`@pamenv/vite`](https://www.npmjs.com/package/@pamenv/vite) |
+| --- | --- | --- |
+| 安装 | `pnpm add @pamenv/next pamenv-cli` | `pnpm add @pamenv/vite pamenv-cli` |
+| 配置 | `createPamenvPlugin` 包住 `next.config` | `plugins: [pamenv({ … })]` |
+| 默认注入时机 | 仅 `next dev` | 仅 `vite` / `vite dev`（serve） |
+| 凭证 | 项目 `.pam`（`preferLocal`，不回落 `~/.pam`） | 同左 |
+
+首次在项目目录登录：
+
+```bash
+pamenv login --local
+```
+
+### Next.js
+
+```ts
+// next.config.ts
+import { createPamenvPlugin } from '@pamenv/next';
+
+const withPamenv = createPamenvPlugin({
+  slug: 'my-app',
+  env: 'local',
+  keepEnv: ['APP_ENV'],
+  // envPriority: 'local', // 本地改 .env / process 测值时
+  debug: process.env.PAMENV_DEBUG === '1',
+  enabled: (phase) =>
+    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+});
+
+export default withPamenv(nextConfig);
+```
+
+```json
+{ "scripts": { "dev": "next dev" } }
+```
+
+### Vite
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import pamenv from '@pamenv/vite';
+
+export default defineConfig({
+  plugins: [
+    pamenv({
+      slug: 'my-app',
+      env: 'local',
+      debug: process.env.PAMENV_DEBUG === '1',
+      clientPublicPrefixes: ['VITE_'] // 敏感键勿用 VITE_；[] 关闭该告警
+    })
+  ]
+});
+```
+
+客户端要用的键仍须带 Vite 公开前缀（如 `VITE_*` → `import.meta.env.VITE_*`）。示例应用：`apps/pamenv-vite-app`。
+
+### 插件常用选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `slug` / `env` | 同 `pamenv run <slug> -e <env>` |
+| `keepEnv` | 这些键若 process 已有值则保留 |
+| `envPriority` | `remote`（默认）\| `local`（process → `.env*` → PAM） |
+| `debug` | 打印路径 / 键名等元数据，**从不打印变量值** |
+| `enabled` | `false` 关闭；`true` 含 build；函数可按 phase / command 控制 |
+| `clientPublicPrefixes` | 敏感+公开前缀告警（Vite 常用 `['VITE_']`）；`[]` 关闭 |
+| `preferLocal` | 默认 `true`；勿在插件里写 token |
+
+细节见 `packages/pamenv-next/README.md`、`packages/pamenv-vite/README.md`，设计说明见 [docs/pamenv-v2.md](./docs/pamenv-v2.md)。
 
 ## `pamenv render`
 
