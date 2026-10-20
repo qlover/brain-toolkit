@@ -1,3 +1,4 @@
+import { createPamenvPlugin } from '@pamenv/next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import { generateApiRoutes } from './tools/generateApiRoutes';
 import { generateAppThemeCss } from './tools/generateAppThemeCss';
@@ -6,6 +7,16 @@ import { getLocalIpAddress } from './tools/getLocalIpAddress';
 import type { NextConfig } from 'next';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
+const withPamenv = createPamenvPlugin({
+  slug: 'pam',
+  env: 'local',
+  keepEnv: ['APP_ENV'],
+  debug: process.env.PAMENV_DEBUG === '1',
+  // 本地临时改 .env.local / process 测值：envPriority: 'local',
+  enabled: (phase) =>
+    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+});
 
 generateApiRoutes(__dirname, { outFile: './shared/config/apiRoutes.ts' }).catch(
   (error) => {
@@ -49,4 +60,4 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: localIp ? [localIp as string] : []
 };
 
-export default withNextIntl(nextConfig);
+export default withPamenv(withNextIntl(nextConfig));
