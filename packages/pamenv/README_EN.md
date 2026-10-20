@@ -208,7 +208,7 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--no-warn` | Disable the pre-run checks |
 | `--env-priority <remote\|local>` | Overlap priority: `remote` (default, PAM wins) \| `local` (process → on-disk `.env*` → PAM, for temporary local overrides) |
 
-Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next`) also accepts:
+Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next` / `@pamenv/vite`) also accepts:
 
 - `debug` (default `false`): quiet by default — no “Using local config…”, inject count, key names, `baseUrl` / `.pam` root. When `true`, those metadata lines go to stderr (**never values**). CLI `pamenv run` stays verbose.
 - `envPriority`: same as `--env-priority`; default `remote`. Use `local` for local overrides (process → `.env*` → PAM). Sensitive placeholders resolve to PAM plaintext; remote-sensitive + local plaintext warns but does not block.

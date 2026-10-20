@@ -833,6 +833,19 @@ importers:
         specifier: ^22.9.0
         version: 22.19.0
 
+  packages/pamenv-vite:
+    dependencies:
+      pamenv-cli:
+        specifier: workspace:^
+        version: link:../pamenv
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.0
+      vite:
+        specifier: ^6.1.0
+        version: 6.4.1(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.0)(yaml@2.8.1)
+
   packages/react-kit:
     devDependencies:
       '@qlover/corekit-bridge':

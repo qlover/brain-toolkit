@@ -20,8 +20,10 @@ export type PamenvInjectOptions = PamCliRunOptionsType & {
   readonly env: string;
   /**
    * When false, skip the network resolve and leave `process.env` unchanged.
-   * A function receives the Next.js phase (`phase-development-server`, …).
-   * Default for `@pamenv/next` is development-server only.
+   * A function receives a framework phase string:
+   * - `@pamenv/next`: Next phase (`phase-development-server`, …)
+   * - `@pamenv/vite`: Vite command (`serve` | `build`)
+   * Defaults: Next = development-server only; Vite = `serve` only.
    */
   readonly enabled?: boolean | ((phase: string) => boolean);
   /** Active `.pam` directory. Defaults to `process.cwd()`. */
