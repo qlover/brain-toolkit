@@ -4,6 +4,9 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import {
   PAMENV_CLI_ONLY_MISSING,
   PAMENV_CLI_RUN_COMMAND_REQUIRED,
+  PAMENV_CLI_RUN_DEBUG_KEYS,
+  PAMENV_CLI_RUN_DEBUG_SENSITIVE_KEYS,
+  PAMENV_CLI_RUN_DEBUG_SUMMARY,
   PAMENV_CLI_RUN_INJECTED,
   PAMENV_CLI_RUN_SPAWN_FAILED
 } from '../i18n/identifier/pamenv_cli';
@@ -23,6 +26,11 @@ export type PamCliRunOptionsType = {
   readonly keepEnv?: readonly string[];
   /** Pre-run bypass warnings (default true). */
   readonly warn?: boolean;
+  /**
+   * Verbose stderr for config path / inject summary / key names (never values).
+   * CLI `run` defaults to true; `injectPamenvProcessEnv` / `@pamenv/next` default false.
+   */
+  readonly debug?: boolean;
 };
 
 const FORWARDED_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
@@ -86,8 +94,11 @@ export class RunCommand {
     readonly envName: string;
     readonly env: NodeJS.ProcessEnv;
   }> {
+    // CLI run keeps historical verbosity; plugins pass `debug: false` by default.
+    const debug = options.debug !== false;
+
     if (this.authStore) {
-      await PamCliSecurityGate.assertIdentity(this.authStore);
+      await PamCliSecurityGate.assertIdentity(this.authStore, { debug });
     }
 
     const { variables, projectSlug, envName } = await this.resolveVariables(
@@ -105,6 +116,7 @@ export class RunCommand {
       }
     }
 
+    // Security / bypass warnings stay on unless explicitly disabled.
     if (options.warn !== false) {
       for (const line of await PamCliRunWarningUtil.collect(cwd, variables)) {
         console.error(line);
@@ -112,15 +124,63 @@ export class RunCommand {
     }
 
     const env = RunCommand.mergeEnv(baseEnv, variables, options.keepEnv);
+
+    if (debug) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_INJECTED, {
+          count: String(variables.length),
+          slug: projectSlug,
+          env: envName
+        })
+      );
+      await this.printDebugDetails(variables, projectSlug, envName);
+    }
+
+    return { variables, projectSlug, envName, env };
+  }
+
+  /**
+   * Debug-only lines: counts, baseUrl, pam root, key names — never values.
+   */
+  protected async printDebugDetails(
+    variables: readonly PamCliResolvedVarType[],
+    projectSlug: string,
+    envName: string
+  ): Promise<void> {
+    const sensitiveKeys = variables
+      .filter((variable) => variable.sensitive)
+      .map((variable) => variable.key)
+      .sort((left, right) => left.localeCompare(right));
+    const keys = variables
+      .map((variable) => variable.key)
+      .sort((left, right) => left.localeCompare(right));
+    const baseUrl = this.authStore
+      ? await this.authStore.getBaseUrl()
+      : '(unknown)';
+    const root = this.authStore?.getActivePamRoot() ?? '(unknown)';
+
     console.error(
-      PamCliI18n.t(PAMENV_CLI_RUN_INJECTED, {
+      PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_SUMMARY, {
+        baseUrl,
+        root,
+        sensitive: String(sensitiveKeys.length),
         count: String(variables.length),
         slug: projectSlug,
         env: envName
       })
     );
-
-    return { variables, projectSlug, envName, env };
+    if (keys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_KEYS, { keys: keys.join(', ') })
+      );
+    }
+    if (sensitiveKeys.length > 0) {
+      console.error(
+        PamCliI18n.t(PAMENV_CLI_RUN_DEBUG_SENSITIVE_KEYS, {
+          keys: sensitiveKeys.join(', ')
+        })
+      );
+    }
   }
 
   /**

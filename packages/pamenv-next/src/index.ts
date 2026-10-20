@@ -16,10 +16,14 @@ export type PamenvNextConfigContext = {
  * `process.env` first, then the inner config (object or plugin) runs.
  *
  * @example
- * const withPamenv = createPamenvPlugin({ slug: 'pam', env: 'local' });
+ * const withPamenv = createPamenvPlugin({
+ *   slug: 'pam',
+ *   env: 'local',
+ *   debug: process.env.PAMENV_DEBUG === '1'
+ * });
  * export default withPamenv(withNextIntl(nextConfig));
  *
- * @param options - Same fields as `pamenv run <slug> -e <env>`
+ * @param options - Same fields as `pamenv run <slug> -e <env>`; `debug` defaults to false
  */
 export function createPamenvPlugin(options: PamenvInjectOptions) {
   return function withPamenv<TConfig>(

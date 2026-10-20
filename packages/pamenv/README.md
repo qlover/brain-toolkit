@@ -208,6 +208,8 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--keep-env <keys>` | 这些键如果当前 shell 已有值，就保留 shell 的值 |
 | `--no-warn` | 关闭启动前的检查提示 |
 
+程序化注入（`injectPamenvProcessEnv` / `@pamenv/next`）另有 `debug`：默认 `false`，不打印 “Using local config…”、注入数量、键名、`baseUrl` / `.pam` 路径；设为 `true` 时输出这些元数据（**从不打印变量值**）。安全/绕过类警告仍会打印（除非 `warn: false`）。CLI `pamenv run` 保持原有啰嗦输出。
+
 - `--` 之后的内容原样交给子进程，包括子命令自己的参数。
 - 同名变量以 PAM 为准（`--keep-env` 例外）。
 - `Ctrl+C` 等信号会转发给子进程，pamenv 的退出码与子进程一致。

@@ -53,6 +53,7 @@ const withPamenv = createPamenvPlugin({
   slug: 'brain-oauth',
   env: 'local',
   keepEnv: ['APP_ENV'],
+  debug: process.env.PAMENV_DEBUG === '1',
   enabled: (phase) =>
     phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
 });

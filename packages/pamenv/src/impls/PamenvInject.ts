@@ -7,6 +7,11 @@ import { PamCliAuthStore } from './PamCliAuthStore';
 /**
  * Options for injecting a PAM environment into the current process.
  * Same meaning as `pamenv run <slug> -e <env>`.
+ *
+ * `debug` defaults to **false** here (unlike CLI `pamenv run`). When true,
+ * stderr shows config path, inject count, baseUrl, root, and key names —
+ * never secret values. Security / bypass warnings still print when `warn`
+ * is not false.
  */
 export type PamenvInjectOptions = PamCliRunOptionsType & {
   /** Project slug or id. */
@@ -89,7 +94,9 @@ async function applyPamenvProcessEnv(
       envName: options.env,
       only: options.only,
       keepEnv: options.keepEnv,
-      warn: options.warn
+      warn: options.warn,
+      // Inject / Next plugin stay quiet unless opted in.
+      debug: options.debug === true
     },
     cwd
   );

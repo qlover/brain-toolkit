@@ -692,6 +692,28 @@ export const PAMENV_CLI_RUN_COMMAND_REQUIRED =
 export const PAMENV_CLI_RUN_INJECTED = 'pamenv_cli:run_injected';
 
 /**
+ * @description run/inject debug：地址与敏感变量数量（不含值）
+ * @localZh [pamenv] debug: baseUrl={{baseUrl}} root={{root}} sensitive={{sensitive}}/{{count}}
+ * @localEn [pamenv] debug: baseUrl={{baseUrl}} root={{root}} sensitive={{sensitive}}/{{count}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_SUMMARY = 'pamenv_cli:run_debug_summary';
+
+/**
+ * @description run/inject debug：全部键名（不含值）
+ * @localZh [pamenv] debug keys: {{keys}}
+ * @localEn [pamenv] debug keys: {{keys}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_KEYS = 'pamenv_cli:run_debug_keys';
+
+/**
+ * @description run/inject debug：敏感键名（不含值）
+ * @localZh [pamenv] debug sensitive keys: {{keys}}
+ * @localEn [pamenv] debug sensitive keys: {{keys}}
+ */
+export const PAMENV_CLI_RUN_DEBUG_SENSITIVE_KEYS =
+  'pamenv_cli:run_debug_sensitive_keys';
+
+/**
  * @description run 无法启动子进程
  * @localZh 无法启动命令 "{{command}}": {{message}}
  * @localEn Failed to start "{{command}}": {{message}}

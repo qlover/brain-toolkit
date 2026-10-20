@@ -207,6 +207,8 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | `--keep-env <keys>` | Keep the shell's value for these keys when already set |
 | `--no-warn` | Disable the pre-run checks |
 
+Programmatic inject (`injectPamenvProcessEnv` / `@pamenv/next`) also accepts `debug` (default `false`): quiet by default — no “Using local config…”, inject count, key names, `baseUrl` / `.pam` root. When `true`, those metadata lines go to stderr (**never values**). Security / bypass warnings still print unless `warn: false`. CLI `pamenv run` stays verbose.
+
 - Everything after `--` goes to the child unchanged, including the child's own options.
 - PAM wins for keys that also exist in the shell (except `--keep-env` keys).
 - Signals such as `Ctrl+C` are forwarded to the child, and pamenv exits with the child's exit code.

@@ -178,4 +178,18 @@ describe('PamCliSecurityGate.assertIdentity', () => {
     ).rejects.toThrow(/not_logged_in|login|登录/i);
     errorSpy.mockRestore();
   });
+
+  it('skips Using config log when debug is false', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const authStore = {
+      getToken: async () => 'token',
+      getConfig: async () => ({ email: 'a@b.c' }),
+      getActivePamRoot: () => '/tmp/project/.pam'
+    };
+    await PamCliSecurityGate.assertIdentity(authStore as never, {
+      debug: false
+    });
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
 });
