@@ -2,6 +2,13 @@
 
 在 Next 读取配置之前，把 PAM 环境写进当前进程的 `process.env`。`dev` 脚本可以继续是 `next dev`，不必再包 `pamenv run`。
 
+```bash
+pnpm add @pamenv/next pamenv-cli
+# 或 npm i @pamenv/next pamenv-cli
+```
+
+依赖 `pamenv-cli`（注入与登录逻辑）。项目目录需有可用的 `.pam`（与 CLI 相同）。
+
 ```ts
 import { createPamenvPlugin } from '@pamenv/next';
 

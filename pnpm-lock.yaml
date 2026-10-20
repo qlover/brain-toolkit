@@ -826,7 +826,7 @@ importers:
   packages/pamenv-next:
     dependencies:
       pamenv-cli:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../pamenv
     devDependencies:
       '@types/node':
