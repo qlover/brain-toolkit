@@ -166,7 +166,7 @@ describe('PamCliSecurityGate.run guards', () => {
 });
 
 describe('PamCliSecurityGate.assertIdentity', () => {
-  it('fails when there is no token', async () => {
+  it('fails when there is no token and hints login --local for project .pam', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const authStore = {
       getToken: async () => null,
@@ -175,7 +175,9 @@ describe('PamCliSecurityGate.assertIdentity', () => {
     };
     await expect(
       PamCliSecurityGate.assertIdentity(authStore as never)
-    ).rejects.toThrow(/not_logged_in|login|登录/i);
+    ).rejects.toThrow(
+      /not_logged_in_local|login --local|本地 \.pam|not logged in \(local/i
+    );
     errorSpy.mockRestore();
   });
 

@@ -28,7 +28,7 @@ import { ThemeSwitcher } from '../components-app/ThemeSwitcher';
 import { useSessionPermissionKeys } from '../hook/useHasPermission';
 import { useWarnTranslations } from '../hook/useWarnTranslations';
 import type { PageI18nInterface } from '@qlover/next-kit/common';
-import type { ComponentType, SVGProps } from 'react';
+import type { ForwardRefExoticComponent, RefAttributes, SVGProps } from 'react';
 
 export interface AdminLayoutTT {
   title: string;
@@ -48,7 +48,13 @@ export interface AdminLayoutProps {
   className?: string;
 }
 
-type NavIcon = ComponentType<SVGProps<SVGSVGElement>>;
+/** Heroicons v2 export shape (`ForwardRef` + optional title props). */
+type NavIcon = ForwardRefExoticComponent<
+  Omit<SVGProps<SVGSVGElement>, 'ref'> & {
+    title?: string;
+    titleId?: string;
+  } & RefAttributes<SVGSVGElement>
+>;
 
 const NAV_ICONS: Record<string, NavIcon> = {
   dashboard: ChartBarSquareIcon,

@@ -90,6 +90,7 @@ import {
   PAMENV_HELP_RUN,
   PAMENV_HELP_RUN_ARG_COMMAND,
   PAMENV_HELP_RUN_OPT_KEEP_ENV,
+  PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES,
   PAMENV_HELP_RUN_OPT_ENV_PRIORITY,
   PAMENV_HELP_RUN_OPT_NO_WARN,
   PAMENV_HELP_TITLE_ARGUMENTS,
@@ -403,6 +404,10 @@ export class PamCliApp {
         t(PAMENV_HELP_RUN_OPT_ENV_PRIORITY),
         'remote'
       )
+      .option(
+        '--client-public-prefixes <list>',
+        t(PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES)
+      )
       .action(
         async (
           projectRef: string,
@@ -413,6 +418,7 @@ export class PamCliApp {
             keepEnv?: string;
             warn?: boolean;
             envPriority?: string;
+            clientPublicPrefixes?: string;
           }
         ) => {
           const envPriority = this.parseEnvPriority(options.envPriority);
@@ -424,7 +430,10 @@ export class PamCliApp {
             only: this.splitKeys(options.only),
             keepEnv: this.splitKeys(options.keepEnv),
             warn: options.warn,
-            envPriority
+            envPriority,
+            clientPublicPrefixes: this.parseClientPublicPrefixes(
+              options.clientPublicPrefixes
+            )
           });
         }
       );
@@ -475,6 +484,22 @@ export class PamCliApp {
     throw new Error(
       `Invalid --env-priority "${value ?? ''}". Use remote or local.`
     );
+  }
+
+  /**
+   * Parses `--client-public-prefixes`. `undefined` = built-in defaults;
+   * present (including empty) = explicit list (`[]` disables the warning).
+   */
+  protected parseClientPublicPrefixes(
+    value?: string
+  ): string[] | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+    return value
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part !== '');
   }
 
   /**

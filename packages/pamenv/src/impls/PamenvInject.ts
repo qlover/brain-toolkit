@@ -20,8 +20,10 @@ export type PamenvInjectOptions = PamCliRunOptionsType & {
   readonly env: string;
   /**
    * When false, skip the network resolve and leave `process.env` unchanged.
-   * A function receives the Next.js phase (`phase-development-server`, …).
-   * Default for `@pamenv/next` is development-server only.
+   * A function receives a framework phase string:
+   * - `@pamenv/next`: Next phase (`phase-development-server`, …)
+   * - `@pamenv/vite`: Vite command (`serve` | `build`)
+   * Defaults: Next = development-server only; Vite = `serve` only.
    */
   readonly enabled?: boolean | ((phase: string) => boolean);
   /** Active `.pam` directory. Defaults to `process.cwd()`. */
@@ -54,7 +56,10 @@ export async function injectPamenvProcessEnv(
     options.preferLocal === false ? 'global' : 'local',
     options.envPriority === 'local' ? 'env-local' : 'env-remote',
     (options.only ?? []).join(','),
-    (options.keepEnv ?? []).join(',')
+    (options.keepEnv ?? []).join(','),
+    options.clientPublicPrefixes === undefined
+      ? 'prefixes-default'
+      : `prefixes:${options.clientPublicPrefixes.join(',')}`
   ].join('\0');
 
   const pending = injected.get(key);
@@ -97,6 +102,7 @@ async function applyPamenvProcessEnv(
       keepEnv: options.keepEnv,
       warn: options.warn,
       envPriority: options.envPriority,
+      clientPublicPrefixes: options.clientPublicPrefixes,
       // Inject / Next plugin stay quiet unless opted in.
       debug: options.debug === true
     },

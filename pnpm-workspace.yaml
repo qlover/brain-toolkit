@@ -8,6 +8,9 @@ peerDependencyRules:
 
 overrides:
   typescript: ~6.0.3
+  # Keep Next apps on one @types/react; 19.3+ breaks Heroicons → ComponentType<SVGProps>
+  '@types/react': 19.2.2
+  '@types/react-dom': 19.2.3
   '@typescript-eslint/types': ^8.60.1
   '@typescript-eslint/utils': ^8.60.1
   '@typescript-eslint/scope-manager': ^8.60.1

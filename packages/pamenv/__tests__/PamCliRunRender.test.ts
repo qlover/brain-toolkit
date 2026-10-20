@@ -244,13 +244,35 @@ describe('PamCliRunWarningUtil', () => {
     }
   });
 
-  it('flags sensitive keys with public bundler prefixes', () => {
-    expect(
-      PamCliRunWarningUtil.findPublicSensitiveKeys([
+  it('flags sensitive keys with public bundler prefixes (batched)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'pamenv-public-'));
+    await expect(
+      PamCliRunWarningUtil.findPublicSensitiveKeys(dir, [
         { key: 'NEXT_PUBLIC_SECRET', value: 'x', sensitive: true },
-        { key: 'VITE_URL', value: 'x', sensitive: false }
+        { key: 'VITE_TOKEN', value: 'y', sensitive: true },
+        { key: 'REACT_APP_KEY', value: 'z', sensitive: true },
+        { key: 'VITE_URL', value: 'x', sensitive: false },
+        { key: 'SECRET', value: 'x', sensitive: true }
       ])
-    ).toEqual(['NEXT_PUBLIC_SECRET']);
+    ).resolves.toEqual([
+      'NEXT_PUBLIC_SECRET',
+      'REACT_APP_KEY',
+      'VITE_TOKEN'
+    ]);
+  });
+
+  it('honors clientPublicPrefixes override and empty disables', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'pamenv-public-opt-'));
+    const vars = [
+      { key: 'NEXT_PUBLIC_SECRET', value: 'x', sensitive: true },
+      { key: 'VITE_TOKEN', value: 'y', sensitive: true }
+    ] as const;
+    await expect(
+      PamCliRunWarningUtil.findPublicSensitiveKeys(dir, vars, ['VITE'])
+    ).resolves.toEqual(['VITE_TOKEN']);
+    await expect(
+      PamCliRunWarningUtil.findPublicSensitiveKeys(dir, vars, [])
+    ).resolves.toEqual([]);
   });
 
   it('reports keys undeclared in a strict turbo.json', async () => {

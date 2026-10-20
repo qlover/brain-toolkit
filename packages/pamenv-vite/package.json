@@ -1,0 +1,65 @@
+{
+  "name": "@pamenv/vite",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "description": "Vite plugin: load PAM env into process.env before Vite resolves config",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/pamenv-vite"
+  },
+  "homepage": "https://pam.qlover.top/docs/cli",
+  "keywords": [
+    "brain toolkit",
+    "pam",
+    "pamenv",
+    "vite",
+    "vite-plugin",
+    "dotenv"
+  ],
+  "author": "qlover",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "pamenv-cli": "workspace:^"
+  },
+  "peerDependencies": {
+    "vite": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

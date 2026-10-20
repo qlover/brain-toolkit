@@ -25,15 +25,28 @@ import {
   ROUTE_REQUEST_LOGS
 } from '@config/route';
 import type { PageI18nInterface } from '@qlover/next-kit/common';
-import type { ComponentType, ReactNode, SVGProps } from 'react';
+import type {
+  ForwardRefExoticComponent,
+  ReactNode,
+  RefAttributes,
+  SVGProps
+} from 'react';
 
 export type AdminNavKey = 'overview' | 'users' | 'logs' | 'settings';
+
+/** Heroicons v2 export shape (`ForwardRef` + optional title props). */
+type NavIcon = ForwardRefExoticComponent<
+  Omit<SVGProps<SVGSVGElement>, 'ref'> & {
+    title?: string;
+    titleId?: string;
+  } & RefAttributes<SVGSVGElement>
+>;
 
 interface AdminNavItem {
   key: AdminNavKey;
   href: string;
   label: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  icon: NavIcon;
   adminOnly?: boolean;
 }
 
