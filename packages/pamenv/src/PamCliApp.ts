@@ -69,6 +69,7 @@ import {
   PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE,
   PAMENV_HELP_PROJECTS_OPT_SORT,
   PAMENV_HELP_PROJECTS_OPT_VISIBILITY,
+  PAMENV_HELP_PROJECTS_OPT_VERBOSE,
   PAMENV_HELP_PROJECTS_OPT_WRITABLE,
   PAMENV_HELP_PULL,
   PAMENV_HELP_PULL_OPT_FORCE,
@@ -172,11 +173,12 @@ export class PamCliApp {
         global
       });
       await PamCliI18n.syncFromStore(this.authStore);
-      if (this.authStore.getActivePamRoot() === PamCliConfig.getLocalRoot(process.cwd())) {
-        // stderr: keeps `render` stdout clean; covers --local and auto-detect.
+      const activeRoot = this.authStore.getActivePamRoot();
+      if (activeRoot !== PamCliConfig.getHomeRoot()) {
+        // stderr: keeps `render` stdout clean; covers --local and ancestor .pam.
         console.error(
           PamCliI18n.t(PAMENV_CLI_USING_LOCAL_ROOT, {
-            path: PamCliConfig.getLocalRoot(process.cwd())
+            path: activeRoot
           })
         );
       }
@@ -202,6 +204,7 @@ export class PamCliApp {
       .option('--page-size <n>', t(PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE))
       .option('--mine', t(PAMENV_HELP_PROJECTS_OPT_MINE))
       .option('--writable', t(PAMENV_HELP_PROJECTS_OPT_WRITABLE))
+      .option('-v, --verbose', t(PAMENV_HELP_PROJECTS_OPT_VERBOSE))
       .action(
         async (
           keyword: string | undefined,
@@ -214,6 +217,7 @@ export class PamCliApp {
             pageSize?: string;
             mine?: boolean;
             writable?: boolean;
+            verbose?: boolean;
           }
         ) => {
           const visibility =
@@ -240,7 +244,8 @@ export class PamCliApp {
             ...(page && Number.isFinite(page) ? { page } : {}),
             ...(pageSize && Number.isFinite(pageSize) ? { pageSize } : {}),
             ...(options.mine ? { mine: true } : {}),
-            ...(options.writable ? { writable: true } : {})
+            ...(options.writable ? { writable: true } : {}),
+            ...(options.verbose ? { verbose: true } : {})
           });
         }
       );
@@ -523,14 +528,15 @@ export class PamCliApp {
    */
   protected async loadHelpLocale(argv: readonly string[]): Promise<void> {
     try {
-      const workingDir = process.cwd();
+      const cwd = process.cwd();
+      const flags = {
+        local: argv.includes('--local'),
+        global: argv.includes('--global') || argv.includes('-g'),
+        workingDir: cwd
+      };
       const store = new PamCliAuthStore({
-        preferLocal: PamCliConfig.resolvePreferLocal({
-          local: argv.includes('--local'),
-          global: argv.includes('--global') || argv.includes('-g'),
-          workingDir
-        }),
-        workingDir
+        preferLocal: PamCliConfig.resolvePreferLocal(flags),
+        workingDir: PamCliConfig.resolveAuthWorkingDir(flags)
       });
       PamCliI18n.setLocale(await store.getLocale());
     } catch {
@@ -680,11 +686,16 @@ export class PamCliApp {
 
     this.runtimeGlobals = globals;
     const urlOverride = this.resolveHostOverride(globals.url, globals.domain);
-    const workingDir = process.cwd();
+    const cwd = process.cwd();
     const preferLocal = PamCliConfig.resolvePreferLocal({
       local: globals.local,
       global: globals.global,
-      workingDir
+      workingDir: cwd
+    });
+    const workingDir = PamCliConfig.resolveAuthWorkingDir({
+      local: globals.local,
+      global: globals.global,
+      workingDir: cwd
     });
 
     this.authStore = new PamCliAuthStore({
@@ -700,18 +711,23 @@ export class PamCliApp {
   }
 
   /**
-   * Aligns sync/auth root with `-o`: if `outDir/.pam` exists, prefer that
-   * identity (unless `-g`); binding paths stay relative to `outDir`.
+   * Aligns sync/auth root with `-o`: walk up from `outDir` for a nearest
+   * `.pam` (unless `-g`); binding paths stay relative to `outDir` for files.
    */
   protected bindOutDir(outDir?: string): void {
     if (!outDir?.trim()) {
       return;
     }
-    const workingDir = resolve(outDir);
+    const startDir = resolve(outDir);
     const preferLocal = PamCliConfig.resolvePreferLocal({
       local: this.runtimeGlobals.local,
       global: this.runtimeGlobals.global,
-      workingDir
+      workingDir: startDir
+    });
+    const workingDir = PamCliConfig.resolveAuthWorkingDir({
+      local: this.runtimeGlobals.local,
+      global: this.runtimeGlobals.global,
+      workingDir: startDir
     });
     this.authStore.setWorkingDir(workingDir);
     this.authStore.setPreferLocal(preferLocal);

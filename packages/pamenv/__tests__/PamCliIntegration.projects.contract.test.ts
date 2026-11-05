@@ -174,10 +174,57 @@ describe('pamenv projects contract (mock PAM)', () => {
 
     await new ProjectsCommand(ctx.apiClient).run();
     const lines = logSpy.mock.calls.map((call) => String(call[0]));
-    expect(lines.some((line) => /\(owner\)/.test(line))).toBe(true);
-    expect(lines.some((line) => /\(member, writable\)/.test(line))).toBe(true);
+    // Header + aligned columns; role is its own column (not "(owner)" suffix).
+    expect(lines[0]).toMatch(/SLUG|标识/);
+    expect(lines.some((line) => /\bowner\b/.test(line))).toBe(true);
+    expect(lines.some((line) => /member, writable/.test(line))).toBe(true);
     expect(lines.every((line) => !/description|category|created_at/i.test(line))).toBe(
       true
     );
+    // Default hides UUID; verbose shows it.
+    const uuid =
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    expect(lines.every((line) => !uuid.test(line))).toBe(true);
+    // Pagination footer from search meta (total / page).
+    expect(
+      lines.some(
+        (line) =>
+          /共\s*2\s*个/.test(line) ||
+          /total\s+2\b/i.test(line) ||
+          /page\s+1\/1/i.test(line) ||
+          /第\s*1\/1\s*页/.test(line)
+      )
+    ).toBe(true);
+
+    logSpy.mockClear();
+    await new ProjectsCommand(ctx.apiClient).run(undefined, { verbose: true });
+    const verboseLines = logSpy.mock.calls.map((call) => String(call[0]));
+    expect(verboseLines.some((line) => uuid.test(line))).toBe(true);
+  });
+
+  it('treats offset+loaded total as a lower bound when hasMore', async () => {
+    mockConsole();
+    // Production PAM skips exact count on page 2+ and sets total=offset+loaded.
+    const items = Array.from({ length: 10 }, (_, i) =>
+      ownerProject({ slug: `p${i}`, name: `P${i}` })
+    );
+    const api = {
+      searchProjects: async () => ({
+        items,
+        page: 2,
+        pageSize: 10,
+        total: 20,
+        hasMore: true
+      })
+    };
+    await new ProjectsCommand(api as never).run(undefined, {
+      page: 2,
+      pageSize: 10
+    });
+    const lines = logSpy.mock.calls.map((call) => String(call[0]));
+    const footer = lines[lines.length - 1] ?? '';
+    expect(footer).toMatch(/至少\s*20|at least\s+20/i);
+    expect(footer).not.toMatch(/第\s*2\/2\s*页|page\s+2\/2/i);
+    expect(footer).toMatch(/--page\s*3|page 3/i);
   });
 });

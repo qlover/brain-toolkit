@@ -7,7 +7,7 @@ pnpm add @pamenv/next pamenv-cli
 # 或 npm i @pamenv/next pamenv-cli
 ```
 
-依赖 `pamenv-cli`（注入与登录逻辑）。项目目录需有可用的 `.pam`（与 CLI 相同）。
+依赖 `pamenv-cli`（注入与登录逻辑）。从项目目录向上需有可用的 `.pam`（与 CLI 相同；monorepo 可在仓库根登录一次）。
 
 ```ts
 import { createPamenvPlugin } from '@pamenv/next';
@@ -25,7 +25,7 @@ const withPamenv = createPamenvPlugin({
 export default withPamenv(withNextIntl(nextConfig));
 ```
 
-Token 来自**当前项目**的 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进这个对象。未登录时请在项目目录执行 `pamenv login --local`。`enabled: false` 时不请求 PAM，正式构建应关掉。未传 `enabled` 时只在 `next dev` 注入。
+Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进这个对象。未登录时请在仓库根或项目目录执行 `pamenv login --local`。`enabled: false` 时不请求 PAM，正式构建应关掉。未传 `enabled` 时只在 `next dev` 注入。
 
 `debug` 默认 `false`：像 “Using local config…”、注入数量、键名等只在 `debug: true` 时输出到 stderr；安全/绕过类警告仍会始终打印（除非 `warn: false`）。
 

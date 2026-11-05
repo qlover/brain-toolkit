@@ -67,9 +67,9 @@ export const PAMENV_HELP_TITLE_GLOBAL_OPTIONS =
 export const PAMENV_HELP_TITLE_COMMANDS = 'pamenv_help:title_commands';
 
 /**
- * @description 本次进程使用的 PAM 地址（覆盖配置）
- * @localZh 本次进程使用的 PAM 地址（覆盖配置）
- * @localEn PAM base URL for this process (overrides config)
+ * @description 本次进程使用的 PAM 地址（默认 https://pam.qlover.top；覆盖配置）
+ * @localZh 本次进程使用的 PAM 地址（默认 https://pam.qlover.top；覆盖配置）
+ * @localEn PAM base URL for this process (default https://pam.qlover.top; overrides config)
  */
 export const PAMENV_HELP_OPT_URL = 'pamenv_help:opt_url';
 
@@ -81,9 +81,9 @@ export const PAMENV_HELP_OPT_URL = 'pamenv_help:opt_url';
 export const PAMENV_HELP_OPT_DOMAIN = 'pamenv_help:opt_domain';
 
 /**
- * @description 强制使用工作目录 ./.pam（通常可省略：存在 .pam/ 时自动隔离，不读 ~/.pam）
- * @localZh 强制使用工作目录 ./.pam（通常可省略：存在 .pam/ 时自动隔离，不读 ~/.pam）
- * @localEn Force cwd ./.pam (usually optional: .pam/ auto-isolates from ~/.pam)
+ * @description 强制使用工作目录 ./.pam（通常可省略：cwd 或上层 monorepo 有 .pam/ 时自动隔离，不读 ~/.pam）
+ * @localZh 强制使用工作目录 ./.pam（通常可省略：cwd 或上层 monorepo 有 .pam/ 时自动隔离，不读 ~/.pam）
+ * @localEn Force cwd ./.pam (usually optional: nearest ancestor .pam/ auto-isolates from ~/.pam)
  */
 export const PAMENV_HELP_OPT_LOCAL = 'pamenv_help:opt_local';
 
@@ -123,16 +123,16 @@ export const PAMENV_HELP_OPT_FILE = 'pamenv_help:opt_file';
 export const PAMENV_HELP_OPT_WORKDIR = 'pamenv_help:opt_workdir';
 
 /**
- * @description 登录并保存 CLI token（默认浏览器登录；--local 写入 cwd/.pam）
- * @localZh 登录并保存 CLI token（默认浏览器登录；--local 写入 cwd/.pam）
- * @localEn Login and store CLI token (browser by default; --local writes cwd/.pam)
+ * @description 登录并保存 CLI token（默认浏览器；默认 PAM https://pam.qlover.top；--local 写入 cwd/.pam）
+ * @localZh 登录并保存 CLI token（默认浏览器；默认 PAM https://pam.qlover.top；--local 写入 cwd/.pam）
+ * @localEn Login and store CLI token (browser by default; PAM defaults to https://pam.qlover.top; --local writes cwd/.pam)
  */
 export const PAMENV_HELP_LOGIN = 'pamenv_help:login';
 
 /**
- * @description PAM 地址（覆盖配置 / --domain）
- * @localZh PAM 地址（覆盖配置 / --domain）
- * @localEn PAM base URL (overrides config / --domain)
+ * @description PAM 地址（默认 https://pam.qlover.top；可覆盖配置 / --domain）
+ * @localZh PAM 地址（默认 https://pam.qlover.top；可覆盖配置 / --domain）
+ * @localEn PAM base URL (default https://pam.qlover.top; overrides config / --domain)
  */
 export const PAMENV_HELP_LOGIN_OPT_URL = 'pamenv_help:login_opt_url';
 
@@ -294,6 +294,14 @@ export const PAMENV_HELP_PROJECTS_OPT_MINE = 'pamenv_help:projects_opt_mine';
  */
 export const PAMENV_HELP_PROJECTS_OPT_WRITABLE =
   'pamenv_help:projects_opt_writable';
+
+/**
+ * @description 显示项目 ID 列
+ * @localZh 显示项目 ID 列
+ * @localEn Show the project id column
+ */
+export const PAMENV_HELP_PROJECTS_OPT_VERBOSE =
+  'pamenv_help:projects_opt_verbose';
 
 /**
  * @description 根据当前目录交互式创建 PAM 项目

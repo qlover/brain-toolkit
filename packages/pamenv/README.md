@@ -27,7 +27,7 @@ npx pamenv --help
 ## 快速开始
 
 ```bash
-pamenv login                      # 浏览器授权登录
+pamenv login                      # 浏览器授权登录（默认 https://pam.qlover.top）
 cd your-project
 pamenv init                       # 交互创建项目（按当前目录给默认值）
 pamenv push <slug> -e local       # 上传 .env.local
@@ -57,28 +57,34 @@ pamenv pull <slug> -e staging     # 拉取到 .env.staging（需导出权限）
 
 | 参数 | 说明 |
 | --- | --- |
-| `--url <url>` | 指定 PAM 地址，如 `https://pam.example.com` |
+| `--url <url>` | 覆盖 PAM 地址（默认 `https://pam.qlover.top`；登录不再交互询问） |
 | `--domain <host>` | 同 `--url`，可只写主机名；`localhost` 与内网地址默认 `http`，其余 `https` |
-| `--local` | 强制使用当前目录 `.pam/`；只要存在 `.pam/`，不写也会自动隔离（不读 `~/.pam`） |
-| `-g, --global` | 强制使用 `~/.pam`（即使 cwd 已有 `.pam/`） |
+| `--local` | 强制使用**当前目录** `.pam/`；自动模式会向上查找 monorepo 根的 `.pam/` |
+| `-g, --global` | 强制使用 `~/.pam`（即使 cwd 或上层已有 `.pam/`） |
 
 `--url` 与 `--domain` 不能同时使用；`--local` 与 `--global` 也不能同时使用。请把 `.pam/` 加入 `.gitignore`。
 
+**Monorepo：** 在仓库根执行一次 `pamenv login --local`（生成根目录 `.pam/`）后，子目录（如 `apps/pam`）会自动向上找到该 `.pam`，无需再登录。子目录仍可单独 `pamenv login --local`，生成自己的 `.pam/` 后优先用最近的本地凭证，与根目录互不影响。显式 `--local` 始终只认当前目录。向上查找最多 32 层父目录，并在遇到 `.git` 后停止（不会用到仓库外的 `.pam`）。
+
+**登录落点（待定）：** 默认全局 `~/.pam` 还是默认当前目录 / monorepo 本地，尚未定案；现状：无 `.pam` 时用全局，有最近祖先 `.pam` 时用本地。
+
 ```bash
-pamenv --domain pam.localhost:3400 login
-pamenv --local --domain pam.localhost:3400 login   # 首次写入 cwd/.pam
-pamenv projects                                   # 有 .pam/ 时只用本地身份（未登录会失败，不会偷用全局）
+pamenv login                                      # 默认 pam.qlover.top
+pamenv --domain pam.localhost:3400 login          # 仅参数覆盖地址
+pamenv --local --domain pam.localhost:3400 login  # 首次写入 cwd/.pam
+pamenv projects                                   # 有 .pam/（含上层）时只用本地身份
 pamenv -g projects                                # 明确要用全局登录时
 ```
 
 ## `pamenv projects`
 
-列出当前身份可见的项目。与 Web 首页共用 `GET /api/pam/search`；**CLI 只输出一行核心字段**（slug / name / 身份 / envs / id），不展示 Web 卡片上的描述、分类、时间戳等。
+列出当前身份可见的项目。与 Web 首页共用 `GET /api/pam/search`；**CLI 输出对齐表格**（标识 / 名称 / 角色 / 环境；`-v` 再显示 ID），表下打印页码 / 本页条数 / 总数（以及是否还有下一页），不展示 Web 卡片上的描述、分类、时间戳等。
 
-身份列：`owner` · `admin` · `member` · `member, writable` · `readonly`。
+角色列：`owner` · `admin` · `member` · `member, writable` · `readonly`。
 
 ```bash
 pamenv projects
+pamenv projects -v                 # 含 ID 列
 pamenv projects fe
 pamenv projects --visibility private
 pamenv projects --category frontend --sort updated_at --order desc
@@ -99,7 +105,8 @@ pamenv projects fe --writable --page 1 --page-size 20
 | `--page-size <n>` | `pageSize` | 每页条数，**默认 `10`（与 Web 一致）**，最大 `100` |
 | `--mine` | `filters.mine` | **服务端**过滤：仅严格项目 owner（`owner_id = me`） |
 | `--writable` | `filters.writable` | **服务端**过滤：owner 或活跃团队成员（可编辑）；可与 `--mine` 同时用（取交集） |
-| （固定） | `view=compact` | CLI 默认精简字段（id/slug/name/envs/…）；Web 卡片用 `full`（默认） |
+| `-v, --verbose` | — | 额外显示项目 ID 列 |
+| （固定） | `view=compact` | CLI 默认精简字段（slug/name/role/envs；`-v` 含 id）；Web 卡片用 `full`（默认） |
 
 另可叠加全局参数：`--url` / `--domain` / `--local` / `-g`。
 
@@ -128,7 +135,7 @@ pnpm --filter pamenv-cli test:live
 
 ## 安全模型
 
-- **身份隔离**：cwd 存在 `.pam/` 时只用本地凭证，绝不回退到 `~/.pam`；缺 token 立即失败。`-g` 才强制全局。
+- **身份隔离**：从 cwd **向上**找到最近的 `.pam/` 时只用该本地凭证，绝不回退到 `~/.pam`；缺 token 立即失败。`-g` 才强制全局。
 - **精确项目**：`pull` / `push` / `run` / `render` / `remove` / `fork` 只接受**精确** slug 或 uuid（不会 `pam` 误匹配 `pamenv-…`）。
 - **权限 fail-closed**：以服务端返回的 `permissions[]` 为准；缺权限或 401/403 时零落盘、零注入。CLI 预检不能替代服务端鉴权。
 - **pull ≠ run**：`pull` / `render` 需要 `pam_environments_export`（admin+），敏感值为 placeholder；`run` 需要 `pam_environments_inject`（member+），明文只进子进程。
@@ -253,9 +260,9 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | 安装 | `pnpm add @pamenv/next pamenv-cli` | `pnpm add @pamenv/vite pamenv-cli` |
 | 配置 | `createPamenvPlugin` 包住 `next.config` | `plugins: [pamenv({ … })]` |
 | 默认注入时机 | 仅 `next dev` | 仅 `vite` / `vite dev`（serve） |
-| 凭证 | 项目 `.pam`（`preferLocal`，不回落 `~/.pam`） | 同左 |
+| 凭证 | 向上查找最近的 `.pam`（`preferLocal`，不回落 `~/.pam`） | 同左 |
 
-首次在项目目录登录：
+首次在仓库 / 项目根登录（monorepo 在根目录执行一次即可）：
 
 ```bash
 pamenv login --local
@@ -424,7 +431,7 @@ pamenv locales pull                         # 刷新服务端错误提示文案
 
 - CLI 登录默认 **30 天**有效，过期后重新 `pamenv login`。
 - `pamenv logout` 会让当前凭证在服务端立即失效，并清除本地的登录和同步记录。
-- `config.json`（0600）只存 baseUrl / locale / email 等非密钥字段；Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI 加密的 `credentials.enc`，macOS 为登录钥匙串，其它平台为同目录下 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。不同目录的 `.pam` 互不共用凭证。
+- `config.json`（0600）只存 baseUrl / locale / email 等非密钥字段；Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI 加密的 `credentials.enc`，macOS 为登录钥匙串，其它平台为同目录下 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。默认 PAM 地址为 `https://pam.qlover.top`，仅 `--url` / `--domain` 或 `pamenv config set` 可覆盖。Monorepo 根与子目录可共用同一 `.pam`（向上查找）；互不相关的目录树仍互不共用凭证。
 
 ## 项目权限
 

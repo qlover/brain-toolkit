@@ -17,7 +17,6 @@ import {
   PAMENV_CLI_LOGIN_TIMEOUT,
   PAMENV_CLI_LOGIN_USER_CODE,
   PAMENV_CLI_LOGIN_WAITING,
-  PAMENV_CLI_PROMPT_BASE_URL,
   PAMENV_CLI_PROMPT_EMAIL,
   PAMENV_CLI_PROMPT_PASSWORD,
   PAMENV_CLI_USING_CONFIG
@@ -66,12 +65,11 @@ export class LoginCommand {
       })
     );
 
+    // Default PAM origin; override only via `--url` / `--domain` (or prior config).
     const baseUrl = PamCliConfig.normalizeOrigin(
       options?.url?.trim() ||
-        (await input({
-          message: PamCliI18n.t(PAMENV_CLI_PROMPT_BASE_URL),
-          default: current.baseUrl || PamCliConfig.DEFAULT_BASE_URL
-        }))
+        current.baseUrl?.trim() ||
+        PamCliConfig.DEFAULT_BASE_URL
     );
 
     await this.authStore.setBaseUrl(baseUrl);
