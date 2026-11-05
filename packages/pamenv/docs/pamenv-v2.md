@@ -77,7 +77,7 @@ pamenv run <slug|id> -e dev -- node server.js
 
 共同点：
 
-- 默认 **`preferLocal: true`**：只用项目目录的 `.pam`，**不回落** `~/.pam`。未登录时在项目根执行 `pamenv login --local`。
+- 默认 **`preferLocal: true`**：从 cwd **向上**找最近的 `.pam`（monorepo 根登录一次即可），**不回落** `~/.pam`。未登录时在仓库根或当前目录执行 `pamenv login --local`。
 - `envPriority` 默认 `remote`（PAM 盖同名键）；本地临时改 `.env` / process 测值时用 `local`（process → 磁盘 `.env*` → PAM）。
 - `debug` 默认关；`PAMENV_DEBUG=1` 或 `debug: true` 只打路径 / 键名 / baseUrl，**从不打印变量值**。
 - 正式构建默认不注入；需要时显式 `enabled: true` 或传入函数。
@@ -259,6 +259,9 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 - `config.json`（0600）只保留 baseUrl / locale / email 等非密钥字段。
 - Bearer token 写入 OS 绑定保险库：Windows 为 DPAPI（CurrentUser）加密的 `credentials.enc`；macOS 为登录钥匙串；其它平台为 0600 私有文件。旧版写在 config.json 里的 token 会在下次读取时自动迁出。
 - 有效期由站点设置 `AUTH_CLI_TOKEN_EXPIRES_IN` 控制。
+- **默认 PAM 地址**为 `https://pam.qlover.top`；登录不再交互询问，仅 `--url` / `--domain` 或 `pamenv config set` 可覆盖。
+- **Monorepo**：从 cwd 向上查找**最近**的 `.pam`（最多 32 层父目录，遇到 `.git` 即停，避免仓库外误匹配）；在仓库根 `login --local` 一次后，子包目录可直接用。子目录再 `login --local` 会生成自己的 `.pam` 并优先生效，与根互不影响。显式 `--local` 仍固定当前目录。
+- **登录落点（待定）**：无 `.pam` 时默认全局 `~/.pam`，还是改为默认本地 / monorepo，尚未定案。
 
 ## 不在本次范围
 
@@ -280,6 +283,7 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 2. 收紧 `export` 权限后，现有依赖 `pull` 的成员如何过渡：是否需要一段时间的兼容期？
 3. 适配器是否需要支持嵌套结构，比如把 `DB__HOST` 展开为 `db.host`？
 4. 审计日志保留多久？
+5. **`pamenv login` 默认落点**：全局 `~/.pam` vs 当前目录 / monorepo 本地（现状：无祖先 `.pam` 时用全局）。
 
 ## TODO：CI OIDC（Trusted Publishing 式，待单独分支）
 

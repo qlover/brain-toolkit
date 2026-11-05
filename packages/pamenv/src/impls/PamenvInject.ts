@@ -1,3 +1,4 @@
+import { PamCliConfig } from '../config/PamCliConfig';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import type { PamCliRunOptionsType } from '../commands/RunCommand';
 import { RunCommand } from '../commands/RunCommand';
@@ -26,9 +27,12 @@ export type PamenvInjectOptions = PamCliRunOptionsType & {
    * Defaults: Next = development-server only; Vite = `serve` only.
    */
   readonly enabled?: boolean | ((phase: string) => boolean);
-  /** Active `.pam` directory. Defaults to `process.cwd()`. */
+  /** Start directory for `.pam` walk-up. Defaults to `process.cwd()`. */
   readonly cwd?: string;
-  /** When true (default), use `{cwd}/.pam` and do not fall back to `~/.pam`. */
+  /**
+   * When true (default), walk up from `cwd` to the nearest `.pam` and do not
+   * fall back to `~/.pam` (monorepo-friendly).
+   */
   readonly preferLocal?: boolean;
 };
 
@@ -85,9 +89,14 @@ async function applyPamenvProcessEnv(
   options: PamenvInjectOptions,
   cwd: string
 ): Promise<void> {
+  const preferLocal = options.preferLocal !== false;
+  // Walk up for monorepo root `.pam` when preferLocal (default).
+  const authWorkingDir = preferLocal
+    ? (PamCliConfig.resolveLocalWorkingDir(cwd) ?? cwd)
+    : cwd;
   const authStore = new PamCliAuthStore({
-    preferLocal: options.preferLocal !== false,
-    workingDir: cwd
+    preferLocal,
+    workingDir: authWorkingDir
   });
   await PamCliI18n.syncFromStore(authStore);
   await PamCliI18n.ensureLoaded(PamCliI18n.getLocale());

@@ -7,7 +7,7 @@ pnpm add @pamenv/vite pamenv-cli
 # 或 npm i @pamenv/vite pamenv-cli
 ```
 
-依赖 `pamenv-cli`（注入与登录逻辑）。项目目录需有可用的 `.pam`（与 CLI 相同）。
+依赖 `pamenv-cli`（注入与登录逻辑）。从项目目录向上需有可用的 `.pam`（与 CLI 相同；monorepo 可在仓库根登录一次）。
 
 ```ts
 import { defineConfig } from 'vite';
@@ -29,7 +29,7 @@ export default defineConfig({
 
 也可用命名导出：`import { createPamenvPlugin } from '@pamenv/vite'`（与 `@pamenv/next` 同名）。
 
-Token 来自**当前项目**的 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进配置对象。未登录时请在项目目录执行：
+Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进配置对象。未登录时请在仓库根或项目目录执行：
 
 ```bash
 pamenv login --local

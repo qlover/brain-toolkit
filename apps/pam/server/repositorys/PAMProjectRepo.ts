@@ -296,7 +296,10 @@ export class PAMProjectRepo extends BaseRepository<
       page: page,
       pageSize: pageSize,
       sort: params.sort,
-      includeCount: params.includeCount ?? page <= 1,
+      // Web infinite scroll skips count on page 2+; CLI `compact` always needs
+      // an exact total for the projects footer.
+      includeCount:
+        params.includeCount ?? (page <= 1 || searchView === 'compact'),
       exactCount: params.exactCount,
       // Substring match across project text fields (not FTS / search_vector).
       ilikeOr: keyword
@@ -624,7 +627,9 @@ export class PAMProjectRepo extends BaseRepository<
       p_keyword: keyword ?? null,
       p_page: page,
       p_page_size: pageSize,
-      p_include_count: params.includeCount ?? page <= 1,
+      // Web skips count on page 2+; CLI compact always wants an exact total.
+      p_include_count:
+        params.includeCount ?? (page <= 1 || searchView === 'compact'),
       p_include_owner_id: Boolean(user_id),
       p_sort_by: sortBy,
       p_sort_order: sortOrder,

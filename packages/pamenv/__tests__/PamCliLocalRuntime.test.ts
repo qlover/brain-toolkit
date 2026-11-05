@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { PamCliConfig } from '../src/config/PamCliConfig';
 import { PamCliAuthStore } from '../src/impls/PamCliAuthStore';
 import { PamCliApiError } from '../src/impls/PamCliApiError';
@@ -82,6 +82,109 @@ describe('PamCliConfig.resolvePreferLocal', () => {
       expect(await store.getToken()).toBeNull();
     } finally {
       await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('walks up to monorepo root .pam for nested cwd', async () => {
+    const { mkdir } = await import('node:fs/promises');
+    const root = await mkdtemp(join(tmpdir(), 'pamenv-mono-'));
+    const nested = join(root, 'apps', 'web');
+    try {
+      await mkdir(PamCliConfig.getLocalRoot(root));
+      await mkdir(nested, { recursive: true });
+
+      expect(PamCliConfig.findNearestPamRoot(nested)).toBe(
+        PamCliConfig.getLocalRoot(root)
+      );
+      expect(PamCliConfig.resolveLocalWorkingDir(nested)).toBe(resolve(root));
+      expect(PamCliConfig.resolvePreferLocal({ workingDir: nested })).toBe(
+        true
+      );
+      expect(PamCliConfig.resolveAuthWorkingDir({ workingDir: nested })).toBe(
+        resolve(root)
+      );
+      // Explicit --local stays at nested cwd (create apps/web/.pam).
+      expect(
+        PamCliConfig.resolveAuthWorkingDir({
+          workingDir: nested,
+          local: true
+        })
+      ).toBe(resolve(nested));
+
+      // Nested own .pam shadows monorepo root (independent login).
+      await mkdir(PamCliConfig.getLocalRoot(nested));
+      expect(PamCliConfig.findNearestPamRoot(nested)).toBe(
+        PamCliConfig.getLocalRoot(nested)
+      );
+      expect(PamCliConfig.resolveAuthWorkingDir({ workingDir: nested })).toBe(
+        resolve(nested)
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('does not treat ~/.pam as a monorepo-local root when walking up', async () => {
+    // tmpdir() on Windows often uses 8.3 short paths (ADMINI~1); walk-up must
+    // still recognize ~/.pam via realpath, not string equality.
+    const underTemp = await mkdtemp(join(tmpdir(), 'pamenv-home-skip-'));
+    try {
+      expect(PamCliConfig.findNearestPamRoot(underTemp)).toBeNull();
+      expect(PamCliConfig.resolvePreferLocal({ workingDir: underTemp })).toBe(
+        false
+      );
+    } finally {
+      await rm(underTemp, { recursive: true, force: true });
+    }
+  });
+
+  it('stops at .git and does not use .pam above the work tree', async () => {
+    const { mkdir, writeFile } = await import('node:fs/promises');
+    const outer = await mkdtemp(join(tmpdir(), 'pamenv-gitbound-'));
+    const repo = join(outer, 'repo');
+    const nested = join(repo, 'apps', 'web');
+    try {
+      await mkdir(PamCliConfig.getLocalRoot(outer));
+      await mkdir(nested, { recursive: true });
+      await writeFile(join(repo, '.git'), 'gitdir: /tmp/fake\n');
+
+      // Root of git work tree has no .pam; outer/.pam must not leak in.
+      expect(PamCliConfig.findNearestPamRoot(nested)).toBeNull();
+
+      await mkdir(PamCliConfig.getLocalRoot(repo));
+      expect(PamCliConfig.findNearestPamRoot(nested)).toBe(
+        PamCliConfig.getLocalRoot(repo)
+      );
+    } finally {
+      await rm(outer, { recursive: true, force: true });
+    }
+  });
+
+  it('respects MAX_PAM_WALK_UP_DEPTH', async () => {
+    const { mkdir } = await import('node:fs/promises');
+    const base = await mkdtemp(join(tmpdir(), 'pamenv-depth-'));
+    try {
+      // Build: base/.pam + base/d0/d1/.../d{MAX+1}
+      await mkdir(PamCliConfig.getLocalRoot(base));
+      let deep = base;
+      for (let i = 0; i <= PamCliConfig.MAX_PAM_WALK_UP_DEPTH + 1; i++) {
+        deep = join(deep, `d${i}`);
+      }
+      await mkdir(deep, { recursive: true });
+
+      expect(PamCliConfig.findNearestPamRoot(deep)).toBeNull();
+
+      // One hop inside the limit still finds base/.pam.
+      let within = base;
+      for (let i = 0; i < PamCliConfig.MAX_PAM_WALK_UP_DEPTH; i++) {
+        within = join(within, `w${i}`);
+      }
+      await mkdir(within, { recursive: true });
+      expect(PamCliConfig.findNearestPamRoot(within)).toBe(
+        PamCliConfig.getLocalRoot(base)
+      );
+    } finally {
+      await rm(base, { recursive: true, force: true });
     }
   });
 });
@@ -184,6 +287,22 @@ describe('PamCliApiError', () => {
     );
     expect(text.startsWith('未授权')).toBe(true);
     expect(text).toContain('id: api:not_authorized');
+  });
+
+  it('uses friendly auth headline and keeps id for support', () => {
+    const err = new PamCliApiError({
+      id: 'api:not_authorized',
+      message: 'forbidden',
+      requestId: 'req-2',
+      httpStatus: 403
+    });
+    const text = err.formatForCli(undefined, {
+      friendlyHeadline:
+        '没有访问该资源的权限。请联系项目 owner 将你加入团队，或确认使用了正确的账号与项目。'
+    });
+    expect(text.startsWith('没有访问该资源的权限')).toBe(true);
+    expect(text).toContain('id: api:not_authorized');
+    expect(text).toContain('requestId: req-2');
   });
 });
 

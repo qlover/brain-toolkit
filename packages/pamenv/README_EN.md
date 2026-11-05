@@ -27,7 +27,7 @@ Package: https://www.npmjs.com/package/pamenv-cli
 ## Quick start
 
 ```bash
-pamenv login                      # sign in via the browser
+pamenv login                      # browser sign-in (default https://pam.qlover.top)
 cd your-project
 pamenv init                       # create a project interactively (defaults from the cwd)
 pamenv push <slug> -e local       # upload .env.local
@@ -41,7 +41,7 @@ pamenv pull <slug> -e staging     # download into .env.staging (export permissio
 | --- | --- |
 | `pamenv login` | Sign in through the browser |
 | `pamenv logout` | Sign out and revoke the current CLI credential |
-| `pamenv projects` | List projects (compact: slug / name / role / envs / id) |
+| `pamenv projects` | List projects (aligned table: slug / name / role / envs; `-v` adds id) |
 | `pamenv init` | Create a project interactively |
 | `pamenv fork <slug\|id>` | Fork a readable project into your own private project |
 | `pamenv run <slug\|id> -- <command>` | Run a command with variables injected into its process; no files written |
@@ -57,28 +57,34 @@ pamenv pull <slug> -e staging     # download into .env.staging (export permissio
 
 | Option | Description |
 | --- | --- |
-| `--url <url>` | PAM origin, e.g. `https://pam.example.com` |
+| `--url <url>` | Override PAM origin (default `https://pam.qlover.top`; login no longer prompts) |
 | `--domain <host>` | Same as `--url` but accepts a bare host; `localhost` and private addresses default to `http`, others to `https` |
-| `--local` | Force cwd `.pam/`; if `.pam/` exists it auto-isolates (never reads `~/.pam`) |
-| `-g, --global` | Force `~/.pam` even when cwd already has `.pam/` |
+| `--local` | Force **cwd** `.pam/`; auto mode walks up to a monorepo-root `.pam/` |
+| `-g, --global` | Force `~/.pam` even when cwd or an ancestor has `.pam/` |
 
 Do not pass `--url` and `--domain` together, or `--local` and `--global` together. Add `.pam/` to `.gitignore`.
 
+**Monorepo:** run `pamenv login --local` once at the repo root (creates root `.pam/`); nested dirs (e.g. `apps/pam`) walk up to that `.pam` and need no second login. A nested dir can still `pamenv login --local` for its own `.pam/`; the nearest `.pam` wins and stays isolated from the root. Explicit `--local` always means cwd only. Walk-up is capped at 32 parent hops and stops at `.git` (never picks a `.pam` outside the work tree).
+
+**Login location (TBD):** default global `~/.pam` vs default local / monorepo — undecided. Today: global when no `.pam` is found; nearest ancestor `.pam` when present.
+
 ```bash
-pamenv --domain pam.localhost:3400 login
-pamenv --local --domain pam.localhost:3400 login   # first write to cwd/.pam
-pamenv projects                                   # with .pam/, local only (fails if not logged in locally)
+pamenv login                                      # default pam.qlover.top
+pamenv --domain pam.localhost:3400 login          # override origin via flag only
+pamenv --local --domain pam.localhost:3400 login  # first write to cwd/.pam
+pamenv projects                                   # local identity when .pam/ exists (incl. ancestors)
 pamenv -g projects                                # force global sign-in
 ```
 
 ## `pamenv projects`
 
-Lists projects visible to the current identity. Uses the same `GET /api/pam/search` as the web home list; **CLI prints one compact row** (slug / name / role / envs / id) — not web card fields like description, category, or timestamps.
+Lists projects visible to the current identity. Uses the same `GET /api/pam/search` as the web home list; **CLI prints an aligned table** (slug / name / role / envs; `-v` adds id) plus a page footer (page / count / total / next-page hint) — not web card fields like description, category, or timestamps.
 
 Role column: `owner` · `admin` · `member` · `member, writable` · `readonly`.
 
 ```bash
 pamenv projects
+pamenv projects -v                 # include id column
 pamenv projects fe
 pamenv projects --visibility private
 pamenv projects --category frontend --sort updated_at --order desc
@@ -99,7 +105,8 @@ pamenv projects fe --writable --page 1 --page-size 20
 | `--page-size <n>` | `pageSize` | Page size, **default `10` (same as Web)**, max `100` |
 | `--mine` | `filters.mine` | **Server-side**: strict project owner (`owner_id = me`) |
 | `--writable` | `filters.writable` | **Server-side**: owner or active team member; with `--mine` → intersection |
-| (fixed) | `view=compact` | CLI compact payload (id/slug/name/envs/…); web cards use `full` (default) |
+| `-v, --verbose` | — | Show the project id column |
+| (fixed) | `view=compact` | CLI compact payload (slug/name/role/envs; `-v` includes id); web cards use `full` (default) |
 
 Also accepts global options: `--url` / `--domain` / `--local` / `-g`.
 
@@ -127,7 +134,7 @@ Contract tests (~78) use an in-memory mock PAM covering identity / exact slug / 
 
 ## Security model
 
-- **Identity isolation:** if cwd has `.pam/`, only local credentials are used — never fall back to `~/.pam`. Missing token fails immediately. Use `-g` for the home root.
+- **Identity isolation:** walk up from cwd to the nearest `.pam/` and use only that local identity — never fall back to `~/.pam`. Missing token fails immediately. Use `-g` for the home root.
 - **Exact project:** `pull` / `push` / `run` / `render` / `remove` / `fork` accept an **exact** slug or uuid only (no substring match like `pam` → `pamenv-…`).
 - **Fail-closed permissions:** trust server `permissions[]`; on missing permission or 401/403 there is no disk write and no injection. CLI checks are not a substitute for server auth.
 - **pull ≠ run:** `pull` / `render` need `pam_environments_export` (admin+); sensitive values are placeholders. `run` needs `pam_environments_inject` (member+); plaintext stays in the child process only.
@@ -252,9 +259,9 @@ These call `injectPamenvProcessEnv` while the framework loads config, writing PA
 | Install | `pnpm add @pamenv/next pamenv-cli` | `pnpm add @pamenv/vite pamenv-cli` |
 | Wire-up | wrap `next.config` with `createPamenvPlugin` | `plugins: [pamenv({ … })]` |
 | Default inject | `next dev` only | `vite` / `vite dev` (serve) only |
-| Credentials | project `.pam` (`preferLocal`, no `~/.pam` fallback) | same |
+| Credentials | nearest `.pam` walking up (`preferLocal`, no `~/.pam` fallback) | same |
 
-First-time login in the project directory:
+First-time login at the repo / project root (monorepo: once at root):
 
 ```bash
 pamenv login --local

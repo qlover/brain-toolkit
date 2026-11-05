@@ -1,11 +1,13 @@
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
+import { dirname, join, parse, resolve } from 'node:path';
 
 /**
  * Shared config and path constants for pamenv.
  *
  * Significance: Centralizes local CLI state paths and defaults.
- * Core idea: Auth under `~/.pam` by default; any `cwd/.pam` isolates from
- * home (`--local` / `--global` to force). Local never falls back to global.
+ * Core idea: Auth under `~/.pam` by default; a nearest ancestor `.pam`
+ * (monorepo root) isolates from home (`--local` / `--global` to force).
+ * Local never falls back to global.
  * Main function: Resolve home/local paths and normalize PAM origins.
  * Main purpose: Keep file layout consistent across commands.
  *
@@ -16,6 +18,11 @@ export class PamCliConfig {
   public static readonly CONFIG_FILE_NAME = 'config.json' as const;
   public static readonly SYNC_DIR_NAME = 'sync' as const;
   public static readonly PAM_DIR_NAME = '.pam' as const;
+  /**
+   * Max parent hops when auto-discovering a project `.pam` (cwd itself is
+   * hop 0). Caps accidental matches far above the workspace.
+   */
+  public static readonly MAX_PAM_WALK_UP_DEPTH = 32 as const;
   public static readonly DEFAULT_BASE_URL = 'https://pam.qlover.top' as const;
   public static readonly DEFAULT_LOCALE = 'en' as const;
   public static readonly SUPPORTED_LOCALES = ['en', 'zh'] as const;
@@ -25,21 +32,21 @@ export class PamCliConfig {
    */
   public static getHomeRoot(): string {
     const home = process.env.HOME || process.env.USERPROFILE || '.';
-    return `${home}/${this.PAM_DIR_NAME}`;
+    return join(home, this.PAM_DIR_NAME);
   }
 
   /**
    * @returns Absolute path to `~/.pam/config.json`
    */
   public static getConfigPath(): string {
-    return `${this.getHomeRoot()}/${this.CONFIG_FILE_NAME}`;
+    return join(this.getHomeRoot(), this.CONFIG_FILE_NAME);
   }
 
   /**
    * @returns Absolute path to `~/.pam/sync`
    */
   public static getSyncRoot(): string {
-    return `${this.getHomeRoot()}/${this.SYNC_DIR_NAME}`;
+    return join(this.getHomeRoot(), this.SYNC_DIR_NAME);
   }
 
   /**
@@ -49,15 +56,15 @@ export class PamCliConfig {
    */
   public static getSyncSnapshotPath(projectId: string, envName: string): string {
     const safeEnv = envName.trim().replace(/[^a-zA-Z0-9._-]+/g, '_');
-    return `${this.getSyncRoot()}/${projectId}/${safeEnv}.json`;
+    return join(this.getSyncRoot(), projectId, `${safeEnv}.json`);
   }
 
   /**
    * @param cwd - Working directory (usually process.cwd() or `-o`)
-   * @returns Absolute path to `{cwd}/.pam`
+   * @returns Absolute path to `{cwd}/.pam` (exact; does not walk ancestors)
    */
   public static getLocalRoot(cwd: string): string {
-    return `${cwd.replace(/[/\\]+$/, '')}/${this.PAM_DIR_NAME}`;
+    return join(resolve(cwd), this.PAM_DIR_NAME);
   }
 
   /**
@@ -65,16 +72,70 @@ export class PamCliConfig {
    * @returns Absolute path to `{cwd}/.pam/config.json`
    */
   public static getLocalConfigPath(cwd: string): string {
-    return `${this.getLocalRoot(cwd)}/${this.CONFIG_FILE_NAME}`;
+    return join(this.getLocalRoot(cwd), this.CONFIG_FILE_NAME);
   }
 
   /**
-   * Whether the working directory has a `.pam` root (isolated from `~/.pam`).
+   * Whether `{cwd}/.pam` exists as a directory (exact; no ancestor walk).
    *
    * @param cwd - Working directory
    */
   public static hasLocalPamRoot(cwd: string): boolean {
-    return existsSync(this.getLocalRoot(cwd));
+    return this.isPamDirectory(this.getLocalRoot(cwd));
+  }
+
+  /**
+   * Walks from `startDir` upward and returns the nearest **project** `.pam`
+   * directory (absolute), or `null` if none exists within bounds.
+   *
+   * Bounds (stop after checking the current directory):
+   * - {@link MAX_PAM_WALK_UP_DEPTH} parent hops
+   * - nearest `.git` (file or directory) — do not leave the work tree
+   * - filesystem root
+   *
+   * Skips the global home root (`~/.pam`) so paths under the user profile
+   * do not treat home credentials as a monorepo-local identity.
+   *
+   * Enables monorepo: login once at the repo root, use from `apps/*`.
+   *
+   * @param startDir - Directory to start walking from
+   */
+  public static findNearestPamRoot(startDir: string): string | null {
+    let dir = resolve(startDir);
+    const { root } = parse(dir);
+    const homePam = this.getHomeRoot();
+
+    for (let hop = 0; hop <= this.MAX_PAM_WALK_UP_DEPTH; hop++) {
+      const candidate = join(dir, this.PAM_DIR_NAME);
+      if (
+        this.isPamDirectory(candidate) &&
+        !this.isSamePath(candidate, homePam)
+      ) {
+        return resolve(candidate);
+      }
+
+      // Checked this dir; do not ascend past the git work tree or FS root.
+      if (this.hasGitMarker(dir) || dir === root) {
+        break;
+      }
+      const parent = dirname(dir);
+      if (parent === dir) {
+        break;
+      }
+      dir = parent;
+    }
+
+    return null;
+  }
+
+  /**
+   * Directory that owns the nearest `.pam` (parent of `.pam`), or `null`.
+   *
+   * @param startDir - Directory to start walking from
+   */
+  public static resolveLocalWorkingDir(startDir: string): string | null {
+    const pamRoot = this.findNearestPamRoot(startDir);
+    return pamRoot ? dirname(pamRoot) : null;
   }
 
   /**
@@ -89,8 +150,8 @@ export class PamCliConfig {
   /**
    * Picks local vs home auth root.
    *
-   * Priority: `--global` → home; `--local` → cwd; else auto if `{cwd}/.pam`
-   * exists (folder alone is enough — never bleed global creds into a local
+   * Priority: `--global` → home; `--local` → cwd; else auto if a nearest
+   * ancestor `{dir}/.pam` exists (never bleed global creds into a local
    * workspace).
    *
    * @param options.local - Explicit `--local`
@@ -108,7 +169,31 @@ export class PamCliConfig {
     if (options.local) {
       return true;
     }
-    return this.hasLocalPamRoot(options.workingDir);
+    return this.findNearestPamRoot(options.workingDir) !== null;
+  }
+
+  /**
+   * Working directory used for `{workingDir}/.pam` when preferLocal is true.
+   *
+   * - `--local`: always the given `workingDir` (login creates cwd/.pam)
+   * - auto: nearest ancestor that already has `.pam`, else `workingDir`
+   * - `--global`: unused for auth paths (caller should not prefer local)
+   *
+   * @param options - Same flags as {@link resolvePreferLocal}
+   */
+  public static resolveAuthWorkingDir(options: {
+    readonly local?: boolean;
+    readonly global?: boolean;
+    readonly workingDir: string;
+  }): string {
+    const start = resolve(options.workingDir);
+    if (options.global) {
+      return start;
+    }
+    if (options.local) {
+      return start;
+    }
+    return this.resolveLocalWorkingDir(start) ?? start;
   }
 
   /**
@@ -116,7 +201,7 @@ export class PamCliConfig {
    * @returns Absolute path to `{cwd}/.pam/sync`
    */
   public static getLocalSyncRoot(cwd: string): string {
-    return `${this.getLocalRoot(cwd)}/${this.SYNC_DIR_NAME}`;
+    return join(this.getLocalRoot(cwd), this.SYNC_DIR_NAME);
   }
 
   /**
@@ -131,7 +216,7 @@ export class PamCliConfig {
     envName: string
   ): string {
     const safeEnv = envName.trim().replace(/[^a-zA-Z0-9._-]+/g, '_');
-    return `${this.getLocalSyncRoot(cwd)}/${projectId}/${safeEnv}.json`;
+    return join(this.getLocalSyncRoot(cwd), projectId, `${safeEnv}.json`);
   }
 
   /**
@@ -212,5 +297,46 @@ export class PamCliConfig {
       return true;
     }
     return false;
+  }
+
+  protected static isPamDirectory(path: string): boolean {
+    try {
+      return existsSync(path) && statSync(path).isDirectory();
+    } catch {
+      return false;
+    }
+  }
+
+  /** True when `dir` is a git work tree root (`.git` file or directory). */
+  protected static hasGitMarker(dir: string): boolean {
+    return existsSync(join(dir, '.git'));
+  }
+
+  /**
+   * Path equality for existing paths. Prefers device+inode so Windows 8.3
+   * short names (`ADMINI~1`) match the long form (`Administrator`);
+   * `realpath` alone does not expand 8.3 on Windows.
+   */
+  protected static isSamePath(a: string, b: string): boolean {
+    try {
+      if (existsSync(a) && existsSync(b)) {
+        const sa = statSync(a);
+        const sb = statSync(b);
+        if (sa.dev === sb.dev && sa.ino === sb.ino && sa.ino !== 0) {
+          return true;
+        }
+        if (realpathSync(a) === realpathSync(b)) {
+          return true;
+        }
+      }
+    } catch {
+      // fall through
+    }
+    const left = resolve(a);
+    const right = resolve(b);
+    if (process.platform === 'win32') {
+      return left.toLowerCase() === right.toLowerCase();
+    }
+    return left === right;
   }
 }

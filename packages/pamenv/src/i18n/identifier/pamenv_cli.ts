@@ -1130,11 +1130,74 @@ export const PAMENV_CLI_FORK_NO_ENVS = 'pamenv_cli:fork_no_envs';
 export const PAMENV_CLI_NO_PROJECTS = 'pamenv_cli:no_projects';
 
 /**
- * @description {{slug}}\t{{name}}{{role}}\tenvs: {{envs}}\tid: {{id}}
- * @localZh {{slug}}\t{{name}}{{role}}\tenvs: {{envs}}\tid: {{id}}
- * @localEn {{slug}}\t{{name}}{{role}}\tenvs: {{envs}}\tid: {{id}}
+ * @description SLUG
+ * @localZh 标识
+ * @localEn SLUG
  */
-export const PAMENV_CLI_PROJECTS_LINE = 'pamenv_cli:projects_line';
+export const PAMENV_CLI_PROJECTS_COL_SLUG = 'pamenv_cli:projects_col_slug';
+
+/**
+ * @description NAME
+ * @localZh 名称
+ * @localEn NAME
+ */
+export const PAMENV_CLI_PROJECTS_COL_NAME = 'pamenv_cli:projects_col_name';
+
+/**
+ * @description ROLE
+ * @localZh 角色
+ * @localEn ROLE
+ */
+export const PAMENV_CLI_PROJECTS_COL_ROLE = 'pamenv_cli:projects_col_role';
+
+/**
+ * @description ENVS
+ * @localZh 环境
+ * @localEn ENVS
+ */
+export const PAMENV_CLI_PROJECTS_COL_ENVS = 'pamenv_cli:projects_col_envs';
+
+/**
+ * @description ID
+ * @localZh ID
+ * @localEn ID
+ */
+export const PAMENV_CLI_PROJECTS_COL_ID = 'pamenv_cli:projects_col_id';
+
+/**
+ * Footer when API returns an exact total.
+ * @description 第 {{page}}/{{pages}} 页 · 本页 {{count}} 条 · 共 {{total}} 个
+ * @localZh 第 {{page}}/{{pages}} 页 · 本页 {{count}} 条 · 共 {{total}} 个
+ * @localEn page {{page}}/{{pages}} · showing {{count}} · total {{total}}
+ */
+export const PAMENV_CLI_PROJECTS_PAGE_FOOTER =
+  'pamenv_cli:projects_page_footer';
+
+/**
+ * Footer when API total is only a lower bound (count skipped on page 2+).
+ * @description 第 {{page}} 页 · 本页 {{count}} 条 · 至少 {{total}} 个
+ * @localZh 第 {{page}} 页 · 本页 {{count}} 条 · 至少 {{total}} 个
+ * @localEn page {{page}} · showing {{count}} · at least {{total}}
+ */
+export const PAMENV_CLI_PROJECTS_PAGE_FOOTER_AT_LEAST =
+  'pamenv_cli:projects_page_footer_at_least';
+
+/**
+ * Footer when total is unknown (older servers).
+ * @description 第 {{page}} 页 · 本页 {{count}} 条 · 每页 {{pageSize}}
+ * @localZh 第 {{page}} 页 · 本页 {{count}} 条 · 每页 {{pageSize}}
+ * @localEn page {{page}} · showing {{count}} · page size {{pageSize}}
+ */
+export const PAMENV_CLI_PROJECTS_PAGE_FOOTER_NO_TOTAL =
+  'pamenv_cli:projects_page_footer_no_total';
+
+/**
+ * @description （还有下一页，用 --page {{next}} 查看）
+ * @localZh （还有下一页，用 --page {{next}} 查看）
+ * @localEn (more pages — use --page {{next}})
+ */
+export const PAMENV_CLI_PROJECTS_PAGE_MORE =
+  'pamenv_cli:projects_page_more';
 
 /**
  * @description 已退出登录（服务端吊销 + 本地 token/sync 已清除）。配置: {{path}}
@@ -1241,8 +1304,8 @@ export const PAMENV_CLI_NOT_LOGGED_IN = 'pamenv_cli:not_logged_in';
 
 /**
  * @description 本地 .pam 尚未登录（插件 / --local）
- * @localZh 尚未登录（本地 .pam：{{path}}）。请在项目目录执行：pamenv login --local
- * @localEn Not logged in (local .pam: {{path}}). In this project directory run: pamenv login --local
+ * @localZh 尚未登录（本地 .pam：{{path}}）。请在 monorepo 根或当前目录执行：pamenv login --local
+ * @localEn Not logged in (local .pam: {{path}}). At the monorepo root or this directory run: pamenv login --local
  */
 export const PAMENV_CLI_NOT_LOGGED_IN_LOCAL = 'pamenv_cli:not_logged_in_local';
 
@@ -1253,6 +1316,30 @@ export const PAMENV_CLI_NOT_LOGGED_IN_LOCAL = 'pamenv_cli:not_logged_in_local';
  */
 export const PAMENV_CLI_PERMISSIONS_MISSING =
   'pamenv_cli:permissions_missing';
+
+/**
+ * Friendly headline for HTTP 401 from PAM API.
+ * @description 登录已失效或未授权。请重新执行 `pamenv login` 后再试。
+ * @localZh 登录已失效或未授权。请重新执行 `pamenv login` 后再试。
+ * @localEn Session expired or unauthorized. Run `pamenv login` again, then retry.
+ */
+export const PAMENV_CLI_API_UNAUTHORIZED = 'pamenv_cli:api_unauthorized';
+
+/**
+ * Friendly headline for HTTP 403 from PAM API (generic).
+ * @description 没有访问该资源的权限。请联系项目 owner 将你加入团队，或确认使用了正确的账号与项目。
+ * @localZh 没有访问该资源的权限。请联系项目 owner 将你加入团队，或确认使用了正确的账号与项目。
+ * @localEn You do not have access to this resource. Ask the project owner to add you to the team, or confirm you are using the right account and project.
+ */
+export const PAMENV_CLI_API_FORBIDDEN = 'pamenv_cli:api_forbidden';
+
+/**
+ * Friendly headline when the environment is protected (API id pam_env_protected).
+ * @description 该环境受保护，当前账号无权读取或注入。请联系项目 owner。
+ * @localZh 该环境受保护，当前账号无权读取或注入。请联系项目 owner。
+ * @localEn This environment is protected; your account cannot read or inject it. Contact the project owner.
+ */
+export const PAMENV_CLI_API_ENV_PROTECTED = 'pamenv_cli:api_env_protected';
 
 /**
  * @description export 返回了敏感明文（旧检测；现已改为客户端强制占位符）

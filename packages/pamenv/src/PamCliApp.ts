@@ -21,6 +21,9 @@ import { PamCliAuthStore } from './impls/PamCliAuthStore';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
 import { PamCliI18n } from './i18n/PamCliI18n';
 import {
+  PAMENV_CLI_API_ENV_PROTECTED,
+  PAMENV_CLI_API_FORBIDDEN,
+  PAMENV_CLI_API_UNAUTHORIZED,
   PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE,
   PAMENV_CLI_LOGOUT_DONE,
   PAMENV_CLI_LOGOUT_REVOKE_FAILED,
@@ -69,6 +72,7 @@ import {
   PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE,
   PAMENV_HELP_PROJECTS_OPT_SORT,
   PAMENV_HELP_PROJECTS_OPT_VISIBILITY,
+  PAMENV_HELP_PROJECTS_OPT_VERBOSE,
   PAMENV_HELP_PROJECTS_OPT_WRITABLE,
   PAMENV_HELP_PULL,
   PAMENV_HELP_PULL_OPT_FORCE,
@@ -172,11 +176,12 @@ export class PamCliApp {
         global
       });
       await PamCliI18n.syncFromStore(this.authStore);
-      if (this.authStore.getActivePamRoot() === PamCliConfig.getLocalRoot(process.cwd())) {
-        // stderr: keeps `render` stdout clean; covers --local and auto-detect.
+      const activeRoot = this.authStore.getActivePamRoot();
+      if (activeRoot !== PamCliConfig.getHomeRoot()) {
+        // stderr: keeps `render` stdout clean; covers --local and ancestor .pam.
         console.error(
           PamCliI18n.t(PAMENV_CLI_USING_LOCAL_ROOT, {
-            path: PamCliConfig.getLocalRoot(process.cwd())
+            path: activeRoot
           })
         );
       }
@@ -202,6 +207,7 @@ export class PamCliApp {
       .option('--page-size <n>', t(PAMENV_HELP_PROJECTS_OPT_PAGE_SIZE))
       .option('--mine', t(PAMENV_HELP_PROJECTS_OPT_MINE))
       .option('--writable', t(PAMENV_HELP_PROJECTS_OPT_WRITABLE))
+      .option('-v, --verbose', t(PAMENV_HELP_PROJECTS_OPT_VERBOSE))
       .action(
         async (
           keyword: string | undefined,
@@ -214,6 +220,7 @@ export class PamCliApp {
             pageSize?: string;
             mine?: boolean;
             writable?: boolean;
+            verbose?: boolean;
           }
         ) => {
           const visibility =
@@ -240,7 +247,8 @@ export class PamCliApp {
             ...(page && Number.isFinite(page) ? { page } : {}),
             ...(pageSize && Number.isFinite(pageSize) ? { pageSize } : {}),
             ...(options.mine ? { mine: true } : {}),
-            ...(options.writable ? { writable: true } : {})
+            ...(options.writable ? { writable: true } : {}),
+            ...(options.verbose ? { verbose: true } : {})
           });
         }
       );
@@ -504,15 +512,41 @@ export class PamCliApp {
 
   /**
    * Formats an error for stderr, translating API `id` when locale catalog exists.
+   * HTTP 401/403 get a human-friendly headline (login again / ask owner).
    *
    * @param error - Thrown value
    */
   public async formatCliError(error: unknown): Promise<string> {
     if (error instanceof PamCliApiError) {
       await PamCliI18n.hydrateFromApiOnce(this.authStore);
-      return error.formatForCli((id) => PamCliI18n.lookup(id));
+      return error.formatForCli(
+        (id) => PamCliI18n.lookup(id),
+        { friendlyHeadline: this.resolveAuthFriendlyHeadline(error) }
+      );
     }
     return error instanceof Error ? error.message : String(error);
+  }
+
+  /**
+   * Human-readable headline for auth denials; undefined for other statuses.
+   */
+  protected resolveAuthFriendlyHeadline(
+    error: PamCliApiError
+  ): string | undefined {
+    if (error.httpStatus === 401) {
+      return PamCliI18n.t(PAMENV_CLI_API_UNAUTHORIZED);
+    }
+    if (error.httpStatus !== 403) {
+      return undefined;
+    }
+    // Prefer a specific protected-env line when the API id says so.
+    if (
+      error.id === 'api:pam_env_protected' ||
+      error.id.endsWith(':pam_env_protected')
+    ) {
+      return PamCliI18n.t(PAMENV_CLI_API_ENV_PROTECTED);
+    }
+    return PamCliI18n.t(PAMENV_CLI_API_FORBIDDEN);
   }
 
   /**
@@ -523,14 +557,15 @@ export class PamCliApp {
    */
   protected async loadHelpLocale(argv: readonly string[]): Promise<void> {
     try {
-      const workingDir = process.cwd();
+      const cwd = process.cwd();
+      const flags = {
+        local: argv.includes('--local'),
+        global: argv.includes('--global') || argv.includes('-g'),
+        workingDir: cwd
+      };
       const store = new PamCliAuthStore({
-        preferLocal: PamCliConfig.resolvePreferLocal({
-          local: argv.includes('--local'),
-          global: argv.includes('--global') || argv.includes('-g'),
-          workingDir
-        }),
-        workingDir
+        preferLocal: PamCliConfig.resolvePreferLocal(flags),
+        workingDir: PamCliConfig.resolveAuthWorkingDir(flags)
       });
       PamCliI18n.setLocale(await store.getLocale());
     } catch {
@@ -680,11 +715,16 @@ export class PamCliApp {
 
     this.runtimeGlobals = globals;
     const urlOverride = this.resolveHostOverride(globals.url, globals.domain);
-    const workingDir = process.cwd();
+    const cwd = process.cwd();
     const preferLocal = PamCliConfig.resolvePreferLocal({
       local: globals.local,
       global: globals.global,
-      workingDir
+      workingDir: cwd
+    });
+    const workingDir = PamCliConfig.resolveAuthWorkingDir({
+      local: globals.local,
+      global: globals.global,
+      workingDir: cwd
     });
 
     this.authStore = new PamCliAuthStore({
@@ -700,18 +740,23 @@ export class PamCliApp {
   }
 
   /**
-   * Aligns sync/auth root with `-o`: if `outDir/.pam` exists, prefer that
-   * identity (unless `-g`); binding paths stay relative to `outDir`.
+   * Aligns sync/auth root with `-o`: walk up from `outDir` for a nearest
+   * `.pam` (unless `-g`); binding paths stay relative to `outDir` for files.
    */
   protected bindOutDir(outDir?: string): void {
     if (!outDir?.trim()) {
       return;
     }
-    const workingDir = resolve(outDir);
+    const startDir = resolve(outDir);
     const preferLocal = PamCliConfig.resolvePreferLocal({
       local: this.runtimeGlobals.local,
       global: this.runtimeGlobals.global,
-      workingDir
+      workingDir: startDir
+    });
+    const workingDir = PamCliConfig.resolveAuthWorkingDir({
+      local: this.runtimeGlobals.local,
+      global: this.runtimeGlobals.global,
+      workingDir: startDir
     });
     this.authStore.setWorkingDir(workingDir);
     this.authStore.setPreferLocal(preferLocal);
