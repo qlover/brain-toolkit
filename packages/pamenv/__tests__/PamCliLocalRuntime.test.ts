@@ -288,6 +288,22 @@ describe('PamCliApiError', () => {
     expect(text.startsWith('未授权')).toBe(true);
     expect(text).toContain('id: api:not_authorized');
   });
+
+  it('uses friendly auth headline and keeps id for support', () => {
+    const err = new PamCliApiError({
+      id: 'api:not_authorized',
+      message: 'forbidden',
+      requestId: 'req-2',
+      httpStatus: 403
+    });
+    const text = err.formatForCli(undefined, {
+      friendlyHeadline:
+        '没有访问该资源的权限。请联系项目 owner 将你加入团队，或确认使用了正确的账号与项目。'
+    });
+    expect(text.startsWith('没有访问该资源的权限')).toBe(true);
+    expect(text).toContain('id: api:not_authorized');
+    expect(text).toContain('requestId: req-2');
+  });
 });
 
 describe('PamCliAuthStore locale', () => {

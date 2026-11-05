@@ -31,14 +31,38 @@ export class PamCliApiError extends Error {
   }
 
   /**
-   * Multi-line CLI output: localized text when available, plus id / requestId.
+   * Multi-line CLI output: localized / friendly text, plus id / requestId.
    *
-   * @param translate - Optional `id` → localized string lookup
+   * @param translate - Optional `id` → localized string lookup (PAM `api:*`)
+   * @param options.friendlyHeadline - Prefer this over raw API message (401/403)
    */
-  public formatForCli(translate?: (id: string) => string | undefined): string {
+  public formatForCli(
+    translate?: (id: string) => string | undefined,
+    options?: { readonly friendlyHeadline?: string }
+  ): string {
     const localized = translate?.(this.id)?.trim();
-    const headline = localized || this.message;
+    const friendly = options?.friendlyHeadline?.trim();
+    const headline = friendly || localized || this.message;
     const lines = [headline];
+
+    // Keep a short server detail when it adds info beyond the friendly line.
+    if (
+      friendly &&
+      localized &&
+      localized !== friendly &&
+      localized !== this.id
+    ) {
+      lines.push(localized);
+    } else if (
+      friendly &&
+      this.message?.trim() &&
+      this.message.trim() !== friendly &&
+      this.message.trim() !== this.id &&
+      this.message.trim() !== localized
+    ) {
+      lines.push(this.message.trim());
+    }
+
     if (this.id && this.id !== headline) {
       lines.push(`id: ${this.id}`);
     }

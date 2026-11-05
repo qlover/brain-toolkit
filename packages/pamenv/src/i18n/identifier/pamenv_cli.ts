@@ -1318,6 +1318,30 @@ export const PAMENV_CLI_PERMISSIONS_MISSING =
   'pamenv_cli:permissions_missing';
 
 /**
+ * Friendly headline for HTTP 401 from PAM API.
+ * @description 登录已失效或未授权。请重新执行 `pamenv login` 后再试。
+ * @localZh 登录已失效或未授权。请重新执行 `pamenv login` 后再试。
+ * @localEn Session expired or unauthorized. Run `pamenv login` again, then retry.
+ */
+export const PAMENV_CLI_API_UNAUTHORIZED = 'pamenv_cli:api_unauthorized';
+
+/**
+ * Friendly headline for HTTP 403 from PAM API (generic).
+ * @description 没有访问该资源的权限。请联系项目 owner 将你加入团队，或确认使用了正确的账号与项目。
+ * @localZh 没有访问该资源的权限。请联系项目 owner 将你加入团队，或确认使用了正确的账号与项目。
+ * @localEn You do not have access to this resource. Ask the project owner to add you to the team, or confirm you are using the right account and project.
+ */
+export const PAMENV_CLI_API_FORBIDDEN = 'pamenv_cli:api_forbidden';
+
+/**
+ * Friendly headline when the environment is protected (API id pam_env_protected).
+ * @description 该环境受保护，当前账号无权读取或注入。请联系项目 owner。
+ * @localZh 该环境受保护，当前账号无权读取或注入。请联系项目 owner。
+ * @localEn This environment is protected; your account cannot read or inject it. Contact the project owner.
+ */
+export const PAMENV_CLI_API_ENV_PROTECTED = 'pamenv_cli:api_env_protected';
+
+/**
  * @description export 返回了敏感明文（旧检测；现已改为客户端强制占位符）
  * @localZh 拒绝写入：导出结果中敏感键 "{{key}}"（{{slug}}/{{env}}）仍含明文。请检查服务端 redact，或将该变量标记为 sensitive。
  * @localEn Refusing to write: export returned plaintext for sensitive key "{{key}}" ({{slug}}/{{env}}). Check server redaction, or mark the variable sensitive.
