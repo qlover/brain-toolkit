@@ -1,5 +1,28 @@
 # pam
 
+## 3.1.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pam:** 集成 @pamenv/next 插件以实现环境变量注入 ([5fff511](https://github.com/qlover/brain-toolkit/commit/5fff5119e4fa6717b50825ae629b395a802d6108)) ([#197](https://github.com/qlover/brain-toolkit/pull/197))
+  - 添加了 @pamenv/next 插件，以在 Next.js 应用程序中启用环境变量注入。
+  - 已更新 next.config.ts 文件，采用 createPamenvPlugin 进行本地环境管理。
+    修改了 package.json 文件，将 @pamenv/next 添加为依赖项。
+    更新了 pnpm-lock.yaml 文件以反映新的依赖关系。
+
+#### 🐞 Bug Fixes
+
+- **pam:** compact 搜索每页返回精确 total ([080d180](https://github.com/qlover/brain-toolkit/commit/080d180ad6c15606b4216184377fcf384a41a5b8)) ([#199](https://github.com/qlover/brain-toolkit/pull/199))
+
+  CLI view=compact 时不再跳过 count，避免第 2 页起 total 变成 offset+loaded 占位值。
+
+- **pam,brain-oauth:** 修复语言切换后被 query/cookie 拉回 ([d85524e](https://github.com/qlover/brain-toolkit/commit/d85524ea8eee667669a5a079e19fddb1f0f3fbd8)) ([#196](https://github.com/qlover/brain-toolkit/pull/196))
+
+  切换时写入 NEXT_LOCALE，并去掉冲突的 locale/ui_locales；
+  pam middleware 仅在无路径语言前缀时才采用 query 语言偏好。
+
 ## 3.0.0
 
 ### Major Changes
