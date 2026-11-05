@@ -1,5 +1,16 @@
 # @pamenv/vite
 
+## 1.1.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** monorepo .pam 复用、默认域名与 projects 表格分页 ([a770e9d](https://github.com/qlover/brain-toolkit/commit/a770e9d4413d491abd1959d0bb2d509fbc2bd815)) ([#199](https://github.com/qlover/brain-toolkit/pull/199))
+  - 向上查找最近项目 .pam（最多 32 层、遇 .git 停止；跳过 ~/.pam）
+  - 登录默认 https://pam.qlover.top，仅参数/config 覆盖
+  - projects 对齐表格（-v 显示 ID）并打印分页摘要
+
 ## 1.0.0
 
 ### Major Changes
