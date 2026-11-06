@@ -1,21 +1,13 @@
 ---
-description: 
-globs: *.md
+description: Markdown / 文档约定（中文优先）
+globs: "**/*.{md,mdc}"
 alwaysApply: false
 ---
-## Documentation Standards
 
-### Markdown File Rules
+# 文档规范
 
-- For all md files, language preference is given to the language in the md file, or English if a new file is created.
-- AI-generated content for .md files must always be wrapped in code blocks
-- Use proper markdown formatting and structure
-- Content updates must follow this format:
-
-  ```markdown
-  // Original content to be replaced
-  ```
-
-  ```markdown
-  // New content
-  ```
+1. **语言**：本仓库文档与规则**优先中文**。已有纯英文文档可保持英文；新建说明类 md 默认中文（对外 README 双语时中英可并存，以目录既有习惯为准）。
+2. **结构**：标题层级清晰；列表与表格适度；避免大段无结构墙文。
+3. **代码**：文档中的命令、路径、类型名用行内或围栏代码块，标识符保持英文。
+4. **改文档**：改动对准既有章节；不要无故重写无关段落。
+5. **规则文件（`.mdc`）**：条文用中文；示例代码可中英混排（注释中文、标识符英文）。新增规则前可先提醒用户确认（见 `general.mdc`「失误入规」）。

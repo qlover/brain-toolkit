@@ -1,6 +1,5 @@
 ---
-description:
-globs:
+description: Git 提交规范 — 中文、提交前质检、禁止 Cursor co-author
 alwaysApply: true
 ---
 
@@ -15,23 +14,35 @@ alwaysApply: true
 
 未通过质检不得提交。不要等用户再提醒。
 
-## 禁止 Cursor co-author trailer
+## 禁止作者类 trailer
 
-**禁止**在 commit 中加入以下 footer（或任何 Cursor co-author trailer）：
+**禁止**在 commit message 末尾追加任何作者 / 共同作者 / Signed-off / Cursor 归属类 trailer。正文在「标题 + 可选 body」结束后即止。禁止示例：
 
 ```
 Co-authored-by: Cursor <cursoragent@cursor.com>
+Co-authored-by: ...
+Signed-off-by: ...
+Made-with: Cursor
+Generated-by: ...
 ```
 
-若工具自动注入，须在收尾前去掉（amend / rewrite），保证最终提交信息中没有 `Co-authored-by: Cursor` 行。
+若工具自动注入，须在收尾前去掉（amend / rewrite / `commit-tree`），保证最终提交信息中没有上述行。除非用户明确要求，不要添加其他 AI co-author trailer。
 
-除非用户明确要求，不要添加其他 AI co-author trailer。
+### 推荐：`git commit-tree`（避免被再次注入）
 
-## 语言
+普通 `git commit` / `git commit --amend -m` 常被 Cursor 自动塞入 `Co-authored-by`。需要干净提交时：
+
+1. `git add` 暂存所需文件（勿提交密钥文件）
+2. `git write-tree` 得到 tree sha
+3. 用**仅含中文说明、无 trailer** 的 message，经 stdin：`git commit-tree <tree> -p HEAD`
+4. `git update-ref HEAD <新 commit sha>`
+5. `git log -1 --format=full` 核对：**不得**出现 `Co-authored-by` 等行
+
+若已误带 trailer：不要只靠 `--amend -m`（常被再次注入）；用同样流程重写 commit 对象后再 `update-ref`。
+
+## 语言与格式
 
 与本仓库近期提交风格一致：subject / body **优先中文**（见 `git log`）。保留 conventional-commit 的 `type(scope):` 前缀。
-
-### 格式
 
 ```
 type(scope?): subject
@@ -41,36 +52,18 @@ body?
 footer?
 ```
 
-### 长度
-
-- 标题行：简洁（建议 ≤ 72 字符，保持可读）
-- 正文：实用时按约 72 字符换行
-- 整条提交信息：聚焦要点，避免噪音
-
-### 类型
-
-- `feat`：新功能
-- `fix`：缺陷修复
-- `docs`：文档
-- `style`：代码风格（不影响逻辑）
-- `refactor`：重构
-- `perf`：性能
-- `test`：测试
-- `chore`：构建、配置等杂项
-
-### 规则
-
-- 标题：祈使语气 / 现在时感，句末不加句号
-- Scope（可选）：包或区域（如 `pam`、`pamenv`）
-- 正文（可选）：说明原因与影响；多项可用列表
-- Footer（可选）：破坏性变更、issue 引用 — **不要**写 Cursor co-author
+- 标题：祈使 / 现在时感，句末不加句号；建议 ≤ 72 字符
+- 正文：说明原因与影响；实用时约 72 字符换行
+- Scope 可选：`pam`、`pamenv` 等
+- type：`feat` / `fix` / `docs` / `style` / `refactor` / `perf` / `test` / `chore`
+- Footer 可选：破坏性变更、issue — **不要**写 Cursor co-author
 
 ### 示例
 
 ```
-feat(pam): 详情改用 slug，并支持删除与 CLI 环境管理
+feat(pam): resolve 响应改为密封信封，并支持 CI 内存票
 
-详情 URL 使用 slug；owner 可删除项目。
+API 不再返回明文 variables；PAMENV_TOKEN 优先于 vault。
 ```
 
 ```

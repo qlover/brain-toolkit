@@ -25,6 +25,8 @@ import {
   API_PAM_ENV_NAME_EXISTS,
   API_PAM_ENV_NOT_FOUND,
   API_PAM_ENV_PROTECTED,
+  API_PAM_ENV_RESOLVE_SEAL_FAILED,
+  API_PAM_ENV_RESOLVE_SEAL_REQUIRED,
   API_PAM_PROJECT_NOT_FOUND,
   API_PAM_SLUG_EXISTS,
   API_PAM_TRANSFER_TO_SELF,
@@ -49,6 +51,7 @@ import type {
   PAMEnvResolve,
   PAMEnvResolveByName,
   PAMEnvResolvedEnvironment,
+  PAMEnvResolveSealEnvelope,
   PAMEnvResolvedVariable,
   PAMEnvSettings,
   PAMEnvWriteable,
@@ -85,6 +88,7 @@ import {
   capturePageScreenshot,
   resolveProjectCaptureUrl
 } from '@server/utils/PAMPreviewCaptureUtil';
+import { PamResolveSealRegistry } from '@server/utils/PamResolveSealRegistry';
 import { fetchSiteLogoForUrl } from '@server/utils/PAMSiteLogoFetchUtil';
 import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
 import { projectAccessFlags } from '@server/utils/projectAccessRole';
@@ -138,6 +142,12 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(I.Logger)
   protected readonly logger!: LoggerInterface;
+
+  /**
+   * resolve 密封注册表（alg → 实现）。测试可直接改写 `resolveSealRegistry`。
+   */
+  protected resolveSealRegistry: PamResolveSealRegistry =
+    PamResolveSealRegistry.createDefault();
 
   /** Coalesce identical in-flight searches (real-time; not a result cache). */
   private readonly searchInflight = new Map<
@@ -1409,7 +1419,7 @@ export class PAMService implements PAMServiceInterface {
     envId: string,
     params: PAMEnvResolve,
     context: PAMEnvAccessContext
-  ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
+  ): Promise<{ seal: PAMEnvResolveSealEnvelope }> {
     const { userId, role } = await this.assertOrgPermission(
       projectId,
       PermissionKey.pam_environments_inject
@@ -1433,7 +1443,7 @@ export class PAMService implements PAMServiceInterface {
       params,
       context
     );
-    return { variables };
+    return { seal: this.sealResolvedVariables(variables, params) };
   }
 
   /**
@@ -1472,8 +1482,33 @@ export class PAMService implements PAMServiceInterface {
       projectSlug: access.slug,
       environmentId: environment.id,
       environmentName: environment.name,
-      variables
+      seal: this.sealResolvedVariables(variables, params)
     };
+  }
+
+  /**
+   * 将已解密变量封成线上载荷，不返回明文 value。
+   *
+   * @param variables - 注入用解密结果
+   * @param params - 含必填 `seal` offer 的 resolve 请求体
+   */
+  protected sealResolvedVariables(
+    variables: PAMEnvResolvedVariable[],
+    params: PAMEnvResolve
+  ): PAMEnvResolveSealEnvelope {
+    const offer = params.seal;
+    if (!offer?.alg?.trim() || !offer.publicKey?.trim()) {
+      throw new ExecutorError(API_PAM_ENV_RESOLVE_SEAL_REQUIRED);
+    }
+    try {
+      const plaintext = Buffer.from(JSON.stringify(variables), 'utf8');
+      return this.resolveSealRegistry.seal(plaintext, {
+        alg: offer.alg,
+        publicKey: offer.publicKey
+      });
+    } catch {
+      throw new ExecutorError(API_PAM_ENV_RESOLVE_SEAL_FAILED);
+    }
   }
 
   /**

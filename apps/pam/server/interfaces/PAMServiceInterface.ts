@@ -6,7 +6,7 @@ import type {
   PAMEnvResolve,
   PAMEnvResolveByName,
   PAMEnvResolvedEnvironment,
-  PAMEnvResolvedVariable,
+  PAMEnvResolveSealEnvelope,
   PAMEnvSettings,
   PAMEnvWriteable
 } from '@shared/schemas/PAMEnvironmentSchema';
@@ -235,7 +235,7 @@ export interface PAMServiceInterface {
     envId: string,
     params: PAMEnvResolve,
     context: PAMEnvAccessContext
-  ): Promise<{ variables: PAMEnvResolvedVariable[] }>;
+  ): Promise<{ seal: PAMEnvResolveSealEnvelope }>;
 
   /**
    * Same as {@link resolveEnvironment}, addressed by project slug/id and

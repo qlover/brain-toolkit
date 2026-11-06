@@ -58,12 +58,12 @@ export interface PamCliAuthStoreInterface {
   clearToken(): Promise<void>;
 
   /**
-   * @returns Stored token or null
+   * @returns 有则返回 `PAMENV_TOKEN`，否则 vault / config 中的 token，否则 null
    */
   getToken(): Promise<string | null>;
 
   /**
-   * @returns Configured PAM base URL
+   * @returns `--url` 覆盖，否则 `PAMENV_BASE_URL`，否则 config / 默认域名
    */
   getBaseUrl(): Promise<string>;
 

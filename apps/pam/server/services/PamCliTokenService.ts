@@ -35,6 +35,20 @@ export type PamCliCreateTokenMetaType = {
 };
 
 /**
+ * 签发 CLI token 时的可选覆盖（CI / bot 短 TTL）。
+ */
+export type PamCliCreateTokenOptionsType = {
+  /**
+   * JWT `expiresIn`（如 `15m`、`1h`）。
+   * 省略时用站点设置 / `PAM_CLI_TOKEN_EXPIRES_IN`（交互默认约 30d）。
+   */
+  readonly expiresIn?: SignOptions['expiresIn'];
+};
+
+/** CI / bot 短票推荐 TTL（OIDC 交换 / bot 路径复用）。 */
+export const PAM_CLI_CI_TOKEN_EXPIRES_IN = '15m' as const;
+
+/**
  * Issues and verifies revocable PAM CLI bearer JWTs.
  *
  * Significance: Lets the CLI authenticate without browser cookies.
@@ -71,11 +85,13 @@ export class PamCliTokenService {
    *
    * @param user - Authenticated user schema
    * @param meta - Optional login audit fields
-   * @returns Token string and ISO expiry
+   * @param options - 可选 TTL 覆盖（CI / bot 短票）
+   * @returns token 字符串与 ISO 过期时间
    */
   public async createToken(
     user: UserSchema,
-    meta: PamCliCreateTokenMetaType = {}
+    meta: PamCliCreateTokenMetaType = {},
+    options: PamCliCreateTokenOptionsType = {}
   ): Promise<{
     token: string;
     expiresAt: string;
@@ -89,9 +105,11 @@ export class PamCliTokenService {
       providerRefreshToken: ''
     };
 
-    const expiresIn = ((await this.siteSettings.getString(
-      PAM_SITE_SETTING_KEYS.AUTH_CLI_TOKEN_EXPIRES_IN
-    )) || this.expiresIn) as SignOptions['expiresIn'];
+    const expiresIn = (options.expiresIn ||
+      (await this.siteSettings.getString(
+        PAM_SITE_SETTING_KEYS.AUTH_CLI_TOKEN_EXPIRES_IN
+      )) ||
+      this.expiresIn) as SignOptions['expiresIn'];
 
     const token = jwt.sign(payload, this.sessionSecret, {
       expiresIn,
@@ -113,6 +131,30 @@ export class PamCliTokenService {
     });
 
     return { token, expiresAt, jti };
+  }
+
+  /**
+   * 为 CI / bot runner 签发短寿命 CLI token（默认 15m）。
+   * claims 与交互登录相同；调用方不应写入 vault。
+   *
+   * @param user - bot 或服务账号
+   * @param meta - 审计字段（建议 `loginMethod: 'ci'`）
+   * @param expiresIn - TTL 覆盖（默认 {@link PAM_CLI_CI_TOKEN_EXPIRES_IN}）
+   */
+  public async createCiToken(
+    user: UserSchema,
+    meta: PamCliCreateTokenMetaType = {},
+    expiresIn: SignOptions['expiresIn'] = PAM_CLI_CI_TOKEN_EXPIRES_IN
+  ): Promise<{
+    token: string;
+    expiresAt: string;
+    jti: string;
+  }> {
+    return this.createToken(
+      user,
+      { ...meta, loginMethod: meta.loginMethod ?? 'ci' },
+      { expiresIn }
+    );
   }
 
   /**

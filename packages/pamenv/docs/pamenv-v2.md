@@ -12,7 +12,7 @@ Web：`GET .../environments` 只返回环境元数据；选中环境再 `GET ...
 - 日常开发默认把变量注入进程（`pamenv run`），不写文件。
 - `.env`、JSON、YAML、TOML 都只是按需输出的格式（`pamenv render`）。
 - 权限区分「能用」和「能看」：成员可以注入运行，但拿不到明文。
-- **敏感值只经 `run` 进入进程**：网页、`render`、`pull`、`fork` 都不返回敏感明文，owner 也一样。明文只存在于「服务端解密 → 传输 → 目标进程环境」这条链路上。CLI 保证不落盘、不打印；拦不住的是进程自己打印/写日志、同机读该进程环境、调试器附加——请用 `--only` 收窄注入面，并避免在应用里打印密钥。
+- **敏感值只经 `run` 进入进程**：网页、`render`、`pull`、`fork` 都不返回敏感明文，owner 也一样。`resolve` 在 API / 抓包层只见密封密文；明文只存在于「服务端解密瞬间 → CLI 内存解开 → 目标进程环境」。CLI 保证不落盘、不打印；拦不住的是进程自己打印/写日志、同机读该进程环境、调试器附加——请用 `--only` 收窄注入面，并避免在应用里打印密钥。
 
 ## 现状与问题
 
@@ -28,8 +28,8 @@ Web：`GET .../environments` 只返回环境元数据；选中环境再 `GET ...
 PAM（按项目 / 环境 / 权限管理变量，服务端 AES-256-GCM 加密存储）
    │  CLI 用本地身份凭证（Bearer token）请求
    ▼
-服务端检查权限 → 只返回本次需要的键值（不缓存）
-   ├─ resolve：解密敏感值 → pamenv run 注入子进程环境变量（需要「使用」权限）
+服务端检查权限 → 只返回本次需要的键（不缓存）
+   ├─ resolve：解密 → 用客户端一次性公钥封包 → API 仅密文 → CLI 内存解开 → 注入进程
    └─ export：敏感值置空 → pamenv render / pull 输出非敏感变量（需要「导出」权限）
 ```
 
@@ -38,6 +38,20 @@ PAM（按项目 / 环境 / 权限管理变量，服务端 AES-256-GCM 加密存�
 - 凭证只用来证明「我是谁」，每次请求都由服务端重新检查权限。
 - 凭证有有效期，可以随时吊销；成员退出团队后立即失效。
 - 凭证泄露的影响限于该用户的权限范围，而且可以吊销；不存在一把能解开所有变量的本地主密钥。
+
+### resolve 传输信封（应用层）
+
+- 请求必须带 `seal: { alg, publicKey }`（CLI 每次 resolve 生成一次性 X25519 密钥对）。
+- 响应为 `{ seal: { alg, ephemeralPublicKey, nonce, ciphertext } }`（by-name 另带回项目/环境元数据），**无明文 `variables`**。
+- 默认算法：`x25519-aes256gcm-v1`（ECDH → HKDF-SHA256 → AES-256-GCM）。服务端 / CLI 均走接口 + 可换实现类（`PamResolveSealInterface` / `PamResolveSealClientInterface`）。
+- 明文允许出现在：PAM 解密瞬间、CLI 内存、子进程 `process.env`。不允许出现在：API JSON、抓包可见的响应体、CLI debug 日志。
+- 旧客户端不送 `seal`：fail-closed（`api:pam_env_resolve_seal_required`）。
+
+### CI 内存票（底座，非 OIDC）
+
+- 环境变量 `PAMENV_TOKEN`：优先于 vault / `.pam`，**不写盘**。
+- 可选 `PAMENV_BASE_URL`：无 config 时指定 PAM 源站。
+- 服务端 `PamCliTokenService.createCiToken`：默认 `15m` 短寿命 `pam_cli`（bot / 后续 OIDC 交换复用）；交互登录仍用站点长 TTL。
 
 ## 命令设计
 
@@ -212,8 +226,8 @@ interface PamEnvOutputAdapterInterface {
 ### 新增 `POST /api/pam/:projectId/environments/:envId/resolve`
 
 - 鉴权：Bearer token；检查 `pam_environments_inject`。
-- 请求体：`{ "keys"?: string[] }`，对应 `--only`。
-- 响应：`{ "variables": [{ "key", "value", "sensitive" }] }`，不返回注释（运行时用不到）。
+- 请求体：`{ "seal": { "alg", "publicKey" }, "keys"?: string[] }`，`seal` 必填；`keys` 对应 `--only`。
+- 响应：`{ "seal": { "alg", "ephemeralPublicKey", "nonce", "ciphertext" } }`（密文内为 `variables[]` JSON），不返回明文与注释。
 - 响应头：`Cache-Control: no-store`。
 - 使用 POST，避免键名出现在 URL 和访问日志里。
 
@@ -285,18 +299,19 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 4. 审计日志保留多久？
 5. **`pamenv login` 默认落点**：全局 `~/.pam` vs 当前目录 / monorepo 本地（现状：无祖先 `.pam` 时用全局）。
 
-## TODO：CI OIDC（Trusted Publishing 式，待单独分支）
+## CI 短票 / OIDC 切片
 
-现状：CLI 是「真人登录 → 长寿命 `pam_cli` JWT（`jti` 可吊销）→ 项目角色鉴权」。无 GitHub Actions 等联邦交换；CI 目前只能塞长寿命用户 token（不推荐）。
+**本分支底座（`feat/pam-cli-ci-token`）已具备：**
 
-目标：CI 用平台 OIDC `id_token` 换短寿命 `pam_cli`，再走现有 `resolve` / `export`，本地 vault 登录不变。
+- resolve 传输信封（API 无明文）
+- `PAMENV_TOKEN` / `PAMENV_BASE_URL` 内存票
+- `createCiToken`（默认 15m）供 bot / 后续交换签发
 
-建议切片（另开 `feat/pam-cli-oidc-exchange`）：
+**后续分支：**
 
-1. **信任配置**：`issuer` + `aud` + claim 匹配（如 `repository` / `environment`）→ `projectId` + 权限档；第一刀绑固定 bot 用户。
-2. **交换 API**：`POST /api/pam/cli/oidc/exchange` — 验 JWKS → 签发分钟级 `pam_cli` + 审计（repo / run_id）。
-3. **pamenv CI 模式**：读 `ACTIONS_ID_TOKEN_REQUEST_*` → exchange → 内存用 token（不写 vault）。
-4. **默认只授 inject**；export 需单独绑定。claim 绑死具体 repo，禁止任意 fork。
-5. 产品化（第二刀）：多 issuer、网页管理信任关系、环境级绑定。
+| 分支 | 内容 |
+| --- | --- |
+| `feat/pam-cli-ci-bot` | 专用 bot + 短 TTL 票 + Docker / 自建机文档 |
+| `feat/pam-cli-ci-github` | `POST /api/pam/cli/oidc/exchange`、GitHub JWKS、Actions 读 |
 
-过渡（非 OIDC）：专用 bot + 短 TTL CLI token + CI secret，权限复用现有 `pam_environments_*`。
+OIDC 目标：平台 `id_token` → 分钟级 `pam_cli` → 现有 sealed `resolve`；默认只授 inject；claim 绑死 repo。
