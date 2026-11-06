@@ -4,13 +4,15 @@ import { inject, injectable } from '@shared/container';
 import { API_REQUEST_BODY_EMPTY } from '@config/i18n-identifier/api';
 import {
   PamCiOidcBindingUpsertSchema,
-  type PamCiOidcBinding
+  PamCiOidcProviderSchema,
+  type PamCiOidcBinding,
+  type PamCiOidcProviderType
 } from '@schemas/PamCiOidcSchema';
 import { PamCiOidcService } from '@server/services/PamCiOidcService';
 import type { NextRequest } from 'next/server';
 
 /**
- * 项目级 GitHub OIDC 绑定管理。
+ * 项目级 CI OIDC 绑定管理（GitHub / Vercel）。
  */
 @injectable()
 export class PamCiOidcController {
@@ -19,8 +21,14 @@ export class PamCiOidcController {
     protected readonly ciOidcService: PamCiOidcService
   ) {}
 
-  public async getBinding(projectId: string): Promise<PamCiOidcBinding | null> {
-    return this.ciOidcService.getBinding(projectId);
+  public async getBinding(
+    projectId: string,
+    request: NextRequest
+  ): Promise<PamCiOidcBinding | null> {
+    return this.ciOidcService.getBinding(
+      projectId,
+      this.parseProviderQuery(request)
+    );
   }
 
   public async upsertBinding(
@@ -42,17 +50,35 @@ export class PamCiOidcController {
     );
   }
 
-  public async deleteBinding(projectId: string): Promise<{ ok: true }> {
-    await this.ciOidcService.deleteBinding(projectId);
+  public async deleteBinding(
+    projectId: string,
+    request: NextRequest
+  ): Promise<{ ok: true }> {
+    await this.ciOidcService.deleteBinding(
+      projectId,
+      this.parseProviderQuery(request)
+    );
     return { ok: true };
   }
 
   /**
-   * 前端展示用：当前站点默认 OIDC audience。
+   * 前端展示用：当前站点默认 OIDC audience（按 provider）。
    */
-  public async getAudienceHint(): Promise<{ audience: string }> {
+  public async getAudienceHint(
+    request: NextRequest
+  ): Promise<{ audience: string }> {
     return {
-      audience: await this.ciOidcService.resolveDefaultAudience()
+      audience: await this.ciOidcService.resolveAudience(
+        this.parseProviderQuery(request)
+      )
     };
+  }
+
+  protected parseProviderQuery(request: NextRequest): PamCiOidcProviderType {
+    const raw = request.nextUrl.searchParams.get('provider');
+    if (!raw) {
+      return 'github';
+    }
+    return PamCiOidcProviderSchema.parse(raw);
   }
 }

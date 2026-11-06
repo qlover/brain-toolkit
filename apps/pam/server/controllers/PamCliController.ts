@@ -117,7 +117,7 @@ export class PamCliController {
   /**
    * GitHub Actions OIDC id_token → 15m pam_cli（项目 CI 身份）。
    *
-   * @param request - `{ provider: 'github', idToken }`
+   * @param request - `{ provider: 'github' | 'vercel', idToken }`
    */
   public async exchangeOidc(
     request: NextRequest
@@ -140,7 +140,8 @@ export class PamCliController {
         userAgent: request.headers.get('user-agent'),
         ipAddress:
           request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-        login_method: 'oidc_github'
+        login_method:
+          parsed.provider === 'vercel' ? 'oidc_vercel' : 'oidc_github'
       });
     } catch {
       // 公开换票无用户 session 时审计可跳过

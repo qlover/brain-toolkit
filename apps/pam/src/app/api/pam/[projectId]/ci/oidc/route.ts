@@ -10,7 +10,7 @@ type CiOidcRouteContext = {
 };
 
 /**
- * GET /api/pam/:projectId/ci/oidc — 读取 GitHub OIDC 绑定。
+ * GET /api/pam/:projectId/ci/oidc?provider=github|vercel — 读取 OIDC 绑定。
  */
 export async function GET(req: NextRequest, context: CiOidcRouteContext) {
   const { projectId } = await context.params;
@@ -21,12 +21,12 @@ export async function GET(req: NextRequest, context: CiOidcRouteContext) {
       })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
-      IOC(PamCiOidcController).getBinding(projectId)
+      IOC(PamCiOidcController).getBinding(projectId, req)
     );
 }
 
 /**
- * PUT /api/pam/:projectId/ci/oidc — upsert GitHub owner/repo 绑定。
+ * PUT /api/pam/:projectId/ci/oidc — upsert 绑定（body.provider，默认 github）。
  */
 export async function PUT(req: NextRequest, context: CiOidcRouteContext) {
   const { projectId } = await context.params;
@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest, context: CiOidcRouteContext) {
 }
 
 /**
- * DELETE /api/pam/:projectId/ci/oidc — 删除绑定。
+ * DELETE /api/pam/:projectId/ci/oidc?provider=github|vercel — 删除绑定。
  */
 export async function DELETE(req: NextRequest, context: CiOidcRouteContext) {
   const { projectId } = await context.params;
@@ -53,6 +53,6 @@ export async function DELETE(req: NextRequest, context: CiOidcRouteContext) {
       })
     )
     .runWithJson(async ({ parameters: { IOC } }) =>
-      IOC(PamCiOidcController).deleteBinding(projectId)
+      IOC(PamCiOidcController).deleteBinding(projectId, req)
     );
 }

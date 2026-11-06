@@ -16,6 +16,8 @@ export const PAM_SITE_SETTING_KEYS = {
   AUTH_CLI_TOKEN_EXPIRES_IN: 'auth.cli_token_expires_in',
   /** GitHub Actions OIDC id_token 的 aud（与 workflow audience 一致）。 */
   AUTH_OIDC_GITHUB_AUDIENCE: 'auth.oidc_github_audience',
+  /** Vercel OIDC 自定义 aud（与 getVercelOidcToken({ audience }) 一致）。 */
+  AUTH_OIDC_VERCEL_AUDIENCE: 'auth.oidc_vercel_audience',
 
   BRAIN_OAUTH_SITE_URL: 'brain_oauth.site_url',
   BRAIN_OAUTH_CLIENT_ID: 'brain_oauth.client_id',
@@ -130,6 +132,13 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       label: 'GitHub Actions OIDC Audience',
       description:
         '校验 Actions id_token 的 aud；须与 workflow 里请求 token 时的 audience 一致。默认使用 SITE_URL 去尾斜杠。也可设环境变量 PAM_OIDC_GITHUB_AUDIENCE。',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.AUTH_OIDC_VERCEL_AUDIENCE,
+      label: 'Vercel OIDC Audience',
+      description:
+        '校验 Vercel OIDC id_token 的 aud；须与 getVercelOidcToken({ audience }) 一致。默认使用 SITE_URL 去尾斜杠。也可设环境变量 PAM_OIDC_VERCEL_AUDIENCE。',
       isSensitive: false
     },
     {

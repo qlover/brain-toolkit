@@ -4,12 +4,12 @@ import { NextApiServer } from '@server/NextApiServer';
 import type { NextRequest } from 'next/server';
 
 /**
- * GET /api/pam/ci/oidc/audience — 站点默认 GitHub OIDC audience（需登录）。
+ * GET /api/pam/ci/oidc/audience?provider=github|vercel — 站点默认 OIDC audience。
  */
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   return new NextApiServer(API_PAM_CI_OIDC_AUDIENCE, req).runWithJson(
     async ({ parameters: { IOC } }) => {
-      return IOC(PamCiOidcController).getAudienceHint();
+      return IOC(PamCiOidcController).getAudienceHint(req);
     }
   );
 }

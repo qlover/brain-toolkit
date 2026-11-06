@@ -1,13 +1,16 @@
 import { z } from 'zod';
 import { V_REQUIRED } from '@config/i18n-identifier/common/validators';
 
-/** GitHub `owner/repo`（与 Actions repository claim 一致）。 */
+/**
+ * 外部资源键：`a/b` 形态。
+ * GitHub = owner/repo；Vercel = teamSlug/projectName。
+ */
 export const PamCiOidcRepositorySchema = z
   .string()
   .trim()
   .regex(/^[^/\s]+\/[^/\s]+$/, { message: V_REQUIRED });
 
-export const PamCiOidcProviderSchema = z.literal('github');
+export const PamCiOidcProviderSchema = z.enum(['github', 'vercel']);
 
 export type PamCiOidcProviderType = z.infer<typeof PamCiOidcProviderSchema>;
 
@@ -27,6 +30,8 @@ export type PamCliOidcExchangeRequest = z.infer<
  * Body for `PUT /api/pam/:projectId/ci/oidc`.
  */
 export const PamCiOidcBindingUpsertSchema = z.object({
+  /** 默认 github，兼容旧 UI。 */
+  provider: PamCiOidcProviderSchema.default('github'),
   repository: PamCiOidcRepositorySchema,
   /** 可选；省略则用站点默认 audience。 */
   audience: z.string().trim().min(1).optional()

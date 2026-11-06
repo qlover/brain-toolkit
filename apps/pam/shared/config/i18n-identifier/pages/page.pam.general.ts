@@ -309,18 +309,34 @@ export const PAGE_PAM_GENERAL_DESC_PROJECT_REPO =
   'page_pam_general:descProjectRepo';
 
 /**
- * @description GitHub Actions OIDC CI 绑定标题
- * @localZh CI / GitHub Actions
- * @localEn CI / GitHub Actions
+ * @description CI OIDC 绑定区块标题
+ * @localZh CI / OIDC
+ * @localEn CI / OIDC
  */
 export const PAGE_PAM_GENERAL_CI_OIDC_TITLE = 'page_pam_general:ciOidcTitle';
 
 /**
- * @description GitHub Actions OIDC 绑定说明
- * @localZh 绑定 GitHub 仓库后，Actions 可用 OIDC 换短票注入环境（无需 bot 密码）。受保护环境默认不可 resolve。
- * @localEn Bind a GitHub repository so Actions can exchange an OIDC id_token for a short pam_cli ticket (no bot password). Protected envs cannot resolve by default.
+ * @description CI OIDC 绑定说明
+ * @localZh 绑定 GitHub 仓库或 Vercel 项目后，CI 可用 OIDC 换短票注入环境（无需 bot 密码）。受保护环境默认不可 resolve。
+ * @localEn Bind a GitHub repo or Vercel project so CI can exchange an OIDC id_token for a short pam_cli ticket (no bot password). Protected envs cannot resolve by default.
  */
 export const PAGE_PAM_GENERAL_CI_OIDC_DESC = 'page_pam_general:ciOidcDesc';
+
+/**
+ * @description Provider 切换：GitHub
+ * @localZh GitHub Actions
+ * @localEn GitHub Actions
+ */
+export const PAGE_PAM_GENERAL_CI_OIDC_PROVIDER_GITHUB =
+  'page_pam_general:ciOidcProviderGithub';
+
+/**
+ * @description Provider 切换：Vercel
+ * @localZh Vercel
+ * @localEn Vercel
+ */
+export const PAGE_PAM_GENERAL_CI_OIDC_PROVIDER_VERCEL =
+  'page_pam_general:ciOidcProviderVercel';
 
 /**
  * @description GitHub owner/repo 输入标签
@@ -339,12 +355,36 @@ export const PAGE_PAM_GENERAL_CI_OIDC_REPO_PLACEHOLDER =
   'page_pam_general:ciOidcRepoPlaceholder';
 
 /**
- * @description OIDC audience 提示
+ * @description Vercel team/project 输入标签
+ * @localZh Vercel 项目（team/project）
+ * @localEn Vercel project (team/project)
+ */
+export const PAGE_PAM_GENERAL_CI_OIDC_VERCEL_LABEL =
+  'page_pam_general:ciOidcVercelLabel';
+
+/**
+ * @description Vercel team/project 占位
+ * @localZh 例如 acme/my-app
+ * @localEn e.g. acme/my-app
+ */
+export const PAGE_PAM_GENERAL_CI_OIDC_VERCEL_PLACEHOLDER =
+  'page_pam_general:ciOidcVercelPlaceholder';
+
+/**
+ * @description GitHub OIDC audience 提示
  * @localZh Actions 申请 id_token 时的 audience 须为：{{audience}}
  * @localEn Actions must request the id_token with audience: {{audience}}
  */
 export const PAGE_PAM_GENERAL_CI_OIDC_AUDIENCE_HINT =
   'page_pam_general:ciOidcAudienceHint';
+
+/**
+ * @description Vercel OIDC audience 提示
+ * @localZh getVercelOidcToken({ audience }) 的 audience 须为：{{audience}}
+ * @localEn getVercelOidcToken({ audience }) must use audience: {{audience}}
+ */
+export const PAGE_PAM_GENERAL_CI_OIDC_VERCEL_AUDIENCE_HINT =
+  'page_pam_general:ciOidcVercelAudienceHint';
 
 /**
  * @description 保存 OIDC 绑定
@@ -362,8 +402,8 @@ export const PAGE_PAM_GENERAL_CI_OIDC_CLEAR = 'page_pam_general:ciOidcClear';
 
 /**
  * @description OIDC 绑定已保存
- * @localZh 已保存 GitHub Actions 绑定
- * @localEn GitHub Actions binding saved
+ * @localZh 已保存 OIDC 绑定
+ * @localEn OIDC binding saved
  */
 export const PAGE_PAM_GENERAL_CI_OIDC_SAVED = 'page_pam_general:ciOidcSaved';
 
