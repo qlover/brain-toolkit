@@ -24,26 +24,30 @@ export type PlatformRoleKeyType =
 export const TeamRoleKey = {
   Owner: 'team_owner',
   Admin: 'team_admin',
-  Member: 'team_member'
+  Member: 'team_member',
+  /** GitHub Actions / OIDC CI：仅 inject */
+  CiRunner: 'team_ci_runner'
 } as const;
 
 export type TeamRoleKeyType = (typeof TeamRoleKey)[keyof typeof TeamRoleKey];
 
 /** Legacy API / membership text → pam_roles.key */
 export function teamRoleKeyFromLegacy(
-  role: 'owner' | 'admin' | 'member'
+  role: 'owner' | 'admin' | 'member' | 'ci_runner'
 ): TeamRoleKeyType {
   if (role === 'owner') return TeamRoleKey.Owner;
   if (role === 'admin') return TeamRoleKey.Admin;
+  if (role === 'ci_runner') return TeamRoleKey.CiRunner;
   return TeamRoleKey.Member;
 }
 
 export function legacyTeamRoleFromKey(
   key: string | null | undefined
-): 'owner' | 'admin' | 'member' | null {
+): 'owner' | 'admin' | 'member' | 'ci_runner' | null {
   if (key === TeamRoleKey.Owner || key === 'owner') return 'owner';
   if (key === TeamRoleKey.Admin || key === 'admin') return 'admin';
   if (key === TeamRoleKey.Member || key === 'member') return 'member';
+  if (key === TeamRoleKey.CiRunner || key === 'ci_runner') return 'ci_runner';
   return null;
 }
 

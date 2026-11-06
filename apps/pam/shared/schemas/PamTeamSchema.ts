@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { V_REQUIRED } from '@config/i18n-identifier/common/validators';
 
-export const PAM_TEAM_ROLES = ['owner', 'admin', 'member'] as const;
+export const PAM_TEAM_ROLES = [
+  'owner',
+  'admin',
+  'member',
+  'ci_runner'
+] as const;
 export type PamTeamRole = (typeof PAM_TEAM_ROLES)[number];
 
 export const PamTeamRoleSchema = z.enum(PAM_TEAM_ROLES);
@@ -32,7 +37,7 @@ export const PamTeamMemberRowSchema = z.object({
 export type PamTeamMemberRow = z.infer<typeof PamTeamMemberRowSchema>;
 
 export const PamTeamMemberItemSchema = PamTeamMemberRowSchema.extend({
-  /** Derived from role_id for API/UI (owner|admin|member). */
+  /** Derived from role_id for API/UI（含 ci_runner）。 */
   role: PamTeamRoleSchema,
   email: z.string().email().or(z.literal('')).optional(),
   phone: z.string().nullable().optional(),

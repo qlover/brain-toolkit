@@ -11,6 +11,7 @@ export const PAM_PROJECT_ACCESS_ROLES = [
   'owner',
   'admin',
   'member',
+  'ci_runner',
   'none'
 ] as const;
 

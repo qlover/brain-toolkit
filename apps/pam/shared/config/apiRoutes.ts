@@ -228,6 +228,15 @@ export const API_OAUTH_PLAYGROUND_VALIDATE =
 export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 
 /**
+ * API path: `/api/pam/:projectId/ci/oidc`
+ *
+ * @see [src/app/api/pam/[projectId]/ci/oidc/route.ts](../../src/app/api/pam/[projectId]/ci/oidc/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/ci/oidc/route.ts`
+ */
+export const API_PAM_CI_OIDC = '/api/pam/:projectId/ci/oidc' as const;
+
+/**
  * API path: `/api/pam/:projectId/environments`
  *
  * @see [src/app/api/pam/[projectId]/environments/route.ts](../../src/app/api/pam/[projectId]/environments/route.ts)
@@ -325,6 +334,15 @@ export const API_PAM_RESOLVE = '/api/pam/:projectId/resolve' as const;
 export const API_PAM_CATEGORIES = '/api/pam/categories' as const;
 
 /**
+ * API path: `/api/pam/ci/oidc/audience`
+ *
+ * @see [src/app/api/pam/ci/oidc/audience/route.ts](../../src/app/api/pam/ci/oidc/audience/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/ci/oidc/audience/route.ts`
+ */
+export const API_PAM_CI_OIDC_AUDIENCE = '/api/pam/ci/oidc/audience' as const;
+
+/**
  * API path: `/api/pam/cli/device/approve`
  *
  * @see [src/app/api/pam/cli/device/approve/route.ts](../../src/app/api/pam/cli/device/approve/route.ts)
@@ -360,6 +378,15 @@ export const API_PAM_CLI_DEVICE_TOKEN = '/api/pam/cli/device/token' as const;
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/logout/route.ts`
  */
 export const API_PAM_CLI_LOGOUT = '/api/pam/cli/logout' as const;
+
+/**
+ * API path: `/api/pam/cli/oidc/exchange`
+ *
+ * @see [src/app/api/pam/cli/oidc/exchange/route.ts](../../src/app/api/pam/cli/oidc/exchange/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/oidc/exchange/route.ts`
+ */
+export const API_PAM_CLI_OIDC_EXCHANGE = '/api/pam/cli/oidc/exchange' as const;
 
 /**
  * API path: `/api/pam/cli/token`
@@ -695,6 +722,7 @@ export type ApiRoutePath =
   | typeof API_OAUTH_CONSENT
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
+  | typeof API_PAM_CI_OIDC
   | typeof API_PAM_ENVIRONMENTS
   | typeof API_PAM_ENVIRONMENTS_2
   | typeof API_PAM_ENVIRONMENTS_ACCESS_LOGS
@@ -705,10 +733,12 @@ export type ApiRoutePath =
   | typeof API_PAM_ENVIRONMENTS_VARIABLES
   | typeof API_PAM_RESOLVE
   | typeof API_PAM_CATEGORIES
+  | typeof API_PAM_CI_OIDC_AUDIENCE
   | typeof API_PAM_CLI_DEVICE_APPROVE
   | typeof API_PAM_CLI_DEVICE_CODE
   | typeof API_PAM_CLI_DEVICE_TOKEN
   | typeof API_PAM_CLI_LOGOUT
+  | typeof API_PAM_CLI_OIDC_EXCHANGE
   | typeof API_PAM_CLI_TOKEN
   | typeof API_PAM_CREATE
   | typeof API_PAM_DELETE

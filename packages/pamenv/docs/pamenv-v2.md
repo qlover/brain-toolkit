@@ -307,11 +307,14 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 - `PAMENV_TOKEN` / `PAMENV_BASE_URL` 内存票
 - `createCiToken`（默认 15m）供 bot / 后续交换签发
 
-**后续分支：**
+**Bot / 自建机（`feat/pam-cli-ci-bot`，过渡）：**
 
-| 分支 | 内容 |
-| --- | --- |
-| `feat/pam-cli-ci-bot` | 专用 bot + 短 TTL 票 + Docker / 自建机文档 |
-| `feat/pam-cli-ci-github` | `POST /api/pam/cli/oidc/exchange`、GitHub JWKS、Actions 读 |
+- `POST /api/pam/cli/ci/token` — bot 邮箱密码换 15m（见 [ci-bot.md](./ci-bot.md)）
 
-OIDC 目标：平台 `id_token` → 分钟级 `pam_cli` → 现有 sealed `resolve`；默认只授 inject；claim 绑死 repo。
+**GitHub OIDC（`feat/pam-cli-ci-github`）：**
+
+- 项目绑定 `owner/repo` → CI 用户（`team_ci_runner`，仅 inject）
+- `POST /api/pam/cli/oidc/exchange` — Actions `id_token` → 15m `pam_cli`
+- 用法见 [ci-github.md](./ci-github.md)
+
+OIDC：平台 `id_token` → 分钟级 `pam_cli` → sealed `resolve`；claim 绑死 repo；默认不授 export。

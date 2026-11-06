@@ -9,6 +9,7 @@ import {
   API_REQUEST_BODY_EMPTY
 } from '@config/i18n-identifier/api';
 import { ROUTE_PAMENV_DEVICE, withLocalePrefix } from '@config/route';
+import { PamCliOidcExchangeRequestSchema } from '@schemas/PamCiOidcSchema';
 import {
   PamCliDeviceApproveRequestSchema,
   PamCliDeviceCodeRequestSchema,
@@ -20,6 +21,7 @@ import {
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { ServerConfig } from '@server/ServerConfig';
 import { OAuthUserService } from '@server/services/OAuthUserService';
+import { PamCiOidcService } from '@server/services/PamCiOidcService';
 import {
   PamCliDeviceCodeStore,
   PamCliDeviceStatus
@@ -62,6 +64,9 @@ export class PamCliController {
 
   @inject(ServerConfig)
   protected serverConfig!: SeedServerConfigInterface;
+
+  @inject(PamCiOidcService)
+  protected ciOidcService!: PamCiOidcService;
 
   /**
    * Creates a CLI bearer token from email/password credentials.
@@ -107,6 +112,40 @@ export class PamCliController {
     }
 
     return this.issueTokenForUser(user, request, 'password');
+  }
+
+  /**
+   * GitHub Actions OIDC id_token → 15m pam_cli（项目 CI 身份）。
+   *
+   * @param request - `{ provider: 'github', idToken }`
+   */
+  public async exchangeOidc(
+    request: NextRequest
+  ): Promise<PamCliTokenResponse> {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+    if (isEmpty(body)) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+    const parsed = PamCliOidcExchangeRequestSchema.parse(body);
+    const issued = await this.ciOidcService.exchange(parsed, request);
+    try {
+      await this.requestLogsRepository.insertWithAuth({
+        event_type: 'pam.cli.token',
+        auth_provider: 'pam-cli',
+        userAgent: request.headers.get('user-agent'),
+        ipAddress:
+          request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+        login_method: 'oidc_github'
+      });
+    } catch {
+      // 公开换票无用户 session 时审计可跳过
+    }
+    return issued;
   }
 
   /**

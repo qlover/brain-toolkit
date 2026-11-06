@@ -1,0 +1,313 @@
+import { randomBytes } from 'node:crypto';
+import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { SupabaseRepo } from '@qlover/next-kit/server';
+import { decodeJwt } from 'jose';
+import { PermissionKey } from '@shared/auth/permissionKeys';
+import { TeamRoleKey } from '@shared/auth/roleKeys';
+import { inject, injectable } from '@shared/container';
+import {
+  API_NOT_AUTHORIZED,
+  API_PAM_PROJECT_NOT_FOUND,
+  API_REQUEST_BODY_EMPTY,
+  API_SERVER_ERROR
+} from '@config/i18n-identifier/api';
+import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
+import type {
+  PamCiOidcBinding,
+  PamCiOidcBindingUpsert,
+  PamCliOidcExchangeRequest
+} from '@schemas/PamCiOidcSchema';
+import type { PamCliTokenResponse } from '@schemas/PamCliSchema';
+import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
+import { PamGithubOidcVerifier } from '@server/impls/PamGithubOidcVerifier';
+import { PamCiOidcBindingRepo } from '@server/repositorys/PamCiOidcBindingRepo';
+import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
+import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
+import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
+import { ServerConfig } from '@server/ServerConfig';
+import { PamCliTokenService } from '@server/services/PamCliTokenService';
+import { PAMService } from '@server/services/PAMService';
+import { SiteSettingsService } from '@server/services/SiteSettingsService';
+import type { UserSchema } from '@qlover/next-kit/common';
+import type { NextRequest } from 'next/server';
+
+const CI_EMAIL_DOMAIN = 'pam.ci.invalid';
+
+/**
+ * 项目 GitHub OIDC 绑定与换票。
+ *
+ * 绑定时懒创建 CI 用户并加入 `team_ci_runner`；
+ * exchange 校验 Actions id_token 后签发 15m pam_cli。
+ */
+@injectable()
+export class PamCiOidcService {
+  constructor(
+    @inject(PAMService)
+    protected readonly pamService: PAMService,
+    @inject(PAMProjectRepo)
+    protected readonly projectRepo: PAMProjectRepo,
+    @inject(PamCiOidcBindingRepo)
+    protected readonly bindingRepo: PamCiOidcBindingRepo,
+    @inject(PamUsersRepo)
+    protected readonly pamUsersRepo: PamUsersRepo,
+    @inject(PamRolePermissionsRepo)
+    protected readonly rolesRepo: PamRolePermissionsRepo,
+    @inject(SupabaseRepo)
+    protected readonly supabaseBridge: SupabaseRepo<unknown>,
+    @inject(PamGithubOidcVerifier)
+    protected readonly githubVerifier: PamGithubOidcVerifier,
+    @inject(PamCliTokenService)
+    protected readonly cliTokenService: PamCliTokenService,
+    @inject(SiteSettingsService)
+    protected readonly siteSettings: SiteSettingsService,
+    @inject(ServerConfig)
+    protected readonly serverConfig: SeedServerConfigInterface
+  ) {}
+
+  /**
+   * 读取项目 GitHub OIDC 绑定（需项目管理权）。
+   */
+  public async getBinding(projectId: string): Promise<PamCiOidcBinding | null> {
+    await this.pamService.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_project_edit
+    );
+    const access = await this.requireProjectAccess(projectId);
+    return this.bindingRepo.findByProjectProvider(access.id, 'github');
+  }
+
+  /**
+   * Upsert 绑定：确保 CI 用户 + team_ci_runner 成员。
+   */
+  public async upsertBinding(
+    projectId: string,
+    input: PamCiOidcBindingUpsert
+  ): Promise<PamCiOidcBinding> {
+    const { userId } = await this.pamService.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_project_edit
+    );
+    const access = await this.requireProjectAccess(projectId);
+    if (!access.team_id) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+
+    const repository = input.repository.trim();
+    const existingByRepo = await this.bindingRepo.findByProviderRepository(
+      'github',
+      repository
+    );
+    if (existingByRepo && existingByRepo.projectId !== access.id) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const existing = await this.bindingRepo.findByProjectProvider(
+      access.id,
+      'github'
+    );
+    const ciUserId =
+      existing?.ciUserId ??
+      (await this.ensureCiUser(access.id, access.team_id, userId));
+
+    await this.ensureCiRunnerMembership(access.team_id, ciUserId, userId);
+
+    return this.bindingRepo.upsert({
+      projectId: access.id,
+      provider: 'github',
+      repository,
+      ciUserId,
+      audience: input.audience?.trim() || null,
+      createdBy: existing?.createdBy ?? userId
+    });
+  }
+
+  /**
+   * 删除项目 GitHub OIDC 绑定（保留 CI 用户，便于再绑）。
+   */
+  public async deleteBinding(projectId: string): Promise<void> {
+    await this.pamService.assertOrgPermission(
+      projectId,
+      PermissionKey.pam_project_edit
+    );
+    const access = await this.requireProjectAccess(projectId);
+    await this.bindingRepo.deleteByProjectProvider(access.id, 'github');
+  }
+
+  /**
+   * Actions id_token → 15m pam_cli。
+   */
+  public async exchange(
+    body: PamCliOidcExchangeRequest,
+    request: NextRequest
+  ): Promise<PamCliTokenResponse> {
+    if (body.provider !== 'github') {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    if (!body.idToken?.trim()) {
+      throw new ExecutorError(API_REQUEST_BODY_EMPTY);
+    }
+
+    let repositoryHint = '';
+    try {
+      const peek = decodeJwt(body.idToken);
+      repositoryHint =
+        typeof peek.repository === 'string' ? peek.repository.trim() : '';
+    } catch {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    if (!repositoryHint) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const binding = await this.bindingRepo.findByProviderRepository(
+      'github',
+      repositoryHint
+    );
+    if (!binding) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const audience =
+      binding.audience?.trim() || (await this.resolveDefaultAudience());
+    const claims = await this.githubVerifier.verify(body.idToken, audience);
+    if (claims.repository !== binding.repository) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const user = await this.loadCiUserSchema(binding.ciUserId);
+    const issued = await this.cliTokenService.createCiToken(user, {
+      loginMethod: 'oidc_github',
+      userAgent: request.headers.get('user-agent'),
+      ipAddress:
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null
+    });
+
+    return {
+      token: issued.token,
+      expiresAt: issued.expiresAt,
+      user: {
+        id: user.id,
+        email: user.email
+      }
+    };
+  }
+
+  /**
+   * 解析 Actions 请求 token 时应使用的 audience。
+   */
+  public async resolveDefaultAudience(): Promise<string> {
+    const fromEnv = process.env.PAM_OIDC_GITHUB_AUDIENCE?.trim();
+    if (fromEnv) {
+      return fromEnv.replace(/\/$/, '');
+    }
+    const fromSettings = (
+      await this.siteSettings.getString(
+        PAM_SITE_SETTING_KEYS.AUTH_OIDC_GITHUB_AUDIENCE
+      )
+    )?.trim();
+    if (fromSettings) {
+      return fromSettings.replace(/\/$/, '');
+    }
+    return this.serverConfig.siteUrl.replace(/\/$/, '');
+  }
+
+  protected async requireProjectAccess(projectId: string): Promise<{
+    id: string;
+    team_id: string | null;
+    owner_id: string;
+  }> {
+    const access = await this.projectRepo.getProjectAccessAdmin(projectId);
+    if (!access) {
+      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
+    }
+    return {
+      id: access.id,
+      owner_id: access.owner_id,
+      team_id: access.team_id ?? null
+    };
+  }
+
+  protected ciEmailForProject(projectId: string): string {
+    return `ci+${projectId}@${CI_EMAIL_DOMAIN}`;
+  }
+
+  protected async ensureCiUser(
+    projectId: string,
+    teamId: string,
+    invitedBy: string
+  ): Promise<string> {
+    const email = this.ciEmailForProject(projectId);
+    const existing = await this.pamUsersRepo.findByEmail(email);
+    if (existing) {
+      await this.ensureCiRunnerMembership(teamId, existing.id, invitedBy);
+      return existing.id;
+    }
+
+    const admin = await this.supabaseBridge.getAdminSupabase();
+    const password = randomBytes(32).toString('base64url');
+    const created = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        pam_ci: true,
+        pam_ci_project_id: projectId
+      }
+    });
+
+    let userId = created.data.user?.id ?? null;
+    if (!userId && created.error) {
+      const again = await this.pamUsersRepo.findByEmail(email);
+      if (again) {
+        userId = again.id;
+      } else {
+        this.supabaseBridge.throwIfError(created);
+        throw new ExecutorError(API_SERVER_ERROR);
+      }
+    }
+    if (!userId) {
+      throw new ExecutorError(API_SERVER_ERROR);
+    }
+
+    await this.pamUsersRepo.ensureProfile({
+      id: userId,
+      email,
+      displayName: `CI ${projectId.slice(0, 8)}`
+    });
+    await this.ensureCiRunnerMembership(teamId, userId, invitedBy);
+    return userId;
+  }
+
+  protected async ensureCiRunnerMembership(
+    teamId: string,
+    userId: string,
+    invitedBy: string
+  ): Promise<void> {
+    const roleId = await this.rolesRepo.requireRoleIdByKey(
+      TeamRoleKey.CiRunner
+    );
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const result = await supabase.from('pam_role_team_members').upsert(
+      {
+        team_id: teamId,
+        user_id: userId,
+        role_id: roleId,
+        status: 'active',
+        invited_by: invitedBy
+      },
+      { onConflict: 'team_id,user_id' }
+    );
+    this.supabaseBridge.throwIfError(result);
+  }
+
+  protected async loadCiUserSchema(userId: string): Promise<UserSchema> {
+    const row = await this.pamUsersRepo.findById(userId);
+    if (!row) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    return {
+      id: row.id,
+      email: row.email ?? this.ciEmailForProject(row.id)
+    } as UserSchema;
+  }
+}

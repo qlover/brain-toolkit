@@ -1627,7 +1627,8 @@ INSERT INTO public.pam_roles (key, name, kind, description, is_system) VALUES
   ('admin', '缁崵绮虹粻锛勬倞閸?, 'platform', 'Admin console write', TRUE),
   ('team_owner', '閸ャ垽妲﹂幍鈧張澶庘偓?, 'team', 'Team creator / owner', TRUE),
   ('team_admin', '閸ャ垽妲︾粻锛勬倞閸?, 'team', 'Team admin', TRUE),
-  ('team_member', '閸ャ垽妲﹂幋鎰喅', 'team', 'Team member', TRUE);
+  ('team_member', '閸ャ垽妲﹂幋鎰喅', 'team', 'Team member', TRUE),
+  ('team_ci_runner', 'CI Runner', 'team', 'GitHub Actions / OIDC CI identity: inject only', TRUE);
 
 -- ---------------------------------------------------------------------------
 -- 2) Permission catalog (permission_key PK)
@@ -1832,6 +1833,15 @@ JOIN (VALUES
   ('pam_teams_delete')
 ) AS v(permission_key) ON TRUE
 WHERE r.key = 'team_owner';
+
+INSERT INTO public.pam_role_assignments (role_id, permission_key)
+SELECT r.id, v.permission_key
+FROM public.pam_roles r
+JOIN (VALUES
+  ('pam_environments_inject'),
+  ('pam_teams_read')
+) AS v(permission_key) ON TRUE
+WHERE r.key = 'team_ci_runner';
 
 -- ---------------------------------------------------------------------------
 -- 4) pam_users.role_id (drop legacy system_role)
@@ -2897,3 +2907,30 @@ $$;
 
 REVOKE ALL ON FUNCTION pam_search_projects(uuid, text, text, text, int, int, boolean, boolean, text, text, boolean, boolean, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION pam_search_projects(uuid, text, text, text, int, int, boolean, boolean, text, text, boolean, boolean, text) TO service_role;
+
+-- #############################################################################
+-- CI OIDC bindings (also in 004-pam-ci-oidc.sql for upgrades)
+-- #############################################################################
+
+CREATE TABLE IF NOT EXISTS public.pam_ci_oidc_bindings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES public.pam_projects (id) ON DELETE CASCADE,
+  provider TEXT NOT NULL DEFAULT 'github'
+    CHECK (provider IN ('github')),
+  repository TEXT NOT NULL,
+  ci_user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE RESTRICT,
+  audience TEXT,
+  created_by UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT pam_ci_oidc_bindings_repository_nonempty
+    CHECK (length(trim(repository)) > 0),
+  CONSTRAINT pam_ci_oidc_bindings_repository_format
+    CHECK (repository ~ '^[^/\s]+/[^/\s]+$')
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pam_ci_oidc_bindings_provider_repo
+  ON public.pam_ci_oidc_bindings (provider, repository);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pam_ci_oidc_bindings_project_provider
+  ON public.pam_ci_oidc_bindings (project_id, provider);
+ALTER TABLE public.pam_ci_oidc_bindings ENABLE ROW LEVEL SECURITY;
