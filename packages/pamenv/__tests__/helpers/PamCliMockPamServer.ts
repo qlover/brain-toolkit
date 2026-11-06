@@ -5,6 +5,8 @@ import {
   type ServerResponse
 } from 'node:http';
 import type { PamCliProjectType } from '../../src/interfaces/PamCliTypes';
+import type { PamResolveSealClientOfferType } from '../../src/interfaces/PamResolveSealClientInterface';
+import { PamResolveX25519AesGcmSealClient } from '../../src/impls/PamResolveX25519AesGcmSealClient';
 
 export type PamCliMockExportPayloadType = {
   readonly projectId: string;
@@ -72,10 +74,12 @@ export type PamCliMockPamHandlersType = {
 export class PamCliMockPamServer {
   protected server: Server | null = null;
   protected handlers: PamCliMockPamHandlersType = {};
+  protected readonly resolveSealer = new PamResolveX25519AesGcmSealClient();
   public readonly requests: Array<{
     method: string;
     url: string;
     authorization?: string;
+    body?: unknown;
   }> = [];
   public readonly deletedEnvIds: string[] = [];
   public readonly replacedBodies: Array<{
@@ -321,7 +325,10 @@ export class PamCliMockPamServer {
       );
       if (method === 'POST' && resolveMatch) {
         const envId = decodeURIComponent(resolveMatch[2]!);
-        const body = (await this.readJson(req)) as { keys?: string[] };
+        const body = (await this.readJson(req)) as {
+          keys?: string[];
+          seal?: PamResolveSealClientOfferType;
+        };
         const payload = this.handlers.resolveByEnvId?.[envId];
         if (!payload) {
           this.json(res, 404, { success: false, id: 'api:pam_env_not_found' });
@@ -335,11 +342,21 @@ export class PamCliMockPamServer {
           });
           return;
         }
+        const variables = this.filterResolveVariables(
+          payload.variables,
+          body.keys
+        );
+        const sealed = this.sealResolveVariables(variables, body.seal);
+        if ('error' in sealed) {
+          this.json(res, sealed.status, {
+            success: false,
+            id: sealed.id
+          });
+          return;
+        }
         this.json(res, 200, {
           success: true,
-          data: {
-            variables: this.filterResolveVariables(payload.variables, body.keys)
-          }
+          data: { seal: sealed.seal }
         });
         return;
       }
@@ -352,6 +369,7 @@ export class PamCliMockPamServer {
         const body = (await this.readJson(req)) as {
           env?: string;
           keys?: string[];
+          seal?: PamResolveSealClientOfferType;
         };
         const envName = body.env?.trim() || '';
         const key = `${projectRef}:${envName}`;
@@ -368,6 +386,18 @@ export class PamCliMockPamServer {
           });
           return;
         }
+        const variables = this.filterResolveVariables(
+          payload.variables,
+          body.keys
+        );
+        const sealed = this.sealResolveVariables(variables, body.seal);
+        if ('error' in sealed) {
+          this.json(res, sealed.status, {
+            success: false,
+            id: sealed.id
+          });
+          return;
+        }
         this.json(res, 200, {
           success: true,
           data: {
@@ -375,7 +405,7 @@ export class PamCliMockPamServer {
             projectSlug: payload.projectSlug || projectRef,
             environmentId: payload.environmentId || 'e-unknown',
             environmentName: payload.environmentName || envName,
-            variables: this.filterResolveVariables(payload.variables, body.keys)
+            seal: sealed.seal
           }
         });
         return;
@@ -472,5 +502,40 @@ export class PamCliMockPamServer {
     }
     const wanted = new Set(keys);
     return variables.filter((item) => wanted.has(item.key));
+  }
+
+  /**
+   * 对齐生产：resolve 响应只带 `seal`，不含明文 value。
+   */
+  protected sealResolveVariables(
+    variables: readonly {
+      readonly key: string;
+      readonly value: string;
+      readonly sensitive: boolean;
+    }[],
+    offer: PamResolveSealClientOfferType | undefined
+  ):
+    | { seal: ReturnType<PamResolveX25519AesGcmSealClient['seal']> }
+    | { error: true; status: number; id: string } {
+    if (!offer?.alg?.trim() || !offer.publicKey?.trim()) {
+      return {
+        error: true,
+        status: 400,
+        id: 'api:pam_env_resolve_seal_required'
+      };
+    }
+    try {
+      const seal = this.resolveSealer.seal(
+        Buffer.from(JSON.stringify(variables), 'utf8'),
+        offer
+      );
+      return { seal };
+    } catch {
+      return {
+        error: true,
+        status: 400,
+        id: 'api:pam_env_resolve_seal_failed'
+      };
+    }
   }
 }

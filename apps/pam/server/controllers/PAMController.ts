@@ -16,7 +16,7 @@ import {
   type PAMEnvAccessContext,
   type PAMEnvAccessLog,
   type PAMEnvResolvedEnvironment,
-  type PAMEnvResolvedVariable,
+  type PAMEnvResolveSealEnvelope,
   type PAMEnvWriteable
 } from '@schemas/PAMEnvironmentSchema';
 import {
@@ -280,7 +280,7 @@ export class PAMController {
     projectId: string,
     envId: string,
     request: NextRequest
-  ): Promise<{ variables: PAMEnvResolvedVariable[] }> {
+  ): Promise<{ seal: PAMEnvResolveSealEnvelope }> {
     const projectUuid = uuidSchema.parse(projectId);
     const envUuid = uuidSchema.parse(envId);
     const text = await request.text();

@@ -17,10 +17,13 @@ import {
   buildApiPamEnvironments,
   buildApiPamEnvironmentSettings,
   buildApiPamEnvironmentVariables,
+  buildApiPamCiOidc,
   buildApiPamFork,
   buildApiPamPreviewImage,
-  buildApiPamTransfer
+  buildApiPamTransfer,
+  API_PAM_CI_OIDC_AUDIENCE
 } from '@config/route';
+import type { PamCiOidcBinding } from '@schemas/PamCiOidcSchema';
 import type {
   PAMEnvAccessLog,
   PAMEnvCreate,
@@ -378,5 +381,53 @@ export class PAMApi {
     >(buildApiPamEnvironmentAccessLogs(projectId, envId));
 
     return response.data.data!;
+  }
+
+  /**
+   * 读取项目 GitHub OIDC 绑定。
+   */
+  public async getCiOidcBinding(
+    projectId: string
+  ): Promise<PamCiOidcBinding | null> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<PamCiOidcBinding | null>,
+      Record<string, never>
+    >(buildApiPamCiOidc(projectId));
+    return response.data.data ?? null;
+  }
+
+  /**
+   * Upsert GitHub owner/repo OIDC 绑定。
+   */
+  public async upsertCiOidcBinding(
+    projectId: string,
+    body: { readonly repository: string; readonly audience?: string }
+  ): Promise<PamCiOidcBinding> {
+    const response = await this.appApiRequester.put<
+      NextKitApiSuccess<PamCiOidcBinding>,
+      { readonly repository: string; readonly audience?: string }
+    >(buildApiPamCiOidc(projectId), body);
+    return response.data.data!;
+  }
+
+  /**
+   * 删除 GitHub OIDC 绑定。
+   */
+  public async deleteCiOidcBinding(projectId: string): Promise<void> {
+    await this.appApiRequester.delete<
+      NextKitApiSuccess<{ ok: true }>,
+      Record<string, never>
+    >(buildApiPamCiOidc(projectId));
+  }
+
+  /**
+   * 站点默认 OIDC audience（供 Actions 配置提示）。
+   */
+  public async getCiOidcAudience(): Promise<string> {
+    const response = await this.appApiRequester.get<
+      NextKitApiSuccess<{ audience: string }>,
+      Record<string, never>
+    >(API_PAM_CI_OIDC_AUDIENCE);
+    return response.data.data?.audience ?? '';
   }
 }

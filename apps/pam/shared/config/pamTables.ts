@@ -14,5 +14,6 @@ export const PamTables = {
   oauthConsentGrants: 'pam_oauth_consent_grants',
   cliTokens: 'pam_cli_tokens',
   userIdentities: 'pam_user_identities',
-  envAccessLogs: 'pam_env_access_logs'
+  envAccessLogs: 'pam_env_access_logs',
+  ciOidcBindings: 'pam_ci_oidc_bindings'
 } as const;

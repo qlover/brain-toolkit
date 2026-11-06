@@ -38,6 +38,7 @@ import {
 function roleLabel(tt: PAMTeamsI18nInterface, role: string): string {
   if (role === 'owner') return tt.roleOwner;
   if (role === 'admin') return tt.roleAdmin;
+  if (role === 'ci_runner') return 'CI Runner';
   return tt.roleMember;
 }
 
@@ -162,7 +163,12 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
     member: PamTeamMemberItem,
     role: 'admin' | 'member'
   ) => {
-    if (!canUpdateMember || member.role === 'owner' || member.role === role) {
+    if (
+      !canUpdateMember ||
+      member.role === 'owner' ||
+      member.role === 'ci_runner' ||
+      member.role === role
+    ) {
       return;
     }
     setMemberBusy(true);
@@ -182,7 +188,12 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   };
 
   const handleRemove = async (member: PamTeamMemberItem) => {
-    if (!canRemoveMember || member.role === 'owner') return;
+    if (
+      !canRemoveMember ||
+      member.role === 'owner' ||
+      member.role === 'ci_runner'
+    )
+      return;
     setMemberBusy(true);
     detailStore.emit({ error: null });
     try {
@@ -340,6 +351,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
                 userId: member.user_id
               });
               const isOwner = member.role === 'owner';
+              const isCiRunner = member.role === 'ci_runner';
               return (
                 <li
                   data-testid="PAMTeamDetailPage"
@@ -355,7 +367,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {canUpdateMember && !isOwner ? (
+                    {canUpdateMember && !isOwner && !isCiRunner ? (
                       <select
                         value={member.role}
                         disabled={memberBusy}
@@ -376,7 +388,7 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
                         {roleLabel(tt, member.role)}
                       </span>
                     )}
-                    {canRemoveMember && !isOwner ? (
+                    {canRemoveMember && !isOwner && !isCiRunner ? (
                       <button
                         type="button"
                         disabled={memberBusy}

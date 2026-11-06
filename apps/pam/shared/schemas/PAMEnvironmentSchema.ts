@@ -80,10 +80,39 @@ export type PAMEnvReplaceVariables = z.infer<
 >;
 
 /**
- * Body for `POST .../resolve`: optional key filter (`pamenv run --only`).
+ * `POST .../resolve` 的客户端临时密封 offer。
+ * 必填：响应不再包含明文 `variables`。
+ */
+export const PAMEnvResolveSealOfferSchema = z.object({
+  alg: z.string().trim().min(1).max(64),
+  publicKey: z.string().trim().min(1).max(512)
+});
+
+export type PAMEnvResolveSealOffer = z.infer<
+  typeof PAMEnvResolveSealOfferSchema
+>;
+
+/**
+ * resolve 响应中的密封载荷（无明文 value）。
+ */
+export const PAMEnvResolveSealEnvelopeSchema = z.object({
+  alg: z.string().trim().min(1).max(64),
+  ephemeralPublicKey: z.string().trim().min(1).max(512),
+  nonce: z.string().trim().min(1).max(128),
+  ciphertext: z.string().trim().min(1)
+});
+
+export type PAMEnvResolveSealEnvelope = z.infer<
+  typeof PAMEnvResolveSealEnvelopeSchema
+>;
+
+/**
+ * `POST .../resolve` 请求体：可选 `keys`（对应 `--only`），
+ * 以及必填 seal offer，以便响应省略明文。
  */
 export const PAMEnvResolveSchema = z.object({
-  keys: z.array(z.string().trim().min(1)).max(500).optional()
+  keys: z.array(z.string().trim().min(1)).max(500).optional(),
+  seal: PAMEnvResolveSealOfferSchema
 });
 
 export type PAMEnvResolve = z.infer<typeof PAMEnvResolveSchema>;
@@ -103,7 +132,13 @@ export type PAMEnvResolvedEnvironment = {
   projectSlug: string;
   environmentId: string;
   environmentName: string;
-  variables: PAMEnvResolvedVariable[];
+  /** 仅遗留 / 测试路径可能出现；生产 resolve 只返回 `seal`。 */
+  variables?: PAMEnvResolvedVariable[];
+  seal: PAMEnvResolveSealEnvelope;
+};
+
+export type PAMEnvResolvedSealed = {
+  seal: PAMEnvResolveSealEnvelope;
 };
 
 /**

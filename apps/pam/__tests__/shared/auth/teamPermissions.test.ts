@@ -25,13 +25,16 @@ describe('teamPermissions', () => {
   });
 
   it('every team role can inject, only admin and owner can export', () => {
-    for (const role of ['member', 'admin', 'owner'] as const) {
+    for (const role of ['member', 'admin', 'owner', 'ci_runner'] as const) {
       expect(
         hasOrgPermission(role, PermissionKey.pam_environments_inject)
       ).toBe(true);
     }
     expect(
       hasOrgPermission('member', PermissionKey.pam_environments_export)
+    ).toBe(false);
+    expect(
+      hasOrgPermission('ci_runner', PermissionKey.pam_environments_export)
     ).toBe(false);
     expect(
       hasOrgPermission('admin', PermissionKey.pam_environments_export)

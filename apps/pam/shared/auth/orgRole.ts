@@ -22,9 +22,10 @@ export type OrgRoleType = (typeof OrgRole)[keyof typeof OrgRole];
 
 const ROLE_RANK: Record<PAMProjectAccessRole, number> = {
   none: 0,
-  member: 1,
-  admin: 2,
-  owner: 3
+  ci_runner: 1,
+  member: 2,
+  admin: 3,
+  owner: 4
 };
 
 export function orgRoleRank(role: PAMProjectAccessRole): number {

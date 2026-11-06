@@ -26,6 +26,7 @@ import {
 } from '@schemas/PAMProjectSchema';
 import type { PAMAuthUserSummary } from '@schemas/PAMProjectSchema';
 import { isPersonalTeamSlug } from '@schemas/PamTeamSchema';
+import { PAMProjectCiOidcSection } from './PAMProjectCiOidcSection';
 import {
   PAMProjectTransferPicker,
   prefetchTransferUsers
@@ -594,6 +595,10 @@ export function PAMProjectGeneralPanel({
           <SettingsFieldSkeleton />
         )}
       </PAMSettingsCard>
+
+      {ready ? (
+        <PAMProjectCiOidcSection projectId={projectId} canEdit={canEdit} />
+      ) : null}
 
       {isOwner && ready ? (
         <PAMSettingsCard

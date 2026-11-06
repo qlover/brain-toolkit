@@ -19,11 +19,13 @@ export const pamPermissionRegistry = new PermissionRegistry({
     ...DEFAULT_SYSTEM_ROLE_PERMISSIONS,
     [TeamRoleKey.Owner]: DEFAULT_ORG_ROLE_PERMISSIONS.owner ?? [],
     [TeamRoleKey.Admin]: DEFAULT_ORG_ROLE_PERMISSIONS.admin ?? [],
-    [TeamRoleKey.Member]: DEFAULT_ORG_ROLE_PERMISSIONS.member ?? []
+    [TeamRoleKey.Member]: DEFAULT_ORG_ROLE_PERMISSIONS.member ?? [],
+    [TeamRoleKey.CiRunner]: DEFAULT_ORG_ROLE_PERMISSIONS.ci_runner ?? []
   },
   aliases: {
     owner: TeamRoleKey.Owner,
-    member: TeamRoleKey.Member
+    member: TeamRoleKey.Member,
+    ci_runner: TeamRoleKey.CiRunner
   }
 });
 
@@ -69,7 +71,12 @@ export function resolveOrgPermissions(role: string): readonly string[] {
   if (role === 'none') {
     return [];
   }
-  if (role === 'owner' || role === 'admin' || role === 'member') {
+  if (
+    role === 'owner' ||
+    role === 'admin' ||
+    role === 'member' ||
+    role === 'ci_runner'
+  ) {
     return resolveRolePermissions(teamRoleKeyFromLegacy(role));
   }
   return resolveRolePermissions(role);

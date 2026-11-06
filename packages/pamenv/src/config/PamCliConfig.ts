@@ -28,6 +28,32 @@ export class PamCliConfig {
   public static readonly SUPPORTED_LOCALES = ['en', 'zh'] as const;
 
   /**
+   * CI / runner 内存票环境变量名（不写 vault），优先于 `.pam`。
+   */
+  public static readonly ENV_TOKEN = 'PAMENV_TOKEN' as const;
+
+  /**
+   * 使用 {@link ENV_TOKEN} 且无 config 时可选的 PAM 源站。
+   */
+  public static readonly ENV_BASE_URL = 'PAMENV_BASE_URL' as const;
+
+  /**
+   * @returns 去空白后的 `PAMENV_TOKEN`，未设置则为 null
+   */
+  public static getEnvToken(): string | null {
+    const token = process.env[this.ENV_TOKEN]?.trim();
+    return token || null;
+  }
+
+  /**
+   * @returns 去空白后的 `PAMENV_BASE_URL`，未设置则为 null
+   */
+  public static getEnvBaseUrl(): string | null {
+    const url = process.env[this.ENV_BASE_URL]?.trim();
+    return url || null;
+  }
+
+  /**
    * @returns Absolute path to `~/.pam`
    */
   public static getHomeRoot(): string {

@@ -173,18 +173,28 @@ export class PamCliAuthStore implements PamCliAuthStoreInterface {
 
   /**
    * @override
+   * 优先 `PAMENV_TOKEN`（CI 内存票），再读 vault / config。
    */
   public async getToken(): Promise<string | null> {
+    const envToken = PamCliConfig.getEnvToken();
+    if (envToken) {
+      return envToken;
+    }
     const config = await this.getConfig();
     return config.token;
   }
 
   /**
    * @override
+   * 顺序：`--url` → `PAMENV_BASE_URL` → config / 默认域名。
    */
   public async getBaseUrl(): Promise<string> {
     if (this.runtime.urlOverride?.trim()) {
       return PamCliConfig.normalizeOrigin(this.runtime.urlOverride);
+    }
+    const envBaseUrl = PamCliConfig.getEnvBaseUrl();
+    if (envBaseUrl) {
+      return PamCliConfig.normalizeOrigin(envBaseUrl);
     }
     const config = await this.readConfigFile();
     return PamCliConfig.normalizeOrigin(config.baseUrl);

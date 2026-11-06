@@ -242,6 +242,22 @@ export const API_PAM_ENV_NOT_FOUND = 'api:pam_env_not_found';
 export const API_PAM_ENV_PROTECTED = 'api:pam_env_protected';
 
 /**
+ * @description resolve 必须携带 seal 公钥，且算法受支持
+ * @localZh 环境注入需要密封参数（seal），请升级 pamenv
+ * @localEn Environment resolve requires a seal offer; upgrade pamenv
+ */
+export const API_PAM_ENV_RESOLVE_SEAL_REQUIRED =
+  'api:pam_env_resolve_seal_required';
+
+/**
+ * @description resolve seal 算法不受支持或封包失败
+ * @localZh 不支持的密封算法或密封失败
+ * @localEn Unsupported resolve seal algorithm or seal failed
+ */
+export const API_PAM_ENV_RESOLVE_SEAL_FAILED =
+  'api:pam_env_resolve_seal_failed';
+
+/**
  * @description 项目 slug 不能重复
  * @localZh 项目 slug 已存在
  * @localEn PAM slug already exists

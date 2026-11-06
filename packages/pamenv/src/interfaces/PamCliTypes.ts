@@ -139,7 +139,8 @@ export type PamCliResolvedVarType = {
 };
 
 /**
- * `POST .../resolve` response (no comments).
+ * CLI 解开 resolve 密封信封后的变量列表（不含注释）。
+ * 线上 JSON 只有 `{ seal }`，HTTP 体不出现明文。
  */
 export type PamCliResolveResultType = {
   readonly variables: readonly PamCliResolvedVarType[];

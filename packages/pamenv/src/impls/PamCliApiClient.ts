@@ -22,10 +22,27 @@ import { PamCliI18n } from '../i18n/PamCliI18n';
 import { PAMENV_CLI_NOT_LOGGED_IN } from '../i18n/identifier/pamenv_cli';
 import { PamCliApiError } from './PamCliApiError';
 import { PamCliProjectSearchUtil } from './PamCliProjectSearchUtil';
+import { PamResolveSealClientRegistry } from './PamResolveSealClientRegistry';
+import type {
+  PamResolveSealEnvelopeType,
+  PamResolveSealEphemeralKeyPairType
+} from '../interfaces/PamResolveSealClientInterface';
 import { version } from '../../package.json';
 
 /** Recorded in PAM env access logs. */
 const CLIENT_HEADER = { 'x-pamenv-client': `pamenv-cli/${version}` } as const;
+
+type SealedResolveWireType = {
+  readonly seal: PamResolveSealEnvelopeType;
+  readonly variables?: never;
+};
+
+type SealedResolveByNameWireType = SealedResolveWireType & {
+  readonly projectId: string;
+  readonly projectSlug: string;
+  readonly environmentId: string;
+  readonly environmentName: string;
+};
 
 type ApiEnvelopeType<T> = {
   readonly success: boolean;
@@ -48,7 +65,10 @@ type ApiEnvelopeType<T> = {
  * const projects = await client.listProjects('my-app');
  */
 export class PamCliApiClient implements PamCliApiClientInterface {
-  constructor(protected readonly authStore: PamCliAuthStoreInterface) {}
+  constructor(
+    protected readonly authStore: PamCliAuthStoreInterface,
+    protected readonly resolveSealRegistry: PamResolveSealClientRegistry = PamResolveSealClientRegistry.createDefault()
+  ) {}
 
   /**
    * @override
@@ -372,8 +392,9 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   ): Promise<PamCliResolveResultType> {
     const baseUrl = await this.authStore.getBaseUrl();
     const token = await this.requireToken();
+    const ephemeral = this.resolveSealRegistry.createEphemeralKeyPair();
 
-    return this.requestJson<PamCliResolveResultType>(
+    const sealed = await this.requestJson<SealedResolveWireType>(
       `${baseUrl}/api/pam/${projectId}/environments/${envId}/resolve`,
       {
         method: 'POST',
@@ -382,9 +403,11 @@ export class PamCliApiClient implements PamCliApiClientInterface {
           'Content-Type': 'application/json',
           ...CLIENT_HEADER
         },
-        body: JSON.stringify(keys && keys.length > 0 ? { keys } : {})
+        body: JSON.stringify(this.buildResolveBody(ephemeral, keys))
       }
     );
+
+    return { variables: this.openResolveVariables(sealed, ephemeral) };
   }
 
   /**
@@ -397,8 +420,9 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   ): Promise<PamCliResolveByNameResultType> {
     const baseUrl = await this.authStore.getBaseUrl();
     const token = await this.requireToken();
+    const ephemeral = this.resolveSealRegistry.createEphemeralKeyPair();
 
-    return this.requestJson<PamCliResolveByNameResultType>(
+    const sealed = await this.requestJson<SealedResolveByNameWireType>(
       `${baseUrl}/api/pam/${encodeURIComponent(projectRef)}/resolve`,
       {
         method: 'POST',
@@ -407,11 +431,54 @@ export class PamCliApiClient implements PamCliApiClientInterface {
           'Content-Type': 'application/json',
           ...CLIENT_HEADER
         },
-        body: JSON.stringify(
-          keys && keys.length > 0 ? { env: envName, keys } : { env: envName }
-        )
+        body: JSON.stringify({
+          env: envName,
+          ...this.buildResolveBody(ephemeral, keys)
+        })
       }
     );
+
+    return {
+      projectId: sealed.projectId,
+      projectSlug: sealed.projectSlug,
+      environmentId: sealed.environmentId,
+      environmentName: sealed.environmentName,
+      variables: this.openResolveVariables(sealed, ephemeral)
+    };
+  }
+
+  /**
+   * 组装带必填 seal offer 的 resolve 请求体。
+   */
+  protected buildResolveBody(
+    ephemeral: PamResolveSealEphemeralKeyPairType,
+    keys?: readonly string[]
+  ): { seal: PamResolveSealEphemeralKeyPairType['offer']; keys?: string[] } {
+    return {
+      seal: ephemeral.offer,
+      ...(keys && keys.length > 0 ? { keys: [...keys] } : {})
+    };
+  }
+
+  /**
+   * 解开密封变量；线上若仍带明文 `variables` 则拒绝。
+   */
+  protected openResolveVariables(
+    sealed: SealedResolveWireType,
+    ephemeral: PamResolveSealEphemeralKeyPairType
+  ): PamCliResolveResultType['variables'] {
+    if (!sealed.seal) {
+      throw new Error('Resolve response missing seal envelope');
+    }
+    const opened = this.resolveSealRegistry.open(
+      sealed.seal,
+      ephemeral.privateKey
+    );
+    const parsed = JSON.parse(Buffer.from(opened).toString('utf8')) as unknown;
+    if (!Array.isArray(parsed)) {
+      throw new Error('Resolve seal payload is not a variables array');
+    }
+    return parsed as PamCliResolveResultType['variables'];
   }
 
   /**

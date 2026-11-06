@@ -11,6 +11,7 @@ import {
   API_PAM_ENVIRONMENTS_EXPORT,
   API_PAM_ENVIRONMENTS_SETTINGS,
   API_PAM_ENVIRONMENTS_VARIABLES,
+  API_PAM_CI_OIDC,
   API_PAM_FORK,
   API_PAM_TRANSFER,
   API_PAM_PREVIEW_IMAGE
@@ -687,6 +688,13 @@ export function buildApiPamEnvironmentExport(
     projectId,
     envId
   });
+}
+
+/**
+ * @see {@link API_PAM_CI_OIDC}
+ */
+export function buildApiPamCiOidc(projectId: string): string {
+  return buildApiWithPath(API_PAM_CI_OIDC, { projectId });
 }
 
 export function isAuthGuestOnlyPath(pathname: string): boolean {
