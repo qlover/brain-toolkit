@@ -317,4 +317,10 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 - `POST /api/pam/cli/oidc/exchange` — Actions `id_token` → 15m `pam_cli`
 - 用法见 [ci-github.md](./ci-github.md)
 
-OIDC：平台 `id_token` → 分钟级 `pam_cli` → sealed `resolve`；claim 绑死 repo；默认不授 export。
+**Vercel OIDC（`feat/pam-cli-ci-vercel`）：**
+
+- 项目绑定 `teamSlug/projectName`（claim `owner`/`project`）→ 同一 CI 用户
+- 同一项目可同时有 github + vercel 各一条；`provider=vercel` 换票
+- 用法见 [ci-vercel.md](./ci-vercel.md)
+
+OIDC：平台 `id_token` → 分钟级 `pam_cli` → sealed `resolve`；claim 绑死外部资源键；默认不授 export。

@@ -11,15 +11,20 @@ import {
   API_REQUEST_BODY_EMPTY,
   API_SERVER_ERROR
 } from '@config/i18n-identifier/api';
-import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
+import {
+  PAM_SITE_SETTING_KEYS,
+  type PamSiteSettingKey
+} from '@config/pamSiteSettings';
 import type {
   PamCiOidcBinding,
   PamCiOidcBindingUpsert,
+  PamCiOidcProviderType,
   PamCliOidcExchangeRequest
 } from '@schemas/PamCiOidcSchema';
 import type { PamCliTokenResponse } from '@schemas/PamCliSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { PamGithubOidcVerifier } from '@server/impls/PamGithubOidcVerifier';
+import { PamVercelOidcVerifier } from '@server/impls/PamVercelOidcVerifier';
 import { PamCiOidcBindingRepo } from '@server/repositorys/PamCiOidcBindingRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
@@ -34,10 +39,11 @@ import type { NextRequest } from 'next/server';
 const CI_EMAIL_DOMAIN = 'pam.ci.invalid';
 
 /**
- * 项目 GitHub OIDC 绑定与换票。
+ * 项目 CI OIDC 绑定与换票（GitHub / Vercel）。
  *
  * 绑定时懒创建 CI 用户并加入 `team_ci_runner`；
- * exchange 校验 Actions id_token 后签发 15m pam_cli。
+ * 同一项目各 provider 共用同一 CI 用户；
+ * exchange 校验平台 id_token 后签发 15m pam_cli。
  */
 @injectable()
 export class PamCiOidcService {
@@ -56,6 +62,8 @@ export class PamCiOidcService {
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
     @inject(PamGithubOidcVerifier)
     protected readonly githubVerifier: PamGithubOidcVerifier,
+    @inject(PamVercelOidcVerifier)
+    protected readonly vercelVerifier: PamVercelOidcVerifier,
     @inject(PamCliTokenService)
     protected readonly cliTokenService: PamCliTokenService,
     @inject(SiteSettingsService)
@@ -65,15 +73,18 @@ export class PamCiOidcService {
   ) {}
 
   /**
-   * 读取项目 GitHub OIDC 绑定（需项目管理权）。
+   * 读取项目某 provider 的 OIDC 绑定（需项目管理权）。
    */
-  public async getBinding(projectId: string): Promise<PamCiOidcBinding | null> {
+  public async getBinding(
+    projectId: string,
+    provider: PamCiOidcProviderType = 'github'
+  ): Promise<PamCiOidcBinding | null> {
     await this.pamService.assertOrgPermission(
       projectId,
       PermissionKey.pam_project_edit
     );
     const access = await this.requireProjectAccess(projectId);
-    return this.bindingRepo.findByProjectProvider(access.id, 'github');
+    return this.bindingRepo.findByProjectProvider(access.id, provider);
   }
 
   /**
@@ -83,6 +94,7 @@ export class PamCiOidcService {
     projectId: string,
     input: PamCiOidcBindingUpsert
   ): Promise<PamCiOidcBinding> {
+    const provider = input.provider ?? 'github';
     const { userId } = await this.pamService.assertOrgPermission(
       projectId,
       PermissionKey.pam_project_edit
@@ -94,7 +106,7 @@ export class PamCiOidcService {
 
     const repository = input.repository.trim();
     const existingByRepo = await this.bindingRepo.findByProviderRepository(
-      'github',
+      provider,
       repository
     );
     if (existingByRepo && existingByRepo.projectId !== access.id) {
@@ -103,17 +115,24 @@ export class PamCiOidcService {
 
     const existing = await this.bindingRepo.findByProjectProvider(
       access.id,
-      'github'
+      provider
+    );
+    const siblingProvider: PamCiOidcProviderType =
+      provider === 'github' ? 'vercel' : 'github';
+    const sibling = await this.bindingRepo.findByProjectProvider(
+      access.id,
+      siblingProvider
     );
     const ciUserId =
       existing?.ciUserId ??
+      sibling?.ciUserId ??
       (await this.ensureCiUser(access.id, access.team_id, userId));
 
     await this.ensureCiRunnerMembership(access.team_id, ciUserId, userId);
 
     return this.bindingRepo.upsert({
       projectId: access.id,
-      provider: 'github',
+      provider,
       repository,
       ciUserId,
       audience: input.audience?.trim() || null,
@@ -122,34 +141,72 @@ export class PamCiOidcService {
   }
 
   /**
-   * 删除项目 GitHub OIDC 绑定（保留 CI 用户，便于再绑）。
+   * 删除项目某 provider 的 OIDC 绑定（保留 CI 用户，便于再绑）。
    */
-  public async deleteBinding(projectId: string): Promise<void> {
+  public async deleteBinding(
+    projectId: string,
+    provider: PamCiOidcProviderType = 'github'
+  ): Promise<void> {
     await this.pamService.assertOrgPermission(
       projectId,
       PermissionKey.pam_project_edit
     );
     const access = await this.requireProjectAccess(projectId);
-    await this.bindingRepo.deleteByProjectProvider(access.id, 'github');
+    await this.bindingRepo.deleteByProjectProvider(access.id, provider);
   }
 
   /**
-   * Actions id_token → 15m pam_cli。
+   * 平台 id_token → 15m pam_cli。
    */
   public async exchange(
     body: PamCliOidcExchangeRequest,
     request: NextRequest
   ): Promise<PamCliTokenResponse> {
-    if (body.provider !== 'github') {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
     if (!body.idToken?.trim()) {
       throw new ExecutorError(API_REQUEST_BODY_EMPTY);
     }
 
+    if (body.provider === 'vercel') {
+      return this.exchangeVercel(body.idToken, request);
+    }
+    if (body.provider === 'github') {
+      return this.exchangeGithub(body.idToken, request);
+    }
+    throw new ExecutorError(API_NOT_AUTHORIZED);
+  }
+
+  /**
+   * 按 provider 解析默认 audience（绑定未覆盖时）。
+   */
+  public async resolveAudience(
+    provider: PamCiOidcProviderType = 'github'
+  ): Promise<string> {
+    if (provider === 'vercel') {
+      return this.resolveAudienceFrom(
+        process.env.PAM_OIDC_VERCEL_AUDIENCE,
+        PAM_SITE_SETTING_KEYS.AUTH_OIDC_VERCEL_AUDIENCE
+      );
+    }
+    return this.resolveAudienceFrom(
+      process.env.PAM_OIDC_GITHUB_AUDIENCE,
+      PAM_SITE_SETTING_KEYS.AUTH_OIDC_GITHUB_AUDIENCE
+    );
+  }
+
+  /**
+   * @deprecated 使用 {@link resolveAudience}；保留兼容旧调用。
+   */
+  public async resolveDefaultAudience(): Promise<string> {
+    return this.resolveAudience('github');
+  }
+
+  protected async exchangeGithub(
+    idToken: string,
+    request: NextRequest
+  ): Promise<PamCliTokenResponse> {
     let repositoryHint = '';
     try {
-      const peek = decodeJwt(body.idToken);
+      const peek = decodeJwt(idToken);
       repositoryHint =
         typeof peek.repository === 'string' ? peek.repository.trim() : '';
     } catch {
@@ -168,15 +225,61 @@ export class PamCiOidcService {
     }
 
     const audience =
-      binding.audience?.trim() || (await this.resolveDefaultAudience());
-    const claims = await this.githubVerifier.verify(body.idToken, audience);
-    if (claims.repository !== binding.repository) {
+      binding.audience?.trim() || (await this.resolveAudience('github'));
+    const claims = await this.githubVerifier.verify(idToken, audience);
+    if (claims.resourceKey !== binding.repository) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    const user = await this.loadCiUserSchema(binding.ciUserId);
+    return this.issueCiToken(binding.ciUserId, 'oidc_github', request);
+  }
+
+  protected async exchangeVercel(
+    idToken: string,
+    request: NextRequest
+  ): Promise<PamCliTokenResponse> {
+    let resourceHint = '';
+    try {
+      const peek = decodeJwt(idToken);
+      const owner = typeof peek.owner === 'string' ? peek.owner.trim() : '';
+      const project =
+        typeof peek.project === 'string' ? peek.project.trim() : '';
+      if (owner && project) {
+        resourceHint = `${owner}/${project}`;
+      }
+    } catch {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+    if (!resourceHint) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const binding = await this.bindingRepo.findByProviderRepository(
+      'vercel',
+      resourceHint
+    );
+    if (!binding) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const audience =
+      binding.audience?.trim() || (await this.resolveAudience('vercel'));
+    const claims = await this.vercelVerifier.verify(idToken, audience);
+    if (claims.resourceKey !== binding.repository) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    return this.issueCiToken(binding.ciUserId, 'oidc_vercel', request);
+  }
+
+  protected async issueCiToken(
+    ciUserId: string,
+    loginMethod: 'oidc_github' | 'oidc_vercel',
+    request: NextRequest
+  ): Promise<PamCliTokenResponse> {
+    const user = await this.loadCiUserSchema(ciUserId);
     const issued = await this.cliTokenService.createCiToken(user, {
-      loginMethod: 'oidc_github',
+      loginMethod,
       userAgent: request.headers.get('user-agent'),
       ipAddress:
         request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null
@@ -192,18 +295,16 @@ export class PamCiOidcService {
     };
   }
 
-  /**
-   * 解析 Actions 请求 token 时应使用的 audience。
-   */
-  public async resolveDefaultAudience(): Promise<string> {
-    const fromEnv = process.env.PAM_OIDC_GITHUB_AUDIENCE?.trim();
+  protected async resolveAudienceFrom(
+    envRaw: string | undefined,
+    settingKey: PamSiteSettingKey
+  ): Promise<string> {
+    const fromEnv = envRaw?.trim();
     if (fromEnv) {
       return fromEnv.replace(/\/$/, '');
     }
     const fromSettings = (
-      await this.siteSettings.getString(
-        PAM_SITE_SETTING_KEYS.AUTH_OIDC_GITHUB_AUDIENCE
-      )
+      await this.siteSettings.getString(settingKey)
     )?.trim();
     if (fromSettings) {
       return fromSettings.replace(/\/$/, '');

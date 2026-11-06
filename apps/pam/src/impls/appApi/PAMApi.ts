@@ -23,7 +23,10 @@ import {
   buildApiPamTransfer,
   API_PAM_CI_OIDC_AUDIENCE
 } from '@config/route';
-import type { PamCiOidcBinding } from '@schemas/PamCiOidcSchema';
+import type {
+  PamCiOidcBinding,
+  PamCiOidcProviderType
+} from '@schemas/PamCiOidcSchema';
 import type {
   PAMEnvAccessLog,
   PAMEnvCreate,
@@ -384,50 +387,66 @@ export class PAMApi {
   }
 
   /**
-   * 读取项目 GitHub OIDC 绑定。
+   * 读取项目 CI OIDC 绑定。
    */
   public async getCiOidcBinding(
-    projectId: string
+    projectId: string,
+    provider: PamCiOidcProviderType = 'github'
   ): Promise<PamCiOidcBinding | null> {
     const response = await this.appApiRequester.get<
       NextKitApiSuccess<PamCiOidcBinding | null>,
       Record<string, never>
-    >(buildApiPamCiOidc(projectId));
+    >(buildApiPamCiOidc(projectId, provider));
     return response.data.data ?? null;
   }
 
   /**
-   * Upsert GitHub owner/repo OIDC 绑定。
+   * Upsert CI OIDC 绑定（GitHub owner/repo 或 Vercel team/project）。
    */
   public async upsertCiOidcBinding(
     projectId: string,
-    body: { readonly repository: string; readonly audience?: string }
+    body: {
+      readonly provider?: PamCiOidcProviderType;
+      readonly repository: string;
+      readonly audience?: string;
+    }
   ): Promise<PamCiOidcBinding> {
     const response = await this.appApiRequester.put<
       NextKitApiSuccess<PamCiOidcBinding>,
-      { readonly repository: string; readonly audience?: string }
-    >(buildApiPamCiOidc(projectId), body);
+      {
+        readonly provider?: PamCiOidcProviderType;
+        readonly repository: string;
+        readonly audience?: string;
+      }
+    >(buildApiPamCiOidc(projectId, body.provider ?? 'github'), body);
     return response.data.data!;
   }
 
   /**
-   * 删除 GitHub OIDC 绑定。
+   * 删除 CI OIDC 绑定。
    */
-  public async deleteCiOidcBinding(projectId: string): Promise<void> {
+  public async deleteCiOidcBinding(
+    projectId: string,
+    provider: PamCiOidcProviderType = 'github'
+  ): Promise<void> {
     await this.appApiRequester.delete<
       NextKitApiSuccess<{ ok: true }>,
       Record<string, never>
-    >(buildApiPamCiOidc(projectId));
+    >(buildApiPamCiOidc(projectId, provider));
   }
 
   /**
-   * 站点默认 OIDC audience（供 Actions 配置提示）。
+   * 站点默认 OIDC audience（供 CI 配置提示）。
    */
-  public async getCiOidcAudience(): Promise<string> {
+  public async getCiOidcAudience(
+    provider: PamCiOidcProviderType = 'github'
+  ): Promise<string> {
+    const qs =
+      provider === 'github' ? '' : `?provider=${encodeURIComponent(provider)}`;
     const response = await this.appApiRequester.get<
       NextKitApiSuccess<{ audience: string }>,
       Record<string, never>
-    >(API_PAM_CI_OIDC_AUDIENCE);
+    >(`${API_PAM_CI_OIDC_AUDIENCE}${qs}`);
     return response.data.data?.audience ?? '';
   }
 }

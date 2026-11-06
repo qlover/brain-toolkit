@@ -66,6 +66,7 @@ jobs:
 | job 内换票，短票只进 env | 把 `PAMENV_TOKEN` 打进日志 / artifact |
 | 最小 CI 角色（仅 inject） | 给 CI 用户 admin / export（除非明确需要受保护环境） |
 
-## 与 bot 密码路径
+## 相关
 
-自建机 / 无 OIDC 的过渡方案见 [ci-bot.md](./ci-bot.md)。有 GitHub Actions 时优先本页 OIDC。
+- Vercel：[ci-vercel.md](./ci-vercel.md)
+- 自建机 / 无 OIDC：[ci-bot.md](./ci-bot.md)。有平台 OIDC 时优先本页 / Vercel 页。
