@@ -398,6 +398,22 @@ export const API_PAM_CLI_OIDC_EXCHANGE = '/api/pam/cli/oidc/exchange' as const;
 export const API_PAM_CLI_TOKEN = '/api/pam/cli/token' as const;
 
 /**
+ * API path: `/api/pam/:projectId/cli/deploy-dek/wrap`
+ *
+ * @see [src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts](../../src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts)
+ */
+export const API_PAM_DEPLOY_DEK_WRAP =
+  '/api/pam/:projectId/cli/deploy-dek/wrap' as const;
+
+/**
+ * API path: `/api/pam/:projectId/cli/deploy-dek/unwrap`
+ *
+ * @see [src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts](../../src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts)
+ */
+export const API_PAM_DEPLOY_DEK_UNWRAP =
+  '/api/pam/:projectId/cli/deploy-dek/unwrap' as const;
+
+/**
  * API path: `/api/pam/create`
  *
  * @see [src/app/api/pam/create/route.ts](../../src/app/api/pam/create/route.ts)
@@ -740,6 +756,8 @@ export type ApiRoutePath =
   | typeof API_PAM_CLI_LOGOUT
   | typeof API_PAM_CLI_OIDC_EXCHANGE
   | typeof API_PAM_CLI_TOKEN
+  | typeof API_PAM_DEPLOY_DEK_WRAP
+  | typeof API_PAM_DEPLOY_DEK_UNWRAP
   | typeof API_PAM_CREATE
   | typeof API_PAM_DELETE
   | typeof API_PAM_DETAIL
