@@ -1,5 +1,5 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
 import { injectable } from '@shared/container';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import type {
@@ -31,6 +31,17 @@ export class PamVercelOidcVerifier implements PamCiOidcVerifierInterface {
   /**
    * @override
    */
+  public peekResourceKey(idToken: string): string | null {
+    try {
+      return this.resourceKeyFromPayload(decodeJwt(idToken));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * @override
+   */
   public async verify(
     idToken: string,
     audience: string
@@ -51,10 +62,8 @@ export class PamVercelOidcVerifier implements PamCiOidcVerifierInterface {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    const owner = typeof payload.owner === 'string' ? payload.owner.trim() : '';
-    const project =
-      typeof payload.project === 'string' ? payload.project.trim() : '';
-    if (!owner || !project) {
+    const resourceKey = this.resourceKeyFromPayload(payload);
+    if (!resourceKey) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
@@ -70,8 +79,20 @@ export class PamVercelOidcVerifier implements PamCiOidcVerifierInterface {
       iss,
       aud: audValue,
       sub: String(payload.sub ?? ''),
-      resourceKey: `${owner}/${project}`,
+      resourceKey,
       exp: typeof payload.exp === 'number' ? payload.exp : 0
     };
+  }
+
+  protected resourceKeyFromPayload(
+    payload: Record<string, unknown>
+  ): string | null {
+    const owner = typeof payload.owner === 'string' ? payload.owner.trim() : '';
+    const project =
+      typeof payload.project === 'string' ? payload.project.trim() : '';
+    if (!owner || !project) {
+      return null;
+    }
+    return `${owner}/${project}`;
   }
 }

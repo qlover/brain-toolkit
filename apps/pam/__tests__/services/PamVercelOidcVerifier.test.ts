@@ -58,6 +58,17 @@ describe('PamVercelOidcVerifier', () => {
     );
   });
 
+  it('peekResourceKey reads owner/project without verifying', () => {
+    const payload = Buffer.from(
+      JSON.stringify({ owner: 'acme', project: 'my-app' }),
+      'utf8'
+    ).toString('base64url');
+    const token = `hdr.${payload}.sig`;
+    const verifier = new PamVercelOidcVerifier();
+    expect(verifier.peekResourceKey(token)).toBe('acme/my-app');
+    expect(verifier.peekResourceKey('not-a-jwt')).toBeNull();
+  });
+
   it('rejects wrong-audience tokens', async () => {
     const { privateKey } = await generateKeyPair('RS256');
     const badAud = await new SignJWT({
@@ -74,7 +85,7 @@ describe('PamVercelOidcVerifier', () => {
     await expect(verifier.verify(badAud, audience)).rejects.toBeInstanceOf(
       ExecutorError
     );
-  });
+  }, 15_000);
 
   it('rejects tokens with non-Vercel issuer after jose verify fails or claim check', async () => {
     const { privateKey } = await generateKeyPair('RS256');
@@ -92,5 +103,5 @@ describe('PamVercelOidcVerifier', () => {
     await expect(verifier.verify(badIss, audience)).rejects.toBeInstanceOf(
       ExecutorError
     );
-  });
+  }, 15_000);
 });

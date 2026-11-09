@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { SupabaseRepo } from '@qlover/next-kit/server';
-import { decodeJwt } from 'jose';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { TeamRoleKey } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
@@ -25,6 +24,7 @@ import type { PamCliTokenResponse } from '@schemas/PamCliSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { PamGithubOidcVerifier } from '@server/impls/PamGithubOidcVerifier';
 import { PamVercelOidcVerifier } from '@server/impls/PamVercelOidcVerifier';
+import type { PamCiOidcVerifierInterface } from '@server/interfaces/PamCiOidcVerifierInterface';
 import { PamCiOidcBindingRepo } from '@server/repositorys/PamCiOidcBindingRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
@@ -38,15 +38,34 @@ import type { NextRequest } from 'next/server';
 
 const CI_EMAIL_DOMAIN = 'pam.ci.invalid';
 
+const OIDC_LOGIN_METHOD = {
+  github: 'oidc_github',
+  vercel: 'oidc_vercel'
+} as const;
+
+const OIDC_AUDIENCE_ENV = {
+  github: 'PAM_OIDC_GITHUB_AUDIENCE',
+  vercel: 'PAM_OIDC_VERCEL_AUDIENCE'
+} as const;
+
+const OIDC_AUDIENCE_SETTING = {
+  github: PAM_SITE_SETTING_KEYS.AUTH_OIDC_GITHUB_AUDIENCE,
+  vercel: PAM_SITE_SETTING_KEYS.AUTH_OIDC_VERCEL_AUDIENCE
+} as const;
+
 /**
  * 项目 CI OIDC 绑定与换票（GitHub / Vercel）。
  *
  * 绑定时懒创建 CI 用户并加入 `team_ci_runner`；
  * 同一项目各 provider 共用同一 CI 用户；
- * exchange 校验平台 id_token 后签发 15m pam_cli。
+ * exchange 按 provider 选 verifier：peek → 查绑定 → verify → 发 15m pam_cli。
  */
 @injectable()
 export class PamCiOidcService {
+  protected readonly verifiers: Readonly<
+    Record<PamCiOidcProviderType, PamCiOidcVerifierInterface>
+  >;
+
   constructor(
     @inject(PAMService)
     protected readonly pamService: PAMService,
@@ -61,16 +80,21 @@ export class PamCiOidcService {
     @inject(SupabaseRepo)
     protected readonly supabaseBridge: SupabaseRepo<unknown>,
     @inject(PamGithubOidcVerifier)
-    protected readonly githubVerifier: PamGithubOidcVerifier,
+    githubVerifier: PamGithubOidcVerifier,
     @inject(PamVercelOidcVerifier)
-    protected readonly vercelVerifier: PamVercelOidcVerifier,
+    vercelVerifier: PamVercelOidcVerifier,
     @inject(PamCliTokenService)
     protected readonly cliTokenService: PamCliTokenService,
     @inject(SiteSettingsService)
     protected readonly siteSettings: SiteSettingsService,
     @inject(ServerConfig)
     protected readonly serverConfig: SeedServerConfigInterface
-  ) {}
+  ) {
+    this.verifiers = {
+      github: githubVerifier,
+      vercel: vercelVerifier
+    };
+  }
 
   /**
    * 读取项目某 provider 的 OIDC 绑定（需项目管理权）。
@@ -157,6 +181,8 @@ export class PamCiOidcService {
 
   /**
    * 平台 id_token → 15m pam_cli。
+   *
+   * 单路径：按 provider 取 verifier → peek 查绑定 → verify → 发票。
    */
   public async exchange(
     body: PamCliOidcExchangeRequest,
@@ -166,13 +192,36 @@ export class PamCiOidcService {
       throw new ExecutorError(API_REQUEST_BODY_EMPTY);
     }
 
-    if (body.provider === 'vercel') {
-      return this.exchangeVercel(body.idToken, request);
+    const verifier = this.verifiers[body.provider];
+    if (!verifier) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
     }
-    if (body.provider === 'github') {
-      return this.exchangeGithub(body.idToken, request);
+
+    const resourceHint = verifier.peekResourceKey(body.idToken);
+    if (!resourceHint) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
     }
-    throw new ExecutorError(API_NOT_AUTHORIZED);
+
+    const binding = await this.bindingRepo.findByProviderRepository(
+      body.provider,
+      resourceHint
+    );
+    if (!binding) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const audience =
+      binding.audience?.trim() || (await this.resolveAudience(body.provider));
+    const claims = await verifier.verify(body.idToken, audience);
+    if (claims.resourceKey !== binding.repository) {
+      throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    return this.issueCiToken(
+      binding.ciUserId,
+      OIDC_LOGIN_METHOD[body.provider],
+      request
+    );
   }
 
   /**
@@ -181,15 +230,9 @@ export class PamCiOidcService {
   public async resolveAudience(
     provider: PamCiOidcProviderType = 'github'
   ): Promise<string> {
-    if (provider === 'vercel') {
-      return this.resolveAudienceFrom(
-        process.env.PAM_OIDC_VERCEL_AUDIENCE,
-        PAM_SITE_SETTING_KEYS.AUTH_OIDC_VERCEL_AUDIENCE
-      );
-    }
     return this.resolveAudienceFrom(
-      process.env.PAM_OIDC_GITHUB_AUDIENCE,
-      PAM_SITE_SETTING_KEYS.AUTH_OIDC_GITHUB_AUDIENCE
+      process.env[OIDC_AUDIENCE_ENV[provider]],
+      OIDC_AUDIENCE_SETTING[provider]
     );
   }
 
@@ -200,81 +243,9 @@ export class PamCiOidcService {
     return this.resolveAudience('github');
   }
 
-  protected async exchangeGithub(
-    idToken: string,
-    request: NextRequest
-  ): Promise<PamCliTokenResponse> {
-    let repositoryHint = '';
-    try {
-      const peek = decodeJwt(idToken);
-      repositoryHint =
-        typeof peek.repository === 'string' ? peek.repository.trim() : '';
-    } catch {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-    if (!repositoryHint) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    const binding = await this.bindingRepo.findByProviderRepository(
-      'github',
-      repositoryHint
-    );
-    if (!binding) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    const audience =
-      binding.audience?.trim() || (await this.resolveAudience('github'));
-    const claims = await this.githubVerifier.verify(idToken, audience);
-    if (claims.resourceKey !== binding.repository) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    return this.issueCiToken(binding.ciUserId, 'oidc_github', request);
-  }
-
-  protected async exchangeVercel(
-    idToken: string,
-    request: NextRequest
-  ): Promise<PamCliTokenResponse> {
-    let resourceHint = '';
-    try {
-      const peek = decodeJwt(idToken);
-      const owner = typeof peek.owner === 'string' ? peek.owner.trim() : '';
-      const project =
-        typeof peek.project === 'string' ? peek.project.trim() : '';
-      if (owner && project) {
-        resourceHint = `${owner}/${project}`;
-      }
-    } catch {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-    if (!resourceHint) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    const binding = await this.bindingRepo.findByProviderRepository(
-      'vercel',
-      resourceHint
-    );
-    if (!binding) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    const audience =
-      binding.audience?.trim() || (await this.resolveAudience('vercel'));
-    const claims = await this.vercelVerifier.verify(idToken, audience);
-    if (claims.resourceKey !== binding.repository) {
-      throw new ExecutorError(API_NOT_AUTHORIZED);
-    }
-
-    return this.issueCiToken(binding.ciUserId, 'oidc_vercel', request);
-  }
-
   protected async issueCiToken(
     ciUserId: string,
-    loginMethod: 'oidc_github' | 'oidc_vercel',
+    loginMethod: (typeof OIDC_LOGIN_METHOD)[PamCiOidcProviderType],
     request: NextRequest
   ): Promise<PamCliTokenResponse> {
     const user = await this.loadCiUserSchema(ciUserId);

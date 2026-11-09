@@ -1,8 +1,8 @@
 /**
  * CI OIDC 验签契约（GitHub / Vercel 共用）。
  *
- * 各平台实现 JWKS / iss 细节；对外只暴露绑定所需的 `resourceKey`
- *（GitHub = owner/repo，Vercel = team/project）。
+ * 平台差异收口在实现类：如何从 JWT 抽出绑定键、如何 JWKS 验签。
+ * Service 只做编排：peek → 查绑定 → verify → 发票。
  */
 
 export type PamCiOidcClaimsType = {
@@ -15,6 +15,13 @@ export type PamCiOidcClaimsType = {
 };
 
 export interface PamCiOidcVerifierInterface {
+  /**
+   * 未验签前从 JWT 抽出绑定键，供查库；解析失败返回 null。
+   *
+   * @param idToken - 平台签发的 JWT（可未验签）
+   */
+  peekResourceKey(idToken: string): string | null;
+
   /**
    * 验签并返回统一 claim；失败抛 ExecutorError。
    *
