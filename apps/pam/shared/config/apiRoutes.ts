@@ -237,6 +237,26 @@ export const API_OAUTH_VERIFY = '/api/oauth/verify' as const;
 export const API_PAM_CI_OIDC = '/api/pam/:projectId/ci/oidc' as const;
 
 /**
+ * API path: `/api/pam/:projectId/cli/deploy-dek/unwrap`
+ *
+ * @see [src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts](../../src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts`
+ */
+export const API_PAM_CLI_DEPLOY_DEK_UNWRAP =
+  '/api/pam/:projectId/cli/deploy-dek/unwrap' as const;
+
+/**
+ * API path: `/api/pam/:projectId/cli/deploy-dek/wrap`
+ *
+ * @see [src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts](../../src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts)
+ *
+ * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts`
+ */
+export const API_PAM_CLI_DEPLOY_DEK_WRAP =
+  '/api/pam/:projectId/cli/deploy-dek/wrap' as const;
+
+/**
  * API path: `/api/pam/:projectId/environments`
  *
  * @see [src/app/api/pam/[projectId]/environments/route.ts](../../src/app/api/pam/[projectId]/environments/route.ts)
@@ -396,22 +416,6 @@ export const API_PAM_CLI_OIDC_EXCHANGE = '/api/pam/cli/oidc/exchange' as const;
  * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/pam/cli/token/route.ts`
  */
 export const API_PAM_CLI_TOKEN = '/api/pam/cli/token' as const;
-
-/**
- * API path: `/api/pam/:projectId/cli/deploy-dek/wrap`
- *
- * @see [src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts](../../src/app/api/pam/[projectId]/cli/deploy-dek/wrap/route.ts)
- */
-export const API_PAM_DEPLOY_DEK_WRAP =
-  '/api/pam/:projectId/cli/deploy-dek/wrap' as const;
-
-/**
- * API path: `/api/pam/:projectId/cli/deploy-dek/unwrap`
- *
- * @see [src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts](../../src/app/api/pam/[projectId]/cli/deploy-dek/unwrap/route.ts)
- */
-export const API_PAM_DEPLOY_DEK_UNWRAP =
-  '/api/pam/:projectId/cli/deploy-dek/unwrap' as const;
 
 /**
  * API path: `/api/pam/create`
@@ -739,6 +743,8 @@ export type ApiRoutePath =
   | typeof API_OAUTH_PLAYGROUND_VALIDATE
   | typeof API_OAUTH_VERIFY
   | typeof API_PAM_CI_OIDC
+  | typeof API_PAM_CLI_DEPLOY_DEK_UNWRAP
+  | typeof API_PAM_CLI_DEPLOY_DEK_WRAP
   | typeof API_PAM_ENVIRONMENTS
   | typeof API_PAM_ENVIRONMENTS_2
   | typeof API_PAM_ENVIRONMENTS_ACCESS_LOGS
@@ -756,8 +762,6 @@ export type ApiRoutePath =
   | typeof API_PAM_CLI_LOGOUT
   | typeof API_PAM_CLI_OIDC_EXCHANGE
   | typeof API_PAM_CLI_TOKEN
-  | typeof API_PAM_DEPLOY_DEK_WRAP
-  | typeof API_PAM_DEPLOY_DEK_UNWRAP
   | typeof API_PAM_CREATE
   | typeof API_PAM_DELETE
   | typeof API_PAM_DETAIL
