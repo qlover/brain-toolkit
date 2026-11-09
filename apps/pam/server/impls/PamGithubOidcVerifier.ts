@@ -1,11 +1,11 @@
 import { ExecutorError } from '@qlover/fe-corekit/executor';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
 import { injectable } from '@shared/container';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import type {
-  PamGithubOidcClaimsType,
-  PamGithubOidcVerifierInterface
-} from '@server/interfaces/PamGithubOidcVerifierInterface';
+  PamCiOidcClaimsType,
+  PamCiOidcVerifierInterface
+} from '@server/interfaces/PamCiOidcVerifierInterface';
 
 /** GitHub Actions OIDC issuer。 */
 export const PAM_GITHUB_OIDC_ISSUER =
@@ -17,16 +17,29 @@ const JWKS = createRemoteJWKSet(
 
 /**
  * 基于 jose 远程 JWKS 的 GitHub Actions OIDC 校验。
+ *
+ * `repository` claim → `resourceKey`。
  */
 @injectable()
-export class PamGithubOidcVerifier implements PamGithubOidcVerifierInterface {
+export class PamGithubOidcVerifier implements PamCiOidcVerifierInterface {
+  /**
+   * @override
+   */
+  public peekResourceKey(idToken: string): string | null {
+    try {
+      return this.resourceKeyFromPayload(decodeJwt(idToken));
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * @override
    */
   public async verify(
     idToken: string,
     audience: string
-  ): Promise<PamGithubOidcClaimsType> {
+  ): Promise<PamCiOidcClaimsType> {
     let payload: Record<string, unknown>;
     try {
       const verified = await jwtVerify(idToken, JWKS, {
@@ -38,9 +51,8 @@ export class PamGithubOidcVerifier implements PamGithubOidcVerifierInterface {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
-    const repository =
-      typeof payload.repository === 'string' ? payload.repository.trim() : '';
-    if (!repository || !repository.includes('/')) {
+    const resourceKey = this.resourceKeyFromPayload(payload);
+    if (!resourceKey) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
@@ -56,16 +68,19 @@ export class PamGithubOidcVerifier implements PamGithubOidcVerifierInterface {
       iss: String(payload.iss ?? PAM_GITHUB_OIDC_ISSUER),
       aud: audValue,
       sub: String(payload.sub ?? ''),
-      repository,
-      repository_owner:
-        typeof payload.repository_owner === 'string'
-          ? payload.repository_owner
-          : undefined,
-      ref: typeof payload.ref === 'string' ? payload.ref : undefined,
-      workflow:
-        typeof payload.workflow === 'string' ? payload.workflow : undefined,
-      run_id: payload.run_id !== undefined ? String(payload.run_id) : undefined,
+      resourceKey,
       exp: typeof payload.exp === 'number' ? payload.exp : 0
     };
+  }
+
+  protected resourceKeyFromPayload(
+    payload: Record<string, unknown>
+  ): string | null {
+    const repository =
+      typeof payload.repository === 'string' ? payload.repository.trim() : '';
+    if (!repository || !repository.includes('/')) {
+      return null;
+    }
+    return repository;
   }
 }

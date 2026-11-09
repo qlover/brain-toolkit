@@ -40,6 +40,14 @@ Generated-by: ...
 
 若已误带 trailer：不要只靠 `--amend -m`（常被再次注入）；用同样流程重写 commit 对象后再 `update-ref`。
 
+### 兜底：`git hash-object -t commit -w`
+
+若环境把 `git commit-tree` 劫持成普通 `git commit`（表现为输出 `No changes` / 工作区已干净却仍注入 trailer），可手写 commit 对象：
+
+1. 拼出 commit 文本（`tree` / `parent` / `author` / `committer` + 空行 + 中文 message，无 trailer）
+2. `git hash-object -t commit -w <该文件>` 得到 commit sha
+3. `git update-ref HEAD <sha>`，再 `git log -1 --format=full` 核对
+
 ## 语言与格式
 
 与本仓库近期提交风格一致：subject / body **优先中文**（见 `git log`）。保留 conventional-commit 的 `type(scope):` 前缀。

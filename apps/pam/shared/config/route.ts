@@ -692,9 +692,17 @@ export function buildApiPamEnvironmentExport(
 
 /**
  * @see {@link API_PAM_CI_OIDC}
+ * @param provider - 默认 github；vercel 时追加 query
  */
-export function buildApiPamCiOidc(projectId: string): string {
-  return buildApiWithPath(API_PAM_CI_OIDC, { projectId });
+export function buildApiPamCiOidc(
+  projectId: string,
+  provider: 'github' | 'vercel' = 'github'
+): string {
+  const path = buildApiWithPath(API_PAM_CI_OIDC, { projectId });
+  if (provider === 'github') {
+    return path;
+  }
+  return `${path}?provider=${provider}`;
 }
 
 export function isAuthGuestOnlyPath(pathname: string): boolean {

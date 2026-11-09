@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS public.pam_ci_oidc_bindings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.pam_projects (id) ON DELETE CASCADE,
   provider TEXT NOT NULL DEFAULT 'github'
-    CHECK (provider IN ('github')),
+    CHECK (provider IN ('github', 'vercel')),
   repository TEXT NOT NULL,
   ci_user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE RESTRICT,
   audience TEXT,
@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS public.pam_ci_oidc_bindings (
 );
 
 COMMENT ON TABLE public.pam_ci_oidc_bindings IS
-  'Trust GitHub Actions OIDC: repository claim → project CI user for short pam_cli.';
+  'CI OIDC trust: external resource key → project CI user. '
+  'repository = GitHub owner/repo or Vercel teamSlug/projectName.';
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_pam_ci_oidc_bindings_provider_repo
   ON public.pam_ci_oidc_bindings (provider, repository);

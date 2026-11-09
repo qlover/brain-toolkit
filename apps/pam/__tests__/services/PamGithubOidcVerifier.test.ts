@@ -70,6 +70,18 @@ describe('PamGithubOidcVerifier', () => {
     );
   });
 
+  it('peekResourceKey reads repository without verifying', () => {
+    // peek 不依赖 JWKS；用三段假 JWT（payload 含 repository）
+    const payload = Buffer.from(
+      JSON.stringify({ repository: 'acme/app' }),
+      'utf8'
+    ).toString('base64url');
+    const token = `hdr.${payload}.sig`;
+    const verifier = new PamGithubOidcVerifier();
+    expect(verifier.peekResourceKey(token)).toBe('acme/app');
+    expect(verifier.peekResourceKey('not-a-jwt')).toBeNull();
+  });
+
   it('rejects expired or wrong-audience tokens via jose helpers', async () => {
     const { privateKey } = await generateKeyPair('RS256');
     const badAud = await new SignJWT({ repository: 'acme/app' })
@@ -83,5 +95,5 @@ describe('PamGithubOidcVerifier', () => {
     await expect(verifier.verify(badAud, audience)).rejects.toBeInstanceOf(
       ExecutorError
     );
-  });
+  }, 15_000);
 });

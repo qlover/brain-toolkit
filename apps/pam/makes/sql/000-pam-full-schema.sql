@@ -2916,7 +2916,7 @@ CREATE TABLE IF NOT EXISTS public.pam_ci_oidc_bindings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.pam_projects (id) ON DELETE CASCADE,
   provider TEXT NOT NULL DEFAULT 'github'
-    CHECK (provider IN ('github')),
+    CHECK (provider IN ('github', 'vercel')),
   repository TEXT NOT NULL,
   ci_user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE RESTRICT,
   audience TEXT,
