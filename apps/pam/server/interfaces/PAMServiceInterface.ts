@@ -252,6 +252,23 @@ export interface PAMServiceInterface {
   ): Promise<PAMEnvResolvedEnvironment>;
 
   /**
+   * 构建部署快照：包装 DEK（inject 权限）。
+   */
+  wrapDeployDek(
+    projectRef: string,
+    dekBase64: string
+  ): Promise<{ wrappedDek: string }>;
+
+  /**
+   * 运行时解封 DEK：响应仅为 seal（inject 权限）。
+   */
+  unwrapDeployDek(
+    projectRef: string,
+    wrappedDek: string,
+    sealOffer: { alg: string; publicKey: string }
+  ): Promise<{ seal: PAMEnvResolveSealEnvelope }>;
+
+  /**
    * Updates environment settings (protected flag). Requires export permission.
    *
    * @param projectId - Project id

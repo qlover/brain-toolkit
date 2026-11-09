@@ -258,6 +258,13 @@ export const API_PAM_ENV_RESOLVE_SEAL_FAILED =
   'api:pam_env_resolve_seal_failed';
 
 /**
+ * @description 部署快照 DEK 无效或无法包装/解包
+ * @localZh 部署快照密钥无效
+ * @localEn Deploy snapshot DEK is invalid
+ */
+export const API_PAM_DEPLOY_DEK_INVALID = 'api:pam_deploy_dek_invalid';
+
+/**
  * @description 项目 slug 不能重复
  * @localZh 项目 slug 已存在
  * @localEn PAM slug already exists
