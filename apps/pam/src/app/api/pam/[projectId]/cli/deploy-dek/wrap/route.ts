@@ -1,5 +1,5 @@
 import { PermissionKey } from '@shared/auth/permissionKeys';
-import { API_PAM_DEPLOY_DEK_WRAP } from '@config/route';
+import { API_PAM_CLI_DEPLOY_DEK_WRAP } from '@config/route';
 import { PAMController } from '@server/controllers/PAMController';
 import { NextApiServer } from '@server/NextApiServer';
 import { PamCliAuthPlugin } from '@server/plugins/PamCliAuthPlugin';
@@ -15,7 +15,7 @@ type DeployDekRouteContext = {
  */
 export async function POST(req: NextRequest, context: DeployDekRouteContext) {
   const { projectId } = await context.params;
-  const response = await new NextApiServer(API_PAM_DEPLOY_DEK_WRAP, req)
+  const response = await new NextApiServer(API_PAM_CLI_DEPLOY_DEK_WRAP, req)
     .use(new PamCliAuthPlugin())
     .use(
       new RequirePermissionPlugin(PermissionKey.pam_environments_inject, {
