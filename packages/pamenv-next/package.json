@@ -1,6 +1,6 @@
 {
   "name": "@pamenv/next",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "private": false,
   "description": "Load PAM env into process.env before Next.js reads its config",

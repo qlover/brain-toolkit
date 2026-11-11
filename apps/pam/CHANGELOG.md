@@ -1,5 +1,85 @@
 # pam
 
+## 3.2.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv:** 支持 PAMENV_ENABLED 强制关闭注入与解封 ([25d45e0](https://github.com/qlover/brain-toolkit/commit/25d45e06e7a65c7543d8726238ade50ff36c29e9)) ([#208](https://github.com/qlover/brain-toolkit/pull/208))
+
+  设为 0/false/off/no 时插件不 OIDC、createPamenv 返回空袋，
+  便于回填平台变量后用普通 build 恢复线上。
+
+- **pamenv:** 预置默认 keepEnv，插件无需再抄平台键 ([7e7bea1](https://github.com/qlover/brain-toolkit/commit/7e7bea14e3c46b5f66928b6164423e5a50133adb)) ([#208](https://github.com/qlover/brain-toolkit/pull/208))
+
+  DEFAULT_PAMENV_KEEP_ENV 覆盖 pamenv/Vercel/Node 引导键；
+  options.keepEnv 仅追加。pam next.config 去掉冗长 keepEnv 列表。
+
+- **pam:** 接入 createPamenv，惰性读密封密钥并收敛文档 SSG ([a424d3c](https://github.com/qlover/brain-toolkit/commit/a424d3c81590f1322980a8d8a9e6685f21be6c9d)) ([#203](https://github.com/qlover/brain-toolkit/pull/203))
+
+  NextApiServer.run / createBootstrapServer / proxy 解封；密钥消费方构造期不 snapshot；
+  APP_ENV 改 PAM_ENV；文档读 content/ 静态副本；删除无用的 deploy-dek 路由。
+
+- **pam:** 新增 deploy-dek wrap/unwrap API ([6154b87](https://github.com/qlover/brain-toolkit/commit/6154b87def8ae3abcc1bcb75542f4db2db848c82)) ([#205](https://github.com/qlover/brain-toolkit/pull/205))
+
+  供 Vercel 密封部署快照在构建时包装 DEK、运行时密封回传，可先合入 production。
+
+- **pam:** 支持 Vercel OIDC 换短票与项目绑定 ([40a3359](https://github.com/qlover/brain-toolkit/commit/40a335925d82d3a92d326e9270680ef8685c8385)) ([#202](https://github.com/qlover/brain-toolkit/pull/202))
+
+  扩展 provider=vercel，绑定 team/project；统一 PamCiOidcVerifierInterface（resourceKey）；
+  站点可配 auth.oidc_vercel_audience；设置页可切换 GitHub/Vercel。
+
+- **pam,pamenv:** resolve 密封传输与 CI 内存票底座 ([924557b](https://github.com/qlover/brain-toolkit/commit/924557b0497ddd5fae4e516f5d3239e199d72a18)) ([#201](https://github.com/qlover/brain-toolkit/pull/201))
+
+  resolve 响应改为应用层信封，API/抓包不见明文；支持 PAMENV_TOKEN 内存票与 createCiToken；同步重构 cursor rules 中文 JSDoc 约定。
+
+- **pam:** GitHub Actions OIDC 换短票并支持项目仓库绑定 ([89cebde](https://github.com/qlover/brain-toolkit/commit/89cebdeabc181cc331bd1f41e3c3eafca8739e10)) ([#201](https://github.com/qlover/brain-toolkit/pull/201))
+
+  项目绑定 owner/repo 后签发 team_ci_runner 身份的 15m pam_cli；
+  Actions 经 JWKS 校验 id_token 调用 /api/pam/cli/oidc/exchange。
+
+#### 🐞 Bug Fixes
+
+- **pam:** 前台隐藏 CI 与个人团队加人，后台展示 OIDC 绑定 ([f9850c3](https://github.com/qlover/brain-toolkit/commit/f9850c3d1a19d1440b5b7b492e485f8106769a8f)) ([#215](https://github.com/qlover/brain-toolkit/pull/215))
+
+  CI 身份改由 bindings/ci_runner/metadata 判定；团队成员列表过滤 ci_runner；
+  个人团队去掉成员管理入口；Admin 用户表标注 CI 及对应 OIDC 项目。
+
+- **brain-oauth:** 静默 pamenv 动态 cwd 的 Turbopack NFT 告警 ([8b51b24](https://github.com/qlover/brain-toolkit/commit/8b51b24383863d947ac53df2a34e2480ba9f9dbf)) ([#212](https://github.com/qlover/brain-toolkit/pull/212))
+
+  pamenv-next 对 process.cwd 加 turbopackIgnore 并固定 .pam；
+  应用 next.config 按路径忽略 Dynamic filesystem / NFT list。
+
+- **pam:** 恢复个人团队 CI Runner inject 例外 ([42fd733](https://github.com/qlover/brain-toolkit/commit/42fd7336ec134cbe6b0a08b749324ba30b00696d)) ([#211](https://github.com/qlover/brain-toolkit/pull/211))
+
+  #203 误回退 #204：personal 团队上 CI 成员被判无效，OIDC 换票后 resolve 报 not_authorized。
+
+- **pam:** SSG 构建期跳过 API locales 并加 fetch 超时 ([e99eb7b](https://github.com/qlover/brain-toolkit/commit/e99eb7b5f5d719efb1dfcf4bf1e924593730a0a1)) ([#209](https://github.com/qlover/brain-toolkit/pull/209))
+
+  线上 SITE_URL 不可用时无超时 fetch 会拖死 getStaticProps（>60s）。
+  构建期只用本包静态 JSON；运行时补拉 8s 超时后回落本地。
+
+- **pam:** 恢复 deploy-dek 并跳过引导路由 createPamenv ([bc085a3](https://github.com/qlover/brain-toolkit/commit/bc085a3a2faf3efc71d0778c2d506d84e05c28b8)) ([#207](https://github.com/qlover/brain-toolkit/pull/207))
+
+  runtime 解封快照会回调 oidc/exchange 与 deploy-dek/unwrap；
+  这些接口再 createPamenv 会自锁超时。引导路由改读平台环境变量。
+
+- **pam:** 对齐 deploy-dek 路由常量与 apiRoutes 生成名 ([33a0ed8](https://github.com/qlover/brain-toolkit/commit/33a0ed8e8630ca9b0e3bd53b10ba7700f5e65c0c)) ([#206](https://github.com/qlover/brain-toolkit/pull/206))
+
+  引用 API*PAM_CLI_DEPLOY_DEK*\*；补充 apiRoutes 自动生成协作规则。
+
+- **pam:** 个人团队允许 CI Runner 参与 inject ([47033bd](https://github.com/qlover/brain-toolkit/commit/47033bd5d157356105d67140cb4c964bf0c18a32)) ([#204](https://github.com/qlover/brain-toolkit/pull/204))
+
+  个人团队原先把非主人成员一律判无效，OIDC CI 换票后 resolve 会 not_authorized。
+
+#### ♻️ Refactors
+
+- **pam:** OIDC 验签接口分发并加厚通用协作规范 ([7f04c41](https://github.com/qlover/brain-toolkit/commit/7f04c418ba16c81d29a59dc04e505e66df8c1aca)) ([#202](https://github.com/qlover/brain-toolkit/pull/202))
+
+  统一 peekResourceKey/verify 与 Service 单路径换票；general/gitcommit
+  对齐 fe-base 通用条文并固化多实现方法隔离。
+
 ## 3.1.0
 
 ### Minor Changes

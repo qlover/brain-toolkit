@@ -1,6 +1,6 @@
 {
   "name": "@pamenv/vite",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "type": "module",
   "private": false,
   "description": "Vite plugin: load PAM env into process.env before Vite resolves config",
