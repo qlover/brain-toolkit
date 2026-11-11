@@ -16,6 +16,8 @@ overrides:
   '@typescript-eslint/scope-manager': ^8.60.1
   '@typescript-eslint/typescript-estree': ^8.60.1
   '@typescript-eslint/parser': ^8.60.1
+  # @vercel/oidc / @hookform/resolvers 对 zod minor 敏感；全仓钉死避免 4.4 vs 4.6 双实例
+  zod: 4.6.7
 
 # pnpm 11+: approve dependency lifecycle scripts (strictDepBuilds default true)
 allowBuilds:
