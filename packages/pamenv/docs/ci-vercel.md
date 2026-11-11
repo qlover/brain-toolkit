@@ -38,7 +38,7 @@ Content-Type: application/json
 
 `@pamenv/next` 在读 `next.config` 时调用 `injectPamenvProcessEnv`（可传 `oidc: 'vercel'`），与 CLI `pamenv run --oidc` 同路。
 
-`apps/pam` 统一一条 **`pnpm build`**（`build:vercel` 仅为别名）：
+`apps/pam` 统一一条 **`pnpm build`**：
 
 1. 预构建 `@brain-toolkit/ts2locales`、`pamenv-cli`、`@pamenv/next`（monorepo dist）
 2. `next build`（是否 OIDC 注入见下方「PAM 自托管」）
@@ -66,7 +66,7 @@ Vercel 项目设置：
 | 项 | 值 |
 | --- | --- |
 | Root Directory | `apps/pam` |
-| Build Command Override | `pnpm run build`（`build:vercel` 同义；不要写 `next build:vercel`） |
+| Build Command Override | `pnpm run build`（不要写裸 `next build`，否则会跳过 monorepo 预构建） |
 | `PAM_ENV` / `NODE_ENV` | 脚本内固定 `PAM_ENV=dev`、`NODE_ENV=production` |
 
 Vercel 环境变量：
