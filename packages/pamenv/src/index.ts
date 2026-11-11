@@ -11,9 +11,11 @@ export {
 export { PamCliEnvMergeUtil } from './impls/PamCliEnvMergeUtil';
 export {
   assertOnlyKeysPresent,
+  DEFAULT_PAMENV_KEEP_ENV,
   ensurePamenvRuntimeEnv,
   injectPamenvProcessEnv,
   isPamenvGloballyDisabled,
+  mergePamenvKeepEnvKeys,
   resetPamenvInjectCache,
   resolveActiveOidcProvider,
   resolveInjectDebug,

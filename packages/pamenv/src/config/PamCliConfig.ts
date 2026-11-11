@@ -69,6 +69,11 @@ export class PamCliConfig {
   public static readonly ENV_ENABLED = 'PAMENV_ENABLED' as const;
 
   /**
+   * 部署快照路径（相对或绝对）；运行时解封优先读此变量。
+   */
+  public static readonly ENV_SNAPSHOT_PATH = 'PAMENV_SNAPSHOT_PATH' as const;
+
+  /**
    * @returns 去空白后的 `PAMENV_TOKEN`，未设置则为 null
    */
   public static getEnvToken(): string | null {

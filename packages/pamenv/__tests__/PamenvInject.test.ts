@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   assertOnlyKeysPresent,
+  DEFAULT_PAMENV_KEEP_ENV,
   ensurePamenvRuntimeEnv,
   injectPamenvProcessEnv,
   isPamenvGloballyDisabled,
+  mergePamenvKeepEnvKeys,
   resetPamenvInjectCache,
   resolveActiveOidcProvider,
   resolvePamenvEnabled,
@@ -106,6 +108,27 @@ describe('resolvePamenvInjectOptions', () => {
     expect(resolved.env).toBe('local');
     expect(resolved.oidc).toBeUndefined();
     expect(resolved.preferLocal).toBe(true);
+  });
+
+  it('keepEnv 默认含平台键，并可追加', () => {
+    const base = resolvePamenvInjectOptions({
+      slug: 'pam',
+      env: 'local'
+    });
+    expect(base.keepEnvKeys).toEqual(
+      expect.arrayContaining([...DEFAULT_PAMENV_KEEP_ENV])
+    );
+    const merged = mergePamenvKeepEnvKeys(['MY_CUSTOM']);
+    expect(merged).toEqual(
+      expect.arrayContaining([...DEFAULT_PAMENV_KEEP_ENV, 'MY_CUSTOM'])
+    );
+    const withExtra = resolvePamenvInjectOptions({
+      slug: 'pam',
+      env: 'local',
+      keepEnv: 'MY_CUSTOM'
+    });
+    expect(withExtra.keepEnvKeys).toContain('MY_CUSTOM');
+    expect(withExtra.keepEnvKeys).toContain(PamCliConfig.ENV_ENABLED);
   });
 
   it('activates vercel oidc only on Vercel', () => {

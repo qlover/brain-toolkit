@@ -25,8 +25,6 @@ const withPamenv = createPamenvPlugin({
   cwd: PAMENV_APP_ROOT,
   /** Vercel 上用 OIDC 换票；本地走 .pam 登录 */
   oidc: 'vercel',
-  /** 注入时保留的平台键（不被 PAM 值覆盖） */
-  keepEnv: ['PAM_ENV', 'PAMENV_ENABLED', 'VERCEL', 'VERCEL_ENV', 'NODE_ENV'],
   /** 打印路径 / 键名等元数据（不含变量值） */
   debug: true,
   /**
