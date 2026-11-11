@@ -39,7 +39,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build pamenv-cli
-        run: pnpm --filter pamenv-cli run build
+        run: pnpm --filter @brain-toolkit/ts2locales run build && pnpm --filter pamenv-cli run build
 
       - name: OIDC exchange + inject smoke
         working-directory: packages/pamenv
