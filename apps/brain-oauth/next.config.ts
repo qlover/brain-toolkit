@@ -104,13 +104,11 @@ const nextConfig: NextConfig = {
       },
       {
         path: 'packages/pamenv/dist/index.js',
-        title:
-          'Dynamic filesystem access causes tracing of the whole project'
+        title: 'Dynamic filesystem access causes tracing of the whole project'
       },
       {
         path: 'packages/pamenv-next/dist/index.js',
-        title:
-          'Dynamic filesystem access causes tracing of the whole project'
+        title: 'Dynamic filesystem access causes tracing of the whole project'
       }
     ]
   }
