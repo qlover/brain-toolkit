@@ -1,5 +1,8 @@
 import { useApiLocales } from '@config/common';
 
+/** 运行时补拉 API locales 的上限；超时后回落静态 JSON，避免拖死 SSG 页。 */
+const API_LOCALES_FETCH_TIMEOUT_MS = 8_000;
+
 // Static locale loaders so the bundler can resolve the JSON modules
 const localeLoaders: Record<
   string,
@@ -21,22 +24,32 @@ async function loadLocaleFromFile(
 }
 
 /**
- * 加载 i18n 消息的公共方法
- * 支持从 API 加载或从 JSON 文件加载
+ * 是否允许向 `SITE_URL` 补拉词典。
  *
- * @param locale - 要加载的语言代码
- * @param namespace - 可选的命名空间（单个字符串或字符串数组），如果提供则只返回该命名空间下的消息，保留命名空间前缀
- * @returns Promise<Record<string, string>> 返回翻译消息对象
+ * `next build` 的 `getStaticProps` 若请求本站（或已挂掉的旧部署），会无超时地
+ * 卡住，触发 Next「page took more than 60 seconds」。构建期只用本包静态 JSON。
+ */
+export function shouldFetchApiLocalesAtRuntime(): boolean {
+  if (!useApiLocales) {
+    return false;
+  }
+  return process.env.NEXT_PHASE !== 'phase-production-build';
+}
+
+/**
+ * 加载 i18n 消息。
+ *
+ * 始终以本构建生成的 JSON 为底。`useApiLocales` 且非 `next build` 时，再向
+ * `SITE_URL/api/locales/json` 补全后台键（静态文案优先）；失败或超时回落静态。
+ *
+ * @param locale - 语言代码
+ * @param namespace - 可选命名空间（单个或数组），过滤时保留前缀
+ * @returns 翻译消息对象
  *
  * @example
  * ```ts
- * // 加载所有消息
  * const allMessages = await loadMessages('en');
- *
- * // 加载单个命名空间
  * const commonMessages = await loadMessages('en', 'common');
- *
- * // 加载多个命名空间
  * const messages = await loadMessages('en', ['common', 'page_home']);
  * ```
  */
@@ -44,13 +57,12 @@ export async function loadMessages(
   locale: string,
   namespace?: string | string[]
 ): Promise<Record<string, string>> {
-  // Always start from this build's generated JSON so SSG cannot bake an empty
-  // page namespace when SITE_URL still points at an older deploy (chicken-egg).
+  // 始终以本构建 JSON 为底，避免 SITE_URL 仍指向旧部署时 SSG 烤进空命名空间。
   const staticMessages = await loadLocaleFromFile(locale);
   let allMessages: Record<string, string> = staticMessages;
 
-  // API 可补全后台独有键；本构建生成的静态文案优先，避免库里旧翻译盖住发版新句。
-  if (useApiLocales) {
+  // API 可补全后台独有键；本构建静态文案优先，避免库里旧翻译盖住发版新句。
+  if (shouldFetchApiLocalesAtRuntime()) {
     try {
       const SITE_URL = process.env.SITE_URL;
       if (!SITE_URL) {
@@ -64,7 +76,9 @@ export async function loadMessages(
         localeUrl.searchParams.set('namespaces', namespacesParam);
       }
 
-      const response = await fetch(localeUrl.toString());
+      const response = await fetch(localeUrl.toString(), {
+        signal: AbortSignal.timeout(API_LOCALES_FETCH_TIMEOUT_MS)
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -80,7 +94,6 @@ export async function loadMessages(
     }
   }
 
-  // 如果指定了命名空间，进行过滤
   return filterMessagesByNamespace(allMessages, namespace);
 }
 

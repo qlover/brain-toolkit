@@ -1,5 +1,24 @@
-import { describe, expect, it } from 'vitest';
-import { filterMessagesByNamespace } from '@/i18n/loadMessages';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  filterMessagesByNamespace,
+  shouldFetchApiLocalesAtRuntime
+} from '@/i18n/loadMessages';
+
+describe('shouldFetchApiLocalesAtRuntime', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('skips API fetch during next production build', () => {
+    vi.stubEnv('NEXT_PHASE', 'phase-production-build');
+    expect(shouldFetchApiLocalesAtRuntime()).toBe(false);
+  });
+
+  it('allows API fetch outside production build', () => {
+    vi.stubEnv('NEXT_PHASE', '');
+    expect(shouldFetchApiLocalesAtRuntime()).toBe(true);
+  });
+});
 
 describe('filterMessagesByNamespace', () => {
   const messages = {
