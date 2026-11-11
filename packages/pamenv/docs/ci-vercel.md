@@ -38,10 +38,10 @@ Content-Type: application/json
 
 `@pamenv/next` 在读 `next.config` 时调用 `injectPamenvProcessEnv`（可传 `oidc: 'vercel'`），与 CLI `pamenv run --oidc` 同路。
 
-`apps/pam` 的 `build:vercel`：
+`apps/pam` 统一一条 **`pnpm build`**（`build:vercel` 仅为别名）：
 
 1. 预构建 `@brain-toolkit/ts2locales`、`pamenv-cli`、`@pamenv/next`（monorepo dist）
-2. `next build`（config 插件在 `phase-production-build` 下 OIDC 注入）
+2. `next build`（是否 OIDC 注入见下方「PAM 自托管」）
 3. `next-sitemap`
 
 **不要**再写成：
@@ -50,25 +50,34 @@ Content-Type: application/json
 pamenv run "$SLUG" -e dev --oidc vercel -- next build
 ```
 
+### PAM 自托管：同一 Build Command，Production / Preview 不同链路
+
+Vercel 只有一个 Build Command，用 `VERCEL_ENV` 在 `apps/pam/next.config.ts` 分叉：
+
+| `VERCEL_ENV` | 链路 | 密钥来源 |
+| --- | --- | --- |
+| **`production`** | 关 pamenv 插件；内联 `PAMENV_ENABLED=0` | **平台环境变量**（勿 OIDC 打自己） |
+| **`preview`**（及本地非 production） | 开插件 + OIDC + 密封快照 | 打**已稳定的 Production PAM** resolve |
+
+其它应用（如 brain-oauth）不受此限制，Production 也可继续走插件。
+
 Vercel 项目设置：
 
 | 项 | 值 |
 | --- | --- |
 | Root Directory | `apps/pam` |
-| Build Command Override | `pnpm run build:vercel`（不要写 `next build:vercel`） |
-| `APP_ENV` / `NODE_ENV` | 脚本内固定 `production`（与普通 `build` 一致） |
-| `PAMENV_ENV_NAME` | `build:vercel` 脚本内默认 `dev`（覆盖插件里本地默认的 `local`） |
+| Build Command Override | `pnpm run build`（`build:vercel` 同义；不要写 `next build:vercel`） |
+| `PAM_ENV` / `NODE_ENV` | 脚本内固定 `PAM_ENV=dev`、`NODE_ENV=production` |
 
-Vercel 环境变量（非密钥引导项）：
+Vercel 环境变量：
 
-| 变量 | 说明 |
-| --- | --- |
-| `PAMENV_PROJECT_SLUG` | PAM 项目 id 或 slug |
-| `PAMENV_ENV_NAME` | 可选覆盖；未设时以 `build:vercel` 的 `dev` 为准。本地 `next.dev` 插件默认 `local` |
-| `PAMENV_BASE_URL` | PAM 根，如 `https://pam.qlover.top` |
-| `PAM_OIDC_AUD` | 可选；默认同 `PAMENV_BASE_URL`（须与绑定页 audience 提示一致） |
-
-密钥类（`SITE_URL`、`SUPABASE_*`、`SESSION_SECRET`…）由 PAM resolve 注入，不必再手填进 Vercel（除非你刻意覆盖）。
+| 变量 | Production | Preview |
+| --- | --- | --- |
+| `SITE_URL`、`SUPABASE_*`、`SESSION_SECRET`… | **必填**（平台变量） | 一般由 OIDC resolve；也可手填覆盖 |
+| `PAMENV_PROJECT_SLUG` | 不需要 | PAM 项目 id 或 slug |
+| `PAMENV_BASE_URL` | 不需要 | PAM 根，如 `https://pam.qlover.top` |
+| `PAM_OIDC_AUD` | 不需要 | 可选；默认同 `PAMENV_BASE_URL` |
+| `PAMENV_ENABLED` | 构建已内联 `0`；仪表盘也可再设 `0` | 不设或 `1`（开插件） |
 
 单独排错换票（不注入）：
 
