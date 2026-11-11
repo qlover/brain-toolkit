@@ -1,3 +1,4 @@
+import { createPamenv } from '@pamenv/next';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import {
   ApiServer,
@@ -43,11 +44,16 @@ export type BinaryApiPayload = {
 };
 
 /**
- * App Next.js API server: wires ServerConfig + IOC, resolves ServerContext,
- * logs requests, and registers nextApiServerBackstop.
- * Keeps OAuth RFC JSON helper for machine endpoints.
+ * App Next.js API server。
+ * 路由：`new NextApiServer(...).run...()`；`run` 内先 `createPamenv`。
+ * 密钥消费方须惰性读 config（构造期不 snapshot）。
  */
 export class NextApiServer extends ApiServer<PamServerIocMap> {
+  /**
+   * 与 IOC 中 `I.AppConfig` 同一实例；`run` 内解封后 {@link ServerConfig.bindPamenvBag}。
+   */
+  protected readonly serverConfig: ServerConfig;
+
   constructor(name?: string, nextRequest?: NextRequest);
   constructor(context?: Partial<NextApiServerContext>);
 
@@ -72,6 +78,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
         serverContext,
         resultHandler: new NextApiHandler(logger, serverContext)
       });
+      this.serverConfig = serverConfig;
       return;
     }
 
@@ -89,6 +96,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
       serverContext,
       resultHandler: new NextApiHandler(logger, serverContext)
     });
+    this.serverConfig = serverConfig;
   }
 
   /**
@@ -96,6 +104,17 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
    */
   protected resolveServerContext(): ServerContextInterface {
     return this.IOC(I.ServerContextInterface);
+  }
+
+  /**
+   * @override
+   */
+  public override async run<Result>(
+    task?: RunWithTask<Result>
+  ): Promise<NextKitApiResult<Result>> {
+    const bag = await createPamenv();
+    this.serverConfig.bindPamenvBag(bag);
+    return super.run(task);
   }
 
   /** ApiCorsPlugin 等在 onBefore 写入的响应头。 */

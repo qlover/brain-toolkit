@@ -49,20 +49,15 @@ export type PamCliCreateTokenOptionsType = {
 export const PAM_CLI_CI_TOKEN_EXPIRES_IN = '15m' as const;
 
 /**
- * Issues and verifies revocable PAM CLI bearer JWTs.
+ * 签发 / 校验可撤销的 PAM CLI bearer JWT。
  *
- * Significance: Lets the CLI authenticate without browser cookies.
- * Core idea: Short-lived JWT (`typ`/`aud`/`jti`) registered in DB until revoke.
- * Main function: Create / verify / revoke CLI tokens.
- * Main purpose: Drive export and search from `pam-cli` with logout support.
+ * `SESSION_SECRET` 用时再读 `config` getter，避免 IOC 急切构造时尚未 `createPamenv`。
  *
  * @example
  * const issued = await service.createToken(user);
  */
 @injectable()
 export class PamCliTokenService {
-  protected readonly sessionSecret: string;
-  protected readonly expiresIn: SignOptions['expiresIn'];
   protected readonly verifyCache = new Map<
     string,
     Promise<WithUserSession<OAuthSessionPayload, UserSchema> | null>
@@ -70,14 +65,22 @@ export class PamCliTokenService {
 
   constructor(
     @inject(ServerConfig)
-    config: SeedServerConfigInterface,
+    protected readonly config: SeedServerConfigInterface,
     @inject(PamCliTokenRepo)
     protected readonly tokenRepo: PamCliTokenRepo,
     @inject(SiteSettingsService)
     protected readonly siteSettings: SiteSettingsService
-  ) {
-    this.sessionSecret = config.sessionSecret;
-    this.expiresIn = config.pamCliTokenExpiresIn;
+  ) {}
+
+  /**
+   * 惰性读 JWT 签名密钥（构造期不 snapshot）。
+   */
+  protected get sessionSecret(): string {
+    return this.config.sessionSecret;
+  }
+
+  protected get expiresIn(): SignOptions['expiresIn'] {
+    return this.config.pamCliTokenExpiresIn;
   }
 
   /**

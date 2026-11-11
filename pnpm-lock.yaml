@@ -13,6 +13,7 @@ overrides:
   '@typescript-eslint/scope-manager': ^8.60.1
   '@typescript-eslint/typescript-estree': ^8.60.1
   '@typescript-eslint/parser': ^8.60.1
+  zod: 4.6.7
 
 importers:
 
@@ -227,10 +228,10 @@ importers:
         version: 1.2.0
       '@qlover/next-kit':
         specifier: ^1.5.0
-        version: 1.5.0(1cfb47bf6e837e9db2fefa3d5b522632)
+        version: 1.5.0(2562a71b4ab9bb60b5a449bff09455f7)
       '@qlover/oauth-wrapper':
         specifier: 0.11.1
-        version: 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+        version: 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.6.7)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/slice-store-react':
         specifier: ^1.4.2
         version: 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -287,7 +288,7 @@ importers:
         version: 2.7.0
       openai:
         specifier: ^6.21.0
-        version: 6.39.0(ws@8.18.3)(zod@4.4.3)
+        version: 6.39.0(ws@8.18.3)(zod@4.6.7)
       p-limit:
         specifier: ^7.3.0
         version: 7.3.0
@@ -307,8 +308,8 @@ importers:
         specifier: ^13.0.0
         version: 13.0.2
       zod:
-        specifier: ^4.3.6
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
       zustand:
         specifier: ^5.0.12
         version: 5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
@@ -334,256 +335,6 @@ importers:
       '@types/lodash':
         specifier: ^4.17.20
         version: 4.17.20
-      '@types/ms':
-        specifier: ^2.1.0
-        version: 2.1.0
-      '@types/node':
-        specifier: ^20
-        version: 20.19.41
-      '@types/node-fetch':
-        specifier: ^2.6.13
-        version: 2.6.13
-      '@types/react':
-        specifier: 19.2.2
-        version: 19.2.2
-      '@types/react-dom':
-        specifier: 19.2.3
-        version: 19.2.3(@types/react@19.2.2)
-      '@vitejs/plugin-react':
-        specifier: ^5.1.1
-        version: 5.2.0(supports-color@8.1.1)(vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.33.0)(terser@5.44.0)(yaml@2.8.1))
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
-      dotenv-expand:
-        specifier: ^12.0.3
-        version: 12.0.3
-      eslint:
-        specifier: ^10.0.3
-        version: 10.7.0(jiti@1.21.7)(supports-color@8.1.1)
-      eslint-config-prettier:
-        specifier: ^10.1.8
-        version: 10.1.8(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))
-      eslint-import-resolver-typescript:
-        specifier: ^4.4.4
-        version: 4.4.4(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@8.1.1))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-import@2.32.0)(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)
-      eslint-plugin-import-x:
-        specifier: ^4.16.1
-        version: 4.17.1(@typescript-eslint/utils@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@8.1.1))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)
-      eslint-plugin-prettier:
-        specifier: ^5.5.4
-        version: 5.5.4(eslint-config-prettier@10.1.8(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1)))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(prettier@3.6.2)
-      eslint-plugin-react-hooks:
-        specifier: ^7.1.1
-        version: 7.1.1(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)
-      eslint-plugin-unused-imports:
-        specifier: ^4.2.0
-        version: 4.4.1(@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))
-      globals:
-        specifier: ^16.5.0
-        version: 16.5.0
-      jsdom:
-        specifier: ^28.0.0
-        version: 28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1)
-      next-sitemap:
-        specifier: ^4.2.3
-        version: 4.2.3(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
-      next-swagger-doc:
-        specifier: ^0.4.1
-        version: 0.4.1(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(openapi-types@12.1.3)
-      prettier:
-        specifier: ^3.6.2
-        version: 3.6.2
-      swagger-ui-react:
-        specifier: ^5.31.2
-        version: 5.32.6(@types/react@19.2.2)(debug@4.4.3(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(supports-color@8.1.1)
-      tailwindcss:
-        specifier: ^4
-        version: 4.3.0
-      typescript:
-        specifier: ~6.0.3
-        version: 6.0.3
-      typescript-eslint:
-        specifier: ^8.60.1
-        version: 8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@20.19.41)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
-
-  apps/pam:
-    dependencies:
-      '@ant-design/nextjs-registry':
-        specifier: ^1.3.0
-        version: 1.3.0(@ant-design/cssinjs@1.24.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@ant-design/v5-patch-for-react-19':
-        specifier: ^1.0.3
-        version: 1.0.3(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@brain-toolkit/antd-theme-override':
-        specifier: ^0.1.2
-        version: 0.1.2(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      '@brain-toolkit/element-sizer':
-        specifier: workspace:*
-        version: link:../../packages/element-sizer
-      '@brain-toolkit/next-app-kit':
-        specifier: workspace:*
-        version: link:../../packages/next-app-kit
-      '@brain-toolkit/react-kit':
-        specifier: workspace:*
-        version: link:../../packages/react-kit
-      '@fortawesome/free-brands-svg-icons':
-        specifier: ^7.2.0
-        version: 7.2.0
-      '@fortawesome/free-solid-svg-icons':
-        specifier: ^7.2.0
-        version: 7.2.0
-      '@fortawesome/react-fontawesome':
-        specifier: ^3.3.1
-        version: 3.3.1(@fortawesome/fontawesome-svg-core@7.2.0)(react@19.2.4)
-      '@heroicons/react':
-        specifier: ^2.2.0
-        version: 2.2.0(react@19.2.4)
-      '@hookform/resolvers':
-        specifier: ^5.4.0
-        version: 5.4.0(react-hook-form@7.80.0(react@19.2.4))
-      '@pamenv/next':
-        specifier: workspace:*
-        version: link:../../packages/pamenv-next
-      '@qlover/corekit-bridge':
-        specifier: 3.4.0
-        version: 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
-      '@qlover/fe-corekit':
-        specifier: 3.4.6
-        version: 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      '@qlover/logger':
-        specifier: 1.2.1
-        version: 1.2.1
-      '@qlover/next-kit':
-        specifier: ^1.5.0
-        version: 1.5.0(1cfb47bf6e837e9db2fefa3d5b522632)
-      '@qlover/oauth-wrapper':
-        specifier: 0.11.1
-        version: 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
-      '@qlover/slice-store-react':
-        specifier: ^1.4.2
-        version: 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@qlover/tailwind-theme':
-        specifier: ^0.3.0
-        version: 0.3.0
-      '@scalar/nextjs-api-reference':
-        specifier: ^0.9.24
-        version: 0.9.26(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      '@supabase/postgrest-js':
-        specifier: ^2.87.1
-        version: 2.106.1
-      '@supabase/ssr':
-        specifier: ^0.7.0
-        version: 0.7.0(@supabase/supabase-js@2.106.1)
-      '@supabase/supabase-js':
-        specifier: ^2.57.2
-        version: 2.106.1
-      '@types/js-cookie':
-        specifier: ^3.0.6
-        version: 3.0.6
-      '@types/jsonwebtoken':
-        specifier: ^9.0.10
-        version: 9.0.10
-      '@wrksz/themes':
-        specifier: ^0.9.3
-        version: 0.9.3(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
-      antd:
-        specifier: ^5.27.1
-        version: 5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      dayjs:
-        specifier: ^1.11.18
-        version: 1.11.19
-      https-proxy-agent:
-        specifier: ^5.0.1
-        version: 5.0.1(supports-color@8.1.1)
-      inversify:
-        specifier: ^7.8.1
-        version: 7.11.0(reflect-metadata@0.2.2)
-      jose:
-        specifier: ^6.2.15
-        version: 6.2.15
-      jsonwebtoken:
-        specifier: ^9.0.2
-        version: 9.0.3
-      lodash-es:
-        specifier: ^4.17.22
-        version: 4.17.23
-      next:
-        specifier: ^16.1.6
-        version: 16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      next-intl:
-        specifier: ^4.8.2
-        version: 4.12.0(@swc/helpers@0.5.17)(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
-      node-fetch:
-        specifier: ^2.7.0
-        version: 2.7.0
-      openai:
-        specifier: ^6.21.0
-        version: 6.39.0(ws@8.18.3)(zod@4.4.3)
-      p-limit:
-        specifier: ^7.3.0
-        version: 7.3.0
-      react:
-        specifier: 19.2.4
-        version: 19.2.4
-      react-dom:
-        specifier: 19.2.4
-        version: 19.2.4(react@19.2.4)
-      react-hook-form:
-        specifier: ^7.80.0
-        version: 7.80.0(react@19.2.4)
-      react-intersection-observer:
-        specifier: ^10.0.3
-        version: 10.0.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.2.2)(react@19.2.4)(supports-color@8.1.1)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1(supports-color@8.1.1)
-      sonner:
-        specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      uuid:
-        specifier: ^13.0.0
-        version: 13.0.2
-      zod:
-        specifier: ^4.3.6
-        version: 4.4.3
-      zustand:
-        specifier: ^5.0.12
-        version: 5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
-    devDependencies:
-      '@brain-toolkit/ts2locales':
-        specifier: ^0.4.0
-        version: 0.4.0
-      '@eslint/js':
-        specifier: ^10.0.1
-        version: 10.0.1(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))
-      '@next/eslint-plugin-next':
-        specifier: ^16.1.6
-        version: 16.2.10
-      '@qlover/env-loader':
-        specifier: 1.0.2
-        version: 1.0.2
-      '@qlover/eslint-plugin':
-        specifier: 2.1.1
-        version: 2.1.1(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(typescript@6.0.3)
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.3.0
-      '@types/lodash-es':
-        specifier: ^4.17.12
-        version: 4.17.12
       '@types/ms':
         specifier: ^2.1.0
         version: 2.1.0
@@ -659,6 +410,259 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@20.19.41)(jiti@1.21.7)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
+
+  apps/pam:
+    dependencies:
+      '@ant-design/nextjs-registry':
+        specifier: ^1.3.0
+        version: 1.3.0(@ant-design/cssinjs@1.24.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@ant-design/v5-patch-for-react-19':
+        specifier: ^1.0.3
+        version: 1.0.3(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@brain-toolkit/antd-theme-override':
+        specifier: ^0.1.2
+        version: 0.1.2(antd@5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@brain-toolkit/element-sizer':
+        specifier: workspace:*
+        version: link:../../packages/element-sizer
+      '@brain-toolkit/next-app-kit':
+        specifier: workspace:*
+        version: link:../../packages/next-app-kit
+      '@brain-toolkit/react-kit':
+        specifier: workspace:*
+        version: link:../../packages/react-kit
+      '@fortawesome/free-brands-svg-icons':
+        specifier: ^7.2.0
+        version: 7.2.0
+      '@fortawesome/free-solid-svg-icons':
+        specifier: ^7.2.0
+        version: 7.2.0
+      '@fortawesome/react-fontawesome':
+        specifier: ^3.3.1
+        version: 3.3.1(@fortawesome/fontawesome-svg-core@7.2.0)(react@19.2.4)
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@19.2.4)
+      '@hookform/resolvers':
+        specifier: ^5.4.0
+        version: 5.4.0(react-hook-form@7.80.0(react@19.2.4))
+      '@pamenv/next':
+        specifier: workspace:*
+        version: link:../../packages/pamenv-next
+      '@qlover/corekit-bridge':
+        specifier: 3.4.0
+        version: 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+      '@qlover/fe-corekit':
+        specifier: 3.4.6
+        version: 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@qlover/logger':
+        specifier: 1.2.1
+        version: 1.2.1
+      '@qlover/next-kit':
+        specifier: ^1.5.0
+        version: 1.5.0(2562a71b4ab9bb60b5a449bff09455f7)
+      '@qlover/oauth-wrapper':
+        specifier: 0.11.1
+        version: 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.6.7)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+      '@qlover/slice-store-react':
+        specifier: ^1.4.2
+        version: 1.4.2(@types/react@19.2.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@qlover/tailwind-theme':
+        specifier: ^0.3.0
+        version: 0.3.0
+      '@scalar/nextjs-api-reference':
+        specifier: ^0.9.24
+        version: 0.9.26(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@supabase/postgrest-js':
+        specifier: ^2.87.1
+        version: 2.106.1
+      '@supabase/ssr':
+        specifier: ^0.7.0
+        version: 0.7.0(@supabase/supabase-js@2.106.1)
+      '@supabase/supabase-js':
+        specifier: ^2.57.2
+        version: 2.106.1
+      '@types/js-cookie':
+        specifier: ^3.0.6
+        version: 3.0.6
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
+      '@wrksz/themes':
+        specifier: ^0.9.3
+        version: 0.9.3(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
+      antd:
+        specifier: ^5.27.1
+        version: 5.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      dayjs:
+        specifier: ^1.11.18
+        version: 1.11.19
+      https-proxy-agent:
+        specifier: ^5.0.1
+        version: 5.0.1(supports-color@8.1.1)
+      inversify:
+        specifier: ^7.8.1
+        version: 7.11.0(reflect-metadata@0.2.2)
+      jose:
+        specifier: ^6.2.15
+        version: 6.2.15
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.3
+      lodash-es:
+        specifier: ^4.17.22
+        version: 4.17.23
+      next:
+        specifier: ^16.1.6
+        version: 16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next-intl:
+        specifier: ^4.8.2
+        version: 4.12.0(@swc/helpers@0.5.17)(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
+      node-fetch:
+        specifier: ^2.7.0
+        version: 2.7.0
+      openai:
+        specifier: ^6.21.0
+        version: 6.39.0(ws@8.18.3)(zod@4.6.7)
+      p-limit:
+        specifier: ^7.3.0
+        version: 7.3.0
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      react-hook-form:
+        specifier: ^7.80.0
+        version: 7.80.0(react@19.2.4)
+      react-intersection-observer:
+        specifier: ^10.0.3
+        version: 10.0.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.2.2)(react@19.2.4)(supports-color@8.1.1)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1(supports-color@8.1.1)
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.2
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+      zustand:
+        specifier: ^5.0.12
+        version: 5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
+    devDependencies:
+      '@brain-toolkit/ts2locales':
+        specifier: ^0.4.0
+        version: 0.4.0
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))
+      '@next/eslint-plugin-next':
+        specifier: ^16.1.6
+        version: 16.2.10
+      '@qlover/env-loader':
+        specifier: 1.0.2
+        version: 1.0.2
+      '@qlover/eslint-plugin':
+        specifier: 2.1.1
+        version: 2.1.1(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(typescript@6.0.3)
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.3.0
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
+      '@types/ms':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@types/node':
+        specifier: ^20
+        version: 20.19.41
+      '@types/node-fetch':
+        specifier: ^2.6.13
+        version: 2.6.13
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.2)
+      '@vitejs/plugin-react':
+        specifier: ^5.1.1
+        version: 5.2.0(supports-color@8.1.1)(vite@6.4.1(@types/node@20.19.41)(jiti@2.6.1)(lightningcss@1.33.0)(terser@5.44.0)(yaml@2.8.1))
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      dotenv-expand:
+        specifier: ^12.0.3
+        version: 12.0.3
+      eslint:
+        specifier: ^10.0.3
+        version: 10.7.0(jiti@1.21.7)(supports-color@8.1.1)
+      eslint-config-prettier:
+        specifier: ^10.1.8
+        version: 10.1.8(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))
+      eslint-import-resolver-typescript:
+        specifier: ^4.4.4
+        version: 4.4.4(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@8.1.1))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-import@2.32.0)(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)
+      eslint-plugin-import-x:
+        specifier: ^4.16.1
+        version: 4.17.1(@typescript-eslint/utils@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@8.1.1))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)
+      eslint-plugin-prettier:
+        specifier: ^5.5.4
+        version: 5.5.4(eslint-config-prettier@10.1.8(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1)))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(prettier@3.6.2)
+      eslint-plugin-react-hooks:
+        specifier: ^7.1.1
+        version: 7.1.1(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)
+      eslint-plugin-unused-imports:
+        specifier: ^4.2.0
+        version: 4.4.1(@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))
+      globals:
+        specifier: ^16.5.0
+        version: 16.5.0
+      jsdom:
+        specifier: ^28.0.0
+        version: 28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1)
+      next-sitemap:
+        specifier: ^4.2.3
+        version: 4.2.3(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
+      next-swagger-doc:
+        specifier: ^0.4.1
+        version: 0.4.1(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(openapi-types@12.1.3)
+      pamenv-cli:
+        specifier: workspace:*
+        version: link:../../packages/pamenv
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      swagger-ui-react:
+        specifier: ^5.31.2
+        version: 5.32.6(@types/react@19.2.2)(debug@4.4.3(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(supports-color@8.1.1)
+      tailwindcss:
+        specifier: ^4
+        version: 4.3.0
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      typescript-eslint:
+        specifier: ^8.60.1
+        version: 8.65.0(eslint@10.7.0(jiti@1.21.7)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@20.19.41)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
 
   apps/pamenv-vite-app:
     dependencies:
@@ -823,7 +827,7 @@ importers:
         version: 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@qlover/next-kit':
         specifier: ^1.5.0
-        version: 1.5.0(513ce356487be2f15a7c3ebd73a0f8ed)
+        version: 1.5.0(bf6f57bf12f33ed3b1eeef09bf97f724)
       '@supabase/supabase-js':
         specifier: ^2.57.2
         version: 2.106.1
@@ -855,14 +859,17 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.0)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
       zod:
-        specifier: ^4.3.6
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
   packages/pamenv:
     dependencies:
       '@inquirer/prompts':
         specifier: ^8.5.2
         version: 8.5.2(@types/node@22.19.0)
+      '@vercel/oidc':
+        specifier: ^4.0.7
+        version: 4.0.7
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -3365,7 +3372,7 @@ packages:
       react-dom: '>=18'
       reflect-metadata: ^0.2.0
       sonner: ^1.0.0 || ^2.0.0
-      zod: ^3.0.0 || ^4.0.0
+      zod: 4.6.7
     peerDependenciesMeta:
       '@qlover/oauth-wrapper':
         optional: true
@@ -3385,7 +3392,7 @@ packages:
   '@qlover/oauth-wrapper@0.11.1':
     resolution: {integrity: sha512-A9j4LqRCM0ZRHSZWjIEvRPhCSTipwPE1L9ugs/dFOtx68P8qXSNSphdkz9+AFXsfd6+U/fF/xNsTa2ZsFu7FDg==}
     peerDependencies:
-      zod: ^3.0.0 || ^4.0.0
+      zod: 4.6.7
 
   '@qlover/scripts-context@2.0.0':
     resolution: {integrity: sha512-0bNF0/2SWsLYublNbYlS7aV/3kbAmoFnwwD2dohzrPi4UJwfntblUuPtF++fP6W9KSREDI4e0Z1qM7wlNtF10Q==}
@@ -4773,6 +4780,17 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@vercel/cli-config@0.3.7':
+    resolution: {integrity: sha512-bHFJcUF2sUsB/6XfS+BWAYjD7DIt1xyhz6oOAvGEBua0S4P+pKQ04O6vZ3jLw1HMX1ZNKP9lyGpoiqgToqI7GQ==}
+
+  '@vercel/cli-exec@1.0.1':
+    resolution: {integrity: sha512-g9XerViJ/paZujufXYcu5XYI2vU2rtB4sgdpjUHde5RnOkdmpu0ngH46LCFGHoPXO/C+qDPSczIHIRN+8Q2YKQ==}
+    engines: {node: '>= 18'}
+
+  '@vercel/oidc@4.0.7':
+    resolution: {integrity: sha512-ZiplzlXLWdKPj36yp23LBwaKWt4hR+kNULULeMVwtrx+iDpxnMk1nFKiHEtUWRjGpnqi/rDGwtnE/Xkfl9xXvQ==}
+    engines: {node: '>= 20'}
+
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -6035,6 +6053,10 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
+  execa@5.1.1:
+    resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
+    engines: {node: '>=10'}
+
   expand-tilde@2.0.2:
     resolution: {integrity: sha512-A5EmesHW6rfnZ9ysHQjPdJRni0SRar0tjtG5MNtm9n5TUvsYU8oozprtRD4AqHxcZWWlVuAmQo2nWKfN9oyjTw==}
     engines: {node: '>=0.10.0'}
@@ -6265,6 +6287,10 @@ packages:
     resolution: {integrity: sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g==}
     engines: {node: '>= 0.4'}
 
+  get-stream@6.0.1:
+    resolution: {integrity: sha512-ts6Wi+2j3jQjqi70w5AlN8DFnkSwC+MqmxEzdEALB2qXZYV3X/b1CTfgPLGJNMeAWxdPfU8FO1ms3NUfaHCPYg==}
+    engines: {node: '>=10'}
+
   get-symbol-description@1.1.0:
     resolution: {integrity: sha512-w9UMqWwJxHNOvoNzSJ2oPF5wvYcvP7jUvYzhp67yEhTi17ZDBBC1z9pTdGuzjD+EFIqLSYRweZjqfiPzQ06Ebg==}
     engines: {node: '>= 0.4'}
@@ -6455,6 +6481,10 @@ packages:
   human-id@4.1.2:
     resolution: {integrity: sha512-v/J+4Z/1eIJovEBdlV5TYj1IR+ZiohcYGRY+qN/oC9dAfKzVT023N/Bgw37hrKCoVRBvk3bqyzpr2PP5YeTMSg==}
     hasBin: true
+
+  human-signals@2.1.0:
+    resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
+    engines: {node: '>=10.17.0'}
 
   husky@9.1.7:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
@@ -6702,6 +6732,10 @@ packages:
   is-ssh@1.4.1:
     resolution: {integrity: sha512-JNeu1wQsHjyHgn9NcWTaXq6zWSR6hqE0++zhfZlkFBbScNkyvxCdeV8sRkSBaeLKxmbpR21brail63ACNxJ0Tg==}
 
+  is-stream@2.0.1:
+    resolution: {integrity: sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==}
+    engines: {node: '>=8'}
+
   is-string@1.1.1:
     resolution: {integrity: sha512-BtEeSsoaQjlSPBemMQIrY1MY0uM6vnS1g5fmufYOtnxLGUZM2178PKbhsk7Ffv58IX+ZtcvoGwccYsh0PglkAA==}
     engines: {node: '>= 0.4'}
@@ -6781,6 +6815,9 @@ packages:
 
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
+
+  jose@5.10.0:
+    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
   jose@6.2.15:
     resolution: {integrity: sha512-qdF6ewcZARtef63fJ9AKKZPgxw+t7USH6HLXYcD4CrdmSvDp79rpJSPFEKc90QBeGS63u1KQtN2MZQHC0yDIzA==}
@@ -7254,6 +7291,9 @@ packages:
     resolution: {integrity: sha512-BhXM0Au22RwUneMPwSCnyhTOizdWoIEPU9sp0Aqa1PnDMR5Wv2FGXYDjuzJEIX+Eo2Rb8xuYe5jrnm5QowQFkw==}
     engines: {node: '>=16.10'}
 
+  merge-stream@2.0.0:
+    resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
+
   merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
@@ -7615,7 +7655,7 @@ packages:
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
-      zod: ^3.25 || ^4.0
+      zod: 4.6.7
     peerDependenciesMeta:
       ws:
         optional: true
@@ -7644,6 +7684,10 @@ packages:
   ora@5.4.1:
     resolution: {integrity: sha512-5b6Y85tPxZZ7QytO+BQzysW31HJku27cRIlkbAXaNx+BdcVi+LlRFmVXzeF6a7JCwJpyw5c4b+YSVImQIrBpuQ==}
     engines: {node: '>=10'}
+
+  os-paths@4.4.0:
+    resolution: {integrity: sha512-wrAwOeXp1RRMFfQY8Sy7VaGVmPocaLwSFOYCGKSyo8qmJ+/yaafCl5BCA1IQZWqFSRBrKDYFeR9d/VyQzfH/jg==}
+    engines: {node: '>= 6.0'}
 
   os-tmpdir@1.0.2:
     resolution: {integrity: sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==}
@@ -8745,6 +8789,10 @@ packages:
     resolution: {integrity: sha512-3xurFv5tEgii33Zi8Jtp55wEIILR9eh34FAW00PZf+JnSsTmV/ioewSgQl97JHvgjoRGwPShsWm+IdrxB35d0w==}
     engines: {node: '>=8'}
 
+  strip-final-newline@2.0.0:
+    resolution: {integrity: sha512-BrpvfNAE3dcvq7ll3xVumzjKjZQ5tI1sEUIKr3Uoks0XUl45St3FlatVqef9prk4jRDzhW6WZg+3bk93y6pLjA==}
+    engines: {node: '>=6'}
+
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
@@ -9528,6 +9576,14 @@ packages:
       utf-8-validate:
         optional: true
 
+  xdg-app-paths@5.5.1:
+    resolution: {integrity: sha512-hI3flOB4PLZIy5prbtTpirobtPE2ZtZ52szO+2mM9Efp6ErM398La+C1lIpNWDfNoQk+6Lsi6nMcCwVB7pxeMQ==}
+    engines: {node: '>= 6.0'}
+
+  xdg-portable@7.3.0:
+    resolution: {integrity: sha512-sqMMuL1rc0FmMBOzCpd0yuy9trqF2yTTVe+E9ogwCSWQCdDEtQUwrZPT6AxqtsFGRNxycgncbP/xmOOSPw5ZUw==}
+    engines: {node: '>= 6.0'}
+
   xml-but-prettier@1.0.1:
     resolution: {integrity: sha512-C2CJaadHrZTqESlH03WOyw0oZTtoy2uEg6dSDF6YRg+9GnYNub53RRemLpnvtbHDFelxMx4LajiFsYeR6XJHgQ==}
 
@@ -9596,10 +9652,10 @@ packages:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: ^3.25.0 || ^4.0.0
+      zod: 4.6.7
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zustand@5.0.13:
     resolution: {integrity: sha512-efI2tVaVQPqtOh114loML/Z80Y4NP3yc+Ff0fYiZJPauNeWZeIp/bRFD7I9bfmCOYBh/PHxlglQ9+wvlwnPikQ==}
@@ -12427,7 +12483,7 @@ snapshots:
 
   '@qlover/logger@1.2.1': {}
 
-  '@qlover/next-kit@1.5.0(1cfb47bf6e837e9db2fefa3d5b522632)':
+  '@qlover/next-kit@1.5.0(2562a71b4ab9bb60b5a449bff09455f7)':
     dependencies:
       '@qlover/corekit-bridge': 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -12438,9 +12494,9 @@ snapshots:
       lodash-es: 4.17.23
       reflect-metadata: 0.2.2
       uuid: 13.0.2
-      zod: 4.4.3
+      zod: 4.6.7
     optionalDependencies:
-      '@qlover/oauth-wrapper': 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+      '@qlover/oauth-wrapper': 0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.6.7)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@supabase/supabase-js': 2.106.1
       next: 16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-intl: 4.12.0(@swc/helpers@0.5.17)(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
@@ -12462,7 +12518,7 @@ snapshots:
       - yaml
       - zustand
 
-  '@qlover/next-kit@1.5.0(513ce356487be2f15a7c3ebd73a0f8ed)':
+  '@qlover/next-kit@1.5.0(bf6f57bf12f33ed3b1eeef09bf97f724)':
     dependencies:
       '@qlover/corekit-bridge': 3.4.0(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -12473,9 +12529,9 @@ snapshots:
       lodash-es: 4.17.23
       reflect-metadata: 0.2.2
       uuid: 13.0.2
-      zod: 4.4.3
+      zod: 4.6.7
     optionalDependencies:
-      '@qlover/oauth-wrapper': 0.11.1(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
+      '@qlover/oauth-wrapper': 0.11.1(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.6.7)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@supabase/supabase-js': 2.106.1
       next: 16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-intl: 4.12.0(@swc/helpers@0.5.17)(next@16.2.6(@babel/core@7.29.7(supports-color@8.1.1))(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
@@ -12497,12 +12553,12 @@ snapshots:
       - yaml
       - zustand
 
-  '@qlover/oauth-wrapper@0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
+  '@qlover/oauth-wrapper@0.11.1(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.6.7)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
     dependencies:
       '@qlover/corekit-bridge': 3.4.0(@types/node@20.19.41)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@qlover/logger': 1.2.1
-      zod: 4.4.3
+      zod: 4.6.7
     transitivePeerDependencies:
       - '@types/node'
       - debug
@@ -12519,12 +12575,12 @@ snapshots:
       - yaml
       - zustand
 
-  '@qlover/oauth-wrapper@0.11.1(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.4.3)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
+  '@qlover/oauth-wrapper@0.11.1(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zod@4.6.7)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))':
     dependencies:
       '@qlover/corekit-bridge': 3.4.0(@types/node@22.19.0)(debug@4.4.3(supports-color@8.1.1))(lightningcss@1.33.0)(reflect-metadata@0.2.2)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)(zustand@5.0.13(@types/react@19.2.2)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))
       '@qlover/fe-corekit': 3.4.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@qlover/logger': 1.2.1
-      zod: 4.4.3
+      zod: 4.6.7
     transitivePeerDependencies:
       - '@types/node'
       - debug
@@ -13038,7 +13094,7 @@ snapshots:
       '@scalar/helpers': 0.2.18
       nanoid: 5.1.11
       type-fest: 5.6.0
-      zod: 4.4.3
+      zod: 4.6.7
 
   '@scarf/scarf@1.4.0': {}
 
@@ -14255,6 +14311,21 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
+
+  '@vercel/cli-config@0.3.7':
+    dependencies:
+      xdg-app-paths: 5.5.1
+      zod: 4.6.7
+
+  '@vercel/cli-exec@1.0.1':
+    dependencies:
+      execa: 5.1.1
+
+  '@vercel/oidc@4.0.7':
+    dependencies:
+      '@vercel/cli-config': 0.3.7
+      '@vercel/cli-exec': 1.0.1
+      jose: 5.10.0
 
   '@vitejs/plugin-react@4.7.0(supports-color@8.1.1)(vite@6.4.1(@types/node@22.19.0)(jiti@1.21.7)(lightningcss@1.33.0)(terser@5.44.0)(yaml@2.8.1))':
     dependencies:
@@ -15730,8 +15801,8 @@ snapshots:
       '@babel/parser': 7.29.7
       eslint: 10.13.0(jiti@2.6.1)(supports-color@8.1.1)
       hermes-parser: 0.25.1
-      zod: 4.4.3
-      zod-validation-error: 4.0.2(zod@4.4.3)
+      zod: 4.6.7
+      zod-validation-error: 4.0.2(zod@4.6.7)
     transitivePeerDependencies:
       - supports-color
 
@@ -15741,8 +15812,8 @@ snapshots:
       '@babel/parser': 7.29.7
       eslint: 10.7.0(jiti@1.21.7)(supports-color@8.1.1)
       hermes-parser: 0.25.1
-      zod: 4.4.3
-      zod-validation-error: 4.0.2(zod@4.4.3)
+      zod: 4.6.7
+      zod-validation-error: 4.0.2(zod@4.6.7)
     transitivePeerDependencies:
       - supports-color
 
@@ -15941,6 +16012,18 @@ snapshots:
       '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
+
+  execa@5.1.1:
+    dependencies:
+      cross-spawn: 7.0.6
+      get-stream: 6.0.1
+      human-signals: 2.1.0
+      is-stream: 2.0.1
+      merge-stream: 2.0.0
+      npm-run-path: 4.0.1
+      onetime: 5.1.2
+      signal-exit: 3.0.7
+      strip-final-newline: 2.0.0
 
   expand-tilde@2.0.2:
     dependencies:
@@ -16206,6 +16289,8 @@ snapshots:
       dunder-proto: 1.0.1
       es-object-atoms: 1.1.1
 
+  get-stream@6.0.1: {}
+
   get-symbol-description@1.1.0:
     dependencies:
       call-bound: 1.0.4
@@ -16442,6 +16527,8 @@ snapshots:
       - supports-color
 
   human-id@4.1.2: {}
+
+  human-signals@2.1.0: {}
 
   husky@9.1.7: {}
 
@@ -16692,6 +16779,8 @@ snapshots:
     dependencies:
       protocols: 2.0.2
 
+  is-stream@2.0.1: {}
+
   is-string@1.1.1:
     dependencies:
       call-bound: 1.0.4
@@ -16771,6 +16860,8 @@ snapshots:
   jiti@2.6.1: {}
 
   jju@1.4.0: {}
+
+  jose@5.10.0: {}
 
   jose@6.2.15: {}
 
@@ -17298,6 +17389,8 @@ snapshots:
 
   meow@12.1.1: {}
 
+  merge-stream@2.0.0: {}
+
   merge2@1.4.1: {}
 
   merge@2.1.1: {}
@@ -17802,10 +17895,10 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openai@6.39.0(ws@8.18.3)(zod@4.4.3):
+  openai@6.39.0(ws@8.18.3)(zod@4.6.7):
     optionalDependencies:
       ws: 8.18.3
-      zod: 4.4.3
+      zod: 4.6.7
 
   openapi-path-templating@2.2.1:
     dependencies:
@@ -17848,6 +17941,8 @@ snapshots:
       log-symbols: 4.1.0
       strip-ansi: 6.0.1
       wcwidth: 1.0.1
+
+  os-paths@4.4.0: {}
 
   os-tmpdir@1.0.2: {}
 
@@ -19475,6 +19570,8 @@ snapshots:
 
   strip-bom@4.0.0: {}
 
+  strip-final-newline@2.0.0: {}
+
   strip-json-comments@3.1.1: {}
 
   strip-literal@3.1.0:
@@ -20679,6 +20776,15 @@ snapshots:
 
   ws@8.18.3: {}
 
+  xdg-app-paths@5.5.1:
+    dependencies:
+      os-paths: 4.4.0
+      xdg-portable: 7.3.0
+
+  xdg-portable@7.3.0:
+    dependencies:
+      os-paths: 4.4.0
+
   xml-but-prettier@1.0.1:
     dependencies:
       repeat-string: 1.6.1
@@ -20729,11 +20835,11 @@ snapshots:
 
   zenscroll@4.0.2: {}
 
-  zod-validation-error@4.0.2(zod@4.4.3):
+  zod-validation-error@4.0.2(zod@4.6.7):
     dependencies:
-      zod: 4.4.3
+      zod: 4.6.7
 
-  zod@4.4.3: {}
+  zod@4.6.7: {}
 
   zustand@5.0.13(@types/react@19.2.2)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)):
     optionalDependencies:

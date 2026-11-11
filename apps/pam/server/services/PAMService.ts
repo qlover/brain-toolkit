@@ -25,7 +25,6 @@ import {
   API_PAM_ENV_NAME_EXISTS,
   API_PAM_ENV_NOT_FOUND,
   API_PAM_ENV_PROTECTED,
-  API_PAM_DEPLOY_DEK_INVALID,
   API_PAM_ENV_RESOLVE_SEAL_FAILED,
   API_PAM_ENV_RESOLVE_SEAL_REQUIRED,
   API_PAM_PROJECT_NOT_FOUND,
@@ -1725,99 +1724,5 @@ export class PAMService implements PAMServiceInterface {
       sensitivePlaceholder,
       variables: safeVariables
     };
-  }
-
-  /**
-   * 构建部署快照：包装 DEK（响应仅为密文，无业务变量明文）。
-   *
-   * @override
-   * @param projectRef - 项目 slug 或 id
-   * @param dekBase64 - 客户端随机 DEK（base64，32 字节）
-   */
-  public async wrapDeployDek(
-    projectRef: string,
-    dekBase64: string
-  ): Promise<{ wrappedDek: string }> {
-    await this.assertOrgPermission(
-      projectRef,
-      PermissionKey.pam_environments_inject
-    );
-    const access = await this.loadProjectAccess(projectRef);
-    if (!access) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
-    const dekBuf = Buffer.from(dekBase64, 'base64');
-    if (dekBuf.length !== 32) {
-      throw new ExecutorError(API_PAM_DEPLOY_DEK_INVALID);
-    }
-    const payload = JSON.stringify({
-      v: 1,
-      projectId: access.id,
-      dek: dekBase64
-    });
-    return { wrappedDek: this.getSecretEncryption().encrypt(payload) };
-  }
-
-  /**
-   * 运行时解封：解开 wrappedDek，再用客户端 seal offer 封回 DEK。
-   *
-   * @override
-   * @param projectRef - 项目 slug 或 id
-   * @param wrappedDek - 快照中的包装 DEK
-   * @param sealOffer - 客户端一次性公钥
-   */
-  public async unwrapDeployDek(
-    projectRef: string,
-    wrappedDek: string,
-    sealOffer: { alg: string; publicKey: string }
-  ): Promise<{ seal: PAMEnvResolveSealEnvelope }> {
-    await this.assertOrgPermission(
-      projectRef,
-      PermissionKey.pam_environments_inject
-    );
-    const access = await this.loadProjectAccess(projectRef);
-    if (!access) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
-    if (!sealOffer?.alg?.trim() || !sealOffer.publicKey?.trim()) {
-      throw new ExecutorError(API_PAM_ENV_RESOLVE_SEAL_REQUIRED);
-    }
-
-    let payload: { v?: number; projectId?: string; dek?: string };
-    try {
-      payload = JSON.parse(this.getSecretEncryption().decrypt(wrappedDek)) as {
-        v?: number;
-        projectId?: string;
-        dek?: string;
-      };
-    } catch {
-      throw new ExecutorError(API_PAM_DEPLOY_DEK_INVALID);
-    }
-    if (
-      payload.v !== 1 ||
-      payload.projectId !== access.id ||
-      !payload.dek?.trim()
-    ) {
-      throw new ExecutorError(API_PAM_DEPLOY_DEK_INVALID);
-    }
-    const dekBuf = Buffer.from(payload.dek, 'base64');
-    if (dekBuf.length !== 32) {
-      throw new ExecutorError(API_PAM_DEPLOY_DEK_INVALID);
-    }
-
-    try {
-      const plaintext = Buffer.from(
-        JSON.stringify({ dek: payload.dek }),
-        'utf8'
-      );
-      return {
-        seal: this.resolveSealRegistry.seal(plaintext, {
-          alg: sealOffer.alg,
-          publicKey: sealOffer.publicKey
-        })
-      };
-    } catch {
-      throw new ExecutorError(API_PAM_ENV_RESOLVE_SEAL_FAILED);
-    }
   }
 }

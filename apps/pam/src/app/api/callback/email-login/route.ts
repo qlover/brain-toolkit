@@ -13,7 +13,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { API_CALLBACK_EMAIL_LOGIN } from '@config/apiRoutes';
 import { I } from '@config/ioc-identifiter';
-import { BootstrapServer } from '@server/BootstrapServer';
+import { createBootstrapServer } from '@server/BootstrapServer';
 import { UserController } from '@server/controllers/UserController';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
 import { NextApiServer } from '@server/NextApiServer';
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const server = new BootstrapServer();
+    const server = await createBootstrapServer();
     const provider = server.getIOC(
       I.OAuthWrapperProviderInterface
     ) as OAuthWrapperProviderInterface;

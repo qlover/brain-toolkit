@@ -1,3 +1,4 @@
+import { createPamenv } from '@pamenv/next';
 import { NextResponse, type NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import {
@@ -70,7 +71,20 @@ export default async function proxy(request: NextRequest) {
     return localPathResponse;
   }
 
-  const oauthSession = new OAuthSessionService(new ServerConfig());
+  // Next 16 Proxy 为 Node：sessionProxy 除验 cookie 外还会查库（撤销会话 / 平台管理员）
+  // → 还需 SUPABASE_*；勿把 PAM_ENV / VERCEL 等平台键塞进 only
+  const bag = await createPamenv({
+    only: [
+      'SESSION_SECRET',
+      'OAUTH_SESSION_KEY',
+      'SUPABASE_URL',
+      'SUPABASE_SERVICE_ROLE_KEY'
+    ]
+  });
+  const serverConfig = new ServerConfig();
+  serverConfig.bindPamenvBag(bag);
+
+  const oauthSession = new OAuthSessionService(serverConfig);
   // ---------- 第二步：登录检查 ----------
   if (oauthSession.hasNeedProxy(request)) {
     // 将国际化响应作为“通过”时的返回值传给 oauthSession

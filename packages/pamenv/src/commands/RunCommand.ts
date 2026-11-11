@@ -15,7 +15,9 @@ import {
 } from '../i18n/identifier/pamenv_cli';
 import type { PamCliApiClientInterface } from '../interfaces/PamCliApiClientInterface';
 import type { PamCliAuthStoreInterface } from '../interfaces/PamCliAuthStoreInterface';
+import type { PamCiOidcProviderType } from '../interfaces/PamCiOidcTokenSourceInterface';
 import type { PamCliResolvedVarType } from '../interfaces/PamCliTypes';
+import { PamCiOidcBootstrap } from '../impls/PamCiOidcBootstrap';
 import { PamCliApiError } from '../impls/PamCliApiError';
 import {
   PamCliEnvMergeUtil,
@@ -28,12 +30,57 @@ import { PamCliRunWarningUtil } from '../impls/PamCliRunWarningUtil';
 
 export type { PamCliEnvPriorityType };
 
+/** 键名单：单个字符串或数组（入口 normalize）。 */
+export type PamCliKeyListType = string | readonly string[];
+
+/**
+ * 将 `only` / `omit` / `keepEnv` 规范为去重、去空后的键数组。
+ */
+export function normalizePamCliKeyList(
+  input?: PamCliKeyListType
+): string[] {
+  if (input === undefined) {
+    return [];
+  }
+  const raw = typeof input === 'string' ? [input] : input;
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const key = item.trim();
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
+}
+
+/**
+ * `only` 与 `omit` 不可同时非空。
+ */
+export function assertOnlyOmitExclusive(
+  only: readonly string[],
+  omit: readonly string[]
+): void {
+  if (only.length > 0 && omit.length > 0) {
+    throw new Error('pamenv: `only` and `omit` cannot both be set');
+  }
+}
+
 export type PamCliRunOptionsType = {
   readonly envName?: string;
-  /** Only inject these keys. */
-  readonly only?: readonly string[];
-  /** Keep these keys from the current shell when already set. */
-  readonly keepEnv?: readonly string[];
+  /** 白名单：只注入这些键；不传 = 全部。 */
+  readonly only?: PamCliKeyListType;
+  /** 黑名单：排除这些键；与 `only` 互斥。 */
+  readonly omit?: PamCliKeyListType;
+  /** 进程里已有则不覆盖。 */
+  readonly keepEnv?: PamCliKeyListType;
+  /**
+   * 是否使用进程内注入缓存。默认 true；false 强制本趟重做。
+   * CLI 子进程场景通常无关；inject / ensure 运行时使用。
+   */
+  readonly cache?: boolean;
   /** Pre-run bypass warnings (default true). */
   readonly warn?: boolean;
   /**
@@ -52,6 +99,11 @@ export type PamCliRunOptionsType = {
    * Pass `[]` to disable that warning.
    */
   readonly clientPublicPrefixes?: readonly string[];
+  /**
+   * CI OIDC：先换短票写入 `PAMENV_TOKEN`，再 resolve。
+   * 例：`vercel`（需 `@vercel/oidc` + `PAMENV_BASE_URL`）。
+   */
+  readonly oidc?: PamCiOidcProviderType;
 };
 
 const FORWARDED_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
@@ -114,22 +166,49 @@ export class RunCommand {
     readonly projectSlug: string;
     readonly envName: string;
     readonly env: NodeJS.ProcessEnv;
+    /** OIDC 短票过期时间（ISO）；未走 OIDC 时为 undefined。 */
+    readonly oidcExpiresAt?: string;
   }> {
     // CLI run keeps historical verbosity; plugins pass `debug: false` by default.
     const debug = options.debug !== false;
+    const only = normalizePamCliKeyList(options.only);
+    const omit = normalizePamCliKeyList(options.omit);
+    assertOnlyOmitExclusive(only, omit);
+    const keepEnv = normalizePamCliKeyList(options.keepEnv);
+
+    let oidcExpiresAt: string | undefined;
+    if (options.oidc) {
+      if (!this.authStore) {
+        throw new Error('OIDC bootstrap requires an auth store (base URL)');
+      }
+      const issued = await new PamCiOidcBootstrap(
+        this.apiClient,
+        this.authStore
+      ).ensurePamenvToken(options.oidc, debug);
+      oidcExpiresAt = issued.expiresAt;
+    }
 
     if (this.authStore) {
       await PamCliSecurityGate.assertIdentity(this.authStore, { debug });
     }
 
-    const { variables, projectSlug, envName } = await this.resolveVariables(
-      projectRef,
-      options
-    );
+    const resolved = await this.resolveVariables(projectRef, {
+      ...options,
+      only: only.length > 0 ? only : undefined,
+      omit: undefined,
+      keepEnv
+    });
+    let variables = resolved.variables;
+    const { projectSlug, envName } = resolved;
 
-    if (options.only && options.only.length > 0) {
+    if (omit.length > 0) {
+      const omitSet = new Set(omit);
+      variables = variables.filter((variable) => !omitSet.has(variable.key));
+    }
+
+    if (only.length > 0) {
       const returned = new Set(variables.map((variable) => variable.key));
-      const missing = options.only.filter((key) => !returned.has(key));
+      const missing = only.filter((key) => !returned.has(key));
       if (missing.length > 0) {
         console.error(
           PamCliI18n.t(PAMENV_CLI_ONLY_MISSING, { keys: missing.join(', ') })
@@ -153,7 +232,7 @@ export class RunCommand {
         : undefined;
     const merged = PamCliEnvMergeUtil.merge(baseEnv, variables, {
       priority,
-      keepEnv: options.keepEnv,
+      keepEnv,
       fileLayer
     });
 
@@ -182,7 +261,13 @@ export class RunCommand {
       );
     }
 
-    return { variables, projectSlug, envName, env: merged.env };
+    return {
+      variables,
+      projectSlug,
+      envName,
+      env: merged.env,
+      ...(oidcExpiresAt ? { oidcExpiresAt } : {})
+    };
   }
 
   protected static formatMergeWarnings(
@@ -269,10 +354,11 @@ export class RunCommand {
     const wantedEnv = options.envName?.trim();
     if (wantedEnv && projectRef.trim()) {
       try {
+        const onlyKeys = normalizePamCliKeyList(options.only);
         const result = await this.apiClient.resolveEnvironmentByName(
           projectRef.trim(),
           wantedEnv,
-          options.only
+          onlyKeys.length > 0 ? onlyKeys : undefined
         );
         PamCliSecurityGate.assertResolvedProjectMatches(
           projectRef,
@@ -308,10 +394,11 @@ export class RunCommand {
       options.envName,
       project.slug
     );
+    const onlyKeys = normalizePamCliKeyList(options.only);
     const { variables } = await this.apiClient.resolveEnvironment(
       project.id,
       env.id,
-      options.only
+      onlyKeys.length > 0 ? onlyKeys : undefined
     );
     return { variables, projectSlug: project.slug, envName: env.name };
   }

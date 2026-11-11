@@ -13,20 +13,61 @@ pnpm add @pamenv/next pamenv-cli
 import { createPamenvPlugin } from '@pamenv/next';
 
 const withPamenv = createPamenvPlugin({
-  slug: 'brain-oauth',
-  env: 'local',
-  keepEnv: ['APP_ENV'],
-  // 默认 PAM 优先；本地临时改 .env / process 测值时用 'local'
-  // envPriority: 'local',
-  // 默认安静；需要排查时再开（会打印 config 路径、键名、baseUrl，不含密钥值）
-  debug: process.env.PAMENV_DEBUG === '1'
+  slug: 'pam',
+  env: process.env.PAM_ENV,
+  keepEnv: ['PAM_ENV', 'VERCEL', 'VERCEL_ENV', 'NODE_ENV'],
+  oidc: 'vercel',
+  debug: true,
+  enabled: true
 });
 
 export default withPamenv(withNextIntl(nextConfig));
 ```
 
-Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进这个对象。未登录时请在仓库根或项目目录执行 `pamenv login --local`。`enabled: false` 时不请求 PAM，正式构建应关掉。未传 `enabled` 时只在 `next dev` 注入。
+Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进这个对象。未登录时请在仓库根或项目目录执行 `pamenv login --local`。
 
-`debug` 默认 `false`：像 “Using local config…”、注入数量、键名等只在 `debug: true` 时输出到 stderr；安全/绕过类警告仍会始终打印（除非 `warn: false`）。
+### 总开关与自动时机
 
-`envPriority` 默认 `remote`（PAM 盖同名键）。设为 `local` 时按 **process → 磁盘 `.env*` → PAM**；敏感占位符仍换成 PAM 明文。
+| 选项 | 含义 |
+| --- | --- |
+| `enabled` | **总开关**：`false` 整插件不注入；省略 / `true` 允许注入 |
+| （内部）自动时机 | 本地仅 `next dev`；有 `oidc` 且在匹配 CI 时 production build/server |
+| `dev` / `ci` | 分别关掉本地或 CI 侧的自动时机 |
+
+`PAMENV_PROJECT_SLUG` / `PAMENV_ENV_NAME` 优先于入参 `slug` / `env`。`debug` 可传 `true`；省略则读 `PAMENV_DEBUG`。
+
+### 两层 API（进程级 / 运行时级）
+
+| API | 时机 |
+| --- | --- |
+| `createPamenvPlugin`（进程级） | **本地** `next dev`：inject → 当前进程 `process.env`；**CI** `next build`：inject + 写密封快照 |
+| `createPamenv`（运行时级） | **Vercel runtime**：解封 → 返回 `PamenvBag`；**默认不写** `process.env`。Edge 内 no-op（空袋） |
+
+```ts
+import { createPamenv } from '@pamenv/next';
+
+const bag = await createPamenv(); // 整表按键解密（快照 v2）→ PamenvBag
+bag.get('SESSION_SECRET');
+const only = await createPamenv({ only: ['SESSION_SECRET'] });
+// 遗留裸读 process.env 时才开：
+await createPamenv({ writeProcessEnv: true });
+```
+
+| 参数 | 含义 | 默认 |
+| --- | --- | --- |
+| `only` | 白名单；缺键且进程也没有 → **抛错**；袋内只含这些键 | 不传 = 全部 |
+| `omit` | 黑名单（与 `only` 互斥） | 不传 = 不排除 |
+| `keepEnv` | `writeProcessEnv: true` 时：进程已有则不覆盖 | runtime 内置 CI 键 |
+| `cache` | 进程内解封缓存 | `true` |
+| `writeProcessEnv` | 是否把袋写入 `process.env` | **`false`** |
+
+应用侧把袋挂到配置（袋优先，平台键回落 process）：
+
+```ts
+const bag = await createPamenv();
+serverConfig.bindPamenvBag(bag);
+```
+
+### 平台矩阵
+
+见主包 `packages/pamenv/README.md`。

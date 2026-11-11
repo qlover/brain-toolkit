@@ -98,28 +98,13 @@ export function isPersonalTeamSlug(slug: string): boolean {
   return slug.startsWith('personal-');
 }
 
-/**
- * 个人团队默认只对主人本人生效；例外：OIDC CI Runner（`team_ci_runner` /
- * legacy `ci_runner`）可挂在主人的 personal 团队上并参与 inject。
- *
- * @param slug - 团队 slug
- * @param userId - 成员用户 id
- * @param roleKey - 可选；`pam_roles.key` 或 legacy `ci_runner`
- */
+/** Personal teams only ever grant access to their own user. */
 export function isTeamMembershipEffective(
   slug: string | null | undefined,
-  userId: string,
-  roleKey?: string | null
+  userId: string
 ): boolean {
   if (!slug) {
     return false;
   }
-  if (!isPersonalTeamSlug(slug)) {
-    return true;
-  }
-  if (slug === `personal-${userId}`) {
-    return true;
-  }
-  const key = roleKey?.trim();
-  return key === 'team_ci_runner' || key === 'ci_runner';
+  return !isPersonalTeamSlug(slug) || slug === `personal-${userId}`;
 }

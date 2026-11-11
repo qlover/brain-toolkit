@@ -142,26 +142,6 @@ export type PAMEnvResolvedSealed = {
 };
 
 /**
- * `POST .../cli/deploy-dek/wrap`：构建机上交 DEK（HTTPS + pam_cli），
- * 响应仅为包装密文。
- */
-export const PamDeployDekWrapSchema = z.object({
-  dek: z.string().trim().min(1).max(256)
-});
-
-export type PamDeployDekWrapType = z.infer<typeof PamDeployDekWrapSchema>;
-
-/**
- * `POST .../cli/deploy-dek/unwrap`：运行时取 DEK，响应走 seal。
- */
-export const PamDeployDekUnwrapSchema = z.object({
-  wrappedDek: z.string().trim().min(1),
-  seal: PAMEnvResolveSealOfferSchema
-});
-
-export type PamDeployDekUnwrapType = z.infer<typeof PamDeployDekUnwrapSchema>;
-
-/**
  * Body for `POST .../settings`.
  */
 export const PAMEnvSettingsSchema = z

@@ -1,6 +1,6 @@
 # Vercel OIDC + pamenv
 
-本页对应分支 `feat/pam-cli-ci-vercel`。用 Vercel 的 OIDC `id_token` 换 **15 分钟** `pam_cli`，再 `pamenv run` 注入变量。**无需 bot 密码、无需 `.pam`。**
+用 Vercel 的 OIDC `id_token` 换 **15 分钟** `pam_cli`，再注入 PAM 变量。**无需 bot 密码、无需 `.pam`。**
 
 与 GitHub 同模型：绑定 **PAM 项目**，不绑真人。同一项目可同时有 `github` + `vercel` 各一条，共用同一 CI 用户（`team_ci_runner`，仅 inject）。
 
@@ -24,77 +24,99 @@ Content-Type: application/json
 
 成功响应与 CLI token 同形：`{ token, expiresAt, user }`。把 `token` 放进 `PAMENV_TOKEN`，不要写盘。
 
-## Build 示例（`@vercel/oidc`）
+## 模型（只此两路，不做 `next.config.env` 内联）
+
+| 场景 | 做法 |
+| --- | --- |
+| 本地 `next dev` | 插件 `injectPamenvProcessEnv` → 写**当前进程** `process.env`（同读 `.env`：非 `NEXT_PUBLIC_*` 不进前端包） |
+| Vercel build | 同上 inject（构建机进程）+ 写出密封快照 |
+| Vercel **runtime** | 新进程；须 `createPamenv` 解封 → **bag**（默认不写 `process.env`） |
+
+**不要**把整包 PAM 密钥塞进 `next.config.env`（会进前端包）。例外：Edge middleware 无法解密封时，可用插件 `inlineEnv: ['SESSION_SECRET']` **只内联验 session 所需的极少键**；业务密钥仍走密封快照 + bag。
+
+## Build（插件调度，不必包 `pamenv run`）
+
+`@pamenv/next` 在读 `next.config` 时调用 `injectPamenvProcessEnv`（可传 `oidc: 'vercel'`），与 CLI `pamenv run --oidc` 同路。
+
+`apps/pam` 的 `build:vercel`：
+
+1. 预构建 `@brain-toolkit/ts2locales`、`pamenv-cli`、`@pamenv/next`（monorepo dist）
+2. `next build`（config 插件在 `phase-production-build` 下 OIDC 注入）
+3. `next-sitemap`
+
+**不要**再写成：
+
+```bash
+pamenv run "$SLUG" -e dev --oidc vercel -- next build
+```
+
+Vercel 项目设置：
+
+| 项 | 值 |
+| --- | --- |
+| Root Directory | `apps/pam` |
+| Build Command Override | `pnpm run build:vercel`（不要写 `next build:vercel`） |
+| `APP_ENV` / `NODE_ENV` | 脚本内固定 `production`（与普通 `build` 一致） |
+| `PAMENV_ENV_NAME` | `build:vercel` 脚本内默认 `dev`（覆盖插件里本地默认的 `local`） |
+
+Vercel 环境变量（非密钥引导项）：
+
+| 变量 | 说明 |
+| --- | --- |
+| `PAMENV_PROJECT_SLUG` | PAM 项目 id 或 slug |
+| `PAMENV_ENV_NAME` | 可选覆盖；未设时以 `build:vercel` 的 `dev` 为准。本地 `next.dev` 插件默认 `local` |
+| `PAMENV_BASE_URL` | PAM 根，如 `https://pam.qlover.top` |
+| `PAM_OIDC_AUD` | 可选；默认同 `PAMENV_BASE_URL`（须与绑定页 audience 提示一致） |
+
+密钥类（`SITE_URL`、`SUPABASE_*`、`SESSION_SECRET`…）由 PAM resolve 注入，不必再手填进 Vercel（除非你刻意覆盖）。
+
+单独排错换票（不注入）：
+
+```bash
+PAMENV_BASE_URL=https://pam.qlover.top pamenv oidc exchange --provider vercel
+```
+
+Vercel 项目需启用 OIDC；云端 Build / Function 可拿到 id_token。`@vercel/oidc` 已是 `pamenv-cli` 的 dependencies。
+
+## Runtime（解封部署快照 → bag）
+
+`next.config` 插件在 **CI `next build`** 注入后写出**密封部署快照**（产物内无明文；含 `wrappedDek`）。
+
+运行时解封（路径由 `@pamenv/next` 约定为 `.pam/deploy-snapshot.json`）返回 **`PamenvBag`**，**默认不写** `process.env`：
 
 ```ts
-// scripts/pam-exchange.ts — 在 build / install 前换票
-import { getVercelOidcToken } from '@vercel/oidc';
-
-const PAMENV_BASE_URL = process.env.PAMENV_BASE_URL!;
-const audience =
-  process.env.PAM_OIDC_AUD ?? PAMENV_BASE_URL.replace(/\/$/, '');
-
-async function main(): Promise<void> {
-  const idToken = await getVercelOidcToken({ audience });
-  const res = await fetch(`${PAMENV_BASE_URL}/api/pam/cli/oidc/exchange`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider: 'vercel', idToken })
-  });
-  if (!res.ok) {
-    throw new Error(`OIDC exchange failed: ${res.status}`);
-  }
-  const json = (await res.json()) as { data: { token: string } };
-  process.env.PAMENV_TOKEN = json.data.token;
-  // 随后: pamenv run my-app -e prod -- <build>
-}
-
-void main();
+import { createPamenv } from '@pamenv/next';
+const bag = await createPamenv(); // 整表按键解密（快照 v2）
+bag.get('SESSION_SECRET');
+await createPamenv({ only: 'SESSION_SECRET' });
+await createPamenv({ writeProcessEnv: true }); // 仅遗留裸读需要时
 ```
 
-`package.json` 示例：
+入口：`proxy`（`only` 名单；缺键抛错）、`createBootstrapServer` / `NextApiServer.run`（全量）。
+流程：OIDC → unwrap DEK → 按名单 AES → **bag** → `ServerConfig.bindPamenvBag(bag)`（袋优先，平台键回落 process）。
+旧 v1 整包快照仍可读。快照只含 PAM resolve 的键；`APP_ENV` 等平台键不要塞进 `only`。
 
-```json
-{
-  "scripts": {
-    "build": "node scripts/pam-exchange.ts && pamenv run my-app -e prod -- next build"
-  }
-}
-```
+`next.config` 须 `outputFileTracingIncludes` 打进 `.pam/deploy-snapshot.json`。**改 PAM 变量须重新 build/部署**。
 
-Vercel 项目需启用 OIDC；本地 `vercel build` / 云端 Build 均可拿到 token（以当前 Vercel 文档为准）。
+自建 Docker / 常驻 Node：仍可用 `PAMENV_TOKEN` + `pamenv run -- next start`（进程级，无需袋）。
 
-## Function / Runtime 示例
+## 平台矩阵
 
-```ts
-import { getVercelOidcToken } from '@vercel/oidc';
-
-export async function resolvePamToken(): Promise<string> {
-  const base = process.env.PAMENV_BASE_URL!;
-  const audience = (process.env.PAM_OIDC_AUD ?? base).replace(/\/$/, '');
-  const idToken = await getVercelOidcToken({ audience });
-  const res = await fetch(`${base}/api/pam/cli/oidc/exchange`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider: 'vercel', idToken })
-  });
-  if (!res.ok) {
-    throw new Error(`OIDC exchange failed: ${res.status}`);
-  }
-  const json = (await res.json()) as { data: { token: string } };
-  return json.data.token;
-}
-```
-
-短票只进内存 / 当次请求 env，勿写入日志或 artifact。
+| 场景 | 进程级插件 | 运行时 bag |
+| --- | --- | --- |
+| 本地 / 自建同进程 | ✅ | 不需要 |
+| Vercel build | ✅ 写密封快照 | — |
+| Vercel runtime | ❌ | ✅ 默认不写 process |
+| Vercel Edge | ❌ | ❌；`inlineEnv` 极少键 |
 
 ## 安全注意
 
 | 做 | 不做 |
 | --- | --- |
 | 绑定精确 `team/project` | 把长票 / bot 密码塞进 Vercel env 当主路径 |
-| build / function 内换票，短票只进 env | 把 `PAMENV_TOKEN` 打进日志 / artifact |
+| build / runtime 内换票，短票只进 env | 把 `PAMENV_TOKEN` 打进日志 / artifact |
 | 最小 CI 角色（仅 inject） | 给 CI 用户 admin / export（除非明确需要受保护环境） |
+| runtime 用 bag；进程级才写 `process.env` | 用 `next.config.env` 内联密钥（会进前端包） |
 
 ## 相关
 

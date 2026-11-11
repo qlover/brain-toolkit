@@ -13,7 +13,7 @@ import {
 } from '@config/i18n-mapping/OAuthAuthorizeI18n';
 import { localePage, ROUTE_LOGIN, ROUTE_OAUTH_AUTHORIZE } from '@config/route';
 import type { PageParamsProps } from '@interfaces/AppPageRouter';
-import { BootstrapServer } from '@server/BootstrapServer';
+import { createBootstrapServer } from '@server/BootstrapServer';
 import { OAuthWrapperController } from '@server/controllers/OAuthWrapperController';
 import {
   AppPageRouteParams,
@@ -49,7 +49,7 @@ export default async function OAuthAuthorizePage(
   );
 
   const rawSearchParams = (await props.searchParams) ?? {};
-  const IOC = new BootstrapServer('OAuthAuthorizePage').getIOC();
+  const IOC = (await createBootstrapServer('OAuthAuthorizePage')).getIOC();
   const oauthContoller = IOC(OAuthWrapperController);
   const authorizeResult =
     await oauthContoller.resolveAuthorizePage(rawSearchParams);

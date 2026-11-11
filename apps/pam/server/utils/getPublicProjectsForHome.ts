@@ -2,7 +2,7 @@ import { unstable_cache } from 'next/cache';
 import { defaultSearchParams } from '@config/common';
 import { buildPamListSort, PAMListSortBy } from '@config/pamListSort';
 import type { SearchPAMProject } from '@schemas/PAMProjectSchema';
-import { BootstrapServer } from '@server/BootstrapServer';
+import { createBootstrapServer } from '@server/BootstrapServer';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import type { ResourceSearchResult } from '@qlover/corekit-bridge';
 
@@ -21,7 +21,7 @@ function homePublicListSort() {
 async function fetchPublicProjectsForHome(): Promise<
   ResourceSearchResult<SearchPAMProject>
 > {
-  const server = new BootstrapServer('pam-home-public-list');
+  const server = await createBootstrapServer('pam-home-public-list');
   const repo = server.getIOC(PAMProjectRepo);
 
   return repo.searchProjects({
@@ -58,7 +58,7 @@ export async function getPublicProjectsForHome(): Promise<ResourceSearchResult<S
  * Fetch distinct public project categories for ISR (no session).
  */
 async function fetchPublicCategoriesForHome(): Promise<string[]> {
-  const server = new BootstrapServer('pam-home-public-categories');
+  const server = await createBootstrapServer('pam-home-public-categories');
   const repo = server.getIOC(PAMProjectRepo);
   return repo.listDistinctCategories();
 }

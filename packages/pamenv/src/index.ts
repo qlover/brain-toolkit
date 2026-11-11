@@ -1,14 +1,44 @@
 export { RunCommand } from './commands/RunCommand';
 export type {
   PamCliEnvPriorityType,
+  PamCliKeyListType,
   PamCliRunOptionsType
+} from './commands/RunCommand';
+export {
+  assertOnlyOmitExclusive,
+  normalizePamCliKeyList
 } from './commands/RunCommand';
 export { PamCliEnvMergeUtil } from './impls/PamCliEnvMergeUtil';
 export {
+  assertOnlyKeysPresent,
+  ensurePamenvRuntimeEnv,
   injectPamenvProcessEnv,
-  resetPamenvInjectCache
+  resetPamenvInjectCache,
+  resolveActiveOidcProvider,
+  resolveInjectDebug,
+  resolvePamenvInjectOptions,
+  resolveSnapshotKeysToOpen
 } from './impls/PamenvInject';
-export type { PamenvInjectOptions } from './impls/PamenvInject';
+export type {
+  PamenvInjectOptions,
+  PamenvRuntimeOptions
+} from './impls/PamenvInject';
+export { PamenvBag } from './impls/PamenvBag';
+export type { EnvSourceInterface } from './interfaces/EnvSourceInterface';
+export type { PamenvBagInterface } from './interfaces/PamenvBagInterface';
+export {
+  PAMENV_DEPLOY_SNAPSHOT_ALG,
+  PAMENV_DEPLOY_SNAPSHOT_ALG_V1,
+  PamenvDeploySnapshotEngine
+} from './impls/PamenvDeploySnapshotEngine';
+export type {
+  PamenvDeploySnapshotCreateResultType,
+  PamenvDeploySnapshotEngineInterface,
+  PamenvDeploySnapshotEntryType,
+  PamenvDeploySnapshotFileType,
+  PamenvDeploySnapshotV1FileType,
+  PamenvDeploySnapshotV2FileType
+} from './interfaces/PamenvDeploySnapshotEngineInterface';
 export { PamCliApp } from './PamCliApp';
 export { PamCliConfig } from './config/PamCliConfig';
 export type { PamCliRuntimeContextType } from './config/PamCliRuntimeContext';
@@ -31,6 +61,7 @@ export type {
   PamCliDeviceCodeType,
   PamCliDevicePollResultType
 } from './interfaces/PamCliApiClientInterface';
+export type { PamCiOidcProviderType } from './interfaces/PamCiOidcTokenSourceInterface';
 export type {
   PamCliConfigFileType,
   PamCliCreateEnvironmentInputType,

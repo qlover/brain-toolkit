@@ -10,6 +10,7 @@ import {
 import { SupabaseRepo } from '@qlover/next-kit/server';
 import type { RoleKindType } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
+import { getRuntimeEnv } from '@shared/env/RuntimeEnvBridge';
 import { resetAdminSupabaseClient } from '@shared/supabase/server';
 
 export type PamPermissionRow = PermissionRow;
@@ -55,8 +56,8 @@ export class PamRolePermissionsRepo extends RolePermissionsRepository {
 
     // Fallback: admin client may have been polluted by auth.refreshSession
     // (user JWT + RLS → []). Raw service_role REST still sees rows.
-    const url = process.env.SUPABASE_URL?.trim();
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    const url = getRuntimeEnv('SUPABASE_URL')?.trim();
+    const serviceKey = getRuntimeEnv('SUPABASE_SERVICE_ROLE_KEY')?.trim();
     if (!url || !serviceKey) {
       return rows;
     }

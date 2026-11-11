@@ -9,14 +9,13 @@
     "directory": "apps/pam"
   },
   "scripts": {
-    "dev": "cross-env APP_ENV=localhost next dev --hostname pam.localhost --port 3400",
-    "dev:localhost": "cross-env APP_ENV=localhost next dev --port 3400",
-    "dev:staging": "cross-env APP_ENV=staging next dev --port 3400",
-    "dev:prod": "cross-env APP_ENV=production next dev --port 3400",
-    "dev:turbo": "cross-env APP_ENV=localhost next dev --turbopack --port 3400",
-    "build": "cross-env APP_ENV=production NODE_ENV=production next build && next-sitemap",
-    "build:staging": "cross-env APP_ENV=staging NODE_ENV=production next build && next-sitemap",
-    "build:dev": "cross-env APP_ENV=localhost NODE_ENV=production next build && next-sitemap",
+    "dev": "cross-env PAM_ENV=local next dev --hostname pam.localhost --port 3400",
+    "dev:localhost": "cross-env PAM_ENV=local next dev --port 3400",
+    "dev:prod": "cross-env PAM_ENV=dev next dev --port 3400",
+    "dev:turbo": "cross-env PAM_ENV=local next dev --turbopack --port 3400",
+    "build": "cross-env PAM_ENV=dev NODE_ENV=production next build && next-sitemap",
+    "build:vercel": "pnpm --filter @brain-toolkit/ts2locales run build && pnpm --filter pamenv-cli run build && pnpm --filter @pamenv/next run build && cross-env PAM_ENV=dev NODE_ENV=production next build && next-sitemap",
+    "build:dev": "cross-env PAM_ENV=local NODE_ENV=production next build && next-sitemap",
     "start": "next start --port 3401",
     "lint": "eslint . --cache --cache-location node_modules/.cache/eslint",
     "lint:fix": "eslint . --fix",
@@ -76,7 +75,7 @@
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "uuid": "^13.0.0",
-    "zod": "^4.3.6",
+    "zod": "4.6.7",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -95,6 +94,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "cross-env": "^7.0.3",
     "dotenv-expand": "^12.0.3",
+    "pamenv-cli": "workspace:*",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -114,7 +114,7 @@
     "vitest": "^3.2.4"
   },
   "engines": {
-    "node": "^20.17.0 || >=22.9.0",
+    "node": "24.x",
     "npm": ">=10.0.0"
   },
   "prettier": {

@@ -105,6 +105,36 @@ export interface SupabaseSession extends OAuthSessionPayload {
 }
 
 /**
+ * 包装 {@link TokenEncryption}：密钥用时再取，避免 ctor 读 `ENCRYPTION_KEY`。
+ */
+class LazyTokenEncryption implements EncryptorInterface<string, string> {
+  protected engine?: TokenEncryption;
+
+  constructor(protected readonly getKey: () => string) {}
+
+  protected getEngine(): TokenEncryption {
+    if (!this.engine) {
+      this.engine = new TokenEncryption(this.getKey());
+    }
+    return this.engine;
+  }
+
+  /**
+   * @override
+   */
+  public encrypt(plaintext: string): string {
+    return this.getEngine().encrypt(plaintext);
+  }
+
+  /**
+   * @override
+   */
+  public decrypt(ciphertext: string): string {
+    return this.getEngine().decrypt(ciphertext);
+  }
+}
+
+/**
  * Demo reference provider: Supabase Auth (`@supabase/supabase-js`).
  */
 @injectable()
@@ -120,11 +150,10 @@ export class SupabaseOAuthProvider
   @inject(PamUserService)
   protected pamUserService!: PamUserService;
 
-  protected readonly appHost: string;
   private consentTrustInstance?: OAuthConsentTrustService;
 
   constructor(
-    @inject(I.AppConfig) config: SeedServerConfigInterface,
+    @inject(I.AppConfig) protected readonly config: SeedServerConfigInterface,
     @inject(OAuthWrapperRepository)
     protected pamOAuthRepo: OAuthWrapperRepository,
     @inject(PasswordEncrypt)
@@ -139,10 +168,16 @@ export class SupabaseOAuthProvider
       new OAuthSessionService(config, (token) =>
         cliTokenService.verifyToken(token)
       ),
-      new TokenEncryption(config.encryptionKey),
+      new LazyTokenEncryption(() => config.encryptionKey),
       pamOAuthRepo
     );
-    this.appHost = config.appHost;
+  }
+
+  /**
+   * 惰性读 `SITE_URL`：避免构造期快照。
+   */
+  protected get appHost(): string {
+    return this.config.appHost;
   }
 
   protected resolvePassword(password: string): string {
