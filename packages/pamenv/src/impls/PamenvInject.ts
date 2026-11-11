@@ -168,7 +168,7 @@ export async function injectPamenvProcessEnv(
   }
 
   const resolved = resolvePamenvInjectOptions(options);
-  const cwd = resolved.cwd ?? process.cwd();
+  const cwd = resolved.cwd ?? /* turbopackIgnore: true */ process.cwd();
   await runWithInjectCache(
     buildInjectCacheKey(resolved, cwd),
     options.cache !== false,
@@ -206,7 +206,7 @@ export async function ensurePamenvRuntimeEnv(
 
   if (snapshotPath) {
     const resolved = resolvePamenvSnapshotRuntimeOptions(options);
-    const cwd = resolved.cwd ?? process.cwd();
+    const cwd = resolved.cwd ?? /* turbopackIgnore: true */ process.cwd();
     const key = `snapshot\0${snapshotPath}\0${buildInjectCacheKey(resolved, cwd)}`;
     const values = await runWithInjectCache(
       key,
@@ -496,11 +496,14 @@ async function openDeploySnapshot(
   options: PamenvResolvedInjectOptionsType,
   snapshotPath: string
 ): Promise<PamenvInjectRunResultType> {
-  const raw = await readFile(snapshotPath, 'utf8');
+  const raw = await readFile(
+    /* turbopackIgnore: true */ snapshotPath,
+    'utf8'
+  );
   const snapshot = JSON.parse(raw) as PamenvDeploySnapshotFileType;
 
   const preferLocal = false;
-  const cwd = options.cwd ?? process.cwd();
+  const cwd = options.cwd ?? /* turbopackIgnore: true */ process.cwd();
   const authStore = new PamCliAuthStore({
     preferLocal,
     workingDir: cwd

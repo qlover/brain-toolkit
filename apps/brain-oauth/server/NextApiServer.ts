@@ -1,3 +1,4 @@
+import { createPamenv } from '@pamenv/next';
 import {
   ApiServer,
   createLogger,
@@ -42,11 +43,15 @@ type RunWithTask<Result> = ExecutorAsyncTask<
 >;
 
 /**
- * App Next.js API server: wires ServerConfig + IOC, resolves ServerContext,
- * logs requests, and registers nextApiServerBackstop.
- * Keeps OAuth RFC JSON helper for machine endpoints.
+ * App Next.js API server：`run` 内先 `createPamenv` 再 bind。
+ * 密钥消费方须惰性读 config（构造期不 snapshot）。
  */
 export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
+  /**
+   * 与 IOC 中 `I.AppConfig` 同一实例；`run` 内解封后 {@link ServerConfig.bindPamenvBag}。
+   */
+  protected readonly serverConfig: ServerConfig;
+
   constructor(name?: string, nextRequest?: NextRequest);
   constructor(context?: Partial<NextApiServerContext>);
 
@@ -71,6 +76,7 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
         serverContext,
         resultHandler: new NextApiHandler(logger, serverContext)
       });
+      this.serverConfig = serverConfig;
       return;
     }
 
@@ -88,6 +94,7 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
       serverContext,
       resultHandler: new NextApiHandler(logger, serverContext)
     });
+    this.serverConfig = serverConfig;
   }
 
   /**
@@ -95,6 +102,17 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
    */
   protected resolveServerContext(): ServerContextInterface {
     return this.IOC(I.ServerContextInterface);
+  }
+
+  /**
+   * @override
+   */
+  public override async run<Result>(
+    task?: RunWithTask<Result>
+  ): Promise<NextKitApiResult<Result>> {
+    const bag = await createPamenv();
+    this.serverConfig.bindPamenvBag(bag);
+    return super.run(task);
   }
 
   /** Response headers written by plugins in `onBefore` (e.g. ApiCorsPlugin). */
@@ -142,13 +160,6 @@ export class NextApiServer extends ApiServer<BrainOAuthServerIocMap> {
     if (!request) {
       return;
     }
-
-    // Success rows: keep the call site for easy re-enable, but do not write.
-    // this.IOC(RequestLogsRepository)
-    //   .insertWithApiResult(envelope, { request })
-    //   .catch((error: unknown) => {
-    //     this.IOC(I.Logger).warn('Failed to write request log', error);
-    //   });
 
     if (envelope.success) {
       return;
