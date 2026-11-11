@@ -314,5 +314,7 @@ export const adminUsers18n = Object.freeze({
   searchButton: commonTablesKeys.COMMON_ADMIN_TABLE_SEARCH,
   cannotChangeSelf: userKeys.ADMIN_USERS_CANNOT_CHANGE_SELF,
   you: userKeys.ADMIN_USERS_YOU,
-  roleChangeForbidden: userKeys.ADMIN_USERS_ROLE_CHANGE_FORBIDDEN
+  roleChangeForbidden: userKeys.ADMIN_USERS_ROLE_CHANGE_FORBIDDEN,
+  ciBadge: userKeys.ADMIN_USERS_CI_BADGE,
+  ciNoBinding: userKeys.ADMIN_USERS_CI_NO_BINDING
 });

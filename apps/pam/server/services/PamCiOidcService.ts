@@ -4,6 +4,7 @@ import { SupabaseRepo } from '@qlover/next-kit/server';
 import { PermissionKey } from '@shared/auth/permissionKeys';
 import { TeamRoleKey } from '@shared/auth/roleKeys';
 import { inject, injectable } from '@shared/container';
+import { CI_USER_EMAIL_DOMAIN } from '@shared/utils/pamUserIdentity';
 import {
   API_NOT_AUTHORIZED,
   API_PAM_PROJECT_NOT_FOUND,
@@ -35,8 +36,6 @@ import { PAMService } from '@server/services/PAMService';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { UserSchema } from '@qlover/next-kit/common';
 import type { NextRequest } from 'next/server';
-
-const CI_EMAIL_DOMAIN = 'pam.ci.invalid';
 
 const OIDC_LOGIN_METHOD = {
   github: 'oidc_github',
@@ -300,7 +299,7 @@ export class PamCiOidcService {
   }
 
   protected ciEmailForProject(projectId: string): string {
-    return `ci+${projectId}@${CI_EMAIL_DOMAIN}`;
+    return `ci+${projectId}@${CI_USER_EMAIL_DOMAIN}`;
   }
 
   protected async ensureCiUser(

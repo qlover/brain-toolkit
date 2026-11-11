@@ -66,21 +66,19 @@ export function PAMTeamDetailPage({ teamId }: { teamId: string }) {
   const error = detailState.status === 'failed' ? tt.error : null;
 
   const permissions = detail?.permissions ?? [];
-  const canAddMember = permissions.includes(
-    PermissionKey.pam_teams_members_create
-  );
-  const canUpdateMember = permissions.includes(
-    PermissionKey.pam_teams_members_update
-  );
-  const canRemoveMember = permissions.includes(
-    PermissionKey.pam_teams_members_delete
-  );
+  const isPersonal = !!detail && isPersonalTeamSlug(detail.slug);
+  const canAddMember =
+    !isPersonal && permissions.includes(PermissionKey.pam_teams_members_create);
+  const canUpdateMember =
+    !isPersonal && permissions.includes(PermissionKey.pam_teams_members_update);
+  const canRemoveMember =
+    !isPersonal && permissions.includes(PermissionKey.pam_teams_members_delete);
   const canAttach = permissions.includes(
     PermissionKey.pam_teams_projects_attach
   );
   const canDissolve =
     !!detail &&
-    !isPersonalTeamSlug(detail.slug) &&
+    !isPersonal &&
     permissions.includes(PermissionKey.pam_teams_delete);
 
   const loadAttachedProjects = useCallback(async () => {

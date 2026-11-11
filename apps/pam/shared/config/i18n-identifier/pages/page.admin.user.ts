@@ -364,3 +364,17 @@ export const ADMIN_USERS_YOU = 'admin_users:you';
  */
 export const ADMIN_USERS_ROLE_CHANGE_FORBIDDEN =
   'admin_users:role_change_forbidden';
+
+/**
+ * @description Badge for OIDC CI system accounts in admin users table
+ * @localZh CI
+ * @localEn CI
+ */
+export const ADMIN_USERS_CI_BADGE = 'admin_users:ci_badge';
+
+/**
+ * @description Empty OIDC binding hint for orphan CI accounts
+ * @localZh 无 OIDC 绑定
+ * @localEn No OIDC binding
+ */
+export const ADMIN_USERS_CI_NO_BINDING = 'admin_users:ci_no_binding';

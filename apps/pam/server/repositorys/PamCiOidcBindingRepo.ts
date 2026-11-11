@@ -99,6 +99,28 @@ export class PamCiOidcBindingRepo {
     this.supabaseBridge.throwIfError(result);
   }
 
+  /**
+   * 按 CI 用户批量查 OIDC 绑定（管理后台用户列表）。
+   *
+   * @param ciUserIds - CI 用户 id 列表
+   */
+  public async listByCiUserIds(
+    ciUserIds: readonly string[]
+  ): Promise<PamCiOidcBinding[]> {
+    if (ciUserIds.length === 0) {
+      return [];
+    }
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const result = await supabase
+      .from(PamTables.ciOidcBindings)
+      .select('*')
+      .in('ci_user_id', [...ciUserIds]);
+    this.supabaseBridge.throwIfError(result);
+    return ((result.data ?? []) as BindingRowType[]).map((row) =>
+      this.mapRow(row)
+    );
+  }
+
   protected mapRow(row: BindingRowType): PamCiOidcBinding {
     return {
       id: row.id,

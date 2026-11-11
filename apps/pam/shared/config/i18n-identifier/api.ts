@@ -424,6 +424,13 @@ export const API_ADMIN_USERS_CANNOT_CHANGE_SELF =
   'api:admin_users_cannot_change_self';
 
 /**
+ * @description CI Runner 由 OIDC 绑定托管，不可手动加人/改角色/移除
+ * @localZh CI 用户由 OIDC 绑定管理，不能手动添加、修改或移除
+ * @localEn CI users are managed by OIDC bindings and cannot be added, updated, or removed manually
+ */
+export const API_PAM_CI_USER_MANAGED = 'api:pam_ci_user_managed';
+
+/**
  * @description Mail provider is disabled or missing required settings
  * @localZh 邮件通道未启用或配置不完整
  * @localEn Mail provider is disabled or not fully configured

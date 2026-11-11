@@ -4,12 +4,15 @@ import { PermissionKey } from '@shared/auth/permissionKeys';
 import { inject, injectable } from '@shared/container';
 import {
   API_NOT_AUTHORIZED,
+  API_PAM_CI_USER_MANAGED,
   API_PAM_PROJECT_NOT_FOUND,
   API_PAM_SLUG_EXISTS,
   API_PAM_TRANSFER_USER_NOT_FOUND,
   API_SERVER_ERROR
 } from '@config/i18n-identifier/api';
 import {
+  filterHumanTeamMembers,
+  isCiRunnerRole,
   isPersonalTeamSlug,
   type PamTeamAttachProject,
   type PamTeamCreate,
@@ -26,7 +29,16 @@ import { PamTeamMembersRepo } from '@server/repositorys/PamTeamMembersRepo';
 import { PamTeamsRepo } from '@server/repositorys/PamTeamsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
 import { OAuthUserService } from '@server/services/OAuthUserService';
+import { PamCiUserResolver } from '@server/services/PamCiUserResolver';
 import { PamPermissionService } from '@server/services/PamPermissionService';
+
+/** 个人团队不对外暴露成员管理 / 解散权限（CI 仍由 OIDC 挂载）。 */
+const PERSONAL_TEAM_HIDDEN_PERMISSIONS: ReadonlySet<string> = new Set([
+  PermissionKey.pam_teams_members_create,
+  PermissionKey.pam_teams_members_update,
+  PermissionKey.pam_teams_members_delete,
+  PermissionKey.pam_teams_delete
+]);
 
 function slugify(input: string): string {
   return input
@@ -35,6 +47,16 @@ function slugify(input: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 48);
+}
+
+function permissionsForTeam(role: PamTeamRole, slug: string): string[] {
+  const permissions = [...expandOrgPermissions(role)];
+  if (!isPersonalTeamSlug(slug)) {
+    return permissions;
+  }
+  return permissions.filter(
+    (key) => !PERSONAL_TEAM_HIDDEN_PERMISSIONS.has(key)
+  );
 }
 
 @injectable()
@@ -47,7 +69,9 @@ export class PamTeamService {
     @inject(PamUsersRepo) protected readonly pamUsersRepo: PamUsersRepo,
     @inject(OAuthUserService) protected readonly userService: OAuthUserService,
     @inject(PamPermissionService)
-    protected readonly permissionService: PamPermissionService
+    protected readonly permissionService: PamPermissionService,
+    @inject(PamCiUserResolver)
+    protected readonly ciUserResolver: PamCiUserResolver
   ) {}
 
   public async listMyTeams(): Promise<
@@ -73,7 +97,7 @@ export class PamTeamService {
       out.push({
         ...team,
         my_role: role,
-        permissions: [...expandOrgPermissions(role)]
+        permissions: permissionsForTeam(role, team.slug)
       });
     }
     return out;
@@ -109,7 +133,9 @@ export class PamTeamService {
     return {
       ...team,
       my_role: 'owner',
-      members: await this.membersRepo.listByTeamId(team.id),
+      members: filterHumanTeamMembers(
+        await this.membersRepo.listByTeamId(team.id)
+      ),
       permissions: [...expandOrgPermissions('owner')]
     };
   }
@@ -147,8 +173,10 @@ export class PamTeamService {
     return {
       ...team,
       my_role: role,
-      members: await this.membersRepo.listByTeamId(teamId),
-      permissions: [...expandOrgPermissions(role)]
+      members: filterHumanTeamMembers(
+        await this.membersRepo.listByTeamId(teamId)
+      ),
+      permissions: permissionsForTeam(role, team.slug)
     };
   }
 
@@ -172,6 +200,9 @@ export class PamTeamService {
     const exists = await this.pamUsersRepo.findById(input.user_id);
     if (!exists) {
       throw new ExecutorError(API_PAM_TRANSFER_USER_NOT_FOUND);
+    }
+    if (await this.ciUserResolver.isCiUser(input.user_id)) {
+      throw new ExecutorError(API_PAM_CI_USER_MANAGED);
     }
 
     await this.membersRepo.upsertMember({
@@ -207,6 +238,14 @@ export class PamTeamService {
       throw new ExecutorError(API_NOT_AUTHORIZED);
     }
 
+    const currentRole = await this.membersRepo.getActiveRole(teamId, userId);
+    if (
+      isCiRunnerRole(currentRole) ||
+      (await this.ciUserResolver.isCiUser(userId))
+    ) {
+      throw new ExecutorError(API_PAM_CI_USER_MANAGED);
+    }
+
     await this.membersRepo.updateRole(teamId, userId, input.role);
     const list = await this.membersRepo.listByTeamId(teamId);
     const item = list.find((m) => m.user_id === userId);
@@ -226,8 +265,16 @@ export class PamTeamService {
     if (!team) {
       throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
     }
-    if (userId === team.owner_id) {
+    if (isPersonalTeamSlug(team.slug) || userId === team.owner_id) {
       throw new ExecutorError(API_NOT_AUTHORIZED);
+    }
+
+    const currentRole = await this.membersRepo.getActiveRole(teamId, userId);
+    if (
+      isCiRunnerRole(currentRole) ||
+      (await this.ciUserResolver.isCiUser(userId))
+    ) {
+      throw new ExecutorError(API_PAM_CI_USER_MANAGED);
     }
 
     await this.membersRepo.remove(teamId, userId);

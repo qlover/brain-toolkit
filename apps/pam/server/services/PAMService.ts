@@ -95,6 +95,7 @@ import type { FetchedSiteLogo } from '@server/utils/PAMSiteLogoFetchUtil';
 import { projectAccessFlags } from '@server/utils/projectAccessRole';
 import { OAuthUserService } from './OAuthUserService';
 import { PAMCategoryCacheService } from './PAMCategoryCacheService';
+import { PamCiUserResolver } from './PamCiUserResolver';
 import { PamCliTokenService } from './PamCliTokenService';
 import { PamPermissionService } from './PamPermissionService';
 import { PamTeamService } from './PamTeamService';
@@ -137,6 +138,9 @@ export class PAMService implements PAMServiceInterface {
 
   @inject(PamTeamMembersRepo)
   protected readonly teamMembersRepo!: PamTeamMembersRepo;
+
+  @inject(PamCiUserResolver)
+  protected readonly ciUserResolver!: PamCiUserResolver;
 
   @inject(PamEnvAccessLogsRepo)
   protected readonly envAccessLogsRepo!: PamEnvAccessLogsRepo;
@@ -1073,17 +1077,22 @@ export class PAMService implements PAMServiceInterface {
       offset: 0
     });
 
-    const enriched: PAMAuthUserSummary[] = await Promise.all(
-      rows.map(async (row) => {
-        const pam = await this.pamUsersRepo.findById(row.id);
-        return {
-          id: row.id,
-          email: toBusinessEmail(pam?.email ?? row.email) ?? '',
-          phone: pam?.phone ?? null,
-          display_name: pam?.display_name ?? null
-        };
-      })
+    const ciUserIds = await this.ciUserResolver.resolveCiUserIds(
+      rows.map((row) => row.id)
     );
+    const enriched: PAMAuthUserSummary[] = [];
+    for (const row of rows) {
+      if (ciUserIds.has(row.id)) {
+        continue;
+      }
+      const pam = await this.pamUsersRepo.findById(row.id);
+      enriched.push({
+        id: row.id,
+        email: toBusinessEmail(pam?.email ?? row.email) ?? '',
+        phone: pam?.phone ?? null,
+        display_name: pam?.display_name ?? null
+      });
+    }
 
     await this.kv.setItem(cacheKey, enriched, {
       ttlMs: AUTH_USERS_SEARCH_CACHE_TTL_MS
