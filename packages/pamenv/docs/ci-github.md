@@ -63,12 +63,16 @@ jobs:
 | --- | --- |
 | PAM 项目 slug | `pamenv-ci-smoke` |
 | 环境 | `dev`（非受保护） |
-| 探测键 | `PAMENV_CI_SMOKE=1`（勿放真实密钥） |
+| 探测键 | `PAMENV_CI_SMOKE=1`（CLI）；`VITE_PAMENV_CI_SMOKE=1`（`@pamenv/vite` build） |
 | GitHub 绑定 | `qlover/brain-toolkit` |
 | Workflow | [`.github/workflows/pamenv-github-oidc-smoke.yml`](../../../.github/workflows/pamenv-github-oidc-smoke.yml) |
-| 触发 | Actions → **pamenv GitHub OIDC smoke** → Run workflow |
+| 触发 | Actions → **pamenv GitHub OIDC smoke** → Run workflow（合入 master 后）；或本功能分支 push |
 
-成功日志应出现 OIDC 换票成功提示（**不含** token）以及 `PAMENV_CI_SMOKE present`。
+成功日志应出现 OIDC 换票成功提示（**不含** token）、CLI 的 `PAMENV_CI_SMOKE present`，以及 vite job 的 build 注入成功。
+
+### `@pamenv/vite` 构建注入
+
+示例应用 [`apps/pamenv-vite-app`](../../../apps/pamenv-vite-app) 配置 `oidc: 'github'`：在 Actions 上 `vite build` 时由插件换票并注入（不必再包 `pamenv run`）。详见 [`packages/pamenv-vite/README.md`](../../pamenv-vite/README.md)。
 
 ## 换票 API（底层）
 

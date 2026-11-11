@@ -1,13 +1,13 @@
 # @pamenv/vite
 
-在 Vite 解析配置之前，把 PAM 环境写进当前进程的 `process.env`。`dev` 脚本可以继续是 `vite`，不必再包 `pamenv run`。
+在 Vite 解析配置之前，把 PAM 环境写进当前进程的 `process.env`。`dev` / `build` 脚本可以继续是普通的 `vite`，不必再包 `pamenv run`。
+
+与 [`@pamenv/next`](https://www.npmjs.com/package/@pamenv/next) 同构：`enabled` / `dev` / `ci` / `oidc`。
 
 ```bash
 pnpm add @pamenv/vite pamenv-cli
 # 或 npm i @pamenv/vite pamenv-cli
 ```
-
-依赖 `pamenv-cli`（注入与登录逻辑）。从项目目录向上需有可用的 `.pam`（与 CLI 相同；monorepo 可在仓库根登录一次）。
 
 ```ts
 import { defineConfig } from 'vite';
@@ -17,26 +17,67 @@ export default defineConfig({
   plugins: [
     pamenv({
       slug: 'my-app',
-      env: 'local',
+      env: process.env.PAM_ENV ?? 'local',
+      oidc: 'github',
       keepEnv: ['APP_ENV'],
       // 默认 PAM 优先；本地临时改 .env / process 测值时用 'local'
       // envPriority: 'local',
-      debug: process.env.PAMENV_DEBUG === '1'
+      debug: process.env.PAMENV_DEBUG === '1',
+      clientPublicPrefixes: ['VITE_']
     })
   ]
 });
 ```
 
-也可用命名导出：`import { createPamenvPlugin } from '@pamenv/vite'`（与 `@pamenv/next` 同名）。
+也可用命名导出：`import { createPamenvPlugin } from '@pamenv/vite'`。
 
-Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进配置对象。未登录时请在仓库根或项目目录执行：
+## 启用时机
+
+| | 说明 |
+| --- | --- |
+| `enabled` | 总开关。`false` 永不注入；省略/`true` 交给自动时机。`PAMENV_ENABLED=0` 强制关 |
+| `dev` | 本地 `vite` / `vite dev`（`serve`）。默认 true |
+| `ci` | 匹配 CI 的 `vite build`。默认：传了 `oidc` 时为 true |
+| `oidc` | `'github'` / `'vercel'`。仅在对应 CI 生效；本地忽略，仍走 `.pam` |
+
+自动时机：
+
+- **本地**：仅 `serve`（除非 `dev: false`）
+- **`GITHUB_ACTIONS` + `oidc: 'github'`**：`vite build` 注入
+- **`VERCEL=1` + `oidc: 'vercel'`**：`vite build` 注入
+
+匹配 CI 的 build 默认还会写出密封快照 `.pam/deploy-snapshot.json`（可用 `snapshotPath` 覆盖）。纯 SPA 运行时通常不需解封；密钥已在构建期进入 `import.meta.env.VITE_*`。
+
+## 本地登录
+
+Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`）。未登录时：
 
 ```bash
 pamenv login --local
 ```
 
-`enabled: false` 时不请求 PAM。未传 `enabled` 时只在 **`vite` / `vite dev`（serve）** 注入；`vite build` 默认跳过。需要构建期注入时设 `enabled: true`，或 `enabled: (command) => command === 'serve' || command === 'build'`。
+## GitHub Actions 示例
 
-`debug` 默认 `false`；`envPriority` 默认 `remote`（与 CLI / `@pamenv/next` 相同）。
+```yaml
+permissions:
+  id-token: write
+  contents: read
 
-`clientPublicPrefixes` 可覆盖「敏感 + 公开前缀」告警用的前缀（如 `['VITE_']`）；传 `[]` 关闭该告警。
+env:
+  PAMENV_BASE_URL: https://pam.qlover.top
+  PAM_OIDC_AUD: https://pam.qlover.top
+  PAM_ENV: dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm install
+      - run: pnpm --filter @pamenv/vite run build
+      - run: pnpm --filter pamenv-vite-app run build:ci
+```
+
+仓库内示例：`apps/pamenv-vite-app`；OIDC smoke：`.github/workflows/pamenv-github-oidc-smoke.yml`。
+
+更多设计见 [pamenv docs](https://pam.qlover.top/docs/cli) 与 `packages/pamenv/docs/ci-github.md`。

@@ -1,5 +1,12 @@
 # @pamenv/vite
 
+## 1.2.0
+
+### Minor Changes
+
+- 对齐 `@pamenv/next`：`enabled` / `dev` / `ci` / `oidc` 自动时机；去掉 `enabled` 函数形态
+- 匹配 CI 的 `vite build` 可 OIDC 注入，并默认写出 `.pam/deploy-snapshot.json`
+
 ## 1.1.0
 
 ### Minor Changes

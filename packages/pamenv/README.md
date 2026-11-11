@@ -259,8 +259,9 @@ pamenv run <slug|id> -e local --keep-env PORT -- pnpm dev
 | --- | --- | --- |
 | 安装 | `pnpm add @pamenv/next pamenv-cli` | `pnpm add @pamenv/vite pamenv-cli` |
 | 配置 | `createPamenvPlugin` 包住 `next.config` | `plugins: [pamenv({ … })]` |
-| 默认注入时机 | 仅 `next dev` | 仅 `vite` / `vite dev`（serve） |
-| 凭证 | 向上查找最近的 `.pam`（`preferLocal`，不回落 `~/.pam`） | 同左 |
+| 默认注入时机 | 本地 `next dev`；有 `oidc` 时匹配 CI 的 build 也注入 | 本地 `vite` serve；有 `oidc` 时匹配 CI 的 `vite build` 也注入 |
+| `oidc` | `'vercel'` / `'github'` | 同左 |
+| 凭证 | 本地 `.pam`；CI 用平台 OIDC 换短票 | 同左 |
 
 首次在仓库 / 项目根登录（monorepo 在根目录执行一次即可）：
 
@@ -301,7 +302,8 @@ export default defineConfig({
   plugins: [
     pamenv({
       slug: 'my-app',
-      env: 'local',
+      env: process.env.PAM_ENV ?? 'local',
+      oidc: 'github',
       debug: process.env.PAMENV_DEBUG === '1',
       clientPublicPrefixes: ['VITE_'] // 敏感键勿用 VITE_；[] 关闭该告警
     })
@@ -319,7 +321,9 @@ export default defineConfig({
 | `keepEnv` | 这些键若 process 已有值则保留 |
 | `envPriority` | `remote`（默认）\| `local`（process → `.env*` → PAM） |
 | `debug` | 打印路径 / 键名等元数据，**从不打印变量值** |
-| `enabled` | 总开关：`false` 关闭；省略 / `true` 允许注入（时机由插件内部判断；Vite 仍可用函数按 command） |
+| `enabled` | 总开关：`false` 关闭；省略 / `true` 允许注入（时机由 `dev`/`ci`/`oidc` 判断） |
+| `dev` / `ci` | 本地 serve / 匹配 CI 的 build；`ci` 默认在传了 `oidc` 时开启 |
+| `oidc` | `'vercel'` \| `'github'`；仅在对应 CI 生效 |
 | `clientPublicPrefixes` | 敏感+公开前缀告警（Vite 常用 `['VITE_']`）；`[]` 关闭 |
 | `preferLocal` | 默认 `true`；勿在插件里写 token |
 
