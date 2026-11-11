@@ -1,16 +1,23 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import pamenv from '@pamenv/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-// https://vite.dev/config/
+const appRoot = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * 示例：本地 `vite` 走 .pam；GitHub Actions `vite build` 走 oidc github。
+ * 复用 PAM 项目 `pamenv-ci-smoke`（dev 需含 `VITE_PAMENV_CI_SMOKE`）。
+ */
 export default defineConfig({
   plugins: [
     pamenv({
-      // PAM project slug — create/bind this project, then: pamenv login --local
-      slug: 'pamenv-vite-test-app',
-      env: 'local',
+      slug: 'pamenv-ci-smoke',
+      env: process.env.PAM_ENV ?? 'local',
+      cwd: appRoot,
+      oidc: 'github',
       debug: process.env.PAMENV_DEBUG === '1',
-      // 只按 Vite 公开前缀告警；传 [] 可关闭该告警
       clientPublicPrefixes: ['VITE_']
     }),
     react()

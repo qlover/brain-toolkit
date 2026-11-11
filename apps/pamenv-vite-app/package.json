@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "cross-env PAM_ENV=local vite",
     "build": "tsc -b && vite build",
+    "build:ci": "cross-env PAM_ENV=dev vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "pamenv:login": "pamenv login --local"
@@ -21,6 +22,7 @@
     "@types/react-dom": "19.2.3",
     "@pamenv/vite": "workspace:*",
     "@vitejs/plugin-react": "^6.1.2",
+    "cross-env": "^7.0.3",
     "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",

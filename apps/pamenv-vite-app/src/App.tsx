@@ -5,6 +5,7 @@ import './App.css';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL;
 const JWT_SCRECT = import.meta.env.VITE_JWT_SCRECT;
+const CI_SMOKE = import.meta.env.VITE_PAMENV_CI_SMOKE;
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
             SITE_URL: {SITE_URL}
             <br />
             JWT_SCRECT: {JWT_SCRECT}
+            <br />
+            VITE_PAMENV_CI_SMOKE: {CI_SMOKE}
           </p>
         </div>
       </section>

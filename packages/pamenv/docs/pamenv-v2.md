@@ -86,15 +86,15 @@ pamenv run <slug|id> -e dev -- node server.js
 
 | 包 | 接入点 | 默认何时注入 |
 | --- | --- | --- |
-| `@pamenv/next` | `next.config` 外包一层 `createPamenvPlugin` | 仅 `next dev`（`phase-development-server`） |
-| `@pamenv/vite` | `vite.config` 的 `plugins` | 仅 `vite` / `vite dev`（`command === 'serve'`） |
+| `@pamenv/next` | `next.config` 外包一层 `createPamenvPlugin` | 本地 `next dev`；有 `oidc` 时匹配 CI 的 production build |
+| `@pamenv/vite` | `vite.config` 的 `plugins` | 本地 `vite` serve；有 `oidc` 时匹配 CI 的 `vite build` |
 
 共同点：
 
 - 默认 **`preferLocal: true`**：从 cwd **向上**找最近的 `.pam`（monorepo 根登录一次即可），**不回落** `~/.pam`。未登录时在仓库根或当前目录执行 `pamenv login --local`。
 - `envPriority` 默认 `remote`（PAM 盖同名键）；本地临时改 `.env` / process 测值时用 `local`（process → 磁盘 `.env*` → PAM）。
 - `debug` 默认关；`PAMENV_DEBUG=1` 或 `debug: true` 只打路径 / 键名 / baseUrl，**从不打印变量值**。
-- `enabled` 为总开关：`false` 关闭；省略 / `true` 允许注入；具体时机由插件内部判断（Vite 仍可用函数按 command）。
+- `enabled` / `dev` / `ci` / `oidc`：与两插件同构；`PAMENV_ENABLED=0` 强制关；CI 走平台 OIDC 换短票（见 [ci-github.md](./ci-github.md) / [ci-vercel.md](./ci-vercel.md)）。
 
 #### Next.js
 
@@ -137,7 +137,8 @@ export default defineConfig({
   plugins: [
     pamenv({
       slug: 'my-app',
-      env: 'local',
+      env: process.env.PAM_ENV ?? 'local',
+      oidc: 'github',
       keepEnv: ['PAM_ENV'],
       debug: process.env.PAMENV_DEBUG === '1',
       // 前端包公开前缀告警（敏感键勿挂 VITE_）；[] 可关闭
@@ -147,7 +148,7 @@ export default defineConfig({
 });
 ```
 
-客户端可读的键仍须符合 Vite 约定（如 `VITE_*` → `import.meta.env.VITE_*`）。仓库内示例：`apps/pamenv-vite-app`。
+客户端可读的键仍须符合 Vite 约定（如 `VITE_*` → `import.meta.env.VITE_*`）。仓库内示例：`apps/pamenv-vite-app`（可复用 `pamenv-ci-smoke` + `VITE_PAMENV_CI_SMOKE`）。
 
 更细的选项见各包 README：`packages/pamenv-next/README.md`、`packages/pamenv-vite/README.md`。
 

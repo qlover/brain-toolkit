@@ -1,18 +1,19 @@
 name: pamenv GitHub OIDC smoke
 
-# 验通 Actions OIDC → PAM 换票 → inject（不部署业务）。
-# 前置：PAM 项目 pamenv-ci-smoke 已绑定 qlover/brain-toolkit，dev 含 PAMENV_CI_SMOKE=1。
-#
-# 说明：workflow_dispatch 只有默认分支（master）上的 workflow 会出现在
-# Actions「Run workflow」列表；本分支用 push 触发以便合入前就能跑。
+# 验通 Actions OIDC → PAM 换票 → inject（CLI + @pamenv/vite build）。
+# 前置：PAM 项目 pamenv-ci-smoke 已绑定 qlover/brain-toolkit；
+#   dev 含 PAMENV_CI_SMOKE=1 与 VITE_PAMENV_CI_SMOKE=1。
 on:
   workflow_dispatch:
   push:
     branches:
+      - feat/pamenv-vite-oidc
       - feat/pamenv-github-oidc-smoke
     paths:
       - '.github/workflows/pamenv-github-oidc-smoke.yml'
       - 'packages/pamenv/**'
+      - 'packages/pamenv-vite/**'
+      - 'apps/pamenv-vite-app/**'
 
 permissions:
   id-token: write
@@ -24,7 +25,7 @@ env:
   NX_DAEMON: 'false'
 
 jobs:
-  smoke:
+  cli-smoke:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -46,3 +47,46 @@ jobs:
         run: >
           node ./dist/cli.js run pamenv-ci-smoke -e dev --oidc github --
           node -e "const v=process.env.PAMENV_CI_SMOKE; if(!v){console.error('PAMENV_CI_SMOKE missing after inject'); process.exit(1);} console.log('pamenv github oidc smoke ok (PAMENV_CI_SMOKE present, value redacted)');"
+
+  vite-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+
+      - run: npm install -g pnpm@10
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build pamenv packages
+        run: >
+          pnpm --filter @brain-toolkit/ts2locales run build &&
+          pnpm --filter pamenv-cli run build &&
+          pnpm --filter @pamenv/vite run build
+
+      - name: Vite build with OIDC inject
+        working-directory: apps/pamenv-vite-app
+        env:
+          PAM_ENV: dev
+          PAMENV_DEBUG: '1'
+        run: |
+          set -euo pipefail
+          pnpm exec vite build 2>&1 | tee /tmp/pamenv-vite-build.log
+          if ! grep -qi 'Injected' /tmp/pamenv-vite-build.log; then
+            echo '::error::pamenv vite smoke: inject log missing (OIDC/resolve failed?)'
+            exit 1
+          fi
+          if ! grep -q 'VITE_PAMENV_CI_SMOKE' /tmp/pamenv-vite-build.log; then
+            echo '::error::pamenv vite smoke: VITE_PAMENV_CI_SMOKE not in inject log. Add VITE_PAMENV_CI_SMOKE=1 to PAM project pamenv-ci-smoke / env=dev (clientPublicPrefixes only exposes VITE_*).'
+            grep -E 'debug keys:|Injected' /tmp/pamenv-vite-build.log || true
+            exit 1
+          fi
+          if ! grep -R -q --fixed-strings 'VITE_PAMENV_CI_SMOKE' dist/; then
+            echo '::error::pamenv vite smoke: VITE_PAMENV_CI_SMOKE not embedded in dist/ (define/clientPublicPrefixes?)'
+            exit 1
+          fi
+          echo 'pamenv vite oidc smoke ok (inject log + dist label present, value redacted)'
