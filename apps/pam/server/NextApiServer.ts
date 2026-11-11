@@ -13,6 +13,11 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { API_SERVER_ERROR } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import { oauthI18nIdToRfc } from '@config/oauthErrors';
+import {
+  API_PAM_CLI_DEPLOY_DEK_UNWRAP,
+  API_PAM_CLI_DEPLOY_DEK_WRAP,
+  API_PAM_CLI_OIDC_EXCHANGE
+} from '@config/route';
 import { nextApiServerBackstop } from './plugins/nextApiServerBackstop';
 import { ServerConfig } from './ServerConfig';
 import { createServerIoc } from './serverIoc';
@@ -24,6 +29,16 @@ import type { SeedConfigInterface } from '@qlover/corekit-bridge/bootstrap';
 import type { ExecutorAsyncTask } from '@qlover/fe-corekit/executor';
 import type { NextKitApiResult } from '@qlover/next-kit/common';
 import type { ServerContextInterface } from '@qlover/next-kit/server';
+
+/**
+ * 引导路由：解封快照会 HTTP 回调这些接口，此处再 `createPamenv` 会自锁。
+ * 须依赖 Vercel/进程上的平台环境变量（`SUPABASE_*`、加密密钥等）。
+ */
+const PAMENV_BOOTSTRAP_API_ROUTES: ReadonlySet<string> = new Set([
+  API_PAM_CLI_OIDC_EXCHANGE,
+  API_PAM_CLI_DEPLOY_DEK_WRAP,
+  API_PAM_CLI_DEPLOY_DEK_UNWRAP
+]);
 
 export type NextApiServerContext = ApiServerContext;
 
@@ -45,7 +60,8 @@ export type BinaryApiPayload = {
 
 /**
  * App Next.js API server。
- * 路由：`new NextApiServer(...).run...()`；`run` 内先 `createPamenv`。
+ * 路由：`new NextApiServer(...).run...()`；`run` 内先 `createPamenv`
+ *（引导路由除外，见 {@link PAMENV_BOOTSTRAP_API_ROUTES}）。
  * 密钥消费方须惰性读 config（构造期不 snapshot）。
  */
 export class NextApiServer extends ApiServer<PamServerIocMap> {
@@ -53,6 +69,11 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
    * 与 IOC 中 `I.AppConfig` 同一实例；`run` 内解封后 {@link ServerConfig.bindPamenvBag}。
    */
   protected readonly serverConfig: ServerConfig;
+
+  /**
+   * 路由名（多为 `API_*` 常量）；用于识别引导路由是否跳过 pamenv。
+   */
+  protected readonly apiRouteName: string;
 
   constructor(name?: string, nextRequest?: NextRequest);
   constructor(context?: Partial<NextApiServerContext>);
@@ -79,6 +100,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
         resultHandler: new NextApiHandler(logger, serverContext)
       });
       this.serverConfig = serverConfig;
+      this.apiRouteName = name;
       return;
     }
 
@@ -97,6 +119,7 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
       resultHandler: new NextApiHandler(logger, serverContext)
     });
     this.serverConfig = serverConfig;
+    this.apiRouteName = name;
   }
 
   /**
@@ -107,13 +130,22 @@ export class NextApiServer extends ApiServer<PamServerIocMap> {
   }
 
   /**
+   * 引导路由跳过密封解封，避免 runtime 解快照时回调自身形成死锁。
+   */
+  protected shouldBindPamenvBag(): boolean {
+    return !PAMENV_BOOTSTRAP_API_ROUTES.has(this.apiRouteName);
+  }
+
+  /**
    * @override
    */
   public override async run<Result>(
     task?: RunWithTask<Result>
   ): Promise<NextKitApiResult<Result>> {
-    const bag = await createPamenv();
-    this.serverConfig.bindPamenvBag(bag);
+    if (this.shouldBindPamenvBag()) {
+      const bag = await createPamenv();
+      this.serverConfig.bindPamenvBag(bag);
+    }
     return super.run(task);
   }
 
