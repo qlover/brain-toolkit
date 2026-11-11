@@ -412,8 +412,8 @@ export const PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES =
 
 /**
  * @description run --oidc 选项
- * @localZh CI OIDC 换短票后再注入（如 vercel）。需 PAMENV_BASE_URL；audience 默认同源，可用 PAM_OIDC_AUD 覆盖。Vercel 需安装 @vercel/oidc
- * @localEn Exchange a CI OIDC id_token for a short ticket before inject (e.g. vercel). Requires PAMENV_BASE_URL; audience defaults to that origin (override with PAM_OIDC_AUD). Vercel needs @vercel/oidc
+ * @localZh CI OIDC 换短票后再注入（vercel / github）。需 PAMENV_BASE_URL；audience 默认同源，可用 PAM_OIDC_AUD 覆盖。Vercel 需 @vercel/oidc；GitHub 需 Actions permissions.id-token: write
+ * @localEn Exchange a CI OIDC id_token for a short ticket before inject (vercel / github). Requires PAMENV_BASE_URL; audience defaults to that origin (override with PAM_OIDC_AUD). Vercel needs @vercel/oidc; GitHub needs Actions permissions.id-token: write
  */
 export const PAMENV_HELP_RUN_OPT_OIDC = 'pamenv_help:run_opt_oidc';
 
@@ -433,8 +433,8 @@ export const PAMENV_HELP_OIDC_EXCHANGE = 'pamenv_help:oidc_exchange';
 
 /**
  * @description oidc exchange --provider
- * @localZh OIDC 平台（当前：vercel）
- * @localEn OIDC provider (currently: vercel)
+ * @localZh OIDC 平台（vercel / github）
+ * @localEn OIDC provider (vercel / github)
  */
 export const PAMENV_HELP_OIDC_OPT_PROVIDER = 'pamenv_help:oidc_opt_provider';
 

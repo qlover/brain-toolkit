@@ -1429,8 +1429,8 @@ export const PAMENV_CLI_OIDC_NEED_BASE_URL = 'pamenv_cli:oidc_need_base_url';
 
 /**
  * @description 不支持的 OIDC provider
- * @localZh 不支持的 OIDC provider「{{provider}}」（当前支持：vercel）
- * @localEn Unsupported OIDC provider "{{provider}}" (supported: vercel)
+ * @localZh 不支持的 OIDC provider「{{provider}}」（当前支持：vercel、github）
+ * @localEn Unsupported OIDC provider "{{provider}}" (supported: vercel, github)
  */
 export const PAMENV_CLI_OIDC_PROVIDER_UNSUPPORTED =
   'pamenv_cli:oidc_provider_unsupported';
@@ -1442,4 +1442,28 @@ export const PAMENV_CLI_OIDC_PROVIDER_UNSUPPORTED =
  */
 export const PAMENV_CLI_OIDC_VERCEL_PACKAGE_MISSING =
   'pamenv_cli:oidc_vercel_package_missing';
+
+/**
+ * @description GitHub Actions 缺少 OIDC 请求环境变量
+ * @localZh 使用 --oidc github 需要在 GitHub Actions 中运行，并设置 permissions.id-token: write（缺少 ACTIONS_ID_TOKEN_REQUEST_URL / ACTIONS_ID_TOKEN_REQUEST_TOKEN）
+ * @localEn --oidc github requires GitHub Actions with permissions.id-token: write (missing ACTIONS_ID_TOKEN_REQUEST_URL / ACTIONS_ID_TOKEN_REQUEST_TOKEN)
+ */
+export const PAMENV_CLI_OIDC_GITHUB_ACTIONS_ENV_MISSING =
+  'pamenv_cli:oidc_github_actions_env_missing';
+
+/**
+ * @description GitHub Actions OIDC 返回空 token
+ * @localZh GitHub Actions OIDC 返回了空的 id_token
+ * @localEn GitHub Actions OIDC returned an empty id_token
+ */
+export const PAMENV_CLI_OIDC_GITHUB_TOKEN_EMPTY =
+  'pamenv_cli:oidc_github_token_empty';
+
+/**
+ * @description GitHub Actions OIDC 请求失败
+ * @localZh 向 GitHub Actions 请求 OIDC id_token 失败（HTTP {{status}}）
+ * @localEn Failed to request OIDC id_token from GitHub Actions (HTTP {{status}})
+ */
+export const PAMENV_CLI_OIDC_GITHUB_TOKEN_HTTP_ERROR =
+  'pamenv_cli:oidc_github_token_http_error';
 
