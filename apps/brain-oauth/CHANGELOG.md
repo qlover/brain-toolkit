@@ -1,5 +1,21 @@
 # apps/brain-oauth
 
+## 3.1.0
+
+### Minor Changes
+
+#### 🐞 Bug Fixes
+
+- **brain-oauth:** 静默 pamenv 动态 cwd 的 Turbopack NFT 告警 ([8b51b24](https://github.com/qlover/brain-toolkit/commit/8b51b24383863d947ac53df2a34e2480ba9f9dbf)) ([#212](https://github.com/qlover/brain-toolkit/pull/212))
+
+  pamenv-next 对 process.cwd 加 turbopackIgnore 并固定 .pam；
+  应用 next.config 按路径忽略 Dynamic filesystem / NFT list。
+
+- **pam,brain-oauth:** 修复语言切换后被 query/cookie 拉回 ([d85524e](https://github.com/qlover/brain-toolkit/commit/d85524ea8eee667669a5a079e19fddb1f0f3fbd8)) ([#196](https://github.com/qlover/brain-toolkit/pull/196))
+
+  切换时写入 NEXT_LOCALE，并去掉冲突的 locale/ui_locales；
+  pam middleware 仅在无路径语言前缀时才采用 query 语言偏好。
+
 ## 3.0.0
 
 ### Major Changes

@@ -1,5 +1,16 @@
 # pamenv-vite-app
 
+## 1.1.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv-vite:** 对齐 next 的 enabled/dev/ci/oidc 注入时机 ([9eb1954](https://github.com/qlover/brain-toolkit/commit/9eb1954a3bedc3de4506b24dca1d6cbef98da763)) ([#214](https://github.com/qlover/brain-toolkit/pull/214))
+
+  GitHub Actions vite build 可 OIDC 注入；示例复用 pamenv-ci-smoke；
+  扩展 smoke workflow 增加 vite job。
+
 ## 1.0.0
 
 ### Major Changes

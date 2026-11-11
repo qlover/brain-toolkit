@@ -1,5 +1,60 @@
 # pamenv-cli
 
+## 2.2.0
+
+### Minor Changes
+
+#### ✨ Features
+
+- **pamenv-vite:** 对齐 next 的 enabled/dev/ci/oidc 注入时机 ([9eb1954](https://github.com/qlover/brain-toolkit/commit/9eb1954a3bedc3de4506b24dca1d6cbef98da763)) ([#214](https://github.com/qlover/brain-toolkit/pull/214))
+
+  GitHub Actions vite build 可 OIDC 注入；示例复用 pamenv-ci-smoke；
+  扩展 smoke workflow 增加 vite job。
+
+- **pamenv:** 补齐 GitHub OIDC token source 与本仓 smoke ([3ef2b2a](https://github.com/qlover/brain-toolkit/commit/3ef2b2ae7e86bc6fc17a5b03f95020dc8a089de3)) ([#213](https://github.com/qlover/brain-toolkit/pull/213))
+
+  Actions 内取 id_token 换票；workflow_dispatch 验 pamenv-ci-smoke。
+
+- **pamenv:** 支持 PAMENV_ENABLED 强制关闭注入与解封 ([25d45e0](https://github.com/qlover/brain-toolkit/commit/25d45e06e7a65c7543d8726238ade50ff36c29e9)) ([#208](https://github.com/qlover/brain-toolkit/pull/208))
+
+  设为 0/false/off/no 时插件不 OIDC、createPamenv 返回空袋，
+  便于回填平台变量后用普通 build 恢复线上。
+
+- **pamenv:** 预置默认 keepEnv，插件无需再抄平台键 ([7e7bea1](https://github.com/qlover/brain-toolkit/commit/7e7bea14e3c46b5f66928b6164423e5a50133adb)) ([#208](https://github.com/qlover/brain-toolkit/pull/208))
+
+  DEFAULT_PAMENV_KEEP_ENV 覆盖 pamenv/Vercel/Node 引导键；
+  options.keepEnv 仅追加。pam next.config 去掉冗长 keepEnv 列表。
+
+- **pamenv:** OIDC run、密封快照按键解封与 PamenvBag ([62338ba](https://github.com/qlover/brain-toolkit/commit/62338ba7fd9ae53eb3c43b212e8a894c2e3deda2)) ([#203](https://github.com/qlover/brain-toolkit/pull/203))
+
+  支持 --oidc 换票注入；runtime 解封默认返回 Bag（可不写 process.env）；
+  统一 PAM_ENV；补齐单测与 CI/Vercel 文档。
+
+- **pam:** 支持 Vercel OIDC 换短票与项目绑定 ([40a3359](https://github.com/qlover/brain-toolkit/commit/40a335925d82d3a92d326e9270680ef8685c8385)) ([#202](https://github.com/qlover/brain-toolkit/pull/202))
+
+  扩展 provider=vercel，绑定 team/project；统一 PamCiOidcVerifierInterface（resourceKey）；
+  站点可配 auth.oidc_vercel_audience；设置页可切换 GitHub/Vercel。
+
+- **pam,pamenv:** resolve 密封传输与 CI 内存票底座 ([924557b](https://github.com/qlover/brain-toolkit/commit/924557b0497ddd5fae4e516f5d3239e199d72a18)) ([#201](https://github.com/qlover/brain-toolkit/pull/201))
+
+  resolve 响应改为应用层信封，API/抓包不见明文；支持 PAMENV_TOKEN 内存票与 createCiToken；同步重构 cursor rules 中文 JSDoc 约定。
+
+- **pam:** GitHub Actions OIDC 换短票并支持项目仓库绑定 ([89cebde](https://github.com/qlover/brain-toolkit/commit/89cebdeabc181cc331bd1f41e3c3eafca8739e10)) ([#201](https://github.com/qlover/brain-toolkit/pull/201))
+
+  项目绑定 owner/repo 后签发 team_ci_runner 身份的 15m pam_cli；
+  Actions 经 JWKS 校验 id_token 调用 /api/pam/cli/oidc/exchange。
+
+#### 🐞 Bug Fixes
+
+- **pamenv:** 澄清 OIDC audience 日志与 vite smoke 缺键报错 ([3a57493](https://github.com/qlover/brain-toolkit/commit/3a574939aa86575d31cb64a7f59e4453a5001559)) ([#214](https://github.com/qlover/brain-toolkit/pull/214))
+
+  audience=https 改为 audience: https；vite smoke 在缺 VITE_PAMENV_CI_SMOKE 时打印 PAM 补键提示。
+
+- **brain-oauth:** 静默 pamenv 动态 cwd 的 Turbopack NFT 告警 ([8b51b24](https://github.com/qlover/brain-toolkit/commit/8b51b24383863d947ac53df2a34e2480ba9f9dbf)) ([#212](https://github.com/qlover/brain-toolkit/pull/212))
+
+  pamenv-next 对 process.cwd 加 turbopackIgnore 并固定 .pam；
+  应用 next.config 按路径忽略 Dynamic filesystem / NFT list。
+
 ## 2.1.0
 
 ### Minor Changes
