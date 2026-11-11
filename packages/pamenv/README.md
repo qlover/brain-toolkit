@@ -276,12 +276,11 @@ import { createPamenvPlugin } from '@pamenv/next';
 
 const withPamenv = createPamenvPlugin({
   slug: 'my-app',
-  env: 'local',
-  keepEnv: ['APP_ENV'],
+  env: process.env.PAM_ENV,
+  keepEnv: ['PAM_ENV', 'VERCEL', 'VERCEL_ENV', 'NODE_ENV'],
   // envPriority: 'local', // 本地改 .env / process 测值时
-  debug: process.env.PAMENV_DEBUG === '1',
-  enabled: (phase) =>
-    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+  debug: true,
+  enabled: true
 });
 
 export default withPamenv(nextConfig);
@@ -320,7 +319,7 @@ export default defineConfig({
 | `keepEnv` | 这些键若 process 已有值则保留 |
 | `envPriority` | `remote`（默认）\| `local`（process → `.env*` → PAM） |
 | `debug` | 打印路径 / 键名等元数据，**从不打印变量值** |
-| `enabled` | `false` 关闭；`true` 含 build；函数可按 phase / command 控制 |
+| `enabled` | 总开关：`false` 关闭；省略 / `true` 允许注入（时机由插件内部判断；Vite 仍可用函数按 command） |
 | `clientPublicPrefixes` | 敏感+公开前缀告警（Vite 常用 `['VITE_']`）；`[]` 关闭 |
 | `preferLocal` | 默认 `true`；勿在插件里写 token |
 

@@ -202,4 +202,33 @@ export interface PamCliApiClientInterface {
    * Revokes the current CLI bearer token on the server (best-effort).
    */
   revokeCliToken(): Promise<void>;
+
+  /**
+   * 公开换票：平台 OIDC id_token → 15m pam_cli（无需既有登录）。
+   *
+   * @param provider - github | vercel
+   * @param idToken - 平台 JWT
+   * @param baseUrl - PAM 源站（可覆盖 authStore）
+   */
+  exchangeOidc(
+    provider: 'github' | 'vercel',
+    idToken: string,
+    baseUrl?: string
+  ): Promise<{ token: string; expiresAt: string }>;
+
+  /**
+   * 构建部署快照：将 DEK 交 PAM 包装为 `wrappedDek`（响应无业务明文）。
+   *
+   * @param projectRef - 项目 slug 或 id
+   * @param dekBase64 - 32 字节 DEK 的 base64
+   */
+  wrapDeployDek(projectRef: string, dekBase64: string): Promise<string>;
+
+  /**
+   * 运行时解封：请求带 seal offer，本地 open 得到 DEK（响应无明文）。
+   *
+   * @param projectRef - 项目 slug 或 id
+   * @param wrappedDek - 快照中的包装 DEK
+   */
+  unwrapDeployDek(projectRef: string, wrappedDek: string): Promise<string>;
 }

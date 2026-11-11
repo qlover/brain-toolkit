@@ -94,7 +94,7 @@ pamenv run <slug|id> -e dev -- node server.js
 - 默认 **`preferLocal: true`**：从 cwd **向上**找最近的 `.pam`（monorepo 根登录一次即可），**不回落** `~/.pam`。未登录时在仓库根或当前目录执行 `pamenv login --local`。
 - `envPriority` 默认 `remote`（PAM 盖同名键）；本地临时改 `.env` / process 测值时用 `local`（process → 磁盘 `.env*` → PAM）。
 - `debug` 默认关；`PAMENV_DEBUG=1` 或 `debug: true` 只打路径 / 键名 / baseUrl，**从不打印变量值**。
-- 正式构建默认不注入；需要时显式 `enabled: true` 或传入函数。
+- `enabled` 为总开关：`false` 关闭；省略 / `true` 允许注入；具体时机由插件内部判断（Vite 仍可用函数按 command）。
 
 #### Next.js
 
@@ -109,13 +109,11 @@ import { createPamenvPlugin } from '@pamenv/next';
 
 const withPamenv = createPamenvPlugin({
   slug: 'my-app',
-  env: 'local',
-  keepEnv: ['APP_ENV'],
+  env: process.env.PAM_ENV,
+  keepEnv: ['PAM_ENV', 'VERCEL', 'VERCEL_ENV', 'NODE_ENV'],
   // envPriority: 'local',
-  debug: process.env.PAMENV_DEBUG === '1',
-  // 仅本地 dev：与现有 APP_ENV 门禁组合示例
-  enabled: (phase) =>
-    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+  debug: true,
+  enabled: true
 });
 
 export default withPamenv(/* 其它 withXxx */ nextConfig);
@@ -140,7 +138,7 @@ export default defineConfig({
     pamenv({
       slug: 'my-app',
       env: 'local',
-      keepEnv: ['APP_ENV'],
+      keepEnv: ['PAM_ENV'],
       debug: process.env.PAMENV_DEBUG === '1',
       // 前端包公开前缀告警（敏感键勿挂 VITE_）；[] 可关闭
       clientPublicPrefixes: ['VITE_']
@@ -321,6 +319,7 @@ CLI 请求带 `x-pamenv-client: pamenv-cli/<版本>`，审计日志的 `client` 
 
 - 项目绑定 `teamSlug/projectName`（claim `owner`/`project`）→ 同一 CI 用户
 - 同一项目可同时有 github + vercel 各一条；`provider=vercel` 换票
-- 用法见 [ci-vercel.md](./ci-vercel.md)
+- `@pamenv/next`：`oidc: 'vercel'` + Vercel build phase 注入；runtime 在服务端入口 `await ensurePamenvRuntime`（见 [ci-vercel.md](./ci-vercel.md)）
+- CLI 仍可用：`pamenv run <slug> -e <env> --oidc vercel -- <build>`
 
 OIDC：平台 `id_token` → 分钟级 `pam_cli` → sealed `resolve`；claim 绑死外部资源键；默认不授 export。

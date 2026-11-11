@@ -5,6 +5,7 @@ import { ForkCommand } from './commands/ForkCommand';
 import { InitCommand } from './commands/InitCommand';
 import { LocalesCommand } from './commands/LocalesCommand';
 import { LoginCommand } from './commands/LoginCommand';
+import { OidcCommand } from './commands/OidcCommand';
 import { ProjectsCommand } from './commands/ProjectsCommand';
 import { PullCommand } from './commands/PullCommand';
 import { PushCommand } from './commands/PushCommand';
@@ -14,6 +15,7 @@ import {
   RunCommand,
   type PamCliEnvPriorityType
 } from './commands/RunCommand';
+import { PamCiOidcBootstrap } from './impls/PamCiOidcBootstrap';
 import { PamCliConfig } from './config/PamCliConfig';
 import { PamCliApiClient } from './impls/PamCliApiClient';
 import { PamCliApiError } from './impls/PamCliApiError';
@@ -60,6 +62,7 @@ import {
   PAMENV_HELP_OPT_GLOBAL,
   PAMENV_HELP_OPT_LOCAL,
   PAMENV_HELP_OPT_ONLY,
+  PAMENV_HELP_OPT_OMIT,
   PAMENV_HELP_OPT_URL,
   PAMENV_HELP_OPT_WORKDIR,
   PAMENV_HELP_PROGRAM,
@@ -91,12 +94,16 @@ import {
   PAMENV_HELP_RENDER,
   PAMENV_HELP_RENDER_OPT_FORMAT,
   PAMENV_HELP_RENDER_OPT_OUT,
+  PAMENV_HELP_OIDC,
+  PAMENV_HELP_OIDC_EXCHANGE,
+  PAMENV_HELP_OIDC_OPT_PROVIDER,
   PAMENV_HELP_RUN,
   PAMENV_HELP_RUN_ARG_COMMAND,
   PAMENV_HELP_RUN_OPT_KEEP_ENV,
   PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES,
   PAMENV_HELP_RUN_OPT_ENV_PRIORITY,
   PAMENV_HELP_RUN_OPT_NO_WARN,
+  PAMENV_HELP_RUN_OPT_OIDC,
   PAMENV_HELP_TITLE_ARGUMENTS,
   PAMENV_HELP_TITLE_COMMANDS,
   PAMENV_HELP_TITLE_GLOBAL_OPTIONS,
@@ -191,6 +198,7 @@ export class PamCliApp {
     this.registerLogout(program);
     this.registerConfig(program);
     this.registerLocales(program);
+    this.registerOidc(program);
 
     const projects = program
       .command('projects')
@@ -405,6 +413,7 @@ export class PamCliApp {
       .argument('[command...]', t(PAMENV_HELP_RUN_ARG_COMMAND))
       .option('-e, --env <name>', t(PAMENV_HELP_OPT_ENV))
       .option('--only <keys>', t(PAMENV_HELP_OPT_ONLY))
+      .option('--omit <keys>', t(PAMENV_HELP_OPT_OMIT))
       .option('--keep-env <keys>', t(PAMENV_HELP_RUN_OPT_KEEP_ENV))
       .option('--no-warn', t(PAMENV_HELP_RUN_OPT_NO_WARN))
       .option(
@@ -416,6 +425,7 @@ export class PamCliApp {
         '--client-public-prefixes <list>',
         t(PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES)
       )
+      .option('--oidc <provider>', t(PAMENV_HELP_RUN_OPT_OIDC))
       .action(
         async (
           projectRef: string,
@@ -423,29 +433,58 @@ export class PamCliApp {
           options: {
             env?: string;
             only?: string;
+            omit?: string;
             keepEnv?: string;
             warn?: boolean;
             envPriority?: string;
             clientPublicPrefixes?: string;
+            oidc?: string;
           }
         ) => {
           const envPriority = this.parseEnvPriority(options.envPriority);
+          const oidc = options.oidc
+            ? PamCiOidcBootstrap.parseProvider(options.oidc)
+            : undefined;
           process.exitCode = await new RunCommand(
             this.apiClient,
             this.authStore
           ).run(projectRef, command, {
             envName: options.env,
             only: this.splitKeys(options.only),
+            omit: this.splitKeys(options.omit),
             keepEnv: this.splitKeys(options.keepEnv),
             warn: options.warn,
             envPriority,
             clientPublicPrefixes: this.parseClientPublicPrefixes(
               options.clientPublicPrefixes
-            )
+            ),
+            oidc
           });
         }
       );
     this.addRuntimeOptions(run);
+  }
+
+  protected registerOidc(program: Command): void {
+    const oidc = program
+      .command('oidc')
+      .description(t(PAMENV_HELP_OIDC));
+
+    const exchange = oidc
+      .command('exchange')
+      .description(t(PAMENV_HELP_OIDC_EXCHANGE))
+      .requiredOption('--provider <name>', t(PAMENV_HELP_OIDC_OPT_PROVIDER))
+      .option('--print-token', 'Print PAMENV_TOKEN to stdout (avoid in CI logs)')
+      .action(
+        async (options: { provider: string; printToken?: boolean }) => {
+          const provider = PamCiOidcBootstrap.parseProvider(options.provider);
+          await new OidcCommand(this.apiClient, this.authStore).exchange(
+            provider,
+            Boolean(options.printToken)
+          );
+        }
+      );
+    this.addRuntimeOptions(exchange);
   }
 
   protected registerRender(program: Command): void {

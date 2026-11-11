@@ -461,6 +461,27 @@ export class PamCliApiClient implements PamCliApiClientInterface {
   }
 
   /**
+   * 解开传输密封为原始字节（resolve / unwrapDek 共用）。
+   */
+  protected openSealedBytes(
+    envelope: PamResolveSealEnvelopeType,
+    ephemeral: PamResolveSealEphemeralKeyPairType
+  ): Uint8Array {
+    return this.resolveSealRegistry.open(envelope, ephemeral.privateKey);
+  }
+
+  /**
+   * 解开传输密封并 JSON.parse。
+   */
+  protected openSealedJson<T>(
+    envelope: PamResolveSealEnvelopeType,
+    ephemeral: PamResolveSealEphemeralKeyPairType
+  ): T {
+    const opened = this.openSealedBytes(envelope, ephemeral);
+    return JSON.parse(Buffer.from(opened).toString('utf8')) as T;
+  }
+
+  /**
    * 解开密封变量；线上若仍带明文 `variables` 则拒绝。
    */
   protected openResolveVariables(
@@ -470,15 +491,80 @@ export class PamCliApiClient implements PamCliApiClientInterface {
     if (!sealed.seal) {
       throw new Error('Resolve response missing seal envelope');
     }
-    const opened = this.resolveSealRegistry.open(
-      sealed.seal,
-      ephemeral.privateKey
-    );
-    const parsed = JSON.parse(Buffer.from(opened).toString('utf8')) as unknown;
+    const parsed = this.openSealedJson<unknown>(sealed.seal, ephemeral);
     if (!Array.isArray(parsed)) {
       throw new Error('Resolve seal payload is not a variables array');
     }
     return parsed as PamCliResolveResultType['variables'];
+  }
+
+  /**
+   * 构建时：把 DEK 交给 PAM 包装（响应仅为密文 wrappedDek）。
+
+   * @override
+      */
+  public async wrapDeployDek(
+    projectRef: string,
+    dekBase64: string
+  ): Promise<string> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+    const result = await this.requestJson<{ wrappedDek: string }>(
+      `${baseUrl}/api/pam/${encodeURIComponent(projectRef)}/cli/deploy-dek/wrap`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...CLIENT_HEADER
+        },
+        body: JSON.stringify({ dek: dekBase64 })
+      }
+    );
+    if (!result.wrappedDek?.trim()) {
+      throw new Error('wrapDeployDek response missing wrappedDek');
+    }
+    return result.wrappedDek;
+  }
+
+  /**
+   * 运行时：用 seal offer 取回 DEK（响应无明文，本地 open）。
+
+   * @override
+      */
+  public async unwrapDeployDek(
+    projectRef: string,
+    wrappedDek: string
+  ): Promise<string> {
+    const baseUrl = await this.authStore.getBaseUrl();
+    const token = await this.requireToken();
+    const ephemeral = this.resolveSealRegistry.createEphemeralKeyPair();
+    const sealed = await this.requestJson<{ seal: PamResolveSealEnvelopeType }>(
+      `${baseUrl}/api/pam/${encodeURIComponent(projectRef)}/cli/deploy-dek/unwrap`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...CLIENT_HEADER
+        },
+        body: JSON.stringify({
+          wrappedDek,
+          seal: ephemeral.offer
+        })
+      }
+    );
+    if (!sealed.seal) {
+      throw new Error('unwrapDeployDek response missing seal envelope');
+    }
+    const parsed = this.openSealedJson<{ dek?: string }>(
+      sealed.seal,
+      ephemeral
+    );
+    if (!parsed.dek?.trim()) {
+      throw new Error('unwrapDeployDek seal payload missing dek');
+    }
+    return parsed.dek;
   }
 
   /**
@@ -549,6 +635,35 @@ export class PamCliApiClient implements PamCliApiClientInterface {
         body: '{}'
       }
     );
+  }
+
+  /**
+   * @override
+   */
+  public async exchangeOidc(
+    provider: 'github' | 'vercel',
+    idToken: string,
+    baseUrl?: string
+  ): Promise<{ token: string; expiresAt: string }> {
+    const origin = PamCliConfig.normalizeOrigin(
+      baseUrl?.trim() || (await this.authStore.getBaseUrl())
+    );
+    const result = await this.requestJson<{
+      token: string;
+      expiresAt: string;
+      user?: { id?: string; email?: string };
+    }>(`${origin}/api/pam/cli/oidc/exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...CLIENT_HEADER
+      },
+      body: JSON.stringify({ provider, idToken })
+    });
+    return {
+      token: result.token,
+      expiresAt: result.expiresAt
+    };
   }
 
   protected async requireToken(): Promise<string> {

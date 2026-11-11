@@ -1413,3 +1413,33 @@ export const PAMENV_CLI_FORCE_REBIND_NEEDS_TTY =
 export const PAMENV_CLI_FORCE_REBIND_CONFIRM =
   'pamenv_cli:force_rebind_confirm';
 
+/**
+ * @description OIDC 换票成功（不含 token）
+ * @localZh 已通过 {{provider}} OIDC 换票（audience={{audience}}，expiresAt={{expiresAt}}）
+ * @localEn Exchanged {{provider}} OIDC ticket (audience={{audience}}, expiresAt={{expiresAt}})
+ */
+export const PAMENV_CLI_OIDC_EXCHANGED = 'pamenv_cli:oidc_exchanged';
+
+/**
+ * @description 缺少 PAM 源站
+ * @localZh OIDC 换票需要 PAM 源站：请设置 PAMENV_BASE_URL，或使用 --url / pamenv login
+ * @localEn OIDC exchange needs a PAM origin: set PAMENV_BASE_URL, or use --url / pamenv login
+ */
+export const PAMENV_CLI_OIDC_NEED_BASE_URL = 'pamenv_cli:oidc_need_base_url';
+
+/**
+ * @description 不支持的 OIDC provider
+ * @localZh 不支持的 OIDC provider「{{provider}}」（当前支持：vercel）
+ * @localEn Unsupported OIDC provider "{{provider}}" (supported: vercel)
+ */
+export const PAMENV_CLI_OIDC_PROVIDER_UNSUPPORTED =
+  'pamenv_cli:oidc_provider_unsupported';
+
+/**
+ * @description 缺少 @vercel/oidc
+ * @localZh 使用 --oidc vercel 需要安装可选依赖 @vercel/oidc（例如：pnpm add -D @vercel/oidc）
+ * @localEn --oidc vercel requires optional dependency @vercel/oidc (e.g. pnpm add -D @vercel/oidc)
+ */
+export const PAMENV_CLI_OIDC_VERCEL_PACKAGE_MISSING =
+  'pamenv_cli:oidc_vercel_package_missing';
+

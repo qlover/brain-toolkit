@@ -275,12 +275,11 @@ import { createPamenvPlugin } from '@pamenv/next';
 
 const withPamenv = createPamenvPlugin({
   slug: 'my-app',
-  env: 'local',
-  keepEnv: ['APP_ENV'],
+  env: process.env.PAM_ENV,
+  keepEnv: ['PAM_ENV', 'VERCEL', 'VERCEL_ENV', 'NODE_ENV'],
   // envPriority: 'local', // when overriding via .env / process
-  debug: process.env.PAMENV_DEBUG === '1',
-  enabled: (phase) =>
-    phase === 'phase-development-server' && process.env.APP_ENV === 'localhost'
+  debug: true,
+  enabled: true
 });
 
 export default withPamenv(nextConfig);
@@ -319,7 +318,7 @@ Client-readable keys still need Vite’s public prefix (`VITE_*` → `import.met
 | `keepEnv` | Keep process values for these keys when already set |
 | `envPriority` | `remote` (default) \| `local` (process → `.env*` → PAM) |
 | `debug` | Metadata on stderr (paths / key names); **never values** |
-| `enabled` | `false` off; `true` includes build; or a phase/command predicate |
+| `enabled` | Master switch: `false` off; omit / `true` allows inject (timing is internal; Vite may still use a command predicate) |
 | `clientPublicPrefixes` | Sensitive + public-prefix warning (e.g. `['VITE_']`); `[]` disables |
 | `preferLocal` | Default `true`; never put a token in the plugin options |
 

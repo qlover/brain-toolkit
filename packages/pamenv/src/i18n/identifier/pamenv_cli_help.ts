@@ -374,6 +374,13 @@ export const PAMENV_HELP_RUN_ARG_COMMAND = 'pamenv_help:run_arg_command';
 export const PAMENV_HELP_OPT_ONLY = 'pamenv_help:opt_only';
 
 /**
+ * @description --omit 选项
+ * @localZh 排除这些键，逗号分隔（不可与 --only 同时使用）
+ * @localEn Omit these keys (comma-separated; cannot combine with --only)
+ */
+export const PAMENV_HELP_OPT_OMIT = 'pamenv_help:opt_omit';
+
+/**
  * @description --keep-env 选项
  * @localZh 这些键如果当前 shell 已有值，就保留不覆盖（逗号分隔）
  * @localEn Keep these keys from the current shell when already set (comma-separated)
@@ -402,6 +409,34 @@ export const PAMENV_HELP_RUN_OPT_ENV_PRIORITY =
  */
 export const PAMENV_HELP_RUN_OPT_CLIENT_PUBLIC_PREFIXES =
   'pamenv_help:run_opt_client_public_prefixes';
+
+/**
+ * @description run --oidc 选项
+ * @localZh CI OIDC 换短票后再注入（如 vercel）。需 PAMENV_BASE_URL；audience 默认同源，可用 PAM_OIDC_AUD 覆盖。Vercel 需安装 @vercel/oidc
+ * @localEn Exchange a CI OIDC id_token for a short ticket before inject (e.g. vercel). Requires PAMENV_BASE_URL; audience defaults to that origin (override with PAM_OIDC_AUD). Vercel needs @vercel/oidc
+ */
+export const PAMENV_HELP_RUN_OPT_OIDC = 'pamenv_help:run_opt_oidc';
+
+/**
+ * @description oidc 命令说明
+ * @localZh CI OIDC 相关（换票等）
+ * @localEn CI OIDC helpers (exchange, …)
+ */
+export const PAMENV_HELP_OIDC = 'pamenv_help:oidc';
+
+/**
+ * @description oidc exchange 说明
+ * @localZh 用平台 id_token 换 PAMENV_TOKEN（写入当前进程环境，不写盘）；便于单独排错
+ * @localEn Exchange a platform id_token for PAMENV_TOKEN (set on this process only; not written to disk); useful for debugging
+ */
+export const PAMENV_HELP_OIDC_EXCHANGE = 'pamenv_help:oidc_exchange';
+
+/**
+ * @description oidc exchange --provider
+ * @localZh OIDC 平台（当前：vercel）
+ * @localEn OIDC provider (currently: vercel)
+ */
+export const PAMENV_HELP_OIDC_OPT_PROVIDER = 'pamenv_help:oidc_opt_provider';
 
 /**
  * @description render 命令说明

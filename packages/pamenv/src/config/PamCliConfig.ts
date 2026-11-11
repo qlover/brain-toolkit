@@ -38,6 +38,31 @@ export class PamCliConfig {
   public static readonly ENV_BASE_URL = 'PAMENV_BASE_URL' as const;
 
   /**
+   * OIDC 换票 audience（可选；默认与 {@link ENV_BASE_URL} / config 同源）。
+   */
+  public static readonly ENV_OIDC_AUD = 'PAM_OIDC_AUD' as const;
+
+  /**
+   * 插件 / 运行时注入用的项目 slug 或 id（优先于 options.slug）。
+   */
+  public static readonly ENV_PROJECT_SLUG = 'PAMENV_PROJECT_SLUG' as const;
+
+  /**
+   * 插件 / 运行时注入用的环境名（优先于 options.env）。
+   */
+  public static readonly ENV_ENV_NAME = 'PAMENV_ENV_NAME' as const;
+
+  /**
+   * 应用侧常用的 PAM 环境名（次于 {@link ENV_ENV_NAME}，优先于 options.env）。
+   */
+  public static readonly ENV_PAM_ENV = 'PAM_ENV' as const;
+
+  /**
+   * 注入调试开关（`1` / `true` 开启）；`options.debug` 未传时默认读此变量。
+   */
+  public static readonly ENV_DEBUG = 'PAMENV_DEBUG' as const;
+
+  /**
    * @returns 去空白后的 `PAMENV_TOKEN`，未设置则为 null
    */
   public static getEnvToken(): string | null {
