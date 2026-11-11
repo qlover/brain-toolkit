@@ -24,10 +24,16 @@ export { PamenvBag };
  * 插件 build 写入、`createPamenv` 读取，应用层不必传。
  * monorepo 须由应用传入 `cwd`（如 next.config 的 `__dirname`），库不猜测应用目录名。
  */
-export function resolvePamenvNextSnapshotPath(
-  cwd: string = process.cwd()
-): string {
-  return path.join(cwd, '.pam', 'deploy-snapshot.json');
+export function resolvePamenvNextSnapshotPath(cwd?: string): string {
+  // 固定落在 `.pam/`，避免 Turbopack 把 process.cwd() 判成整仓 NFT。
+  if (cwd) {
+    return path.join(cwd, '.pam', 'deploy-snapshot.json');
+  }
+  return path.join(
+    /* turbopackIgnore: true */ process.cwd(),
+    '.pam',
+    'deploy-snapshot.json'
+  );
 }
 
 /**
@@ -134,7 +140,8 @@ export function createPamenvPlugin(options: PamenvNextPluginOptions) {
         inlineEnv,
         ...injectOptions
       } = options;
-      const cwd = injectOptions.cwd ?? process.cwd();
+      const cwd =
+        injectOptions.cwd ?? /* turbopackIgnore: true */ process.cwd();
       const onCiBuild =
         phase === 'phase-production-build' && isMatchingCi(options.oidc);
       await injectPamenvProcessEnv({
@@ -226,11 +233,12 @@ export async function createPamenv(
     return new PamenvBag({});
   }
 
-  const cwd = options.cwd ?? process.cwd();
+  const cwd = options.cwd ?? /* turbopackIgnore: true */ process.cwd();
   return ensurePamenvRuntimeEnv({
     oidc: 'vercel',
     preferLocal: false,
     ...options,
+    cwd,
     snapshotPath: resolveRuntimeSnapshotPath(cwd, options.snapshotPath)
   });
 }

@@ -91,7 +91,29 @@ const nextConfig: NextConfig = {
     PAM_ENV: resolvedPamEnv,
     PAMENV_SNAPSHOT_PATH: '.pam/deploy-snapshot.json'
   },
-  allowedDevOrigins: localIp ? [localIp as string] : []
+  allowedDevOrigins: localIp ? [localIp as string] : [],
+  /**
+   * 构建期副作用与 pamenv 解封的动态 cwd/fs：Turbopack NFT 会告警「整仓追踪」。
+   * 读盘仅发生在构建机 / 运行时解封约定快照，不进前端包；按路径+标题精确静默。
+   */
+  turbopack: {
+    ignoreIssue: [
+      {
+        path: 'apps/brain-oauth/next.config.ts',
+        title: 'Encountered unexpected file in NFT list'
+      },
+      {
+        path: 'packages/pamenv/dist/index.js',
+        title:
+          'Dynamic filesystem access causes tracing of the whole project'
+      },
+      {
+        path: 'packages/pamenv-next/dist/index.js',
+        title:
+          'Dynamic filesystem access causes tracing of the whole project'
+      }
+    ]
+  }
 };
 
 export default withPamenv(withNextIntl(nextConfig));

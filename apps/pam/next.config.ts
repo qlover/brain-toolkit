@@ -127,6 +127,16 @@ const nextConfig: NextConfig = {
       {
         path: 'apps/pam/next.config.ts',
         title: 'Encountered unexpected file in NFT list'
+      },
+      {
+        path: 'packages/pamenv/dist/index.js',
+        title:
+          'Dynamic filesystem access causes tracing of the whole project'
+      },
+      {
+        path: 'packages/pamenv-next/dist/index.js',
+        title:
+          'Dynamic filesystem access causes tracing of the whole project'
       }
     ]
   }
