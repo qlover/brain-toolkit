@@ -1,3 +1,4 @@
+import { createPamenv } from '@pamenv/next';
 import jwt from 'jsonwebtoken';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isBrainAdminUser } from '@shared/auth/brainAdmin';
@@ -47,21 +48,25 @@ export function parseOAuthAppSessionCookie(
 }
 
 /**
- * Next OAuth Wrapper session gate for LOGINED_PAGES.
- * Validates signed session cookie and redirects unauthenticated users to login.
- * Client `useUserAuth` is local UI only — not a page-entry gate.
+ * Next OAuth Wrapper session gate for LOGINED_PAGES。
+ * Proxy 为 Node：先解封袋再验 cookie；无密钥则放行（本地未注入时不挡）。
  */
 export async function oauthWrapperProxySession(request: NextRequest) {
   const response = NextResponse.next({
     request
   });
 
-  const sessionSecret = process.env.SESSION_SECRET;
+  const bag = await createPamenv({
+    only: ['SESSION_SECRET', 'OAUTH_SESSION_KEY']
+  });
+  const serverConfig = new ServerConfig();
+  serverConfig.bindPamenvBag(bag);
+
+  const sessionSecret = serverConfig.sessionSecret;
   if (!sessionSecret) {
     return response;
   }
 
-  const serverConfig = new ServerConfig();
   const pathname = request.nextUrl.pathname;
   if (!hasSessionPath(pathname)) {
     return response;

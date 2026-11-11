@@ -1,3 +1,4 @@
+import { createPamenv } from '@pamenv/next';
 import {
   BootstrapServer as KitBootstrapServer,
   createLogger
@@ -13,9 +14,12 @@ import { createServerIoc } from './serverIoc';
 export type BrainOAuthServerIocMap = IOCIdentifierMapServer &
   Record<PropertyKey, unknown>;
 
-export class BootstrapServer extends KitBootstrapServer<BrainOAuthServerIocMap> {
-  constructor(name?: string) {
-    const serverConfig = new ServerConfig();
+/**
+ * brain-oauth server bootstrap：薄包 kit `BootstrapServer`（RSC / 仅需 IOC）。
+ * 对外请用 {@link createBootstrapServer}，勿直接 `new`。
+ */
+class BootstrapServer extends KitBootstrapServer<BrainOAuthServerIocMap> {
+  constructor(serverConfig: ServerConfig, name?: string) {
     const serverName = name ?? serverConfig.name;
     const logger = createLogger(serverName, serverConfig);
     const ioc = createServerIoc(logger, serverConfig);
@@ -26,4 +30,18 @@ export class BootstrapServer extends KitBootstrapServer<BrainOAuthServerIocMap> 
       ioc
     });
   }
+}
+
+export type { BootstrapServer };
+
+/**
+ * 先解封 bag → 绑进 {@link ServerConfig} → 再构造 Bootstrap（RSC 等少数入口）。
+ */
+export async function createBootstrapServer(
+  name?: string
+): Promise<BootstrapServer> {
+  const bag = await createPamenv();
+  const serverConfig = new ServerConfig();
+  serverConfig.bindPamenvBag(bag);
+  return new BootstrapServer(serverConfig, name);
 }

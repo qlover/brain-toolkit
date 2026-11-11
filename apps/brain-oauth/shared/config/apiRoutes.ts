@@ -6,15 +6,6 @@
  */
 
 /**
- * API path: `/api/admin/env-dump`
- *
- * @see [src/app/api/admin/env-dump/route.ts](../../src/app/api/admin/env-dump/route.ts)
- *
- * **Fallback:** Ctrl/Cmd+P (Quick Open) → `src/app/api/admin/env-dump/route.ts`
- */
-export const API_ADMIN_ENV_DUMP = '/api/admin/env-dump' as const;
-
-/**
  * API path: `/api/admin/overview`
  *
  * @see [src/app/api/admin/overview/route.ts](../../src/app/api/admin/overview/route.ts)
@@ -180,7 +171,6 @@ export const API_USER_REQUEST_LOGS = '/api/user/request-logs' as const;
 export const API_USER_SESSION = '/api/user/session' as const;
 
 export type ApiRoutePath =
-  | typeof API_ADMIN_ENV_DUMP
   | typeof API_ADMIN_OVERVIEW
   | typeof API_ADMIN_SITE_SETTINGS
   | typeof API_ADMIN_USERS

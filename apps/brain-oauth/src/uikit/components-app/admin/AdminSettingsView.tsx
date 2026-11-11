@@ -27,7 +27,6 @@ import {
 import { I } from '@config/ioc-identifiter';
 import { SITE_SETTING_KEYS } from '@config/siteSettings';
 import { AdminBrainApiCard } from './AdminBrainApiCard';
-import { AdminEnvDumpPanel } from './AdminEnvDumpPanel';
 import type { DialogHandler } from '@qlover/next-kit/client';
 
 const CORS_KEY = SITE_SETTING_KEYS.API_CORS_RULES;
@@ -316,7 +315,6 @@ export function AdminSettingsView() {
             </div>
           </div>
           <AdminBrainApiCard rows={rows} onSaved={setRows} />
-          <AdminEnvDumpPanel />
         </div>
       )}
     </div>

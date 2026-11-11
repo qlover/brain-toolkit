@@ -1,34 +1,37 @@
-import { SUPABASE_URL } from '@qlover/next-kit/common';
 import {
   createClient as createSupabaseClient,
   type SupabaseClient
 } from '@supabase/supabase-js';
+import { getRuntimeEnv } from '@shared/env/RuntimeEnvBridge';
 
 type AdminClientCache = typeof globalThis & {
   __brainOAuthAdminSupabase?: SupabaseClient;
   __brainOAuthAdminSupabaseCacheKey?: string;
 };
 
+function requireSupabaseUrl(): string {
+  const url = getRuntimeEnv('SUPABASE_URL')?.trim();
+  if (!url) {
+    throw new Error('SUPABASE_URL is required for OAuth operations');
+  }
+  return url;
+}
+
 /**
- * Service-role Supabase client (bypasses RLS). brain-oauth uses Supabase as a
- * plain database only — no Supabase Auth sessions — so every repository goes
- * through this client and scopes rows itself. Never import from client bundles.
- *
- * Cached on `globalThis` so TLS / HTTP keep-alive to Supabase is reused across
- * API requests. The cache key includes URL + key fingerprint so env changes do
- * not reuse a stale client. Never call `auth.*` sign-in methods on it — that
- * would replace the service_role Authorization header.
+ * Service-role Supabase client（绕过 RLS）。经 {@link getRuntimeEnv} 读密钥，
+ * 与入口 bind 的袋同源。勿从客户端 bundle 引入。
  */
 export function createAdminClient(): SupabaseClient {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey = getRuntimeEnv('SUPABASE_SERVICE_ROLE_KEY');
   if (!serviceKey) {
     throw new Error(
       'SUPABASE_SERVICE_ROLE_KEY is required for OAuth operations'
     );
   }
 
+  const supabaseUrl = requireSupabaseUrl();
   const cache = globalThis as AdminClientCache;
-  const cacheKey = `${SUPABASE_URL}::${serviceKey.slice(0, 16)}`;
+  const cacheKey = `${supabaseUrl}::${serviceKey.slice(0, 16)}`;
   if (
     cache.__brainOAuthAdminSupabase &&
     cache.__brainOAuthAdminSupabaseCacheKey === cacheKey
@@ -37,7 +40,7 @@ export function createAdminClient(): SupabaseClient {
   }
 
   cache.__brainOAuthAdminSupabase = createSupabaseClient(
-    SUPABASE_URL!,
+    supabaseUrl,
     serviceKey,
     {
       auth: { persistSession: false, autoRefreshToken: false },
