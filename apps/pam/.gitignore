@@ -6,3 +6,4 @@ public/robots.txt
 .cache
 .vscode
 src/styles/generated/
+content/

@@ -68,7 +68,7 @@ Run them in the Supabase SQL Editor. All tables use the `pam_` prefix.
 ### 3. Run
 
 ```bash
-pnpm dev            # http://pam.localhost:3400 (APP_ENV=localhost)
+pnpm dev            # http://pam.localhost:3400 (PAM_ENV=local)
 pnpm dev:localhost  # http://localhost:3400
 pnpm build && pnpm start   # production build, port 3401
 ```

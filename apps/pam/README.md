@@ -68,7 +68,7 @@ PAM 是面向开发团队的多环境配置与环境变量管理平台：按项�
 ### 3. 启动
 
 ```bash
-pnpm dev            # http://pam.localhost:3400（APP_ENV=localhost）
+pnpm dev            # http://pam.localhost:3400（PAM_ENV=local）
 pnpm dev:localhost  # http://localhost:3400
 pnpm build && pnpm start   # 生产构建，端口 3401
 ```

@@ -8,8 +8,6 @@ import {
   API_REQUEST_BODY_EMPTY
 } from '@config/i18n-identifier/api';
 import {
-  PamDeployDekUnwrapSchema,
-  PamDeployDekWrapSchema,
   PAMEnvCreateSchema,
   PAMEnvReplaceVariablesSchema,
   PAMEnvResolveByNameSchema,
@@ -318,38 +316,6 @@ export class PAMController {
       parsed,
       this.getEnvAccessContext(request)
     );
-  }
-
-  /**
-   * 构建部署快照：包装 DEK。
-   */
-  public async wrapDeployDek(
-    projectRef: string,
-    request: NextRequest
-  ): Promise<{ wrappedDek: string }> {
-    const ref = projectRef.trim();
-    if (!ref) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
-    const text = await request.text();
-    const parsed = PamDeployDekWrapSchema.parse(text ? JSON.parse(text) : {});
-    return this.pamService.wrapDeployDek(ref, parsed.dek);
-  }
-
-  /**
-   * 运行时：密封回传 DEK。
-   */
-  public async unwrapDeployDek(
-    projectRef: string,
-    request: NextRequest
-  ): Promise<{ seal: PAMEnvResolveSealEnvelope }> {
-    const ref = projectRef.trim();
-    if (!ref) {
-      throw new ExecutorError(API_PAM_PROJECT_NOT_FOUND);
-    }
-    const text = await request.text();
-    const parsed = PamDeployDekUnwrapSchema.parse(text ? JSON.parse(text) : {});
-    return this.pamService.unwrapDeployDek(ref, parsed.wrappedDek, parsed.seal);
   }
 
   /**

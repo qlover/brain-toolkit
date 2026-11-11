@@ -69,7 +69,8 @@ import type { NextRequest } from 'next/server';
 
 @injectable()
 export class UserController {
-  protected stringEncryptor: StringEncryptor;
+  protected stringEncryptorInstance?: StringEncryptor;
+
   constructor(
     @inject(LoginValidator)
     protected loginValidator: ValidatorInterface<LoginSchema>,
@@ -94,13 +95,23 @@ export class UserController {
     protected linkedLoginService: PamLinkedLoginService,
     @inject(I.ServerContextInterface)
     protected serverContext: ServerContextInterface,
-    @inject(ServerConfig) serverConfig: SeedServerConfigInterface,
-    @inject(Base64Serializer) base64Serializer: Base64Serializer
-  ) {
-    this.stringEncryptor = new StringEncryptor(
-      serverConfig.stringEncryptorKey,
-      base64Serializer
-    );
+    @inject(ServerConfig)
+    protected readonly serverConfig: SeedServerConfigInterface,
+    @inject(Base64Serializer)
+    protected readonly base64Serializer: Base64Serializer
+  ) {}
+
+  /**
+   * 惰性创建；密钥用时再读，避免构造期 snapshot。
+   */
+  protected get stringEncryptor(): StringEncryptor {
+    if (!this.stringEncryptorInstance) {
+      this.stringEncryptorInstance = new StringEncryptor(
+        this.serverConfig.stringEncryptorKey,
+        this.base64Serializer
+      );
+    }
+    return this.stringEncryptorInstance;
   }
 
   public async login(

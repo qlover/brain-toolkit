@@ -1,3 +1,4 @@
+import { createPamenv } from '@pamenv/next';
 import {
   BootstrapServer as KitBootstrapServer,
   createLogger
@@ -14,12 +15,11 @@ export type PamServerIocMap = IOCIdentifierMapServer &
   Record<PropertyKey, unknown>;
 
 /**
- * PAM server bootstrap: thin wrap around `@qlover/next-kit/server`
- * `BootstrapServer`, wiring the app's `ServerConfig` + `serverIoc`.
+ * PAM server bootstrap：薄包 kit `BootstrapServer`（RSC / 仅需 IOC）。
+ * 对外请用 {@link createBootstrapServer}，勿直接 `new`。
  */
-export class BootstrapServer extends KitBootstrapServer<PamServerIocMap> {
-  constructor(name?: string) {
-    const serverConfig = new ServerConfig();
+class BootstrapServer extends KitBootstrapServer<PamServerIocMap> {
+  constructor(serverConfig: ServerConfig, name?: string) {
     const serverName = name ?? serverConfig.name;
     const logger = createLogger(serverName, serverConfig);
     const ioc = createServerIoc(logger, serverConfig);
@@ -30,4 +30,18 @@ export class BootstrapServer extends KitBootstrapServer<PamServerIocMap> {
       ioc
     });
   }
+}
+
+export type { BootstrapServer };
+
+/**
+ * 先解封 bag → 绑进 {@link ServerConfig} → 再构造 Bootstrap（RSC 等少数入口）。
+ */
+export async function createBootstrapServer(
+  name?: string
+): Promise<BootstrapServer> {
+  const bag = await createPamenv();
+  const serverConfig = new ServerConfig();
+  serverConfig.bindPamenvBag(bag);
+  return new BootstrapServer(serverConfig, name);
 }

@@ -13,21 +13,6 @@ describe('isTeamMembershipEffective', () => {
     expect(isTeamMembershipEffective(`personal-${owner}`, other)).toBe(false);
   });
 
-  it('allows CI Runner on another user personal team', () => {
-    expect(
-      isTeamMembershipEffective(`personal-${owner}`, other, 'team_ci_runner')
-    ).toBe(true);
-    expect(
-      isTeamMembershipEffective(`personal-${owner}`, other, 'ci_runner')
-    ).toBe(true);
-  });
-
-  it('still denies non-CI roles on another user personal team', () => {
-    expect(
-      isTeamMembershipEffective(`personal-${owner}`, other, 'team_member')
-    ).toBe(false);
-  });
-
   it('grants named teams', () => {
     expect(isTeamMembershipEffective('brain-test', other)).toBe(true);
   });

@@ -45,14 +45,7 @@ export class PamTeamMembersRepo {
     this.supabaseBridge.throwIfError(result);
 
     const row = result.data as unknown as MemberRoleJoin | null;
-    if (
-      !row ||
-      !isTeamMembershipEffective(
-        row.pam_role_teams?.slug,
-        userId,
-        row.pam_roles?.key
-      )
-    ) {
+    if (!row || !isTeamMembershipEffective(row.pam_role_teams?.slug, userId)) {
       return null;
     }
     return legacyTeamRoleFromKey(row.pam_roles?.key);
@@ -62,23 +55,17 @@ export class PamTeamMembersRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
       .from(TABLE)
-      .select('team_id, pam_roles ( key ), pam_role_teams ( slug )')
+      .select('team_id, pam_role_teams ( slug )')
       .eq('user_id', userId)
       .eq('status', 'active');
     this.supabaseBridge.throwIfError(result);
 
     const rows = (result.data ?? []) as unknown as Array<
-      Pick<MemberRoleJoin, 'pam_roles' | 'pam_role_teams'> & {
-        team_id: string;
-      }
+      Pick<MemberRoleJoin, 'pam_role_teams'> & { team_id: string }
     >;
     return rows
       .filter((row) =>
-        isTeamMembershipEffective(
-          row.pam_role_teams?.slug,
-          userId,
-          row.pam_roles?.key
-        )
+        isTeamMembershipEffective(row.pam_role_teams?.slug, userId)
       )
       .map((row) => row.team_id);
   }
@@ -242,13 +229,7 @@ export class PamTeamMembersRepo {
       (membersResult.data ?? [])
         .map((m) => {
           const join = m as unknown as MemberRoleJoin & { team_id: string };
-          if (
-            !isTeamMembershipEffective(
-              join.pam_role_teams?.slug,
-              userId,
-              join.pam_roles?.key
-            )
-          ) {
+          if (!isTeamMembershipEffective(join.pam_role_teams?.slug, userId)) {
             return null;
           }
           const legacy = legacyTeamRoleFromKey(join.pam_roles?.key);

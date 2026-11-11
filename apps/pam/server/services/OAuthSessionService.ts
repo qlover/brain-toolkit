@@ -23,35 +23,49 @@ export type PamCliBearerVerifierType = (
 ) => Promise<OAuthSessionPayload | null>;
 
 /**
- * 该文件用于页面访问权限控制
+ * 页面访问权限与 cookie session。
  *
- * 访问权限控制逻辑：
- * - 当访问需要登陆时的页面时，如果用户没有登陆则会跳转到登陆页面
- * - 这是在 supabase 上一层的抽象，它和 supabase 没有关系，supabase 只是一种实现，
- *   它本身可能会在 cookies 中保存数据, 但那是调用 supabase api sdk 的能力和鉴权无关, 不要混淆
- *   如果使用 supabase 登陆需要设置 serverConfig.oauthSessionKey 的值
+ * `SESSION_SECRET` / `OAUTH_SESSION_KEY` **用时再读** `config` getter，
+ * 避免 IOC 急切构造时密封快照尚未 `createPamenv`。
  */
 export class OAuthSessionService
   implements
     OAuthSessionServiceInterface,
     OAuthSessionInterface<OAuthSessionPayload, UserSchema>
 {
-  protected secure: boolean;
-  protected sessionSecret: string;
-  protected sessionKey: string;
-
   constructor(
-    config: SeedServerConfigInterface,
+    protected readonly config: SeedServerConfigInterface,
     protected readonly verifyCliBearer?: PamCliBearerVerifierType
-  ) {
-    if (!config.sessionSecret || !config.oauthSessionKey) {
+  ) {}
+
+  /**
+   * 惰性读 session 签名密钥（构造期不 snapshot）。
+   */
+  protected get sessionSecret(): string {
+    const secret = this.config.sessionSecret;
+    if (!secret) {
       throw new Error(
-        'Session secret or session key is not set, You can set process.env.SESSION_SECRET and process.env.OAUTH_SESSION_KEY to fix this error'
+        'Session secret is not set, You can set process.env.SESSION_SECRET to fix this error'
       );
     }
-    this.sessionSecret = config.sessionSecret;
-    this.sessionKey = config.oauthSessionKey;
-    this.secure = config.isProduction;
+    return secret;
+  }
+
+  /**
+   * 惰性读 cookie 名。
+   */
+  protected get sessionKey(): string {
+    const key = this.config.oauthSessionKey;
+    if (!key) {
+      throw new Error(
+        'Session key is not set, You can set process.env.OAUTH_SESSION_KEY to fix this error'
+      );
+    }
+    return key;
+  }
+
+  protected get secure(): boolean {
+    return this.config.isProduction;
   }
 
   protected parseJWT(raw: string, secret: string): OAuthSessionPayload | null {

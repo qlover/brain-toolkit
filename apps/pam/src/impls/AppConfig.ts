@@ -2,10 +2,11 @@ import type { SeedSrcConfigInterface } from '@interfaces/SeedConfigInterface';
 import { name, version } from '../../package.json';
 
 export class AppConfig implements SeedSrcConfigInterface {
-  public readonly env: string = process.env.APP_ENV ?? 'development';
+  /** 当前 PAM 环境名（`PAM_ENV`：`local` / `dev` …） */
+  public readonly env: string = process.env.PAM_ENV ?? 'local';
   public readonly name: string = name;
   public readonly version: string = version;
-  public readonly isProduction: boolean = process.env.APP_ENV === 'production';
+  public readonly isProduction: boolean = process.env.NODE_ENV === 'production';
   public readonly logLevel: string =
     process.env.NEXT_PUBLIC_LOG_LEVEL ?? 'info';
 
