@@ -57,8 +57,16 @@ describe('PamCiOidcBootstrap', () => {
     expect(apiClient.exchangeOidc).toHaveBeenCalledOnce();
   });
 
-  it('parseProvider accepts vercel', () => {
+  it('parseProvider accepts vercel and github', () => {
     expect(PamCiOidcBootstrap.parseProvider('vercel')).toBe('vercel');
+    expect(PamCiOidcBootstrap.parseProvider('github')).toBe('github');
     expect(() => PamCiOidcBootstrap.parseProvider('gitlab')).toThrow();
   });
+
+  it('default registry includes github source', () => {
+    const registry = new PamCiOidcTokenSourceRegistry();
+    expect(registry.require('github')).toBeDefined();
+    expect(registry.require('vercel')).toBeDefined();
+  });
 });
+

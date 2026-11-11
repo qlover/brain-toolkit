@@ -4,6 +4,7 @@ import type {
 } from '../interfaces/PamCiOidcTokenSourceInterface';
 import { PamCliI18n } from '../i18n/PamCliI18n';
 import { PAMENV_CLI_OIDC_PROVIDER_UNSUPPORTED } from '../i18n/identifier/pamenv_cli';
+import { PamGithubOidcTokenSource } from './PamGithubOidcTokenSource';
 import { PamVercelOidcTokenSource } from './PamVercelOidcTokenSource';
 
 /**
@@ -20,7 +21,8 @@ export class PamCiOidcTokenSourceRegistry {
     >
   ) {
     this.sources = sources ?? {
-      vercel: new PamVercelOidcTokenSource()
+      vercel: new PamVercelOidcTokenSource(),
+      github: new PamGithubOidcTokenSource()
     };
   }
 

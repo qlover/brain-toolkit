@@ -1,0 +1,39 @@
+name: pamenv GitHub OIDC smoke
+
+# 手动触发：验通 Actions OIDC → PAM 换票 → inject（不部署业务）。
+# 前置：PAM 项目 pamenv-ci-smoke 已绑定 qlover/brain-toolkit，dev 含 PAMENV_CI_SMOKE=1。
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  PAMENV_BASE_URL: https://pam.qlover.top
+  PAM_OIDC_AUD: https://pam.qlover.top
+  NX_DAEMON: 'false'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+
+      - run: npm install -g pnpm@10
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build pamenv-cli
+        run: pnpm --filter pamenv-cli run build
+
+      - name: OIDC exchange + inject smoke
+        working-directory: packages/pamenv
+        run: >
+          node ./dist/cli.js run pamenv-ci-smoke -e dev --oidc github --
+          node -e "const v=process.env.PAMENV_CI_SMOKE; if(!v){console.error('PAMENV_CI_SMOKE missing after inject'); process.exit(1);} console.log('pamenv github oidc smoke ok (PAMENV_CI_SMOKE present, value redacted)');"
