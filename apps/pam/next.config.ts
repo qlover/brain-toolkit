@@ -13,8 +13,20 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const PAMENV_APP_ROOT = __dirname;
 
 /**
+ * PAM 自托管 Production：禁止构建期 OIDC 打自己（鸡生蛋），改走平台环境变量。
+ * Preview / 本地仍可用插件；`PAMENV_ENABLED=0` 仍可全局强制关闭。
+ */
+const isPamVercelProduction =
+  process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production';
+
+/**
  * 构建期 / `next dev` 注入 PAM 环境。
  * `PAM_ENV` 由 package.json 脚本提供（`local` | `dev`；暂无独立 prod）。
+ *
+ * ### Production vs Preview（同一 `pnpm build`）
+ * - Production（`VERCEL_ENV=production`）：`enabled: false`，并内联
+ *   `PAMENV_ENABLED=0`，build / runtime 都只用 Vercel 平台变量。
+ * - Preview：开插件 + OIDC + 密封快照（打已稳定的 Production PAM）。
  */
 const withPamenv = createPamenvPlugin({
   /** PAM 项目 slug */
@@ -28,10 +40,10 @@ const withPamenv = createPamenvPlugin({
   /** 打印路径 / 键名等元数据（不含变量值） */
   debug: true,
   /**
-   * 是否启用 pamenv 注入；也可被 `PAMENV_ENABLED=0` 强制关闭
-   *（同时关闭 runtime `createPamenv` 解封，改走平台环境变量）。
+   * Production 关插件；Preview / 本地开。
+   * 也可被 `PAMENV_ENABLED=0` 强制关闭（同时关掉 runtime 解封）。
    */
-  enabled: true
+  enabled: !isPamVercelProduction
 });
 
 generateApiRoutes(__dirname, { outFile: './shared/config/apiRoutes.ts' }).catch(
@@ -92,8 +104,16 @@ const nextConfig: NextConfig = {
   },
   env: {
     PAM_ENV: process.env.PAM_ENV,
-    /** 运行时 ensure 与构建写出同一相对约定；绝对路径在 Vercel 构建机与函数间不可移植 */
-    PAMENV_SNAPSHOT_PATH: '.pam/deploy-snapshot.json'
+    /**
+     * Production：内联关闭解封，强制走平台变量（无密封快照）。
+     * Preview：不设，沿用 OIDC 写出的快照路径。
+     */
+    ...(isPamVercelProduction
+      ? { PAMENV_ENABLED: '0' }
+      : {
+          /** 运行时 ensure 与构建写出同一相对约定；绝对路径在构建机与函数间不可移植 */
+          PAMENV_SNAPSHOT_PATH: '.pam/deploy-snapshot.json'
+        })
   },
   allowedDevOrigins: localIp ? [localIp as string] : [],
   /**
