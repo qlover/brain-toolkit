@@ -7,12 +7,22 @@ import type { ConfigEnv, Plugin } from 'vite';
 export type { PamenvInjectOptions };
 
 /**
- * Vite plugin that writes PAM variables onto `process.env` in an early
- * `config` hook (before most other plugins and `loadEnv` consumers see env).
+ * Vite 插件选项：`enabled` 可额外按 Vite command 细分（serve / build）。
+ */
+export type PamenvVitePluginOptions = Omit<PamenvInjectOptions, 'enabled'> & {
+  /**
+   * 是否启用注入。`false` 关闭；`true` 含 build；
+   * 函数接收 Vite `command`（`serve` | `build`）；省略时仅 `serve`。
+   */
+  readonly enabled?: boolean | ((command: ConfigEnv['command']) => boolean);
+};
+
+/**
+ * Vite 插件：在早期 `config` 钩子把 PAM 变量写入 `process.env`
+ *（多数其它插件与 `loadEnv` 消费者看到之前）。
  *
- * Default: only runs for `vite` / `vite dev` (`command === 'serve'`).
- * Pass `enabled: true` to also inject during `vite build`, or a function
- * receiving Vite's command (`serve` | `build`).
+ * 默认仅 `vite` / `vite:dev`（`command === 'serve'`）注入。
+ * `enabled: true` 时 build 也注入；或传函数按 command 判断。
  *
  * @example
  * import { defineConfig } from 'vite';
@@ -28,10 +38,10 @@ export type { PamenvInjectOptions };
  *   ]
  * });
  *
- * @param options - Same fields as `pamenv run <slug> -e <env>`;
- *   `debug` / `envPriority` default false / `remote`
+ * @param options - 与 `pamenv run <slug> -e <env>` 同字段；
+ *   `debug` / `envPriority` 默认 false / `remote`
  */
-export function createPamenvPlugin(options: PamenvInjectOptions): Plugin {
+export function createPamenvPlugin(options: PamenvVitePluginOptions): Plugin {
   return {
     name: 'pamenv',
     enforce: 'pre',
@@ -45,10 +55,13 @@ export function createPamenvPlugin(options: PamenvInjectOptions): Plugin {
   };
 }
 
-/** Default export — idiomatic Vite plugin factory. */
+/** 默认导出 — Vite 惯用插件工厂。 */
 export default createPamenvPlugin;
 
-function isEnabled(options: PamenvInjectOptions, env: ConfigEnv): boolean {
+function isEnabled(
+  options: PamenvVitePluginOptions,
+  env: ConfigEnv
+): boolean {
   if (typeof options.enabled === 'function') {
     return options.enabled(env.command);
   }
