@@ -1,9 +1,18 @@
 name: pamenv GitHub OIDC smoke
 
-# 手动触发：验通 Actions OIDC → PAM 换票 → inject（不部署业务）。
+# 验通 Actions OIDC → PAM 换票 → inject（不部署业务）。
 # 前置：PAM 项目 pamenv-ci-smoke 已绑定 qlover/brain-toolkit，dev 含 PAMENV_CI_SMOKE=1。
+#
+# 说明：workflow_dispatch 只有默认分支（master）上的 workflow 会出现在
+# Actions「Run workflow」列表；本分支用 push 触发以便合入前就能跑。
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/pamenv-github-oidc-smoke
+    paths:
+      - '.github/workflows/pamenv-github-oidc-smoke.yml'
+      - 'packages/pamenv/**'
 
 permissions:
   id-token: write
