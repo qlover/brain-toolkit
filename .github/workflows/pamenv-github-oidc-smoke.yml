@@ -76,7 +76,17 @@ jobs:
         run: |
           set -euo pipefail
           pnpm exec vite build 2>&1 | tee /tmp/pamenv-vite-build.log
-          grep -q 'VITE_PAMENV_CI_SMOKE' /tmp/pamenv-vite-build.log
-          grep -qi 'Injected' /tmp/pamenv-vite-build.log
-          grep -R -q --fixed-strings 'VITE_PAMENV_CI_SMOKE' dist/
+          if ! grep -qi 'Injected' /tmp/pamenv-vite-build.log; then
+            echo '::error::pamenv vite smoke: inject log missing (OIDC/resolve failed?)'
+            exit 1
+          fi
+          if ! grep -q 'VITE_PAMENV_CI_SMOKE' /tmp/pamenv-vite-build.log; then
+            echo '::error::pamenv vite smoke: VITE_PAMENV_CI_SMOKE not in inject log. Add VITE_PAMENV_CI_SMOKE=1 to PAM project pamenv-ci-smoke / env=dev (clientPublicPrefixes only exposes VITE_*).'
+            grep -E 'debug keys:|Injected' /tmp/pamenv-vite-build.log || true
+            exit 1
+          fi
+          if ! grep -R -q --fixed-strings 'VITE_PAMENV_CI_SMOKE' dist/; then
+            echo '::error::pamenv vite smoke: VITE_PAMENV_CI_SMOKE not embedded in dist/ (define/clientPublicPrefixes?)'
+            exit 1
+          fi
           echo 'pamenv vite oidc smoke ok (inject log + dist label present, value redacted)'

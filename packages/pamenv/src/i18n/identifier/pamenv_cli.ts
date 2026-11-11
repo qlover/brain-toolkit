@@ -1415,8 +1415,8 @@ export const PAMENV_CLI_FORCE_REBIND_CONFIRM =
 
 /**
  * @description OIDC 换票成功（不含 token）
- * @localZh 已通过 {{provider}} OIDC 换票（audience={{audience}}，expiresAt={{expiresAt}}）
- * @localEn Exchanged {{provider}} OIDC ticket (audience={{audience}}, expiresAt={{expiresAt}})
+ * @localZh 已通过 {{provider}} OIDC 换票（audience: {{audience}}；expiresAt: {{expiresAt}}）
+ * @localEn Exchanged {{provider}} OIDC ticket (audience: {{audience}}; expiresAt: {{expiresAt}})
  */
 export const PAMENV_CLI_OIDC_EXCHANGED = 'pamenv_cli:oidc_exchanged';
 
