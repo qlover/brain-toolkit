@@ -1,5 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { isTeamMembershipEffective } from '@schemas/PamTeamSchema';
+import {
+  filterHumanTeamMembers,
+  isCiRunnerRole,
+  isTeamMembershipEffective,
+  type PamTeamMemberItem
+} from '@schemas/PamTeamSchema';
+
+describe('isCiRunnerRole', () => {
+  it('accepts legacy and pam_roles keys', () => {
+    expect(isCiRunnerRole('ci_runner')).toBe(true);
+    expect(isCiRunnerRole('team_ci_runner')).toBe(true);
+    expect(isCiRunnerRole('member')).toBe(false);
+    expect(isCiRunnerRole(null)).toBe(false);
+  });
+});
+
+describe('filterHumanTeamMembers', () => {
+  it('drops ci_runner rows', () => {
+    const members = [
+      { user_id: 'a', role: 'owner' },
+      { user_id: 'b', role: 'ci_runner' },
+      { user_id: 'c', role: 'member' }
+    ] as PamTeamMemberItem[];
+    expect(filterHumanTeamMembers(members).map((m) => m.user_id)).toEqual([
+      'a',
+      'c'
+    ]);
+  });
+});
 
 describe('isTeamMembershipEffective', () => {
   const owner = '308c658e-a3c8-4684-89d4-9c6211134abc';

@@ -1,3 +1,4 @@
+import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { UserRole } from '@qlover/next-kit/common';
 import {
   expandSystemPermissions,
@@ -8,13 +9,18 @@ import {
 } from '@shared/auth/systemRole';
 import { inject, injectable } from '@shared/container';
 import { toBusinessEmail } from '@shared/utils/pamUserIdentity';
+import { API_PAM_CI_USER_MANAGED } from '@config/i18n-identifier/api';
 import type {
+  PamAdminCiOidcBinding,
   PamAdminUserListItem,
   PamSessionUser,
   PamUserRow
 } from '@schemas/PamUserSchema';
+import { PamCiOidcBindingRepo } from '@server/repositorys/PamCiOidcBindingRepo';
+import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
+import { PamCiUserResolver } from '@server/services/PamCiUserResolver';
 import { PamPermissionService } from '@server/services/PamPermissionService';
 import {
   getSystemRoleCache,
@@ -36,7 +42,12 @@ export class PamUserService {
     @inject(PamRolePermissionsRepo)
     protected readonly roles: PamRolePermissionsRepo,
     @inject(PamPermissionService)
-    protected readonly permissionService: PamPermissionService
+    protected readonly permissionService: PamPermissionService,
+    @inject(PamCiOidcBindingRepo)
+    protected readonly ciOidcBindingRepo: PamCiOidcBindingRepo,
+    @inject(PAMProjectRepo) protected readonly projectRepo: PAMProjectRepo,
+    @inject(PamCiUserResolver)
+    protected readonly ciUserResolver: PamCiUserResolver
   ) {}
 
   protected async systemRoleFromUser(
@@ -112,16 +123,27 @@ export class PamUserService {
     offset?: number;
   }): Promise<PamAdminUserListItem[]> {
     const rows = await this.repo.searchForAdmin(params);
-    return rows.map((row) => ({
-      id: row.id,
-      email: row.email,
-      phone: row.phone,
-      displayName: row.displayName,
-      isPlatformAdmin: row.isPlatformAdmin,
-      systemRole: row.systemRole,
-      status: row.status as 'active' | 'suspended',
-      createdAt: row.createdAt
-    }));
+    const userIds = rows.map((row) => row.id);
+    const [ciUserIds, bindingsByUser] = await Promise.all([
+      this.ciUserResolver.resolveCiUserIds(userIds),
+      this.loadCiOidcBindingsByUserIds(userIds)
+    ]);
+
+    return rows.map((row) => {
+      const isCi = ciUserIds.has(row.id);
+      return {
+        id: row.id,
+        email: row.email,
+        phone: row.phone,
+        displayName: row.displayName,
+        isPlatformAdmin: row.isPlatformAdmin,
+        systemRole: row.systemRole,
+        status: row.status as 'active' | 'suspended',
+        createdAt: row.createdAt,
+        isCi,
+        ciOidcBindings: isCi ? (bindingsByUser.get(row.id) ?? []) : []
+      };
+    });
   }
 
   public async setPlatformAdmin(
@@ -141,6 +163,10 @@ export class PamUserService {
     systemRole: SystemRoleType,
     actorUserId: string
   ): Promise<PamUserRow> {
+    if (await this.ciUserResolver.isCiUser(targetUserId)) {
+      throw new ExecutorError(API_PAM_CI_USER_MANAGED);
+    }
+
     const row = await this.repo.setSystemRole(
       targetUserId,
       systemRole,
@@ -160,5 +186,43 @@ export class PamUserService {
       userId,
       displayName
     });
+  }
+
+  /**
+   * 批量加载 CI 用户的 OIDC 绑定并附带项目 slug/name。
+   *
+   * @param userIds - 用户 id 列表
+   */
+  protected async loadCiOidcBindingsByUserIds(
+    userIds: readonly string[]
+  ): Promise<Map<string, PamAdminCiOidcBinding[]>> {
+    const out = new Map<string, PamAdminCiOidcBinding[]>();
+    if (userIds.length === 0) {
+      return out;
+    }
+
+    const bindings = await this.ciOidcBindingRepo.listByCiUserIds(userIds);
+    if (bindings.length === 0) {
+      return out;
+    }
+
+    const projectIds = [...new Set(bindings.map((b) => b.projectId))];
+    const projects = await this.projectRepo.listBasicsByIdsAdmin(projectIds);
+    const projectById = new Map(projects.map((p) => [p.id, p]));
+
+    for (const binding of bindings) {
+      const project = projectById.get(binding.projectId);
+      const item: PamAdminCiOidcBinding = {
+        provider: binding.provider,
+        repository: binding.repository,
+        projectId: binding.projectId,
+        projectSlug: project?.slug ?? binding.projectId,
+        projectName: project?.name ?? binding.projectId
+      };
+      const list = out.get(binding.ciUserId) ?? [];
+      list.push(item);
+      out.set(binding.ciUserId, list);
+    }
+    return out;
   }
 }

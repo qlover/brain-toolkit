@@ -99,6 +99,27 @@ export function isPersonalTeamSlug(slug: string): boolean {
 }
 
 /**
+ * 是否为团队 CI Runner 角色（含 legacy `ci_runner` / `team_ci_runner`）。
+ *
+ * @param role - API legacy 角色或 pam_roles.key
+ */
+export function isCiRunnerRole(role: string | null | undefined): boolean {
+  const key = role?.trim();
+  return key === 'ci_runner' || key === 'team_ci_runner';
+}
+
+/**
+ * 团队详情对外成员列表：去掉 CI Runner（仅后台 / OIDC 绑定面可见）。
+ *
+ * @param members - 原始成员
+ */
+export function filterHumanTeamMembers(
+  members: readonly PamTeamMemberItem[]
+): PamTeamMemberItem[] {
+  return members.filter((member) => !isCiRunnerRole(member.role));
+}
+
+/**
  * 个人团队默认只对主人本人生效；例外：OIDC CI Runner（`team_ci_runner` /
  * legacy `ci_runner`）可挂在主人的 personal 团队上并参与 inject。
  *
@@ -120,6 +141,5 @@ export function isTeamMembershipEffective(
   if (slug === `personal-${userId}`) {
     return true;
   }
-  const key = roleKey?.trim();
-  return key === 'team_ci_runner' || key === 'ci_runner';
+  return isCiRunnerRole(roleKey);
 }

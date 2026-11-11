@@ -1,6 +1,12 @@
 /** Internal Supabase placeholder for phone-only auth.users (not a business email). */
 export const PHONE_PLACEHOLDER_EMAIL_SUFFIX = '@phone.pam.local';
 
+/**
+ * OIDC CI 创建时使用的邮箱域（`ci+{projectId}@pam.ci.invalid`）。
+ * **仅作创建约定**；身份判定请用 PamCiUserResolver（bindings / ci_runner / metadata）。
+ */
+export const CI_USER_EMAIL_DOMAIN = 'pam.ci.invalid';
+
 export function isPhonePlaceholderEmail(
   email: string | null | undefined
 ): boolean {

@@ -23,6 +23,17 @@ export const pamUserRowSchema = z.object({
 
 export type PamUserRow = z.infer<typeof pamUserRowSchema>;
 
+/** 管理后台：CI 用户关联的 OIDC 绑定摘要 */
+export const pamAdminCiOidcBindingSchema = z.object({
+  provider: z.enum(['github', 'vercel']),
+  repository: z.string(),
+  projectId: z.string().uuid(),
+  projectSlug: z.string(),
+  projectName: z.string()
+});
+
+export type PamAdminCiOidcBinding = z.infer<typeof pamAdminCiOidcBindingSchema>;
+
 export const pamAdminUserListItemSchema = z.object({
   id: z.string().uuid(),
   email: z.string().nullable(),
@@ -32,7 +43,11 @@ export const pamAdminUserListItemSchema = z.object({
   isPlatformAdmin: z.boolean(),
   systemRole: systemRoleSchema,
   status: z.enum(['active', 'suspended']),
-  createdAt: z.string()
+  createdAt: z.string(),
+  /** OIDC CI 系统账号（邮箱域 pam.ci.invalid） */
+  isCi: z.boolean().default(false),
+  /** 该 CI 用户当前绑定的 provider / 仓库 / 项目 */
+  ciOidcBindings: z.array(pamAdminCiOidcBindingSchema).default([])
 });
 
 export type PamAdminUserListItem = z.infer<typeof pamAdminUserListItemSchema>;

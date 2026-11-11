@@ -78,6 +78,7 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
     async (row: PamAdminUserListItem, systemRole: SystemRoleType) => {
       if (
         !canChangeRole ||
+        row.isCi ||
         row.id === currentUserId ||
         row.systemRole === systemRole
       ) {
@@ -124,18 +125,47 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
           email: row.email,
           userId: row.id
         });
-        if (row.id !== currentUserId) {
+        const isSelf = row.id === currentUserId;
+        const showBadges = isSelf || row.isCi;
+        if (!showBadges) {
           return label;
         }
         return (
           <span
-            data-testid="columns"
-            className="inline-flex flex-wrap items-center gap-1.5"
+            data-testid="AdminUsersIdentity"
+            className="inline-flex flex-col gap-1"
           >
-            <span>{label}</span>
-            <span className="rounded bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand">
-              {tt.you}
+            <span className="inline-flex flex-wrap items-center gap-1.5">
+              <span>{label}</span>
+              {isSelf ? (
+                <span className="rounded bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand">
+                  {tt.you}
+                </span>
+              ) : null}
+              {row.isCi ? (
+                <span
+                  data-testid="AdminUsersCiBadge"
+                  className="rounded bg-elevated px-1.5 py-0.5 text-xs font-medium text-secondary-text"
+                >
+                  {tt.ciBadge}
+                </span>
+              ) : null}
             </span>
+            {row.isCi ? (
+              <span
+                data-testid="AdminUsersCiBindings"
+                className="text-xs text-secondary-text"
+              >
+                {row.ciOidcBindings.length === 0
+                  ? tt.ciNoBinding
+                  : row.ciOidcBindings
+                      .map(
+                        (binding) =>
+                          `${binding.provider} ${binding.repository} · ${binding.projectSlug}`
+                      )
+                      .join(' · ')}
+              </span>
+            ) : null}
           </span>
         );
       }
@@ -146,16 +176,26 @@ export function AdminUsersPanel({ tt }: { tt: AdminUsersI18nInterface }) {
       width: 180,
       render: (_, row) => {
         const isSelf = row.id === currentUserId;
-        if (!canChangeRole || isSelf) {
+        if (!canChangeRole || isSelf || row.isCi) {
           return (
             <span
               className="text-sm text-secondary-text"
-              title={isSelf ? tt.cannotChangeSelf : tt.roleChangeForbidden}
+              title={
+                row.isCi
+                  ? tt.ciBadge
+                  : isSelf
+                    ? tt.cannotChangeSelf
+                    : tt.roleChangeForbidden
+              }
               data-testid={
-                isSelf ? 'AdminUsersSelfRoleReadonly' : 'AdminUsersRoleReadonly'
+                row.isCi
+                  ? 'AdminUsersCiRoleReadonly'
+                  : isSelf
+                    ? 'AdminUsersSelfRoleReadonly'
+                    : 'AdminUsersRoleReadonly'
               }
             >
-              {roleLabel(row.systemRole)}
+              {row.isCi ? tt.ciBadge : roleLabel(row.systemRole)}
             </span>
           );
         }

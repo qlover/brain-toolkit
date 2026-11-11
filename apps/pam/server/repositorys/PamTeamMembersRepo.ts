@@ -83,6 +83,35 @@ export class PamTeamMembersRepo {
       .map((row) => row.team_id);
   }
 
+  /**
+   * 在给定用户中筛出仍挂着 CI Runner 角色的 id（管理后台 / 选人排除）。
+   *
+   * @param userIds - 候选用户 id
+   */
+  public async listUserIdsWithCiRunnerAmong(
+    userIds: readonly string[]
+  ): Promise<string[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
+    const ciRoleId = await this.roles.requireRoleIdByKey(TeamRoleKey.CiRunner);
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const result = await supabase
+      .from(TABLE)
+      .select('user_id')
+      .eq('status', 'active')
+      .eq('role_id', ciRoleId)
+      .in('user_id', [...userIds]);
+    this.supabaseBridge.throwIfError(result);
+    return [
+      ...new Set(
+        (result.data ?? [])
+          .map((row) => String((row as { user_id?: string }).user_id ?? ''))
+          .filter((id) => id.length > 0)
+      )
+    ];
+  }
+
   public async listByTeamId(teamId: string): Promise<PamTeamMemberItem[]> {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase

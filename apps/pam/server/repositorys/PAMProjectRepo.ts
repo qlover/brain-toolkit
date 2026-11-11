@@ -1051,6 +1051,29 @@ export class PAMProjectRepo extends BaseRepository<
   }
 
   /**
+   * 按 id 批量取项目基础字段（admin；管理后台 CI 绑定展示）。
+   *
+   * @param projectIds - 项目 UUID 列表
+   */
+  public async listBasicsByIdsAdmin(
+    projectIds: readonly string[]
+  ): Promise<Array<Pick<PAMProjectRaw, 'id' | 'name' | 'slug'>>> {
+    if (projectIds.length === 0) {
+      return [];
+    }
+    const admin = this.supabaseRepo.getAdminSupabase();
+    const result = await admin
+      .from(this.getRepoName())
+      .select('id,name,slug')
+      .in('id', [...projectIds])
+      .eq('is_deleted', DeleteStatus.UNDELETE);
+    this.supabaseRepo.throwIfError(result);
+    return (result.data ?? []) as Array<
+      Pick<PAMProjectRaw, 'id' | 'name' | 'slug'>
+    >;
+  }
+
+  /**
    * Projects currently attached to a team (admin client).
    */
   public async listByTeamIdAdmin(
