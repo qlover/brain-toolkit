@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   assertOnlyKeysPresent,
+  DEFAULT_PAMENV_KEEP_ENV,
   ensurePamenvRuntimeEnv,
   injectPamenvProcessEnv,
+  isPamenvGloballyDisabled,
+  mergePamenvKeepEnvKeys,
   resetPamenvInjectCache,
   resolveActiveOidcProvider,
+  resolvePamenvEnabled,
   resolvePamenvInjectOptions,
   resolveSnapshotKeysToOpen
 } from '../src/impls/PamenvInject';
@@ -22,6 +26,7 @@ describe('injectPamenvProcessEnv', () => {
     delete process.env.GITHUB_ACTIONS;
     delete process.env[PamCliConfig.ENV_PROJECT_SLUG];
     delete process.env[PamCliConfig.ENV_ENV_NAME];
+    delete process.env[PamCliConfig.ENV_ENABLED];
   });
 
   it('does not touch process.env when disabled', async () => {
@@ -33,6 +38,34 @@ describe('injectPamenvProcessEnv', () => {
     });
     expect(process.env.PAMENV_INJECT_SENTINEL).toBe('keep');
   });
+
+  it('PAMENV_ENABLED=0 时不注入', async () => {
+    process.env.PAMENV_INJECT_SENTINEL = 'keep';
+    process.env[PamCliConfig.ENV_ENABLED] = '0';
+    await injectPamenvProcessEnv({
+      slug: 'brain-oauth',
+      env: 'local',
+      enabled: true
+    });
+    expect(process.env.PAMENV_INJECT_SENTINEL).toBe('keep');
+  });
+});
+
+describe('resolvePamenvEnabled / isPamenvGloballyDisabled', () => {
+  afterEach(() => {
+    delete process.env[PamCliConfig.ENV_ENABLED];
+  });
+
+  it('PAMENV_ENABLED=0 强制关闭', () => {
+    process.env[PamCliConfig.ENV_ENABLED] = '0';
+    expect(isPamenvGloballyDisabled()).toBe(true);
+    expect(resolvePamenvEnabled(true)).toBe(false);
+  });
+
+  it('未设置时尊重 options.enabled', () => {
+    expect(resolvePamenvEnabled(undefined)).toBe(true);
+    expect(resolvePamenvEnabled(false)).toBe(false);
+  });
 });
 
 describe('resolvePamenvInjectOptions', () => {
@@ -42,6 +75,7 @@ describe('resolvePamenvInjectOptions', () => {
     delete process.env[PamCliConfig.ENV_PROJECT_SLUG];
     delete process.env[PamCliConfig.ENV_ENV_NAME];
     delete process.env[PamCliConfig.ENV_PAM_ENV];
+    delete process.env[PamCliConfig.ENV_ENABLED];
   });
 
   it('prefers PAMENV_PROJECT_SLUG / PAMENV_ENV_NAME over options', () => {
@@ -74,6 +108,27 @@ describe('resolvePamenvInjectOptions', () => {
     expect(resolved.env).toBe('local');
     expect(resolved.oidc).toBeUndefined();
     expect(resolved.preferLocal).toBe(true);
+  });
+
+  it('keepEnv 默认含平台键，并可追加', () => {
+    const base = resolvePamenvInjectOptions({
+      slug: 'pam',
+      env: 'local'
+    });
+    expect(base.keepEnvKeys).toEqual(
+      expect.arrayContaining([...DEFAULT_PAMENV_KEEP_ENV])
+    );
+    const merged = mergePamenvKeepEnvKeys(['MY_CUSTOM']);
+    expect(merged).toEqual(
+      expect.arrayContaining([...DEFAULT_PAMENV_KEEP_ENV, 'MY_CUSTOM'])
+    );
+    const withExtra = resolvePamenvInjectOptions({
+      slug: 'pam',
+      env: 'local',
+      keepEnv: 'MY_CUSTOM'
+    });
+    expect(withExtra.keepEnvKeys).toContain('MY_CUSTOM');
+    expect(withExtra.keepEnvKeys).toContain(PamCliConfig.ENV_ENABLED);
   });
 
   it('activates vercel oidc only on Vercel', () => {
@@ -152,6 +207,21 @@ describe('ensurePamenvRuntimeEnv', () => {
     resetPamenvInjectCache();
     delete process.env.VERCEL;
     delete process.env.PAMENV_INJECT_SENTINEL;
+    delete process.env[PamCliConfig.ENV_ENABLED];
+  });
+
+  it('PAMENV_ENABLED=0 时即使在 Vercel 也返回空 bag', async () => {
+    process.env.VERCEL = '1';
+    process.env[PamCliConfig.ENV_ENABLED] = '0';
+    process.env.PAMENV_INJECT_SENTINEL = 'keep';
+    const bag = await ensurePamenvRuntimeEnv({
+      slug: 'pam',
+      env: 'dev',
+      oidc: 'vercel',
+      snapshotPath: '.pam/deploy-snapshot.json'
+    });
+    expect(bag.values).toEqual({});
+    expect(process.env.PAMENV_INJECT_SENTINEL).toBe('keep');
   });
 
   it('no-ops when not on matching CI，返回空 bag', async () => {

@@ -37,7 +37,8 @@ import type { PamenvBagInterface } from '../interfaces/PamenvBagInterface';
  * `GITHUB_ACTIONS`）；本地忽略，仍走 `.pam`。
  *
  * ### only / omit / keepEnv / cache
- * 与 CLI 同源：`only` 白名单、`omit` 黑名单（互斥）、`keepEnv` 保留已有、
+ * 与 CLI 同源：`only` 白名单、`omit` 黑名单（互斥）；
+ * `keepEnv` 在 {@link DEFAULT_PAMENV_KEEP_ENV} 之上**追加**（不必每次抄平台键）；
  * `cache` 默认 true。
  *
  * ### snapshotPath
@@ -58,6 +59,43 @@ export type PamenvInjectOptions = PamCliRunOptionsType & {
    */
   readonly snapshotPath?: string;
 };
+
+/**
+ * 注入/解封默认保留的平台与 pamenv 引导键（进程已有则不被 PAM 值覆盖）。
+ * 应用只需在 `keepEnv` 里追加业务特有键。
+ */
+export const DEFAULT_PAMENV_KEEP_ENV = [
+  PamCliConfig.ENV_TOKEN,
+  PamCliConfig.ENV_BASE_URL,
+  PamCliConfig.ENV_OIDC_AUD,
+  PamCliConfig.ENV_PROJECT_SLUG,
+  PamCliConfig.ENV_ENV_NAME,
+  PamCliConfig.ENV_PAM_ENV,
+  PamCliConfig.ENV_DEBUG,
+  PamCliConfig.ENV_ENABLED,
+  PamCliConfig.ENV_SNAPSHOT_PATH,
+  'APP_ENV',
+  'NODE_ENV',
+  'NEXT_RUNTIME',
+  'VERCEL',
+  'VERCEL_ENV',
+  'VERCEL_URL',
+  'VERCEL_REGION',
+  'CI',
+  'GITHUB_ACTIONS'
+] as const;
+
+/**
+ * 默认 keepEnv ∪ 调用方追加键（去重）。
+ */
+export function mergePamenvKeepEnvKeys(
+  extra?: string | readonly string[]
+): readonly string[] {
+  return normalizePamCliKeyList([
+    ...DEFAULT_PAMENV_KEEP_ENV,
+    ...normalizePamCliKeyList(extra)
+  ]);
+}
 
 /**
  * 运行时选项：优先解封 `snapshotPath`；无快照时在 Vercel 上 fail-closed。
@@ -100,12 +138,32 @@ const OIDC_REFRESH_SKEW_MS = 60_000;
 const injected = new Map<string, PamenvInjectCacheEntryType>();
 
 /**
+ * 是否被环境变量 {@link PamCliConfig.ENV_ENABLED} 强制关闭。
+ */
+export function isPamenvGloballyDisabled(): boolean {
+  const raw = process.env[PamCliConfig.ENV_ENABLED]?.trim().toLowerCase();
+  return raw === '0' || raw === 'false' || raw === 'off' || raw === 'no';
+}
+
+/**
+ * 插件/注入是否允许运行：先看 `PAMENV_ENABLED`，再看 `options.enabled`。
+ *
+ * @param enabled - 入参；`false` 关闭；省略视为允许（仍受全局变量约束）
+ */
+export function resolvePamenvEnabled(enabled: boolean | undefined): boolean {
+  if (isPamenvGloballyDisabled()) {
+    return false;
+  }
+  return enabled !== false;
+}
+
+/**
  * 将 resolve 后的变量写入 `process.env`；可选写出密封部署快照。
  */
 export async function injectPamenvProcessEnv(
   options: PamenvInjectOptions
 ): Promise<void> {
-  if (options.enabled === false) {
+  if (!resolvePamenvEnabled(options.enabled)) {
     return;
   }
 
@@ -117,15 +175,6 @@ export async function injectPamenvProcessEnv(
     () => applyPamenvProcessEnv(resolved, cwd)
   );
 }
-
-const DEFAULT_RUNTIME_KEEP_ENV = [
-  'PAM_ENV',
-  'APP_ENV',
-  'VERCEL',
-  'VERCEL_ENV',
-  'NODE_ENV',
-  'NEXT_RUNTIME'
-] as const;
 
 /**
  * CI 运行时：优先解封部署快照（与 build 同源）；无快照则 Vercel fail-closed。
@@ -139,6 +188,10 @@ const DEFAULT_RUNTIME_KEEP_ENV = [
 export async function ensurePamenvRuntimeEnv(
   options: PamenvRuntimeOptions = {}
 ): Promise<PamenvBagInterface> {
+  if (isPamenvGloballyDisabled()) {
+    return new PamenvBag({});
+  }
+
   const oidc = resolveActiveOidcProvider(options.oidc ?? 'vercel');
   const enabled =
     options.enabled ?? (oidc !== undefined || process.env.VERCEL === '1');
@@ -148,7 +201,7 @@ export async function ensurePamenvRuntimeEnv(
 
   const snapshotPath =
     options.snapshotPath?.trim() ||
-    process.env.PAMENV_SNAPSHOT_PATH?.trim() ||
+    process.env[PamCliConfig.ENV_SNAPSHOT_PATH]?.trim() ||
     '';
 
   if (snapshotPath) {
@@ -193,9 +246,7 @@ function resolvePamenvSnapshotRuntimeOptions(
   const onlyKeys = normalizePamCliKeyList(options.only);
   const omitKeys = normalizePamCliKeyList(options.omit);
   assertOnlyOmitExclusive(onlyKeys, omitKeys);
-  const keepEnvKeys = normalizePamCliKeyList(
-    options.keepEnv ?? [...DEFAULT_RUNTIME_KEEP_ENV]
-  );
+  const keepEnvKeys = mergePamenvKeepEnvKeys(options.keepEnv);
 
   return {
     ...options,
@@ -251,7 +302,7 @@ export function resolvePamenvInjectOptions(
   const onlyKeys = normalizePamCliKeyList(options.only);
   const omitKeys = normalizePamCliKeyList(options.omit);
   assertOnlyOmitExclusive(onlyKeys, omitKeys);
-  const keepEnvKeys = normalizePamCliKeyList(options.keepEnv);
+  const keepEnvKeys = mergePamenvKeepEnvKeys(options.keepEnv);
 
   return {
     ...options,
