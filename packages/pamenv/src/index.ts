@@ -13,9 +13,11 @@ export {
   assertOnlyKeysPresent,
   ensurePamenvRuntimeEnv,
   injectPamenvProcessEnv,
+  isPamenvGloballyDisabled,
   resetPamenvInjectCache,
   resolveActiveOidcProvider,
   resolveInjectDebug,
+  resolvePamenvEnabled,
   resolvePamenvInjectOptions,
   resolveSnapshotKeysToOpen
 } from './impls/PamenvInject';

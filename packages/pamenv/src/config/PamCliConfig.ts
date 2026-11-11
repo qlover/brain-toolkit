@@ -63,6 +63,12 @@ export class PamCliConfig {
   public static readonly ENV_DEBUG = 'PAMENV_DEBUG' as const;
 
   /**
+   * 全局总开关：`0` / `false` / `off` / `no` 时关闭插件注入与 runtime 解封。
+   * 未设置则不干预（仍由 options.enabled / 自动时机决定）。
+   */
+  public static readonly ENV_ENABLED = 'PAMENV_ENABLED' as const;
+
+  /**
    * @returns 去空白后的 `PAMENV_TOKEN`，未设置则为 null
    */
   public static getEnvToken(): string | null {

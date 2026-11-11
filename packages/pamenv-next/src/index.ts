@@ -3,6 +3,7 @@ import {
   ensurePamenvRuntimeEnv,
   injectPamenvProcessEnv,
   PamenvBag,
+  resolvePamenvEnabled,
   type EnvSourceInterface,
   type PamenvBagInterface,
   type PamenvInjectOptions,
@@ -62,6 +63,8 @@ export type PamenvNextConfigContext = {
  * 仅表示程序上是否启用 pamenv 注入能力：
  * - 不传 / `true`：允许注入；具体何时注入看下方「自动时机」
  * - `false`：整插件不注入（不请求 PAM）
+ * - 环境变量 `PAMENV_ENABLED=0|false|off|no`：**强制关闭**插件注入与
+ *   `createPamenv` 解封（返回空袋，改走进程/平台环境变量）
  *
  * ### 自动时机（插件内部）
  * - 本地：`phase-development-server`（`next dev`）
@@ -255,7 +258,7 @@ function shouldInject(
   options: PamenvNextPluginOptions,
   phase: string
 ): boolean {
-  if (options.enabled === false) {
+  if (!resolvePamenvEnabled(options.enabled)) {
     return false;
   }
 

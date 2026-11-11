@@ -100,12 +100,32 @@ const OIDC_REFRESH_SKEW_MS = 60_000;
 const injected = new Map<string, PamenvInjectCacheEntryType>();
 
 /**
+ * 是否被环境变量 {@link PamCliConfig.ENV_ENABLED} 强制关闭。
+ */
+export function isPamenvGloballyDisabled(): boolean {
+  const raw = process.env[PamCliConfig.ENV_ENABLED]?.trim().toLowerCase();
+  return raw === '0' || raw === 'false' || raw === 'off' || raw === 'no';
+}
+
+/**
+ * 插件/注入是否允许运行：先看 `PAMENV_ENABLED`，再看 `options.enabled`。
+ *
+ * @param enabled - 入参；`false` 关闭；省略视为允许（仍受全局变量约束）
+ */
+export function resolvePamenvEnabled(enabled: boolean | undefined): boolean {
+  if (isPamenvGloballyDisabled()) {
+    return false;
+  }
+  return enabled !== false;
+}
+
+/**
  * 将 resolve 后的变量写入 `process.env`；可选写出密封部署快照。
  */
 export async function injectPamenvProcessEnv(
   options: PamenvInjectOptions
 ): Promise<void> {
-  if (options.enabled === false) {
+  if (!resolvePamenvEnabled(options.enabled)) {
     return;
   }
 
@@ -120,6 +140,7 @@ export async function injectPamenvProcessEnv(
 
 const DEFAULT_RUNTIME_KEEP_ENV = [
   'PAM_ENV',
+  'PAMENV_ENABLED',
   'APP_ENV',
   'VERCEL',
   'VERCEL_ENV',
@@ -139,6 +160,10 @@ const DEFAULT_RUNTIME_KEEP_ENV = [
 export async function ensurePamenvRuntimeEnv(
   options: PamenvRuntimeOptions = {}
 ): Promise<PamenvBagInterface> {
+  if (isPamenvGloballyDisabled()) {
+    return new PamenvBag({});
+  }
+
   const oidc = resolveActiveOidcProvider(options.oidc ?? 'vercel');
   const enabled =
     options.enabled ?? (oidc !== undefined || process.env.VERCEL === '1');
