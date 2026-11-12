@@ -250,7 +250,101 @@ export const PAGE_ACCOUNT_PASSWORD_MISMATCH = 'page_account:password_mismatch';
 export const PAGE_ACCOUNT_PASSWORD_SAME = 'page_account:password_same';
 
 /**
- * @description Feedback section title
+ * @description Account link to my feedback history
+ * @localZh 我的反馈
+ * @localEn My feedback
+ */
+export const PAGE_ACCOUNT_MY_FEEDBACK_LINK = 'page_account:my_feedback_link';
+
+/**
+ * @description Account my-feedback hint
+ * @localZh 查看你提交过的反馈。新反馈请点右下角「反馈」。
+ * @localEn Review your submissions. Use the floating Feedback button to send new ones.
+ */
+export const PAGE_ACCOUNT_MY_FEEDBACK_HINT = 'page_account:my_feedback_hint';
+
+/**
+ * @description My feedback page title
+ * @localZh 我的反馈
+ * @localEn My feedback
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_TITLE =
+  'page_account:feedback_list_title';
+
+/**
+ * @description My feedback page description
+ * @localZh 仅显示你自己提交的反馈记录
+ * @localEn Only your own feedback submissions
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_DESCRIPTION =
+  'page_account:feedback_list_description';
+
+/**
+ * @description My feedback empty state
+ * @localZh 还没有反馈记录
+ * @localEn No feedback yet
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_EMPTY =
+  'page_account:feedback_list_empty';
+
+/**
+ * @description My feedback load failed
+ * @localZh 加载失败
+ * @localEn Failed to load
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_LOAD_FAILED =
+  'page_account:feedback_list_load_failed';
+
+/**
+ * @description My feedback table - status column
+ * @localZh 状态
+ * @localEn Status
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_COL_STATUS =
+  'page_account:feedback_list_col_status';
+
+/**
+ * @description My feedback table - time column
+ * @localZh 提交时间
+ * @localEn Submitted
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_COL_TIME =
+  'page_account:feedback_list_col_time';
+
+/**
+ * @description Feedback status - open
+ * @localZh 待处理
+ * @localEn Open
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_OPEN =
+  'page_account:feedback_status_open';
+
+/**
+ * @description Feedback status - reviewing
+ * @localZh 处理中
+ * @localEn Reviewing
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_REVIEWING =
+  'page_account:feedback_status_reviewing';
+
+/**
+ * @description Feedback status - resolved
+ * @localZh 已解决
+ * @localEn Resolved
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_RESOLVED =
+  'page_account:feedback_status_resolved';
+
+/**
+ * @description Feedback status - closed
+ * @localZh 已关闭
+ * @localEn Closed
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_CLOSED =
+  'page_account:feedback_status_closed';
+
+/**
+ * @description Feedback section title (legacy form; kept for locale sync)
  * @localZh 反馈
  * @localEn Feedback
  */

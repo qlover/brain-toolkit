@@ -3,6 +3,7 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { isI18nKey, type TranslateFn } from '@qlover/next-kit/common';
+import { useLocale } from 'next-intl';
 import {
   type FormEvent,
   type ReactNode,
@@ -13,9 +14,9 @@ import {
 
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import type { UserService } from '@/impls/UserService';
+import { LocaleLink } from '@/uikit/components/LocaleLink';
 import { BindEmailForm } from '@/uikit/components-app/BindEmailForm';
 import { ChangePasswordForm } from '@/uikit/components-app/ChangePasswordForm';
-import { PamFeedbackForm } from '@/uikit/components-app/feedback/PamFeedbackForm';
 import { LinkedLoginsSection } from '@/uikit/components-app/LinkedLoginsSection';
 import { useIOC } from '@/uikit/hook/useIOC';
 import { useUserAuth } from '@/uikit/hook/useUserAuth';
@@ -27,7 +28,7 @@ import {
 } from '@shared/utils/pamUserIdentity';
 import type { AccountI18nInterface } from '@config/i18n-mapping/accountI18n';
 import { I } from '@config/ioc-identifiter';
-import { PamUserFeedbackCategory } from '@schemas/PamUserFeedbackSchema';
+import { ROUTE_ACCOUNT_FEEDBACK } from '@config/route';
 import {
   isValidDisplayName,
   pamDisplayNameUpdateSchema,
@@ -76,6 +77,7 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
   const userService = useIOC(I.UserServiceInterface) as UserService;
   const dialog = useIOC(I.DialogHandler);
   const t = useWarnTranslations();
+  const locale = useLocale();
 
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -337,33 +339,17 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
 
       <section className="rounded-2xl border border-primary-border bg-primary p-5 sm:p-6">
         <h2 className="mb-2 text-base font-semibold text-primary-text">
-          {tt.feedbackSectionTitle}
+          {tt.myFeedbackLink}
         </h2>
-        <p className="mb-4 text-sm text-secondary-text">{tt.feedbackHint}</p>
-        <PamFeedbackForm
-          labels={{
-            category: tt.feedbackCategory,
-            body: tt.feedbackBody,
-            bodyPlaceholder: tt.feedbackBodyPlaceholder,
-            screenshots: tt.feedbackScreenshots,
-            screenshotsAdd: tt.feedbackScreenshotsAdd,
-            deviceNotice: tt.feedbackDeviceNotice,
-            submit: tt.feedbackSubmit,
-            submitting: tt.feedbackSubmitting,
-            success: tt.feedbackSuccess,
-            screenshotsError: tt.feedbackScreenshotsError,
-            error: tt.feedbackError,
-            categories: {
-              [PamUserFeedbackCategory.bug]: tt.feedbackCategoryBug,
-              [PamUserFeedbackCategory.ux]: tt.feedbackCategoryUx,
-              [PamUserFeedbackCategory.feature]: tt.feedbackCategoryFeature,
-              [PamUserFeedbackCategory.performance]:
-                tt.feedbackCategoryPerformance,
-              [PamUserFeedbackCategory.content]: tt.feedbackCategoryContent,
-              [PamUserFeedbackCategory.other]: tt.feedbackCategoryOther
-            }
-          }}
-        />
+        <p className="mb-4 text-sm text-secondary-text">{tt.myFeedbackHint}</p>
+        <LocaleLink
+          href={ROUTE_ACCOUNT_FEEDBACK}
+          locale={locale}
+          title={tt.myFeedbackLink}
+          className="inline-flex text-sm font-medium text-brand hover:underline"
+        >
+          {tt.myFeedbackLink}
+        </LocaleLink>
       </section>
     </div>
   );

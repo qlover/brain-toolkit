@@ -59,26 +59,8 @@ export const accountI18n = Object.freeze({
   bindSuccessMerged: commonKeys.COMMON_BIND_EMAIL_SUCCESS_MERGED,
   bindError: commonKeys.COMMON_BIND_EMAIL_ERROR,
 
-  feedbackSectionTitle: accountKeys.PAGE_ACCOUNT_FEEDBACK_SECTION_TITLE,
-  feedbackHint: accountKeys.PAGE_ACCOUNT_FEEDBACK_HINT,
-  feedbackCategory: accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY,
-  feedbackBody: accountKeys.PAGE_ACCOUNT_FEEDBACK_BODY,
-  feedbackBodyPlaceholder: accountKeys.PAGE_ACCOUNT_FEEDBACK_BODY_PLACEHOLDER,
-  feedbackScreenshots: accountKeys.PAGE_ACCOUNT_FEEDBACK_SCREENSHOTS,
-  feedbackScreenshotsAdd: accountKeys.PAGE_ACCOUNT_FEEDBACK_SCREENSHOTS_ADD,
-  feedbackDeviceNotice: accountKeys.PAGE_ACCOUNT_FEEDBACK_DEVICE_NOTICE,
-  feedbackSubmit: accountKeys.PAGE_ACCOUNT_FEEDBACK_SUBMIT,
-  feedbackSubmitting: accountKeys.PAGE_ACCOUNT_FEEDBACK_SUBMITTING,
-  feedbackSuccess: accountKeys.PAGE_ACCOUNT_FEEDBACK_SUCCESS,
-  feedbackScreenshotsError: accountKeys.PAGE_ACCOUNT_FEEDBACK_SCREENSHOTS_ERROR,
-  feedbackError: accountKeys.PAGE_ACCOUNT_FEEDBACK_ERROR,
-  feedbackCategoryBug: accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY_BUG,
-  feedbackCategoryUx: accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY_UX,
-  feedbackCategoryFeature: accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY_FEATURE,
-  feedbackCategoryPerformance:
-    accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY_PERFORMANCE,
-  feedbackCategoryContent: accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY_CONTENT,
-  feedbackCategoryOther: accountKeys.PAGE_ACCOUNT_FEEDBACK_CATEGORY_OTHER
+  myFeedbackLink: accountKeys.PAGE_ACCOUNT_MY_FEEDBACK_LINK,
+  myFeedbackHint: accountKeys.PAGE_ACCOUNT_MY_FEEDBACK_HINT
 });
 
 export type AccountI18nInterface = typeof accountI18n;

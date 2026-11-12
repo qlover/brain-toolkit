@@ -147,6 +147,11 @@ export const ROUTE_DEVELOPER_APPS = '/developer/apps' as const;
  */
 export const ROUTE_ACCOUNT = '/account' as const;
 
+/**
+ * Current user's feedback history. Pages Router: `src/pages/[locale]/account/feedback.tsx`.
+ */
+export const ROUTE_ACCOUNT_FEEDBACK = '/account/feedback' as const;
+
 /** OAuth 2.0 authorization consent page. */
 export const ROUTE_OAUTH_AUTHORIZE = '/oauth/authorize' as const;
 
@@ -242,6 +247,7 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN_LOCALES,
   ROUTE_DEVELOPER_APPS,
   ROUTE_ACCOUNT,
+  ROUTE_ACCOUNT_FEEDBACK,
   ROUTE_OAUTH_PLAYGROUND,
   // Consent requires an app session; gate here so unauthenticated users
   // are sent to login with `?redirect=<full authorize URL>` via redirectToPath.
