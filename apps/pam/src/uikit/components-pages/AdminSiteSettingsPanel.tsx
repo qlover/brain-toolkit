@@ -247,6 +247,20 @@ export function AdminSiteSettingsPanel({
     PAM_SITE_SETTING_KEYS.STORAGE_SCREENSHOT_URL_TEMPLATE
   ] as const;
 
+  const githubFeedbackToggleKey =
+    PAM_SITE_SETTING_KEYS.GITHUB_FEEDBACK_SYNC_ENABLED;
+  const githubFeedbackTextKeys = [
+    PAM_SITE_SETTING_KEYS.GITHUB_APP_ID,
+    PAM_SITE_SETTING_KEYS.GITHUB_APP_INSTALLATION_ID,
+    PAM_SITE_SETTING_KEYS.GITHUB_APP_PRIVATE_KEY,
+    PAM_SITE_SETTING_KEYS.GITHUB_FEEDBACK_REPO,
+    PAM_SITE_SETTING_KEYS.GITHUB_WEBHOOK_SECRET
+  ] as const;
+  const githubFeedbackKeys = [
+    githubFeedbackToggleKey,
+    ...githubFeedbackTextKeys
+  ];
+
   return (
     <div
       data-testid="AdminSiteSettingsPanel"
@@ -582,6 +596,62 @@ export function AdminSiteSettingsPanel({
               />
             </SettingRow>
           ))}
+        </div>
+      </PAMSettingsCard>
+
+      <PAMSettingsCard
+        title={tt.sectionGithubFeedback}
+        description={tt.sectionGithubFeedbackDesc}
+        saveLabel={tt.save}
+        savingLabel={tt.saving}
+        saving={savingSection === 'githubFeedback'}
+        onSave={() => patchSection('githubFeedback', githubFeedbackKeys)}
+      >
+        <div>
+          <SettingRow
+            entry={byKey.get(githubFeedbackToggleKey)}
+            tt={tt}
+            layout="inline"
+          >
+            <SettingToggleSwitch
+              checked={Boolean(
+                getDraftValue(
+                  draft,
+                  byKey.get(githubFeedbackToggleKey),
+                  githubFeedbackToggleKey
+                ) === true
+              )}
+              onChange={(checked) =>
+                setDraftValue(githubFeedbackToggleKey, checked)
+              }
+            />
+          </SettingRow>
+          {githubFeedbackTextKeys.map((key) => {
+            const entry = byKey.get(key);
+            const raw = getDraftValue(draft, entry, key);
+            const isSensitive = entry?.isSensitive;
+            const value =
+              isSensitive && raw === PAM_SITE_SETTING_SECRET_UNCHANGED
+                ? ''
+                : String(raw);
+            const placeholder =
+              key === PAM_SITE_SETTING_KEYS.GITHUB_FEEDBACK_REPO
+                ? 'qlover/brain-toolkit'
+                : isSensitive
+                  ? tt.secretHint
+                  : undefined;
+            return (
+              <SettingRow key={key} entry={entry} tt={tt}>
+                <input
+                  type={isSensitive ? 'password' : 'text'}
+                  value={value}
+                  placeholder={placeholder}
+                  onChange={(event) => setDraftValue(key, event.target.value)}
+                  className={pamFormFieldClass}
+                />
+              </SettingRow>
+            );
+          })}
         </div>
       </PAMSettingsCard>
     </div>

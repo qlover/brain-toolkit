@@ -134,6 +134,21 @@ export const PERMISSION_ADMIN_MAIL_LOGS_READ =
 export const PERMISSION_ADMIN_MAIL_TEST = 'permission:admin_mail_test';
 
 /**
+ * @description List user feedback
+ * @localZh 查看用户反馈
+ * @localEn List user feedback
+ */
+export const PERMISSION_ADMIN_FEEDBACK_READ = 'permission:admin_feedback_read';
+
+/**
+ * @description Update feedback status or create GitHub issue
+ * @localZh 更新反馈状态或创建 GitHub Issue
+ * @localEn Update feedback status or create GitHub issue
+ */
+export const PERMISSION_ADMIN_FEEDBACK_UPDATE =
+  'permission:admin_feedback_update';
+
+/**
  * @description List project collaborators
  * @localZh 查看项目协作者
  * @localEn List project collaborators

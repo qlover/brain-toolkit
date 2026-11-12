@@ -140,6 +140,13 @@ export const COMMON_ADMIN_NAV_MEMORY_KV = 'common:admin_nav__memory_kv';
 export const COMMON_ADMIN_NAV_MAIL_LOGS = 'common:admin_nav__mail_logs';
 
 /**
+ * @description Admin sidebar nav - User feedback
+ * @localZh 用户反馈
+ * @localEn Feedback
+ */
+export const COMMON_ADMIN_NAV_FEEDBACK = 'common:admin_nav__feedback';
+
+/**
  * @description logout dialog title
  * @localZh 登出
  * @localEn Logout

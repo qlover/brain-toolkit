@@ -1,5 +1,6 @@
 import * as commonTablesKeys from '../i18n-identifier/common/admin.table';
 import * as commonKeys from '../i18n-identifier/common/common';
+import * as feedbackKeys from '../i18n-identifier/pages/page.admin.feedback';
 import * as homeKeys from '../i18n-identifier/pages/page.admin.home';
 import * as localesKeys from '../i18n-identifier/pages/page.admin.locales';
 import * as mailLogsKeys from '../i18n-identifier/pages/page.admin.mail-logs';
@@ -59,6 +60,8 @@ export type AdminMemoryKvI18nInterface = typeof adminMemoryKv18n;
 export type AdminMailLogsI18nInterface = typeof adminMailLogs18n;
 
 export type AdminLocalesI18nInterface = typeof adminLocales18n;
+
+export type AdminFeedbackI18nInterface = typeof adminFeedback18n;
 
 export const adminRoles18n = Object.freeze({
   title: rolesKeys.ADMIN_ROLES_TITLE,
@@ -213,6 +216,9 @@ export const adminSettings18n = Object.freeze({
   sectionApiDesc: settingsKeys.ADMIN_SETTINGS_SECTION_API_DESC,
   sectionStorage: settingsKeys.ADMIN_SETTINGS_SECTION_STORAGE,
   sectionStorageDesc: settingsKeys.ADMIN_SETTINGS_SECTION_STORAGE_DESC,
+  sectionGithubFeedback: settingsKeys.ADMIN_SETTINGS_SECTION_GITHUB_FEEDBACK,
+  sectionGithubFeedbackDesc:
+    settingsKeys.ADMIN_SETTINGS_SECTION_GITHUB_FEEDBACK_DESC,
   loading: settingsKeys.ADMIN_SETTINGS_LOADING,
   save: settingsKeys.ADMIN_SETTINGS_SAVE,
   saving: settingsKeys.ADMIN_SETTINGS_SAVING,
@@ -285,6 +291,35 @@ export const adminRequestLogs18n = Object.freeze({
   colLoginMethod: requestLogsKeys.ADMIN_REQUEST_LOGS_COL_LOGIN_METHOD,
   colError: requestLogsKeys.ADMIN_REQUEST_LOGS_COL_ERROR,
   empty: requestLogsKeys.ADMIN_REQUEST_LOGS_EMPTY
+});
+
+export const adminFeedback18n = Object.freeze({
+  title: feedbackKeys.ADMIN_FEEDBACK_TITLE,
+  description: feedbackKeys.ADMIN_FEEDBACK_DESCRIPTION,
+  content: feedbackKeys.ADMIN_FEEDBACK_DESCRIPTION,
+  keywords: feedbackKeys.ADMIN_FEEDBACK_KEYWORDS,
+  empty: feedbackKeys.ADMIN_FEEDBACK_EMPTY,
+  loadFailed: feedbackKeys.ADMIN_FEEDBACK_LOAD_FAILED,
+  colUser: feedbackKeys.ADMIN_FEEDBACK_COL_USER,
+  colCategory: feedbackKeys.ADMIN_FEEDBACK_COL_CATEGORY,
+  colBody: feedbackKeys.ADMIN_FEEDBACK_COL_BODY,
+  colStatus: feedbackKeys.ADMIN_FEEDBACK_COL_STATUS,
+  colGithub: feedbackKeys.ADMIN_FEEDBACK_COL_GITHUB,
+  colTime: feedbackKeys.ADMIN_FEEDBACK_COL_TIME,
+  createIssue: feedbackKeys.ADMIN_FEEDBACK_CREATE_ISSUE,
+  githubNotConfigured: feedbackKeys.ADMIN_FEEDBACK_GITHUB_NOT_CONFIGURED,
+  githubCreateFailed: feedbackKeys.ADMIN_FEEDBACK_GITHUB_CREATE_FAILED,
+  statusChangeFailed: feedbackKeys.ADMIN_FEEDBACK_STATUS_CHANGE_FAILED,
+  categoryBug: feedbackKeys.ADMIN_FEEDBACK_CATEGORY_BUG,
+  categoryUx: feedbackKeys.ADMIN_FEEDBACK_CATEGORY_UX,
+  categoryFeature: feedbackKeys.ADMIN_FEEDBACK_CATEGORY_FEATURE,
+  categoryPerformance: feedbackKeys.ADMIN_FEEDBACK_CATEGORY_PERFORMANCE,
+  categoryContent: feedbackKeys.ADMIN_FEEDBACK_CATEGORY_CONTENT,
+  categoryOther: feedbackKeys.ADMIN_FEEDBACK_CATEGORY_OTHER,
+  statusOpen: feedbackKeys.ADMIN_FEEDBACK_STATUS_OPEN,
+  statusReviewing: feedbackKeys.ADMIN_FEEDBACK_STATUS_REVIEWING,
+  statusResolved: feedbackKeys.ADMIN_FEEDBACK_STATUS_RESOLVED,
+  statusClosed: feedbackKeys.ADMIN_FEEDBACK_STATUS_CLOSED
 });
 
 export const adminUsers18n = Object.freeze({
