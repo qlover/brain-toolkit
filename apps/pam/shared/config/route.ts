@@ -96,6 +96,11 @@ export const ROUTE_ADMIN_SETTINGS = '/admin/settings' as const;
  */
 export const ROUTE_ADMIN_LOCALES = '/admin/locales' as const;
 
+/**
+ * Admin user feedback. Pages Router: `src/pages/[locale]/admin/feedback.tsx`.
+ */
+export const ROUTE_ADMIN_FEEDBACK = '/admin/feedback' as const;
+
 export const ROUTE_HOME = '/' as const;
 
 /**
@@ -231,6 +236,7 @@ export const LOGINED_PAGES = [
   ROUTE_ADMIN_PHONE_OTPS,
   ROUTE_ADMIN_MEMORY_KV,
   ROUTE_ADMIN_MAIL_LOGS,
+  ROUTE_ADMIN_FEEDBACK,
   ROUTE_REQUEST_LOGS,
   ROUTE_ADMIN_SETTINGS,
   ROUTE_ADMIN_LOCALES,
