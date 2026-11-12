@@ -34,6 +34,8 @@ export const PermissionKey = {
   admin_memory_kv_write: 'admin_memory_kv_write',
   admin_mail_logs_read: 'admin_mail_logs_read',
   admin_mail_test: 'admin_mail_test',
+  admin_feedback_read: 'admin_feedback_read',
+  admin_feedback_update: 'admin_feedback_update',
 
   // —— platform app ——
   pam_project_create: 'pam_project_create',

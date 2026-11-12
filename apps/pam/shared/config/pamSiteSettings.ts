@@ -1,4 +1,4 @@
-﻿import {
+import {
   SITE_SETTING_CORS_RULES_KEY,
   SITE_SETTING_SECRET_UNCHANGED,
   SiteSettingRegistry,
@@ -52,7 +52,15 @@ export const PAM_SITE_SETTING_KEYS = {
   API_CORS_RULES: SITE_SETTING_CORS_RULES_KEY,
 
   STORAGE_PREVIEW_BUCKET: 'storage.preview_bucket',
-  STORAGE_SCREENSHOT_URL_TEMPLATE: 'storage.screenshot_url_template'
+  STORAGE_SCREENSHOT_URL_TEMPLATE: 'storage.screenshot_url_template',
+
+  /** 反馈自动同步到 GitHub Issue */
+  GITHUB_FEEDBACK_SYNC_ENABLED: 'github.feedback_sync_enabled',
+  GITHUB_APP_ID: 'github.app_id',
+  GITHUB_APP_INSTALLATION_ID: 'github.app_installation_id',
+  GITHUB_APP_PRIVATE_KEY: 'github.app_private_key',
+  GITHUB_FEEDBACK_REPO: 'github.feedback_repo',
+  GITHUB_WEBHOOK_SECRET: 'github.webhook_secret'
 } as const;
 
 export type PamSiteSettingKey =
@@ -316,6 +324,49 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       description:
         '生成项目预览图时使用的截图服务地址，{url} 为占位符。留空则使用 Microlink 默认。',
       isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.GITHUB_FEEDBACK_SYNC_ENABLED,
+      label: '反馈同步 GitHub Issue',
+      description:
+        '用户提交反馈后是否自动用 GitHub App 在目标仓库创建 Issue。关闭后仍可在 Admin 手动补建。',
+      isSensitive: false,
+      defaultValue: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.GITHUB_APP_ID,
+      label: 'GitHub App ID',
+      description:
+        'GitHub App 数字 ID（Settings → Developer settings → GitHub Apps）。',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.GITHUB_APP_INSTALLATION_ID,
+      label: 'GitHub App Installation ID',
+      description:
+        'App 安装到组织/用户后的 installation id（安装页 URL 或 API 可查）。',
+      isSensitive: false
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.GITHUB_APP_PRIVATE_KEY,
+      label: 'GitHub App Private Key',
+      description:
+        'App 私钥 PEM（含 BEGIN/END PRIVATE KEY）。加密存储，界面不回显明文。',
+      isSensitive: true
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.GITHUB_FEEDBACK_REPO,
+      label: '反馈 Issue 仓库',
+      description: 'owner/repo，默认 qlover/brain-toolkit。',
+      isSensitive: false,
+      defaultValue: 'qlover/brain-toolkit'
+    },
+    {
+      key: PAM_SITE_SETTING_KEYS.GITHUB_WEBHOOK_SECRET,
+      label: 'GitHub Webhook Secret',
+      description:
+        '接收 issues 事件的 webhook secret，用于 HMAC 验签。加密存储。',
+      isSensitive: true
     }
   ]);
 
