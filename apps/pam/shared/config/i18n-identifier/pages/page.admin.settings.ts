@@ -166,6 +166,22 @@ export const ADMIN_SETTINGS_SECTION_STORAGE_DESC =
   'admin_settings:section__storage_desc';
 
 /**
+ * @description GitHub feedback sync section title
+ * @localZh Feedback → GitHub
+ * @localEn Feedback → GitHub
+ */
+export const ADMIN_SETTINGS_SECTION_GITHUB_FEEDBACK =
+  'admin_settings:section__github_feedback';
+
+/**
+ * @description GitHub feedback sync section description
+ * @localZh 用 GitHub App 把用户反馈同步为 Issue，并接收 webhook 回写状态
+ * @localEn Sync user feedback to Issues via GitHub App; webhook updates status
+ */
+export const ADMIN_SETTINGS_SECTION_GITHUB_FEEDBACK_DESC =
+  'admin_settings:section__github_feedback_desc';
+
+/**
  * @description Loading state label
  * @localZh 加载中…
  * @localEn Loading…

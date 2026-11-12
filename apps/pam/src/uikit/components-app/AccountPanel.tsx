@@ -3,6 +3,7 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { isI18nKey, type TranslateFn } from '@qlover/next-kit/common';
+import { useLocale } from 'next-intl';
 import {
   type FormEvent,
   type ReactNode,
@@ -13,6 +14,7 @@ import {
 
 import { AppUserGateway } from '@/impls/AppUserGateway';
 import type { UserService } from '@/impls/UserService';
+import { LocaleLink } from '@/uikit/components/LocaleLink';
 import { BindEmailForm } from '@/uikit/components-app/BindEmailForm';
 import { ChangePasswordForm } from '@/uikit/components-app/ChangePasswordForm';
 import { LinkedLoginsSection } from '@/uikit/components-app/LinkedLoginsSection';
@@ -26,6 +28,7 @@ import {
 } from '@shared/utils/pamUserIdentity';
 import type { AccountI18nInterface } from '@config/i18n-mapping/accountI18n';
 import { I } from '@config/ioc-identifiter';
+import { ROUTE_ACCOUNT_FEEDBACK } from '@config/route';
 import {
   isValidDisplayName,
   pamDisplayNameUpdateSchema,
@@ -74,6 +77,7 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
   const userService = useIOC(I.UserServiceInterface) as UserService;
   const dialog = useIOC(I.DialogHandler);
   const t = useWarnTranslations();
+  const locale = useLocale();
 
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -332,6 +336,21 @@ export function AccountPanel({ tt }: { tt: AccountI18nInterface }) {
           />
         </section>
       )}
+
+      <section className="rounded-2xl border border-primary-border bg-primary p-5 sm:p-6">
+        <h2 className="mb-2 text-base font-semibold text-primary-text">
+          {tt.myFeedbackLink}
+        </h2>
+        <p className="mb-4 text-sm text-secondary-text">{tt.myFeedbackHint}</p>
+        <LocaleLink
+          href={ROUTE_ACCOUNT_FEEDBACK}
+          locale={locale}
+          title={tt.myFeedbackLink}
+          className="inline-flex text-sm font-medium text-brand hover:underline"
+        >
+          {tt.myFeedbackLink}
+        </LocaleLink>
+      </section>
     </div>
   );
 }

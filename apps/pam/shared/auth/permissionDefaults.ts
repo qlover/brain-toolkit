@@ -22,7 +22,8 @@ const ADMIN_READ = [
   PermissionKey.admin_phone_otps_read,
   PermissionKey.admin_site_settings_read,
   PermissionKey.admin_locales_read,
-  PermissionKey.admin_mail_logs_read
+  PermissionKey.admin_mail_logs_read,
+  PermissionKey.admin_feedback_read
 ] as const;
 
 const ADMIN_WRITE = [
@@ -31,7 +32,8 @@ const ADMIN_WRITE = [
   PermissionKey.admin_roles_write,
   PermissionKey.admin_site_settings_write,
   PermissionKey.admin_locales_write,
-  PermissionKey.admin_mail_test
+  PermissionKey.admin_mail_test,
+  PermissionKey.admin_feedback_update
 ] as const;
 
 /** Super-admin only: permission catalog CRUD (not granted to operator). */

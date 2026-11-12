@@ -248,3 +248,243 @@ export const PAGE_ACCOUNT_PASSWORD_MISMATCH = 'page_account:password_mismatch';
  * @localEn New password must differ from the current password
  */
 export const PAGE_ACCOUNT_PASSWORD_SAME = 'page_account:password_same';
+
+/**
+ * @description Account link to my feedback history
+ * @localZh 我的反馈
+ * @localEn My feedback
+ */
+export const PAGE_ACCOUNT_MY_FEEDBACK_LINK = 'page_account:my_feedback_link';
+
+/**
+ * @description Account my-feedback hint
+ * @localZh 查看你提交过的反馈。新反馈请点右下角「反馈」。
+ * @localEn Review your submissions. Use the floating Feedback button to send new ones.
+ */
+export const PAGE_ACCOUNT_MY_FEEDBACK_HINT = 'page_account:my_feedback_hint';
+
+/**
+ * @description My feedback page title
+ * @localZh 我的反馈
+ * @localEn My feedback
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_TITLE =
+  'page_account:feedback_list_title';
+
+/**
+ * @description My feedback page description
+ * @localZh 仅显示你自己提交的反馈记录
+ * @localEn Only your own feedback submissions
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_DESCRIPTION =
+  'page_account:feedback_list_description';
+
+/**
+ * @description My feedback empty state
+ * @localZh 还没有反馈记录
+ * @localEn No feedback yet
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_EMPTY =
+  'page_account:feedback_list_empty';
+
+/**
+ * @description My feedback load failed
+ * @localZh 加载失败
+ * @localEn Failed to load
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_LOAD_FAILED =
+  'page_account:feedback_list_load_failed';
+
+/**
+ * @description My feedback table - status column
+ * @localZh 状态
+ * @localEn Status
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_COL_STATUS =
+  'page_account:feedback_list_col_status';
+
+/**
+ * @description My feedback table - time column
+ * @localZh 提交时间
+ * @localEn Submitted
+ */
+export const PAGE_ACCOUNT_FEEDBACK_LIST_COL_TIME =
+  'page_account:feedback_list_col_time';
+
+/**
+ * @description Feedback status - open
+ * @localZh 待处理
+ * @localEn Open
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_OPEN =
+  'page_account:feedback_status_open';
+
+/**
+ * @description Feedback status - reviewing
+ * @localZh 处理中
+ * @localEn Reviewing
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_REVIEWING =
+  'page_account:feedback_status_reviewing';
+
+/**
+ * @description Feedback status - resolved
+ * @localZh 已解决
+ * @localEn Resolved
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_RESOLVED =
+  'page_account:feedback_status_resolved';
+
+/**
+ * @description Feedback status - closed
+ * @localZh 已关闭
+ * @localEn Closed
+ */
+export const PAGE_ACCOUNT_FEEDBACK_STATUS_CLOSED =
+  'page_account:feedback_status_closed';
+
+/**
+ * @description Feedback section title (legacy form; kept for locale sync)
+ * @localZh 反馈
+ * @localEn Feedback
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SECTION_TITLE =
+  'page_account:feedback_section_title';
+
+/**
+ * @description Feedback section hint
+ * @localZh 告诉我们哪里不好用，或你希望增加什么。可附带截图。
+ * @localEn Tell us what is broken or what you want. Screenshots optional.
+ */
+export const PAGE_ACCOUNT_FEEDBACK_HINT = 'page_account:feedback_hint';
+
+/**
+ * @description Feedback category label
+ * @localZh 类型
+ * @localEn Category
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY = 'page_account:feedback_category';
+
+/**
+ * @description Feedback body label
+ * @localZh 描述
+ * @localEn Description
+ */
+export const PAGE_ACCOUNT_FEEDBACK_BODY = 'page_account:feedback_body';
+
+/**
+ * @description Feedback body placeholder
+ * @localZh 请尽量说明复现步骤或期望效果
+ * @localEn Steps to reproduce or the outcome you expected
+ */
+export const PAGE_ACCOUNT_FEEDBACK_BODY_PLACEHOLDER =
+  'page_account:feedback_body_placeholder';
+
+/**
+ * @description Feedback screenshots label
+ * @localZh 截图（可选，最多 3 张）
+ * @localEn Screenshots (optional, up to 3)
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SCREENSHOTS =
+  'page_account:feedback_screenshots';
+
+/**
+ * @description Feedback screenshots add
+ * @localZh 添加
+ * @localEn Add
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SCREENSHOTS_ADD =
+  'page_account:feedback_screenshots_add';
+
+/**
+ * @description Feedback device notice
+ * @localZh 提交时会自动附带当前页面与设备环境信息，便于排查。
+ * @localEn Page URL and device context are attached automatically.
+ */
+export const PAGE_ACCOUNT_FEEDBACK_DEVICE_NOTICE =
+  'page_account:feedback_device_notice';
+
+/**
+ * @description Feedback submit
+ * @localZh 提交反馈
+ * @localEn Submit feedback
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SUBMIT = 'page_account:feedback_submit';
+
+/**
+ * @description Feedback submitting
+ * @localZh 提交中…
+ * @localEn Submitting…
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SUBMITTING =
+  'page_account:feedback_submitting';
+
+/**
+ * @description Feedback success
+ * @localZh 感谢反馈，我们已收到。
+ * @localEn Thanks — we got your feedback.
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SUCCESS = 'page_account:feedback_success';
+
+/**
+ * @description Feedback screenshots partial failure
+ * @localZh 反馈已提交，但截图上传失败，可稍后重试。
+ * @localEn Feedback saved, but screenshot upload failed.
+ */
+export const PAGE_ACCOUNT_FEEDBACK_SCREENSHOTS_ERROR =
+  'page_account:feedback_screenshots_error';
+
+/**
+ * @description Feedback submit error
+ * @localZh 提交失败，请稍后重试。
+ * @localEn Submit failed. Please try again.
+ */
+export const PAGE_ACCOUNT_FEEDBACK_ERROR = 'page_account:feedback_error';
+
+/**
+ * @description Feedback category bug
+ * @localZh 功能异常
+ * @localEn Bug
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY_BUG =
+  'page_account:feedback_category_bug';
+
+/**
+ * @description Feedback category ux
+ * @localZh 体验优化
+ * @localEn UX
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY_UX =
+  'page_account:feedback_category_ux';
+
+/**
+ * @description Feedback category feature
+ * @localZh 功能建议
+ * @localEn Feature
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY_FEATURE =
+  'page_account:feedback_category_feature';
+
+/**
+ * @description Feedback category performance
+ * @localZh 速度卡顿
+ * @localEn Performance
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY_PERFORMANCE =
+  'page_account:feedback_category_performance';
+
+/**
+ * @description Feedback category content
+ * @localZh 内容有误
+ * @localEn Content
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY_CONTENT =
+  'page_account:feedback_category_content';
+
+/**
+ * @description Feedback category other
+ * @localZh 其他
+ * @localEn Other
+ */
+export const PAGE_ACCOUNT_FEEDBACK_CATEGORY_OTHER =
+  'page_account:feedback_category_other';

@@ -140,6 +140,13 @@ export const COMMON_ADMIN_NAV_MEMORY_KV = 'common:admin_nav__memory_kv';
 export const COMMON_ADMIN_NAV_MAIL_LOGS = 'common:admin_nav__mail_logs';
 
 /**
+ * @description Admin sidebar nav - User feedback
+ * @localZh 用户反馈
+ * @localEn Feedback
+ */
+export const COMMON_ADMIN_NAV_FEEDBACK = 'common:admin_nav__feedback';
+
+/**
  * @description logout dialog title
  * @localZh 登出
  * @localEn Logout
@@ -345,3 +352,142 @@ export const COMMON_HEADER_NAV_DEVELOPER = 'common:header_nav__developer';
  * @localEn Teams
  */
 export const COMMON_HEADER_NAV_TEAMS = 'common:header_nav__teams';
+
+/**
+ * @description Floating feedback button
+ * @localZh 反馈
+ * @localEn Feedback
+ */
+export const COMMON_FEEDBACK_FAB = 'common:feedback_fab';
+
+/**
+ * @description Feedback modal title
+ * @localZh 提交反馈
+ * @localEn Submit feedback
+ */
+export const COMMON_FEEDBACK_MODAL_TITLE = 'common:feedback_modal_title';
+
+/**
+ * @description Feedback category label
+ * @localZh 类型
+ * @localEn Category
+ */
+export const COMMON_FEEDBACK_CATEGORY = 'common:feedback_category';
+
+/**
+ * @description Feedback body label
+ * @localZh 描述
+ * @localEn Description
+ */
+export const COMMON_FEEDBACK_BODY = 'common:feedback_body';
+
+/**
+ * @description Feedback body placeholder
+ * @localZh 请尽量写清复现步骤或期望行为
+ * @localEn Steps to reproduce or what you expected
+ */
+export const COMMON_FEEDBACK_BODY_PLACEHOLDER =
+  'common:feedback_body_placeholder';
+
+/**
+ * @description Feedback screenshots label
+ * @localZh 截图（可选）
+ * @localEn Screenshots (optional)
+ */
+export const COMMON_FEEDBACK_SCREENSHOTS = 'common:feedback_screenshots';
+
+/**
+ * @description Feedback screenshots add button
+ * @localZh 添加截图
+ * @localEn Add screenshots
+ */
+export const COMMON_FEEDBACK_SCREENSHOTS_ADD =
+  'common:feedback_screenshots_add';
+
+/**
+ * @description Feedback device notice
+ * @localZh 将附带当前设备与浏览器环境，便于排查。
+ * @localEn Device and browser context will be attached.
+ */
+export const COMMON_FEEDBACK_DEVICE_NOTICE = 'common:feedback_device_notice';
+
+/**
+ * @description Feedback submit button
+ * @localZh 提交
+ * @localEn Submit
+ */
+export const COMMON_FEEDBACK_SUBMIT = 'common:feedback_submit';
+
+/**
+ * @description Feedback submitting state
+ * @localZh 提交中…
+ * @localEn Submitting…
+ */
+export const COMMON_FEEDBACK_SUBMITTING = 'common:feedback_submitting';
+
+/**
+ * @description Feedback success message
+ * @localZh 已收到，感谢反馈。
+ * @localEn Thanks — we got your feedback.
+ */
+export const COMMON_FEEDBACK_SUCCESS = 'common:feedback_success';
+
+/**
+ * @description Feedback screenshots upload error
+ * @localZh 反馈已提交，但截图上传失败
+ * @localEn Feedback saved, but screenshot upload failed
+ */
+export const COMMON_FEEDBACK_SCREENSHOTS_ERROR =
+  'common:feedback_screenshots_error';
+
+/**
+ * @description Feedback submit error
+ * @localZh 提交失败，请稍后重试
+ * @localEn Submit failed, please try again
+ */
+export const COMMON_FEEDBACK_ERROR = 'common:feedback_error';
+
+/**
+ * @description Feedback category - bug
+ * @localZh 功能异常
+ * @localEn Bug
+ */
+export const COMMON_FEEDBACK_CATEGORY_BUG = 'common:feedback_category_bug';
+
+/**
+ * @description Feedback category - ux
+ * @localZh 体验优化
+ * @localEn UX
+ */
+export const COMMON_FEEDBACK_CATEGORY_UX = 'common:feedback_category_ux';
+
+/**
+ * @description Feedback category - feature
+ * @localZh 功能建议
+ * @localEn Feature
+ */
+export const COMMON_FEEDBACK_CATEGORY_FEATURE =
+  'common:feedback_category_feature';
+
+/**
+ * @description Feedback category - performance
+ * @localZh 速度卡顿
+ * @localEn Performance
+ */
+export const COMMON_FEEDBACK_CATEGORY_PERFORMANCE =
+  'common:feedback_category_performance';
+
+/**
+ * @description Feedback category - content
+ * @localZh 内容有误
+ * @localEn Content
+ */
+export const COMMON_FEEDBACK_CATEGORY_CONTENT =
+  'common:feedback_category_content';
+
+/**
+ * @description Feedback category - other
+ * @localZh 其他
+ * @localEn Other
+ */
+export const COMMON_FEEDBACK_CATEGORY_OTHER = 'common:feedback_category_other';

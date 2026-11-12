@@ -38,6 +38,11 @@
       "@brain-toolkit/bridge/*": ["./packages/bridge/src/*"],
       "@brain-toolkit/element-sizer": ["./packages/element-sizer/src"],
       "@brain-toolkit/element-sizer/*": ["./packages/element-sizer/src/*"],
+      "@brain-toolkit/issue-forge": ["./packages/issue-forge/src"],
+      "@brain-toolkit/issue-forge/feedback": [
+        "./packages/issue-forge/src/feedback"
+      ],
+      "@brain-toolkit/issue-forge/*": ["./packages/issue-forge/src/*"],
       "@brain-toolkit/ts2locales": ["./packages/ts2locales/src"],
       "@brain-toolkit/ts2locales/*": ["./packages/ts2locales/src/*"],
       "@brain-toolkit/brain-user": ["./packages/brain-user/src"],

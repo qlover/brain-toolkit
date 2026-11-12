@@ -57,7 +57,10 @@ export const accountI18n = Object.freeze({
   bindVerify: commonKeys.COMMON_BIND_EMAIL_VERIFY,
   bindSuccess: commonKeys.COMMON_BIND_EMAIL_SUCCESS,
   bindSuccessMerged: commonKeys.COMMON_BIND_EMAIL_SUCCESS_MERGED,
-  bindError: commonKeys.COMMON_BIND_EMAIL_ERROR
+  bindError: commonKeys.COMMON_BIND_EMAIL_ERROR,
+
+  myFeedbackLink: accountKeys.PAGE_ACCOUNT_MY_FEEDBACK_LINK,
+  myFeedbackHint: accountKeys.PAGE_ACCOUNT_MY_FEEDBACK_HINT
 });
 
 export type AccountI18nInterface = typeof accountI18n;
