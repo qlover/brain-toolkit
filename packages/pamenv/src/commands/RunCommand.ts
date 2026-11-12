@@ -78,6 +78,7 @@ export type PamCliRunOptionsType = {
   readonly keepEnv?: PamCliKeyListType;
   /**
    * 是否使用进程内注入缓存。默认 true；false 强制本趟重做。
+   * 开启时：命中复用明文；过期重拉失败则 stale-on-error（保留旧值）。
    * CLI 子进程场景通常无关；inject / ensure 运行时使用。
    */
   readonly cache?: boolean;

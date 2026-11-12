@@ -39,7 +39,8 @@ import type { PamenvBagInterface } from '../interfaces/PamenvBagInterface';
  * ### only / omit / keepEnv / cache
  * 与 CLI 同源：`only` 白名单、`omit` 黑名单（互斥）；
  * `keepEnv` 在 {@link DEFAULT_PAMENV_KEEP_ENV} 之上**追加**（不必每次抄平台键）；
- * `cache` 默认 true。
+ * `cache` 默认 true：进程内复用上次成功明文；过期刷新失败时 **stale-on-error**
+ *（不断网重拉失败仍返回旧值，进程不退出可继续用）。
  *
  * ### snapshotPath
  * CI 注入成功后写入密封部署快照（无明文）；运行时 `ensurePamenvRuntimeEnv` 解封。
@@ -130,6 +131,7 @@ type PamenvInjectRunResultType = {
 type PamenvInjectCacheEntryType = {
   readonly promise: Promise<PamenvInjectRunResultType>;
   expiresAtMs: number;
+  /** 上次成功解出的明文；刷新失败时 stale 回落 */
   values: Readonly<Record<string, string>>;
 };
 
@@ -159,6 +161,9 @@ export function resolvePamenvEnabled(enabled: boolean | undefined): boolean {
 
 /**
  * 将 resolve 后的变量写入 `process.env`；可选写出密封部署快照。
+ *
+ * 缓存命中 / stale 回落时仍会把明文**补写回** `process.env`
+ *（避免 Next Fast Refresh 后进程键被清空却仍跳过重拉）。
  */
 export async function injectPamenvProcessEnv(
   options: PamenvInjectOptions
@@ -169,11 +174,14 @@ export async function injectPamenvProcessEnv(
 
   const resolved = resolvePamenvInjectOptions(options);
   const cwd = resolved.cwd ?? /* turbopackIgnore: true */ process.cwd();
-  await runWithInjectCache(
+  const debug = resolveInjectDebug(options.debug);
+  const values = await runWithInjectCache(
     buildInjectCacheKey(resolved, cwd),
     options.cache !== false,
-    () => applyPamenvProcessEnv(resolved, cwd)
+    () => applyPamenvProcessEnv(resolved, cwd),
+    debug
   );
+  applyCachedValuesToProcessEnv(values);
 }
 
 /**
@@ -208,10 +216,12 @@ export async function ensurePamenvRuntimeEnv(
     const resolved = resolvePamenvSnapshotRuntimeOptions(options);
     const cwd = resolved.cwd ?? /* turbopackIgnore: true */ process.cwd();
     const key = `snapshot\0${snapshotPath}\0${buildInjectCacheKey(resolved, cwd)}`;
+    const debug = resolveInjectDebug(options.debug);
     const values = await runWithInjectCache(
       key,
       options.cache !== false,
-      () => openDeploySnapshot(resolved, snapshotPath)
+      () => openDeploySnapshot(resolved, snapshotPath),
+      debug
     );
     const bag = new PamenvBag(values);
     if (options.writeProcessEnv === true) {
@@ -338,26 +348,53 @@ export function resolveActiveOidcProvider(
   return undefined;
 }
 
+/**
+ * 进程内注入/解封缓存。
+ *
+ * - 未过期且已有明文 → 直接返回
+ * - 过期或未命中 → 重跑；失败时若已有明文则 stale-on-error，不删旧值
+ * - `useCache === false` → 不读写缓存，失败即抛
+ *
+ * @internal 单测可经 {@link runWithInjectCacheForTests} 调用
+ */
 async function runWithInjectCache(
   key: string,
   useCache: boolean,
-  run: () => Promise<PamenvInjectRunResultType>
+  run: () => Promise<PamenvInjectRunResultType>,
+  debug = false
 ): Promise<Readonly<Record<string, string>>> {
-  if (useCache) {
-    const existing = injected.get(key);
-    if (existing && isInjectCacheFresh(existing)) {
-      await existing.promise;
-      return existing.values;
-    }
-    if (existing) {
-      injected.delete(key);
-    }
-  } else {
+  if (!useCache) {
     injected.delete(key);
+    const result = await run();
+    return result.values;
   }
 
-  let expiresAtMs = Number.POSITIVE_INFINITY;
-  let values: Readonly<Record<string, string>> = Object.freeze({});
+  const existing = injected.get(key);
+  if (existing && isInjectCacheFresh(existing)) {
+    try {
+      await existing.promise;
+    } catch (error: unknown) {
+      if (hasInjectCacheValues(existing.values)) {
+        return existing.values;
+      }
+      throw error;
+    }
+    if (hasInjectCacheValues(existing.values)) {
+      return existing.values;
+    }
+  }
+
+  const staleValues = existing?.values;
+  const staleExpiresAtMs =
+    existing?.expiresAtMs ?? Number.POSITIVE_INFINITY;
+
+  let expiresAtMs = staleExpiresAtMs;
+  let values: Readonly<Record<string, string>> = hasInjectCacheValues(
+    staleValues ?? Object.freeze({})
+  )
+    ? (staleValues as Readonly<Record<string, string>>)
+    : Object.freeze({});
+
   const task = run()
     .then((result) => {
       expiresAtMs = result.expiresAtMs;
@@ -370,15 +407,66 @@ async function runWithInjectCache(
       return result;
     })
     .catch((error: unknown) => {
+      if (hasInjectCacheValues(staleValues ?? Object.freeze({}))) {
+        const kept = staleValues as Readonly<Record<string, string>>;
+        injected.set(key, {
+          promise: Promise.resolve({
+            expiresAtMs: staleExpiresAtMs,
+            values: kept
+          }),
+          expiresAtMs: staleExpiresAtMs,
+          values: kept
+        });
+        if (debug) {
+          process.stderr.write(
+            `[pamenv] inject/open refresh failed; reusing process cache (${Object.keys(kept).length} keys)\n`
+          );
+        }
+        return {
+          expiresAtMs: staleExpiresAtMs,
+          values: kept
+        };
+      }
       injected.delete(key);
       throw error;
     });
 
-  if (useCache) {
-    injected.set(key, { promise: task, expiresAtMs, values });
+  injected.set(key, {
+    promise: task,
+    expiresAtMs,
+    values
+  });
+  const settled = await task;
+  return settled.values;
+}
+
+/**
+ * @internal 单测：直接验证缓存 / stale-on-error。
+ */
+export async function runWithInjectCacheForTests(
+  key: string,
+  useCache: boolean,
+  run: () => Promise<PamenvInjectRunResultType>,
+  debug = false
+): Promise<Readonly<Record<string, string>>> {
+  return runWithInjectCache(key, useCache, run, debug);
+}
+
+function hasInjectCacheValues(
+  values: Readonly<Record<string, string>>
+): boolean {
+  return Object.keys(values).length > 0;
+}
+
+/**
+ * 把缓存中的明文补回 `process.env`（只写有值的键，不删其它键）。
+ */
+function applyCachedValuesToProcessEnv(
+  values: Readonly<Record<string, string>>
+): void {
+  for (const [name, value] of Object.entries(values)) {
+    process.env[name] = value;
   }
-  await task;
-  return values;
 }
 
 function buildInjectCacheKey(
@@ -454,11 +542,13 @@ async function applyPamenvProcessEnv(
     cwd
   );
 
+  const written: Record<string, string> = {};
   for (const [name, value] of Object.entries(prepared.env)) {
     if (value === undefined) {
       delete process.env[name];
     } else {
       process.env[name] = value;
+      written[name] = value;
     }
   }
 
@@ -485,7 +575,7 @@ async function applyPamenvProcessEnv(
     expiresAtMs: Number.isFinite(expiresAtMs)
       ? expiresAtMs
       : Number.POSITIVE_INFINITY,
-    values: Object.freeze({})
+    values: Object.freeze(written)
   };
 }
 
