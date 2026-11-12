@@ -1,0 +1,42 @@
+{
+  "name": "@brain-toolkit/issue-forge",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Forge-agnostic Issue gateway + optional feedback→Issue sync engines; GitHub App first",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./feedback": {
+      "types": "./src/feedback/index.ts",
+      "import": "./src/feedback/index.ts",
+      "default": "./src/feedback/index.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qlover/brain-toolkit.git",
+    "directory": "packages/issue-forge"
+  },
+  "author": "qlover",
+  "license": "ISC",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10"
+  },
+  "keywords": [
+    "github-app",
+    "issue",
+    "forge",
+    "webhook"
+  ]
+}
