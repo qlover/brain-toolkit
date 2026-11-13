@@ -3,9 +3,13 @@ import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { after } from 'next/server';
 import { inject, injectable } from '@shared/container';
 import {
-  API_NOT_AUTHORIZED,
-  API_SERVER_ERROR,
-  API_USER_NOT_FOUND
+  API_FEEDBACK_NOT_FOUND,
+  API_FEEDBACK_SCREENSHOT_EMPTY,
+  API_FEEDBACK_SCREENSHOT_TOO_LARGE,
+  API_FEEDBACK_SCREENSHOT_TYPE_UNSUPPORTED,
+  API_FEEDBACK_SCREENSHOTS_REQUIRED,
+  API_FEEDBACK_SCREENSHOTS_TOO_MANY,
+  API_NOT_AUTHORIZED
 } from '@config/i18n-identifier/api';
 import {
   PAM_FEEDBACK_SCREENSHOT_MAX_BYTES,
@@ -81,7 +85,7 @@ export class PamUserFeedbackService {
       status
     );
     if (saved === null) {
-      throw new ExecutorError(API_USER_NOT_FOUND, 'feedback not found');
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
     }
     return { ok: true, id: feedbackId, status: saved };
   }
@@ -92,7 +96,7 @@ export class PamUserFeedbackService {
     await this.issueBundle.sync.syncFeedback(feedbackId, { manual: true });
     const item = await this.feedbackRepo.findByIdAsAdmin(feedbackId);
     if (!item) {
-      throw new ExecutorError(API_USER_NOT_FOUND, 'feedback not found');
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
     }
     return {
       ok: true,
@@ -109,29 +113,26 @@ export class PamUserFeedbackService {
     files: readonly PamFeedbackScreenshotUploadType[]
   ): Promise<PamUserFeedbackScreenshotsOkType> {
     if (files.length === 0) {
-      throw new ExecutorError(API_SERVER_ERROR, 'screenshots required');
+      throw new ExecutorError(API_FEEDBACK_SCREENSHOTS_REQUIRED);
     }
     if (files.length > PAM_FEEDBACK_SCREENSHOT_MAX_COUNT) {
-      throw new ExecutorError(API_SERVER_ERROR, 'too many screenshots');
+      throw new ExecutorError(API_FEEDBACK_SCREENSHOTS_TOO_MANY);
     }
     const userId = await this.requireUserId();
     const ownedId = await this.feedbackRepo.findOwnedId(feedbackId, userId);
     if (ownedId === null) {
-      throw new ExecutorError(API_USER_NOT_FOUND, 'feedback not found');
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
     }
     const paths: string[] = [];
     for (const [index, file] of files.entries()) {
       if (file.bytes.byteLength === 0) {
-        throw new ExecutorError(API_SERVER_ERROR, 'empty screenshot');
+        throw new ExecutorError(API_FEEDBACK_SCREENSHOT_EMPTY);
       }
       if (file.bytes.byteLength > PAM_FEEDBACK_SCREENSHOT_MAX_BYTES) {
-        throw new ExecutorError(API_SERVER_ERROR, 'screenshot too large');
+        throw new ExecutorError(API_FEEDBACK_SCREENSHOT_TOO_LARGE);
       }
       if (!isAllowedImageType(file.contentType)) {
-        throw new ExecutorError(
-          API_SERVER_ERROR,
-          'unsupported screenshot type'
-        );
+        throw new ExecutorError(API_FEEDBACK_SCREENSHOT_TYPE_UNSUPPORTED);
       }
       const ext = extensionForContentType(file.contentType);
       const objectPath = `${userId}/${feedbackId}/${randomUUID()}-${String(index)}.${ext}`;
