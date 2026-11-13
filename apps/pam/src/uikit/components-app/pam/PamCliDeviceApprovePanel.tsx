@@ -52,9 +52,7 @@ export function PamCliDeviceApprovePanel() {
       if (isNextKitApiError(body)) {
         const translated = isI18nKey(body.id) ? t(body.id) : '';
         throw new Error(
-          translated && translated !== body.id
-            ? translated
-            : tt.approveFailed
+          translated && translated !== body.id ? translated : tt.approveFailed
         );
       }
 

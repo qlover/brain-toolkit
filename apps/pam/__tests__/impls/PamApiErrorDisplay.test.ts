@@ -1,11 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
 import { ExecutorError } from '@qlover/fe-corekit/executor';
+import { describe, expect, it, vi } from 'vitest';
 import { PamApiErrorDisplay } from '@/impls/PamApiErrorDisplay';
 import type { I18nServiceInterface } from '@qlover/next-kit/common';
 
-function createI18n(
-  table: Record<string, string>
-): I18nServiceInterface {
+function createI18n(table: Record<string, string>): I18nServiceInterface {
   return {
     t: (key: string) => table[key] ?? key
   } as I18nServiceInterface;

@@ -1,4 +1,3 @@
-import { ExecutorError } from '@qlover/fe-corekit/executor';
 import { isRequestAdapterResponse } from '@qlover/fe-corekit/request';
 import {
   isI18nKey,
@@ -7,6 +6,7 @@ import {
   type NextKitApiError
 } from '@qlover/next-kit/common';
 import { COMMON_API_REQUEST_FAILED } from '@config/i18n-identifier/common/common';
+import type { ExecutorError } from '@qlover/fe-corekit/executor';
 
 export type PamApiErrorDisplayOptionsType = {
   /** 缺译时的兜底 i18n key；默认 {@link COMMON_API_REQUEST_FAILED} */
