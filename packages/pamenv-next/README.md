@@ -24,7 +24,7 @@ const withPamenv = createPamenvPlugin({
 export default withPamenv(withNextIntl(nextConfig));
 ```
 
-Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`，不会用 `~/.pam`），不要写进这个对象。未登录时请在仓库根或项目目录执行 `pamenv login --local`。
+Token 解析与 CLI 自动模式一致：优先向上查找最近的项目 `.pam`；没有则回落 `~/.pam`。不要把 token 写进这个对象。仓库内已有 `.pam` 但未登录时，在仓库根或项目目录执行 `pamenv login --local`；仅全局登录亦可。
 
 ### 总开关与自动时机
 

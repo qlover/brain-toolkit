@@ -53,6 +53,11 @@ export type PamenvInjectOptions = PamCliRunOptionsType & {
    */
   readonly enabled?: boolean;
   readonly cwd?: string;
+  /**
+   * 是否只用项目 `.pam`。
+   * 省略时：匹配 CI 的 OIDC 为 false；本地与 CLI 自动模式一致——
+   * 有最近项目 `.pam` 则用它，否则回落 `~/.pam`。
+   */
   readonly preferLocal?: boolean;
   /**
    * 部署快照输出路径。仅在匹配 CI 且本次注入成功时写入。
@@ -269,6 +274,26 @@ export function resetPamenvInjectCache(): void {
 }
 
 /**
+ * 注入用 preferLocal：显式优先；OIDC 生效时用全局票路径；
+ * 否则与 CLI 自动模式一致（有项目 `.pam` 才 preferLocal）。
+ */
+export function resolveInjectPreferLocal(
+  options: Pick<PamenvInjectOptions, 'preferLocal' | 'cwd'>,
+  oidc: PamCiOidcProviderType | undefined
+): boolean {
+  if (options.preferLocal !== undefined) {
+    return options.preferLocal;
+  }
+  if (oidc !== undefined) {
+    return false;
+  }
+  const workingDir =
+    options.cwd?.trim() ||
+    /* turbopackIgnore: true */ process.cwd();
+  return PamCliConfig.resolvePreferLocal({ workingDir });
+}
+
+/**
  * 解析 slug / env / 生效中的 oidc / preferLocal / 键名单。
  */
 export function resolvePamenvInjectOptions(
@@ -295,10 +320,7 @@ export function resolvePamenvInjectOptions(
   }
 
   const oidc = resolveActiveOidcProvider(options.oidc);
-  const preferLocal =
-    options.preferLocal !== undefined
-      ? options.preferLocal
-      : oidc === undefined;
+  const preferLocal = resolveInjectPreferLocal(options, oidc);
   const onlyKeys = normalizePamCliKeyList(options.only);
   const omitKeys = normalizePamCliKeyList(options.omit);
   assertOnlyOmitExclusive(onlyKeys, omitKeys);

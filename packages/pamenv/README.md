@@ -325,7 +325,7 @@ export default defineConfig({
 | `dev` / `ci` | 本地 serve / 匹配 CI 的 build；`ci` 默认在传了 `oidc` 时开启 |
 | `oidc` | `'vercel'` \| `'github'`；仅在对应 CI 生效 |
 | `clientPublicPrefixes` | 敏感+公开前缀告警（Vite 常用 `['VITE_']`）；`[]` 关闭 |
-| `preferLocal` | 默认 `true`；勿在插件里写 token |
+| `preferLocal` | 省略时与 CLI 自动模式一致（有项目 `.pam` 用本地，否则 `~/.pam`）；OIDC 生效时为 false；勿在插件里写 token |
 
 细节见 `packages/pamenv-next/README.md`、`packages/pamenv-vite/README.md`，设计说明见 [docs/pamenv-v2.md](./docs/pamenv-v2.md)。
 

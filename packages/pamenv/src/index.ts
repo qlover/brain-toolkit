@@ -19,6 +19,7 @@ export {
   resetPamenvInjectCache,
   resolveActiveOidcProvider,
   resolveInjectDebug,
+  resolveInjectPreferLocal,
   resolvePamenvEnabled,
   resolvePamenvInjectOptions,
   resolveSnapshotKeysToOpen

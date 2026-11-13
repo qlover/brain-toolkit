@@ -91,7 +91,7 @@ pamenv run <slug|id> -e dev -- node server.js
 
 共同点：
 
-- 默认 **`preferLocal: true`**：从 cwd **向上**找最近的 `.pam`（monorepo 根登录一次即可），**不回落** `~/.pam`。未登录时在仓库根或当前目录执行 `pamenv login --local`。
+- **`preferLocal` 默认与 CLI 自动模式一致**：从 cwd **向上**找最近的项目 `.pam`（monorepo 根登录一次即可）；**没有项目 `.pam` 时回落** `~/.pam`。仓库内已有 `.pam` 但未带 token 时，在仓库根或当前目录执行 `pamenv login --local`。
 - `envPriority` 默认 `remote`（PAM 盖同名键）；本地临时改 `.env` / process 测值时用 `local`（process → 磁盘 `.env*` → PAM）。
 - `debug` 默认关；`PAMENV_DEBUG=1` 或 `debug: true` 只打路径 / 键名 / baseUrl，**从不打印变量值**。
 - `enabled` / `dev` / `ci` / `oidc`：与两插件同构；`PAMENV_ENABLED=0` 强制关；CI 走平台 OIDC 换短票（见 [ci-github.md](./ci-github.md) / [ci-vercel.md](./ci-vercel.md)）。
