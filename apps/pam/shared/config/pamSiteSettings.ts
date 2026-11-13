@@ -351,7 +351,7 @@ export const PAM_SITE_SETTING_DEFINITIONS: readonly PamSiteSettingDefinition[] =
       key: PAM_SITE_SETTING_KEYS.GITHUB_APP_PRIVATE_KEY,
       label: 'GitHub App Private Key',
       description:
-        'App 私钥 PEM（含 BEGIN/END PRIVATE KEY）。加密存储，界面不回显明文。',
+        'App 私钥 PEM（含 BEGIN/END 与换行）。请用多行文本框整段粘贴；加密存储，界面不回显明文。',
       isSensitive: true
     },
     {
