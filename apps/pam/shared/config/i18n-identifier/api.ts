@@ -473,3 +473,49 @@ export const API_PASSWORD_RESET_TOKEN_INVALID =
  */
 export const API_PASSWORD_RESET_RATE_LIMITED =
   'api:password_reset_rate_limited';
+
+/**
+ * @description Feedback record not found
+ * @localZh 反馈不存在或无权访问
+ * @localEn Feedback not found or access denied
+ */
+export const API_FEEDBACK_NOT_FOUND = 'api:feedback_not_found';
+
+/**
+ * @description Feedback screenshots are required
+ * @localZh 请至少上传一张截图
+ * @localEn Please upload at least one screenshot
+ */
+export const API_FEEDBACK_SCREENSHOTS_REQUIRED =
+  'api:feedback_screenshots_required';
+
+/**
+ * @description Too many feedback screenshots
+ * @localZh 截图数量超出限制
+ * @localEn Too many screenshots
+ */
+export const API_FEEDBACK_SCREENSHOTS_TOO_MANY =
+  'api:feedback_screenshots_too_many';
+
+/**
+ * @description Feedback screenshot file is empty
+ * @localZh 截图文件为空
+ * @localEn Screenshot file is empty
+ */
+export const API_FEEDBACK_SCREENSHOT_EMPTY = 'api:feedback_screenshot_empty';
+
+/**
+ * @description Feedback screenshot exceeds size limit
+ * @localZh 截图文件过大
+ * @localEn Screenshot file is too large
+ */
+export const API_FEEDBACK_SCREENSHOT_TOO_LARGE =
+  'api:feedback_screenshot_too_large';
+
+/**
+ * @description Feedback screenshot content type is not allowed
+ * @localZh 不支持的截图格式
+ * @localEn Unsupported screenshot type
+ */
+export const API_FEEDBACK_SCREENSHOT_TYPE_UNSUPPORTED =
+  'api:feedback_screenshot_type_unsupported';

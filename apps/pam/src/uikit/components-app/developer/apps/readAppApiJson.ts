@@ -1,3 +1,4 @@
+import { ExecutorError } from '@qlover/fe-corekit/executor';
 import {
   isNextKitApiError,
   isNextKitApiSuccess,
@@ -8,7 +9,7 @@ export async function readAppApiJson<T>(response: Response): Promise<T> {
   const body = (await response.json()) as NextKitApiResult<T>;
 
   if (isNextKitApiError(body)) {
-    throw new Error(body.message ?? body.id);
+    throw new ExecutorError(body.id, body);
   }
 
   if (!isNextKitApiSuccess<T>(body)) {

@@ -18,14 +18,11 @@ import {
 import { PamCiOidcBootstrap } from './impls/PamCiOidcBootstrap';
 import { PamCliConfig } from './config/PamCliConfig';
 import { PamCliApiClient } from './impls/PamCliApiClient';
-import { PamCliApiError } from './impls/PamCliApiError';
+import { PamCliErrorPresenter } from './impls/PamCliErrorPresenter';
 import { PamCliAuthStore } from './impls/PamCliAuthStore';
 import { PamCliSyncStore } from './impls/PamCliSyncStore';
 import { PamCliI18n } from './i18n/PamCliI18n';
 import {
-  PAMENV_CLI_API_ENV_PROTECTED,
-  PAMENV_CLI_API_FORBIDDEN,
-  PAMENV_CLI_API_UNAUTHORIZED,
   PAMENV_CLI_LOCAL_AND_GLOBAL_EXCLUSIVE,
   PAMENV_CLI_LOGOUT_DONE,
   PAMENV_CLI_LOGOUT_REVOKE_FAILED,
@@ -550,42 +547,12 @@ export class PamCliApp {
   }
 
   /**
-   * Formats an error for stderr, translating API `id` when locale catalog exists.
-   * HTTP 401/403 get a human-friendly headline (login again / ask owner).
+   * 格式化 stderr 文案：翻译 API `id`；401/403 用友好标题。
    *
-   * @param error - Thrown value
+   * @param error - 捕获到的异常
    */
   public async formatCliError(error: unknown): Promise<string> {
-    if (error instanceof PamCliApiError) {
-      await PamCliI18n.hydrateFromApiOnce(this.authStore);
-      return error.formatForCli(
-        (id) => PamCliI18n.lookup(id),
-        { friendlyHeadline: this.resolveAuthFriendlyHeadline(error) }
-      );
-    }
-    return error instanceof Error ? error.message : String(error);
-  }
-
-  /**
-   * Human-readable headline for auth denials; undefined for other statuses.
-   */
-  protected resolveAuthFriendlyHeadline(
-    error: PamCliApiError
-  ): string | undefined {
-    if (error.httpStatus === 401) {
-      return PamCliI18n.t(PAMENV_CLI_API_UNAUTHORIZED);
-    }
-    if (error.httpStatus !== 403) {
-      return undefined;
-    }
-    // Prefer a specific protected-env line when the API id says so.
-    if (
-      error.id === 'api:pam_env_protected' ||
-      error.id.endsWith(':pam_env_protected')
-    ) {
-      return PamCliI18n.t(PAMENV_CLI_API_ENV_PROTECTED);
-    }
-    return PamCliI18n.t(PAMENV_CLI_API_FORBIDDEN);
+    return PamCliErrorPresenter.format(error, this.authStore);
   }
 
   /**

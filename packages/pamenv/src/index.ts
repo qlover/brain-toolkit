@@ -50,6 +50,8 @@ export type { PamCliRuntimeContextType } from './config/PamCliRuntimeContext';
 export { PamCliAuthStore } from './impls/PamCliAuthStore';
 export { PamCliApiClient } from './impls/PamCliApiClient';
 export { PamCliApiError } from './impls/PamCliApiError';
+export { PamCliErrorPresenter } from './impls/PamCliErrorPresenter';
+export type { PamCliDisplayErrorOptionsType } from './impls/PamCliErrorPresenter';
 export { PamCliLocaleCatalog } from './impls/PamCliLocaleCatalog';
 export { PamCliDotenvUtil } from './impls/PamCliDotenvUtil';
 export {

@@ -1,8 +1,8 @@
 /**
- * Structured PAM API failure for the CLI.
+ * PAM API 结构化失败：保留 NextKit `id`（i18n key），不压成含糊字符串。
  *
- * Significance: Preserves NextKit `id` (i18n key) instead of collapsing to a string.
- * Core idea: `id` is the stable business error code; `message` / `data` are extras.
+ * `id` 是稳定业务码；`message` / `data` / `httpStatus` / `requestId` 供展示与排障。
+ * 插件场景请经 {@link PamCliErrorPresenter.toDisplayError} 再抛，避免刷 stack。
  */
 export class PamCliApiError extends Error {
   public readonly id: string;
@@ -21,7 +21,7 @@ export class PamCliApiError extends Error {
       params.message?.trim() ||
       (params.data !== undefined
         ? `${params.id} ${safeJson(params.data)}`
-        : params.id);
+        : `PAM API error (HTTP ${String(params.httpStatus)}): ${params.id}`);
     super(detail);
     this.name = 'PamCliApiError';
     this.id = params.id;
@@ -31,10 +31,10 @@ export class PamCliApiError extends Error {
   }
 
   /**
-   * Multi-line CLI output: localized / friendly text, plus id / requestId.
+   * 多行可读输出：友好/本地化标题 + id / requestId / httpStatus / data。
    *
-   * @param translate - Optional `id` → localized string lookup (PAM `api:*`)
-   * @param options.friendlyHeadline - Prefer this over raw API message (401/403)
+   * @param translate - 可选：`id` → 本地化文案（PAM `api:*`）
+   * @param options.friendlyHeadline - 优先于原始 API message（401/403）
    */
   public formatForCli(
     translate?: (id: string) => string | undefined,
@@ -42,10 +42,10 @@ export class PamCliApiError extends Error {
   ): string {
     const localized = translate?.(this.id)?.trim();
     const friendly = options?.friendlyHeadline?.trim();
-    const headline = friendly || localized || this.message;
+    const rawMessage = this.message?.trim() || '';
+    const headline = friendly || localized || rawMessage || this.id;
     const lines = [headline];
 
-    // Keep a short server detail when it adds info beyond the friendly line.
     if (
       friendly &&
       localized &&
@@ -55,17 +55,18 @@ export class PamCliApiError extends Error {
       lines.push(localized);
     } else if (
       friendly &&
-      this.message?.trim() &&
-      this.message.trim() !== friendly &&
-      this.message.trim() !== this.id &&
-      this.message.trim() !== localized
+      rawMessage &&
+      rawMessage !== friendly &&
+      rawMessage !== this.id &&
+      rawMessage !== localized
     ) {
-      lines.push(this.message.trim());
+      lines.push(rawMessage);
     }
 
-    if (this.id && this.id !== headline) {
+    if (this.id && !headline.includes(this.id)) {
       lines.push(`id: ${this.id}`);
     }
+    lines.push(`httpStatus: ${String(this.httpStatus)}`);
     if (this.requestId) {
       lines.push(`requestId: ${this.requestId}`);
     }
