@@ -4,10 +4,11 @@ import {
   ExecutorError,
   type LifecyclePluginInterface
 } from '@qlover/fe-corekit/executor';
-import { isI18nKey, type I18nServiceInterface } from '@qlover/next-kit/common';
+import { type I18nServiceInterface } from '@qlover/next-kit/common';
 import { inject, injectable } from '@shared/container';
 import { API_NOT_AUTHORIZED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
+import { PamApiErrorDisplay } from './PamApiErrorDisplay';
 import type { RouterService } from './RouterService';
 import type { UIDialogInterface } from '@qlover/corekit-bridge';
 import type { DialogHandlerOptions } from '@qlover/next-kit/client';
@@ -54,20 +55,15 @@ export class DialogErrorPlugin
     }
 
     if (handleError instanceof ExecutorError) {
-      if (this.isI18nMessage(handleError.id)) {
-        const message = this.i18nService.t(handleError.id);
-        this.dialogHandler.error(message);
+      const message = PamApiErrorDisplay.resolveFromExecutorError(
+        this.i18nService,
+        handleError
+      );
+      this.dialogHandler.error(message);
 
-        if (handleError.id === API_NOT_AUTHORIZED) {
-          this.routerService.gotoLogin();
-        }
-      } else {
-        this.dialogHandler.error(handleError.message);
+      if (handleError.id === API_NOT_AUTHORIZED) {
+        this.routerService.gotoLogin();
       }
     }
-  }
-
-  protected isI18nMessage(message: string): boolean {
-    return isI18nKey(message);
   }
 }

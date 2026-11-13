@@ -13,10 +13,14 @@ import {
   type AsyncState
 } from '@brain-toolkit/react-kit';
 import { useStrictEffect } from '@qlover/next-kit/client';
+import { clsx } from 'clsx';
 import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import { SiteSettingsApi } from '@/impls/appApi/SiteSettingsApi';
 import { invalidatePublicConfigCache } from '@/impls/fetchPublicConfig';
-import { pamFormFieldClass } from '@/uikit/components/pam/PAMFormFieldStyles';
+import {
+  pamFormFieldClass,
+  pamFormTextareaClass
+} from '@/uikit/components/pam/PAMFormFieldStyles';
 import { PAMSettingsCard } from '@/uikit/components/pam/PAMSettingsCard';
 import { AdminMailTestAction } from '@/uikit/components-pages/AdminMailTestAction';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
@@ -634,21 +638,40 @@ export function AdminSiteSettingsPanel({
               isSensitive && raw === PAM_SITE_SETTING_SECRET_UNCHANGED
                 ? ''
                 : String(raw);
+            const isPrivateKey =
+              key === PAM_SITE_SETTING_KEYS.GITHUB_APP_PRIVATE_KEY;
             const placeholder =
               key === PAM_SITE_SETTING_KEYS.GITHUB_FEEDBACK_REPO
                 ? 'qlover/brain-toolkit'
-                : isSensitive
-                  ? tt.secretHint
-                  : undefined;
+                : isPrivateKey
+                  ? '-----BEGIN RSA PRIVATE KEY-----'
+                  : isSensitive
+                    ? tt.secretHint
+                    : undefined;
             return (
               <SettingRow key={key} entry={entry} tt={tt}>
-                <input
-                  type={isSensitive ? 'password' : 'text'}
-                  value={value}
-                  placeholder={placeholder}
-                  onChange={(event) => setDraftValue(key, event.target.value)}
-                  className={pamFormFieldClass}
-                />
+                {isPrivateKey ? (
+                  <textarea
+                    value={value}
+                    placeholder={placeholder}
+                    rows={8}
+                    spellCheck={false}
+                    autoComplete="off"
+                    onChange={(event) => setDraftValue(key, event.target.value)}
+                    className={clsx(
+                      pamFormTextareaClass,
+                      'font-mono text-xs leading-5 min-h-[10rem]'
+                    )}
+                  />
+                ) : (
+                  <input
+                    type={isSensitive ? 'password' : 'text'}
+                    value={value}
+                    placeholder={placeholder}
+                    onChange={(event) => setDraftValue(key, event.target.value)}
+                    className={pamFormFieldClass}
+                  />
+                )}
               </SettingRow>
             );
           })}

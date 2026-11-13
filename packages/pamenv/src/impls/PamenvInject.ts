@@ -14,16 +14,17 @@ import type {
   PamenvDeploySnapshotV1FileType,
   PamenvDeploySnapshotV2FileType
 } from '../interfaces/PamenvDeploySnapshotEngineInterface';
+import type { PamenvBagInterface } from '../interfaces/PamenvBagInterface';
 import { PamCiOidcBootstrap } from './PamCiOidcBootstrap';
 import { PamCliApiClient } from './PamCliApiClient';
 import { PamCliAuthStore } from './PamCliAuthStore';
+import { PamCliErrorPresenter } from './PamCliErrorPresenter';
 import {
   PAMENV_DEPLOY_SNAPSHOT_ALG,
   PAMENV_DEPLOY_SNAPSHOT_ALG_V1,
   PamenvDeploySnapshotEngine
 } from './PamenvDeploySnapshotEngine';
 import { PamenvBag } from './PamenvBag';
-import type { PamenvBagInterface } from '../interfaces/PamenvBagInterface';
 
 /**
  * 把 PAM 环境写入当前进程 `process.env`（语义同 `pamenv run <slug> -e <env>`）。
@@ -54,6 +55,11 @@ export type PamenvInjectOptions = PamCliRunOptionsType & {
    */
   readonly enabled?: boolean;
   readonly cwd?: string;
+  /**
+   * 是否只用项目 `.pam`。
+   * 省略时：匹配 CI 的 OIDC 为 false；本地与 CLI 自动模式一致——
+   * 有最近项目 `.pam` 则用它，否则回落 `~/.pam`。
+   */
   readonly preferLocal?: boolean;
   /**
    * 部署快照输出路径。仅在匹配 CI 且本次注入成功时写入。
@@ -279,6 +285,26 @@ export function resetPamenvInjectCache(): void {
 }
 
 /**
+ * 注入用 preferLocal：显式优先；OIDC 生效时用全局票路径；
+ * 否则与 CLI 自动模式一致（有项目 `.pam` 才 preferLocal）。
+ */
+export function resolveInjectPreferLocal(
+  options: Pick<PamenvInjectOptions, 'preferLocal' | 'cwd'>,
+  oidc: PamCiOidcProviderType | undefined
+): boolean {
+  if (options.preferLocal !== undefined) {
+    return options.preferLocal;
+  }
+  if (oidc !== undefined) {
+    return false;
+  }
+  const workingDir =
+    options.cwd?.trim() ||
+    /* turbopackIgnore: true */ process.cwd();
+  return PamCliConfig.resolvePreferLocal({ workingDir });
+}
+
+/**
  * 解析 slug / env / 生效中的 oidc / preferLocal / 键名单。
  */
 export function resolvePamenvInjectOptions(
@@ -305,10 +331,7 @@ export function resolvePamenvInjectOptions(
   }
 
   const oidc = resolveActiveOidcProvider(options.oidc);
-  const preferLocal =
-    options.preferLocal !== undefined
-      ? options.preferLocal
-      : oidc === undefined;
+  const preferLocal = resolveInjectPreferLocal(options, oidc);
   const onlyKeys = normalizePamCliKeyList(options.only);
   const omitKeys = normalizePamCliKeyList(options.omit);
   assertOnlyOmitExclusive(onlyKeys, omitKeys);
@@ -520,63 +543,71 @@ async function applyPamenvProcessEnv(
     preferLocal,
     workingDir: authWorkingDir
   });
-  await PamCliI18n.syncFromStore(authStore);
-  await PamCliI18n.ensureLoaded(PamCliI18n.getLocale());
-  await PamCliI18n.ensureLoaded('en');
+  const debug = resolveInjectDebug(options.debug);
+  try {
+    await PamCliI18n.syncFromStore(authStore);
+    await PamCliI18n.ensureLoaded(PamCliI18n.getLocale());
+    await PamCliI18n.ensureLoaded('en');
 
-  const apiClient = new PamCliApiClient(authStore);
-  const command = new RunCommand(apiClient, authStore);
-  const prepared = await command.prepare(
-    options.slug,
-    {
-      envName: options.env,
-      only: options.onlyKeys,
-      omit: options.omitKeys,
-      keepEnv: options.keepEnvKeys,
-      warn: options.warn,
-      envPriority: options.envPriority,
-      clientPublicPrefixes: options.clientPublicPrefixes,
-      oidc: options.oidc,
-      debug: resolveInjectDebug(options.debug)
-    },
-    cwd
-  );
+    const apiClient = new PamCliApiClient(authStore);
+    const command = new RunCommand(apiClient, authStore);
+    const prepared = await command.prepare(
+      options.slug,
+      {
+        envName: options.env,
+        only: options.onlyKeys,
+        omit: options.omitKeys,
+        keepEnv: options.keepEnvKeys,
+        warn: options.warn,
+        envPriority: options.envPriority,
+        clientPublicPrefixes: options.clientPublicPrefixes,
+        oidc: options.oidc,
+        debug
+      },
+      cwd
+    );
 
-  const written: Record<string, string> = {};
-  for (const [name, value] of Object.entries(prepared.env)) {
-    if (value === undefined) {
-      delete process.env[name];
-    } else {
-      process.env[name] = value;
-      written[name] = value;
+    const written: Record<string, string> = {};
+    for (const [name, value] of Object.entries(prepared.env)) {
+      if (value === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = value;
+        written[name] = value;
+      }
     }
-  }
 
-  if (options.snapshotPath?.trim() && options.oidc !== undefined) {
-    const pamVariables: Record<string, string> = {};
-    for (const variable of prepared.variables) {
-      pamVariables[variable.key] = variable.value;
+    if (options.snapshotPath?.trim() && options.oidc !== undefined) {
+      const pamVariables: Record<string, string> = {};
+      for (const variable of prepared.variables) {
+        pamVariables[variable.key] = variable.value;
+      }
+      await writeDeploySnapshotFile({
+        snapshotPath: options.snapshotPath.trim(),
+        projectRef: options.slug,
+        envName: options.env,
+        envMap: pamVariables,
+        apiClient,
+        debug
+      });
     }
-    await writeDeploySnapshotFile({
-      snapshotPath: options.snapshotPath.trim(),
-      projectRef: options.slug,
-      envName: options.env,
-      envMap: pamVariables,
-      apiClient,
-      debug: resolveInjectDebug(options.debug)
+
+    const expiresAtMs = prepared.oidcExpiresAt
+      ? Date.parse(prepared.oidcExpiresAt)
+      : Number.POSITIVE_INFINITY;
+
+    return {
+      expiresAtMs: Number.isFinite(expiresAtMs)
+        ? expiresAtMs
+        : Number.POSITIVE_INFINITY,
+      values: Object.freeze(written)
+    };
+  } catch (error) {
+    throw await PamCliErrorPresenter.toDisplayError(error, {
+      authStore,
+      keepStack: debug
     });
   }
-
-  const expiresAtMs = prepared.oidcExpiresAt
-    ? Date.parse(prepared.oidcExpiresAt)
-    : Number.POSITIVE_INFINITY;
-
-  return {
-    expiresAtMs: Number.isFinite(expiresAtMs)
-      ? expiresAtMs
-      : Number.POSITIVE_INFINITY,
-    values: Object.freeze(written)
-  };
 }
 
 /**
@@ -586,49 +617,61 @@ async function openDeploySnapshot(
   options: PamenvResolvedInjectOptionsType,
   snapshotPath: string
 ): Promise<PamenvInjectRunResultType> {
-  const raw = await readFile(
-    /* turbopackIgnore: true */ snapshotPath,
-    'utf8'
-  );
-  const snapshot = JSON.parse(raw) as PamenvDeploySnapshotFileType;
-
   const preferLocal = false;
   const cwd = options.cwd ?? /* turbopackIgnore: true */ process.cwd();
   const authStore = new PamCliAuthStore({
     preferLocal,
     workingDir: cwd
   });
-  await PamCliI18n.syncFromStore(authStore);
-  await PamCliI18n.ensureLoaded(PamCliI18n.getLocale());
-  await PamCliI18n.ensureLoaded('en');
-
-  const apiClient = new PamCliApiClient(authStore);
   const debug = resolveInjectDebug(options.debug);
-  const provider = options.oidc ?? 'vercel';
-  const issued = await new PamCiOidcBootstrap(
-    apiClient,
-    authStore
-  ).ensurePamenvToken(provider, debug);
+  try {
+    const raw = await readFile(
+      /* turbopackIgnore: true */ snapshotPath,
+      'utf8'
+    );
+    const snapshot = JSON.parse(raw) as PamenvDeploySnapshotFileType;
 
-  const projectRef = snapshot.projectRef || options.slug;
-  const dekBase64 = await apiClient.unwrapDeployDek(
-    projectRef,
-    snapshot.wrappedDek
-  );
-  const engine = new PamenvDeploySnapshotEngine();
-  const variables = openSnapshotVariables(engine, snapshot, dekBase64, options);
-  assertOnlyKeysPresent(options.onlyKeys, variables);
+    await PamCliI18n.syncFromStore(authStore);
+    await PamCliI18n.ensureLoaded(PamCliI18n.getLocale());
+    await PamCliI18n.ensureLoaded('en');
 
-  const expiresAtMs = issued.expiresAt
-    ? Date.parse(issued.expiresAt)
-    : Number.POSITIVE_INFINITY;
+    const apiClient = new PamCliApiClient(authStore);
+    const provider = options.oidc ?? 'vercel';
+    const issued = await new PamCiOidcBootstrap(
+      apiClient,
+      authStore
+    ).ensurePamenvToken(provider, debug);
 
-  return {
-    expiresAtMs: Number.isFinite(expiresAtMs)
-      ? expiresAtMs
-      : Number.POSITIVE_INFINITY,
-    values: Object.freeze({ ...variables })
-  };
+    const projectRef = snapshot.projectRef || options.slug;
+    const dekBase64 = await apiClient.unwrapDeployDek(
+      projectRef,
+      snapshot.wrappedDek
+    );
+    const engine = new PamenvDeploySnapshotEngine();
+    const variables = openSnapshotVariables(
+      engine,
+      snapshot,
+      dekBase64,
+      options
+    );
+    assertOnlyKeysPresent(options.onlyKeys, variables);
+
+    const expiresAtMs = issued.expiresAt
+      ? Date.parse(issued.expiresAt)
+      : Number.POSITIVE_INFINITY;
+
+    return {
+      expiresAtMs: Number.isFinite(expiresAtMs)
+        ? expiresAtMs
+        : Number.POSITIVE_INFINITY,
+      values: Object.freeze({ ...variables })
+    };
+  } catch (error) {
+    throw await PamCliErrorPresenter.toDisplayError(error, {
+      authStore,
+      keepStack: debug
+    });
+  }
 }
 
 /**

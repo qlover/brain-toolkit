@@ -30,10 +30,8 @@ export class AppApiPlugin
     // Important: 当响应数据失败则抛出错误
     if (isRequestAdapterResponse(response)) {
       if (isNextKitApiError(response.data)) {
-        throw new ExecutorError(
-          response.data.message || response.data.id,
-          response
-        );
+        // id 必须是 api:* 契约键，供 DialogErrorPlugin 翻译；勿用 message 占位。
+        throw new ExecutorError(response.data.id, response);
       }
     }
 

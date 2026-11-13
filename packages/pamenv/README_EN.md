@@ -259,7 +259,7 @@ These call `injectPamenvProcessEnv` while the framework loads config, writing PA
 | Install | `pnpm add @pamenv/next pamenv-cli` | `pnpm add @pamenv/vite pamenv-cli` |
 | Wire-up | wrap `next.config` with `createPamenvPlugin` | `plugins: [pamenv({ … })]` |
 | Default inject | `next dev` only | `vite` / `vite dev` (serve) only |
-| Credentials | nearest `.pam` walking up (`preferLocal`, no `~/.pam` fallback) | same |
+| Credentials | nearest project `.pam` walking up; else `~/.pam` (same as CLI auto) | same |
 
 First-time login at the repo / project root (monorepo: once at root):
 
@@ -320,7 +320,7 @@ Client-readable keys still need Vite’s public prefix (`VITE_*` → `import.met
 | `debug` | Metadata on stderr (paths / key names); **never values** |
 | `enabled` | Master switch: `false` off; omit / `true` allows inject (timing is internal; Vite may still use a command predicate) |
 | `clientPublicPrefixes` | Sensitive + public-prefix warning (e.g. `['VITE_']`); `[]` disables |
-| `preferLocal` | Default `true`; never put a token in the plugin options |
+| `preferLocal` | When omitted, same as CLI auto (project `.pam` if present, else `~/.pam`); `false` when OIDC is active; never put a token in the plugin options |
 
 See `packages/pamenv-next/README.md`, `packages/pamenv-vite/README.md`, and [docs/pamenv-v2.md](./docs/pamenv-v2.md).
 

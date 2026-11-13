@@ -1,10 +1,12 @@
 'use client';
 
 import { usePageI18nMapping } from '@qlover/next-kit/client';
+import { isI18nKey, isNextKitApiError } from '@qlover/next-kit/common';
 import clsx from 'clsx';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
+import { useWarnTranslations } from '@/uikit/hook/useWarnTranslations';
 import type { PamenvDeviceI18nInterface } from '@config/i18n-mapping/PamenvDeviceI18n';
 
 type ApproveStateType = 'idle' | 'loading' | 'success' | 'error';
@@ -14,6 +16,7 @@ type ApproveStateType = 'idle' | 'loading' | 'success' | 'error';
  */
 export function PamCliDeviceApprovePanel() {
   const tt = usePageI18nMapping<PamenvDeviceI18nInterface>();
+  const t = useWarnTranslations();
   const searchParams = useSearchParams();
   const locale = useLocale();
   const initialCode = useMemo(
@@ -44,25 +47,31 @@ export function PamCliDeviceApprovePanel() {
         body: JSON.stringify({ user_code: code, locale: approveLocale }),
         credentials: 'include'
       });
-      const body = (await response.json()) as {
-        success?: boolean;
-        message?: string;
-        id?: string;
-        data?: { email?: string };
-      };
+      const body: unknown = await response.json();
 
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || body.id || tt.approveFailed);
+      if (isNextKitApiError(body)) {
+        const translated = isI18nKey(body.id) ? t(body.id) : '';
+        throw new Error(
+          translated && translated !== body.id ? translated : tt.approveFailed
+        );
       }
 
-      setEmail(body.data?.email || '');
+      const okBody = body as {
+        success?: boolean;
+        data?: { email?: string };
+      };
+      if (!response.ok || !okBody.success) {
+        throw new Error(tt.approveFailed);
+      }
+
+      setEmail(okBody.data?.email || '');
       setState('success');
       setMessage(tt.success);
     } catch (error) {
       setState('error');
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [locale, tt.approveFailed, tt.codeRequired, tt.success, userCode]);
+  }, [locale, t, tt.approveFailed, tt.codeRequired, tt.success, userCode]);
 
   return (
     <div

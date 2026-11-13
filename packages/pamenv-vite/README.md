@@ -50,11 +50,13 @@ export default defineConfig({
 
 ## 本地登录
 
-Token 来自向上查找的最近 `.pam`（默认 `preferLocal: true`）。未登录时：
+Token 解析与 CLI 自动模式一致：优先向上查找最近的项目 `.pam`；没有则回落 `~/.pam`（全局登录）。仓库内已有 `.pam` 但未登录时：
 
 ```bash
 pamenv login --local
 ```
+
+仅全局登录过时，可直接 `pamenv login`（写入 `~/.pam`），Vite 插件也能用。
 
 ## GitHub Actions 示例
 

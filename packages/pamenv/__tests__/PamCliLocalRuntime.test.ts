@@ -272,6 +272,7 @@ describe('PamCliApiError', () => {
     const text = err.formatForCli();
     expect(text).toContain('CLI bearer token required');
     expect(text).toContain('id: api:not_authorized');
+    expect(text).toContain('httpStatus: 401');
     expect(text).toContain('requestId: req-1');
     expect(text).toContain('data:');
   });
@@ -287,6 +288,7 @@ describe('PamCliApiError', () => {
     );
     expect(text.startsWith('未授权')).toBe(true);
     expect(text).toContain('id: api:not_authorized');
+    expect(text).toContain('httpStatus: 401');
   });
 
   it('uses friendly auth headline and keeps id for support', () => {
@@ -303,6 +305,54 @@ describe('PamCliApiError', () => {
     expect(text.startsWith('没有访问该资源的权限')).toBe(true);
     expect(text).toContain('id: api:not_authorized');
     expect(text).toContain('requestId: req-2');
+    expect(text).toContain('httpStatus: 403');
+  });
+
+  it('id-only API error still includes HTTP status in default message', () => {
+    const err = new PamCliApiError({
+      id: 'api:server__error',
+      requestId: 'd986191a-bd62-435d-83ea-55fe79b3bb09',
+      httpStatus: 400
+    });
+    expect(err.message).toContain('HTTP 400');
+    expect(err.message).toContain('api:server__error');
+    const text = err.formatForCli();
+    expect(text).toContain('httpStatus: 400');
+    expect(text).toContain('requestId: d986191a-bd62-435d-83ea-55fe79b3bb09');
+  });
+});
+
+describe('PamCliErrorPresenter', () => {
+  it('toDisplayError 默认去掉 stack，并保留可读多行 message', async () => {
+    const { PamCliErrorPresenter } = await import(
+      '../src/impls/PamCliErrorPresenter'
+    );
+    const source = new PamCliApiError({
+      id: 'api:server__error',
+      requestId: 'req-display',
+      httpStatus: 400
+    });
+    const display = await PamCliErrorPresenter.toDisplayError(source);
+    expect(display.name).toBe('PamCliApiError');
+    expect(display.message).toContain('api:server__error');
+    expect(display.message).toContain('httpStatus: 400');
+    expect(display.message).toContain('requestId: req-display');
+    expect(display.stack).toBeUndefined();
+  });
+
+  it('keepStack 为 true 时保留原堆栈', async () => {
+    const { PamCliErrorPresenter } = await import(
+      '../src/impls/PamCliErrorPresenter'
+    );
+    const source = new PamCliApiError({
+      id: 'api:server__error',
+      httpStatus: 500
+    });
+    expect(source.stack).toBeTruthy();
+    const display = await PamCliErrorPresenter.toDisplayError(source, {
+      keepStack: true
+    });
+    expect(display.stack).toBe(source.stack);
   });
 });
 
