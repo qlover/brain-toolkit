@@ -491,3 +491,10 @@ export const COMMON_FEEDBACK_CATEGORY_CONTENT =
  * @localEn Other
  */
 export const COMMON_FEEDBACK_CATEGORY_OTHER = 'common:feedback_category_other';
+
+/**
+ * @description API 请求失败时的统一兜底（翻译缺失或仅有裸 api:* id）
+ * @localZh 请求失败，请稍后重试
+ * @localEn Request failed. Please try again later.
+ */
+export const COMMON_API_REQUEST_FAILED = 'common:api_request_failed';
