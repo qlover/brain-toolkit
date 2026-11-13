@@ -1,4 +1,12 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import {
+  assertOnlyOmitExclusive,
+  normalizePamCliKeyList
+} from '../src/commands/RunCommand';
+import { PamCliConfig } from '../src/config/PamCliConfig';
 import {
   assertOnlyKeysPresent,
   DEFAULT_PAMENV_KEEP_ENV,
@@ -8,15 +16,11 @@ import {
   mergePamenvKeepEnvKeys,
   resetPamenvInjectCache,
   resolveActiveOidcProvider,
+  resolveInjectPreferLocal,
   resolvePamenvEnabled,
   resolvePamenvInjectOptions,
   resolveSnapshotKeysToOpen
 } from '../src/impls/PamenvInject';
-import { PamCliConfig } from '../src/config/PamCliConfig';
-import {
-  assertOnlyOmitExclusive,
-  normalizePamCliKeyList
-} from '../src/commands/RunCommand';
 
 describe('injectPamenvProcessEnv', () => {
   afterEach(() => {
@@ -102,12 +106,44 @@ describe('resolvePamenvInjectOptions', () => {
   it('falls back to options when env vars are absent', () => {
     const resolved = resolvePamenvInjectOptions({
       slug: 'pam',
-      env: 'local'
+      env: 'local',
+      preferLocal: true
     });
     expect(resolved.slug).toBe('pam');
     expect(resolved.env).toBe('local');
     expect(resolved.oidc).toBeUndefined();
     expect(resolved.preferLocal).toBe(true);
+  });
+
+  it('本地无项目 .pam 时 preferLocal 默认回落全局（与 CLI 自动模式一致）', () => {
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'pamenv-inject-global-'));
+    try {
+      expect(resolveInjectPreferLocal({ cwd }, undefined)).toBe(false);
+      const resolved = resolvePamenvInjectOptions({
+        slug: 'pam',
+        env: 'local',
+        cwd
+      });
+      expect(resolved.preferLocal).toBe(false);
+    } finally {
+      fs.rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('本地已有项目 .pam 时 preferLocal 默认为 true', () => {
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'pamenv-inject-local-'));
+    try {
+      fs.mkdirSync(path.join(cwd, '.pam'));
+      expect(resolveInjectPreferLocal({ cwd }, undefined)).toBe(true);
+      const resolved = resolvePamenvInjectOptions({
+        slug: 'pam',
+        env: 'local',
+        cwd
+      });
+      expect(resolved.preferLocal).toBe(true);
+    } finally {
+      fs.rmSync(cwd, { recursive: true, force: true });
+    }
   });
 
   it('keepEnv 默认含平台键，并可追加', () => {
