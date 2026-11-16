@@ -48,6 +48,16 @@ Generated-by: ...
 2. `git hash-object -t commit -w <该文件>` 得到 commit sha
 3. `git update-ref HEAD <sha>`，再 `git log -1 --format=full` 核对
 
+## 禁止手改发版产物（version / CHANGELOG / changeset）
+
+**禁止**在功能 / 修复 PR 中主动做下列任一项（除非用户**明文**要求）：
+
+1. 手改各包 `package.json` 的 `version`
+2. 手改各包 `CHANGELOG.md`
+3. 新增或修改 `.changeset/*.md`
+
+版本号、CHANGELOG、changeset 由 **changesets / CI / 发版流程**（或用户本人）处理。Agent 只改源码、测试、文档说明（非 CHANGELOG）与构建/发包脚本等实现本身。
+
 ## 语言与格式
 
 与本仓库近期提交风格一致：subject / body **优先中文**（见 `git log`）。保留 conventional-commit 的 `type(scope):` 前缀。

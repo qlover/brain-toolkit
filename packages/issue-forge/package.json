@@ -4,20 +4,22 @@
   "type": "module",
   "private": false,
   "description": "Forge-agnostic Issue gateway + optional feedback→Issue sync engines; GitHub App first",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     },
     "./feedback": {
-      "types": "./src/feedback/index.ts",
-      "import": "./src/feedback/index.ts",
-      "default": "./src/feedback/index.ts"
+      "types": "./dist/feedback/index.d.ts",
+      "import": "./dist/feedback/index.js",
+      "require": "./dist/feedback/index.cjs",
+      "default": "./dist/feedback/index.js"
     }
   },
   "files": [
@@ -55,22 +57,6 @@
     "feedback"
   ],
   "publishConfig": {
-    "access": "public",
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      "./package.json": "./package.json",
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js",
-        "require": "./dist/index.cjs"
-      },
-      "./feedback": {
-        "types": "./dist/feedback/index.d.ts",
-        "import": "./dist/feedback/index.js",
-        "require": "./dist/feedback/index.cjs"
-      }
-    }
+    "access": "public"
   }
 }

@@ -8,8 +8,7 @@ Forge 无关的 Issue 网关；**GitHub App** 为第一个实现。可选子路�
 pnpm --filter @brain-toolkit/issue-forge build
 ```
 
-- monorepo 内：`exports` 指向 `src`（与 `workspace:*` 一致）
-- npm 发布：`publishConfig` 指向 `dist`（esm / cjs / dts）
+- `main` / `module` / `types` / `exports` 均指向 `dist`（与 `brain-user` 等包一致）；使用前先 `build`
 
 ## `@brain-toolkit/issue-forge`（协议）
 
