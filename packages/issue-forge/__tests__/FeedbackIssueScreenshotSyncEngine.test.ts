@@ -165,10 +165,9 @@ describe('FeedbackIssueScreenshotSyncEngine', () => {
     const posted = await engine.syncScreenshots('fb-1');
 
     expect(posted).toBe(1);
-    expect(createComment).toHaveBeenCalledTimes(1);
-    const commentBody = createComment.mock.calls[0]?.[1] as string;
-    expect(commentBody).toContain(
-      '/raw/feedback-assets/feedback/fb-1/a.jpg'
+    expect(createComment).toHaveBeenCalledWith(
+      { issueNumber: 225 },
+      expect.stringContaining('/raw/feedback-assets/feedback/fb-1/a.jpg')
     );
     expect(host.updateSync).toHaveBeenCalledWith(
       'fb-1',
