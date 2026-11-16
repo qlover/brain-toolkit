@@ -26,6 +26,8 @@ export type FeedbackIssueStatusType =
 
 export type FeedbackScreenshotSyncStateType = {
   readonly issueNumber: number | null;
+  /** 已有 Issue 时用于截图失败写回错误且不丢链接 */
+  readonly issueUrl: string | null;
   readonly paths: readonly string[];
   readonly postedCount: number;
 };

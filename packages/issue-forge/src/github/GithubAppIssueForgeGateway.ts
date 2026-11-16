@@ -68,13 +68,20 @@ export class GithubAppIssueForgeGateway implements IssueForgeGatewayInterface {
     input: ForgeAssetUploadInputType
   ): Promise<ForgeAssetUploadedType> {
     const branch = input.branch?.trim() || 'feedback-assets';
-    const uploaded = await this.assets.uploadFile({
+    await this.assets.uploadFile({
       path: input.path,
       contentBase64: input.contentBase64,
       branch,
       message: input.message?.trim() || `chore(feedback): upload ${input.path}`
     });
-    return { url: `${uploaded.url}?raw=true` };
+    const encodedPath = input.path
+      .split('/')
+      .filter((segment) => segment.length > 0)
+      .map((segment) => encodeURIComponent(segment))
+      .join('/');
+    return {
+      url: `https://github.com/${encodeURIComponent(this.config.owner)}/${encodeURIComponent(this.config.repo)}/raw/${encodeURIComponent(branch)}/${encodedPath}`
+    };
   }
 
   protected postIssue(

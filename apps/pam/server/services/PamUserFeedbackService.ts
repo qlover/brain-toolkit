@@ -149,9 +149,24 @@ export class PamUserFeedbackService {
       paths
     );
     after(() => {
-      void this.issueBundle.screenshots.syncScreenshots(feedbackId);
+      void this.syncScreenshotsAfterAttach(feedbackId);
     });
     return { ok: true, screenshotPaths: [...saved] };
+  }
+
+  /**
+   * 截图入库后：先试同步评论；若仍有未同步项则补跑 syncFeedback（内部会再挂图）。
+   */
+  protected async syncScreenshotsAfterAttach(
+    feedbackId: string
+  ): Promise<void> {
+    await this.issueBundle.screenshots.syncScreenshots(feedbackId);
+    const state =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    if (!state || state.paths.length <= state.postedCount) {
+      return;
+    }
+    await this.issueBundle.sync.syncFeedback(feedbackId);
   }
 
   protected async requireUserId(): Promise<string> {

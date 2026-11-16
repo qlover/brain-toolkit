@@ -7,9 +7,10 @@ import {
   type AsyncState
 } from '@brain-toolkit/react-kit';
 import { useStrictEffect } from '@qlover/next-kit/client';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type MouseEvent } from 'react';
 import { PamUserFeedbackApi } from '@/impls/appApi/PamUserFeedbackApi';
 import { Table, type TableColumn } from '@/uikit/components/Table';
+import { AdminFeedbackDetailDrawer } from '@/uikit/components-pages/AdminFeedbackDetailDrawer';
 import { AdminPanelLoading } from '@/uikit/components-pages/AdminPanelLoading';
 import { PermissionKey, useCan } from '@/uikit/hook/useHasPermission';
 import { useIOC } from '@/uikit/hook/useIOC';
@@ -34,8 +35,12 @@ const STATUS_OPTIONS: readonly PamUserFeedbackStatusType[] = [
   PamUserFeedbackStatus.closed
 ];
 
+function stopRowClick(event: MouseEvent): void {
+  event.stopPropagation();
+}
+
 /**
- * Admin 用户反馈列表：状态切换与手动创建 GitHub Issue。
+ * Admin 用户反馈列表：行点击打开详情抽屉；状态 / GitHub 操作不触发行点击。
  */
 export function AdminFeedbackPanel({
   tt
@@ -45,6 +50,7 @@ export function AdminFeedbackPanel({
   const api = useIOC(PamUserFeedbackApi);
   const { allowed: canUpdate } = useCan(PermissionKey.admin_feedback_update);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [list, listStore] =
     usePendingAsyncStore<AsyncState<readonly PamUserFeedbackAdminItemType[]>>();
@@ -55,6 +61,10 @@ export function AdminFeedbackPanel({
   const loading = list.loading;
   const pendingId = action.targetId;
   const error = list.status === 'failed' ? tt.loadFailed : actionError;
+  const selected =
+    selectedId == null
+      ? null
+      : (list.result?.find((row) => row.id === selectedId) ?? null);
 
   const categoryLabel = useCallback(
     (category: PamUserFeedbackCategoryType): string => {
@@ -232,6 +242,8 @@ export function AdminFeedbackPanel({
             <select
               value={row.status}
               disabled={pendingId === row.id}
+              onClick={stopRowClick}
+              onMouseDown={stopRowClick}
               onChange={(e) =>
                 void handleStatusChange(
                   row,
@@ -254,7 +266,12 @@ export function AdminFeedbackPanel({
         title: tt.colGithub,
         key: 'github',
         render: (_value, row) => (
-          <div data-testid="columns" className="flex flex-col gap-1">
+          <div
+            data-testid="columns"
+            className="flex flex-col gap-1"
+            onClick={stopRowClick}
+            onMouseDown={stopRowClick}
+          >
             {row.githubIssueUrl ? (
               <a
                 href={row.githubIssueUrl}
@@ -279,6 +296,18 @@ export function AdminFeedbackPanel({
                 {tt.createIssue}
               </button>
             ) : null}
+            {canUpdate &&
+            row.githubIssueNumber !== null &&
+            row.screenshotUrls.length > 0 ? (
+              <button
+                type="button"
+                disabled={pendingId === row.id}
+                onClick={() => void handleCreateIssue(row)}
+                className="w-fit cursor-pointer text-xs font-medium text-brand hover:text-brand-hover disabled:opacity-50"
+              >
+                {tt.syncScreenshots}
+              </button>
+            ) : null}
             {row.githubSyncError ? (
               <span className="max-w-[12rem] truncate text-[11px] text-red-500">
                 {row.githubSyncError}
@@ -286,6 +315,43 @@ export function AdminFeedbackPanel({
             ) : null}
           </div>
         )
+      },
+      {
+        title: tt.colScreenshots,
+        key: 'screenshots',
+        render: (_value, row) =>
+          row.screenshotUrls.length === 0 ? (
+            <span data-testid="columns" className="text-xs text-tertiary-text">
+              —
+            </span>
+          ) : (
+            <div
+              data-testid="columns"
+              className="flex flex-wrap gap-1"
+              onClick={stopRowClick}
+              onMouseDown={stopRowClick}
+            >
+              {row.screenshotUrls.map((url) => (
+                <a
+                  data-testid="columns"
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block h-10 w-10 overflow-hidden rounded border border-primary-border"
+                >
+                  {
+                    // eslint-disable-next-line @next/next/no-img-element -- Supabase 签名 URL 缩略图
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  }
+                </a>
+              ))}
+            </div>
+          )
       },
       {
         title: tt.colTime,
@@ -310,10 +376,12 @@ export function AdminFeedbackPanel({
     tt.colBody,
     tt.colCategory,
     tt.colGithub,
+    tt.colScreenshots,
     tt.colStatus,
     tt.colTime,
     tt.colUser,
-    tt.createIssue
+    tt.createIssue,
+    tt.syncScreenshots
   ]);
 
   if (loading && rows.length === 0) {
@@ -335,8 +403,22 @@ export function AdminFeedbackPanel({
         dataSource={rows}
         rowKey="id"
         emptyText={tt.empty}
+        onRowClick={(row) => setSelectedId(row.id)}
         data-testid="AdminFeedbackTable"
       />
+      {selected ? (
+        <AdminFeedbackDetailDrawer
+          item={selected}
+          tt={tt}
+          canUpdate={canUpdate}
+          pending={pendingId === selected.id}
+          categoryLabel={categoryLabel}
+          statusLabel={statusLabel}
+          onStatusChange={(status) => void handleStatusChange(selected, status)}
+          onGithubSync={() => void handleCreateIssue(selected)}
+          onClose={() => setSelectedId(null)}
+        />
+      ) : null}
     </div>
   );
 }

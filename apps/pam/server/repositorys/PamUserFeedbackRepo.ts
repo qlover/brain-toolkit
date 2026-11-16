@@ -62,6 +62,7 @@ export type PamUserFeedbackGithubSyncFieldsType = {
 
 export type PamUserFeedbackScreenshotSyncStateType = {
   readonly issueNumber: number | null;
+  readonly issueUrl: string | null;
   readonly paths: readonly string[];
   readonly postedCount: number;
 };
@@ -275,12 +276,15 @@ export class PamUserFeedbackRepo {
     const supabase = await this.supabaseBridge.getAdminSupabase();
     const result = await supabase
       .from(TABLE)
-      .select('github_issue_number,screenshot_paths,github_screenshot_count')
+      .select(
+        'github_issue_number,github_issue_url,screenshot_paths,github_screenshot_count'
+      )
       .eq('id', feedbackId)
       .maybeSingle();
     this.supabaseBridge.throwIfError(result);
     const row = result.data as {
       readonly github_issue_number: number | null;
+      readonly github_issue_url: string | null;
       readonly screenshot_paths: string[] | null;
       readonly github_screenshot_count: number | null;
     } | null;
@@ -289,6 +293,7 @@ export class PamUserFeedbackRepo {
     }
     return {
       issueNumber: row.github_issue_number ?? null,
+      issueUrl: row.github_issue_url ?? null,
       paths: row.screenshot_paths ?? [],
       postedCount: row.github_screenshot_count ?? 0
     };

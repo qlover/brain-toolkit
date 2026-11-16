@@ -12,7 +12,7 @@ import type {
  */
 export interface FeedbackIssueHostInterface {
   /**
-   * 不存在返回 null；已有 Issue 时仍返回（`issueNumber` 非空），由引擎跳过创建。
+   * 不存在返回 null；已有 Issue 时仍返回（`issueNumber` 非空），引擎跳过创建但仍会同步截图。
    */
   resolveIssueContent(
     feedbackId: string

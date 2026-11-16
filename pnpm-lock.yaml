@@ -829,6 +829,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.0)(jiti@2.6.1)(jsdom@26.1.0(supports-color@8.1.1))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.44.0)(yaml@2.8.1)
 
   packages/next-app-kit:
     devDependencies:
