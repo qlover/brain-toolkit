@@ -2,6 +2,15 @@
 
 Forge 无关的 Issue 网关；**GitHub App** 为第一个实现。可选子路径 **`/feedback`** 提供「反馈 → Issue」编排。
 
+## 构建与发布
+
+```bash
+pnpm --filter @brain-toolkit/issue-forge build
+```
+
+- monorepo 内：`exports` 指向 `src`（与 `workspace:*` 一致）
+- npm 发布：`publishConfig` 指向 `dist`（esm / cjs / dts）
+
 ## `@brain-toolkit/issue-forge`（协议）
 
 ```ts

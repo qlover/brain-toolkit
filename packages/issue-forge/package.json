@@ -2,8 +2,11 @@
   "name": "@brain-toolkit/issue-forge",
   "version": "0.1.0",
   "type": "module",
-  "private": true,
+  "private": false,
   "description": "Forge-agnostic Issue gateway + optional feedback→Issue sync engines; GitHub App first",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -17,7 +20,14 @@
       "default": "./src/feedback/index.ts"
     }
   },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
+    "build": "tsup",
     "type-check": "tsc --build",
     "test": "vitest run --config vitest.config.ts"
   },
@@ -26,6 +36,7 @@
     "url": "git+https://github.com/qlover/brain-toolkit.git",
     "directory": "packages/issue-forge"
   },
+  "homepage": "https://github.com/qlover/brain-toolkit#readme",
   "author": "qlover",
   "license": "ISC",
   "dependencies": {
@@ -33,12 +44,33 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
+    "tsup": "^8.4.0",
     "vitest": "^3.2.4"
   },
   "keywords": [
     "github-app",
     "issue",
     "forge",
-    "webhook"
-  ]
+    "webhook",
+    "feedback"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs"
+      },
+      "./feedback": {
+        "types": "./dist/feedback/index.d.ts",
+        "import": "./dist/feedback/index.js",
+        "require": "./dist/feedback/index.cjs"
+      }
+    }
+  }
 }

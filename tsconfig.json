@@ -14,6 +14,7 @@
     { "path": "./packages/element-sizer" },
     { "path": "./packages/ts2locales" },
     { "path": "./packages/brain-user" },
-    { "path": "./packages/pamenv" }
+    { "path": "./packages/pamenv" },
+    { "path": "./packages/issue-forge" }
   ]
 }
