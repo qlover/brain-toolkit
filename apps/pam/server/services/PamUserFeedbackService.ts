@@ -108,6 +108,48 @@ export class PamUserFeedbackService {
     };
   }
 
+  /**
+   * Admin 补挂截图到已有 Issue（或先确保 Issue 存在再挂图）。
+   */
+  public async syncScreenshotsForAdmin(feedbackId: string): Promise<{
+    readonly ok: true;
+    readonly id: string;
+    readonly postedCount: number;
+    readonly githubIssueNumber: number | null;
+    readonly githubIssueUrl: string | null;
+    readonly githubSyncError: string | null;
+  }> {
+    const existing = await this.feedbackRepo.findByIdAsAdmin(feedbackId);
+    if (!existing) {
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
+    }
+    let postedCount = await this.issueBundle.screenshots.syncScreenshots(
+      feedbackId,
+      { manual: true }
+    );
+    const afterFirst =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    if (afterFirst && afterFirst.paths.length > afterFirst.postedCount) {
+      await this.issueBundle.sync.syncFeedback(feedbackId, { manual: true });
+      postedCount += await this.issueBundle.screenshots.syncScreenshots(
+        feedbackId,
+        { manual: true }
+      );
+    }
+    const item = await this.feedbackRepo.findByIdAsAdmin(feedbackId);
+    if (!item) {
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
+    }
+    return {
+      ok: true,
+      id: item.id,
+      postedCount,
+      githubIssueNumber: item.githubIssueNumber,
+      githubIssueUrl: item.githubIssueUrl,
+      githubSyncError: item.githubSyncError
+    };
+  }
+
   public async attachScreenshotsForCurrentUser(
     feedbackId: string,
     files: readonly PamFeedbackScreenshotUploadType[]

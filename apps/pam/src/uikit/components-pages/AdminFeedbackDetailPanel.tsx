@@ -25,7 +25,8 @@ export type AdminFeedbackDetailPanelPropsType = {
   readonly categoryLabel: (category: PamUserFeedbackCategoryType) => string;
   readonly statusLabel: (status: PamUserFeedbackStatusType) => string;
   readonly onStatusChange: (status: PamUserFeedbackStatusType) => void;
-  readonly onGithubSync: () => void;
+  readonly onCreateIssue: () => void;
+  readonly onSyncScreenshots: () => void;
 };
 
 /**
@@ -42,7 +43,8 @@ export function AdminFeedbackDetailPanel(
     categoryLabel,
     statusLabel,
     onStatusChange,
-    onGithubSync
+    onCreateIssue,
+    onSyncScreenshots
   } = props;
   const ctx = item.clientContext;
   const device = ctx?.device;
@@ -248,7 +250,7 @@ export function AdminFeedbackDetailPanel(
               <button
                 type="button"
                 disabled={pending}
-                onClick={onGithubSync}
+                onClick={onCreateIssue}
                 className="cursor-pointer rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-on-brand disabled:opacity-50"
               >
                 {tt.createIssue}
@@ -259,7 +261,7 @@ export function AdminFeedbackDetailPanel(
               <button
                 type="button"
                 disabled={pending}
-                onClick={onGithubSync}
+                onClick={onSyncScreenshots}
                 className="cursor-pointer rounded-lg border border-primary-border bg-surface px-3 py-1.5 text-sm font-medium text-primary-text disabled:opacity-50"
               >
                 {tt.syncScreenshots}

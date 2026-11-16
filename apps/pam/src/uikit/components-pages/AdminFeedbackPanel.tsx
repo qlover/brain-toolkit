@@ -201,6 +201,55 @@ export function AdminFeedbackPanel({
     ]
   );
 
+  const handleSyncScreenshots = useCallback(
+    async (row: PamUserFeedbackAdminItemType) => {
+      if (!canUpdate || pendingId !== null) {
+        return;
+      }
+      setActionError(null);
+      actionStore.emit({ targetId: row.id });
+      try {
+        const result = await runAsyncStore(
+          actionStore,
+          api.syncScreenshots(row.id).then((synced) => {
+            const current = listStore.getResult() ?? [];
+            listStore.success(
+              current.map((item) =>
+                item.id === row.id
+                  ? {
+                      ...item,
+                      githubIssueNumber: synced.githubIssueNumber,
+                      githubIssueUrl: synced.githubIssueUrl,
+                      githubSyncError: synced.githubSyncError
+                    }
+                  : item
+              )
+            );
+            if (synced.postedCount === 0 && synced.githubSyncError) {
+              setActionError(tt.syncScreenshotsFailed);
+            }
+            return true as const;
+          })
+        );
+        if (!actionStore.isSuccess() || result === undefined) {
+          setActionError(tt.syncScreenshotsFailed);
+        }
+      } catch {
+        setActionError(tt.syncScreenshotsFailed);
+      } finally {
+        actionStore.emit({ targetId: null });
+      }
+    },
+    [
+      actionStore,
+      api,
+      canUpdate,
+      listStore,
+      pendingId,
+      tt.syncScreenshotsFailed
+    ]
+  );
+
   const columns = useMemo((): TableColumn<PamUserFeedbackAdminItemType>[] => {
     return [
       {
@@ -302,7 +351,7 @@ export function AdminFeedbackPanel({
               <button
                 type="button"
                 disabled={pendingId === row.id}
-                onClick={() => void handleCreateIssue(row)}
+                onClick={() => void handleSyncScreenshots(row)}
                 className="w-fit cursor-pointer text-xs font-medium text-brand hover:text-brand-hover disabled:opacity-50"
               >
                 {tt.syncScreenshots}
@@ -371,6 +420,7 @@ export function AdminFeedbackPanel({
     categoryLabel,
     handleCreateIssue,
     handleStatusChange,
+    handleSyncScreenshots,
     pendingId,
     statusLabel,
     tt.colBody,
@@ -415,7 +465,8 @@ export function AdminFeedbackPanel({
           categoryLabel={categoryLabel}
           statusLabel={statusLabel}
           onStatusChange={(status) => void handleStatusChange(selected, status)}
-          onGithubSync={() => void handleCreateIssue(selected)}
+          onCreateIssue={() => void handleCreateIssue(selected)}
+          onSyncScreenshots={() => void handleSyncScreenshots(selected)}
           onClose={() => setSelectedId(null)}
         />
       ) : null}

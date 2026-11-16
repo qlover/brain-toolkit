@@ -277,6 +277,20 @@ export type PamUserFeedbackAdminGithubIssueOkType = z.infer<
   typeof pamUserFeedbackAdminGithubIssueOkSchema
 >;
 
+/** Admin 手动补同步截图到 GitHub Issue（临时补挂历史数据）。 */
+export const pamUserFeedbackAdminSyncScreenshotsOkSchema = z.object({
+  ok: z.literal(true),
+  id: z.string().uuid(),
+  postedCount: z.number().int().nonnegative(),
+  githubIssueNumber: z.number().int().nullable(),
+  githubIssueUrl: z.string().nullable(),
+  githubSyncError: z.string().nullable()
+});
+
+export type PamUserFeedbackAdminSyncScreenshotsOkType = z.infer<
+  typeof pamUserFeedbackAdminSyncScreenshotsOkSchema
+>;
+
 /** Storage / 上传约束 */
 export const PAM_FEEDBACK_SCREENSHOT_BUCKET = 'pam-user-feedback' as const;
 export const PAM_FEEDBACK_SCREENSHOT_MAX_COUNT = 3 as const;

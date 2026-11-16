@@ -98,6 +98,14 @@ export const ADMIN_FEEDBACK_SYNC_SCREENSHOTS =
   'admin_feedback:sync_screenshots';
 
 /**
+ * @description Sync screenshots failed
+ * @localZh 同步截图失败
+ * @localEn Failed to sync screenshots
+ */
+export const ADMIN_FEEDBACK_SYNC_SCREENSHOTS_FAILED =
+  'admin_feedback:sync_screenshots_failed';
+
+/**
  * @description GitHub not configured
  * @localZh GitHub App 未配置完整，无法创建 Issue
  * @localEn GitHub App is not fully configured

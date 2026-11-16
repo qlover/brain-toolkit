@@ -309,6 +309,7 @@ export const adminFeedback18n = Object.freeze({
   colTime: feedbackKeys.ADMIN_FEEDBACK_COL_TIME,
   createIssue: feedbackKeys.ADMIN_FEEDBACK_CREATE_ISSUE,
   syncScreenshots: feedbackKeys.ADMIN_FEEDBACK_SYNC_SCREENSHOTS,
+  syncScreenshotsFailed: feedbackKeys.ADMIN_FEEDBACK_SYNC_SCREENSHOTS_FAILED,
   githubNotConfigured: feedbackKeys.ADMIN_FEEDBACK_GITHUB_NOT_CONFIGURED,
   githubCreateFailed: feedbackKeys.ADMIN_FEEDBACK_GITHUB_CREATE_FAILED,
   statusChangeFailed: feedbackKeys.ADMIN_FEEDBACK_STATUS_CHANGE_FAILED,

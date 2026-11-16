@@ -28,7 +28,8 @@ export type AdminFeedbackDetailDrawerPropsType = {
   readonly categoryLabel: (category: PamUserFeedbackCategoryType) => string;
   readonly statusLabel: (status: PamUserFeedbackStatusType) => string;
   readonly onStatusChange: (status: PamUserFeedbackStatusType) => void;
-  readonly onGithubSync: () => void;
+  readonly onCreateIssue: () => void;
+  readonly onSyncScreenshots: () => void;
   readonly onClose: () => void;
 };
 
@@ -46,7 +47,8 @@ export function AdminFeedbackDetailDrawer(
     categoryLabel,
     statusLabel,
     onStatusChange,
-    onGithubSync,
+    onCreateIssue,
+    onSyncScreenshots,
     onClose
   } = props;
   const [shown, setShown] = useState(false);
@@ -121,7 +123,8 @@ export function AdminFeedbackDetailDrawer(
           categoryLabel={categoryLabel}
           statusLabel={statusLabel}
           onStatusChange={onStatusChange}
-          onGithubSync={onGithubSync}
+          onCreateIssue={onCreateIssue}
+          onSyncScreenshots={onSyncScreenshots}
         />
       </aside>
     </div>,
