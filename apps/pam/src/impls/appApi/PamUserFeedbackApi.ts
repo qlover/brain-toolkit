@@ -3,6 +3,7 @@ import { inject, injectable } from '@shared/container';
 import {
   API_ADMIN_FEEDBACK,
   API_ADMIN_FEEDBACK_GITHUB_ISSUE,
+  API_ADMIN_FEEDBACK_SYNC_SCREENSHOTS,
   API_USER_FEEDBACK,
   API_USER_FEEDBACK_SCREENSHOTS
 } from '@config/apiRoutes';
@@ -10,11 +11,13 @@ import {
   pamUserFeedbackAdminGithubIssueOkSchema,
   pamUserFeedbackAdminListSchema,
   pamUserFeedbackAdminStatusOkSchema,
+  pamUserFeedbackAdminSyncScreenshotsOkSchema,
   pamUserFeedbackCreateOkSchema,
   pamUserFeedbackListPublicSchema,
   type PamUserFeedbackAdminGithubIssueOkType,
   type PamUserFeedbackAdminItemType,
   type PamUserFeedbackAdminStatusOkType,
+  type PamUserFeedbackAdminSyncScreenshotsOkType,
   type PamUserFeedbackCategoryType,
   type PamUserFeedbackItemPublicType,
   type PamUserFeedbackStatusType
@@ -98,6 +101,18 @@ export class PamUserFeedbackApi {
     const response = await this.appApiRequester.post(path, {});
     const envelope = response.data as NextKitApiSuccess<unknown>;
     return pamUserFeedbackAdminGithubIssueOkSchema.parse(envelope.data);
+  }
+
+  public async syncScreenshots(
+    id: string
+  ): Promise<PamUserFeedbackAdminSyncScreenshotsOkType> {
+    const path = API_ADMIN_FEEDBACK_SYNC_SCREENSHOTS.replace(
+      ':id',
+      encodeURIComponent(id)
+    );
+    const response = await this.appApiRequester.post(path, {});
+    const envelope = response.data as NextKitApiSuccess<unknown>;
+    return pamUserFeedbackAdminSyncScreenshotsOkSchema.parse(envelope.data);
   }
 
   protected async uploadScreenshots(

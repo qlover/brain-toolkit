@@ -9,7 +9,10 @@ export type {
   IssueWebhookVerifyResultType
 } from './types/IssueForgeTypes';
 
-export type { IssueForgeGatewayInterface } from './interfaces/IssueForgeGatewayInterface';
+export type {
+  ForgeIssueCommentType,
+  IssueForgeGatewayInterface
+} from './interfaces/IssueForgeGatewayInterface';
 export type {
   IssueForgeRepoContentInterface,
   IssueForgeRepoFileType,

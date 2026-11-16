@@ -49,6 +49,7 @@ export class FeedbackIssueSyncEngine {
       return FeedbackIssueSyncStatus.skipped;
     }
     if (content.issueNumber !== null) {
+      await this.screenshotSync.syncScreenshots(feedbackId, options);
       return FeedbackIssueSyncStatus.synced;
     }
 

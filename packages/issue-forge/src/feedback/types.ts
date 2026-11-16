@@ -26,8 +26,12 @@ export type FeedbackIssueStatusType =
 
 export type FeedbackScreenshotSyncStateType = {
   readonly issueNumber: number | null;
+  /** 已有 Issue 时用于截图失败写回错误且不丢链接 */
+  readonly issueUrl: string | null;
   readonly paths: readonly string[];
   readonly postedCount: number;
+  /** 本地已清理后仍保留的 GitHub raw URL（用于评论被删后补挂） */
+  readonly githubUrls: readonly string[];
 };
 
 export type FeedbackIssueSyncFieldsType = {

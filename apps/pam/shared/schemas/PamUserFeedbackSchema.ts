@@ -217,6 +217,8 @@ export const pamUserFeedbackAdminItemSchema = z.object({
   userAgent: z.string().nullable(),
   clientContext: pamFeedbackClientContextSchema.nullable(),
   screenshotUrls: z.array(z.string().min(1)).max(3),
+  /** 本地 Storage 仍有待同步 / 未清理的截图 */
+  hasLocalScreenshots: z.boolean(),
   status: pamUserFeedbackStatusSchema,
   githubIssueNumber: z.number().int().positive().nullable(),
   githubIssueUrl: z.string().nullable(),
@@ -275,6 +277,20 @@ export const pamUserFeedbackAdminGithubIssueOkSchema = z.object({
 
 export type PamUserFeedbackAdminGithubIssueOkType = z.infer<
   typeof pamUserFeedbackAdminGithubIssueOkSchema
+>;
+
+/** Admin 手动发布截图到 GitHub Issue（补挂 / 重挂）。 */
+export const pamUserFeedbackAdminSyncScreenshotsOkSchema = z.object({
+  ok: z.literal(true),
+  id: z.string().uuid(),
+  postedCount: z.number().int().nonnegative(),
+  githubIssueNumber: z.number().int().nullable(),
+  githubIssueUrl: z.string().nullable(),
+  githubSyncError: z.string().nullable()
+});
+
+export type PamUserFeedbackAdminSyncScreenshotsOkType = z.infer<
+  typeof pamUserFeedbackAdminSyncScreenshotsOkSchema
 >;
 
 /** Storage / 上传约束 */

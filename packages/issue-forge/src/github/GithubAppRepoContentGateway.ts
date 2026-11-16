@@ -42,6 +42,24 @@ export class GithubAppRepoContentGateway
   /**
    * @override
    */
+  public async hasFile(path: string, branch: string): Promise<boolean> {
+    const response = await this.client.request(
+      this.config,
+      `${this.contentsPath(path)}?ref=${encodeURIComponent(branch)}`,
+      { method: 'GET' }
+    );
+    if (response.status === 404) {
+      return false;
+    }
+    if (!response.ok) {
+      throw await this.client.toError('has file', response);
+    }
+    return true;
+  }
+
+  /**
+   * @override
+   */
   public async ensureBranch(
     branch: string,
     initialFile: IssueForgeRepoFileType

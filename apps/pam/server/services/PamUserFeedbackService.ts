@@ -5,6 +5,7 @@ import { inject, injectable } from '@shared/container';
 import {
   API_FEEDBACK_NOT_FOUND,
   API_FEEDBACK_SCREENSHOT_EMPTY,
+  API_FEEDBACK_SCREENSHOT_SYNC_FAILED,
   API_FEEDBACK_SCREENSHOT_TOO_LARGE,
   API_FEEDBACK_SCREENSHOT_TYPE_UNSUPPORTED,
   API_FEEDBACK_SCREENSHOTS_REQUIRED,
@@ -108,6 +109,76 @@ export class PamUserFeedbackService {
     };
   }
 
+  /**
+   * Admin 补挂截图到已有 Issue（或先确保 Issue 存在再挂图）。
+   */
+  public async syncScreenshotsForAdmin(feedbackId: string): Promise<{
+    readonly ok: true;
+    readonly id: string;
+    readonly postedCount: number;
+    readonly githubIssueNumber: number | null;
+    readonly githubIssueUrl: string | null;
+    readonly githubSyncError: string | null;
+  }> {
+    const existing = await this.feedbackRepo.findByIdAsAdmin(feedbackId);
+    if (!existing) {
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
+    }
+    const before =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    // 本地还有图：强制 count=0，避免「count 已满」导致同步空跑（评论被删时尤甚）
+    if (before && before.paths.length > 0) {
+      await this.feedbackRepo.forceScreenshotCountAsAdmin(feedbackId, 0);
+    }
+    let postedCount = await this.issueBundle.screenshots.syncScreenshots(
+      feedbackId,
+      { manual: true }
+    );
+    const afterFirst =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    if (afterFirst && afterFirst.paths.length > afterFirst.postedCount) {
+      await this.issueBundle.sync.syncFeedback(feedbackId, { manual: true });
+      postedCount += await this.issueBundle.screenshots.syncScreenshots(
+        feedbackId,
+        { manual: true }
+      );
+    }
+    // 本地已清：用落库的 GitHub URL 补挂被删的 Issue 评论
+    postedCount +=
+      await this.issueBundle.screenshots.ensureGithubScreenshotComments(
+        feedbackId,
+        { manual: true }
+      );
+    const item = await this.feedbackRepo.findByIdAsAdmin(feedbackId);
+    if (!item) {
+      throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
+    }
+    const afterAll =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    const screenshotError =
+      typeof item.githubSyncError === 'string' &&
+      item.githubSyncError.startsWith('screenshot:');
+    if (
+      !afterAll ||
+      afterAll.paths.length > afterAll.postedCount ||
+      screenshotError ||
+      (postedCount === 0 && afterAll.paths.length > 0) ||
+      (postedCount === 0 &&
+        afterAll.paths.length === 0 &&
+        afterAll.githubUrls.length === 0)
+    ) {
+      throw new ExecutorError(API_FEEDBACK_SCREENSHOT_SYNC_FAILED);
+    }
+    return {
+      ok: true,
+      id: item.id,
+      postedCount,
+      githubIssueNumber: item.githubIssueNumber,
+      githubIssueUrl: item.githubIssueUrl,
+      githubSyncError: item.githubSyncError
+    };
+  }
+
   public async attachScreenshotsForCurrentUser(
     feedbackId: string,
     files: readonly PamFeedbackScreenshotUploadType[]
@@ -149,9 +220,24 @@ export class PamUserFeedbackService {
       paths
     );
     after(() => {
-      void this.issueBundle.screenshots.syncScreenshots(feedbackId);
+      void this.syncScreenshotsAfterAttach(feedbackId);
     });
     return { ok: true, screenshotPaths: [...saved] };
+  }
+
+  /**
+   * 截图入库后：先试同步评论；若仍有未同步项则补跑 syncFeedback（内部会再挂图）。
+   */
+  protected async syncScreenshotsAfterAttach(
+    feedbackId: string
+  ): Promise<void> {
+    await this.issueBundle.screenshots.syncScreenshots(feedbackId);
+    const state =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    if (!state || state.paths.length <= state.postedCount) {
+      return;
+    }
+    await this.issueBundle.sync.syncFeedback(feedbackId);
   }
 
   protected async requireUserId(): Promise<string> {

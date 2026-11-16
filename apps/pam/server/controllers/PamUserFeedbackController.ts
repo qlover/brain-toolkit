@@ -5,6 +5,7 @@ import {
   pamUserFeedbackAdminListSchema,
   pamUserFeedbackAdminStatusOkSchema,
   pamUserFeedbackAdminStatusPatchSchema,
+  pamUserFeedbackAdminSyncScreenshotsOkSchema,
   pamUserFeedbackCreateBodySchema,
   pamUserFeedbackCreateOkSchema,
   pamUserFeedbackListPublicSchema,
@@ -12,6 +13,7 @@ import {
   type PamUserFeedbackAdminGithubIssueOkType,
   type PamUserFeedbackAdminListType,
   type PamUserFeedbackAdminStatusOkType,
+  type PamUserFeedbackAdminSyncScreenshotsOkType,
   type PamUserFeedbackCreateOkType,
   type PamUserFeedbackListPublicType,
   type PamUserFeedbackScreenshotsOkType
@@ -69,6 +71,14 @@ export class PamUserFeedbackController {
       parsed.id
     );
     return pamUserFeedbackAdminGithubIssueOkSchema.parse(data);
+  }
+
+  public async syncAdminScreenshots(
+    body: unknown
+  ): Promise<PamUserFeedbackAdminSyncScreenshotsOkType> {
+    const parsed = pamUserFeedbackAdminGithubIssueBodySchema.parse(body);
+    const data = await this.feedbackService.syncScreenshotsForAdmin(parsed.id);
+    return pamUserFeedbackAdminSyncScreenshotsOkSchema.parse(data);
   }
 
   public async attachScreenshots(

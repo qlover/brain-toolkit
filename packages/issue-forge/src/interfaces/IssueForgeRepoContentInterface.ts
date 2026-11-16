@@ -21,6 +21,11 @@ export type IssueForgeRepoFileUploadedType = {
 export interface IssueForgeRepoContentInterface {
   readTextFile(path: string): Promise<string | null>;
 
+  /**
+   * 指定分支上是否已有该路径文件（HEAD GET contents；404 为 false）。
+   */
+  hasFile(path: string, branch: string): Promise<boolean>;
+
   ensureBranch(
     branch: string,
     initialFile: IssueForgeRepoFileType
