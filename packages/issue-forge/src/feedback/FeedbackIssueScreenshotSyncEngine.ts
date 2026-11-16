@@ -53,6 +53,65 @@ export class FeedbackIssueScreenshotSyncEngine {
         }));
   }
 
+  /**
+   * 本地已清理后：用落库的 GitHub raw URL 检查 Issue 评论，缺失则补发（不碰 Storage）。
+   */
+  public async ensureGithubScreenshotComments(
+    feedbackId: string,
+    options: FeedbackIssueSyncOptionsType = {}
+  ): Promise<number> {
+    const state = await this.host.findScreenshotState(feedbackId);
+    if (
+      !state ||
+      state.issueNumber === null ||
+      state.githubUrls.length === 0
+    ) {
+      return 0;
+    }
+    const auth = await this.host.resolveForgeAuth(options);
+    if (!auth) {
+      return 0;
+    }
+    const issueNumber = state.issueNumber;
+    const urls = state.githubUrls;
+    try {
+      const forge = createGithubAppIssueForge(this.client, auth);
+      const comments = await forge.listComments({ issueNumber });
+      const alreadyPosted = urls.every((url) =>
+        comments.some((comment) => comment.body.includes(url))
+      );
+      if (alreadyPosted) {
+        return 0;
+      }
+      await forge.createComment(
+        { issueNumber },
+        this.host.formatScreenshotComment(urls, 0)
+      );
+      await this.host.updateSync(feedbackId, {
+        status: FeedbackIssueSyncStatus.synced,
+        issueNumber,
+        issueUrl: state.issueUrl,
+        error: null
+      });
+      return urls.length;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger?.error('feedback screenshot comment ensure failed', {
+        feedbackId,
+        message
+      });
+      await this.host
+        .updateSync(feedbackId, {
+          status: FeedbackIssueSyncStatus.synced,
+          issueNumber,
+          issueUrl: state.issueUrl,
+          error: `${SCREENSHOT_ERROR_PREFIX}${message}`
+        })
+        .catch(() => undefined);
+      return 0;
+    }
+  }
+
   public async syncScreenshots(
     feedbackId: string,
     options: FeedbackIssueSyncOptionsType = {}
@@ -92,23 +151,38 @@ export class FeedbackIssueScreenshotSyncEngine {
       return 0;
     }
 
+    const localPaths = state.paths.slice(from);
     try {
-      const urls = await this.uploadScreenshots(
-        auth,
-        feedbackId,
-        state.paths.slice(from)
-      );
+      const urls = await this.uploadScreenshots(auth, feedbackId, localPaths);
       const forge = createGithubAppIssueForge(this.client, auth);
-      await forge.createComment(
-        { issueNumber },
-        this.host.formatScreenshotComment(urls, from)
+      const comments = await forge.listComments({ issueNumber });
+      const alreadyPosted = urls.every((url) =>
+        comments.some((comment) => comment.body.includes(url))
       );
+      if (!alreadyPosted) {
+        await forge.createComment(
+          { issueNumber },
+          this.host.formatScreenshotComment(urls, from)
+        );
+      }
       await this.host.updateSync(feedbackId, {
         status: FeedbackIssueSyncStatus.synced,
         issueNumber,
         issueUrl: state.issueUrl,
         error: null
       });
+      await this.host
+        .releaseLocalScreenshotsAfterGithub(feedbackId, urls, localPaths)
+        .catch((cleanupError: unknown) => {
+          const message =
+            cleanupError instanceof Error
+              ? cleanupError.message
+              : String(cleanupError);
+          this.logger?.error('feedback screenshot local cleanup failed', {
+            feedbackId,
+            message
+          });
+        });
       return urls.length;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -174,15 +248,21 @@ export class FeedbackIssueScreenshotSyncEngine {
     });
     const urls: string[] = [];
     for (const [index, objectPath] of objectPaths.entries()) {
-      const bytes = await this.host.downloadScreenshot(objectPath);
       const fileName = objectPath.split('/').pop() || `${String(index)}.jpg`;
       const repoPath = `${FEEDBACK_ISSUE_ASSETS_DIR}/${feedbackId}/${fileName}`;
-      await content.uploadFile({
-        branch: FEEDBACK_ISSUE_ASSETS_BRANCH,
-        path: repoPath,
-        contentBase64: bytes.toString('base64'),
-        message: `chore(feedback): feedback ${feedbackId} screenshot`
-      });
+      const alreadyOnBranch = await content.hasFile(
+        repoPath,
+        FEEDBACK_ISSUE_ASSETS_BRANCH
+      );
+      if (!alreadyOnBranch) {
+        const bytes = await this.host.downloadScreenshot(objectPath);
+        await content.uploadFile({
+          branch: FEEDBACK_ISSUE_ASSETS_BRANCH,
+          path: repoPath,
+          contentBase64: bytes.toString('base64'),
+          message: `chore(feedback): feedback ${feedbackId} screenshot`
+        });
+      }
       urls.push(
         FeedbackIssueScreenshotSyncEngine.buildRawAssetUrl(
           auth,

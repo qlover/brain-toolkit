@@ -23,7 +23,7 @@ const SELECT_OWN =
   'id,user_id,category,body,page_url,user_agent,client_context,screenshot_paths,status,created_at' as const;
 
 const SELECT_ADMIN =
-  'id,user_id,category,body,page_url,user_agent,client_context,screenshot_paths,status,created_at,github_issue_number,github_issue_url,github_sync_status,github_sync_error' as const;
+  'id,user_id,category,body,page_url,user_agent,client_context,screenshot_paths,github_screenshot_urls,status,created_at,github_issue_number,github_issue_url,github_sync_status,github_sync_error' as const;
 
 type FeedbackDbRowType = {
   readonly id: string;
@@ -39,6 +39,7 @@ type FeedbackDbRowType = {
 };
 
 type FeedbackAdminDbRowType = FeedbackDbRowType & {
+  readonly github_screenshot_urls: string[] | null;
   readonly github_issue_number: number | null;
   readonly github_issue_url: string | null;
   readonly github_sync_status: string | null;
@@ -65,6 +66,7 @@ export type PamUserFeedbackScreenshotSyncStateType = {
   readonly issueUrl: string | null;
   readonly paths: readonly string[];
   readonly postedCount: number;
+  readonly githubUrls: readonly string[];
 };
 
 const GITHUB_SYNC_ERROR_MAX = 500;
@@ -170,9 +172,7 @@ export class PamUserFeedbackRepo {
     );
     const items: PamUserFeedbackAdminItemType[] = [];
     for (const row of rows) {
-      const urls = await this.createScreenshotSignedUrls(
-        row.screenshot_paths ?? []
-      );
+      const urls = await this.resolveAdminScreenshotUrls(row);
       items.push(mapAdminRow(row, urls, nameByUserId.get(row.user_id) ?? null));
     }
     return items;
@@ -193,10 +193,74 @@ export class PamUserFeedbackRepo {
       return null;
     }
     const [urls, nameByUserId] = await Promise.all([
-      this.createScreenshotSignedUrls(row.screenshot_paths ?? []),
+      this.resolveAdminScreenshotUrls(row),
       this.loadDisplayNames([row.user_id])
     ]);
     return mapAdminRow(row, urls, nameByUserId.get(row.user_id) ?? null);
+  }
+
+  /**
+   * 评论成功后：落库 GitHub raw URL，删除本地 Storage，清空 paths / count。
+   */
+  public async releaseLocalScreenshotsAfterGithubAsAdmin(
+    feedbackId: string,
+    githubUrls: readonly string[],
+    localPaths: readonly string[]
+  ): Promise<void> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    if (localPaths.length > 0) {
+      const removed = await supabase.storage
+        .from(PAM_FEEDBACK_SCREENSHOT_BUCKET)
+        .remove([...localPaths]);
+      if (removed.error) {
+        throw new ExecutorError(API_SERVER_ERROR, removed.error.message);
+      }
+    }
+    const current = await supabase
+      .from(TABLE)
+      .select('github_screenshot_urls')
+      .eq('id', feedbackId)
+      .maybeSingle();
+    this.supabaseBridge.throwIfError(current);
+    const existing = (
+      (
+        current.data as {
+          readonly github_screenshot_urls: string[] | null;
+        } | null
+      )?.github_screenshot_urls ?? []
+    ).filter((url) => typeof url === 'string' && url.length > 0);
+    const merged = [...existing];
+    for (const url of githubUrls) {
+      if (!merged.includes(url)) {
+        merged.push(url);
+      }
+    }
+    const result = await supabase
+      .from(TABLE)
+      .update({
+        github_screenshot_urls: merged.slice(
+          0,
+          PAM_FEEDBACK_SCREENSHOT_MAX_COUNT
+        ),
+        screenshot_paths: [],
+        github_screenshot_count: 0,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', feedbackId);
+    this.supabaseBridge.throwIfError(result);
+  }
+
+  protected async resolveAdminScreenshotUrls(
+    row: FeedbackAdminDbRowType
+  ): Promise<string[]> {
+    const localPaths = row.screenshot_paths ?? [];
+    if (localPaths.length > 0) {
+      return this.createScreenshotSignedUrls(localPaths);
+    }
+    return (row.github_screenshot_urls ?? []).slice(
+      0,
+      PAM_FEEDBACK_SCREENSHOT_MAX_COUNT
+    );
   }
 
   public async updateGithubSyncAsAdmin(
@@ -277,7 +341,7 @@ export class PamUserFeedbackRepo {
     const result = await supabase
       .from(TABLE)
       .select(
-        'github_issue_number,github_issue_url,screenshot_paths,github_screenshot_count'
+        'github_issue_number,github_issue_url,screenshot_paths,github_screenshot_count,github_screenshot_urls'
       )
       .eq('id', feedbackId)
       .maybeSingle();
@@ -287,6 +351,7 @@ export class PamUserFeedbackRepo {
       readonly github_issue_url: string | null;
       readonly screenshot_paths: string[] | null;
       readonly github_screenshot_count: number | null;
+      readonly github_screenshot_urls: string[] | null;
     } | null;
     if (!row) {
       return null;
@@ -295,7 +360,8 @@ export class PamUserFeedbackRepo {
       issueNumber: row.github_issue_number ?? null,
       issueUrl: row.github_issue_url ?? null,
       paths: row.screenshot_paths ?? [],
-      postedCount: row.github_screenshot_count ?? 0
+      postedCount: row.github_screenshot_count ?? 0,
+      githubUrls: row.github_screenshot_urls ?? []
     };
   }
 
@@ -313,6 +379,24 @@ export class PamUserFeedbackRepo {
       .select('id');
     this.supabaseBridge.throwIfError(result);
     return (result.data ?? []).length > 0;
+  }
+
+  /**
+   * Admin 手动同步：强制把 screenshot count 设为指定值（不走 CAS）。
+   */
+  public async forceScreenshotCountAsAdmin(
+    feedbackId: string,
+    count: number
+  ): Promise<void> {
+    const supabase = await this.supabaseBridge.getAdminSupabase();
+    const result = await supabase
+      .from(TABLE)
+      .update({
+        github_screenshot_count: count,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', feedbackId);
+    this.supabaseBridge.throwIfError(result);
   }
 
   public async downloadScreenshotObject(objectPath: string): Promise<Buffer> {
@@ -404,6 +488,7 @@ function mapAdminRow(
     userAgent: row.user_agent,
     clientContext: parsedContext.success ? parsedContext.data : null,
     screenshotUrls: [...screenshotUrls],
+    hasLocalScreenshots: (row.screenshot_paths ?? []).length > 0,
     status: row.status as PamUserFeedbackStatusType,
     githubIssueNumber: row.github_issue_number ?? null,
     githubIssueUrl: row.github_issue_url ?? null,

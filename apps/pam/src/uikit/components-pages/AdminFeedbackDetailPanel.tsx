@@ -256,8 +256,7 @@ export function AdminFeedbackDetailPanel(
                 {tt.createIssue}
               </button>
             ) : null}
-            {item.githubIssueNumber !== null &&
-            item.screenshotUrls.length > 0 ? (
+            {item.githubIssueNumber !== null && item.hasLocalScreenshots ? (
               <button
                 type="button"
                 disabled={pending}

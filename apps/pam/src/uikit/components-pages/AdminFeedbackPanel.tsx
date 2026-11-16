@@ -211,25 +211,15 @@ export function AdminFeedbackPanel({
       try {
         const result = await runAsyncStore(
           actionStore,
-          api.syncScreenshots(row.id).then((synced) => {
-            const current = listStore.getResult() ?? [];
-            listStore.success(
-              current.map((item) =>
-                item.id === row.id
-                  ? {
-                      ...item,
-                      githubIssueNumber: synced.githubIssueNumber,
-                      githubIssueUrl: synced.githubIssueUrl,
-                      githubSyncError: synced.githubSyncError
-                    }
-                  : item
-              )
-            );
+          (async () => {
+            const synced = await api.syncScreenshots(row.id);
             if (synced.postedCount === 0 && synced.githubSyncError) {
               setActionError(tt.syncScreenshotsFailed);
             }
+            const refreshed = await api.listAdmin();
+            listStore.success([...refreshed]);
             return true as const;
-          })
+          })()
         );
         if (!actionStore.isSuccess() || result === undefined) {
           setActionError(tt.syncScreenshotsFailed);
@@ -347,7 +337,7 @@ export function AdminFeedbackPanel({
             ) : null}
             {canUpdate &&
             row.githubIssueNumber !== null &&
-            row.screenshotUrls.length > 0 ? (
+            row.hasLocalScreenshots ? (
               <button
                 type="button"
                 disabled={pendingId === row.id}

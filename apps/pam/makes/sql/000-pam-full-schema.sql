@@ -2955,6 +2955,7 @@ CREATE TABLE IF NOT EXISTS public.pam_user_feedback (
   github_sync_error text,
   github_synced_at timestamptz,
   github_screenshot_count integer NOT NULL DEFAULT 0,
+  github_screenshot_urls text[],
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT pam_user_feedback_category_chk CHECK (

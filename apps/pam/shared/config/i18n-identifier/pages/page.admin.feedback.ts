@@ -90,17 +90,17 @@ export const ADMIN_FEEDBACK_COL_TIME = 'admin_feedback:col__time';
 export const ADMIN_FEEDBACK_CREATE_ISSUE = 'admin_feedback:create_issue';
 
 /**
- * @description Sync screenshots to GitHub Issue button
- * @localZh 同步截图
- * @localEn Sync screenshots
+ * @description Publish screenshots to GitHub Issue button
+ * @localZh 发布截图
+ * @localEn Publish screenshots
  */
 export const ADMIN_FEEDBACK_SYNC_SCREENSHOTS =
   'admin_feedback:sync_screenshots';
 
 /**
- * @description Sync screenshots failed
- * @localZh 同步截图失败
- * @localEn Failed to sync screenshots
+ * @description Publish screenshots failed
+ * @localZh 发布截图失败
+ * @localEn Failed to publish screenshots
  */
 export const ADMIN_FEEDBACK_SYNC_SCREENSHOTS_FAILED =
   'admin_feedback:sync_screenshots_failed';

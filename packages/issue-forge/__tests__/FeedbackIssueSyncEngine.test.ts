@@ -20,6 +20,7 @@ function createHost(
     findScreenshotState: vi.fn(async () => null),
     compareAndSetScreenshotCount: vi.fn(async () => false),
     downloadScreenshot: vi.fn(async () => Buffer.from('')),
+    releaseLocalScreenshotsAfterGithub: vi.fn(async () => undefined),
     formatScreenshotComment: vi.fn(() => ''),
     updateStatusByIssueNumber: vi.fn(async () => 0),
     resolveForgeAuth: vi.fn(async () => null),

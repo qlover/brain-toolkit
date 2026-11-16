@@ -5,6 +5,7 @@ import { inject, injectable } from '@shared/container';
 import {
   API_FEEDBACK_NOT_FOUND,
   API_FEEDBACK_SCREENSHOT_EMPTY,
+  API_FEEDBACK_SCREENSHOT_SYNC_FAILED,
   API_FEEDBACK_SCREENSHOT_TOO_LARGE,
   API_FEEDBACK_SCREENSHOT_TYPE_UNSUPPORTED,
   API_FEEDBACK_SCREENSHOTS_REQUIRED,
@@ -123,6 +124,12 @@ export class PamUserFeedbackService {
     if (!existing) {
       throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
     }
+    const before =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    // 本地还有图：强制 count=0，避免「count 已满」导致同步空跑（评论被删时尤甚）
+    if (before && before.paths.length > 0) {
+      await this.feedbackRepo.forceScreenshotCountAsAdmin(feedbackId, 0);
+    }
     let postedCount = await this.issueBundle.screenshots.syncScreenshots(
       feedbackId,
       { manual: true }
@@ -136,9 +143,31 @@ export class PamUserFeedbackService {
         { manual: true }
       );
     }
+    // 本地已清：用落库的 GitHub URL 补挂被删的 Issue 评论
+    postedCount +=
+      await this.issueBundle.screenshots.ensureGithubScreenshotComments(
+        feedbackId,
+        { manual: true }
+      );
     const item = await this.feedbackRepo.findByIdAsAdmin(feedbackId);
     if (!item) {
       throw new ExecutorError(API_FEEDBACK_NOT_FOUND);
+    }
+    const afterAll =
+      await this.feedbackRepo.findScreenshotSyncStateAsAdmin(feedbackId);
+    const screenshotError =
+      typeof item.githubSyncError === 'string' &&
+      item.githubSyncError.startsWith('screenshot:');
+    if (
+      !afterAll ||
+      afterAll.paths.length > afterAll.postedCount ||
+      screenshotError ||
+      (postedCount === 0 && afterAll.paths.length > 0) ||
+      (postedCount === 0 &&
+        afterAll.paths.length === 0 &&
+        afterAll.githubUrls.length === 0)
+    ) {
+      throw new ExecutorError(API_FEEDBACK_SCREENSHOT_SYNC_FAILED);
     }
     return {
       ok: true,

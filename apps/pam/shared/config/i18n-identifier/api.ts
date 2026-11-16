@@ -519,3 +519,11 @@ export const API_FEEDBACK_SCREENSHOT_TOO_LARGE =
  */
 export const API_FEEDBACK_SCREENSHOT_TYPE_UNSUPPORTED =
   'api:feedback_screenshot_type_unsupported';
+
+/**
+ * @description Feedback screenshot sync to GitHub Issue failed
+ * @localZh 截图未能挂到 GitHub Issue，请重试
+ * @localEn Failed to attach screenshots to the GitHub Issue; please retry
+ */
+export const API_FEEDBACK_SCREENSHOT_SYNC_FAILED =
+  'api:feedback_screenshot_sync_failed';

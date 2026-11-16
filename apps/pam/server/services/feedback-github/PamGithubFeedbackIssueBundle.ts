@@ -215,6 +215,21 @@ class PamFeedbackIssueHost implements FeedbackIssueHostInterface {
   /**
    * @override
    */
+  public async releaseLocalScreenshotsAfterGithub(
+    feedbackId: string,
+    githubUrls: readonly string[],
+    localPaths: readonly string[]
+  ): Promise<void> {
+    await this.feedbackRepo.releaseLocalScreenshotsAfterGithubAsAdmin(
+      feedbackId,
+      githubUrls,
+      localPaths
+    );
+  }
+
+  /**
+   * @override
+   */
   public formatScreenshotComment(
     imageUrls: readonly string[],
     startIndex: number

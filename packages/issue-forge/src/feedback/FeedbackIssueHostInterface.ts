@@ -35,6 +35,16 @@ export interface FeedbackIssueHostInterface {
 
   downloadScreenshot(objectPath: string): Promise<Buffer>;
 
+  /**
+   * 截图已挂到 GitHub 后：落库 github raw URL，删除应用侧本地对象并清空 paths。
+   * 失败由宿主自行记录；引擎不因清理失败回滚评论成功。
+   */
+  releaseLocalScreenshotsAfterGithub(
+    feedbackId: string,
+    githubUrls: readonly string[],
+    localPaths: readonly string[]
+  ): Promise<void>;
+
   /** 截图评论正文（markdown），应用决定写法 */
   formatScreenshotComment(
     imageUrls: readonly string[],

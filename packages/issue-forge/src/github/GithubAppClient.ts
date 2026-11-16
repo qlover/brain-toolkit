@@ -8,7 +8,8 @@ import type {
 const GITHUB_API = 'https://api.github.com';
 const GITHUB_API_VERSION = '2022-11-28';
 const DEFAULT_USER_AGENT = 'brain-toolkit-issue-forge';
-const REQUEST_TIMEOUT_MS = 10_000;
+/** Contents 大图 PUT / 弱网下 10s 易超时；评论与普通 GET 也共用此上限 */
+const REQUEST_TIMEOUT_MS = 60_000;
 const APP_JWT_TTL_SEC = 9 * 60;
 const APP_JWT_CLOCK_SKEW_SEC = 60;
 const TOKEN_REFRESH_MARGIN_MS = 2 * 60 * 1000;

@@ -1,5 +1,8 @@
 import { IssueForgeError } from '../errors/IssueForgeError';
-import type { IssueForgeGatewayInterface } from '../interfaces/IssueForgeGatewayInterface';
+import type {
+  ForgeIssueCommentType,
+  IssueForgeGatewayInterface
+} from '../interfaces/IssueForgeGatewayInterface';
 import type {
   ForgeAssetUploadedType,
   ForgeAssetUploadInputType,
@@ -10,6 +13,8 @@ import type {
 } from '../types/IssueForgeTypes';
 import type { GithubAppClient } from './GithubAppClient';
 import { GithubAppRepoContentGateway } from './GithubAppRepoContentGateway';
+
+const COMMENTS_PAGE_SIZE = 100;
 
 /**
  * GitHub App Issue 网关（形态 B：构造时绑定 auth/config）。
@@ -59,6 +64,39 @@ export class GithubAppIssueForgeGateway implements IssueForgeGatewayInterface {
     if (!response.ok) {
       throw await this.client.toError('create comment', response);
     }
+  }
+
+  /**
+   * @override
+   */
+  public async listComments(
+    issue: ForgeIssueRefType
+  ): Promise<readonly ForgeIssueCommentType[]> {
+    const comments: ForgeIssueCommentType[] = [];
+    let page = 1;
+    for (;;) {
+      const response = await this.client.request(
+        this.config,
+        `${this.repoPath()}/issues/${String(issue.issueNumber)}/comments?per_page=${String(COMMENTS_PAGE_SIZE)}&page=${String(page)}`,
+        { method: 'GET' }
+      );
+      if (!response.ok) {
+        throw await this.client.toError('list comments', response);
+      }
+      const json = (await response.json()) as ReadonlyArray<{
+        readonly body?: unknown;
+      }>;
+      for (const item of json) {
+        if (typeof item.body === 'string') {
+          comments.push({ body: item.body });
+        }
+      }
+      if (json.length < COMMENTS_PAGE_SIZE) {
+        break;
+      }
+      page += 1;
+    }
+    return comments;
   }
 
   /**
