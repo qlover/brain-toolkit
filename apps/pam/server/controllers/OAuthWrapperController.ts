@@ -14,7 +14,6 @@ import { API_OAUTH_WRAPPER_AUTH_FAILED } from '@config/i18n-identifier/api';
 import { I } from '@config/ioc-identifiter';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import type { OAuthWrapperProviderInterface } from '@server/interfaces/OAuthWrapperProviderInterface';
-import { ServerConfig } from '@server/ServerConfig';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import {
   ensureConsentDevice,
@@ -42,7 +41,7 @@ export class OAuthWrapperController {
     protected oauthProvider: OAuthWrapperProviderInterface,
     @inject(OAuthUserService)
     protected oauthService: OAuthUserService,
-    @inject(ServerConfig)
+    @inject(I.AppConfig)
     protected readonly serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer)
     protected readonly base64Serializer: Base64Serializer

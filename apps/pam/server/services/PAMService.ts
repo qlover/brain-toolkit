@@ -82,7 +82,6 @@ import { PamEnvAccessLogsRepo } from '@server/repositorys/PamEnvAccessLogsRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamTeamMembersRepo } from '@server/repositorys/PamTeamMembersRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
-import { ServerConfig } from '@server/ServerConfig';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import { PAMEnvSecretEncryption } from '@server/utils/PAMEnvSecretEncryption';
 import {
@@ -112,7 +111,7 @@ export class PAMService implements PAMServiceInterface {
   @inject(OAuthUserService)
   protected readonly userService!: OAuthUserService;
 
-  @inject(ServerConfig)
+  @inject(I.AppConfig)
   protected readonly serverConfig!: SeedServerConfigInterface;
 
   @inject(SiteSettingsService)
