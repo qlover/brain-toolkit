@@ -1,3 +1,4 @@
+import { readFile, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   ensurePamenvRuntimeEnv,
@@ -10,6 +11,30 @@ import {
   type PamenvRuntimeOptions
 } from 'pamenv-cli';
 import type { PamCiOidcProviderType } from 'pamenv-cli';
+
+/**
+ * CJS 自带 `__dirname`。ESM 产物由 tsup banner 补上，指向当前入口文件所在目录。
+ */
+declare const __dirname: string;
+
+/**
+ * 与打包后的入口同目录。
+ * 构建期插件把密封快照复制到这里，运行时用这条静态路径去读。
+ * NFT / Turbopack 跟得上 `readFile` 的静态路径，proxy 的清单也会带上这个文件。
+ */
+const PACKAGED_SNAPSHOT_PATH = path.join(__dirname, 'deploy-snapshot.json');
+
+/**
+ * 副本在不在。读一次是为了让追踪器看见这个静态路径。
+ */
+async function probePackagedSnapshot(): Promise<boolean> {
+  try {
+    await readFile(PACKAGED_SNAPSHOT_PATH);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export type {
   EnvSourceInterface,
@@ -37,15 +62,23 @@ export function resolvePamenvNextSnapshotPath(cwd?: string): string {
 }
 
 /**
- * 解析运行时快照路径：`preferred` → `PAMENV_SNAPSHOT_PATH` → 约定相对路径；
- * 相对路径一律相对 `cwd` 解析一次。
+ * 调用方指定的路径优先。
+ * Vercel 上包目录旁的副本存在时用它：Turbopack 能把这条静态路径打进 proxy。
+ * 否则回落 `PAMENV_SNAPSHOT_PATH` 或项目 `.pam/deploy-snapshot.json`。
  */
 function resolveRuntimeSnapshotPath(
   cwd: string,
-  preferred?: string
+  preferred: string | undefined,
+  packagedReady: boolean
 ): string {
+  const explicit = preferred?.trim();
+  if (explicit) {
+    return path.isAbsolute(explicit) ? explicit : path.resolve(cwd, explicit);
+  }
+  if (process.env.VERCEL === '1' && packagedReady) {
+    return PACKAGED_SNAPSHOT_PATH;
+  }
   const raw =
-    preferred?.trim() ||
     process.env.PAMENV_SNAPSHOT_PATH?.trim() ||
     resolvePamenvNextSnapshotPath(cwd);
   return path.isAbsolute(raw) ? raw : path.resolve(cwd, raw);
@@ -135,7 +168,7 @@ export function createPamenvPlugin(options: PamenvNextPluginOptions) {
   ): (phase: string, context: PamenvNextConfigContext) => Promise<TConfig> {
     return async (phase, context) => {
       const {
-       dev: _dev,
+        dev: _dev,
         ci: _ci,
         inlineEnv,
         ...injectOptions
@@ -144,13 +177,17 @@ export function createPamenvPlugin(options: PamenvNextPluginOptions) {
         injectOptions.cwd ?? /* turbopackIgnore: true */ process.cwd();
       const onCiBuild =
         phase === 'phase-production-build' && isMatchingCi(options.oidc);
+      const snapshotPath = onCiBuild
+        ? (injectOptions.snapshotPath ?? resolvePamenvNextSnapshotPath(cwd))
+        : undefined;
       await injectPamenvProcessEnv({
         ...injectOptions,
         enabled: shouldInject(options, phase),
-        snapshotPath: onCiBuild
-          ? (injectOptions.snapshotPath ?? resolvePamenvNextSnapshotPath(cwd))
-          : undefined
+        snapshotPath
       });
+      if (snapshotPath) {
+        await copySnapshotBesidePackage(snapshotPath);
+      }
       let resolved: TConfig;
       if (typeof config === 'function') {
         resolved = await (
@@ -162,7 +199,9 @@ export function createPamenvPlugin(options: PamenvNextPluginOptions) {
       } else {
         resolved = config;
       }
-      return mergeInlineEnvIntoNextConfig(resolved, inlineEnv);
+      return mergeSnapshotTraceInclude(
+        mergeInlineEnvIntoNextConfig(resolved, inlineEnv)
+      );
     };
   };
 }
@@ -211,6 +250,55 @@ function mergeInlineEnvIntoNextConfig<TConfig>(
   } as TConfig;
 }
 
+const SNAPSHOT_TRACE_INCLUDE = './.pam/deploy-snapshot.json';
+
+/**
+ * 构建期快照是 gitignore 的，NFT 默认不跟。
+ * 页面路由靠这条 include；proxy 还要靠包目录旁的静态副本。
+ */
+function mergeSnapshotTraceInclude<TConfig>(config: TConfig): TConfig {
+  const record = config as Record<string, unknown>;
+  const existing =
+    record.outputFileTracingIncludes !== null &&
+    typeof record.outputFileTracingIncludes === 'object' &&
+    !Array.isArray(record.outputFileTracingIncludes)
+      ? (record.outputFileTracingIncludes as Record<string, readonly string[]>)
+      : {};
+  const current = existing['/**/*'] ?? [];
+  if (current.includes(SNAPSHOT_TRACE_INCLUDE)) {
+    return config;
+  }
+  return {
+    ...record,
+    outputFileTracingIncludes: {
+      ...existing,
+      '/**/*': [...current, SNAPSHOT_TRACE_INCLUDE]
+    }
+  } as TConfig;
+}
+
+/**
+ * 把项目里的密封快照复制到包入口旁边。
+ * 文件不存在时跳过（注入被关掉，或这次构建没有写出快照）。
+ */
+async function copySnapshotBesidePackage(snapshotPath: string): Promise<void> {
+  if (path.resolve(snapshotPath) === path.resolve(PACKAGED_SNAPSHOT_PATH)) {
+    return;
+  }
+  try {
+    await copyFile(snapshotPath, PACKAGED_SNAPSHOT_PATH);
+  } catch (error) {
+    const code =
+      error !== null && typeof error === 'object' && 'code' in error
+        ? error.code
+        : undefined;
+    if (code === 'ENOENT') {
+      return;
+    }
+    throw error;
+  }
+}
+
 /**
  * 运行时解封部署快照 → 返回 {@link PamenvBagInterface}。
  *
@@ -234,12 +322,17 @@ export async function createPamenv(
   }
 
   const cwd = options.cwd ?? /* turbopackIgnore: true */ process.cwd();
+  const packagedReady = await probePackagedSnapshot();
   return ensurePamenvRuntimeEnv({
     oidc: 'vercel',
     preferLocal: false,
     ...options,
     cwd,
-    snapshotPath: resolveRuntimeSnapshotPath(cwd, options.snapshotPath)
+    snapshotPath: resolveRuntimeSnapshotPath(
+      cwd,
+      options.snapshotPath,
+      packagedReady
+    )
   });
 }
 
