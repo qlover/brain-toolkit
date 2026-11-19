@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * Email OTP / Magic Link callback — client UX only (no Supabase browser client).
+ * 邮箱魔法链接回调页，只负责交互，不在浏览器里创建 Supabase 客户端。
  *
- * Reads ?code= from the magic-link URL, POSTs it to /api/callback/email-login,
- * then refreshes user info and navigates. Bootstrap skips /api/user/session
- * restore on this page so session is established before any session fetch.
+ * implicit 链接把 session 放在 hash 里，旧 PKCE 链接仍带 `?code=`。
+ * 解析后立刻清掉地址栏令牌，再 POST 到 /api/callback/email-login。
+ * 本页跳过 /api/user/session 恢复，避免会话建立前去拉用户。
  */
 
 import { useEffect, useState } from 'react';
@@ -19,6 +19,7 @@ import {
   ROUTE_HOME,
   ROUTE_LOGIN
 } from '@config/route';
+import { EmailMagicLinkCallbackResolver } from './EmailMagicLinkCallbackResolver';
 
 type CallbackStatus = 'authenticating' | 'establishing' | 'error';
 
@@ -49,20 +50,35 @@ export function EmailOtpCallbackClient({ tt }: EmailOtpCallbackClientProps) {
     }
 
     async function handleCallback() {
-      const search = new URLSearchParams(window.location.search);
-      const error = search.get('error');
-      if (error) {
-        await failToLogin(
-          `Supabase magic link error: ${error} ${search.get('error_description') ?? ''}`
-        );
+      const resolver = new EmailMagicLinkCallbackResolver();
+      const callback = resolver.resolve(
+        window.location.search,
+        window.location.hash
+      );
+      window.history.replaceState(
+        null,
+        '',
+        resolver.clearCredentials(window.location.href)
+      );
+
+      if (callback.kind === 'error') {
+        await failToLogin(`Supabase magic link error: ${callback.message}`);
+        return;
+      }
+      if (callback.kind === 'missing') {
+        await failToLogin('Missing email login credentials in callback URL');
         return;
       }
 
-      const code = search.get('code');
-      if (!code) {
-        await failToLogin('Missing PKCE code in email callback URL');
-        return;
-      }
+      const body =
+        callback.kind === 'code'
+          ? { code: callback.code }
+          : {
+              access_token: callback.accessToken,
+              refresh_token: callback.refreshToken,
+              expires_in: callback.expiresIn,
+              token_type: callback.tokenType
+            };
 
       try {
         if (cancelled) return;
@@ -71,7 +87,7 @@ export function EmailOtpCallbackClient({ tt }: EmailOtpCallbackClientProps) {
         const res = await fetch(API_CALLBACK_EMAIL_LOGIN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
+          body: JSON.stringify(body)
         });
 
         if (!res.ok) {
@@ -80,13 +96,13 @@ export function EmailOtpCallbackClient({ tt }: EmailOtpCallbackClientProps) {
             const data = (await res.json()) as { message?: string };
             if (data.message) message = data.message;
           } catch {
-            // ignore parse errors
+            // 响应体不是 JSON 时沿用默认文案
           }
           await failToLogin(message);
           return;
         }
 
-        // Session cookie is set — now load user into the client store.
+        // cookie 已写入，再把用户载入客户端 store
         await userService.refreshUser({ disabledDialogError: true });
 
         if (cancelled) return;

@@ -97,10 +97,10 @@ export async function createServerClient() {
 }
 
 /**
- * Cookie-free anon client for GoTrue auth only (`refreshSession` / `getUser`).
- * Never reuse the service-role admin client for these — `refreshSession`
- * writes a user JWT onto the client and subsequent PostgREST calls hit RLS
- * as that user (empty `pam_roles`, etc.).
+ * 无 cookie 的 anon 客户端，只用于 GoTrue（`refreshSession` / `getUser`）。
+ *
+ * 不要在缓存的 service_role 客户端上刷新会话。`refreshSession` 会把用户 JWT
+ * 写进该客户端，随后的 PostgREST 请求会以该用户身份命中 RLS（例如 `pam_roles` 为空）。
  */
 export function createEphemeralAuthClient(): SupabaseClient {
   return createSupabaseClient(requireSupabaseUrl(), requireAnonKey(), {
@@ -108,6 +108,24 @@ export function createEphemeralAuthClient(): SupabaseClient {
       persistSession: false,
       autoRefreshToken: false,
       detectSessionInUrl: false
+    }
+  });
+}
+
+/**
+ * 发送邮箱魔法链接用的无 cookie Auth 客户端。
+ *
+ * `createServerClient` 把 `flowType` 固定为 pkce，`code_verifier` 只写在发信浏览器的 cookie 里。
+ * 邮件经常在别的客户端打开，回调拿不到这张 cookie，`exchangeCodeForSession` 会失败。
+ * 这里使用 implicit：校验链接不带 `pkce_`，Supabase 把 session 放在回调 URL 的 hash 上。
+ */
+export function createMagicLinkAuthClient(): SupabaseClient {
+  return createSupabaseClient(requireSupabaseUrl(), requireAnonKey(), {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      flowType: 'implicit'
     }
   });
 }

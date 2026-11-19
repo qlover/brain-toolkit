@@ -14,7 +14,10 @@ import { SupabaseRepo } from '@qlover/next-kit/server';
 import { OAuthWrapperService } from '@qlover/oauth-wrapper';
 import { PamTables } from '@shared/config/pamTables';
 import { inject, injectable } from '@shared/container';
-import { createEphemeralAuthClient } from '@shared/supabase/server';
+import {
+  createEphemeralAuthClient,
+  createMagicLinkAuthClient
+} from '@shared/supabase/server';
 import {
   resolveUserDisplayLabel,
   toBusinessEmail
@@ -604,8 +607,6 @@ export class SupabaseOAuthProvider
    * @override
    */
   public async signWithOtp(params: SignWithOtpParams): Promise<SignOtpResult> {
-    const supabase = await this.supabaseRepo.getSupabase();
-
     if ('email' in params) {
       const locale = (await this.serverContext.getLocale()) as LocaleType;
       const redirectTo = new URL(
@@ -615,6 +616,8 @@ export class SupabaseOAuthProvider
 
       this.logger.debug('Supabase email OTP redirectTo: ', redirectTo);
 
+      // 不用 SSR 客户端。它强制 PKCE，verifier 只存在发信浏览器，邮箱里点开必然换票失败。
+      const supabase = createMagicLinkAuthClient();
       const result = await supabase.auth.signInWithOtp({
         email: params.email,
         options: { emailRedirectTo: redirectTo }
@@ -626,6 +629,7 @@ export class SupabaseOAuthProvider
       };
     }
 
+    const supabase = await this.supabaseRepo.getSupabase();
     const result = await supabase.auth.signInWithOtp({
       phone: params.phone
     });

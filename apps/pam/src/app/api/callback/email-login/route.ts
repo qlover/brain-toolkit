@@ -1,13 +1,13 @@
 /**
- * ─── Email OTP / Magic Link callback ───
+ * 邮箱魔法链接回调。
  *
  * GET  /api/callback/email-login?code=...&next=...
- *   Direct PKCE exchange + redirect (no UI).
+ *   直接用 PKCE code 换票并重定向（无页面）。
  *
  * POST /api/callback/email-login
- *   JSON establish (used by callback page):
- *   - { code } — PKCE exchange + app session
- *   - { access_token, refresh_token } — session from tokens
+ *   回调页建立会话：
+ *   - { code } — 旧 PKCE 邮件
+ *   - { access_token, refresh_token } — implicit 魔法链接放在 hash 里的 session
  */
 
 import { NextResponse, type NextRequest } from 'next/server';

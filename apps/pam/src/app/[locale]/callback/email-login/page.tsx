@@ -1,8 +1,8 @@
 /**
- * Email OTP / Magic Link callback page (server component).
+ * 邮箱魔法链接回调页（服务端组件）。
  *
- * Magic links redirect here with ?code=... (PKCE). The client shows loading UI
- * and POSTs { code } to /api/callback/email-login — no browser Supabase client.
+ * implicit 链接把 session 放在 hash 里，旧 PKCE 链接带 `?code=`。
+ * 客户端展示加载态，再把 session 或 code POST 到 /api/callback/email-login。
  */
 
 import { notFound } from 'next/navigation';

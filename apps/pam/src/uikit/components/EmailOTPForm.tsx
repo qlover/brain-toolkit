@@ -26,10 +26,10 @@ interface EmailOTPFormProps {
 }
 
 /**
- * Email magic-link login form.
+ * 邮箱魔法链接登录表单。
  *
- * Sends a Supabase magic link. Clicking it opens /callback/email-login with a
- * loading UI; the page POSTs { code } to /api/callback/email-login (no browser Supabase).
+ * 发出的链接不走 PKCE。点击后打开 /callback/email-login，
+ * 页面从 hash 取出 session，再 POST 到 /api/callback/email-login。
  */
 export function EmailOTPForm({
   tt,
