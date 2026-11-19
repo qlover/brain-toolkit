@@ -11,6 +11,7 @@ import {
   API_REQUEST_BODY_EMPTY,
   API_SERVER_ERROR
 } from '@config/i18n-identifier/api';
+import { I } from '@config/ioc-identifiter';
 import {
   PAM_SITE_SETTING_KEYS,
   type PamSiteSettingKey
@@ -30,7 +31,6 @@ import { PamCiOidcBindingRepo } from '@server/repositorys/PamCiOidcBindingRepo';
 import { PAMProjectRepo } from '@server/repositorys/PAMProjectRepo';
 import { PamRolePermissionsRepo } from '@server/repositorys/PamRolePermissionsRepo';
 import { PamUsersRepo } from '@server/repositorys/PamUsersRepo';
-import { ServerConfig } from '@server/ServerConfig';
 import { PamCliTokenService } from '@server/services/PamCliTokenService';
 import { PAMService } from '@server/services/PAMService';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
@@ -86,7 +86,7 @@ export class PamCiOidcService {
     protected readonly cliTokenService: PamCliTokenService,
     @inject(SiteSettingsService)
     protected readonly siteSettings: SiteSettingsService,
-    @inject(ServerConfig)
+    @inject(I.AppConfig)
     protected readonly serverConfig: SeedServerConfigInterface
   ) {
     this.verifiers = {

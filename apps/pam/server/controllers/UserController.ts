@@ -45,7 +45,6 @@ import {
 } from '@schemas/PamUserSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { LoginProviderResult } from '@interfaces/UserServiceInterface';
-import { ServerConfig } from '@server/ServerConfig';
 import { BrainOAuthLoginService } from '@server/services/BrainOAuthLoginService';
 import type { BrainOAuthCallbackSuccess } from '@server/services/BrainOAuthLoginService';
 import { OAuthUserService } from '@server/services/OAuthUserService';
@@ -95,7 +94,7 @@ export class UserController {
     protected linkedLoginService: PamLinkedLoginService,
     @inject(I.ServerContextInterface)
     protected serverContext: ServerContextInterface,
-    @inject(ServerConfig)
+    @inject(I.AppConfig)
     protected readonly serverConfig: SeedServerConfigInterface,
     @inject(Base64Serializer)
     protected readonly base64Serializer: Base64Serializer

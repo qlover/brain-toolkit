@@ -8,6 +8,7 @@ import {
   API_OAUTH_WRAPPER_AUTH_FAILED,
   API_REQUEST_BODY_EMPTY
 } from '@config/i18n-identifier/api';
+import { I } from '@config/ioc-identifiter';
 import { ROUTE_PAMENV_DEVICE, withLocalePrefix } from '@config/route';
 import { PamCliOidcExchangeRequestSchema } from '@schemas/PamCiOidcSchema';
 import {
@@ -19,7 +20,6 @@ import {
   type PamCliTokenResponse
 } from '@schemas/PamCliSchema';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
-import { ServerConfig } from '@server/ServerConfig';
 import { OAuthUserService } from '@server/services/OAuthUserService';
 import { PamCiOidcService } from '@server/services/PamCiOidcService';
 import {
@@ -62,7 +62,7 @@ export class PamCliController {
   @inject(RequestLogsRepository)
   protected requestLogsRepository!: RequestLogsRepository;
 
-  @inject(ServerConfig)
+  @inject(I.AppConfig)
   protected serverConfig!: SeedServerConfigInterface;
 
   @inject(PamCiOidcService)

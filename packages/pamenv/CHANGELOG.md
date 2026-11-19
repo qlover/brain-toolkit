@@ -1,5 +1,23 @@
 # pamenv-cli
 
+## 2.2.1
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- **pamenv,pam:** 可读 API 错误展示并避免裸 api:\* 弹窗 ([0fc886b](https://github.com/qlover/brain-toolkit/commit/0fc886b1f7d646ba98f9dc93d0649ccea2b8ec18)) ([#223](https://github.com/qlover/brain-toolkit/pull/223))
+
+  CLI/插件注入失败改为多行可读文案且默认去掉 stack；Web AppApi 用 id 翻译，缺译走统一兜底。
+
+  Closes #220
+
+- **pamenv:** 插件注入无项目 .pam 时回落全局登录 ([65afd14](https://github.com/qlover/brain-toolkit/commit/65afd14ec077db02c470d865a31fd191e42bff22)) ([#222](https://github.com/qlover/brain-toolkit/pull/222))
+
+  与 CLI 自动模式对齐，修复 vite/next 已全局登录仍提示 login --local。
+
+  Closes #219
+
 ## 2.2.0
 
 ### Minor Changes

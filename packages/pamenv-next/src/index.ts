@@ -19,8 +19,8 @@ declare const __dirname: string;
 
 /**
  * 与打包后的入口同目录。
- * 构建期插件把密封快照复制到这里，运行时用这条静态路径去读。
- * NFT / Turbopack 跟得上 `readFile` 的静态路径，proxy 的清单也会带上这个文件。
+ * 构建期插件把密封快照复制到这里。
+ * 应用目录里的快照读不到时才读它；静态 `readFile` 让 proxy 的清单能带上这个文件。
  */
 const PACKAGED_SNAPSHOT_PATH = path.join(__dirname, 'deploy-snapshot.json');
 
@@ -62,26 +62,41 @@ export function resolvePamenvNextSnapshotPath(cwd?: string): string {
 }
 
 /**
- * 调用方指定的路径优先。
- * Vercel 上包目录旁的副本存在时用它：Turbopack 能把这条静态路径打进 proxy。
- * 否则回落 `PAMENV_SNAPSHOT_PATH` 或项目 `.pam/deploy-snapshot.json`。
+ * 应用快照读得到就用它。
+ * 这是构建期注入进前端的同一份，`PAMENV_SNAPSHOT_PATH` 也指向这里。
+ * 读不到时（proxy 清单没带上 `.pam`）才用包目录旁的副本。
  */
-function resolveRuntimeSnapshotPath(
+async function resolveRuntimeSnapshotPath(
   cwd: string,
   preferred: string | undefined,
   packagedReady: boolean
-): string {
+): Promise<string> {
   const explicit = preferred?.trim();
-  if (explicit) {
-    return path.isAbsolute(explicit) ? explicit : path.resolve(cwd, explicit);
+  const raw =
+    explicit ||
+    process.env.PAMENV_SNAPSHOT_PATH?.trim() ||
+    resolvePamenvNextSnapshotPath(cwd);
+  const appPath = path.isAbsolute(raw) ? raw : path.resolve(cwd, raw);
+  if (await canReadSnapshot(appPath)) {
+    return appPath;
   }
   if (process.env.VERCEL === '1' && packagedReady) {
     return PACKAGED_SNAPSHOT_PATH;
   }
-  const raw =
-    process.env.PAMENV_SNAPSHOT_PATH?.trim() ||
-    resolvePamenvNextSnapshotPath(cwd);
-  return path.isAbsolute(raw) ? raw : path.resolve(cwd, raw);
+  return appPath;
+}
+
+/**
+ * 应用快照是否在本次部署里。
+ * 路径是运行时才知道的，不能让 Turbopack 跟着它扫整仓。
+ */
+async function canReadSnapshot(filePath: string): Promise<boolean> {
+  try {
+    await readFile(/* turbopackIgnore: true */ filePath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export type PamenvNextConfigContext = {
@@ -328,7 +343,7 @@ export async function createPamenv(
     preferLocal: false,
     ...options,
     cwd,
-    snapshotPath: resolveRuntimeSnapshotPath(
+    snapshotPath: await resolveRuntimeSnapshotPath(
       cwd,
       options.snapshotPath,
       packagedReady

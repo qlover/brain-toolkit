@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { inject, injectable } from '@shared/container';
+import { I } from '@config/ioc-identifiter';
 import { PAM_SITE_SETTING_KEYS } from '@config/pamSiteSettings';
 import type { SeedServerConfigInterface } from '@interfaces/SeedConfigInterface';
 import { PamCliTokenRepo } from '@server/repositorys/PamCliTokenRepo';
-import { ServerConfig } from '@server/ServerConfig';
 import { SiteSettingsService } from '@server/services/SiteSettingsService';
 import type { UserSchema } from '@qlover/next-kit/common';
 import type {
@@ -64,7 +64,7 @@ export class PamCliTokenService {
   >();
 
   constructor(
-    @inject(ServerConfig)
+    @inject(I.AppConfig)
     protected readonly config: SeedServerConfigInterface,
     @inject(PamCliTokenRepo)
     protected readonly tokenRepo: PamCliTokenRepo,

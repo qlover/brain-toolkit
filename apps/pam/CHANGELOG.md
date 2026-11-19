@@ -1,5 +1,15 @@
 # pam
 
+## 3.2.1
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- **pam:** 密码解密读取已解封的配置 ([8971337](https://github.com/qlover/brain-toolkit/commit/89713375d5f7298f609f7ea910e711ab885b770c))
+
+  校验登录注入 ServerConfig 会新建一份未绑袋的配置，预览上加密密钥为空。
+
 ## 3.2.0
 
 ### Minor Changes
