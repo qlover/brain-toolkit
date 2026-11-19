@@ -1,5 +1,21 @@
 # @pamenv/next
 
+## 1.2.1
+
+### Patch Changes
+
+#### 🐞 Bug Fixes
+
+- **pamenv-next:** 把密封快照复制到包入口旁 ([1bcb071](https://github.com/qlover/brain-toolkit/commit/1bcb071a133df2f86b13da60c92799874a1b9ca0)) ([#232](https://github.com/qlover/brain-toolkit/pull/232))
+
+  Turbopack 不会把 gitignore 的 .pam 快照打进 proxy。构建期复制到入口旁并用静态路径读取，追踪清单才能带上它。
+
+- **pamenv:** 插件注入无项目 .pam 时回落全局登录 ([65afd14](https://github.com/qlover/brain-toolkit/commit/65afd14ec077db02c470d865a31fd191e42bff22)) ([#222](https://github.com/qlover/brain-toolkit/pull/222))
+
+  与 CLI 自动模式对齐，修复 vite/next 已全局登录仍提示 login --local。
+
+  Closes #219
+
 ## 1.2.0
 
 ### Minor Changes
