@@ -19,7 +19,8 @@ import {
   resolveInjectPreferLocal,
   resolvePamenvEnabled,
   resolvePamenvInjectOptions,
-  resolveSnapshotKeysToOpen
+  resolveSnapshotKeysToOpen,
+  runWithInjectCacheForTests
 } from '../src/impls/PamenvInject';
 
 describe('injectPamenvProcessEnv', () => {
@@ -52,6 +53,87 @@ describe('injectPamenvProcessEnv', () => {
       enabled: true
     });
     expect(process.env.PAMENV_INJECT_SENTINEL).toBe('keep');
+  });
+});
+
+describe('runWithInjectCache stale-on-error', () => {
+  afterEach(() => {
+    resetPamenvInjectCache();
+  });
+
+  it('首次成功后二次命中不重跑', async () => {
+    let runs = 0;
+    const run = async (): Promise<{
+      readonly expiresAtMs: number;
+      readonly values: Readonly<Record<string, string>>;
+    }> => {
+      runs += 1;
+      return {
+        expiresAtMs: Number.POSITIVE_INFINITY,
+        values: Object.freeze({ SITE_URL: 'https://example.test/' })
+      };
+    };
+
+    const first = await runWithInjectCacheForTests('k1', true, run);
+    const second = await runWithInjectCacheForTests('k1', true, run);
+    expect(first).toEqual({ SITE_URL: 'https://example.test/' });
+    expect(second).toEqual({ SITE_URL: 'https://example.test/' });
+    expect(runs).toBe(1);
+  });
+
+  it('刷新失败时复用上次明文', async () => {
+    let runs = 0;
+    const run = async (): Promise<{
+      readonly expiresAtMs: number;
+      readonly values: Readonly<Record<string, string>>;
+    }> => {
+      runs += 1;
+      if (runs === 1) {
+        return {
+          expiresAtMs: Date.now() - 1,
+          values: Object.freeze({ SUPABASE_URL: 'https://db.example' })
+        };
+      }
+      throw new Error('network down');
+    };
+
+    const first = await runWithInjectCacheForTests('k2', true, run);
+    expect(first).toEqual({ SUPABASE_URL: 'https://db.example' });
+
+    const second = await runWithInjectCacheForTests('k2', true, run);
+    expect(second).toEqual({ SUPABASE_URL: 'https://db.example' });
+    expect(runs).toBe(2);
+  });
+
+  it('cache:false 时失败直接抛、不留 stale', async () => {
+    let runs = 0;
+    const run = async (): Promise<{
+      readonly expiresAtMs: number;
+      readonly values: Readonly<Record<string, string>>;
+    }> => {
+      runs += 1;
+      if (runs === 1) {
+        return {
+          expiresAtMs: Number.POSITIVE_INFINITY,
+          values: Object.freeze({ SITE_URL: 'https://a.test/' })
+        };
+      }
+      throw new Error('boom');
+    };
+
+    await runWithInjectCacheForTests('k3', true, run);
+    await expect(runWithInjectCacheForTests('k3', false, run)).rejects.toThrow(
+      'boom'
+    );
+    expect(runs).toBe(2);
+  });
+
+  it('首次即失败且无旧值则抛错', async () => {
+    await expect(
+      runWithInjectCacheForTests('k4', true, async () => {
+        throw new Error('first fail');
+      })
+    ).rejects.toThrow('first fail');
   });
 });
 
